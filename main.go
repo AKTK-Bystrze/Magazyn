@@ -6,6 +6,8 @@ import (
     "log"
     "net/http"
     "time"
+    "os"
+    "fmt"
 
     "github.com/gorilla/mux"
     "github.com/gorilla/sessions"
@@ -99,6 +101,13 @@ type AppState struct {
 var app AppState
 
 func main() {
+    if len(os.Args) != 3 {
+        fmt.Fprintf(os.Stderr, "Usage: %s IP PORT\n", os.Args[0])
+        os.Exit(1)
+    }
+
+    addr := fmt.Sprintf("%s:%s", os.Args[1], os.Args[2])
+
     router := mux.NewRouter()
 
 		db, err := sql.Open("sqlite3", "magazyn.db")
@@ -122,5 +131,6 @@ func main() {
     router.HandleFunc("/setStatus", setStatusHandler).Methods("POST")
     router.HandleFunc("/admin/items", adminItemsHandler).Methods("GET")
     router.HandleFunc("/item/status", adminItemStatusHandler).Methods("POST")
-    log.Fatal(http.ListenAndServe(":8080", router))
+    log.Printf("Server starting on %s...\n", addr)
+    log.Fatal(http.ListenAndServe(addr, router))
 }
