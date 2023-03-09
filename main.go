@@ -22,15 +22,10 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
         http.Redirect(w, r, "/", http.StatusSeeOther)
         return
     }
-    // search for reserved chairs in the db
-    db, err := sql.Open("sqlite3", "chairs.db")
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
-    rows, err := db.Query(`
+    // search for reserved items in the db
+    rows, err := app.db.Query(`
         SELECT r.*,c.name,c.description from reservations r
-        JOIN chairs c ON r.chair_id = c.id
+        JOIN items c ON r.item_id = c.id
         WHERE user_id = ?
     `, session.Values["user_id"]);
     if err != nil {
@@ -38,10 +33,10 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
     }
     defer rows.Close()
 
-    // create a list of available chairs
+    // create a list of available items
     type reservationInfo struct {
       Id int
-      Chair_id int
+      Item_id int
       User_id int
       Start_time time.Time
       End_time time.Time
@@ -49,19 +44,19 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
       Desc string
 			Status string
     }
-    var reservedChairs []reservationInfo
+    var reservedItems []reservationInfo
     for rows.Next() {
         var item reservationInfo
-        if err := rows.Scan(&item.Id, &item.Chair_id,
+        if err := rows.Scan(&item.Id, &item.Item_id,
          &item.User_id,
          &item.Start_time,
          &item.End_time,
+         &item.Status,
          &item.Name,
-         &item.Desc,
-				 &item.Status); err != nil {
+         &item.Desc); err != nil {
             log.Fatal(err)
         }
-        reservedChairs = append(reservedChairs, item)
+        reservedItems = append(reservedItems, item)
     }
     if err := rows.Err(); err != nil {
         log.Fatal(err)
@@ -72,7 +67,7 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
         Reservations []reservationInfo
     }{
         Username:       session.Values["username"].(string),
-        Reservations:   reservedChairs,
+        Reservations:   reservedItems,
     })
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -81,7 +76,7 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func SearchHandler(w http.ResponseWriter, r *http.Request) {	
-	SearchChairs(w, r, "")
+	SearchItems(w, r, "")
 }
 
 func ReserveHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +101,7 @@ var app AppState
 func main() {
     router := mux.NewRouter()
 
-		db, err := sql.Open("sqlite3", "chairs.db")
+		db, err := sql.Open("sqlite3", "magazyn.db")
     if err != nil {
         log.Fatal(err)
     }
@@ -122,8 +117,10 @@ func main() {
     router.HandleFunc("/dashboard", UserDashboard).Methods("GET", "POST")
     router.HandleFunc("/search", SearchHandler).Methods("GET")
     router.HandleFunc("/logout", Logout).Methods("GET")
-    router.HandleFunc("/reserve", ReserveChair).Methods("POST")
-    router.HandleFunc("/admin", adminDashboardHandler).Methods("GET")
+    router.HandleFunc("/reserve", ReserveItem).Methods("POST")
+    router.HandleFunc("/admin/reservations", adminDashboardHandler).Methods("GET")
     router.HandleFunc("/setStatus", setStatusHandler).Methods("POST")
+    router.HandleFunc("/admin/items", adminItemsHandler).Methods("GET")
+    router.HandleFunc("/item/status", adminItemStatusHandler).Methods("POST")
     log.Fatal(http.ListenAndServe(":8080", router))
 }

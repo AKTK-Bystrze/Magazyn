@@ -4,6 +4,7 @@ import (
     "net/http"
 		"time"
 		"log"
+    "strconv"
 )
 
 func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +20,7 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	SELECT r.id, r.start_time, r.end_time, u.username, r.status, c.name
 	FROM reservations r
 	JOIN users u ON r.user_id = u.id
-	JOIN chairs c ON r.chair_id = c.id
+	JOIN items c ON r.item_id = c.id
 	ORDER BY r.start_time ASC`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -94,5 +95,98 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect to admin dashboard
-	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/reservations", http.StatusSeeOther)
+}
+
+func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
+  session, _ := app.store.Get(r, SESSION_NAME)
+
+  if session.Values["role"] != "admin" {
+    http.Redirect(w, r, "/login", http.StatusSeeOther)
+    return
+  }
+
+  // Get all items from the database
+  rows, err := app.db.Query("SELECT id, name, description, status FROM items")
+  if err != nil {
+    log.Println(err)
+    http.Error(w, "Error querying items", http.StatusInternalServerError)
+    return
+  }
+  defer rows.Close()
+
+  type Item struct {
+    ID          int
+    Name        string
+    Description string
+    Status      string
+  }
+
+  // Store items in a slice
+  items := make([]Item, 0)
+  for rows.Next() {
+    var item Item
+    if err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Status); err != nil {
+      http.Error(w, "Error scanning items", http.StatusInternalServerError)
+      return
+    }
+    items = append(items, item)
+  }
+  if err := rows.Err(); err != nil {
+    http.Error(w, "Error iterating items", http.StatusInternalServerError)
+    return
+  }
+
+  if err := app.templates.ExecuteTemplate(w, "admin_items.html", struct {Items[] Item}{Items: items}); err != nil {
+    http.Error(w, "Error executing template", http.StatusInternalServerError)
+    return
+  }
+}
+
+func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
+  session, _ := app.store.Get(r, SESSION_NAME)
+
+  // check if the user is logged in and is an admin
+  if session.Values["role"] != "admin" {
+    http.Redirect(w, r, "/", http.StatusSeeOther)
+    return
+  }
+
+  // check if it's a POST request
+  if r.Method != http.MethodPost {
+    http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+    return
+  }
+
+  // parse form values
+  err := r.ParseForm()
+  if err != nil {
+    http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+    return
+  }
+
+  // get the item ID and status from form values
+  itemID, err := strconv.Atoi(r.FormValue("id"))
+  if err != nil {
+    http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+    return
+  }
+
+  status := r.FormValue("status")
+
+  // update item status in the database
+  stmt, err := app.db.Prepare("UPDATE items SET status = ? WHERE id = ?")
+  if err != nil {
+    http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+    return
+  }
+
+  _, err = stmt.Exec(status, itemID)
+  if err != nil {
+    http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+    return
+  }
+
+  // redirect to the admin items page
+  http.Redirect(w, r, "/admin/items", http.StatusSeeOther)
 }

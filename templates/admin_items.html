@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <title>Dostepny sprzet</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   </head>
   <body>
@@ -27,43 +28,40 @@
 		</div>
 	</nav>
     <div class="container">
-      <h1 class="my-5">Panel Administracyjny</h1>
+      <h1 class="my-3">Dostepny sprzet</h1>
       <table class="table">
         <thead>
           <tr>
+            <th>ID</th>
             <th>Nazwa</th>
-            <th>Wypozyczenie</th>
-            <th>Zwrot</th>
-            <th>Uzytkownik</th>
+            <th>Opis</th>
             <th>Status</th>
             <th>Zmien Status</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
-          {{ range .Reservations }}
+          {{ range .Items }}
           <tr>
+            <td>{{ .ID }}</td>
             <td>{{ .Name }}</td>
-            <td>{{ .StartTime.Format "2006-01-02 15:04:05" }}</td>
-            <td>{{ .EndTime.Format "2006-01-02 15:04:05" }}</td>
-            <td>{{ .Username }}</td>
+            <td>{{ .Description }}</td>
             <td>
-              {{ if eq .Status "approved" }}
-              <span class="badge badge-success">Potwierdzony</span>
-              {{ else if eq .Status "pending" }}
-              <span class="badge badge-danger">Oczekujacy</span>
-              {{ else if eq .Status "denied" }}
-              <span class="badge badge-secondary">Anulowany</span>
+              {{ if eq .Status "ok" }}
+              <span class="badge badge-success">OK</span>
+              {{ else if eq .Status "broken" }}
+              <span class="badge badge-danger">Zepsute</span>
+              {{ else if eq .Status "hidden" }}
+              <span class="badge badge-secondary">Ukryte</span>
               {{ end }}
             </td>
             <td>
-              <form method="POST" action="/setStatus">
-                <input type="hidden" name="reservation_id" value="{{ .ID }}">
+              <form method="POST" action="/item/status">
+                <input type="hidden" name="id" value="{{ .ID }}">
                 <div class="form-group">
-                  <select class="form-control" name="status" onchange="this.form.submit()" autocomplete=off>
-                    <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
-                    <option value="approved" {{ if eq .Status "approved" }}selected{{ end }}>Potwierdzony</option>
-                    <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
+                  <select class="form-control" name="status" onchange="this.form.submit()">
+                    <option value="ok" {{ if eq .Status "ok" }}selected{{ end }}>OK</option>
+                    <option value="broken" {{ if eq .Status "broken" }}selected{{ end }}>Zepsute</option>
+                    <option value="hidden" {{ if eq .Status "hidden" }}selected{{ end }}>Ukryte</option>
                   </select>
                 </div>
               </form>

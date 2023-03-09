@@ -30,7 +30,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
         session.Values["username"] = username
 				session.Values["user_id"] = 2
 
-        target = "/admin"
+        target = "/admin/reservations"
     } else if username == "user" {
         // set the user role as user
         session.Values["role"] = "user"
