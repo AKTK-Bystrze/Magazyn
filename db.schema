@@ -1,0 +1,51 @@
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS chairs;
+DROP TABLE IF EXISTS reservations;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT,
+    role TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS chairs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    hourly_rate INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS reservations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chair_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME CHECK ( end_time > start_time ) NOT NULL,
+    status TEXT CHECK ( status IN ('pending', 'approved', 'denied')) NOT NULL DEFAULT 'pending',
+    FOREIGN KEY (chair_id) REFERENCES chairs (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+INSERT INTO chairs (name, description, hourly_rate) VALUES
+('Chair 1', 'A comfortable armchair', 10),
+('Chair 2', 'A stylish recliner', 12),
+('Chair 3', 'A cozy rocking chair', 8),
+('Chair 4', 'A sleek office chair', 15);
+
+INSERT INTO reservations (start_time, end_time, chair_id, user_id, status) VALUES
+('2023-04-01 10:00:00', '2023-04-05 10:00:00', 1, 0, 'approved'),
+('2023-04-01 12:00:00', '2023-04-03 18:00:00', 2, 1, 'approved'),
+('2023-04-03 16:00:00', '2023-04-05 18:00:00', 3, 1, 'approved'),
+('2023-04-04 08:00:00', '2023-04-07 12:00:00', 2, 0, 'approved'),
+('2023-04-05 10:00:00', '2023-04-05 18:00:00', 1, 1, 'approved'),
+('2023-04-07 10:00:00', '2023-04-09 12:00:00', 1, 0, 'approved'),
+('2023-04-08 14:00:00', '2023-04-11 12:00:00', 2, 1, 'approved'),
+('2023-04-10 10:00:00', '2023-04-15 18:00:00', 3, 0, 'approved'),
+('2023-04-12 08:00:00', '2023-04-14 18:00:00', 1, 1, 'approved'),
+('2023-04-13 12:00:00', '2023-04-17 12:00:00', 4, 0, 'approved');
+
+INSERT INTO users (id, username, role) VALUES
+(0, 'user', 'user'),
+(1, 'user1', 'user'),
+(2, 'admin', 'admin');
