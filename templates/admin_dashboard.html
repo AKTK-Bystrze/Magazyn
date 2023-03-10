@@ -1,52 +1,61 @@
+{{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
   </head>
   <body>
-	<nav class="navbar navbar-expand-lg navbar-light bg-light">
-		<div class="container">
-			<a class="navbar-brand" href="#">Magazyn Bystrze</a>
-			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarNav">
-				<ul class="navbar-nav ml-auto">
-					<li class="nav-item">
-						<a class="nav-link" href="/admin/reservations">Rezerwacje</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/admin/items">Sprzet</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/logout">Wyloguj</a>
-					</li>
-				</ul>
-			</div>
-		</div>
-	</nav>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="#">Magazyn Bystrze</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/reservations">Rezerwacje</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/items">Sprzet</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Wyloguj</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
     <div class="container">
-      <h1 class="my-5">Panel Administracyjny</h1>
-      <table class="table">
+      <h2 class="my-3">Panel Administracyjny</h2>
+      <table class="table" id="dataTable">
         <thead>
           <tr>
+						<th>Rezerwacja</th>
             <th>Nazwa</th>
             <th>Wypozyczenie</th>
             <th>Zwrot</th>
             <th>Uzytkownik</th>
             <th>Status</th>
             <th>Zmien Status</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           {{ range .Reservations }}
           <tr>
-            <td>{{ .Name }}</td>
-            <td>{{ .StartTime.Format "2006-01-02 15:04:05" }}</td>
-            <td>{{ .EndTime.Format "2006-01-02 15:04:05" }}</td>
-            <td>{{ .Username }}</td>
+						<td><small>#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</small></td>
+            <td>{{ .Item.Name }}</td>
+            <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
+            <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
+            <td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>
             <td>
               {{ if eq .Status "approved" }}
               <span class="badge badge-success">Potwierdzony</span>
@@ -74,9 +83,16 @@
       </table>
     </div>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<link href="https://cdn.datatables.net/v/bs4/dt-1.13.3/datatables.min.css" rel="stylesheet"/>
+<script src="https://cdn.datatables.net/v/bs4/dt-1.13.3/datatables.min.js"></script>
+
+<script type="text/javascript">
+let table = new DataTable('#dataTable', {
+  language: {
+    url: '//cdn.datatables.net/plug-ins/1.13.3/i18n/pl.json'
+  }
+});
+</script>
 
   </body>
 </html>

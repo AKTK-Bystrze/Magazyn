@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>User Reservations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+    .row {
+      margin-bottom: 10px;
+    }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="#">Magazyn Bystrze</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/reservations">Rezerwacje</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/items">Sprzet</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Wyloguj</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <h1>Rezerwacje uzytkownika</h1>
+
+      <h3>Nadchodze:</h3>
+      {{ if .UpcomingReservations }}
+      {{ range .UpcomingReservations }}
+      <div class="row border rounded mb-3 {{ if .StartTime.Before $.Highlight24h }}bg-warning{{ end }}">
+        <div class="col-md-4 col-lg-3 py-3 px-4">
+          <h4>{{ .Item.Name }}</h4>
+          <p><small>{{ .CreatedAt }}</small></p>
+        </div>
+        <div class="col-md-8 col-lg-9 py-3 px-4">
+          <p>Od {{ .StartTime.Format "02/01/06 15:04" }} do {{ .EndTime.Format "02/01/06 15:04" }}</p>
+          <p>Status: 
+          {{ if eq .Status "approved" }}
+          <span class="badge badge-success">Zaakceptowany</span>
+          {{ else if eq .Status "denied" }}
+          <span class="badge badge-danger">Anulowany</span>
+          {{ else }}
+          <span class="badge badge-warning">Oczekujacy</span>
+          {{ end }}
+          </p>
+        </div>
+      </div>
+      {{ end }}
+      {{ else }}
+      <p>Brak rezerwacji.</p>
+      {{ end }}
+
+      <h3>Historyczne rezerwacje:</h3>
+      {{ if .HistoricalReservations }}
+      {{ range .HistoricalReservations }}
+      <div class="row border rounded mb-3">
+        <div class="col-md-4 col-lg-3 py-3 px-4">
+          <h4>{{ .Item.Name }}</h4>
+          <p><small>{{ .CreatedAt }}</small></p>
+        </div>
+        <div class="col-md-8 col-lg-9 py-3 px-4">
+          <p>Od {{ .StartTime.Format "02/01/06 15:04" }} do {{ .EndTime.Format "02/01/06 15:04" }}</p>
+          <p>Status: 
+          {{ if eq .Status "approved" }}
+          <span class="badge badge-success">Zaakceptowany</span>
+          {{ else if eq .Status "denied" }}
+          <span class="badge badge-danger">Anulowany</span>
+          {{ else }}
+          <span class="badge badge-warning">Oczekujacy</span>
+          {{ end }}
+          </p>
+        </div>
+      </div>
+      {{ end }}
+      {{ else }}
+      <p>Brak rezerwacji.</p>
+      {{ end }}
+    </div>
+  </body>
+</html>
+

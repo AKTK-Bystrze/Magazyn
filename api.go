@@ -11,7 +11,7 @@ const OUT_TIME_FMT = "2006-01-02 15:04:05"
 
 func checkAvailability(start time.Time, end time.Time, itemID int) (bool, error) {
 	// check if the requested reservation period is outside of any existing reservation
-	query := `SELECT count(*) FROM reservations WHERE item_id=? AND end_time > ? AND start_time < ? AND status != 'denied'`
+	query := `SELECT count(*) FROM reservations WHERE r_item_id=? AND r_end_time > ? AND r_start_time < ? AND r_status != 'denied'`
 	row := app.db.QueryRow(query, itemID, start.Format(OUT_TIME_FMT), end.Format(OUT_TIME_FMT))
 	var count int
 	err := row.Scan(&count)
@@ -82,7 +82,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	// get user ID from session
 	userID := session.Values["user_id"].(int)
 
-	stmt, err := app.db.Prepare("INSERT INTO reservations (item_id, user_id, start_time, end_time, status) VALUES (?, ?, ?, ?, ?)")
+	stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return
@@ -108,13 +108,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
-    // create a list of available items
-    type item struct {
-      Id int
-      Name string
-      Desc string
-    }
-    var availableItems []item
+    var availableItems []Item
     var timeFrom time.Time = time.Now()
     var timeTo time.Time = time.Now()
     var err error
@@ -135,12 +129,12 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 
       // search for available items in the database
       rows, err := app.db.Query(`
-          SELECT id, name, description FROM items
-          WHERE id NOT IN (
-              SELECT item_id
+          SELECT i_id, i_name, i_description FROM items
+          WHERE i_id NOT IN (
+              SELECT r_item_id
               FROM reservations
-              WHERE start_time < ? AND end_time > ? AND status != 'denied'
-          ) AND status == 'ok'
+              WHERE r_start_time < ? AND r_end_time > ? AND r_status != 'denied'
+          ) AND i_status == 'ok'
       `, timeTo.Format(OUT_TIME_FMT), timeFrom.Format(OUT_TIME_FMT))
       if err != nil {
           log.Fatal(err)
@@ -148,8 +142,8 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
       defer rows.Close()
 
       for rows.Next() {
-          var tmp item
-          if err := rows.Scan(&tmp.Id, &tmp.Name, &tmp.Desc); err != nil {
+          var tmp Item
+          if err := rows.Scan(&tmp.ID, &tmp.Name, &tmp.Description); err != nil {
               log.Fatal(err)
           }
           availableItems = append(availableItems, tmp)
@@ -162,7 +156,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 
     // render the search results template with the available items list
     err = app.templates.ExecuteTemplate(w, "search.html", struct {
-        AvailableItems []item
+        AvailableItems []Item
         StartTime time.Time
         EndTime time.Time
 				Msg string

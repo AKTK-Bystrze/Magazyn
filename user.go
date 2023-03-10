@@ -1,0 +1,41 @@
+package main
+
+import (
+  "net/http"
+  "log"
+)
+
+func UserDashboard(w http.ResponseWriter, r *http.Request) {
+    // check if the user is logged in
+    session, _ := app.store.Get(r, SESSION_NAME)
+    role := session.Values["role"]
+    if role == nil || role.(string) != "user" {
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+        return
+    }
+
+    // search for reserved items in the db
+    reservations, err := app.getReservations(queryConfigReservation{
+      oneUser:true,
+      userId:session.Values["user_id"].(int),
+      orderDesc:true,
+      })
+    if err != nil {
+        log.Println(err)
+        http.Error(w, "DB Error", http.StatusInternalServerError)
+        return
+    }
+
+    err = app.templates.ExecuteTemplate(w, "user_dashboard.html", struct {
+        Username       string
+        Reservations []Reservation
+    }{
+        Username:       session.Values["username"].(string),
+        Reservations:   reservations,
+    })
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+}
+

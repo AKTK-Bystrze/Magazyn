@@ -7,6 +7,68 @@ import (
     "strconv"
 )
 
+type tmpReservation struct {
+	Reservation
+	Item
+	User
+}
+
+type queryConfigReservation struct {
+	oneUser bool
+	userId int
+	users	bool
+	orderDesc	bool
+}
+
+func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,error) {
+	// Retrieve all reservations from database
+	query := "SELECT r.*, i.i_name, i.i_description "
+	if conf.users {
+		query += ", u.u_username, u.u_id"
+	}
+	query += " FROM reservations r "
+	if conf.users {
+		query += " JOIN users u ON r.r_user_id = u.u_id "
+	}
+	query += " JOIN items i ON r.r_item_id = i.i_id "
+	if conf.oneUser {
+		query += " WHERE r.r_user_id = ? "
+	}
+	query += " ORDER BY r.r_created_at "
+	if conf.orderDesc {
+		query += " DESC "
+	} else {
+		query += " ASC "
+	}
+	//	allow columns without match in structure
+	udb := app.db.Unsafe()
+	rows, err := udb.Queryx(query, conf.userId)
+
+	if err != nil {
+		return nil,err
+	}
+	defer rows.Close()
+
+	var reservations []Reservation
+	for rows.Next() {
+		var r Reservation
+		var t tmpReservation
+		err := rows.StructScan(&t)
+		if err != nil {
+			return nil,err
+		}
+		//	work around sqlx to better handle embedded structures and JOINs
+		r = t.Reservation
+		r.Item = t.Item
+		r.User = t.User
+		reservations = append(reservations, r)
+	}
+	if err = rows.Err(); err != nil {
+		return nil,err
+	}
+	return reservations,nil
+}
+
 func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if user is authenticated as admin
 	session, _ := app.store.Get(r, SESSION_NAME)
@@ -15,32 +77,10 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieve all reservations from database
-	rows, err := app.db.Query(`
-	SELECT r.id, r.start_time, r.end_time, u.username, r.status, c.name
-	FROM reservations r
-	JOIN users u ON r.user_id = u.id
-	JOIN items c ON r.item_id = c.id
-	ORDER BY r.start_time ASC`)
+	reservations, err := app.getReservations(queryConfigReservation{users:true})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	var reservations []Reservation
-	for rows.Next() {
-		var r Reservation
-		err := rows.Scan(&r.ID, &r.StartTime, &r.EndTime, &r.Username, &r.Status, &r.Name)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		reservations = append(reservations, r)
-		log.Println(r)
-	}
-	if err = rows.Err(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -49,16 +89,6 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		reservations,
 	})
-}
-
-// Reservation represents a reservation in the database
-type Reservation struct {
-		Name			string
-    ID        int
-    StartTime time.Time
-    EndTime   time.Time
-    Username  string
-    Status    string
 }
 
 func setStatusHandler(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +109,7 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	status := r.FormValue("status")
 
 	// Update reservation status in database
-	result, err := app.db.Exec(`UPDATE reservations SET status = ? WHERE id = ?`, status, reservationID)
+	result, err := app.db.Exec(`UPDATE reservations SET r_status = ? WHERE r_id = ?`, status, reservationID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -107,20 +137,13 @@ func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
   }
 
   // Get all items from the database
-  rows, err := app.db.Query("SELECT id, name, description, status FROM items")
+  rows, err := app.db.Query("SELECT i_id, i_name, i_description, i_status FROM items")
   if err != nil {
     log.Println(err)
     http.Error(w, "Error querying items", http.StatusInternalServerError)
     return
   }
   defer rows.Close()
-
-  type Item struct {
-    ID          int
-    Name        string
-    Description string
-    Status      string
-  }
 
   // Store items in a slice
   items := make([]Item, 0)
@@ -189,4 +212,74 @@ func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
 
   // redirect to the admin items page
   http.Redirect(w, r, "/admin/items", http.StatusSeeOther)
+}
+
+func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if user is authenticated and an admin
+	session, err := app.store.Get(r, SESSION_NAME)
+
+	if session.Values["role"] != "admin" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	// Get user ID from query string
+	userID, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Query database for user reservations
+	rows, err := app.db.Query(`
+	SELECT r.r_id, i.i_name, r.r_start_time, r.r_end_time, r.r_status, r.r_created_at
+	FROM reservations r
+	INNER JOIN items i ON i.i_id = r.r_item_id
+	WHERE r.r_user_id = ?
+	ORDER BY r.r_start_time
+	`, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Group reservations into upcoming and historical
+	var upcomingReservations []Reservation
+	var historicalReservations []Reservation
+
+	now := time.Now()
+
+	for rows.Next() {
+		var res Reservation
+		err = rows.Scan(&res.ID, &res.Item.Name, &res.StartTime, &res.EndTime, &res.Status, &res.CreatedAt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if res.StartTime.After(now) {
+			// Reservation is upcoming
+			upcomingReservations = append(upcomingReservations, res)
+		} else {
+			// Reservation is historical
+			historicalReservations = append(historicalReservations, res)
+		}
+	}
+
+	if rows.Err() != nil {
+		http.Error(w, rows.Err().Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Render user reservations page
+	err = app.templates.ExecuteTemplate(w, "admin_user.html", map[string]interface{}{
+		"UpcomingReservations": upcomingReservations,
+		"HistoricalReservations":  historicalReservations,
+		"Highlight24h": time.Now().Add(24 * time.Hour),
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
