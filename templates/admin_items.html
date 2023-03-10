@@ -56,7 +56,7 @@
               {{ end }}
             </td>
             <td>
-              <form method="POST" action="/item/status">
+              <form method="POST" action="/admin/item/status">
                 <input type="hidden" name="id" value="{{ .ID }}">
                 <div class="form-group">
                   <select class="form-control" name="status" onchange="this.form.submit()">
