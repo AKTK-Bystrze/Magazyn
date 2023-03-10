@@ -6,14 +6,7 @@ import (
 )
 
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
-    // check if the user is logged in
     session, _ := app.store.Get(r, SESSION_NAME)
-    role := session.Values["role"]
-    if role == nil || role.(string) != "user" {
-        http.Redirect(w, r, "/", http.StatusSeeOther)
-        return
-    }
-
     // search for reserved items in the db
     reservations, err := app.getReservations(queryConfigReservation{
       oneUser:true,

@@ -7,38 +7,8 @@ import (
   "strconv"
 )
 
-const OUT_TIME_FMT = "2006-01-02 15:04:05"
-
-func checkAvailability(start time.Time, end time.Time, itemID int) (bool, error) {
-	// check if the requested reservation period is outside of any existing reservation
-	query := `SELECT count(*) FROM reservations WHERE r_item_id=? AND r_end_time > ? AND r_start_time < ? AND r_status != 'denied'`
-	row := app.db.QueryRow(query, itemID, start.Format(OUT_TIME_FMT), end.Format(OUT_TIME_FMT))
-	var count int
-	err := row.Scan(&count)
-	if err != nil {
-    log.Println(err)
-		return false, err
-	}
-	if count > 0 {
-		return false, nil
-	}
-	return true, nil
-}
-
 func ReserveItem(w http.ResponseWriter, r *http.Request) {
-	// get session
-	session, err := app.store.Get(r, SESSION_NAME)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// check if user is logged in
-	if session.Values["user_id"] == nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
-		return
-	}
-
+	session, _ := app.store.Get(r, SESSION_NAME)
 	// get parameters
 	itemID, err := strconv.Atoi(r.FormValue("item_id"))
 	if err != nil {
@@ -58,6 +28,8 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+  //  admins can make reservation in the past
+  //  TODO: currently only for themselves
 	if startTime.Before(time.Now()) && session.Values["role"] != "admin" {
 		msg := "Data wypozyczenia musi byc w przyszlosci"
     SearchItems(w, r, msg)
@@ -72,7 +44,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if item is available for the given time period
-	ret, err := checkAvailability(startTime, endTime, itemID)
+	ret, err := app.checkAvailability(startTime, endTime, itemID)
 	if err != nil || !ret {
 		msg := "Przedmiot nie jest juz dostepny w tym terminie"
     SearchItems(w, r, msg)
@@ -101,13 +73,6 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
-    // check if the user is logged in
-    session, _ := app.store.Get(r, SESSION_NAME)
-    role := session.Values["role"]
-    if role == nil {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
-        return
-    }
     var availableItems []Item
     var timeFrom time.Time = time.Now()
     var timeTo time.Time = time.Now()
@@ -127,31 +92,17 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
           return
       }
 
-      // search for available items in the database
-      rows, err := app.db.Query(`
-          SELECT i_id, i_name, i_description FROM items
-          WHERE i_id NOT IN (
-              SELECT r_item_id
-              FROM reservations
-              WHERE r_start_time < ? AND r_end_time > ? AND r_status != 'denied'
-          ) AND i_status == 'ok'
-      `, timeTo.Format(OUT_TIME_FMT), timeFrom.Format(OUT_TIME_FMT))
+      availableItems,err = app.getItems(queryConfigItems{
+        available:true,
+        startTime:timeFrom,
+        endTime:timeTo,
+      })
+
       if err != nil {
-          log.Fatal(err)
+        log.Println(err.Error())
+        http.Error(w, "DB Error", http.StatusInternalServerError)
+        return
       }
-      defer rows.Close()
-
-      for rows.Next() {
-          var tmp Item
-          if err := rows.Scan(&tmp.ID, &tmp.Name, &tmp.Description); err != nil {
-              log.Fatal(err)
-          }
-          availableItems = append(availableItems, tmp)
-      }
-      if err := rows.Err(); err != nil {
-          log.Fatal(err)
-      }
-
     }
 
     // render the search results template with the available items list

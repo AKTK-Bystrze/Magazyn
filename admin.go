@@ -7,76 +7,17 @@ import (
     "strconv"
 )
 
-type tmpReservation struct {
-	Reservation
-	Item
-	User
-}
-
-type queryConfigReservation struct {
-	oneUser bool
-	userId int
-	users	bool
-	orderDesc	bool
-}
-
-func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,error) {
-	// Retrieve all reservations from database
-	query := "SELECT r.*, i.i_name, i.i_description "
-	if conf.users {
-		query += ", u.u_username, u.u_id"
-	}
-	query += " FROM reservations r "
-	if conf.users {
-		query += " JOIN users u ON r.r_user_id = u.u_id "
-	}
-	query += " JOIN items i ON r.r_item_id = i.i_id "
-	if conf.oneUser {
-		query += " WHERE r.r_user_id = ? "
-	}
-	query += " ORDER BY r.r_created_at "
-	if conf.orderDesc {
-		query += " DESC "
-	} else {
-		query += " ASC "
-	}
-	//	allow columns without match in structure
-	udb := app.db.Unsafe()
-	rows, err := udb.Queryx(query, conf.userId)
-
-	if err != nil {
-		return nil,err
-	}
-	defer rows.Close()
-
-	var reservations []Reservation
-	for rows.Next() {
-		var r Reservation
-		var t tmpReservation
-		err := rows.StructScan(&t)
-		if err != nil {
-			return nil,err
-		}
-		//	work around sqlx to better handle embedded structures and JOINs
-		r = t.Reservation
-		r.Item = t.Item
-		r.User = t.User
-		reservations = append(reservations, r)
-	}
-	if err = rows.Err(); err != nil {
-		return nil,err
-	}
-	return reservations,nil
+func (app AppState) adminCheck(w http.ResponseWriter, r *http.Request) (bool) {
+	// Check if user is authenticated as admin
+	session, _ := app.store.Get(r, SESSION_NAME)
+  if session.Values["role"] == "admin" {
+    return true
+  }
+  http.Redirect(w, r, "/", http.StatusFound)
+  return false
 }
 
 func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
-	// Check if user is authenticated as admin
-	session, _ := app.store.Get(r, SESSION_NAME)
-  if session.Values["role"] != "admin" {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-
 	reservations, err := app.getReservations(queryConfigReservation{users:true})
 	if err != nil {
 		log.Println(err.Error())
@@ -92,14 +33,6 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setStatusHandler(w http.ResponseWriter, r *http.Request) {
-	// Get session
-	session, _ := app.store.Get(r, SESSION_NAME)
-	// Check if user is authenticated and has admin role
-	if session.Values["role"] != "admin" {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-
 	// Parse form data
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -129,36 +62,12 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
-  session, _ := app.store.Get(r, SESSION_NAME)
-
-  if session.Values["role"] != "admin" {
-    http.Redirect(w, r, "/login", http.StatusSeeOther)
-    return
-  }
-
-  // Get all items from the database
-  rows, err := app.db.Query("SELECT i_id, i_name, i_description, i_status FROM items")
-  if err != nil {
-    log.Println(err)
-    http.Error(w, "Error querying items", http.StatusInternalServerError)
-    return
-  }
-  defer rows.Close()
-
-  // Store items in a slice
-  items := make([]Item, 0)
-  for rows.Next() {
-    var item Item
-    if err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Status); err != nil {
-      http.Error(w, "Error scanning items", http.StatusInternalServerError)
-      return
-    }
-    items = append(items, item)
-  }
-  if err := rows.Err(); err != nil {
-    http.Error(w, "Error iterating items", http.StatusInternalServerError)
-    return
-  }
+  items,err := app.getItems(queryConfigItems{})
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
 
   if err := app.templates.ExecuteTemplate(w, "admin_items.html", struct {Items[] Item}{Items: items}); err != nil {
     http.Error(w, "Error executing template", http.StatusInternalServerError)
@@ -167,14 +76,6 @@ func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
-  session, _ := app.store.Get(r, SESSION_NAME)
-
-  // check if the user is logged in and is an admin
-  if session.Values["role"] != "admin" {
-    http.Redirect(w, r, "/", http.StatusSeeOther)
-    return
-  }
-
   // check if it's a POST request
   if r.Method != http.MethodPost {
     http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -214,50 +115,14 @@ func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
   http.Redirect(w, r, "/admin/items", http.StatusSeeOther)
 }
 
-func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
-	// Check if user is authenticated and an admin
-	session, err := app.store.Get(r, SESSION_NAME)
-
-	if session.Values["role"] != "admin" {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	// Get user ID from query string
-	userID, err := strconv.Atoi(r.URL.Query().Get("id"))
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	// Query database for user reservations
-	rows, err := app.db.Query(`
-	SELECT r.r_id, i.i_name, r.r_start_time, r.r_end_time, r.r_status, r.r_created_at
-	FROM reservations r
-	INNER JOIN items i ON i.i_id = r.r_item_id
-	WHERE r.r_user_id = ?
-	ORDER BY r.r_start_time
-	`, userID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
+func pastFutureReservations(reservations []Reservation) ([]Reservation,[]Reservation) {
 	// Group reservations into upcoming and historical
 	var upcomingReservations []Reservation
 	var historicalReservations []Reservation
 
 	now := time.Now()
 
-	for rows.Next() {
-		var res Reservation
-		err = rows.Scan(&res.ID, &res.Item.Name, &res.StartTime, &res.EndTime, &res.Status, &res.CreatedAt)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
+  for _, res := range reservations {
 		if res.StartTime.After(now) {
 			// Reservation is upcoming
 			upcomingReservations = append(upcomingReservations, res)
@@ -266,11 +131,29 @@ func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 			historicalReservations = append(historicalReservations, res)
 		}
 	}
+  return upcomingReservations,historicalReservations
+}
 
-	if rows.Err() != nil {
-		http.Error(w, rows.Err().Error(), http.StatusInternalServerError)
+func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from query string
+	userID, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
+
+	reservations,err := app.getReservations(queryConfigReservation{
+    oneUser:true,
+    userId:userID,
+    orderByStart:true,
+  })
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+
+  upcomingReservations, historicalReservations := pastFutureReservations(reservations)
 
 	// Render user reservations page
 	err = app.templates.ExecuteTemplate(w, "admin_user.html", map[string]interface{}{

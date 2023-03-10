@@ -20,10 +20,6 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 	SearchItems(w, r, "")
 }
 
-func ReserveHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	err := app.templates.ExecuteTemplate(w, tmpl, data)
 	if err != nil {
@@ -32,6 +28,33 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 }
 
 var app AppState
+
+func loggingMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    //  TODO: improve logging
+    log.Println(r.RequestURI)
+    next.ServeHTTP(w, r)
+  })
+}
+
+func adminHandler(h http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    if app.adminCheck(w, r) {
+      h.ServeHTTP(w, r)
+    }
+  })
+}
+
+func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+  return func(w http.ResponseWriter, r *http.Request) {
+    if app.checkLoggedIn(w, r) {
+      h(w, r)
+    }
+  }
+}
+
+func SearchHandler2(w http.ResponseWriter, r *http.Request) {	
+}
 
 func main() {
     if len(os.Args) != 3 {
@@ -63,18 +86,28 @@ func main() {
 		app.store = sessions.NewCookieStore([]byte("secret-key"))
 
     log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+  
+    //  log all requests
+    router.Use(loggingMiddleware)
 
+    adminRouter := router.PathPrefix("/admin/").Subrouter()
+    //  everybody
     router.HandleFunc("/", Login).Methods("GET", "POST")
     router.HandleFunc("/login", Login).Methods("GET", "POST")
-    router.HandleFunc("/dashboard", UserDashboard).Methods("GET", "POST")
-    router.HandleFunc("/search", SearchHandler).Methods("GET")
-    router.HandleFunc("/logout", Logout).Methods("GET")
-    router.HandleFunc("/reserve", ReserveItem).Methods("POST")
-    router.HandleFunc("/admin/reservations", adminDashboardHandler).Methods("GET")
-    router.HandleFunc("/setStatus", setStatusHandler).Methods("POST")
-    router.HandleFunc("/admin/items", adminItemsHandler).Methods("GET")
-    router.HandleFunc("/item/status", adminItemStatusHandler).Methods("POST")
-    router.HandleFunc("/admin/user/show", AdminShowUserHandler).Methods("GET")
+    router.HandleFunc("/dashboard", loggedUserHandler(UserDashboard)).Methods("GET", "POST")
+    router.HandleFunc("/search", loggedUserHandler(SearchHandler)).Methods("GET")
+    router.HandleFunc("/logout", loggedUserHandler(Logout)).Methods("GET")
+    router.HandleFunc("/reserve", loggedUserHandler(ReserveItem)).Methods("POST")
+
+    //  enforce users with admin role
+    adminRouter.Use(adminHandler)
+    //  admin
+    adminRouter.HandleFunc("/reservations", adminDashboardHandler).Methods("GET")
+    adminRouter.HandleFunc("/setStatus", setStatusHandler).Methods("POST")
+    adminRouter.HandleFunc("/items", adminItemsHandler).Methods("GET")
+    adminRouter.HandleFunc("/item/status", adminItemStatusHandler).Methods("POST")
+    adminRouter.HandleFunc("/user/show", AdminShowUserHandler).Methods("GET")
+
     log.Printf("Server starting on %s...\n", addr)
     log.Fatal(http.ListenAndServe(addr, router))
 }

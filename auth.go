@@ -4,7 +4,19 @@ import (
     "net/http"
 )
 
+func (app AppState) checkLoggedIn(w http.ResponseWriter, r *http.Request) (bool) {
+  // check if the user is logged in
+  session, _ := app.store.Get(r, SESSION_NAME)
+  role := session.Values["role"]
+  if role == nil || role.(string) != "user" {
+    http.Redirect(w, r, "/", http.StatusSeeOther)
+    return false
+  }
+  return true
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
+    //  TODO: check if user is logged in
     // display the login form
     if r.Method == "GET" {
         err := app.templates.ExecuteTemplate(w, "login.html", nil)
