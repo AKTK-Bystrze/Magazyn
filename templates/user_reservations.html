@@ -1,0 +1,88 @@
+{{ define "user_reservations" }}
+{{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
+      {{ if .Reservations }}
+      <table class="table" id="{{ .TableId }}">
+        <thead>
+          <tr>
+						<th>Rezerwacja</th>
+            <th>Nazwa</th>
+            <th>Wypozyczenie</th>
+            <th>Zwrot</th>
+            {{ if .User }}<th>Uzytkownik</th>{{ end }}
+            <th>Status</th>
+            {{ if .ChangeStatus }}<th>Zmien Status</th>{{ end }}
+            {{ if .ChangeRentalStatus }}<th>Nastepny Krok</th>{{ end }}
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Reservations }}
+          <tr>
+						<td><small><a href="/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</a></small></td>
+            <td>{{ .Item.Name }}</td>
+            <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
+            <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
+            {{ if $.User }}<td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
+            <td>
+              {{ if eq .Status "approved" }}
+              <span class="badge badge-success">Potwierdzony</span>
+              {{ else if eq .Status "pending" }}
+              <span class="badge badge-danger">Oczekujacy</span>
+              {{ else if eq .Status "denied" }}
+              <span class="badge badge-secondary">Anulowany</span>
+              {{ else if eq .Status "rented" }}
+              <span class="badge badge-primary">Wypozyczony</span>
+              {{ else if eq .Status "returned" }}
+              <span class="badge badge-success">Zwrocony</span>
+              {{ end }}
+            </td>
+            {{ if $.ChangeStatus }}
+            <td>
+              {{ if .StartTime.After Now }}
+              <form method="POST" action="/admin/setStatus">
+                <input type="hidden" name="reservation_id" value="{{ .ID }}">
+                <div class="form-group">
+                  <select class="form-control" name="status" onchange="this.form.submit()" autocomplete=off>
+                    <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
+                    <option value="approved" {{ if eq .Status "approved" }}selected{{ end }}>Potwierdzony</option>
+                    <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
+                    <option value="rented" {{ if eq .Status "rented" }}selected{{ end }}>Wypozyczony</option>
+                    <option value="returned" {{ if eq .Status "returned" }}selected{{ end }}>Zwrocony</option>
+                  </select>
+                </div>
+              </form>
+              {{ end }}
+            </td>
+            {{ end }}
+            {{ if $.ChangeRentalStatus }}
+            {{ if and (or (eq .Status "approved") (eq .Status "rented")) (.StartTime.After Now) }}
+            <td>
+              <form method="POST" action="/admin/setStatus">
+                <input type="hidden" name="reservation_id" value="{{ .ID }}">
+                <input type="hidden" name="user_id" value="{{ .User.ID }}">
+                {{ if (eq .Status "approved") }}
+                <input type="hidden" name="status" value="rented">
+                <button type="submit" class="btn btn-primary">Wydaj sprzet</button>
+                {{ else }}
+                <input type="hidden" name="status" value="returned">
+                <button type="submit" class="btn btn-primary">Przyjmij zwrot</button>
+                {{ end }}
+              </form>
+            </td>
+          {{ else }}<td></td>{{ end }}
+          {{ end }}
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+      <script type="text/javascript">
+        new DataTable('#{{ .TableId }}', {
+          order: [[2, 'asc']],
+          language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.3/i18n/pl.json'
+          }
+        });
+      </script>
+      {{ else }}
+      <p>Brak rezerwacji.</p>
+      {{ end }}
+{{ end }}

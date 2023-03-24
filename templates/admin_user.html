@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>User Reservations</title>
+    <title>Rezerwacje uzytkownika</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
@@ -9,64 +9,40 @@
       margin-bottom: 10px;
     }
     </style>
+		{{ template "jq_head" }}
+
+		{{ template "DataTable_head" }}
+
   </head>
   <body>
     {{ template "admin_navbar" }}
     <div class="container">
-      <h1>Rezerwacje uzytkownika</h1>
+      <h1>Rezerwacje {{ .Username }}</h1>
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="next24-tab" data-toggle="tab" href="#next24" role="tab" aria-controls="next24" aria-selected="true">Nastepne 24 godziny</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="upcoming-tab" data-toggle="tab" href="#upcoming" role="tab" aria-controls="upcoming" aria-selected="false">Nadchodzace</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="historical-tab" data-toggle="tab" href="#historical" role="tab" aria-controls="historical" aria-selected="false">Historyczne</a>
+        </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="next24" role="tabpanel" aria-labelledby="next24-tab">
+					{{ template "user_reservations" dict "Reservations" .Next24HReservations "TableId" "DataTable-next24h" "ChangeStatus" true "User" false "ChangeRentalStatus" true}}
+        </div>
 
-      <h3>Nadchodze:</h3>
-      {{ if .UpcomingReservations }}
-      {{ range .UpcomingReservations }}
-      <div class="row border rounded mb-3 {{ if .StartTime.Before $.Highlight24h }}bg-warning{{ end }}">
-        <div class="col-md-4 col-lg-3 py-3 px-4">
-          <h4>{{ .Item.Name }}</h4>
-          <p><small>{{ .CreatedAt }}</small></p>
+        <div class="tab-pane fade" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
+					{{ template "user_reservations" dict "Reservations" .UpcomingReservations "TableId" "DataTable-upcoming" "ChangeStatus" true "User" false}}
         </div>
-        <div class="col-md-8 col-lg-9 py-3 px-4">
-          <p>Od {{ .StartTime.Format "02/01/06 15:04" }} do {{ .EndTime.Format "02/01/06 15:04" }}</p>
-          <p>Status: 
-          {{ if eq .Status "approved" }}
-          <span class="badge badge-success">Zaakceptowany</span>
-          {{ else if eq .Status "denied" }}
-          <span class="badge badge-danger">Anulowany</span>
-          {{ else }}
-          <span class="badge badge-warning">Oczekujacy</span>
-          {{ end }}
-          </p>
-        </div>
-      </div>
-      {{ end }}
-      {{ else }}
-      <p>Brak rezerwacji.</p>
-      {{ end }}
 
-      <h3>Historyczne rezerwacje:</h3>
-      {{ if .HistoricalReservations }}
-      {{ range .HistoricalReservations }}
-      <div class="row border rounded mb-3">
-        <div class="col-md-4 col-lg-3 py-3 px-4">
-          <h4>{{ .Item.Name }}</h4>
-          <p><small>{{ .CreatedAt }}</small></p>
+        <div class="tab-pane fade" id="historical" role="tabpanel" aria-labelledby="historical-tab">
+					{{ template "user_reservations" dict "Reservations" .HistoricalReservations "TableId" "DataTable-history" "ChangeStatus" false "User" false}}
         </div>
-        <div class="col-md-8 col-lg-9 py-3 px-4">
-          <p>Od {{ .StartTime.Format "02/01/06 15:04" }} do {{ .EndTime.Format "02/01/06 15:04" }}</p>
-          <p>Status: 
-          {{ if eq .Status "approved" }}
-          <span class="badge badge-success">Zaakceptowany</span>
-          {{ else if eq .Status "denied" }}
-          <span class="badge badge-danger">Anulowany</span>
-          {{ else }}
-          <span class="badge badge-warning">Oczekujacy</span>
-          {{ end }}
-          </p>
-        </div>
-      </div>
-      {{ end }}
-      {{ else }}
-      <p>Brak rezerwacji.</p>
-      {{ end }}
-    </div>
+
+		</div>
+
   </body>
 </html>
-

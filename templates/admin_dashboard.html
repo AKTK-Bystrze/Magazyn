@@ -4,75 +4,21 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Dashboard</title>
+    <title>Panel Administracyjny</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+		{{ template "jq_head" }}
+
+		{{ template "DataTable_head" }}
 
   </head>
   <body>
     {{ template "admin_navbar" }}
     <div class="container">
       <h2 class="my-3">Panel Administracyjny</h2>
-      <table class="table" id="dataTable">
-        <thead>
-          <tr>
-						<th>Rezerwacja</th>
-            <th>Nazwa</th>
-            <th>Wypozyczenie</th>
-            <th>Zwrot</th>
-            <th>Uzytkownik</th>
-            <th>Status</th>
-            <th>Zmien Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{ range .Reservations }}
-          <tr>
-						<td><small>#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</small></td>
-            <td>{{ .Item.Name }}</td>
-            <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
-            <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
-            <td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>
-            <td>
-              {{ if eq .Status "approved" }}
-              <span class="badge badge-success">Potwierdzony</span>
-              {{ else if eq .Status "pending" }}
-              <span class="badge badge-danger">Oczekujacy</span>
-              {{ else if eq .Status "denied" }}
-              <span class="badge badge-secondary">Anulowany</span>
-              {{ end }}
-            </td>
-            <td>
-              <form method="POST" action="/admin/setStatus">
-                <input type="hidden" name="reservation_id" value="{{ .ID }}">
-                <div class="form-group">
-                  <select class="form-control" name="status" onchange="this.form.submit()" autocomplete=off>
-                    <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
-                    <option value="approved" {{ if eq .Status "approved" }}selected{{ end }}>Potwierdzony</option>
-                    <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
-                  </select>
-                </div>
-              </form>
-            </td>
-          </tr>
-          {{ end }}
-        </tbody>
-      </table>
+			{{ template "user_reservations" dict "Reservations" .Reservations "TableId" "DataTable-reservations" "ChangeStatus" true "User" true "ChangeRentalStatus" true }}
     </div>
 
-<link href="https://cdn.datatables.net/v/bs4/dt-1.13.3/datatables.min.css" rel="stylesheet"/>
-<script src="https://cdn.datatables.net/v/bs4/dt-1.13.3/datatables.min.js"></script>
-
-<script type="text/javascript">
-let table = new DataTable('#dataTable', {
-  language: {
-    url: '//cdn.datatables.net/plug-ins/1.13.3/i18n/pl.json'
-  }
-});
-</script>
 
   </body>
 </html>

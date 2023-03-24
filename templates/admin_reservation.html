@@ -1,0 +1,60 @@
+{{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Szczegoly rezerwacji</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+		{{ template "jq_head" }}
+
+		{{ template "DataTable_head" }}
+
+	</head>
+	<body>
+		{{ template "admin_navbar" }}
+		<div class="container">
+
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4>Rezerwacja #{{ .Reservation.ID }}</h4>
+        </div>
+        <div class="card-body">
+          <p><strong>Przedmiot:</strong> {{ .Reservation.Item.Name }} ({{ .Reservation.Item.Type }})</p>
+          <p><strong>Opis:</strong> {{ .Reservation.Item.Description }}</p>
+          <p><strong>Status:</strong> {{ .Reservation.Status }}</p>
+          <p><strong>Czas rozpoczecia:</strong> {{ .Reservation.StartTime.Format $DATE_FORMAT_OUT }}</p>
+          <p><strong>Czas zakonczenia:</strong> {{ .Reservation.EndTime.Format $DATE_FORMAT_OUT }}</p>
+          <p><strong>Utworzona:</strong> {{ .Reservation.CreatedAt.Format $DATE_FORMAT_OUT }}</p>
+				</div>
+			</div>
+
+			<h3>Historia zmian</h3>
+			{{ if .ReservationHistory }}
+			<table class="table" id="DataTable-history">
+				<thead>
+					<tr>
+						<th>Uzytkownik</th>
+						<th>Status</th>
+						<th>Data</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{ range .ReservationHistory }}
+					<tr>
+						<td>{{ .User.Name }}</td>
+						<td>{{ .Status }}</td>
+						<td>{{ .ChangeDate.Format $DATE_FORMAT_OUT }}</td>
+					</tr>
+					{{ end }}
+				</tbody>
+			</table>
+			{{ else }}
+			<p>Brak historii zmian dla tej rezerwacji.</p>
+			{{ end }}
+
+		</div>
+
+	</body>
+</html>

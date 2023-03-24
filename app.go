@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
 		"time"
     "log"
 )
@@ -19,6 +20,10 @@ type queryConfigReservation struct {
 	users	bool
   orderByStart bool
 	orderDesc	bool
+}
+
+func (app AppState) Err(format string, a...interface{}) {
+  log.Output(2, fmt.Sprintf("ERR:\t" + format, a...))
 }
 
 func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,error) {
@@ -50,6 +55,7 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 	rows, err := udb.Queryx(query, conf.userId)
 
 	if err != nil {
+		app.Err(err.Error())
 		return nil,err
 	}
 	defer rows.Close()
@@ -129,3 +135,14 @@ func (app AppState) checkAvailability(start time.Time, end time.Time, itemID int
 	return true, nil
 }
 
+func (app AppState) getUsername(id int) (string, error) {
+	query := `SELECT u_username FROM users WHERE u_id = ?`
+	row := app.db.QueryRow(query, id)
+	var uname string
+	err := row.Scan(&uname)
+	if err != nil {
+    log.Println(err)
+		return "", err
+	}
+	return uname,nil
+}

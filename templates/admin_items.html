@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dostepny sprzet</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+		{{ template "jq_head" }}
+
   </head>
   <body>
     {{ template "admin_navbar" }}
@@ -17,7 +20,6 @@
             <th>Nazwa</th>
             <th>Opis</th>
             <th>Status</th>
-            <th>Zmien Status</th>
           </tr>
         </thead>
         <tbody>
@@ -27,19 +29,14 @@
             <td>{{ .Name }}</td>
             <td>{{ .Description }}</td>
             <td>
-              {{ if eq .Status "ok" }}
-              <span class="badge badge-success">OK</span>
-              {{ else if eq .Status "broken" }}
-              <span class="badge badge-danger">Zepsute</span>
-              {{ else if eq .Status "hidden" }}
-              <span class="badge badge-secondary">Ukryte</span>
-              {{ end }}
-            </td>
-            <td>
               <form method="POST" action="/admin/item/status">
                 <input type="hidden" name="id" value="{{ .ID }}">
                 <div class="form-group">
-                  <select class="form-control" name="status" onchange="this.form.submit()">
+									{{ $class := "badge badge-secondary" }}
+									{{ if eq .Status "ok" }}{{ $class = "badge badge-success" }}{{ end }}
+									{{ if eq .Status "broken" }}{{ $class = "badge badge-danger" }}{{ end }}
+									{{ if eq .Status "hidden" }}{{ $class = "badge badge-secondary" }}{{ end }}
+                  <select class="form-control {{ $class }}" name="status" onchange="this.form.submit()">
                     <option value="ok" {{ if eq .Status "ok" }}selected{{ end }}>OK</option>
                     <option value="broken" {{ if eq .Status "broken" }}selected{{ end }}>Zepsute</option>
                     <option value="hidden" {{ if eq .Status "hidden" }}selected{{ end }}>Ukryte</option>
@@ -52,9 +49,6 @@
         </tbody>
       </table>
     </div>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
   </body>
 </html>
 
