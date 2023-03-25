@@ -10,7 +10,7 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
     // search for reserved items in the db
     reservations, err := app.getReservations(queryConfigReservation{
       oneUser:true,
-      userId:session.Values["user_id"].(int),
+      selectionId:int(session.Values["user_id"].(int64)),
       orderDesc:true,
       })
     if err != nil {

@@ -3,7 +3,6 @@ package main
 import (
   "net/http"
   "time"
-  "log"
   "strconv"
 )
 
@@ -56,7 +55,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
-		log.Println(err)
+		app.Err(err.Error())
 		return
 	}
 	defer stmt.Close()
@@ -64,16 +63,17 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	status := "pending"
 	_, err = stmt.Exec(itemID, userID, userID, startTime.Format(OUT_TIME_FMT), endTime.Format(OUT_TIME_FMT), status)
 	if err != nil {
-		log.Println(err)
+		app.Err(err.Error())
 		return
 	}
 
+	//	TODO: consider redirect here !
 	msg := "Zarezerwowano"
   SearchItems(w, r, msg)
 }
 
 func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
-    var availableItems []Item
+    var availableItems []tmpItem
     var timeFrom time.Time = time.Now()
     var timeTo time.Time = time.Now()
     var err error
@@ -99,7 +99,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
       })
 
       if err != nil {
-        log.Println(err.Error())
+        app.Err(err.Error())
         http.Error(w, "DB Error", http.StatusInternalServerError)
         return
       }
@@ -107,7 +107,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 
     // render the search results template with the available items list
     err = app.templates.ExecuteTemplate(w, "search.html", struct {
-        AvailableItems []Item
+        AvailableItems []tmpItem
         StartTime time.Time
         EndTime time.Time
 				Msg string
@@ -118,7 +118,8 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 				Msg: msg,
     })
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+				app.Err(err.Error())
+        http.Error(w, "Template error", http.StatusInternalServerError)
         return
     }
 }

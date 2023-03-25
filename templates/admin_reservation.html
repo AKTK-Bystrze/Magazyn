@@ -15,18 +15,42 @@
 	<body>
 		{{ template "admin_navbar" }}
 		<div class="container">
-
+			<h2 class="my-3">Rezerwacja #{{ .Reservation.ID }}</h2>
       <div class="card mb-3">
-        <div class="card-header">
-          <h4>Rezerwacja #{{ .Reservation.ID }}</h4>
-        </div>
-        <div class="card-body">
-          <p><strong>Przedmiot:</strong> {{ .Reservation.Item.Name }} ({{ .Reservation.Item.Type }})</p>
-          <p><strong>Opis:</strong> {{ .Reservation.Item.Description }}</p>
-          <p><strong>Status:</strong> {{ .Reservation.Status }}</p>
-          <p><strong>Czas rozpoczecia:</strong> {{ .Reservation.StartTime.Format $DATE_FORMAT_OUT }}</p>
-          <p><strong>Czas zakonczenia:</strong> {{ .Reservation.EndTime.Format $DATE_FORMAT_OUT }}</p>
-          <p><strong>Utworzona:</strong> {{ .Reservation.CreatedAt.Format $DATE_FORMAT_OUT }}</p>
+				<div class="card mb-3">
+					<div class="card-header">
+						<h4>{{ .Reservation.Item.Name }} ({{ .Reservation.Item.Type }})</h4>
+					</div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-sm-4 col-lg-2"><strong>Przedmiot:</strong></div>
+							<div class="col-sm-8 col-lg-10"><a href="/admin/item/show?id={{ .Reservation.Item.ID }}">{{ .Reservation.Item.Name }} ({{ .Reservation.Item.Type }})</a></div>
+						</div>
+						<div class="row">
+							<div class="col-sm-4 col-lg-2"><strong>Opis:</strong></div>
+							<div class="col-sm-8 col-lg-10">{{ .Reservation.Item.Description }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-4 col-lg-2"><strong>Status:</strong></div>
+							<div class="col-sm-8 col-lg-10">
+								<div class="d-flex align-items-center">
+									{{ template "reservationStatus" .Reservation }}
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-4 col-lg-2"><strong>Rozpoczecie:</strong></div>
+							<div class="col-sm-8 col-lg-10">{{ .Reservation.StartTime.Format $DATE_FORMAT_OUT }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-4 col-lg-2"><strong>Zakonczenie:</strong></div>
+							<div class="col-sm-8 col-lg-10">{{ .Reservation.EndTime.Format $DATE_FORMAT_OUT }}</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-4 col-lg-2"><strong>Utworzona:</strong></div>
+							<div class="col-sm-8 col-lg-10">{{ .Reservation.CreatedAt.Format $DATE_FORMAT_OUT }}</div>
+						</div>
+					</div>
 				</div>
 			</div>
 

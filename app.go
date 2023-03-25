@@ -4,6 +4,7 @@ import (
     "fmt"
 		"time"
     "log"
+    "database/sql"
 )
 
 const OUT_TIME_FMT = "2006-01-02 15:04:05"
@@ -16,7 +17,8 @@ type tmpReservation struct {
 
 type queryConfigReservation struct {
 	oneUser bool
-	userId int
+	oneItem bool
+	selectionId int
 	users	bool
   orderByStart bool
 	orderDesc	bool
@@ -28,7 +30,7 @@ func (app AppState) Err(format string, a...interface{}) {
 
 func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,error) {
 	// Retrieve all reservations from database
-	query := "SELECT r.*, i.i_name, i.i_description "
+	query := "SELECT r.*, i.i_id, i.i_name, i.i_description "
 	if conf.users {
 		query += ", u.u_username, u.u_id"
 	}
@@ -39,7 +41,9 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 	query += " JOIN items i ON r.r_item_id = i.i_id "
 	if conf.oneUser {
 		query += " WHERE r.r_user_id = ? "
-	}
+	} else if conf.oneItem {
+		query += " WHERE i.i_id = ? "
+  }
   if conf.orderByStart {
     query += " ORDER BY r.r_start_time "
   } else {
@@ -52,7 +56,7 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 	}
 	//	allow columns without match in structure
 	udb := app.db.Unsafe()
-	rows, err := udb.Queryx(query, conf.userId)
+	rows, err := udb.Queryx(query, conf.selectionId)
 
 	if err != nil {
 		app.Err(err.Error())
@@ -82,13 +86,42 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 
 type queryConfigItems struct {
   available bool
+  withCurReservation bool
   startTime time.Time
   endTime time.Time
 }
 
-func (app AppState) getItems(conf queryConfigItems) ([]Item,error) {
+type tmpItem2 struct {
+  ID  sql.NullInt64   `db:"r_id"`
+  StartTime sql.NullTime   `db:"r_start_time"`
+  EndTime sql.NullTime   `db:"r_end_time"`
+  Status sql.NullString `db:"r_status"`
+  Username sql.NullString `db:"u_username"`
+  UserID sql.NullInt64 `db:"u_id"`
+  Item
+}
+
+type tmpItem struct {
+  Item
+  CurrentReservation struct {
+    Valid bool
+    Reservation
+  }
+}
+
+
+func (app AppState) getItems(conf queryConfigItems) ([]tmpItem,error) {
   // Get all items from the database
-  query := "SELECT i_id, i_name, i_description, i_status FROM items"
+  query := "SELECT i_id, i_name, i_description, i_status "
+  if conf.withCurReservation {
+    query += ", r.r_id, r.r_status, u.u_username, u.u_id, r.r_start_time, r.r_end_time "
+    //query += ", r.r_id, COALESCE(r.r_start_time, datetime('now')) AS r_start_time, COALESCE(r.r_end_time, datetime('now')) AS r_end_time, COALESCE(r.r_status, '') AS r_status, COALESCE(u.u_username, '') AS u_username "
+  }
+  query += " FROM items i "
+  if conf.withCurReservation {
+    query += ` LEFT JOIN reservations r ON i.i_id = r.r_item_id AND r.r_start_time <= datetime('now') AND r.r_end_time >= datetime('now') 
+    LEFT JOIN users u ON r.r_user_id = u.u_id  `
+  }
   if conf.available {
     query += ` WHERE i_id NOT IN (
       SELECT r_item_id
@@ -105,13 +138,26 @@ func (app AppState) getItems(conf queryConfigItems) ([]Item,error) {
   defer rows.Close()
 
   // Store items in a slice
-  items := make([]Item, 0)
+  items := make([]tmpItem, 0)
   for rows.Next() {
-    var item Item
-    if err := rows.StructScan(&item); err != nil {
+    var tmp tmpItem2 
+    if err := rows.StructScan(&tmp); err != nil {
       return nil,err
     }
-    items = append(items, item)
+    
+    var out tmpItem 
+    out.Item = tmp.Item
+    if tmp.ID.Valid {
+      out.CurrentReservation.Valid = true
+      out.CurrentReservation.ID = tmp.ID.Int64
+      out.CurrentReservation.StartTime = tmp.StartTime.Time
+      out.CurrentReservation.EndTime = tmp.EndTime.Time
+      out.CurrentReservation.Status = tmp.Status.String
+      out.CurrentReservation.User.Name = tmp.Username.String
+      out.CurrentReservation.User.ID = tmp.UserID.Int64
+    }
+
+    items = append(items, out)
   }
   if err := rows.Err(); err != nil {
     return nil,err
@@ -126,7 +172,7 @@ func (app AppState) checkAvailability(start time.Time, end time.Time, itemID int
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
-    log.Println(err)
+    app.Err(err.Error())
 		return false, err
 	}
 	if count > 0 {
@@ -141,8 +187,20 @@ func (app AppState) getUsername(id int) (string, error) {
 	var uname string
 	err := row.Scan(&uname)
 	if err != nil {
-    log.Println(err)
+    app.Err(err.Error())
 		return "", err
 	}
 	return uname,nil
+}
+
+func (app AppState) getItem(id int) (*Item, error) {
+	query := `SELECT * FROM items WHERE i_id = ?`
+	row := app.db.QueryRowx(query, id)
+  var item Item
+	err := row.StructScan(&item)
+	if err != nil {
+    app.Err(err.Error())
+		return nil, err
+	}
+	return &item,nil
 }

@@ -15,13 +15,20 @@ func (app AppState) checkLoggedIn(w http.ResponseWriter, r *http.Request) (bool)
   return true
 }
 
+type tmpUser struct {
+  ID     int64            `db:"u_id"`
+  Name   string         `db:"u_username"`
+  Role   string   `db:"u_role"`
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
     //  TODO: check if user is logged in
     // display the login form
     if r.Method == "GET" {
         err := app.templates.ExecuteTemplate(w, "login.html", nil)
         if err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
+						app.Err(err.Error())
+            http.Error(w, "Template error", http.StatusInternalServerError)
             return
         }
         return
@@ -35,25 +42,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
     session, _ := app.store.Get(r, SESSION_NAME)
     target := "/dashboard"
 
-    // check the username and password
-    if username == "admin" {
-        // set the user role as admin
-        session.Values["role"] = "admin"
-        session.Values["username"] = username
-				session.Values["user_id"] = 2
-
-        target = "/admin/reservations"
-    } else if username == "user" {
-        // set the user role as user
-        session.Values["role"] = "user"
-        session.Values["username"] = username
-        session.Values["user_id"] = 0
-    } else if username == "user1" {
-        // set the user role as user
-        session.Values["role"] = "user"
-        session.Values["username"] = username
-        session.Values["user_id"] = 1
-    } else {
+    var u tmpUser
+    err := app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_username = ?", username)
+    if err != nil {
+      app.Err(err.Error())
       // if the username or password is invalid, display an error message
       err := app.templates.ExecuteTemplate(w, "login.html", struct {
         Msg string
@@ -61,11 +53,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
         Msg: "Invalid username or password",
       })
       if err != nil {
-          http.Error(w, err.Error(), http.StatusInternalServerError)
+					app.Err(err.Error())
+          http.Error(w, "Template error", http.StatusInternalServerError)
           return
       }
       return
     }
+
+    session.Values["role"] = u.Role
+    session.Values["username"] = u.Name
+    session.Values["user_id"] = u.ID
+
+    if u.Role == "admin" {
+        target = "/admin/reservations"
+    } 
 
     session.Save(r, w)
     // redirect to the user dashboard

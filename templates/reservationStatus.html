@@ -1,0 +1,11 @@
+{{ define "reservationStatus" }}
+  {{ $class := "" }}
+  {{ $txt := "" }}
+  {{ if eq .Status "approved" }}{{ $class = "badge badge-success" }}{{ $txt = "Potwierdzony" }}
+  {{ else if eq .Status "pending" }}{{ $class = "badge badge-danger" }}{{ $txt = "Oczekujacy" }}
+  {{ else if eq .Status "denied" }}{{ $class = "badge badge-secondary" }}{{ $txt = "Anulowany" }}
+  {{ else if eq .Status "rented" }}{{ $class = "badge badge-primary" }}{{ $txt = "Wypozyczony" }}
+  {{ else if eq .Status "returned" }}{{ $class = "badge badge-success" }}{{ $txt = "Zwrocony" }}
+  {{ end }}
+  <span class="{{ $class }}">{{ $txt }}</span>
+{{ end }}

@@ -24,11 +24,15 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.templates.ExecuteTemplate(w, "admin_dashboard.html", struct {
+	err = app.templates.ExecuteTemplate(w, "admin_dashboard.html", struct {
 		Reservations []Reservation
 	}{
 		reservations,
 	})
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "Template error", http.StatusInternalServerError)
+	}
 }
 
 func setStatusHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,16 +51,18 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// Update reservation status in database
 	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, session.Values["user_id"], reservationID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.Err(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
 	numRows, err := result.RowsAffected()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if numRows != 1 {
-		http.Error(w, "Failed to update reservation status", http.StatusInternalServerError)
+	if err != nil || numRows != 1 {
+		if err != nil {
+			app.Err(err.Error())
+		} else {
+			app.Err("Failed to update reservation status")
+		}
+		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -65,14 +71,15 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
-  items,err := app.getItems(queryConfigItems{})
+  items,err := app.getItems(queryConfigItems{withCurReservation: true})
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
 
-  if err := app.templates.ExecuteTemplate(w, "admin_items.html", struct {Items[] Item}{Items: items}); err != nil {
+  if err := app.templates.ExecuteTemplate(w, "admin_items.html", struct {Items[] tmpItem}{Items: items}); err != nil {
+		app.Err(err.Error())
     http.Error(w, "Error executing template", http.StatusInternalServerError)
     return
   }
@@ -124,24 +131,27 @@ func pastFutureReservations(reservations []Reservation) ([]Reservation,[]Reserva
 	// Group reservations into upcoming and historical
 	var upcomingReservations []Reservation
 	var historicalReservations []Reservation
-	var next24HReservations []Reservation
+	var currentReservations []Reservation
 
 	now := time.Now()
 	now24hlater := time.Now().Add(24 * time.Hour)
+	now12hearlier := time.Now().Add(-12 * time.Hour)
 
   for _, res := range reservations {
 		if res.StartTime.After(now24hlater) {
 			// Reservation is upcoming
 			upcomingReservations = append(upcomingReservations, res)
-		} else if res.StartTime.After(now) {
+		} else if res.StartTime.After(now) || 
+							res.StartTime.After(now12hearlier) || 
+							(res.StartTime.Before(now) && res.EndTime.After(now)) {
 			// Reservation is upcoming
-			next24HReservations = append(next24HReservations, res)
+			currentReservations = append(currentReservations, res)
 		} else {
 			// Reservation is historical
 			historicalReservations = append(historicalReservations, res)
 		}
 	}
-  return historicalReservations,next24HReservations,upcomingReservations
+  return historicalReservations,currentReservations,upcomingReservations
 }
 
 func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +164,7 @@ func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	reservations,err := app.getReservations(queryConfigReservation{
     oneUser:true,
-    userId:userID,
+    selectionId:userID,
     orderByStart:true,
   })
 	if err != nil {
@@ -177,11 +187,11 @@ func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 		"UpcomingReservations": upcomingReservations,
 		"HistoricalReservations":  historicalReservations,
 		"Next24HReservations": next24HReservations,
-		"Highlight24h": time.Now().Add(24 * time.Hour),
 		"Username": uname,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.Err(err.Error())
+		http.Error(w, "Template Error", http.StatusInternalServerError)
 		return
 	}
 }
@@ -255,3 +265,47 @@ func reservationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from query string
+	itemID, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	reservations,err := app.getReservations(queryConfigReservation{
+    oneItem:true,
+    selectionId:itemID,
+    orderByStart:true,
+		users:true,
+  })
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+
+  historicalReservations, next24HReservations, upcomingReservations := pastFutureReservations(reservations)
+
+	item,err := app.getItem(itemID)
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Render item reservations page
+	err = app.templates.ExecuteTemplate(w, "admin_item.html", map[string]interface{}{
+		"UpcomingReservations": upcomingReservations,
+		"HistoricalReservations":  historicalReservations,
+		"Next24HReservations": next24HReservations,
+		"Item": item,
+	})
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "Template Error", http.StatusInternalServerError)
+		return
+	}
+}
+

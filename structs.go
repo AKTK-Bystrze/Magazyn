@@ -23,13 +23,13 @@ type Item struct {
 }
 
 type User struct {
-  ID     int            `db:"u_id"`
+  ID     int64            `db:"u_id"`
   Name   string         `db:"u_username"`
 }
 
 // Reservation represents a reservation in the database
 type Reservation struct {
-    ID        int         `db:"r_id"`
+    ID        int64         `db:"r_id"`
     StartTime time.Time   `db:"r_start_time"`
     EndTime   time.Time   `db:"r_end_time"`
     Status    string      `db:"r_status"`

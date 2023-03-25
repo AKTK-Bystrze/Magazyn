@@ -5,12 +5,11 @@
         <thead>
           <tr>
 						<th>Rezerwacja</th>
-            <th>Nazwa</th>
+            {{ if not .HideItem }}<th>Nazwa</th>{{ end }}
             <th>Wypozyczenie</th>
             <th>Zwrot</th>
             {{ if .User }}<th>Uzytkownik</th>{{ end }}
             <th>Status</th>
-            {{ if .ChangeStatus }}<th>Zmien Status</th>{{ end }}
             {{ if .ChangeRentalStatus }}<th>Nastepny Krok</th>{{ end }}
           </tr>
         </thead>
@@ -18,30 +17,24 @@
           {{ range .Reservations }}
           <tr>
 						<td><small><a href="/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</a></small></td>
-            <td>{{ .Item.Name }}</td>
+            {{ if not $.HideItem }}<td><a href="/admin/item/show?id={{ .Item.ID }}">{{ .Item.Name }}</a></td>{{ end }}
             <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
             <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
             {{ if $.User }}<td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
             <td>
-              {{ if eq .Status "approved" }}
-              <span class="badge badge-success">Potwierdzony</span>
-              {{ else if eq .Status "pending" }}
-              <span class="badge badge-danger">Oczekujacy</span>
-              {{ else if eq .Status "denied" }}
-              <span class="badge badge-secondary">Anulowany</span>
-              {{ else if eq .Status "rented" }}
-              <span class="badge badge-primary">Wypozyczony</span>
-              {{ else if eq .Status "returned" }}
-              <span class="badge badge-success">Zwrocony</span>
-              {{ end }}
-            </td>
-            {{ if $.ChangeStatus }}
-            <td>
-              {{ if .StartTime.After Now }}
+						{{ $class := "" }}
+						{{ $txt := "" }}
+						{{ if eq .Status "approved" }}{{ $class = "badge badge-success" }}{{ $txt = "Potwierdzony" }}
+						{{ else if eq .Status "pending" }}{{ $class = "badge badge-danger" }}{{ $txt = "Oczekujacy" }}
+						{{ else if eq .Status "denied" }}{{ $class = "badge badge-secondary" }}{{ $txt = "Anulowany" }}
+						{{ else if eq .Status "rented" }}{{ $class = "badge badge-primary" }}{{ $txt = "Wypozyczony" }}
+						{{ else if eq .Status "returned" }}{{ $class = "badge badge-success" }}{{ $txt = "Zwrocony" }}
+						{{ end }}
+            {{ if and $.ChangeStatus (.StartTime.After Now) }}
               <form method="POST" action="/admin/setStatus">
                 <input type="hidden" name="reservation_id" value="{{ .ID }}">
                 <div class="form-group">
-                  <select class="form-control" name="status" onchange="this.form.submit()" autocomplete=off>
+                  <select class="form-control {{ $class }}" name="status" onchange="this.form.submit()" autocomplete=off>
                     <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
                     <option value="approved" {{ if eq .Status "approved" }}selected{{ end }}>Potwierdzony</option>
                     <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
@@ -50,11 +43,14 @@
                   </select>
                 </div>
               </form>
-              {{ end }}
+						{{ else }}
+							<span class="{{ $class }}">{{ $txt }}</span>
+						{{ end }}
             </td>
-            {{ end }}
-            {{ if $.ChangeRentalStatus }}
-            {{ if and (or (eq .Status "approved") (eq .Status "rented")) (.StartTime.After Now) }}
+						{{ if $.ChangeRentalStatus }}
+						{{ if or (and (eq .Status "approved") (.StartTime.After (AddHours Now -2) ) (.StartTime.Before (AddHours Now 12)))
+										 (eq .Status "rented")
+						}}
             <td>
               <form method="POST" action="/admin/setStatus">
                 <input type="hidden" name="reservation_id" value="{{ .ID }}">

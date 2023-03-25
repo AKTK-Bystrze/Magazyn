@@ -8,6 +8,7 @@ import (
     "fmt"
 		"time"
 		"errors"
+		"strings"
 
     "github.com/gorilla/mux"
     "github.com/gorilla/sessions"
@@ -33,7 +34,7 @@ var app AppState
 func loggingMiddleware(next http.Handler) http.Handler {
   return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     //  TODO: improve logging
-    log.Println(r.RequestURI)
+    log.Println(strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
     next.ServeHTTP(w, r)
   })
 }
@@ -52,9 +53,6 @@ func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.R
       h(w, r)
     }
   }
-}
-
-func SearchHandler2(w http.ResponseWriter, r *http.Request) {	
 }
 
 func main() {
@@ -81,8 +79,8 @@ func main() {
 			"After": func(t1, t2 time.Time) bool {
 				return t1.After(t2)
 			},
-			"Add": func(t time.Time, d time.Duration) time.Time {
-				return t.Add(d)
+			"AddHours": func(t time.Time, d int) time.Time {
+				return t.Add(time.Duration(d) * time.Hour)
 			},	
 			"dict": func(values ...interface{}) (map[string]interface{}, error) {
 				if len(values)%2 != 0 {
@@ -123,6 +121,7 @@ func main() {
     adminRouter.HandleFunc("/setStatus", setStatusHandler).Methods("POST")
     adminRouter.HandleFunc("/items", adminItemsHandler).Methods("GET")
     adminRouter.HandleFunc("/item/status", adminItemStatusHandler).Methods("POST")
+    adminRouter.HandleFunc("/item/show", AdminShowItemHandler).Methods("GET")
     adminRouter.HandleFunc("/user/show", AdminShowUserHandler).Methods("GET")
     adminRouter.HandleFunc("/reservation/show", reservationHandler).Methods("GET")
 
