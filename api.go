@@ -51,7 +51,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get user ID from session
-	userID := session.Values["user_id"].(int)
+	userID := int(session.Values["user_id"].(int64))
 
 	stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
