@@ -5,12 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Szczegoly przedmiotu</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-
-    {{ template "jq_head" }}
-
-    {{ template "DataTable_head" }}
-
+    {{ template "stylesInclude" dict "DataTables" true}}
+    {{ template "scriptsInclude" dict "DataTables" true }}
   </head>
   <body>
     {{ template "admin_navbar" }}
@@ -53,15 +49,15 @@
 			</ul>
 			<div class="tab-content" id="myTabContent">
 				<div class="tab-pane fade show active" id="next24" role="tabpanel" aria-labelledby="next24-tab">
-					{{ template "user_reservations" dict "Reservations" .Next24HReservations "TableId" "DataTable-next24h" "ChangeStatus" true "User" true "ChangeRentalStatus" true "HideItem" true}}
+					{{ template "reservations_view" dict "Reservations" .Next24HReservations "TableId" "DataTable-next24h" "ChangeStatus" true "User" true "ChangeRentalStatus" true "HideItem" true}}
 				</div>
 
 				<div class="tab-pane fade" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
-					{{ template "user_reservations" dict "Reservations" .UpcomingReservations "TableId" "DataTable-upcoming" "ChangeStatus" true "User" true "HideItem" true }}
+					{{ template "reservations_view" dict "Reservations" .UpcomingReservations "TableId" "DataTable-upcoming" "ChangeStatus" true "User" true "HideItem" true }}
 				</div>
 
 				<div class="tab-pane fade" id="historical" role="tabpanel" aria-labelledby="historical-tab">
-					{{ template "user_reservations" dict "Reservations" .HistoricalReservations "TableId" "DataTable-history" "ChangeStatus" false "User" true "HideItem" true }}
+					{{ template "reservations_view" dict "Reservations" .HistoricalReservations "TableId" "DataTable-history" "ChangeStatus" false "User" true "HideItem" true }}
 				</div>
       </div>
     </div>

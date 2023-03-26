@@ -1,7 +1,8 @@
-{{ define "user_reservations" }}
+{{ define "reservations_view" }}
 {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
       {{ if .Reservations }}
-      <table class="table" id="{{ .TableId }}">
+			{{/*	https://github.com/DataTables/Responsive/issues/40	*/}}
+      <table class="table" id="{{ .TableId }}" style="width: 100%">
         <thead>
           <tr>
 						<th>Rezerwacja</th>
@@ -71,12 +72,15 @@
         </tbody>
       </table>
       <script type="text/javascript">
+				$(document).ready(function() {
         new DataTable('#{{ .TableId }}', {
           order: [[2, 'asc']],
           language: {
             url: '//cdn.datatables.net/plug-ins/1.13.3/i18n/pl.json'
-          }
+          },
+					responsive: true,
         });
+				});
       </script>
       {{ else }}
       <p>Brak rezerwacji.</p>

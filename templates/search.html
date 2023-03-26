@@ -4,15 +4,8 @@
 	<title>Wyszukaj Sprzet</title>
   <meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-	<style>
-		.row {
-			margin-bottom: 10px;
-		}
-	</style>
-
-	{{ template "jq_head" }}
-
+  {{ template "stylesInclude" dict "DataTables" true}}
+  {{ template "scriptsInclude" dict "DataTables" true }}
 </head>
 <body>
   {{ template "user_navbar" }}
@@ -21,7 +14,7 @@
 		{{ if .Msg }}
 		<div class="alert alert-danger">{{ .Msg }}</div>
 		{{ end }}
-		<form method="GET" action="/search">
+		<form method="POST" action="/search">
 			<div class="form-group row">
 				<label for="start_time" class="col-sm-2 col-form-label">Wypozyczenie:</label>
 				<div class="col-sm-10">

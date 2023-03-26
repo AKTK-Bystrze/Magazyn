@@ -107,10 +107,10 @@ func main() {
 
     adminRouter := router.PathPrefix("/admin/").Subrouter()
     //  everybody
-    router.HandleFunc("/", Login).Methods("GET", "POST")
+    router.HandleFunc("/", Login).Methods("GET")
     router.HandleFunc("/login", Login).Methods("GET", "POST")
-    router.HandleFunc("/dashboard", loggedUserHandler(UserDashboard)).Methods("GET", "POST")
-    router.HandleFunc("/search", loggedUserHandler(SearchHandler)).Methods("GET")
+    router.HandleFunc("/dashboard", loggedUserHandler(UserDashboard)).Methods("GET")
+    router.HandleFunc("/search", loggedUserHandler(SearchHandler)).Methods("GET", "POST")
     router.HandleFunc("/logout", loggedUserHandler(Logout)).Methods("GET")
     router.HandleFunc("/reserve", loggedUserHandler(ReserveItem)).Methods("POST")
 

@@ -16,8 +16,8 @@ func (app AppState) checkLoggedIn(w http.ResponseWriter, r *http.Request) (bool)
 }
 
 type tmpUser struct {
-  ID     int64            `db:"u_id"`
-  Name   string         `db:"u_username"`
+  ID     int64    `db:"u_id"`
+  Name   string   `db:"u_username"`
   Role   string   `db:"u_role"`
 }
 

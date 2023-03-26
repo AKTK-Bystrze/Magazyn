@@ -5,21 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel Administracyjny</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-
-		{{ template "jq_head" }}
-
-		{{ template "DataTable_head" }}
-
+		{{ template "stylesInclude" dict "DataTables" true}}
+		{{ template "scriptsInclude" dict "DataTables" true }}
   </head>
   <body>
     {{ template "admin_navbar" }}
     <div class="container">
       <h2 class="my-3">Panel Administracyjny</h2>
-			{{ template "user_reservations" dict "Reservations" .Reservations "TableId" "DataTable-reservations" "ChangeStatus" true "User" true "ChangeRentalStatus" true }}
+			{{ template "reservations_view" dict "Reservations" .Reservations "TableId" "DataTable-reservations" "ChangeStatus" true "User" true "ChangeRentalStatus" true }}
     </div>
-
-
   </body>
 </html>
 

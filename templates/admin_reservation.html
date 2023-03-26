@@ -5,12 +5,8 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Szczegoly rezerwacji</title>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-
-		{{ template "jq_head" }}
-
-		{{ template "DataTable_head" }}
-
+		{{ template "stylesInclude" dict "DataTables" true}}
+		{{ template "scriptsInclude" dict "DataTables" true }}
 	</head>
 	<body>
 		{{ template "admin_navbar" }}
@@ -79,6 +75,5 @@
 			{{ end }}
 
 		</div>
-
 	</body>
 </html>
