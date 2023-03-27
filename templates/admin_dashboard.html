@@ -9,7 +9,7 @@
 		{{ template "scriptsInclude" dict "DataTables" true }}
   </head>
   <body>
-    {{ template "admin_navbar" }}
+    {{ template "navbar" .UserInfo }}
     <div class="container">
       <h2 class="my-3">Panel Administracyjny</h2>
 			{{ template "reservations_view" dict "Reservations" .Reservations "TableId" "DataTable-reservations" "ChangeStatus" true "ShowUser" true "ChangeRentalStatus" true }}

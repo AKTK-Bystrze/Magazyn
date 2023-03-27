@@ -12,7 +12,7 @@
 		{{ template "scriptsInclude" dict "DataTables" true }}
   </head>
   <body>
-    {{ template "admin_navbar" }}
+    {{ template "navbar" .UserInfo }}
 		<div class="container">
 			<h2 class="my-3">Rezerwacje {{ .Username }}</h2>
 			<ul class="nav nav-tabs" id="myTab" role="tablist">

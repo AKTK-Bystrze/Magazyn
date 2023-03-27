@@ -8,7 +8,7 @@
   {{ template "scriptsInclude" dict "DataTables" true }}
 </head>
 <body>
-  {{ template "user_navbar" }}
+  {{ template "navbar" .UserInfo }}
 	<div class="container">
 		<h2 class="my-3">Wyszukaj Sprzet</h2>
 		{{ if .Msg }}

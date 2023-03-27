@@ -9,7 +9,7 @@
 		{{ template "scriptsInclude" dict "DataTables" true }}
 	</head>
 	<body>
-		{{ template "admin_navbar" }}
+		{{ template "navbar" .UserInfo }}
 		<div class="container">
 			<h2 class="my-3">Rezerwacja #{{ .Reservation.ID }}</h2>
       <div class="card mb-3">
