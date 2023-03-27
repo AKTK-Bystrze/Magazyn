@@ -9,7 +9,7 @@
             {{ if not .HideItem }}<th>Nazwa</th>{{ end }}
             <th>Wypozyczenie</th>
             <th>Zwrot</th>
-            {{ if .User }}<th>Uzytkownik</th>{{ end }}
+            {{ if .ShowUser }}<th>Uzytkownik</th>{{ end }}
             <th>Status</th>
             {{ if .ChangeRentalStatus }}<th>Nastepny Krok</th>{{ end }}
           </tr>
@@ -21,7 +21,7 @@
             {{ if not $.HideItem }}<td><a href="/admin/item/show?id={{ .Item.ID }}">{{ .Item.Name }}</a></td>{{ end }}
             <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
             <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
-            {{ if $.User }}<td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
+            {{ if $.ShowUser }}<td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
             <td>
 						{{ $class := "" }}
 						{{ $txt := "" }}

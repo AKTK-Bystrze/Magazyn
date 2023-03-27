@@ -7,7 +7,6 @@ import (
 )
 
 func ReserveItem(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.store.Get(r, SESSION_NAME)
 	// get parameters
 	itemID, err := strconv.Atoi(r.FormValue("item_id"))
 	if err != nil {
@@ -29,7 +28,8 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
   //  admins can make reservation in the past
   //  TODO: currently only for themselves
-	if startTime.Before(time.Now()) && session.Values["role"] != "admin" {
+	if startTime.Before(time.Now()) && 
+     r.Context().Value("UserInfo").(tmpUser).Role != "admin" {
 		msg := "Data wypozyczenia musi byc w przyszlosci"
     SearchItems(w, r, msg)
     return
@@ -50,8 +50,8 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get user ID from session
-	userID := int(session.Values["user_id"].(int64))
+	// get user ID 
+	userID := int(r.Context().Value("UserInfo").(tmpUser).ID)
 
 	stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
@@ -106,21 +106,17 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
     }
 
     // render the search results template with the available items list
-    err = app.templates.ExecuteTemplate(w, "search.html", struct {
+    app.renderTemplate(w, r, "search.html", &struct {
         AvailableItems []tmpItem
         StartTime time.Time
         EndTime time.Time
 				Msg string
+        templateData
     }{
         AvailableItems: availableItems,
         StartTime: timeFrom,
         EndTime: timeTo,
 				Msg: msg,
     })
-    if err != nil {
-				app.Err(err.Error())
-        http.Error(w, "Template error", http.StatusInternalServerError)
-        return
-    }
 }
 

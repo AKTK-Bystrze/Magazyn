@@ -4,17 +4,6 @@ import (
     "net/http"
 )
 
-func (app AppState) checkLoggedIn(w http.ResponseWriter, r *http.Request) (bool) {
-  // check if the user is logged in
-  session, _ := app.store.Get(r, SESSION_NAME)
-  role := session.Values["role"]
-  if role == nil || role.(string) != "user" {
-    http.Redirect(w, r, "/", http.StatusSeeOther)
-    return false
-  }
-  return true
-}
-
 type tmpUser struct {
   ID     int64    `db:"u_id"`
   Name   string   `db:"u_username"`
@@ -25,12 +14,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
     //  TODO: check if user is logged in
     // display the login form
     if r.Method == "GET" {
-        err := app.templates.ExecuteTemplate(w, "login.html", nil)
-        if err != nil {
-						app.Err(err.Error())
-            http.Error(w, "Template error", http.StatusInternalServerError)
-            return
-        }
+        app.renderTemplateNoData(w, "login.html")
         return
     }
 
@@ -60,15 +44,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
       return
     }
 
-    session.Values["role"] = u.Role
-    session.Values["username"] = u.Name
-    session.Values["user_id"] = u.ID
+    session.Values["UserInfo"] = int(u.ID)
 
     if u.Role == "admin" {
         target = "/admin/reservations"
     } 
 
-    session.Save(r, w)
+    err = session.Save(r, w)
+    if err != nil {
+      app.Err(err.Error())
+    }
     // redirect to the user dashboard
     http.Redirect(w, r, target, http.StatusSeeOther)
     return

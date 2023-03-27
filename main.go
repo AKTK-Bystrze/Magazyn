@@ -9,6 +9,7 @@ import (
 		"time"
 		"errors"
 		"strings"
+    "context"
 
     "github.com/gorilla/mux"
     "github.com/gorilla/sessions"
@@ -22,10 +23,33 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 	SearchItems(w, r, "")
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
+type templateData struct {
+   UserInfo tmpUser
+}
+
+type templateDataIfce interface {
+  SetUser(*tmpUser)
+}
+
+func (data *templateData) SetUser(uinfo *tmpUser) {
+  data.UserInfo = *uinfo
+}
+
+func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
+  uinfo := r.Context().Value("UserInfo").(tmpUser)
+  data.SetUser(&uinfo)
 	err := app.templates.ExecuteTemplate(w, tmpl, data)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.Err(err.Error())
+    http.Error(w, "Template error", http.StatusInternalServerError)
+	}
+}
+
+func (app AppState) renderTemplateNoData(w http.ResponseWriter, tmpl string) {
+	err := app.templates.ExecuteTemplate(w, tmpl, nil)
+	if err != nil {
+		app.Err(err.Error())
+    http.Error(w, "Template error", http.StatusInternalServerError)
 	}
 }
 
@@ -39,6 +63,27 @@ func loggingMiddleware(next http.Handler) http.Handler {
   })
 }
 
+func validUserMiddlware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    session, _ := app.store.Get(r, SESSION_NAME)
+    uid, ok := session.Values["UserInfo"].(int)
+    if !ok {
+      //  TODO: call Logout here ??
+      http.Redirect(w, r, "/", http.StatusSeeOther)
+      return
+    }
+    var uinfo tmpUser
+    err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", uid)
+    if err != nil || (uinfo.Role != "user" && uinfo.Role != "admin") {
+      http.Redirect(w, r, "/", http.StatusSeeOther)
+      return
+    }
+    ctx := r.Context()
+    ctx = context.WithValue(ctx, "UserInfo", uinfo)
+    next.ServeHTTP(w, r.WithContext(ctx))
+  })
+}
+
 func adminHandler(h http.Handler) http.Handler {
   return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     if app.adminCheck(w, r) {
@@ -47,6 +92,8 @@ func adminHandler(h http.Handler) http.Handler {
   })
 }
 
+//  TODO: this is unused, left as a reminder how to build wrappers for handler
+/*
 func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, r *http.Request) {
   return func(w http.ResponseWriter, r *http.Request) {
     if app.checkLoggedIn(w, r) {
@@ -54,6 +101,8 @@ func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.R
     }
   }
 }
+*/
+
 
 func main() {
     if len(os.Args) != 3 {
@@ -63,6 +112,7 @@ func main() {
 
     addr := fmt.Sprintf("%s:%s", os.Args[1], os.Args[2])
 
+    //  TODO: .StrictSlash ???
     router := mux.NewRouter()
 
 		db, err := sqlx.Open("sqlite3", "magazyn.db")
@@ -104,15 +154,18 @@ func main() {
   
     //  log all requests
     router.Use(loggingMiddleware)
-
-    adminRouter := router.PathPrefix("/admin/").Subrouter()
-    //  everybody
     router.HandleFunc("/", Login).Methods("GET")
     router.HandleFunc("/login", Login).Methods("GET", "POST")
-    router.HandleFunc("/dashboard", loggedUserHandler(UserDashboard)).Methods("GET")
-    router.HandleFunc("/search", loggedUserHandler(SearchHandler)).Methods("GET", "POST")
-    router.HandleFunc("/logout", loggedUserHandler(Logout)).Methods("GET")
-    router.HandleFunc("/reserve", loggedUserHandler(ReserveItem)).Methods("POST")
+
+    userRouter := mux.NewRouter()
+    userRouter.Use(validUserMiddlware)
+
+    adminRouter := userRouter.PathPrefix("/admin/").Subrouter()
+    //  every logged-in user
+    userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
+    userRouter.HandleFunc("/search", SearchHandler).Methods("GET", "POST")
+    userRouter.HandleFunc("/logout", Logout).Methods("GET")
+    userRouter.HandleFunc("/reserve", ReserveItem).Methods("POST")
 
     //  enforce users with admin role
     adminRouter.Use(adminHandler)
@@ -124,6 +177,8 @@ func main() {
     adminRouter.HandleFunc("/item/show", AdminShowItemHandler).Methods("GET")
     adminRouter.HandleFunc("/user/show", AdminShowUserHandler).Methods("GET")
     adminRouter.HandleFunc("/reservation/show", reservationHandler).Methods("GET")
+
+    router.PathPrefix("/").Handler(userRouter)
 
     log.Printf("Server starting on %s...\n", addr)
     log.Fatal(http.ListenAndServe(addr, router))

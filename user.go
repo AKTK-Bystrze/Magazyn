@@ -6,11 +6,10 @@ import (
 )
 
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
-    session, _ := app.store.Get(r, SESSION_NAME)
     // search for reserved items in the db
     reservations, err := app.getReservations(queryConfigReservation{
       oneUser:true,
-      selectionId:int(session.Values["user_id"].(int64)),
+      selectionId:int(r.Context().Value("UserInfo").(tmpUser).ID),
       orderDesc:true,
       })
     if err != nil {
@@ -19,16 +18,11 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    err = app.templates.ExecuteTemplate(w, "user_dashboard.html", struct {
-        Username       string
+    app.renderTemplate(w, r, "user_dashboard.html", &struct {
         Reservations []Reservation
+        templateData
     }{
-        Username:       session.Values["username"].(string),
         Reservations:   reservations,
     })
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
 }
 

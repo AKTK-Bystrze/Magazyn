@@ -6,14 +6,22 @@ import (
     "strconv"
 )
 
+func If[T any](cond bool, vtrue, vfalse T) T {
+   if cond {
+     return vtrue
+   }
+   return vfalse
+}
+
 func (app AppState) adminCheck(w http.ResponseWriter, r *http.Request) (bool) {
 	// Check if user is authenticated as admin
-	session, _ := app.store.Get(r, SESSION_NAME)
-  if session.Values["role"] == "admin" {
-    return true
+  uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
+  if !ok || uinfo.Role != "admin" {
+    app.Err("Non-admin user (%s) attempts to access admin API", If(ok, uinfo.Name, "unknown"))
+    http.Redirect(w, r, "/", http.StatusFound)
+    return false
   }
-  http.Redirect(w, r, "/", http.StatusFound)
-  return false
+  return true
 }
 
 func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
@@ -24,15 +32,12 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.templates.ExecuteTemplate(w, "admin_dashboard.html", struct {
-		Reservations []Reservation
-	}{
-		reservations,
+  app.renderTemplate(w, r, "admin_dashboard.html", &struct {
+    Reservations[]Reservation
+    templateData
+  }{
+    Reservations: reservations,
 	})
-	if err != nil {
-		app.Err(err.Error())
-		http.Error(w, "Template error", http.StatusInternalServerError)
-	}
 }
 
 func setStatusHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,12 +49,10 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	reservationID := r.FormValue("reservation_id")
 	status := r.FormValue("status")
 	
-	
 	//	TODO: check if reservation date is in the future !!!
-	session, _ := app.store.Get(r, SESSION_NAME)
-
 	// Update reservation status in database
-	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, session.Values["user_id"], reservationID)
+  uid := r.Context().Value("UserInfo").(tmpUser).ID
+	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, uid, reservationID)
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
@@ -77,12 +80,12 @@ func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
-
-  if err := app.templates.ExecuteTemplate(w, "admin_items.html", struct {Items[] tmpItem}{Items: items}); err != nil {
-		app.Err(err.Error())
-    http.Error(w, "Error executing template", http.StatusInternalServerError)
-    return
-  }
+  app.renderTemplate(w, r, "admin_items.html", &struct {
+    Items[] tmpItem
+    templateData
+  }{
+    Items: items,
+  })
 }
 
 func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,6 +157,13 @@ func pastFutureReservations(reservations []Reservation) ([]Reservation,[]Reserva
   return historicalReservations,currentReservations,upcomingReservations
 }
 
+type ReservationViewData struct {
+  UpcomingReservations *[]Reservation
+  HistoricalReservations *[]Reservation
+  Next24HReservations *[]Reservation
+  templateData
+}
+
 func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from query string
 	userID, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -183,17 +193,17 @@ func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Render user reservations page
-	err = app.templates.ExecuteTemplate(w, "admin_user.html", map[string]interface{}{
-		"UpcomingReservations": upcomingReservations,
-		"HistoricalReservations":  historicalReservations,
-		"Next24HReservations": next24HReservations,
-		"Username": uname,
+  app.renderTemplate(w, r, "admin_user.html", &struct {
+    ReservationViewData
+    Username string
+  }{
+    ReservationViewData{
+      UpcomingReservations: &upcomingReservations,
+      HistoricalReservations:  &historicalReservations,
+      Next24HReservations: &next24HReservations,
+    },
+		uname,
 	})
-	if err != nil {
-		app.Err(err.Error())
-		http.Error(w, "Template Error", http.StatusInternalServerError)
-		return
-	}
 }
 
 type tmpReservationAudit struct {
@@ -252,18 +262,15 @@ func reservationHandler(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		Reservation      Reservation
 		ReservationHistory []ReservationAudit
+    templateData
 	}{
 		Reservation:      t.Reservation,
 		ReservationHistory: history,
 	}
 	data.Reservation.User = t.User
 	data.Reservation.Item = t.Item
-	err = app.templates.ExecuteTemplate(w, "admin_reservation.html", data)
-	if err != nil {
-		app.Err(err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
+
+  app.renderTemplate(w, r, "admin_reservation.html", &data)
 }
 
 func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
@@ -296,16 +303,16 @@ func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Render item reservations page
-	err = app.templates.ExecuteTemplate(w, "admin_item.html", map[string]interface{}{
-		"UpcomingReservations": upcomingReservations,
-		"HistoricalReservations":  historicalReservations,
-		"Next24HReservations": next24HReservations,
-		"Item": item,
+  app.renderTemplate(w, r, "admin_item.html", &struct {
+    ReservationViewData
+    Item *Item
+  }{
+    ReservationViewData {
+      UpcomingReservations: &upcomingReservations,
+      HistoricalReservations:  &historicalReservations,
+      Next24HReservations: &next24HReservations,
+    },
+		item,
 	})
-	if err != nil {
-		app.Err(err.Error())
-		http.Error(w, "Template Error", http.StatusInternalServerError)
-		return
-	}
 }
 

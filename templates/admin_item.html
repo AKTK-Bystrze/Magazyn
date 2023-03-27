@@ -49,15 +49,15 @@
 			</ul>
 			<div class="tab-content" id="myTabContent">
 				<div class="tab-pane fade show active" id="next24" role="tabpanel" aria-labelledby="next24-tab">
-					{{ template "reservations_view" dict "Reservations" .Next24HReservations "TableId" "DataTable-next24h" "ChangeStatus" true "User" true "ChangeRentalStatus" true "HideItem" true}}
+					{{ template "reservations_view" dict "Reservations" .Next24HReservations "TableId" "DataTable-next24h" "ChangeStatus" true "ShowUser" true "ChangeRentalStatus" true "HideItem" true}}
 				</div>
 
 				<div class="tab-pane fade" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
-					{{ template "reservations_view" dict "Reservations" .UpcomingReservations "TableId" "DataTable-upcoming" "ChangeStatus" true "User" true "HideItem" true }}
+					{{ template "reservations_view" dict "Reservations" .UpcomingReservations "TableId" "DataTable-upcoming" "ChangeStatus" true "ShowUser" true "HideItem" true }}
 				</div>
 
 				<div class="tab-pane fade" id="historical" role="tabpanel" aria-labelledby="historical-tab">
-					{{ template "reservations_view" dict "Reservations" .HistoricalReservations "TableId" "DataTable-history" "ChangeStatus" false "User" true "HideItem" true }}
+					{{ template "reservations_view" dict "Reservations" .HistoricalReservations "TableId" "DataTable-history" "ChangeStatus" false "ShowUser" true "HideItem" true }}
 				</div>
       </div>
     </div>
