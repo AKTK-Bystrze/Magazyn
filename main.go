@@ -25,19 +25,26 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 type templateData struct {
    UserInfo tmpUser
+   URL string
 }
 
 type templateDataIfce interface {
   SetUser(*tmpUser)
+  SetURL(string)
 }
 
 func (data *templateData) SetUser(uinfo *tmpUser) {
   data.UserInfo = *uinfo
 }
 
+func (data *templateData) SetURL(url string) {
+  data.URL = url
+}
+
 func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
   uinfo := r.Context().Value("UserInfo").(tmpUser)
   data.SetUser(&uinfo)
+  data.SetURL(r.URL.String())
 	err := app.templates.ExecuteTemplate(w, tmpl, data)
 	if err != nil {
 		app.Err(err.Error())
@@ -105,8 +112,8 @@ func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.R
 
 
 func main() {
-    if len(os.Args) != 3 {
-        fmt.Fprintf(os.Stderr, "Usage: %s IP PORT\n", os.Args[0])
+    if len(os.Args) != 4 {
+        fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN\n", os.Args[0])
         os.Exit(1)
     }
 
@@ -121,6 +128,7 @@ func main() {
     }
     defer db.Close()
 		app.db = db
+    app.server = os.Args[3]
 		funcMap := template.FuncMap{
 			"Now" : time.Now,
 			"Before": func(t1, t2 time.Time) bool {

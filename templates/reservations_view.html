@@ -1,7 +1,7 @@
 {{ define "reservations_view" }}
 {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
       {{ if .Reservations }}
-			{{/*	https://github.com/DataTables/Responsive/issues/40	*/}}
+			{{/*	style because of: https://github.com/DataTables/Responsive/issues/40	*/}}
       <table class="table" id="{{ .TableId }}" style="width: 100%">
         <thead>
           <tr>
@@ -17,8 +17,16 @@
         <tbody>
           {{ range .Reservations }}
           <tr>
-						<td><small><a href="/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</a></small></td>
-            {{ if not $.HideItem }}<td><a href="/admin/item/show?id={{ .Item.ID }}">{{ .Item.Name }}</a></td>{{ end }}
+            <td>
+              {{ if eq $.UserInfo.Role "admin" }}<small><a href="/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</a></small>
+              {{ else }}<small>#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</small>{{ end }}
+            </td>
+            {{ if not $.HideItem }}<td>
+              {{ if eq $.UserInfo.Role "admin" }}
+              <a href="/admin/item/show?id={{ .Item.ID }}">{{ .Item.Name }}</a>
+              {{ else }}{{ .Item.Name }}{{ end }}
+            </td>
+            {{ end }}
             <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
             <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
             {{ if $.ShowUser }}<td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
@@ -31,9 +39,10 @@
 						{{ else if eq .Status "rented" }}{{ $class = "badge badge-primary" }}{{ $txt = "Wypozyczony" }}
 						{{ else if eq .Status "returned" }}{{ $class = "badge badge-success" }}{{ $txt = "Zwrocony" }}
 						{{ end }}
-            {{ if and $.ChangeStatus (.StartTime.After Now) }}
+            {{ if and $.ChangeStatus (.StartTime.After (AddHours Now -2)) }}
               <form method="POST" action="/admin/setStatus">
                 <input type="hidden" name="reservation_id" value="{{ .ID }}">
+                <input type="hidden" name="url" value="{{ $.URL }}">
                 <div class="form-group">
                   <select class="form-control {{ $class }}" name="status" onchange="this.form.submit()" autocomplete=off>
                     <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>

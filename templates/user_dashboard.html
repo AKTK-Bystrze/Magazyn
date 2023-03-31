@@ -13,7 +13,7 @@
 	<div class="container">
 		<h2 class="my-3">Twoje Rezerwacje</h2>
 
-		{{ template "reservations_view" dict "Reservations" .Reservations "TableId" "DataTable-reservations" "ChangeStatus" false "ShowUser" false}}
+		{{ template "reservations_view" dict "Reservations" .Reservations "TableId" "DataTable-reservations" "ChangeStatus" false "ShowUser" false "UserInfo" .UserInfo }}
 
   </div>
 

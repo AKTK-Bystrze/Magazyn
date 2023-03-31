@@ -12,6 +12,7 @@ type AppState struct {
 	db *sqlx.DB
 	templates *template.Template
 	store *sessions.CookieStore
+  server string
 }
 
 type Item struct {

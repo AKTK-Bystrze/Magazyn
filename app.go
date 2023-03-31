@@ -29,6 +29,11 @@ func (app AppState) Err(format string, a...interface{}) {
 }
 
 func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,error) {
+  var location, err = time.LoadLocation("Europe/Warsaw")
+  if err != nil {
+    app.Err(err.Error())
+    return []Reservation{}, err
+  }
 	// Retrieve all reservations from database
 	query := "SELECT r.*, i.i_id, i.i_name, i.i_description "
 	if conf.users {
@@ -76,6 +81,10 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 		r = t.Reservation
 		r.Item = t.Item
 		r.User = t.User
+    //  TODO: update time to localtime (CEST)
+    r.StartTime = r.StartTime.In(location)
+    r.EndTime = r.EndTime.In(location)
+    r.CreatedAt = r.CreatedAt.In(location)
 		reservations = append(reservations, r)
 	}
 	if err = rows.Err(); err != nil {
@@ -111,15 +120,21 @@ type tmpItem struct {
 
 
 func (app AppState) getItems(conf queryConfigItems) ([]tmpItem,error) {
+  var location, err = time.LoadLocation("Europe/Warsaw")
+  if err != nil {
+    app.Err(err.Error())
+    return []tmpItem{}, err
+  }
   // Get all items from the database
-  query := "SELECT i_id, i_name, i_description, i_status "
+  query := "SELECT i_id, i_name, i_description, i_status, i_type "
   if conf.withCurReservation {
     query += ", r.r_id, r.r_status, u.u_username, u.u_id, r.r_start_time, r.r_end_time "
     //query += ", r.r_id, COALESCE(r.r_start_time, datetime('now')) AS r_start_time, COALESCE(r.r_end_time, datetime('now')) AS r_end_time, COALESCE(r.r_status, '') AS r_status, COALESCE(u.u_username, '') AS u_username "
   }
   query += " FROM items i "
   if conf.withCurReservation {
-    query += ` LEFT JOIN reservations r ON i.i_id = r.r_item_id AND r.r_start_time <= datetime('now') AND r.r_end_time >= datetime('now') 
+    //  TODO: this search may require app-privided value for 'now'
+    query += ` LEFT JOIN reservations r ON i.i_id = r.r_item_id AND r.r_start_time <= datetime('now', 'localtime') AND r.r_end_time >= datetime('now', 'localtime') AND r.r_status != 'denied'
     LEFT JOIN users u ON r.r_user_id = u.u_id  `
   }
   if conf.available {
@@ -150,8 +165,8 @@ func (app AppState) getItems(conf queryConfigItems) ([]tmpItem,error) {
     if tmp.ID.Valid {
       out.CurrentReservation.Valid = true
       out.CurrentReservation.ID = tmp.ID.Int64
-      out.CurrentReservation.StartTime = tmp.StartTime.Time
-      out.CurrentReservation.EndTime = tmp.EndTime.Time
+      out.CurrentReservation.StartTime = tmp.StartTime.Time.In(location)
+      out.CurrentReservation.EndTime = tmp.EndTime.Time.In(location)
       out.CurrentReservation.Status = tmp.Status.String
       out.CurrentReservation.User.Name = tmp.Username.String
       out.CurrentReservation.User.ID = tmp.UserID.Int64

@@ -4,6 +4,7 @@ import (
     "net/http"
 		"time"
     "strconv"
+    "net/url"
 )
 
 func If[T any](cond bool, vtrue, vfalse T) T {
@@ -69,6 +70,15 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+  if r.FormValue("url") != "" {
+    target, err := url.Parse(app.server + r.FormValue("url"))
+    if err == nil {
+      app.Err(target.String())
+      http.Redirect(w, r, target.String(), http.StatusSeeOther)
+      return
+    }
+    app.Err(err.Error())
+  } 
 	// Redirect to admin dashboard
 	http.Redirect(w, r, "/admin/reservations", http.StatusSeeOther)
 }
@@ -131,7 +141,7 @@ func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func pastFutureReservations(reservations []Reservation) ([]Reservation,[]Reservation,[]Reservation) {
-	// Group reservations into upcoming and historical
+	// Group reservations into current, upcoming and historical
 	var upcomingReservations []Reservation
 	var historicalReservations []Reservation
 	var currentReservations []Reservation
@@ -146,7 +156,8 @@ func pastFutureReservations(reservations []Reservation) ([]Reservation,[]Reserva
 			upcomingReservations = append(upcomingReservations, res)
 		} else if res.StartTime.After(now) || 
 							res.StartTime.After(now12hearlier) || 
-							(res.StartTime.Before(now) && res.EndTime.After(now)) {
+							(res.StartTime.Before(now) && res.EndTime.After(now) ||
+              res.Status == "rented") {
 			// Reservation is upcoming
 			currentReservations = append(currentReservations, res)
 		} else {
@@ -212,6 +223,12 @@ type tmpReservationAudit struct {
 }
 
 func reservationHandler(w http.ResponseWriter, r *http.Request) {
+  var location, err = time.LoadLocation("Europe/Warsaw")
+  if err != nil {
+    app.Err(err.Error())
+		http.Error(w, "Localization error", http.StatusInternalServerError)
+    return
+  }
 	reservationID, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
 		app.Err(err.Error())
@@ -228,6 +245,10 @@ func reservationHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+  t.StartTime = t.StartTime.In(location)
+  t.EndTime = t.EndTime.In(location)
+  t.CreatedAt = t.CreatedAt.In(location)
+
 
 	// Get the history of changes to the reservation
 	var history []ReservationAudit
@@ -250,6 +271,8 @@ func reservationHandler(w http.ResponseWriter, r *http.Request) {
 		//	work around sqlx to better handle embedded structures and JOINs
 		r = t.ReservationAudit
 		r.User = t.User
+    //  TODO: update timestamps to localtime
+    r.ChangeDate = r.ChangeDate.In(location)
 		history = append(history, r)
 	}
 	if err = rows.Err(); err != nil {
