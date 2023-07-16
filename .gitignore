@@ -1,3 +1,6 @@
 .*.swp
 bystrze_sprzet
 magazyn.db
+/.vscode
+__*
+*.exe
