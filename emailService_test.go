@@ -10,7 +10,7 @@ func TestEmailService(t *testing.T) {
 		Name:  "Name",
 		Email: MAGAZYN_BYSTRZE_EMAIL,
 	}
-	result := SendEmail(receiver, "Topic", "This is a test message, please ignore.")
+	result := SendEmail(receiver, "Subject", "This is a test message, please ignore.")
 	if result != nil {
 		t.Errorf("Can't send test email, error: %s", result)
 	}
