@@ -56,4 +56,5 @@ const (
 	TOKEN_LENGTH                = 10
 	SMTP_HOST                   = "smtp.gmail.com"
 	SMTP_PORT                   = "587"
+	APP_NAME                    = "E-magazyn Bystrze"
 )
