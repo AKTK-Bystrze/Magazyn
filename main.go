@@ -185,7 +185,7 @@ func main() {
 			return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
 				baseURL, token, uid)
 		},
-	}, passwordless.NewCrockfordGenerator(4), 10*time.Minute)
+	}, passwordless.NewCrockfordGenerator(4), COOKIE_VALIDITY_TIME*time.Minute)
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 

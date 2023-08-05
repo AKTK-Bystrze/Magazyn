@@ -51,4 +51,5 @@ type ReservationAudit struct {
 const (
 	MAGAZYN_BYSTRZE_EMAIL = "zarzadbystrze@gmail.com"
 	PWL_KEY_COOKIE_STORE  = ""
+	COOKIE_VALIDITY_TIME  = 10
 )
