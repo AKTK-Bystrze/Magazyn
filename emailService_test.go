@@ -9,7 +9,7 @@ func TestEmailService(t *testing.T) {
 	receiver := User{
 		ID:    1,
 		Name:  "Name",
-		Email: MAGAZYN_BYSTRZE_EMAIL,
+		Email: MAGAZYN_BYSTRZE_EMAIL_ADDR,
 	}
 	result := SendEmail(receiver, "Test email", "This is a test message, please ignore.")
 	if result != nil {

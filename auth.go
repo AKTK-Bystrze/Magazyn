@@ -117,7 +117,11 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	if uid == "" {
 		// Lookup user ID. We just use the recipient value in this demo,
 		// but typically you'd perform a database query here.
-		err := app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_username = ?", recipient)
+		if strategy == "email" {
+			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_email = ?", recipient)
+		} else {
+			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", recipient)
+		}
 		if err != nil {
 			app.Err(err.Error())
 			log.Println(err)
@@ -155,18 +159,19 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		if valid {
 			// User provided a valid token! We can safely use the uid as it
 			// is validated alongside the token.
-			err := app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", uid)
+
+			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", uid)
+
 			if err != nil {
 				app.Err(err.Error())
 				log.Println(err)
 				return
 			}
-			uid = fmt.Sprint(u.ID)
 			if u.Role == "admin" {
 				target = "/admin/reservations"
 			}
 			session.Values["UserInfo"] = int(u.ID)
-			session.Values["uid"] = uid
+			session.Values["recipient"] = recipient
 			session.AddFlash("signed_in")
 			session.Save(r, w)
 			redirect(w, r, target, baseURL)

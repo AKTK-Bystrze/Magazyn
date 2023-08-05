@@ -47,11 +47,11 @@ set cgo_enabled=1
 ## Baza danych
 
 * Stwórz bazę 
-```bash
+```cmd
 sqlite3 magazyn.db < db.schema
 ```
 * Zapełnij bazę
-```bash
-sqlite3 magazyn.db ".read db_test.db"
+```powershell
+sqlite3 magazyn.db ".read db_test.data"
 ```
 

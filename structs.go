@@ -1,11 +1,11 @@
 package main
 
 import (
-	"html/template"
-	"time"
-
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
+	"html/template"
+
+	"time"
 )
 
 type AppState struct {
@@ -49,7 +49,11 @@ type ReservationAudit struct {
 }
 
 const (
-	MAGAZYN_BYSTRZE_EMAIL = "zarzadbystrze@gmail.com"
-	PWL_KEY_COOKIE_STORE  = ""
-	COOKIE_VALIDITY_TIME  = 10
+	MAGAZYN_BYSTRZE_EMAIL_ADDR  = MAGAZYN_BYSTRZE_EMAIL_LOGIN + "@gmail.com"
+	MAGAZYN_BYSTRZE_EMAIL_LOGIN = "zarzadbystrze"
+	COOKIE_VALIDITY_TIME        = 10
+	SEND_COOKIE_BY_EMAIL        = true
+	TOKEN_LENGTH                = 10
+	SMTP_HOST                   = "smtp.gmail.com"
+	SMTP_PORT                   = "587"
 )
