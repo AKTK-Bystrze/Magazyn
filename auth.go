@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/johnsto/go-passwordless/v2"
 )
 
 type tmpUser struct {
@@ -26,7 +28,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// display the login form
 		if r.Method == "GET" {
-			app.renderTemplateNoData(w, "login.html")
+
+			app.templates.ExecuteTemplate(w, "login.html", struct {
+				Strategies map[string]passwordless.Strategy
+				Context    *Context
+				Msg        string
+			}{
+				Strategies: pw.ListStrategies(nil),
+				Context:    getTemplateContext(w, r, session),
+				Msg:        "",
+			})
 			return
 		}
 		// get the username and password from the request
