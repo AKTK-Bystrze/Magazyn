@@ -182,12 +182,14 @@ func main() {
 	log.Println("No email transport specified, printing codes to stdout")
 	pw.SetTransport("debug", passwordless.LogTransport{
 		MessageFunc: func(token, uid string) string {
-			return fmt.Sprintf("Login at %s/account/token?strategy=debug&token=%s&uid=%s",
+			return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
 				baseURL, token, uid)
 		},
-	}, passwordless.NewCrockfordGenerator(4), 30*time.Minute)
+	}, passwordless.NewCrockfordGenerator(4), 10*time.Minute)
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+
+	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
 
 	//  log all requests
 	router.Use(loggingMiddleware)
