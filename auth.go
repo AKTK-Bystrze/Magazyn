@@ -174,7 +174,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			session.Values["recipient"] = recipient
 			session.AddFlash("signed_in")
 			session.Save(r, w)
-			redirect(w, r, target, baseURL)
+			http.Redirect(w, r, target, http.StatusSeeOther)
 			return
 		}
 
