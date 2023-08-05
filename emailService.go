@@ -43,7 +43,7 @@ func emailWriter(ctx context.Context, token, uid, recipient string, w io.Writer)
 		"you can safely ignore it.)"
 	html := "<!doctype html><html><body>" +
 		"<p>You (or someone who knows your email address) wants " +
-		"to sign in to the Go-Passwordless website.</p>" +
+		"to sign in to the " + APP_NAME + ".</p>" +
 		"<p>Your PIN is <b>" + token + "</b> - or <a href=\"" + link + "\">" +
 		"click here</a> to sign in automatically.</p>" +
 		"<p>(If you did not request or were not expecting this email, " +
