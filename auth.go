@@ -120,7 +120,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		if strategy == "email" {
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_email = ?", recipient)
 		} else {
-			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", recipient)
+			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_username = ?", recipient)
 		}
 		if err != nil {
 			app.Err(err.Error())
