@@ -180,7 +180,15 @@ func main() {
 		log.Printf("PWL_BASE_URL not defined; using %s", baseURL)
 	}
 	// Add Passwordless email transport using SMTP credentials from env
-	if SEND_COOKIE_BY_EMAIL {
+	if SEND_COOKIE_TO_STDOUT {
+		log.Println("No email transport specified, printing codes to stdout")
+		pw.SetTransport("debug", passwordless.LogTransport{
+			MessageFunc: func(token, uid string) string {
+				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
+					baseURL, token, uid)
+			},
+		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
+	} else {
 		log.Printf("Using email transport via %s", MAGAZYN_BYSTRZE_EMAIL_ADDR)
 		pw.SetTransport("email", passwordless.NewSMTPTransport(
 			SMTP_HOST+":"+SMTP_PORT,
@@ -192,14 +200,6 @@ func main() {
 				SMTP_HOST),
 			emailWriter,
 		), passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
-	} else {
-		log.Println("No email transport specified, printing codes to stdout")
-		pw.SetTransport("debug", passwordless.LogTransport{
-			MessageFunc: func(token, uid string) string {
-				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
-					baseURL, token, uid)
-			},
-		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
 	}
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
