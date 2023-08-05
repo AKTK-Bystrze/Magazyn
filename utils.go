@@ -84,5 +84,5 @@ func getSession(w http.ResponseWriter, r *http.Request) (*sessions.Session, erro
 }
 
 func isSignedIn(s *sessions.Session) bool {
-	return s != nil && s.Values["uid"] != nil
+	return s != nil && s.Values["UserInfo"] != nil
 }
