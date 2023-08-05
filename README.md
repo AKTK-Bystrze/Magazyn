@@ -5,6 +5,8 @@
   - [Konfiguracja VS Code (GO)](#konfiguracja-vs-code-go)
   - [GCC](#gcc)
   - [Baza danych](#baza-danych)
+- [Passwordless authentication](#passwordless-authentication)
+
 
 
 Repozytorium na aplikację webową do rezerwowania sprzętu AKTK Bystrze.
@@ -55,3 +57,14 @@ sqlite3 magazyn.db < db.schema
 sqlite3 magazyn.db ".read db_test.data"
 ```
 
+# Passwordless authentication
+
+Autentykacja jest realizowana za pomocą pakietu https://github.com/johnsto/go-passwordless. Token autentykacyjny jest przesyłany
+za pomocą emaila zdefiniowanego w MAGAZYN_BYSTRZE_EMAIL_ADDR w struct.go/consts. Parametr SEND_COOKIE_TO_STDOUT po ustawieniu na:
+* true 
+
+pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawany w terminalu. Na stronie należy podać "u_username" występujący w bazie
+
+* false
+
+pozwala na authentykację poprzez email. Na stronie należy podać adres email występujący w bazie.
