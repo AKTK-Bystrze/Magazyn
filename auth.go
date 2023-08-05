@@ -32,11 +32,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			app.templates.ExecuteTemplate(w, "login.html", struct {
 				Strategies map[string]passwordless.Strategy
-				Context    *Context
 				Msg        string
 			}{
 				Strategies: pw.ListStrategies(nil),
-				Context:    getTemplateContext(w, r, session),
 				Msg:        "",
 			})
 			return
@@ -204,8 +202,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	// If we've got to this point, the user is being prompted to enter a
 	// valid token value.
 
-	if err := app.templates.ExecuteTemplate(w, "token.html", struct {
-		Context    *Context
+	if err := app.templates.ExecuteTemplate(w, "tokenGenerated.html", struct {
 		Strategy   string
 		Recipient  string
 		UserID     string
@@ -214,7 +211,6 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		Strategy:   strategy,
 		Recipient:  recipient,
 		UserID:     uid,
-		Context:    getTemplateContext(w, r, session),
 		TokenError: tokenError,
 	}); err != nil {
 		log.Printf("couldn't render template: %v", err)

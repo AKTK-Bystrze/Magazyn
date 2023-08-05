@@ -53,7 +53,7 @@ const (
 	MAGAZYN_BYSTRZE_EMAIL_ADDR  = MAGAZYN_BYSTRZE_EMAIL_LOGIN + "@gmail.com"
 	MAGAZYN_BYSTRZE_EMAIL_LOGIN = "zarzadbystrze"
 	COOKIE_VALIDITY_TIME        = 10
-	SEND_COOKIE_TO_STDOUT       = false
+	SEND_COOKIE_TO_STDOUT       = true
 	TOKEN_LENGTH                = 10
 	SMTP_HOST                   = "smtp.gmail.com"
 	SMTP_PORT                   = "587"
