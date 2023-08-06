@@ -28,6 +28,8 @@ var (
 	baseURL string
 	app     AppState
 	tmpl    *template.Template
+	MAGAZYN_BYSTRZE_EMAIL_LOGIN = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_LOGIN")
+	MAGAZYN_BYSTRZE_EMAIL_ADDR  = MAGAZYN_BYSTRZE_EMAIL_LOGIN + "@gmail.com"
 )
 
 func SearchHandler(w http.ResponseWriter, r *http.Request) {
