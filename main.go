@@ -179,7 +179,7 @@ func main() {
 	//  log all requests
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/", Login).Methods("GET")
-	router.HandleFunc("/login", Login).Methods("GET", "POST")
+	router.HandleFunc("/login", Login).Methods("GET")
 	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
 
 	userRouter := mux.NewRouter()
