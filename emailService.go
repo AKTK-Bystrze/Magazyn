@@ -31,7 +31,7 @@ func emailWriter(ctx context.Context, token, uid, recipient string, w io.Writer)
 		To:      recipient,
 	}
 
-	link := baseURL + "/token" +
+	link := BASE_URL + "/token" +
 		"?strategy=email&token=" + token + "&uid=" + uid
 
 	// Ideally these would be populated from templates, but...

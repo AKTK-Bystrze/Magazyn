@@ -7,13 +7,11 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"net/smtp"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	"github.com/johnsto/go-passwordless/v2"
@@ -24,10 +22,11 @@ const SESSION_NAME = "session-name"
 
 var (
 	pw *passwordless.Passwordless
-	// baseURL should contain the root URL of the web server
-	baseURL string
-	app     AppState
-	tmpl    *template.Template
+	// BASE_URL should contain the root URL of the web server
+	BASE_URL                    = os.Getenv("BASE_URL")
+	COOKIE_KEY                  = []byte(os.Getenv("KEY_COOKIE_STORE"))
+	app                         AppState
+	tmpl                        *template.Template
 	MAGAZYN_BYSTRZE_EMAIL_LOGIN = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_LOGIN")
 	MAGAZYN_BYSTRZE_EMAIL_ADDR  = MAGAZYN_BYSTRZE_EMAIL_LOGIN + "@gmail.com"
 )
@@ -165,52 +164,23 @@ func main() {
 			return dict, nil
 		},
 	}
-	cookieKey := []byte(os.Getenv("PWL_KEY_COOKIE_STORE"))
-	if len(cookieKey) == 0 {
-		log.Println("PWL_KEY_COOKIE_STORE not defined; using random key")
-		cookieKey = securecookie.GenerateRandomKey(16)
-	}
+
+	validateCOOKIE_KEY()
+	validateBASE_URL()
+	setTokenTransportMean()
+
 	app.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
-	app.store = sessions.NewCookieStore(cookieKey)
+	app.store = sessions.NewCookieStore(COOKIE_KEY)
 	tokStore := passwordless.NewMemStore()
 	pw = passwordless.New(tokStore)
 
-	// Determine base URL
-	baseURL = os.Getenv("PWL_BASE_URL")
-	if baseURL == "" {
-		baseURL = "http://localhost:8080"
-		log.Printf("PWL_BASE_URL not defined; using %s", baseURL)
-	}
-	// Add Passwordless email transport using SMTP credentials from env
-	if SEND_COOKIE_TO_STDOUT {
-		log.Println("No email transport specified, printing codes to stdout")
-		pw.SetTransport("debug", passwordless.LogTransport{
-			MessageFunc: func(token, uid string) string {
-				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
-					baseURL, token, uid)
-			},
-		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
-	} else {
-		log.Printf("Using email transport via %s", MAGAZYN_BYSTRZE_EMAIL_ADDR)
-		pw.SetTransport("email", passwordless.NewSMTPTransport(
-			SMTP_HOST+":"+SMTP_PORT,
-			MAGAZYN_BYSTRZE_EMAIL_ADDR,
-			smtp.PlainAuth(
-				"",
-				MAGAZYN_BYSTRZE_EMAIL_LOGIN,
-				os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS"),
-				SMTP_HOST),
-			emailWriter,
-		), passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
-	}
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-
-	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
 
 	//  log all requests
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/", Login).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("GET", "POST")
+	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
 
 	userRouter := mux.NewRouter()
 	userRouter.Use(validUserMiddlware)

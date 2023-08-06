@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/smtp"
+	"os"
+	"time"
 
+	"github.com/gorilla/securecookie"
 	"github.com/johnsto/go-passwordless/v2"
 )
 
@@ -214,5 +218,36 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		TokenError: tokenError,
 	}); err != nil {
 		log.Printf("couldn't render template: %v", err)
+	}
+}
+
+func setTokenTransportMean() {
+	if SEND_COOKIE_TO_STDOUT {
+		log.Println("No email transport specified, printing codes to stdout")
+		pw.SetTransport("debug", passwordless.LogTransport{
+			MessageFunc: func(token, uid string) string {
+				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
+					BASE_URL, token, uid)
+			},
+		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
+	} else {
+		log.Printf("Using email transport via %s", MAGAZYN_BYSTRZE_EMAIL_ADDR)
+		pw.SetTransport("email", passwordless.NewSMTPTransport(
+			SMTP_HOST+":"+SMTP_PORT,
+			MAGAZYN_BYSTRZE_EMAIL_ADDR,
+			smtp.PlainAuth(
+				"",
+				MAGAZYN_BYSTRZE_EMAIL_LOGIN,
+				os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS"),
+				SMTP_HOST),
+			emailWriter,
+		), passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
+	}
+}
+
+func validateCOOKIE_KEY() {
+	if len(COOKIE_KEY) == 0 {
+		log.Println("KEY_COOKIE_STORE not defined; using random key")
+		COOKIE_KEY = securecookie.GenerateRandomKey(COOKIE_KEY_LENGTH)
 	}
 }
