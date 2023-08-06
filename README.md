@@ -6,6 +6,7 @@
   - [GCC](#gcc)
   - [Baza danych](#baza-danych)
 - [Passwordless authentication](#passwordless-authentication)
+  - [Konfiguracja](#konfiguracja)
 
 
 
@@ -60,11 +61,17 @@ sqlite3 magazyn.db ".read db_test.data"
 # Passwordless authentication
 
 Autentykacja jest realizowana za pomocą pakietu https://github.com/johnsto/go-passwordless. Token autentykacyjny jest przesyłany
-za pomocą emaila zdefiniowanego w MAGAZYN_BYSTRZE_EMAIL_ADDR w struct.go/consts. Parametr SEND_COOKIE_TO_STDOUT po ustawieniu na:
-* true 
+za pomocą emaila zdefiniowanego w **MAGAZYN_BYSTRZE_EMAIL_ADDR**. Parametr **SEND_COOKIE_TO_STDOUT** po ustawieniu na:
+* **true** 
 
 pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawany w terminalu. Na stronie należy podać "u_username" występujący w bazie
 
-* false
+* **false**
 
 pozwala na authentykację poprzez email. Na stronie należy podać adres email występujący w bazie.
+
+## Konfiguracja 
+
+Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_LOGIN** oraz **MAGAZYN_BYSTRZE_EMAIL_ADDR**. Ponadto w przypadku **gmail**
+ należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach 
+ skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
