@@ -51,7 +51,7 @@ type ReservationAudit struct {
 
 const (
 	COOKIE_VALIDITY_TIME  = 10
-	SEND_COOKIE_TO_STDOUT = true
+	SEND_COOKIE_TO_STDOUT = false
 	TOKEN_LENGTH          = 10
 	SMTP_HOST             = "smtp.gmail.com"
 	SMTP_PORT             = "587"
