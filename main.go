@@ -24,7 +24,7 @@ var (
 	pw *passwordless.Passwordless
 	// BASE_URL should contain the root URL of the web server
 	BASE_URL                    = os.Getenv("BASE_URL")
-	COOKIE_KEY                  = []byte(os.Getenv("KEY_COOKIE_STORE"))
+	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
 	app                         AppState
 	tmpl                        *template.Template
 	MAGAZYN_BYSTRZE_EMAIL_LOGIN = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_LOGIN")

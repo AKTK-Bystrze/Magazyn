@@ -7,6 +7,8 @@
   - [Baza danych](#baza-danych)
 - [Passwordless authentication](#passwordless-authentication)
   - [Konfiguracja](#konfiguracja)
+- [Zmienne środowiskowe](#zmienne-środowiskowe)
+
 
 
 
@@ -72,10 +74,15 @@ pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawa
 
 pozwala na authentykację poprzez email. Na stronie należy podać adres email występujący w bazie.
 
-Zmienne środowiskowe pobierane przez aplikację:
-- BASE_URL - wymagany do tworzenua linku do szybkieh authentykacji. W przypadku braku używany jest
-- COOKIE_KEY
-
 ## Konfiguracja 
 
-Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_LOGIN** oraz **MAGAZYN_BYSTRZE_EMAIL_ADDR**. Ponadto w przypadku **gmail** należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
+Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_LOGIN**. Ponadto w przypadku **gmail** należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
+
+# Zmienne środowiskowe
+
+Zmienne środowiskowe pobierane przez aplikację:
+- BASE_URL - wymagany do tworzenua linku do szybkieh authentykacji. W przypadku braku używany jest "http://localhost:8080"
+- COOKIE_KEY - klucz ciasteczka
+- MAGAZYN_BYSTRZE_EMAIL_LOGIN - login konta email wtkorzystywanego do wysyłani maili przez aplikację (bez @gmail.com, domyślnie
+serwer to gmail)
+- MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta
