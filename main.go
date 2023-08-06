@@ -164,15 +164,15 @@ func main() {
 			return dict, nil
 		},
 	}
-
 	validateCOOKIE_KEY()
+	app.store = sessions.NewCookieStore(COOKIE_KEY)
+	tokStore := passwordless.NewMemStore()
+	pw = passwordless.New(tokStore)
+
 	validateBASE_URL()
 	setTokenTransportMean()
 
 	app.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
-	app.store = sessions.NewCookieStore(COOKIE_KEY)
-	tokStore := passwordless.NewMemStore()
-	pw = passwordless.New(tokStore)
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
