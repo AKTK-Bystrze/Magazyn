@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/gorilla/sessions"
 	"log"
 	"net/http"
+	"strings"
+
+	"github.com/gorilla/sessions"
 )
 
 // Error represents an error that is displayed to the user.
@@ -33,4 +35,9 @@ func validateBASE_URL() {
 		BASE_URL = "http://localhost:8080"
 		log.Printf("BASE_URL not defined; using %s", BASE_URL)
 	}
+}
+
+func getEmailUsername(email string) string {
+	usernameAndDomain := strings.Split(email, "@")
+	return usernameAndDomain[0]
 }

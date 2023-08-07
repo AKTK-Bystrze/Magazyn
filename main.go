@@ -25,8 +25,10 @@ var (
 	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
 	app                         AppState
 	tmpl                        *template.Template
-	MAGAZYN_BYSTRZE_EMAIL_LOGIN = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_LOGIN")
-	MAGAZYN_BYSTRZE_EMAIL_ADDR  = MAGAZYN_BYSTRZE_EMAIL_LOGIN + "@gmail.com"
+	MAGAZYN_BYSTRZE_EMAIL_ADDR  = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
+	MAGAZYN_BYSTRZE_EMAIL_LOGIN = getEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
+	SMTP_HOST                   = os.Getenv("SMTP_HOST")
+	SMTP_PORT                   = os.Getenv("SMTP_PORT")
 )
 
 func SearchHandler(w http.ResponseWriter, r *http.Request) {
