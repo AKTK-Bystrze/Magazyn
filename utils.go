@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -28,13 +27,6 @@ func writeError(w http.ResponseWriter, r *http.Request, s *sessions.Session, sta
 
 func isSignedIn(s *sessions.Session) bool {
 	return s != nil && s.Values["UserInfo"] != nil
-}
-
-func validateBASE_URL() {
-	if BASE_URL == "" {
-		BASE_URL = "http://localhost:8080"
-		log.Printf("BASE_URL not defined; using %s", BASE_URL)
-	}
 }
 
 func getEmailUsername(email string) string {

@@ -31,7 +31,7 @@ func emailWriter(ctx context.Context, token, uid, recipient string, w io.Writer)
 		To:      recipient,
 	}
 
-	link := BASE_URL + "/token" +
+	link := app.server + "/token" +
 		"?strategy=email&token=" + token + "&uid=" + uid
 
 	// TODO move it to template

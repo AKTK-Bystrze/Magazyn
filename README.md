@@ -81,7 +81,6 @@ Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_ADDR**, **SMT
 # Zmienne środowiskowe
 
 Zmienne środowiskowe pobierane przez aplikację:
-- BASE_URL - wymagany do tworzenua linku do szybkiej authetykacji. W przypadku braku używany jest "http://localhost:8080".
 - COOKIE_KEY - klucz ciasteczka. W przypadku braku generowana jest losowa wartość.
 - MAGAZYN_BYSTRZE_EMAIL_ADDR - adres konta email wykorzystywanego do wysyłania emaili przez aplikację.
 - MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.

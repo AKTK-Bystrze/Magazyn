@@ -19,9 +19,7 @@ import (
 )
 
 var (
-	pw *passwordless.Passwordless
-	// BASE_URL should contain the root URL of the web server
-	BASE_URL                    = os.Getenv("BASE_URL")
+	pw                          *passwordless.Passwordless
 	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
 	app                         AppState
 	tmpl                        *template.Template
@@ -169,7 +167,6 @@ func main() {
 	tokStore := passwordless.NewMemStore()
 	pw = passwordless.New(tokStore)
 
-	validateBASE_URL()
 	setTokenTransportMean()
 
 	app.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
