@@ -29,6 +29,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Template error", http.StatusInternalServerError)
 			return
 		}
+		target := "/dashboard"
+		if err != nil {
+			app.Err(err.Error())
+			log.Println(err)
+			return
+		}
+		if u.Role == "admin" {
+			target = "/admin/reservations"
+		}
+		http.Redirect(w, r, target, http.StatusSeeOther)
+		return
 	} else {
 		// display the login form
 		if r.Method == "GET" {
@@ -59,7 +70,18 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := app.store.Get(r, SESSION_NAME)
 	if err != nil {
 		log.Println(err)
-		return
+		//cookie might be incorect, how to handle it? Is removing cookie correct?
+		c := &http.Cookie{
+			Name:    SESSION_NAME,
+			Value:   "",
+			Path:    "/",
+			Expires: time.Unix(0, 0),
+
+			HttpOnly: true,
+		}
+		target = "/login"
+		http.SetCookie(w, c)
+		// http.Redirect(w, r, target, http.StatusSeeOther)
 	}
 
 	if isSignedIn(session) {

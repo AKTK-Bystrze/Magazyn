@@ -18,8 +18,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const SESSION_NAME = "session-name"
-
 var (
 	pw *passwordless.Passwordless
 	// BASE_URL should contain the root URL of the web server

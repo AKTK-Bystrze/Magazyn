@@ -13,9 +13,12 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-redis/redis/v8 v8.11.4 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/gorilla/securecookie v1.1.1 // indirect
-	github.com/jmoiron/sqlx v1.3.5 // indirect
-	github.com/johnsto/go-passwordless/v2 v2.0.0 // indirect
 	github.com/pzduniak/mcf v0.0.0-20160731113721-0ddac5a6d704 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
+)
+
+require (
+	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/jmoiron/sqlx v1.3.5 // indirect
+	github.com/johnsto/go-passwordless/v2 v2.0.0
 )

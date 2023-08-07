@@ -57,4 +57,5 @@ const (
 	SMTP_HOST             = "smtp.gmail.com"
 	SMTP_PORT             = "587"
 	APP_NAME              = "E-magazyn Bystrze"
+	SESSION_NAME          = "session-name"
 )
