@@ -21,7 +21,6 @@ type tmpUser struct {
 func Login(w http.ResponseWriter, r *http.Request) {
 	session, _ := app.store.Get(r, SESSION_NAME)
 	var u tmpUser
-	// check if user is logged in
 	if isSignedIn(session) {
 		err := app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
 		if err != nil {
@@ -41,17 +40,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, target, http.StatusSeeOther)
 		return
 	} else {
-		// display the login form
-		if r.Method == "GET" {
-			app.templates.ExecuteTemplate(w, "login.html", struct {
-				Strategies map[string]passwordless.Strategy
-				Msg        string
-			}{
-				Strategies: pw.ListStrategies(nil),
-				Msg:        "",
-			})
-			return
-		}
+		app.templates.ExecuteTemplate(w, "login.html", struct {
+			Strategies map[string]passwordless.Strategy
+			Msg        string
+		}{
+			Strategies: pw.ListStrategies(nil),
+			Msg:        "",
+		})
+		return
 	}
 }
 
@@ -70,18 +66,15 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := app.store.Get(r, SESSION_NAME)
 	if err != nil {
 		log.Println(err)
-		//cookie might be incorect, how to handle it? Is removing cookie correct?
 		c := &http.Cookie{
-			Name:    SESSION_NAME,
-			Value:   "",
-			Path:    "/",
-			Expires: time.Unix(0, 0),
-
+			Name:     SESSION_NAME,
+			Value:    "",
+			Path:     "/",
+			Expires:  time.Unix(0, 0),
 			HttpOnly: true,
 		}
 		target = "/login"
 		http.SetCookie(w, c)
-		// http.Redirect(w, r, target, http.StatusSeeOther)
 	}
 
 	if isSignedIn(session) {
