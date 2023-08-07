@@ -34,7 +34,7 @@ func emailWriter(ctx context.Context, token, uid, recipient string, w io.Writer)
 	link := BASE_URL + "/token" +
 		"?strategy=email&token=" + token + "&uid=" + uid
 
-	// Ideally these would be populated from templates, but...
+	// TODO move it to template
 	text := "You (or someone who knows your email address) wants " +
 		"to sign in to the " + APP_NAME + " website.\n\n" +
 		"Your PIN is " + token + " - or use the following link: " +
