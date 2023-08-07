@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>Token generated</title>
+		<title>Logowanie</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		{{ template "stylesInclude" dict "DataTables" false}}
 	</head>
@@ -11,7 +11,7 @@
 			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
 			{{ if eq .Strategy "email" }}
 			<h2>Email Sent!</h2>
-			<p class="{{ if .TokenError }}muted{{end}}">An email has been sent to <strong>{{ .Recipient }}</strong> containing a unique PIN. Enter the PIN you receive into the box below:</p>
+			<p class="{{ if .TokenError }}muted{{end}}">Mail wraz z kodem został wysłany na adres <strong>{{ .Recipient }}</strong>. Wprowadź otrzymany kok do poniższego pola:</p>
 			<form method="POST">
 				<input type="hidden" name="strategy" value="email">
 				<input type="hidden" name="recipient" value="{{ .Recipient }}">
@@ -21,8 +21,8 @@
 			</form>
 			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
 			{{ else if eq .Strategy "debug" }}
-			<h2>Link sent!</h2>
-			<p class="{{ if .TokenError }}muted{{end}}">A protected link has been written to the terminal. Please click on it.</p>
+			<h2>Wysłano link!</h2>
+			<p class="{{ if .TokenError }}muted{{end}}">Link pojawił się w terminalu. Kliknij na niego.</p>
 			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
 			{{ end }}
 			</div>
