@@ -76,12 +76,14 @@ pozwala na authentykację poprzez email. Na stronie należy podać adres email w
 
 ## Konfiguracja 
 
-Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_ADDR**. Ponadto w przypadku **gmail** należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
+Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_ADDR**, **SMTP_HOST**, **SMTP_PORT**. Ponadto w przypadku **gmail** należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
 
 # Zmienne środowiskowe
 
 Zmienne środowiskowe pobierane przez aplikację:
-- BASE_URL - wymagany do tworzenua linku do szybkieh authentykacji. W przypadku braku używany jest "http://localhost:8080"
-- COOKIE_KEY - klucz ciasteczka
-- MAGAZYN_BYSTRZE_EMAIL_ADDR - adres konta email wtkorzystywanego do wysyłani maili przez aplikację
-- MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta
+- BASE_URL - wymagany do tworzenua linku do szybkiej authetykacji. W przypadku braku używany jest "http://localhost:8080".
+- COOKIE_KEY - klucz ciasteczka. W przypadku braku generowana jest losowa wartość.
+- MAGAZYN_BYSTRZE_EMAIL_ADDR - adres konta email wykorzystywanego do wysyłania emaili przez aplikację.
+- MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
+- SMTP_HOST np: smtp.gmail.com
+- SMTP_PORT np: 587
