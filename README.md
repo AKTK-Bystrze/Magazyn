@@ -8,6 +8,7 @@
 - [Passwordless authentication](#passwordless-authentication)
   - [Konfiguracja](#konfiguracja)
 - [Zmienne środowiskowe](#zmienne-środowiskowe)
+- [Testy](#testy)
 
 
 
@@ -86,3 +87,9 @@ Zmienne środowiskowe pobierane przez aplikację:
 - MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
 - SMTP_HOST np: smtp.gmail.com
 - SMTP_PORT np: 587
+
+# Testy
+
+Konwencja nazewnictwa : Test_testowanyStan_oczekiwanyRezultat
+
+Przykład Test_AgeLessThan18_isAdultAsFalse
