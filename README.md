@@ -5,6 +5,11 @@
   - [Konfiguracja VS Code (GO)](#konfiguracja-vs-code-go)
   - [GCC](#gcc)
   - [Baza danych](#baza-danych)
+- [Passwordless authentication](#passwordless-authentication)
+  - [Konfiguracja](#konfiguracja)
+- [Zmienne środowiskowe](#zmienne-środowiskowe)
+
+
 
 
 Repozytorium na aplikację webową do rezerwowania sprzętu AKTK Bystrze.
@@ -47,11 +52,37 @@ set cgo_enabled=1
 ## Baza danych
 
 * Stwórz bazę 
-```bash
+```cmd
 sqlite3 magazyn.db < db.schema
 ```
 * Zapełnij bazę
-```bash
-sqlite3 magazyn.db ".read db_test.db"
+```powershell
+sqlite3 magazyn.db ".read db_test.data"
 ```
 
+# Passwordless authentication
+
+Autentykacja jest realizowana za pomocą pakietu https://github.com/johnsto/go-passwordless. Token autentykacyjny jest przesyłany
+za pomocą emaila zdefiniowanego w **MAGAZYN_BYSTRZE_EMAIL_ADDR**.
+
+ Parametr **SEND_COOKIE_TO_STDOUT** po ustawieniu na:
+- **true** 
+
+pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawany w terminalu. Na stronie należy podać "u_username" występujący w bazie
+
+- **false**
+
+pozwala na authentykację poprzez email. Na stronie należy podać adres email występujący w bazie.
+
+## Konfiguracja 
+
+Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_ADDR**, **SMTP_HOST**, **SMTP_PORT**. Ponadto w przypadku **gmail** należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
+
+# Zmienne środowiskowe
+
+Zmienne środowiskowe pobierane przez aplikację:
+- COOKIE_KEY - klucz ciasteczka. W przypadku braku generowana jest losowa wartość.
+- MAGAZYN_BYSTRZE_EMAIL_ADDR - adres konta email wykorzystywanego do wysyłania emaili przez aplikację.
+- MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
+- SMTP_HOST np: smtp.gmail.com
+- SMTP_PORT np: 587

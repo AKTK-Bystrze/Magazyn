@@ -9,21 +9,36 @@
 		<div class="container mt-5">
 			<h1 class="text-center">Login</h1>
 			{{ if .Msg }}
-			<div class="alert alert-danger">{{ .Msg }}</div>
+				<div class="alert alert-danger">{{ .Msg }}</div>
 			{{ end }}
-			<form method="POST" action="/login" class="mx-auto" style="width: 300px;">
-				<div class="form-group">
-					<label for="username">Login:</label>
-					<input type="text" name="username" id="username" class="form-control">
+			<section class="container px2">
+				<div class="clearfix">
+				{{ range $name, $t := .Strategies }}
+					{{ if eq $name "email" }}
+						<h3><i class="fa fa-envelope"></i> Send me an email</h3>
+						<form method="post" action="token">
+							<input type="hidden" name="strategy" value="email">
+							<label>Enter your email address below:</label>
+							<input name="recipient" type="email" class="field block mb1"
+								required placeholder="Email address">
+							<button type="submit" class="btn btn-primary">Send</button>
+						</form>
+					{{ else if eq $name "debug" }}
+					<h3><i class="fa fa-tty"></i> Emit to debug stdout</h3>
+					<form method="post" action="token">
+						<input type="hidden" name="strategy" value="debug">
+						<label>Enter your name below:</label>
+						<input name="recipient" type="text" class="field block mb1"
+							required placeholder="Your name">
+						<button type="submit" class="btn btn-primary">Send</button>
+					</form>
+					{{ else }}
+						<h3>Unknown strategy "{{ $name }}"</h3>
+					{{ end }}
+					</div>
+				{{ end }}
 				</div>
-				<div class="form-group">
-					<label for="password">Haslo:</label>
-					<input type="password" name="password" id="password" class="form-control">
-				</div>
-				<div class="form-group text-center">
-					<input type="submit" value="Login" class="btn btn-primary">
-				</div>
-			</form>
+			</section>
 		</div>
 	</body>
 </html>

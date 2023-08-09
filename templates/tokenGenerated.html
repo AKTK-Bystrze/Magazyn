@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Logowanie</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		{{ template "stylesInclude" dict "DataTables" false}}
+	</head>
+	<body>
+		<section class="container">
+			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
+			{{ if eq .Strategy "email" }}
+			<h2>Email Sent!</h2>
+			<p class="{{ if .TokenError }}muted{{end}}">Mail wraz z kodem został wysłany na adres <strong>{{ .Recipient }}</strong>. Wprowadź otrzymany kok do poniższego pola:</p>
+			<form method="POST">
+				<input type="hidden" name="strategy" value="email">
+				<input type="hidden" name="recipient" value="{{ .Recipient }}">
+				<input type="hidden" name="uid" value="{{ .UserID }}">
+				<input type="text" name="token" required class="field" autofocus>
+				<button type="submit" class="btn btn-primary">Verify</button>
+			</form>
+			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
+			{{ else if eq .Strategy "debug" }}
+			<h2>Wysłano link!</h2>
+			<p class="{{ if .TokenError }}muted{{end}}">Link pojawił się w terminalu. Kliknij na niego.</p>
+			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
+			{{ end }}
+			</div>
+		</section>
+	</body>
+</html>
