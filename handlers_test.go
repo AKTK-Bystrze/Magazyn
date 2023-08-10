@@ -48,6 +48,14 @@ func beforeEach() {
 	app.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
 }
 
+func setUpDb() {
+	db, err := sqlx.Open("sqlite3", "magazyn.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.db = db
+}
+
 func Test_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 	beforeEach()
 
@@ -83,11 +91,13 @@ func Test_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 
 func Test_userIsSignedIn_redirectToDashboard(t *testing.T) {
 	beforeEach()
+	setUpDb()
+	var u tmpUser
 	req, err := http.NewRequest("GET", "/login", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var u tmpUser
+
 	session, err := app.store.Get(req, SESSION_NAME)
 	if err != nil {
 		t.Fatal(err)
@@ -97,17 +107,11 @@ func Test_userIsSignedIn_redirectToDashboard(t *testing.T) {
 	w := httptest.NewRecorder()
 	session.Save(req, w)
 
-	db, err := sqlx.Open("sqlite3", "magazyn.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	app.db = db
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(Login)
 
 	handler.ServeHTTP(rr, req)
-
+	defer app.db.Close()
 	if status := rr.Code; status != http.StatusSeeOther {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
@@ -117,11 +121,13 @@ func Test_userIsSignedIn_redirectToDashboard(t *testing.T) {
 
 func Test_adminIsSignedIn_redirectToAdminDashboard(t *testing.T) {
 	beforeEach()
+	setUpDb()
+	var u tmpUser
 	req, err := http.NewRequest("GET", "/login", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var u tmpUser
+
 	session, err := app.store.Get(req, SESSION_NAME)
 	if err != nil {
 		t.Fatal(err)
@@ -132,20 +138,25 @@ func Test_adminIsSignedIn_redirectToAdminDashboard(t *testing.T) {
 	w := httptest.NewRecorder()
 	session.Save(req, w)
 
-	db, err := sqlx.Open("sqlite3", "magazyn.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	app.db = db
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(Login)
 
 	handler.ServeHTTP(rr, req)
-
+	defer app.db.Close()
 	if status := rr.Code; status != http.StatusSeeOther {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
 	assert.Equal(t, "/admin/reservations", rr.Result().Header.Get("Location"))
+}
+
+//token handler
+//1 session with wrong cookie
+//2 is signedIn
+//3 no token provided
+//4 provided valid token
+
+func Test_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T) {
+	beforeEach()
+
 }
