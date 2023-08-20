@@ -15,12 +15,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// type MockDB struct{}
-
-// func (m *MockDB) Get(dest interface{}, query string, args ...interface{}) error {
-// 	return nil
-// }
-
 type MockStore struct {
 	mock.Mock
 	session sessions.Session
@@ -49,31 +43,26 @@ type MockPasswordless struct {
 }
 
 func (m *MockPasswordless) GetStrategy(ctx context.Context, name string) (passwordless.Strategy, error) {
-	args := m.Called(ctx, name)
-	return args.Get(0).(passwordless.Strategy), args.Error(1)
+	return nil, nil
 }
 
 func (m *MockPasswordless) RequestToken(ctx context.Context, s string, uid string, recipient string) error {
-	args := m.Called(ctx, s, uid, recipient)
-	return args.Error(0)
+	return nil
 }
 
 func (m *MockPasswordless) SetStrategy(name string, s passwordless.Strategy) {
-	m.Called(name, s)
 }
 
 func (m *MockPasswordless) SetTransport(name string, t passwordless.Transport, g passwordless.TokenGenerator, ttl time.Duration) passwordless.Strategy {
-	args := m.Called(name, t, g, ttl)
-	return args.Get(0).(passwordless.Strategy)
+	return nil
 }
 
 func (m *MockPasswordless) VerifyToken(ctx context.Context, uid string, token string) (bool, error) {
-	args := m.Called(ctx, uid, token)
-	return args.Bool(0), args.Error(1)
+	return false, nil
 }
 
 func (m *MockPasswordless) ListStrategies(ctx context.Context) map[string]passwordless.Strategy {
-	return nil //map[string]Strategy
+	return nil
 }
 
 type mockTemplate struct {
@@ -122,18 +111,15 @@ type MockDatabase struct {
 }
 
 func (m *MockDatabase) Exec(query string, args ...interface{}) (sql.Result, error) {
-	argsList := m.Called(query, args)
-	return argsList.Get(0).(sql.Result), argsList.Error(1)
+	return nil, nil
 }
 
 func (m *MockDatabase) QueryRow(query string, args ...interface{}) *sql.Row {
-	argsList := m.Called(query, args)
-	return argsList.Get(0).(*sql.Row)
+	return nil
 }
 
 func (m *MockDatabase) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	argsList := m.Called(query, args)
-	return argsList.Get(0).(*sql.Rows), argsList.Error(1)
+	return nil, nil
 }
 
 func (m *MockDatabase) Get(dest interface{}, query string, args ...interface{}) error {
@@ -142,31 +128,22 @@ func (m *MockDatabase) Get(dest interface{}, query string, args ...interface{}) 
 }
 
 func (m *MockDatabase) Prepare(query string) (*sql.Stmt, error) {
-	argsList := m.Called(query)
-	return argsList.Get(0).(*sql.Stmt), argsList.Error(1)
+	return nil, nil
 }
 
 func (m *MockDatabase) Unsafe() *sqlx.DB {
-	argsList := m.Called()
-	return argsList.Get(0).(*sqlx.DB)
+	return nil
 }
 
 func (m *MockDatabase) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
-	argsList := m.Called(query, args)
-	return argsList.Get(0).(*sqlx.Rows), argsList.Error(1)
+	return nil, nil
 }
 
 func (m *MockDatabase) QueryRowx(query string, args ...interface{}) *sqlx.Row {
-	argsList := m.Called(query, args)
-	return argsList.Get(0).(*sqlx.Row)
+	return nil
 }
 
 func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
-	//mock
-	// - app.store.Get
-	// - app.db.Get
-	// - userTmp
-	// check if http.Redirect was called : target = "/dashboard"
 	mockStore := new(MockStore)
 	session := sessions.NewSession(nil, SESSION_NAME)
 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
@@ -180,7 +157,7 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 	mockDatabase := new(MockDatabase)
 	mockDatabase.user = tmpUser
 	app = AppState{
-		templates: mockTemplate, // Actual template instance is not needed in the test
+		templates: mockTemplate,
 		store:     mockStore,
 		db:        mockDatabase,
 	}
