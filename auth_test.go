@@ -18,13 +18,13 @@ import (
 )
 
 var (
-	UID_STR     = fmt.Sprint(mock.Anything)
-	UID_NB, _   = strconv.ParseInt(UID_STR, 10, 64)
-	TEST_TOKEN  = "WRONG_TEST_TOKEN"
-	ROLE        = "role"
-	EMAIL       = "email"
-	TOKEN_ERROR = "The entered token/PIN was incorrect."
-	TEST_EMAIL  = "email@address.com"
+	UID_STR             = fmt.Sprint(mock.Anything)
+	UID_NB, _           = strconv.ParseInt(UID_STR, 10, 64)
+	TEST_TOKEN          = "WRONG_TEST_TOKEN"
+	ROLE                = "role"
+	EMAIL               = "email"
+	TOKEN_ERROR_MESSAGE = "The entered token/PIN was incorrect."
+	TEST_EMAIL          = "email@address.com"
 )
 
 type MockStore struct {
@@ -339,7 +339,7 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 		Strategy:   EMAIL,
 		Recipient:  ROLE,
 		UserID:     UID_STR,
-		TokenError: TOKEN_ERROR,
+		TokenError: TOKEN_ERROR_MESSAGE,
 	}).Return(nil)
 	tmpUser := tmpUser{
 		Role: ROLE,
