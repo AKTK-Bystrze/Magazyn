@@ -237,7 +237,7 @@ func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T
 	mockTemplate := new(mockTemplate)
 	mockTemplate.On("ExecuteTemplate", mock.Anything, "tokenGenerated.html", mock.Anything).Return(nil)
 	tmpUser := tmpUser{
-		Role: "user", //todo
+		Role: "user",
 		ID:   UID_NB,
 	}
 	mockDatabase := new(MockDatabase)
@@ -310,7 +310,7 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 		handler := http.HandlerFunc(app.tokenHandler)
 
 		handler.ServeHTTP(recorder, req)
-		if tc.role == "admin" { //todo
+		if tc.role == "admin" {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
 				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
 			}
@@ -409,7 +409,7 @@ func Test_tokenHandler_userIsSignedIn_Redirect(t *testing.T) {
 		handler := http.HandlerFunc(app.tokenHandler)
 
 		handler.ServeHTTP(recorder, req)
-		if tc.role == "admin" { //todo
+		if tc.role == "admin" {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
 				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
 			}
