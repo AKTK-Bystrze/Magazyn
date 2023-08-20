@@ -63,7 +63,7 @@ func (m *MockPasswordless) SetTransport(name string, t passwordless.Transport, g
 }
 
 func (m *MockPasswordless) VerifyToken(ctx context.Context, uid string, token string) (bool, error) {
-	return false, nil
+	return true, nil
 }
 
 func (m *MockPasswordless) ListStrategies(ctx context.Context) map[string]passwordless.Strategy {
@@ -203,7 +203,7 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 //token handler
 //1 session with wrong cookie
 //2 is signedIn
-//3 no token provided
+//3 no token provided(request token on valid email provided) DONE
 //4 provided valid token
 
 func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T) {
@@ -243,4 +243,75 @@ func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T
 	handler.ServeHTTP(recorder, req)
 	mockTemplate.AssertExpectations(t)
 	mockPW.AssertExpectations(t)
+}
+
+type MockSessionStore struct {
+	store SessionStore
+	mock.Mock
+}
+
+func (m *MockSessionStore) Get(r *http.Request, name string) (*sessions.Session, error) {
+	return nil, nil
+}
+func (m *MockSessionStore) New(r *http.Request, name string) (*sessions.Session, error) {
+	return nil, nil
+}
+
+func (m *MockSessionStore) Save(r *http.Request, w http.ResponseWriter, s *sessions.Session) error {
+	return nil
+}
+
+func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
+	testCases := []struct {
+		role           string
+		RedirectTarget string
+	}{
+		{"user", "/dashboard"},
+		{"admin", "/admin/reservations"},
+	}
+
+	for _, tc := range testCases {
+		testToken := "testToken"
+		mockStore := new(MockStore)
+		session := sessions.NewSession(new(MockSessionStore), SESSION_NAME)
+		session.Values = map[interface{}]interface{}{"UserInfo": nil}
+		session.Values["recipient"] = tc.role
+		mockStore.session = *session
+		mockTemplate := new(mockTemplate)
+		tmpUser := tmpUser{
+			Role: tc.role,
+			ID:   1,
+		}
+		mockDatabase := new(MockDatabase)
+		mockDatabase.user = tmpUser
+		app = AppState{
+			templates: mockTemplate,
+			store:     mockStore,
+			db:        mockDatabase,
+		}
+		pw = new(MockPasswordless)
+		req, err := http.NewRequest("GET", "/token", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Form = map[string][]string{}
+		req.Form.Add("strategy", "email")
+		req.Form.Add("recipient", tc.role)
+		req.Form.Add("token", testToken)
+
+		recorder := httptest.NewRecorder()
+		handler := http.HandlerFunc(app.tokenHandler)
+
+		handler.ServeHTTP(recorder, req)
+
+		if tc.role == "admin" {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+			}
+		} else {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+			}
+		}
+	}
 }

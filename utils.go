@@ -63,3 +63,9 @@ type Database interface {
 	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 	QueryRowx(query string, args ...interface{}) *sqlx.Row
 }
+
+type SessionStore interface {
+	Get(r *http.Request, name string) (*sessions.Session, error)
+	New(r *http.Request, name string) (*sessions.Session, error)
+	Save(r *http.Request, w http.ResponseWriter, s *sessions.Session) error
+}
