@@ -2,13 +2,12 @@ package main
 
 import (
 	"github.com/gorilla/sessions"
-	"github.com/jmoiron/sqlx"
 
 	"time"
 )
 
 type AppState struct {
-	db        *sqlx.DB
+	db        Database
 	templates Templates
 	store     sessions.Store
 	server    string

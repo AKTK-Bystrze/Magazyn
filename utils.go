@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gorilla/sessions"
+	"github.com/jmoiron/sqlx"
 	"github.com/johnsto/go-passwordless/v2"
 )
 
@@ -49,4 +51,15 @@ type Passwordless interface {
 	SetStrategy(name string, s passwordless.Strategy)
 	SetTransport(name string, t passwordless.Transport, g passwordless.TokenGenerator, ttl time.Duration) passwordless.Strategy
 	VerifyToken(ctx context.Context, uid string, token string) (bool, error)
+}
+
+type Database interface {
+	Exec(query string, args ...any) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
+	Query(query string, args ...any) (*sql.Rows, error)
+	Get(dest interface{}, query string, args ...interface{}) error
+	Prepare(query string) (*sql.Stmt, error)
+	Unsafe() *sqlx.DB
+	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
+	QueryRowx(query string, args ...interface{}) *sqlx.Row
 }
