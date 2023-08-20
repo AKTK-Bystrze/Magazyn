@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/sessions"
+	"github.com/jmoiron/sqlx"
 	"github.com/johnsto/go-passwordless/v2"
 	"github.com/stretchr/testify/mock"
 )
@@ -92,9 +94,8 @@ func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 	mockTemplate.On("ExecuteTemplate", mock.Anything, "login.html", mock.Anything).Return(nil)
 
 	app = AppState{
-		templates: mockTemplate, // Actual template instance is not needed in the test
+		templates: mockTemplate,
 		store:     mockStore,
-		server:    "example.com",
 	}
 	pw = new(MockPasswordless)
 
@@ -112,5 +113,90 @@ func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 		t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
 	}
 
-	mockTemplate.AssertExpectations(t) // Verify that the mock store was called as expected
+	mockTemplate.AssertExpectations(t)
+}
+
+type MockDatabase struct {
+	mock.Mock
+	user tmpUser
+}
+
+func (m *MockDatabase) Exec(query string, args ...interface{}) (sql.Result, error) {
+	argsList := m.Called(query, args)
+	return argsList.Get(0).(sql.Result), argsList.Error(1)
+}
+
+func (m *MockDatabase) QueryRow(query string, args ...interface{}) *sql.Row {
+	argsList := m.Called(query, args)
+	return argsList.Get(0).(*sql.Row)
+}
+
+func (m *MockDatabase) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	argsList := m.Called(query, args)
+	return argsList.Get(0).(*sql.Rows), argsList.Error(1)
+}
+
+func (m *MockDatabase) Get(dest interface{}, query string, args ...interface{}) error {
+	dest = m.user
+	return nil
+}
+
+func (m *MockDatabase) Prepare(query string) (*sql.Stmt, error) {
+	argsList := m.Called(query)
+	return argsList.Get(0).(*sql.Stmt), argsList.Error(1)
+}
+
+func (m *MockDatabase) Unsafe() *sqlx.DB {
+	argsList := m.Called()
+	return argsList.Get(0).(*sqlx.DB)
+}
+
+func (m *MockDatabase) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	argsList := m.Called(query, args)
+	return argsList.Get(0).(*sqlx.Rows), argsList.Error(1)
+}
+
+func (m *MockDatabase) QueryRowx(query string, args ...interface{}) *sqlx.Row {
+	argsList := m.Called(query, args)
+	return argsList.Get(0).(*sqlx.Row)
+}
+
+func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
+	//mock
+	// - app.store.Get
+	// - app.db.Get
+	// - userTmp
+	// check if http.Redirect was called : target = "/dashboard"
+	mockStore := new(MockStore)
+	session := sessions.NewSession(nil, SESSION_NAME)
+	session.Values = map[interface{}]interface{}{"UserInfo": nil}
+	session.Values["UserInfo"] = int(1)
+	session.Values["recipient"] = "kursant01"
+	mockStore.session = *session
+	mockTemplate := new(mockTemplate)
+	tmpUser := tmpUser{
+		Role: "user",
+	}
+	mockDatabase := new(MockDatabase)
+	mockDatabase.user = tmpUser
+	app = AppState{
+		templates: mockTemplate, // Actual template instance is not needed in the test
+		store:     mockStore,
+		db:        mockDatabase,
+	}
+	pw = new(MockPasswordless)
+
+	req, err := http.NewRequest("GET", "/login", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.Login)
+
+	handler.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == "/dashboard" {
+		t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+	}
 }
