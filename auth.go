@@ -78,6 +78,15 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isSignedIn(session) {
+		err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "Template error", http.StatusInternalServerError)
+			return
+		}
+		if u.Role == "admin" {
+			target = "/admin/reservations"
+		}
 		session.AddFlash("already_signed_in")
 		session.Save(r, w)
 		http.Redirect(w, r, target, http.StatusSeeOther)

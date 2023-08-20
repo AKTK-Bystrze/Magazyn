@@ -189,7 +189,7 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 	for _, tc := range testCases {
 		mockStore := new(MockStore)
 		session := sessions.NewSession(nil, SESSION_NAME)
-		session.Values = map[interface{}]interface{}{"UserInfo": nil}
+		session.Values = map[interface{}]interface{}{}
 		session.Values["UserInfo"] = UID_NB
 		session.Values["recipient"] = tc.role
 		mockStore.session = *session
@@ -217,22 +217,16 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 		handler.ServeHTTP(recorder, req)
 
 		if tc.role == "admin" {
-			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
 				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
 			}
 		} else {
-			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
 				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
 			}
 		}
 	}
 }
-
-//token handler
-//1 session with wrong cookie
-//2 is signedIn
-//3 no token provided(request token on valid email provided) DONE
-//4 provided valid token DONE
 
 func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T) {
 	mockStore := new(MockStore)
@@ -317,11 +311,11 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 
 		handler.ServeHTTP(recorder, req)
 		if tc.role == "admin" { //todo
-			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
 				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
 			}
 		} else {
-			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
 				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
 			}
 		}
@@ -377,4 +371,53 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 	handler.ServeHTTP(recorder, req)
 	mockPW.AssertExpectations(t)
 	mockTemplate.AssertExpectations(t)
+}
+
+func Test_tokenHandler_userIsSignedIn_Redirect(t *testing.T) {
+	testCases := []struct {
+		role           string
+		RedirectTarget string
+	}{
+		{"user", "/dashboard"},
+		{"admin", "/admin/reservations"},
+	}
+
+	for _, tc := range testCases {
+		mockStore := new(MockStore)
+		session := sessions.NewSession(new(MockSessionStore), SESSION_NAME)
+		session.Values = map[interface{}]interface{}{}
+		session.Values["UserInfo"] = UID_NB
+		session.Values["recipient"] = tc.role
+		mockStore.session = *session
+		mockDatabase := new(MockDatabase)
+		tmpUser := tmpUser{
+			Role: tc.role,
+			ID:   UID_NB,
+		}
+		mockDatabase.user = tmpUser
+		app = AppState{
+			store: mockStore,
+			db:    mockDatabase,
+		}
+
+		req, err := http.NewRequest("GET", "/token", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		recorder := httptest.NewRecorder()
+		handler := http.HandlerFunc(app.tokenHandler)
+
+		handler.ServeHTTP(recorder, req)
+		if tc.role == "admin" { //todo
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
+				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+			}
+		} else {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
+				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+			}
+		}
+
+	}
 }
