@@ -98,8 +98,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	tokenError := ""
 
 	if uid == "" {
-		// Lookup user ID. We just use the recipient value in this demo,
-		// but typically you'd perform a database query here.
+		// Lookup user ID.
 		if strategy == "email" {
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_email = ?", recipient)
 		} else {
@@ -208,7 +207,7 @@ func setTokenTransportMean() {
 		pw.SetTransport("debug", passwordless.LogTransport{
 			MessageFunc: func(token, uid string) string {
 				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
-				app.server, token, uid)
+					app.server, token, uid)
 			},
 		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
 	} else {

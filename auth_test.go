@@ -36,6 +36,10 @@ func (a *AppState) Login(w http.ResponseWriter, r *http.Request) {
 	Login(w, r)
 }
 
+func (a *AppState) tokenHandler(w http.ResponseWriter, r *http.Request) {
+	tokenHandler(w, r)
+}
+
 type MockPasswordless struct {
 	mock.Mock
 	Strategies map[string]passwordless.Strategy
@@ -47,7 +51,8 @@ func (m *MockPasswordless) GetStrategy(ctx context.Context, name string) (passwo
 }
 
 func (m *MockPasswordless) RequestToken(ctx context.Context, s string, uid string, recipient string) error {
-	return nil
+	args := m.Called(ctx, s, uid, recipient)
+	return args.Error(0)
 }
 
 func (m *MockPasswordless) SetStrategy(name string, s passwordless.Strategy) {
@@ -72,37 +77,6 @@ type mockTemplate struct {
 func (m *mockTemplate) ExecuteTemplate(wr io.Writer, name string, data any) error {
 	args := m.Called(wr, name, data)
 	return args.Error(0)
-}
-
-func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
-	mockStore := new(MockStore)
-	session := sessions.NewSession(nil, SESSION_NAME)
-	session.Values = map[interface{}]interface{}{"UserInfo": nil}
-	mockStore.session = *session
-	mockTemplate := new(mockTemplate)
-	mockTemplate.On("ExecuteTemplate", mock.Anything, "login.html", mock.Anything).Return(nil)
-
-	app = AppState{
-		templates: mockTemplate,
-		store:     mockStore,
-	}
-	pw = new(MockPasswordless)
-
-	req, err := http.NewRequest("GET", "/login", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(app.Login)
-
-	handler.ServeHTTP(recorder, req)
-
-	if recorder.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
-	}
-
-	mockTemplate.AssertExpectations(t)
 }
 
 type MockDatabase struct {
@@ -141,6 +115,37 @@ func (m *MockDatabase) Queryx(query string, args ...interface{}) (*sqlx.Rows, er
 
 func (m *MockDatabase) QueryRowx(query string, args ...interface{}) *sqlx.Row {
 	return nil
+}
+
+func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
+	mockStore := new(MockStore)
+	session := sessions.NewSession(nil, SESSION_NAME)
+	session.Values = map[interface{}]interface{}{"UserInfo": nil}
+	mockStore.session = *session
+	mockTemplate := new(mockTemplate)
+	mockTemplate.On("ExecuteTemplate", mock.Anything, "login.html", mock.Anything).Return(nil)
+
+	app = AppState{
+		templates: mockTemplate,
+		store:     mockStore,
+	}
+	pw = new(MockPasswordless)
+
+	req, err := http.NewRequest("GET", "/login", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.Login)
+
+	handler.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+	}
+
+	mockTemplate.AssertExpectations(t)
 }
 
 func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
@@ -193,4 +198,49 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 			}
 		}
 	}
+}
+
+//token handler
+//1 session with wrong cookie
+//2 is signedIn
+//3 no token provided
+//4 provided valid token
+
+func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T) {
+	testEmail := "email@address.com"
+	mockStore := new(MockStore)
+	session := sessions.NewSession(nil, SESSION_NAME)
+	session.Values = map[interface{}]interface{}{"UserInfo": nil}
+	session.Values["recipient"] = testEmail
+	mockStore.session = *session
+	mockTemplate := new(mockTemplate)
+	mockTemplate.On("ExecuteTemplate", mock.Anything, "tokenGenerated.html", mock.Anything).Return(nil)
+	tmpUser := tmpUser{
+		Role: "user",
+		ID:   1,
+	}
+	mockDatabase := new(MockDatabase)
+	mockDatabase.user = tmpUser
+	app = AppState{
+		templates: mockTemplate,
+		store:     mockStore,
+		db:        mockDatabase,
+	}
+	mockPW := new(MockPasswordless)
+	mockPW.On("RequestToken", mock.Anything, "email", "0", testEmail).Return(nil)
+	pw = mockPW
+	req, err := http.NewRequest("GET", "/token", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Form = map[string][]string{}
+	req.Form.Add("strategy", "email")
+	req.Form.Add("recipient", testEmail)
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.tokenHandler)
+
+	handler.ServeHTTP(recorder, req)
+	mockTemplate.AssertExpectations(t)
+	mockPW.AssertExpectations(t)
 }
