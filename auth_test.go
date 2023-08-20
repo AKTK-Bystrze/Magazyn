@@ -144,36 +144,53 @@ func (m *MockDatabase) QueryRowx(query string, args ...interface{}) *sqlx.Row {
 }
 
 func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
-	mockStore := new(MockStore)
-	session := sessions.NewSession(nil, SESSION_NAME)
-	session.Values = map[interface{}]interface{}{"UserInfo": nil}
-	session.Values["UserInfo"] = int(1)
-	session.Values["recipient"] = "kursant01"
-	mockStore.session = *session
-	mockTemplate := new(mockTemplate)
-	tmpUser := tmpUser{
-		Role: "user",
-	}
-	mockDatabase := new(MockDatabase)
-	mockDatabase.user = tmpUser
-	app = AppState{
-		templates: mockTemplate,
-		store:     mockStore,
-		db:        mockDatabase,
-	}
-	pw = new(MockPasswordless)
 
-	req, err := http.NewRequest("GET", "/login", nil)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		role           string
+		RedirectTarget string
+	}{
+		{"user", "/dashboard"},
+		{"admin", "/admin/reservations"},
 	}
 
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(app.Login)
+	for _, tc := range testCases {
+		mockStore := new(MockStore)
+		session := sessions.NewSession(nil, SESSION_NAME)
+		session.Values = map[interface{}]interface{}{"UserInfo": nil}
+		session.Values["UserInfo"] = int(1)
+		session.Values["recipient"] = tc.role
+		mockStore.session = *session
+		mockTemplate := new(mockTemplate)
+		tmpUser := tmpUser{
+			Role: tc.role,
+		}
+		mockDatabase := new(MockDatabase)
+		mockDatabase.user = tmpUser
+		app = AppState{
+			templates: mockTemplate,
+			store:     mockStore,
+			db:        mockDatabase,
+		}
+		pw = new(MockPasswordless)
 
-	handler.ServeHTTP(recorder, req)
+		req, err := http.NewRequest("GET", "/login", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == "/dashboard" {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+		recorder := httptest.NewRecorder()
+		handler := http.HandlerFunc(app.Login)
+
+		handler.ServeHTTP(recorder, req)
+
+		if tc.role == "admin" {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+			}
+		} else {
+			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] == tc.RedirectTarget {
+				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+			}
+		}
 	}
 }
