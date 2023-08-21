@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -13,7 +12,7 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
 		orderDesc:   true,
 	})
 	if err != nil {
-		log.Println(err)
+		app.Err(err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
