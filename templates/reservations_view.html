@@ -1,6 +1,26 @@
 {{ define "reservations_view" }}
 {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
       {{ if .Reservations }}
+      <script type="text/javascript">
+        function setReservationStatus(reservationId) {
+          const formEl = document.getElementById("reservation_"+reservationId);
+          
+          var formData = $("#reservation_"+reservationId).serialize();
+          // formData.append('id_tmp', reservationId);
+          fetch('/admin/setStatus', {
+              method: 'POST',
+              headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+              body: formData,
+          })
+          .then(response => response.text())
+          .then(newBodyContent => {
+              console.log(newBodyContent);
+          })
+          .catch(error => console.error('Error:', error));
+        }
+      </script>
 			{{/*	style because of: https://github.com/DataTables/Responsive/issues/40	*/}}
       <table class="table" id="{{ .TableId }}" style="width: 100%">
         <thead>
@@ -40,7 +60,7 @@
 						{{ else if eq .Status "returned" }}{{ $class = "badge badge-success" }}{{ $txt = "Zwrocony" }}
 						{{ end }}
             {{ if and $.ChangeStatus (.StartTime.After (AddHours Now -2)) }}
-              <form method="POST" action="/admin/setStatus">
+              <form method="POST" id="reservation_{{ .ID }}" action="javascript:setReservationStatus({{ .ID }})">
                 <input type="hidden" name="reservation_id" value="{{ .ID }}">
                 <input type="hidden" name="url" value="{{ $.URL }}">
                 <div class="form-group">
