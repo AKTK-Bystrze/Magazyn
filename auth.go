@@ -116,6 +116,19 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			app.Err(err.Error())
 			log.Println(err)
+			if err := app.templates.ExecuteTemplate(w, "tokenGenerated.html", struct {
+				Strategy   string
+				Recipient  string
+				UserID     string
+				TokenError string
+			}{
+				Strategy:   strategy,
+				Recipient:  recipient,
+				UserID:     uid,
+				TokenError: tokenError,
+			}); err != nil {
+				log.Printf("couldn't render template: %v", err)
+			}
 			return
 		}
 		uid = fmt.Sprint(u.ID)

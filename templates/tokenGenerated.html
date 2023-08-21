@@ -17,7 +17,7 @@
 				<input type="hidden" name="recipient" value="{{ .Recipient }}">
 				<input type="hidden" name="uid" value="{{ .UserID }}">
 				<input type="text" name="token" required class="field" autofocus>
-				<button type="submit" class="btn btn-primary">Verify</button>
+				<button type="submit" class="btn btn-primary">Sprawdź</button>
 			</form>
 			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
 			{{ else if eq .Strategy "debug" }}
