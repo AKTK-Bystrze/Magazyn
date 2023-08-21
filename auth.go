@@ -188,7 +188,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			// User entered bad token. Set token error string then fall
 			// through to template.
 			w.WriteHeader(http.StatusForbidden)
-			tokenError = "The entered token/PIN was incorrect."
+			tokenError = "Wprowadzony kod jest niepoprawny."
 		}
 	}
 
