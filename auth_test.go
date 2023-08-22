@@ -18,13 +18,14 @@ import (
 )
 
 var (
-	UID_STR             = fmt.Sprint(mock.Anything)
-	UID_NB, _           = strconv.ParseInt(UID_STR, 10, 64)
-	TEST_TOKEN          = "WRONG_TEST_TOKEN"
-	ROLE                = "role"
-	EMAIL               = "email"
-	TOKEN_ERROR_MESSAGE = "The entered token/PIN was incorrect."
-	TEST_EMAIL          = "email@address.com"
+	UID_STR                      = fmt.Sprint(mock.Anything)
+	UID_NB, _                    = strconv.ParseInt(UID_STR, 10, 64)
+	TEST_TOKEN                   = "WRONG_TEST_TOKEN"
+	ROLE                         = "role"
+	EMAIL                        = "email"
+	TOKEN_ERROR_MESSAGE          = "The entered token/PIN was incorrect."
+	TEST_EMAIL                   = "email@address.com"
+	EXPECTED_STATUS_CODE_BUT_GOT = "Expected status code %d, but got %d"
 )
 
 type MockStore struct {
@@ -171,7 +172,7 @@ func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 	handler.ServeHTTP(recorder, req)
 
 	if recorder.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+		t.Errorf(EXPECTED_STATUS_CODE_BUT_GOT, http.StatusOK, recorder.Code)
 	}
 
 	mockTemplate.AssertExpectations(t)
@@ -218,11 +219,11 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 
 		if tc.role == "admin" {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
-				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+				t.Errorf(EXPECTED_STATUS_CODE_BUT_GOT, http.StatusOK, recorder.Code)
 			}
 		} else {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
-				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+				t.Errorf(EXPECTED_STATUS_CODE_BUT_GOT, http.StatusOK, recorder.Code)
 			}
 		}
 	}
@@ -312,11 +313,11 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 		handler.ServeHTTP(recorder, req)
 		if tc.role == "admin" {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
-				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+				t.Errorf(EXPECTED_STATUS_CODE_BUT_GOT, http.StatusOK, recorder.Code)
 			}
 		} else {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
-				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+				t.Errorf(EXPECTED_STATUS_CODE_BUT_GOT, http.StatusOK, recorder.Code)
 			}
 		}
 		mockPW.AssertExpectations(t)
@@ -411,11 +412,11 @@ func Test_tokenHandler_userIsSignedIn_Redirect(t *testing.T) {
 		handler.ServeHTTP(recorder, req)
 		if tc.role == "admin" {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
-				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+				t.Errorf(EXPECTED_STATUS_CODE_BUT_GOT, http.StatusOK, recorder.Code)
 			}
 		} else {
 			if recorder.Code != http.StatusSeeOther && recorder.Header()["Location"][0] != tc.RedirectTarget {
-				t.Errorf("Expected status code %d, but got %d", http.StatusOK, recorder.Code)
+				t.Errorf(EXPECTED_STATUS_CODE_BUT_GOT, http.StatusOK, recorder.Code)
 			}
 		}
 
