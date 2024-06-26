@@ -71,7 +71,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	// 	http.Error(w, "DB error", http.StatusBadRequest)
 	// 	return
 	// }
-	rentalCost, err := calculateRentalCost(itemID)
+	rentalCost, err := calculateRentalCost(itemID, userID)
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "calculateRentalCost error", http.StatusBadRequest)

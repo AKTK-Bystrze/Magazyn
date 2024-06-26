@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"net/http"
 )
 
 const (
@@ -10,8 +9,12 @@ const (
 	kayakItemCost = 4
 )
 
-func calculateRentalCost(item Item) (int, error) {
-	err := app.db.Get(&user, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", userID)
+func calculateRentalCost(itemID int, userID int) (int, error) {
+	var item Item
+	var user User
+	err := app.db.Get(&item, "SELECT i_type FROM items WHERE i_id = ?", itemID)
+	err = app.db.Get(&user, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", userID)
+	var rentalCost int
 	rentalCost, err = getItemRentalCost(item.Type)
 	return rentalCost, err
 }
