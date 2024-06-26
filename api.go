@@ -62,25 +62,46 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	// get user ID
 	userID := int(r.Context().Value("UserInfo").(tmpUser).ID)
+	// var user User
+	// var reservation Reservation
 
-	stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
+	// err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
+	// if err != nil {
+	// 	app.Err(err.Error())
+	// 	http.Error(w, "DB error", http.StatusBadRequest)
+	// 	return
+	// }
+	rentalCost, err := calculateRentalCost(itemID)
 	if err != nil {
 		app.Err(err.Error())
-		http.Error(w, "DB error", http.StatusBadRequest)
+		http.Error(w, "calculateRentalCost error", http.StatusBadRequest)
 		return
 	}
-	defer stmt.Close()
+	canRentResult, err := canRent(userID, rentalCost)
+	if canRentResult {
+		stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "DB error", http.StatusBadRequest)
+			return
+		}
+		defer stmt.Close()
 
-	status := "pending"
-	_, err = stmt.Exec(itemID, userID, userID, startTime.UTC().Format(OUT_TIME_FMT), endTime.UTC().Format(OUT_TIME_FMT), status)
-	if err != nil {
-		app.Err(err.Error())
-		http.Error(w, "DB error", http.StatusBadRequest)
+		status := "pending"
+		_, err = stmt.Exec(itemID, userID, userID, startTime.UTC().Format(OUT_TIME_FMT), endTime.UTC().Format(OUT_TIME_FMT), status)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "DB error", http.StatusBadRequest)
+			return
+		}
+
+		msg := "Zarezerwowano"
+		http.Redirect(w, r, "/search?msg="+msg, http.StatusFound)
+	} else {
+		msg := "Nie możesz wypożyczyć sprzętu"
+		SearchItems(w, r, msg)
 		return
 	}
-
-	msg := "Zarezerwowano"
-	http.Redirect(w, r, "/search?msg="+msg, http.StatusFound)
 }
 
 func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
