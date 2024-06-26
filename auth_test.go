@@ -340,7 +340,7 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 		Strategy:   EMAIL,
 		Recipient:  ROLE,
 		UserID:     UID_STR,
-		TokenError: TOKEN_ERROR_MESSAGE,
+		TokenError: ERROR_MSG_WRONG_TOKEN,
 	}).Return(nil)
 	tmpUser := tmpUser{
 		Role: ROLE,
