@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 )
@@ -69,18 +69,8 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
-
-	if r.FormValue("url") != "" {
-		target, err := url.Parse(app.server + r.FormValue("url"))
-		if err == nil {
-			app.Err(target.String())
-			http.Redirect(w, r, target.String(), http.StatusSeeOther)
-			return
-		}
-		app.Err(err.Error())
-	}
-	// Redirect to admin dashboard
-	http.Redirect(w, r, "/admin/reservations", http.StatusSeeOther)
+	response := fmt.Sprintf("id: %s", reservationID)
+	w.Write([]byte(response))
 }
 
 func adminItemsHandler(w http.ResponseWriter, r *http.Request) {

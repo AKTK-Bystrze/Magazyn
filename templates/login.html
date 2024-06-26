@@ -15,22 +15,22 @@
 				<div class="clearfix">
 				{{ range $name, $t := .Strategies }}
 					{{ if eq $name "email" }}
-						<h3><i class="fa fa-envelope"></i> Send me an email</h3>
+						<h3><i class="fa fa-envelope"></i> Wyślij email z linkiem logowania</h3>
 						<form method="post" action="token">
 							<input type="hidden" name="strategy" value="email">
-							<label>Enter your email address below:</label>
+							<label>Podaj swój adres email:</label>
 							<input name="recipient" type="email" class="field block mb1"
-								required placeholder="Email address">
-							<button type="submit" class="btn btn-primary">Send</button>
+								required placeholder="Email">
+							<button type="submit" class="btn btn-primary">Wyślij</button>
 						</form>
 					{{ else if eq $name "debug" }}
-					<h3><i class="fa fa-tty"></i> Emit to debug stdout</h3>
+					<h3><i class="fa fa-tty"></i> Tryb debugowania</h3>
 					<form method="post" action="token">
 						<input type="hidden" name="strategy" value="debug">
-						<label>Enter your name below:</label>
+						<label>Podaj swoje imie:</label>
 						<input name="recipient" type="text" class="field block mb1"
-							required placeholder="Your name">
-						<button type="submit" class="btn btn-primary">Send</button>
+							required placeholder="imię">
+						<button type="submit" class="btn btn-primary">Wyślij</button>
 					</form>
 					{{ else }}
 						<h3>Unknown strategy "{{ $name }}"</h3>
