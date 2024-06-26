@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	pw                          *passwordless.Passwordless
+	pw                          Passwordless
 	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
 	app                         AppState
 	tmpl                        *template.Template
