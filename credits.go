@@ -11,13 +11,11 @@ const (
 	kayakItemCost = 4
 )
 
-func calculateRentalCost(itemID int, userID int, start_time time.Time, end_time time.Time) (int, error) {
-	var user User
+func calculateRentalCost(itemID int, start_time time.Time, end_time time.Time) (int, error) {
 	item, err := app.getItem(itemID)
 	if err != nil {
 		return 0, err
 	}
-	err = app.db.Get(&user, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", userID)
 	var rentalCost int
 	duration := end_time.Sub(start_time)
 	rentalCost, err = getItemRentalCost(item.Type)

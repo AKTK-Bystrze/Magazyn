@@ -230,3 +230,38 @@ func (app AppState) getItem(id int) (*Item, error) {
 	}
 	return &item, nil
 }
+
+func (app AppState) getReservation(id int) (*Reservation, error) {
+	query := `SELECT 
+		r.r_id, r.r_start_time, r.r_end_time, r.r_status, r.r_created_at,
+		i.i_id, i.i_name, i.i_description, i.i_status, i.i_type,
+		u.u_id, u.u_username, u.u_email, u.u_credits
+	FROM 
+		reservations r
+	JOIN 
+		items i ON r.r_item_id = i.i_id
+	JOIN 
+		users u ON r.r_user_id = u.u_id
+	WHERE 
+		r.r_id = ?`
+	var location, err = time.LoadLocation("Europe/Warsaw")
+	if err != nil {
+		return nil, err
+	}
+	row := app.db.QueryRowx(query, id)
+	var r Reservation
+	var t tmpReservation
+	err = row.StructScan(&t)
+	if err != nil {
+		return nil, err
+	}
+	//	work around sqlx to better handle embedded structures and JOINs
+	r = t.Reservation
+	r.Item = t.Item
+	r.User = t.User
+	//  TODO: update time to localtime (CEST)
+	r.StartTime = r.StartTime.In(location)
+	r.EndTime = r.EndTime.In(location)
+	r.CreatedAt = r.CreatedAt.In(location)
+	return &r, nil
+}

@@ -49,10 +49,48 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	reservationID := r.FormValue("reservation_id")
 	status := r.FormValue("status")
-
+	id, err := strconv.Atoi(reservationID)
+	reservation, err := app.getReservation(id)
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "DB error", http.StatusBadRequest)
+		return
+	}
+	uid := r.Context().Value("UserInfo").(tmpUser).ID
+	if status == "denied" {
+		rentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "Couldn't calculate rental cost", http.StatusBadRequest)
+			return
+		}
+		u := reservation.User
+		updatedCredits := u.Credits + rentalCost
+		result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, updatedCredits, uid)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "Cant update users credits", http.StatusBadRequest)
+			return
+		}
+		numRows, err := result.RowsAffected()
+		if err != nil || numRows != 1 {
+			if err != nil {
+				app.Err(err.Error())
+			} else {
+				app.Err("Failed to update user credits")
+			}
+			http.Error(w, "DB Error", http.StatusInternalServerError)
+			return
+		}
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "DB Error", http.StatusInternalServerError)
+			return
+		}
+	}
 	//	TODO: check if reservation date is in the future !!!
 	// Update reservation status in database
-	uid := r.Context().Value("UserInfo").(tmpUser).ID
+
 	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, uid, reservationID)
 	if err != nil {
 		app.Err(err.Error())
