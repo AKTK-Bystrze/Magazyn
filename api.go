@@ -62,15 +62,6 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	// get user ID
 	userID := int(r.Context().Value("UserInfo").(tmpUser).ID)
-	// var user User
-	// var reservation Reservation
-
-	// err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
-	// if err != nil {
-	// 	app.Err(err.Error())
-	// 	http.Error(w, "DB error", http.StatusBadRequest)
-	// 	return
-	// }
 	rentalCost, err := calculateRentalCost(itemID, startTime, endTime)
 	if err != nil {
 		app.Err(err.Error())
