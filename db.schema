@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     u_username TEXT NOT NULL UNIQUE,
     u_password_hash TEXT,
     u_email TEXT NOT NULL UNIQUE,
-    u_role TEXT CHECK ( u_role IN ('admin', 'user') ) NOT NULL DEFAULT 'user'
-    U_credits
+    u_role TEXT CHECK ( u_role IN ('admin', 'user') ) NOT NULL DEFAULT 'user',
+    u_credits INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS items (

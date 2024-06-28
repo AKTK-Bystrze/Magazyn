@@ -5,11 +5,11 @@ INSERT INTO items (i_name, i_description, i_status, i_type) VALUES
 ('Jackson All Star', 'Freestyle - czerwony', 'ok', 'kayak'),
 ('Outlaw', 'Riverrunner - zolto-pomaranczowy', 'broken', 'kayak');
 
-INSERT INTO users (u_id, u_username, u_role, u_email) VALUES
-(0, 'kursant01', 'user', 'dummyEmail0'),
-(1, 'kursant02', 'user', 'dummyEmail1'),
-(2, 'admin01', 'admin', 'dummyEmail2'),
-(3, 'admin02', 'admin', 'dummyEmail3');
+INSERT INTO users (u_id, u_username, u_role, u_email, u_credits) VALUES
+(0, 'kursant01', 'user', 'dummyEmail0', 500),
+(1, 'kursant02', 'user', 'dummyEmail1', 6),
+(2, 'admin01', 'admin', 'dummyEmail2', 100),
+(3, 'admin02', 'admin', 'dummyEmail3', -10);
 
 INSERT INTO reservations (r_id, r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) VALUES
 (0, datetime('2023-04-01 10:00:00', 'utc'), datetime('2023-04-05 10:00:00', 'utc'), 1, 0, 0, 'pending', datetime('2023-03-02 16:05', 'utc')),
