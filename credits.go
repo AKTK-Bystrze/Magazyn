@@ -10,9 +10,11 @@ const (
 )
 
 func calculateRentalCost(itemID int, userID int) (int, error) {
-	var item Item
 	var user User
-	err := app.db.Get(&item, "SELECT i_type FROM items WHERE i_id = ?", itemID)
+	item, err := app.getItem(itemID)
+	if err != nil {
+		return 0, err
+	}
 	err = app.db.Get(&user, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", userID)
 	var rentalCost int
 	rentalCost, err = getItemRentalCost(item.Type)
@@ -28,9 +30,8 @@ func getItemRentalCost(itemType string) (int, error) {
 	}
 }
 
-func canRent(userID int, rentalCost int) (bool, error) {
-	var user User
-	err := app.db.Get(&user, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", userID)
-	canRentResult := (user.Credits > rentalCost)
-	return canRentResult, err
+func canRent(userID int, rentalCost int) (bool, int, error) {
+	userCredits, err := app.getUserCredits(userID)
+	canRentResult := (userCredits > rentalCost)
+	return canRentResult, userCredits, err
 }

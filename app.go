@@ -207,6 +207,18 @@ func (app AppState) getUsername(id int) (string, error) {
 	return uname, nil
 }
 
+func (app AppState) getUserCredits(id int) (int, error) {
+	query := `SELECT u_credits FROM users WHERE u_id = ?`
+	row := app.db.QueryRow(query, id)
+	var credits int
+	err := row.Scan(&credits)
+	if err != nil {
+		app.Err(err.Error())
+		return 0, err
+	}
+	return credits, nil
+}
+
 func (app AppState) getItem(id int) (*Item, error) {
 	query := `SELECT * FROM items WHERE i_id = ?`
 	row := app.db.QueryRowx(query, id)

@@ -28,7 +28,7 @@ type User struct {
 	ID      int64  `db:"u_id"`
 	Name    string `db:"u_username"`
 	Email   string `db:"u_email"`
-	Credits int    `db:"U_credits`
+	Credits int    `db:"u_credits"`
 }
 
 // Reservation represents a reservation in the database
@@ -52,7 +52,7 @@ type ReservationAudit struct {
 
 const (
 	COOKIE_VALIDITY_TIME  = 10
-	SEND_COOKIE_TO_STDOUT = false
+	SEND_COOKIE_TO_STDOUT = true
 	TOKEN_LENGTH          = 10
 	COOKIE_KEY_LENGTH     = 16
 
