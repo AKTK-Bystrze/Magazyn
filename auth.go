@@ -13,16 +13,17 @@ import (
 )
 
 type tmpUser struct {
-	ID   int64  `db:"u_id"`
-	Name string `db:"u_username"`
-	Role string `db:"u_role"`
+	ID      int64  `db:"u_id"`
+	Name    string `db:"u_username"`
+	Role    string `db:"u_role"`
+	Credits int    `db:"u_credits"`
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	session, _ := app.store.Get(r, SESSION_NAME)
 	var u tmpUser
 	if isSignedIn(session) {
-		err := app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
+		err := app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", session.Values["UserInfo"])
 		if err != nil {
 			app.Err(err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
@@ -101,9 +102,9 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		// Lookup user ID. We just use the recipient value in this demo,
 		// but typically you'd perform a database query here.
 		if strategy == "email" {
-			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_email = ?", recipient)
+			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_email = ?", recipient)
 		} else {
-			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_username = ?", recipient)
+			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = ?", recipient)
 		}
 		if err != nil {
 			app.Err(err.Error())
@@ -143,8 +144,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			// User provided a valid token! We can safely use the uid as it
 			// is validated alongside the token.
 
-			err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", uid)
-
+			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
 			if err != nil {
 				app.Err(err.Error())
 				log.Println(err)
@@ -208,7 +208,7 @@ func setTokenTransportMean() {
 		pw.SetTransport("debug", passwordless.LogTransport{
 			MessageFunc: func(token, uid string) string {
 				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
-					app.server, token, uid)
+					"http://localhost:8080", token, uid) //todo use app.server as first parameter
 			},
 		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
 	} else {
