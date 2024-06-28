@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"math"
+	"time"
 )
 
 const (
@@ -9,7 +11,7 @@ const (
 	kayakItemCost = 4
 )
 
-func calculateRentalCost(itemID int, userID int) (int, error) {
+func calculateRentalCost(itemID int, userID int, start_time time.Time, end_time time.Time) (int, error) {
 	var user User
 	item, err := app.getItem(itemID)
 	if err != nil {
@@ -17,8 +19,10 @@ func calculateRentalCost(itemID int, userID int) (int, error) {
 	}
 	err = app.db.Get(&user, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", userID)
 	var rentalCost int
+	duration := end_time.Sub(start_time)
 	rentalCost, err = getItemRentalCost(item.Type)
-	return rentalCost, err
+	days := int(math.Max(duration.Hours()/24, 1))
+	return rentalCost * days, err
 }
 
 func getItemRentalCost(itemType string) (int, error) {
