@@ -12,6 +12,11 @@ import (
 	"github.com/johnsto/go-passwordless/v2"
 )
 
+var (
+	ERROR_MSG_WRONG_TOKEN     = "Wprowadzony kod jest niepoprawny."
+	ERROR_MSG_TOKEN_NOT_FOUND = "token_not_found"
+)
+
 type tmpUser struct {
 	ID      int64  `db:"u_id"`
 	Name    string `db:"u_username"`
@@ -30,11 +35,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		target := "/dashboard"
-		if err != nil {
-			app.Err(err.Error())
-			log.Println(err)
-			return
-		}
 		if u.Role == "admin" {
 			target = "/admin/reservations"
 		}
@@ -66,7 +66,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	var u tmpUser
 	session, err := app.store.Get(r, SESSION_NAME)
 	if err != nil {
-		log.Println(err)
+		app.Err(err.Error())
 		c := &http.Cookie{
 			Name:     SESSION_NAME,
 			Value:    "",
@@ -79,6 +79,15 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isSignedIn(session) {
+		err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if u.Role == "admin" {
+			target = "/admin/reservations"
+		}
 		session.AddFlash("already_signed_in")
 		session.Save(r, w)
 		http.Redirect(w, r, target, http.StatusSeeOther)
@@ -99,8 +108,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	tokenError := ""
 
 	if uid == "" {
-		// Lookup user ID. We just use the recipient value in this demo,
-		// but typically you'd perform a database query here.
+		// Lookup user ID.
 		if strategy == "email" {
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_email = ?", recipient)
 		} else {
@@ -108,7 +116,20 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			app.Err(err.Error())
-			log.Println(err)
+			if err := app.templates.ExecuteTemplate(w, "tokenGenerated.html", struct {
+				Strategy   string
+				Recipient  string
+				UserID     string
+				TokenError string
+			}{
+				Strategy:   strategy,
+				Recipient:  recipient,
+				UserID:     uid,
+				TokenError: tokenError,
+			}); err != nil {
+				app.Err("couldn't render template: " + err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		uid = fmt.Sprint(u.ID)
@@ -119,7 +140,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	if strategy == "" {
 		// No strategy specified in request, so send the user back to
 		// the signin page as we can't do anything without it.
-		session.AddFlash("token_not_found")
+		session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
 		session.Save(r, w)
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
@@ -129,11 +150,8 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		err := pw.RequestToken(ctx, strategy, uid, recipient)
 
 		if err != nil {
-			writeError(w, r, session, http.StatusInternalServerError, Error{
-				Name:        "Internal Error",
-				Description: err.Error(),
-				Error:       err,
-			})
+			app.Err(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	} else {
@@ -147,7 +165,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
 			if err != nil {
 				app.Err(err.Error())
-				log.Println(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			if u.Role == "admin" {
@@ -164,23 +182,19 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		if err == passwordless.ErrTokenNotFound {
 			// Token not found, maybe it was a previous one or expired. Either
 			// way, the user will need to attempt sign-in again.
-			session.AddFlash("token_not_found")
+			session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
 			session.Save(r, w)
 			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 			return
 		} else if err != nil {
 			// Some other unexpected error occurred.
-			writeError(w, r, session, http.StatusInternalServerError, Error{
-				Name:        "Failed verifying token",
-				Description: err.Error(),
-				Error:       err,
-			})
+			http.Error(w, "Failed veryfing error: "+err.Error(), http.StatusInternalServerError)
 			return
 		} else {
 			// User entered bad token. Set token error string then fall
 			// through to template.
 			w.WriteHeader(http.StatusForbidden)
-			tokenError = "The entered token/PIN was incorrect."
+			tokenError = ERROR_MSG_WRONG_TOKEN
 		}
 	}
 
@@ -198,7 +212,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:     uid,
 		TokenError: tokenError,
 	}); err != nil {
-		log.Printf("couldn't render template: %v", err)
+		app.Err("couldn't render template: %v", err)
 	}
 }
 
@@ -228,7 +242,7 @@ func setTokenTransportMean() {
 
 func validateCOOKIE_KEY() {
 	if len(COOKIE_KEY) == 0 {
-		log.Println("KEY_COOKIE_STORE not defined; using random key")
+		app.Err("KEY_COOKIE_STORE not defined; using random key")
 		COOKIE_KEY = securecookie.GenerateRandomKey(COOKIE_KEY_LENGTH)
 	}
 }

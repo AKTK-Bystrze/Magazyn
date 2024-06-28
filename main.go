@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	pw                          *passwordless.Passwordless
+	pw                          Passwordless
 	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
 	app                         AppState
 	tmpl                        *template.Template
@@ -193,7 +193,7 @@ func main() {
 	adminRouter.Use(adminHandler)
 	//  admin
 	adminRouter.HandleFunc("/reservations", adminDashboardHandler).Methods("GET")
-	adminRouter.HandleFunc("/setStatus", setStatusHandler).Methods("POST")
+	adminRouter.HandleFunc("/setStatus", setStatusHandler).Methods("PUT")
 	adminRouter.HandleFunc("/items", adminItemsHandler).Methods("GET")
 	adminRouter.HandleFunc("/item/status", adminItemStatusHandler).Methods("POST")
 	adminRouter.HandleFunc("/item/show", AdminShowItemHandler).Methods("GET")
