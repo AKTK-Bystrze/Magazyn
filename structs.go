@@ -22,9 +22,10 @@ type Item struct {
 }
 
 type User struct {
-	ID    int64  `db:"u_id"`
-	Name  string `db:"u_username"`
-	Email string `db:"u_email"`
+	ID      int64  `db:"u_id"`
+	Name    string `db:"u_username"`
+	Email   string `db:"u_email"`
+	Credits int    `db:"u_credits"`
 }
 
 // Reservation represents a reservation in the database

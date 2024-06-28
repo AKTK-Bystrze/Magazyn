@@ -62,25 +62,52 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	// get user ID
 	userID := int(r.Context().Value("UserInfo").(tmpUser).ID)
-
-	stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
+	rentalCost, err := calculateRentalCost(itemID, startTime, endTime)
 	if err != nil {
 		app.Err(err.Error())
-		http.Error(w, "DB error", http.StatusBadRequest)
+		http.Error(w, "calculateRentalCost error", http.StatusBadRequest)
 		return
 	}
-	defer stmt.Close()
+	canRentResult, userCredits, err := canRent(userID, rentalCost)
+	if canRentResult {
+		stmt, err := app.db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "DB error", http.StatusBadRequest)
+			return
+		}
+		defer stmt.Close()
 
-	status := "pending"
-	_, err = stmt.Exec(itemID, userID, userID, startTime.UTC().Format(OUT_TIME_FMT), endTime.UTC().Format(OUT_TIME_FMT), status)
-	if err != nil {
-		app.Err(err.Error())
-		http.Error(w, "DB error", http.StatusBadRequest)
+		status := "pending"
+		_, err = stmt.Exec(itemID, userID, userID, startTime.UTC().Format(OUT_TIME_FMT), endTime.UTC().Format(OUT_TIME_FMT), status)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "DB error", http.StatusBadRequest)
+			return
+		}
+
+		stmt_update_credits, err := app.db.Prepare(`UPDATE users SET u_credits = ? WHERE u_id = ?`)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "DB error", http.StatusBadRequest)
+			return
+		}
+		defer stmt_update_credits.Close()
+		credits_left := userCredits - rentalCost
+		_, err = stmt_update_credits.Exec(credits_left, userID)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "DB error", http.StatusBadRequest)
+			return
+		}
+
+		msg := "Zarezerwowano"
+		http.Redirect(w, r, "/search?msg="+msg, http.StatusFound)
+	} else {
+		msg := "Nie możesz wypożyczyć sprzętu"
+		SearchItems(w, r, msg)
 		return
 	}
-
-	msg := "Zarezerwowano"
-	http.Redirect(w, r, "/search?msg="+msg, http.StatusFound)
 }
 
 func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
