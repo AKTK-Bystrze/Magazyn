@@ -41,7 +41,7 @@ set cgo_enabled=1
             "env": {
                 "GO111MODULE": "on",
             },
-            "args": ["127.0.0.1", "8080", "domain"]
+            "args": ["127.0.0.1", "8080", "http://localhost:8080"]
         }
     ]
 }
