@@ -88,7 +88,7 @@ func validUserMiddlware(next http.Handler) http.Handler {
 			return
 		}
 		var uinfo tmpUser
-		err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", uid)
+		err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
 		if err != nil || (uinfo.Role != "user" && uinfo.Role != "admin") {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
