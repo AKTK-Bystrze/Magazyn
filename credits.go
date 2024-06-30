@@ -7,8 +7,10 @@ import (
 )
 
 const (
-	kayakItemType = "kayak"
-	kayakItemCost = 4
+	kayakItemType  = "kayak"
+	kayakItemCost  = 4
+	paddleItemType = "paddle"
+	paddleItemCost = 2
 )
 
 func calculateRentalCost(itemID int, start_time time.Time, end_time time.Time) (int, error) {
@@ -27,6 +29,8 @@ func getItemRentalCost(itemType string) (int, error) {
 	switch itemType {
 	case kayakItemType:
 		return kayakItemCost, nil
+	case paddleItemType:
+		return paddleItemCost, nil
 	default:
 		return 0, errors.New("unknown item type")
 	}

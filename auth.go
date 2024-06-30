@@ -222,7 +222,7 @@ func setTokenTransportMean() {
 		pw.SetTransport("debug", passwordless.LogTransport{
 			MessageFunc: func(token, uid string) string {
 				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
-					"http://localhost:8080", token, uid) //todo use app.server as first parameter
+					app.server, token, uid)
 			},
 		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
 	} else {

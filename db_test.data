@@ -1,9 +1,13 @@
 INSERT INTO items (i_name, i_description, i_status, i_type) VALUES
-('Perception MrClean', 'Playboat - pomaranczowy', 'ok', 'kayak'),
-('Blisstick MiniMistick', 'Creek - zolty', 'ok', 'kayak'),
-('Necky Witch', 'Playboat - zolto-szary', 'ok', 'kayak'),
-('Jackson All Star', 'Freestyle - czerwony', 'ok', 'kayak'),
-('Outlaw', 'Riverrunner - zolto-pomaranczowy', 'broken', 'kayak');
+('B102', 'Perception MrClean Playboat - pomaranczowy', 'ok', 'kayak'),
+('B18', 'Blisstick MiniMistick Creek - zolty', 'ok', 'kayak'),
+('B21', 'Necky Witch Playboat - zolto-szary', 'ok', 'kayak'),
+('B3', 'Jackson All Star Freestyle - czerwony', 'ok', 'kayak'),
+('B1', 'Outlaw Riverrunner - zolto-pomaranczowy', 'broken', 'kayak'),
+('W11', 'DrKajak żółte symetryczne', 'ok', 'paddle'),
+('W15', 'DrKajak Czerwone symetryczne', 'ok', 'paddle'),
+('W13', 'DrKajak żółte niesymetryczne', 'broken', 'paddle'),
+('NW112', 'Rapa nizinna zielona', 'ok', 'paddle');
 
 INSERT INTO users (u_id, u_username, u_role, u_email, u_credits) VALUES
 (0, 'kursant01', 'user', 'dummyEmail0', 500),

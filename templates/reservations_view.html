@@ -79,30 +79,30 @@
 						{{ end }}
             </td>
 						{{ if $.ChangeRentalStatus }}
-						{{ if or (and (eq .Status "approved") (.StartTime.After (AddHours Now -2) ) (.StartTime.Before (AddHours Now 12)))
-										 (eq .Status "rented")
-						}}
+            {{ if or (and (eq .Status "approved") (.StartTime.After (AddHours Now -2) ) (.StartTime.Before (AddHours Now 12)))
+            (eq .Status "rented")
+            }}
             <td>
-              <form method="POST" action="/admin/setStatus">
-                <input type="hidden" name="reservation_id" value="{{ .ID }}">
-                <input type="hidden" name="user_id" value="{{ .User.ID }}">
-                {{ if (eq .Status "approved") }}
-                <input type="hidden" name="status" value="rented">
-                <button type="submit" class="btn btn-primary">Wydaj sprzet</button>
-                {{ else }}
-                <input type="hidden" name="status" value="returned">
-                <button type="submit" class="btn btn-primary">Przyjmij zwrot</button>
-                {{ end }}
-              </form>
+            <form method="POST" id="rent_form_{{ .ID }}" action="javascript:setReservationStatus({{ .ID }}, 'rent_form')">
+              <input type="hidden" name="reservation_id" value="{{ .ID }}">
+              <input type="hidden" name="user_id" value="{{ .User.ID }}">
+              {{ if (eq .Status "approved") }}
+              <input type="hidden" name="status" value="rented">
+              <button type="submit" class="btn btn-primary">Wydaj sprzęt</button>
+              {{ else }}
+              <input type="hidden" name="status" value="returned">
+              <button type="submit" class="btn btn-primary">Przyjmij zwrot</button>
+              {{ end }}
+            </form>
             </td>
-          {{ else }}<td></td>{{ end }}
+            {{ else }}<td></td>{{ end }}
           {{ end }}
           </tr>
           {{ end }}
         </tbody>
       </table>
       <script type="text/javascript">
-				$(document).ready(function() {
+        $(document).ready(function() {
         new DataTable('#{{ .TableId }}', {
           order: [[2, 'asc']],
           language: {
@@ -110,8 +110,26 @@
           },
 					responsive: true,
         });
-				});
-      </script>
+      });
+        function setReservationStatus(reservationId, formPrefix = 'reservation') {
+            var formData = $("#" + formPrefix + "_" + reservationId).serialize();
+            fetch('/admin/setStatus', {
+                method: 'PUT',
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData,
+            })
+            .then(response => response.text())
+            .then(responseData => {
+                alert("Zmieniono status rezerwacji"); // Display a non-action-required prompt
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Nie udało się zmienić statusu rezerwacji");
+            });
+        }
+        </script>
       {{ else }}
       <p>Brak rezerwacji.</p>
       {{ end }}

@@ -5,6 +5,7 @@
   - [Konfiguracja VS Code (GO)](#konfiguracja-vs-code-go)
   - [GCC](#gcc)
   - [Baza danych](#baza-danych)
+  - [deploy](#deploy)
 - [Passwordless authentication](#passwordless-authentication)
   - [Konfiguracja](#konfiguracja)
 - [Zmienne środowiskowe](#zmienne-środowiskowe)
@@ -40,7 +41,7 @@ set cgo_enabled=1
             "env": {
                 "GO111MODULE": "on",
             },
-            "args": ["127.0.0.1", "8080", "domain"]
+            "args": ["127.0.0.1", "8080", "http://localhost:8080"]
         }
     ]
 }
@@ -59,6 +60,13 @@ sqlite3 magazyn.db < db.schema
 * Zapełnij bazę
 ```powershell
 sqlite3 magazyn.db ".read db_test.data"
+```
+
+## deploy
+```cmd
+go install
+go build
+bystrze_sprzet.exe 127.0.0.1 8080 http://localhost:8080
 ```
 
 # Passwordless authentication
