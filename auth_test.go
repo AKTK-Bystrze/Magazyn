@@ -18,13 +18,13 @@ import (
 )
 
 var (
-	UID_STR                      = fmt.Sprint(mock.Anything)
-	UID_NB, _                    = strconv.ParseInt(UID_STR, 10, 64)
+	TEST_UID_STR                 = fmt.Sprint(mock.Anything)
+	TEST_UID_NB, _               = strconv.ParseInt(TEST_UID_STR, 10, 64)
 	TEST_TOKEN                   = "WRONG_TEST_TOKEN"
-	ROLE                         = "role"
-	EMAIL                        = "email"
-	TOKEN_ERROR_MESSAGE          = "The entered token/PIN was incorrect."
+	TEST_ROLE                    = "role"
+	TEST_TOKEN_ERROR_MESSAGE     = "The entered token/PIN was incorrect."
 	TEST_EMAIL                   = "email@address.com"
+	EMAIL                        = "email"
 	EXPECTED_STATUS_CODE_BUT_GOT = "Expected status code %d, but got %d"
 )
 
@@ -191,7 +191,7 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 		mockStore := new(MockStore)
 		session := sessions.NewSession(nil, SESSION_NAME)
 		session.Values = map[interface{}]interface{}{}
-		session.Values["UserInfo"] = UID_NB
+		session.Values["UserInfo"] = TEST_UID_NB
 		session.Values["recipient"] = tc.role
 		mockStore.session = *session
 		mockTemplate := new(mockTemplate)
@@ -239,7 +239,7 @@ func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T
 	mockTemplate.On("ExecuteTemplate", mock.Anything, "tokenGenerated.html", mock.Anything).Return(nil)
 	tmpUser := tmpUser{
 		Role: "user",
-		ID:   UID_NB,
+		ID:   TEST_UID_NB,
 	}
 	mockDatabase := new(MockDatabase)
 	mockDatabase.user = tmpUser
@@ -249,7 +249,7 @@ func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T
 		db:        mockDatabase,
 	}
 	mockPW := new(MockPasswordless)
-	mockPW.On("RequestToken", mock.Anything, EMAIL, UID_STR, TEST_EMAIL).Return(nil)
+	mockPW.On("RequestToken", mock.Anything, EMAIL, TEST_UID_STR, TEST_EMAIL).Return(nil)
 	pw = mockPW
 	req, err := http.NewRequest("GET", "/token", nil)
 	if err != nil {
@@ -258,7 +258,7 @@ func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T
 	req.Form = map[string][]string{}
 	req.Form.Add("strategy", EMAIL)
 	req.Form.Add("recipient", TEST_EMAIL)
-	req.Form.Add("uid", UID_STR)
+	req.Form.Add("uid", TEST_UID_STR)
 
 	recorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(app.tokenHandler)
@@ -285,7 +285,7 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 		mockTemplate := new(mockTemplate)
 		tmpUser := tmpUser{
 			Role: tc.role,
-			ID:   UID_NB,
+			ID:   TEST_UID_NB,
 		}
 		mockDatabase := new(MockDatabase)
 		mockDatabase.user = tmpUser
@@ -295,7 +295,7 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 			db:        mockDatabase,
 		}
 		mockPW := new(MockPasswordless)
-		mockPW.On("VerifyToken", mock.Anything, UID_STR, TEST_TOKEN).Return(true, nil)
+		mockPW.On("VerifyToken", mock.Anything, TEST_UID_STR, TEST_TOKEN).Return(true, nil)
 		pw = mockPW
 		req, err := http.NewRequest("GET", "/token", nil)
 		if err != nil {
@@ -305,7 +305,7 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 		req.Form.Add("strategy", EMAIL)
 		req.Form.Add("recipient", tc.role)
 		req.Form.Add("token", TEST_TOKEN)
-		req.Form.Add("uid", UID_STR)
+		req.Form.Add("uid", TEST_UID_STR)
 
 		recorder := httptest.NewRecorder()
 		handler := http.HandlerFunc(app.tokenHandler)
@@ -328,7 +328,7 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 	mockStore := new(MockStore)
 	session := sessions.NewSession(new(MockSessionStore), SESSION_NAME)
 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
-	session.Values["recipient"] = ROLE
+	session.Values["recipient"] = TEST_ROLE
 	mockStore.session = *session
 	mockTemplate := new(mockTemplate)
 	mockTemplate.On("ExecuteTemplate", mock.Anything, "tokenGenerated.html", struct {
@@ -338,13 +338,13 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 		TokenError string
 	}{
 		Strategy:   EMAIL,
-		Recipient:  ROLE,
-		UserID:     UID_STR,
+		Recipient:  TEST_ROLE,
+		UserID:     TEST_UID_STR,
 		TokenError: ERROR_MSG_WRONG_TOKEN,
 	}).Return(nil)
 	tmpUser := tmpUser{
-		Role: ROLE,
-		ID:   UID_NB,
+		Role: TEST_ROLE,
+		ID:   TEST_UID_NB,
 	}
 	mockDatabase := new(MockDatabase)
 	mockDatabase.user = tmpUser
@@ -354,7 +354,7 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 		db:        mockDatabase,
 	}
 	mockPW := new(MockPasswordless)
-	mockPW.On("VerifyToken", mock.Anything, UID_STR, TEST_TOKEN).Return(false, nil)
+	mockPW.On("VerifyToken", mock.Anything, TEST_UID_STR, TEST_TOKEN).Return(false, nil)
 	pw = mockPW
 	req, err := http.NewRequest("GET", "/token", nil)
 	if err != nil {
@@ -362,9 +362,9 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 	}
 	req.Form = map[string][]string{}
 	req.Form.Add("strategy", EMAIL)
-	req.Form.Add("recipient", ROLE)
+	req.Form.Add("recipient", TEST_ROLE)
 	req.Form.Add("token", TEST_TOKEN)
-	req.Form.Add("uid", UID_STR)
+	req.Form.Add("uid", TEST_UID_STR)
 
 	recorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(app.tokenHandler)
@@ -387,13 +387,13 @@ func Test_tokenHandler_userIsSignedIn_Redirect(t *testing.T) {
 		mockStore := new(MockStore)
 		session := sessions.NewSession(new(MockSessionStore), SESSION_NAME)
 		session.Values = map[interface{}]interface{}{}
-		session.Values["UserInfo"] = UID_NB
+		session.Values["UserInfo"] = TEST_UID_NB
 		session.Values["recipient"] = tc.role
 		mockStore.session = *session
 		mockDatabase := new(MockDatabase)
 		tmpUser := tmpUser{
 			Role: tc.role,
-			ID:   UID_NB,
+			ID:   TEST_UID_NB,
 		}
 		mockDatabase.user = tmpUser
 		app = AppState{

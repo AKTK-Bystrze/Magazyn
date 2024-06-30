@@ -100,4 +100,4 @@ Zmienne środowiskowe pobierane przez aplikację:
 
 Konwencja nazewnictwa : Test_metodaTestowana_testowanyStan_oczekiwanyRezultat
 
-Przykład Test_AgeLessThan18_isAdultAsFalse
+Przykład Test_isAdult_ageLessThan18_false
