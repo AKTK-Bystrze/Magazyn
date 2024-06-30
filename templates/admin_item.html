@@ -1,12 +1,12 @@
 {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Szczegoly przedmiotu</title>
-    {{ template "stylesInclude" dict "DataTables" true}}
-    {{ template "scriptsInclude" dict "DataTables" true }}
+    {{ template "stylesInclude" dict "DataTables" true}} {{ template
+    "scriptsInclude" dict "DataTables" true }}
   </head>
   <body>
     {{ template "navbar" .UserInfo }}
@@ -36,29 +36,80 @@
         </div>
       </div>
       <h3>Historia rezerwacji</h3>
-			<ul class="nav nav-tabs" id="myTab" role="tablist">
-				<li class="nav-item">
-					<a class="nav-link active" id="next24-tab" data-toggle="tab" href="#next24" role="tab" aria-controls="next24" aria-selected="true">Biezace</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" id="upcoming-tab" data-toggle="tab" href="#upcoming" role="tab" aria-controls="upcoming" aria-selected="false">Nadchodzace</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" id="historical-tab" data-toggle="tab" href="#historical" role="tab" aria-controls="historical" aria-selected="false">Historyczne</a>
-				</li>
-			</ul>
-			<div class="tab-content" id="myTabContent">
-				<div class="tab-pane fade show active" id="next24" role="tabpanel" aria-labelledby="next24-tab">
-					{{ template "reservations_view" dict "Reservations" .Next24HReservations "TableId" "DataTable-next24h" "ChangeStatus" true "ShowUser" true "ChangeRentalStatus" true "HideItem" true "UserInfo" .UserInfo "URL" .URL }}
-				</div>
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+          <a
+            class="nav-link active"
+            id="next24-tab"
+            data-toggle="tab"
+            href="#next24"
+            role="tab"
+            aria-controls="next24"
+            aria-selected="true"
+            >Biezace</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            id="upcoming-tab"
+            data-toggle="tab"
+            href="#upcoming"
+            role="tab"
+            aria-controls="upcoming"
+            aria-selected="false"
+            >Nadchodzace</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            id="historical-tab"
+            data-toggle="tab"
+            href="#historical"
+            role="tab"
+            aria-controls="historical"
+            aria-selected="false"
+            >Historyczne</a
+          >
+        </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+        <div
+          class="tab-pane fade show active"
+          id="next24"
+          role="tabpanel"
+          aria-labelledby="next24-tab"
+        >
+          {{ template "reservations_view" dict "Reservations"
+          .Next24HReservations "TableId" "DataTable-next24h" "ChangeStatus" true
+          "ShowUser" true "ChangeRentalStatus" true "HideItem" true "UserInfo"
+          .UserInfo "URL" .URL }}
+        </div>
 
-				<div class="tab-pane fade" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
-					{{ template "reservations_view" dict "Reservations" .UpcomingReservations "TableId" "DataTable-upcoming" "ChangeStatus" true "ShowUser" true "HideItem" true "UserInfo" .UserInfo "URL" .URL }}
-				</div>
+        <div
+          class="tab-pane fade"
+          id="upcoming"
+          role="tabpanel"
+          aria-labelledby="upcoming-tab"
+        >
+          {{ template "reservations_view" dict "Reservations"
+          .UpcomingReservations "TableId" "DataTable-upcoming" "ChangeStatus"
+          true "ShowUser" true "HideItem" true "UserInfo" .UserInfo "URL" .URL
+          }}
+        </div>
 
-				<div class="tab-pane fade" id="historical" role="tabpanel" aria-labelledby="historical-tab">
-					{{ template "reservations_view" dict "Reservations" .HistoricalReservations "TableId" "DataTable-history" "ChangeStatus" false "ShowUser" true "HideItem" true "UserInfo" .UserInfo "URL" .URL }}
-				</div>
+        <div
+          class="tab-pane fade"
+          id="historical"
+          role="tabpanel"
+          aria-labelledby="historical-tab"
+        >
+          {{ template "reservations_view" dict "Reservations"
+          .HistoricalReservations "TableId" "DataTable-history" "ChangeStatus"
+          false "ShowUser" true "HideItem" true "UserInfo" .UserInfo "URL" .URL
+          }}
+        </div>
       </div>
     </div>
   </body>

@@ -19,6 +19,8 @@ require (
 	github.com/pzduniak/mcf v0.0.0-20160731113721-0ddac5a6d704 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
+	golang.org/x/mod v0.18.0 // indirect
+	golang.org/x/tools v0.22.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

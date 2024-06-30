@@ -54,5 +54,5 @@ const (
 	COOKIE_KEY_LENGTH     = 16
 
 	APP_NAME     = "E-magazyn Bystrze"
-	SESSION_NAME = "session-name"
+	SESSION_NAME = "magazynBystrze"
 )
