@@ -11,7 +11,7 @@
 			{{ if .TokenError }}<p class="red">{{ .TokenError }}</p>{{ end }}
 			{{ if eq .Strategy "email" }}
 			<h2>Email Sent!</h2>
-			<p class="{{ if .TokenError }}muted{{end}}">Mail wraz z kodem został wysłany na adres <strong>{{ .Recipient }}</strong>. Wprowadź otrzymany kok do poniższego pola:</p>
+			<p class="{{ if .TokenError }}muted{{end}}">Mail wraz z kodem został wysłany na adres <strong>{{ .Recipient }}</strong>. Wprowadź otrzymany kod do poniższego pola:</p>
 			<form method="POST">
 				<input type="hidden" name="strategy" value="email">
 				<input type="hidden" name="recipient" value="{{ .Recipient }}">
