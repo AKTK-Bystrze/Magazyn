@@ -34,4 +34,4 @@ RUN mkdir /app/templates
 COPY /templates/*.html /app/templates/
 EXPOSE 8080
 
-CMD ["./main", "", "8080", ""]
+CMD ["./main", "", "8080", "https://app-ibkb4wrviq-lm.a.run.app/"]
