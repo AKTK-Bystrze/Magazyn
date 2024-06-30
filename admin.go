@@ -42,56 +42,35 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setStatusHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse form data
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	reservationID := r.FormValue("reservation_id")
-	status := r.FormValue("status")
-	id, err := strconv.Atoi(reservationID)
+	newStatus := r.FormValue("status")
+	id, _ := strconv.Atoi(reservationID)
 	reservation, err := app.getReservation(id)
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
-	uid := r.Context().Value("UserInfo").(tmpUser).ID
-	if status == "denied" {
-		rentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
-		if err != nil {
-			app.Err(err.Error())
-			http.Error(w, "Couldn't calculate rental cost", http.StatusBadRequest)
-			return
-		}
-		u := reservation.User
-		updatedCredits := u.Credits + rentalCost
-		result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, updatedCredits, uid)
-		if err != nil {
-			app.Err(err.Error())
-			http.Error(w, "Cant update users credits", http.StatusBadRequest)
-			return
-		}
-		numRows, err := result.RowsAffected()
-		if err != nil || numRows != 1 {
-			if err != nil {
-				app.Err(err.Error())
-			} else {
-				app.Err("Failed to update user credits")
-			}
-			http.Error(w, "DB Error", http.StatusInternalServerError)
-			return
-		}
-		if err != nil {
-			app.Err(err.Error())
-			http.Error(w, "DB Error", http.StatusInternalServerError)
-			return
-		}
+	if newStatus == "denied" {
+		handleDeniedStatus(*reservation, w)
 	}
-	//	TODO: check if reservation date is in the future !!!
-	// Update reservation status in database
+	if newStatus == "returned" {
+		handleReturnedStatus(*reservation, w)
+	}
+	if reservation.EndTime.Before(reservation.StartTime) {
+		app.Err(err.Error())
+		http.Error(w, "Reservation end time has to be after the start time", http.StatusBadRequest)
+		return
+	}
+	updateReservationStatus(*reservation, newStatus, w)
+}
 
-	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, uid, reservationID)
+func updateReservationStatus(reservation Reservation, status string, w http.ResponseWriter) {
+	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, reservation.User.ID, reservation.ID)
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
@@ -107,8 +86,65 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
-	response := fmt.Sprintf("id: %s", reservationID)
+	response := fmt.Sprintf("id: %", reservation.ID)
 	w.Write([]byte(response))
+}
+
+func handleDeniedStatus(reservation Reservation, w http.ResponseWriter) {
+	rentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "Couldn't calculate rental cost", http.StatusBadRequest)
+		return
+	}
+	updatedCredits := reservation.User.Credits + rentalCost
+	updateUserCredits(reservation, updatedCredits, w)
+}
+
+func updateUserCredits(reservation Reservation, credits int, w http.ResponseWriter) {
+	u := reservation.User
+	result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, credits, u.ID)
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "Cant update users credits", http.StatusBadRequest)
+		return
+	}
+	numRows, err := result.RowsAffected()
+	if err != nil || numRows != 1 {
+		if err != nil {
+			app.Err(err.Error())
+		} else {
+			app.Err("Failed to update user credits")
+		}
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func handleReturnedStatus(reservation Reservation, w http.ResponseWriter) {
+	now := time.Now()
+	year, month, day := now.Date()
+	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+
+	year, month, day = reservation.EndTime.Date()
+	dateOnly := time.Date(year, month, day, 0, 0, 0, 0, reservation.EndTime.Location())
+	if !today.Equal(dateOnly) {
+		userCredits := reservation.User.Credits
+		oldRentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
+		newRentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, now)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "Server Error", http.StatusInternalServerError)
+			return
+		}
+		userCredits = userCredits + oldRentalCost - newRentalCost
+		updateUserCredits(reservation, userCredits, w)
+	}
 }
 
 func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
