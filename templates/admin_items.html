@@ -1,52 +1,54 @@
 {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
-<!DOCTYPE html>
+<!doctype html>
 <html>
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Dostepny sprzet</title>
-		{{ template "stylesInclude" }}
-		{{ template "scriptsInclude" }}
-	</head>
-	<body>
-		{{ template "navbar" .UserInfo }}
-		<div class="container">
-			<h2 class="my-3">Dostepny sprzet</h2>
-			<table class="table">
-				<thead>
-					<tr>
-						<th>ID</th>
-						<th>Nazwa</th>
-						<th>Opis</th>
-						<th>Stan</th>
-						<th>Aktualna rezerwacja</th>
-					</tr>
-				</thead>
-				<tbody>
-					{{ range .Items }}
-					<tr>
-						<td>{{ .ID }}</td>
-						<td><a href="/admin/item/show?id={{ .ID }}">{{ .Name }}</a></td>
-						<td>{{ .Description }}</td>
-						<td>
-						{{ template "itemStatus" . }}
-						</td>
-						<td>
-						{{ if .CurrentReservation.ID }}
-							{{ with $reservation := .CurrentReservation }}
-								<p>{{ $reservation.User.Name }}: 
-								{{ template "reservationStatus" $reservation }}
-								</p>
-								<p><a href="/admin/reservation/show?id={{ $reservation.ID }}">{{ $reservation.StartTime.Format $DATE_FORMAT_OUT }} - {{ $reservation.EndTime.Format $DATE_FORMAT_OUT }}</a></p>
-							{{ end }}
-						{{ else }}
-						<p>Dostepne</p>
-						{{ end }}
-						</td>
-					</tr>
-					{{ end }}
-				</tbody>
-			</table>
-		</div>
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dostepny sprzet</title>
+    {{ template "stylesInclude" }} {{ template "scriptsInclude" }}
+  </head>
+  <body>
+    {{ template "navbar" .UserInfo }}
+    <div class="container">
+      <h2 class="my-3">Dostepny sprzet</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nazwa</th>
+            <th>Opis</th>
+            <th>Stan</th>
+            <th>Aktualna rezerwacja</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Items }}
+          <tr>
+            <td>{{ .ID }}</td>
+            <td><a href="/admin/item/show?id={{ .ID }}">{{ .Name }}</a></td>
+            <td>{{ .Description }}</td>
+            <td>{{ template "itemStatus" . }}</td>
+            <td>
+              {{ if .CurrentReservation.ID }} {{ with $reservation :=
+              .CurrentReservation }}
+              <p>
+                {{ $reservation.User.Name }}: {{ template "reservationStatus"
+                $reservation }}
+              </p>
+              <p>
+                <a href="/admin/reservation/show?id={{ $reservation.ID }}"
+                  >{{ $reservation.StartTime.Format $DATE_FORMAT_OUT }} - {{
+                  $reservation.EndTime.Format $DATE_FORMAT_OUT }}</a
+                >
+              </p>
+              {{ end }} {{ else }}
+              <p>Dostepne</p>
+              {{ end }}
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+  </body>
 </html>
