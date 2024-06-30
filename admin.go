@@ -86,7 +86,7 @@ func updateReservationStatus(reservation Reservation, status string, w http.Resp
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
-	response := fmt.Sprintf("id: %", reservation.ID)
+	response := fmt.Sprintf("id: %d", reservation.ID)
 	w.Write([]byte(response))
 }
 
