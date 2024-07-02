@@ -414,7 +414,7 @@ func dbBackupHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename=magazyn.db")
+	w.Header().Set("Content-Disposition", "attachment; filename="+DATABASE_NAME)
 
 	_, err = io.Copy(w, file)
 	if err != nil {
