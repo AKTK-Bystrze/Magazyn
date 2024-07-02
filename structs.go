@@ -53,6 +53,7 @@ const (
 	TOKEN_LENGTH          = 10
 	COOKIE_KEY_LENGTH     = 16
 
-	APP_NAME     = "E-magazyn Bystrze"
-	SESSION_NAME = "magazynBystrze"
+	APP_NAME      = "E-magazyn Bystrze"
+	SESSION_NAME  = "magazynBystrze"
+	DATABASE_NAME = "magazyn.db"
 )

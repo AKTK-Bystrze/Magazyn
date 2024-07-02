@@ -129,7 +129,7 @@ func main() {
 	//  TODO: .StrictSlash ???
 	router := mux.NewRouter()
 
-	db, err := sqlx.Open("sqlite3", "magazyn.db")
+	db, err := sqlx.Open("sqlite3", DATABASE_NAME)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -199,6 +199,7 @@ func main() {
 	adminRouter.HandleFunc("/item/show", AdminShowItemHandler).Methods("GET")
 	adminRouter.HandleFunc("/user/show", AdminShowUserHandler).Methods("GET")
 	adminRouter.HandleFunc("/reservation/show", reservationHandler).Methods("GET")
+	adminRouter.HandleFunc("/db/backup", dbBackupHandler).Methods("GET")
 
 	router.PathPrefix("/").Handler(userRouter)
 
