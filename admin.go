@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -400,4 +402,23 @@ func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
 		},
 		item,
 	})
+}
+
+func dbBackupHandler(w http.ResponseWriter, r *http.Request) {
+	dbPath := "./magazyn.db"
+	file, err := os.Open(dbPath)
+	if err != nil {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+	defer file.Close()
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", "attachment; filename=magazyn.db")
+
+	_, err = io.Copy(w, file)
+	if err != nil {
+		print("Error copying file:", err)
+	}
+
 }
