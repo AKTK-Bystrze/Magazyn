@@ -39,6 +39,9 @@
         font-size: 14px;
         height: 40px;
     }
+    .equipment-tile:hover{
+      background-color: deepskyblue;
+    }
     .equipment-tile.duplicate {
         background-color: yellow;
     }
@@ -50,9 +53,11 @@
     }
     #controlSection {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+        flex-wrap: wrap;          /* Allows buttons to wrap if needed */
+        justify-content: space-between;  /* Distribute buttons evenly */
+        width: 100%;               /* Ensure container takes full width */
+        height: 100%;              /* Ensure container takes full height */
+        box-sizing: border-box;  
     }
     #equipmentInput {
         padding: 10px;
@@ -64,13 +69,17 @@
         background-color: white;
     }
     .inventoryButton {
-        padding: 10px;
-        font-size: 14px;
-        cursor: pointer;
+        border-radius: 5px;
+        flex-grow: 1;             
+        flex-basis: calc(33.33% - 10px); 
+        height: auto;              
+        margin: 5px;               
+        padding: 10px;             
+        box-sizing: border-box;    
+        text-align: center;        
+        font-size: 18px;          
         border: none;
         background-color: lightblue;
-        border-radius: 5px;
-        margin-right: 10px;
     }
     .inventoryButton:hover {
         background-color: deepskyblue;
