@@ -48,7 +48,7 @@ type ReservationAudit struct {
 }
 
 const (
-	COOKIE_VALIDITY_TIME  = 10
+	COOKIE_VALIDITY_TIME  = 60
 	SEND_COOKIE_TO_STDOUT = false
 	TOKEN_LENGTH          = 10
 	COOKIE_KEY_LENGTH     = 16
