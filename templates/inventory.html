@@ -16,7 +16,7 @@
     <div id="controlSection">
         <input type="text" id="equipmentInput" placeholder="ID sprzętu">
     </div>
-    <div>
+    <div id="controlSection">
         <button class="inventoryButton" onclick="addFromInput()">Dodaj</button>
         <button class="inventoryButton" onclick="filterList()">Filtruj</button>
         <button class="inventoryButton" onclick="checkDuplicates()">Sprawdź</button>
@@ -130,8 +130,6 @@
             } else if (e.key === 'Backspace') {
                 document.getElementById('equipmentInput').value = 
                     document.getElementById('equipmentInput').value.slice(0, -1);
-            } else if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
-                document.getElementById('equipmentInput').value += e.key;
             }
         };
     </script>
