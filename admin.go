@@ -422,3 +422,19 @@ func dbBackupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func inventory(w http.ResponseWriter, r *http.Request) {
+	reservations, err := app.getReservations(queryConfigReservation{users: true})
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+
+	app.renderTemplate(w, r, "inventory.html", &struct {
+		Reservations []Reservation
+		templateData
+	}{
+		Reservations: reservations,
+	})
+}

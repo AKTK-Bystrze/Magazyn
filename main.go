@@ -200,6 +200,7 @@ func main() {
 	adminRouter.HandleFunc("/user/show", AdminShowUserHandler).Methods("GET")
 	adminRouter.HandleFunc("/reservation/show", reservationHandler).Methods("GET")
 	adminRouter.HandleFunc("/db/backup", dbBackupHandler).Methods("GET")
+	adminRouter.HandleFunc("/inventory", inventory).Methods("GET")
 
 	router.PathPrefix("/").Handler(userRouter)
 

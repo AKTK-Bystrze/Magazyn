@@ -1,0 +1,218 @@
+
+{{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            max-width: 400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #listSection {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 10px 0;
+        }
+        .equipment-tile {
+            padding: 5px;
+            background-color: lightblue;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 14px;
+            height: 40px;
+        }
+        .equipment-tile.duplicate {
+            background-color: yellow;
+        }
+        .equipment-tile.db-extra {
+            background-color: green;
+        }
+        .equipment-tile.list-extra {
+            background-color: red;
+        }
+        #controlSection {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #equipmentInput {
+            padding: 10px;
+            font-size: 18px;
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+            background-color: white;
+        }
+        #addButton {
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            background-color: lightblue;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        #addButton:hover {
+            background-color: deepskyblue;
+        }
+        #actionButtons button {
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 5px;
+            border: none;
+            background-color: lightgray;
+            border-radius: 5px;
+        }
+        #actionButtons button:hover {
+            background-color: darkgray;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="listSection"></div>
+
+    <div id="controlSection">
+        <input type="text" id="equipmentInput" placeholder="ID sprzętu" readonly>
+        <button id="addButton" onclick="addFromInput()">Dodaj</button>
+        <div id="actionButtons">
+            <button onclick="filterList()">Filtruj</button>
+            <button onclick="checkDuplicates()">Sprawdź</button>
+            <button onclick="downloadList()">Pobierz</button>
+        </div>
+    </div>
+
+    <script>
+        let equipmentArray = ["WG11", "WG2", "NW3"];  // Example initial data
+        const dbValues = ["WG11", "WG2", "WG3"];  // Example DB values
+
+        function addEquipment(value) {
+            if (value) {
+                equipmentArray.push(value);
+                updateListView();
+            }
+        }
+
+        function addFromInput() {
+            const inputValue = document.getElementById('equipmentInput').value.trim();
+            addEquipment(inputValue.toUpperCase());
+            document.getElementById('equipmentInput').value = '';
+        }
+
+        function updateListView() {
+            const listSection = document.getElementById('listSection');
+            listSection.innerHTML = '';
+            equipmentArray.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'equipment-tile';
+                btn.innerText = item;
+                btn.onclick = () => removeEquipment(index);
+                listSection.appendChild(btn);
+            });
+        }
+
+        function removeEquipment(index) {
+            equipmentArray.splice(index, 1);
+            updateListView();
+        }
+
+        function filterList() {
+            // Implement filter logic based on your needs
+            alert("Filter function not implemented yet.");
+        }
+
+        function checkDuplicates() {
+            //dodawanie jest ok, niech resetuje widok
+            //sprawdz jest ok
+            //jezeli jakis item jest na zielono to jest zdublowany, Czyli jest niebieski item i zielony a powinien być tylko zielony
+            //usuwanie niepotrzebnie resetuje widok tzn kolory
+            
+            //czy klawiatura jest widoczna caly czas?
+            //powinien ignorowac rozmiar czcionki
+            //duplikat powinien byc podswietlony zaraz po dodaniu czyli duplikaty weryfikowane tez po dodaniu
+            //dodawanie 
+            const listSection = document.getElementById('listSection');
+            listSection.innerHTML = '';
+
+            const duplicates = equipmentArray.filter((item, index) => equipmentArray.indexOf(item) !== index);
+            const uniqueItems = [...new Set(equipmentArray)];
+            
+            uniqueItems.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'equipment-tile';
+                btn.innerText = item;
+                btn.onclick = () => removeEquipment(index);
+
+                if (duplicates.includes(item)) {
+                    btn.classList.add('duplicate');
+                }
+
+                listSection.appendChild(btn);
+            });
+
+            uniqueItems.forEach((item) => {
+                if (!dbValues.includes(item)) {
+                    const btn = document.createElement('button');
+                    btn.className = 'equipment-tile db-extra';
+                    btn.innerText = item;
+                    listSection.appendChild(btn);
+                }
+            });
+
+            dbValues.forEach((item) => {
+                if (!uniqueItems.includes(item)) {
+                    const btn = document.createElement('button');
+                    btn.className = 'equipment-tile list-extra';
+                    btn.innerText = item;
+                    btn.onclick = () => removeEquipment(index);
+                    listSection.appendChild(btn);
+                }
+            });
+        }
+
+        function downloadList() {
+            const blob = new Blob([equipmentArray.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'equipment_list.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        updateListView();
+
+        document.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                addFromInput();
+            } else if (e.key === 'Backspace') {
+                document.getElementById('equipmentInput').value = 
+                    document.getElementById('equipmentInput').value.slice(0, -1);
+            } else if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
+                document.getElementById('equipmentInput').value += e.key;
+            }
+        };
+    </script>
+
+</body>
+</html>
