@@ -6,104 +6,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Equipment Manager</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 10px;
-            max-width: 400px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        #listSection {
-            flex-grow: 1;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 10px;
-            padding: 10px 0;
-        }
-        .equipment-tile {
-            padding: 5px;
-            background-color: lightblue;
-            border: none;
-            cursor: pointer;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 14px;
-            height: 40px;
-        }
-        .equipment-tile.duplicate {
-            background-color: yellow;
-        }
-        .equipment-tile.db-extra {
-            background-color: green;
-        }
-        .equipment-tile.list-extra {
-            background-color: red;
-        }
-        #controlSection {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        #equipmentInput {
-            padding: 10px;
-            font-size: 18px;
-            flex-grow: 1;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-right: 10px;
-            background-color: white;
-        }
-        #addButton {
-            padding: 10px;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
-            background-color: lightblue;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        #addButton:hover {
-            background-color: deepskyblue;
-        }
-        #actionButtons button {
-            padding: 10px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-right: 5px;
-            border: none;
-            background-color: lightgray;
-            border-radius: 5px;
-        }
-        #actionButtons button:hover {
-            background-color: darkgray;
-        }
-    </style>
+    {{ template "stylesInclude" dict "DataTables" true}} {{ template
+        "scriptsInclude" dict "DataTables" true }}
+   
 </head>
 <body>
 
     <div id="listSection"></div>
-
     <div id="controlSection">
-        <input type="text" id="equipmentInput" placeholder="ID sprzętu" readonly>
-        <button id="addButton" onclick="addFromInput()">Dodaj</button>
-        <div id="actionButtons">
-            <button onclick="filterList()">Filtruj</button>
-            <button onclick="checkDuplicates()">Sprawdź</button>
-            <button onclick="downloadList()">Pobierz</button>
-        </div>
+        <input type="text" id="equipmentInput" placeholder="ID sprzętu">
+    </div>
+    <div>
+        <button class="inventoryButton" onclick="addFromInput()">Dodaj</button>
+        <button class="inventoryButton" onclick="filterList()">Filtruj</button>
+        <button class="inventoryButton" onclick="checkDuplicates()">Sprawdź</button>
+        <button class="inventoryButton" onclick="downloadList()">Pobierz</button>
     </div>
 
     <script>
-        let equipmentArray = [];  // Example initial data
-        const dbValues = [];  // Example DB values
+        let equipmentArray = ["WG11", "WG2", "NW3"];  // Example initial data
+        const dbValues = ["WG11", "WG2", "WG3"];  // Example DB values
 
         function addEquipment(value) {
             if (value) {
