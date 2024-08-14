@@ -7,10 +7,22 @@ import (
 )
 
 const (
-	kayakItemType  = "kayak"
-	kayakItemCost  = 4
-	paddleItemType = "paddle"
-	paddleItemCost = 2
+	kayakItemType      = "kayak"
+	kayakItemCost      = 4
+	paddleItemType     = "paddle"
+	paddleItemCost     = 2
+	lifeJacketItemType = "life_jacket"
+	lifeJacketItemCost = 1
+	helmetItemType     = "helmet"
+	helmetItemCost     = 1
+	jacketItemType     = "jacket"
+	jacketItemCost     = 1
+	spraySkirtItemType = "spray_skirt"
+	spraySkirtItemCost = 1
+	ropeItemType       = "rope"
+	ropeItemCost       = 1
+	wetsuitItemType    = "wetsuit"
+	wetsuitItemCost    = 1
 )
 
 func calculateRentalCost(itemID int, start_time time.Time, end_time time.Time) (int, error) {
@@ -31,6 +43,18 @@ func getItemRentalCost(itemType string) (int, error) {
 		return kayakItemCost, nil
 	case paddleItemType:
 		return paddleItemCost, nil
+	case lifeJacketItemType:
+		return lifeJacketItemCost, nil
+	case helmetItemType:
+		return helmetItemCost, nil
+	case jacketItemType:
+		return jacketItemCost, nil
+	case spraySkirtItemType:
+		return spraySkirtItemCost, nil
+	case ropeItemType:
+		return ropeItemCost, nil
+	case wetsuitItemType:
+		return wetsuitItemCost, nil
 	default:
 		return 0, errors.New("unknown item type")
 	}
