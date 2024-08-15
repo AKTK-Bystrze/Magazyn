@@ -441,9 +441,9 @@ func inventory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.renderTemplate(w, r, "inventory.html", &struct {
-		json []byte
+		Json string
 		templateData
 	}{
-		json: json,
+		Json: string(json),
 	})
 }

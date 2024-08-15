@@ -50,7 +50,7 @@
         const Containers = Object.freeze({
             tiles:   'listSection',
         });
-        const dbValues = [{name: "WG11",type: "paddle"}, {name:"WG11",type:"kayak"}];
+        const dbValues = JSON.parse("{{ .Json }}");
     
         let selectedItemTyp = null;
         const itemTypeButtons = document.querySelectorAll('.itemTypeButton');
@@ -61,18 +61,18 @@
                 selectedItemTyp = this.getAttribute('item-type');
             });
         });
-    
+
         function isDuplicate(item){
             const container = document.getElementById(Containers.tiles);
             const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
-            const itemTypeTiles = buttons.filter(button => button.getAttribute(TileData.TYPE) === item.type);
-            const duplicates = itemTypeTiles.filter(button => button.getAttribute(TileData.NAME) === item.name);
+            const itemTypeTiles = buttons.filter(button => button.getAttribute(TileData.TYPE) === item.Type);
+            const duplicates = itemTypeTiles.filter(button => button.getAttribute(TileData.NAME) === item.Name);
             return duplicates;
         }
     
         function isExtra(item){
-            const itemTypeDbItems = dbValues.filter(dbItem => dbItem.type === item.type);
-            const duplicates = itemTypeDbItems.filter(dbItem => dbItem.name === item.name);
+            const itemTypeDbItems = dbValues.filter(dbItem => dbItem.Type === item.Type);
+            const duplicates = itemTypeDbItems.filter(dbItem => dbItem.Name === item.Name);
             return duplicates.length === 0;
         }
     
@@ -89,7 +89,7 @@
         function addEquipment(value) {
             if (value) {
                 removeMissingTiles();
-                const item = {name: value, type: selectedItemTyp};
+                const item = {Name: value, Type: selectedItemTyp};
                 const duplicates = isDuplicate(item);
                 const extra = isExtra(item);
                 const tile = addItemTile(item);
@@ -139,11 +139,14 @@
         }
     
         function removeTile(tile){
+            if(tile.classList.contains(TileClass.MISSING)){
+                return
+            }
             tile.remove();
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
     
-            const duplicates = isDuplicate({name: tile.getAttribute(TileData.NAME), type: tile.getAttribute(TileData.TYPE)});
+            const duplicates = isDuplicate({Name: tile.getAttribute(TileData.NAME), Type: tile.getAttribute(TileData.TYPE)});
             if (duplicates.length === 1) {
                 duplicates[0].classList.remove(TileClass.DUPLICATE);
             }
@@ -156,16 +159,16 @@
         function addItemTile(item){
             const btn = document.createElement('button');
             btn.classList.add(TileClass.BASE);
-            btn.setAttribute(TileData.TYPE, item.type);
-            btn.setAttribute(TileData.NAME, item.name);
+            btn.setAttribute(TileData.TYPE, item.Type);
+            btn.setAttribute(TileData.NAME, item.Name);
     
             const largeText = document.createElement('div');
             largeText.classList.add(TileData.NAME);
-            largeText.textContent = item.name;
+            largeText.textContent = item.Name;
     
             const smallText = document.createElement('div');
             smallText.classList.add(TileData.TYPE);
-            smallText.textContent = item.type;
+            smallText.textContent = item.Type;
     
             btn.appendChild(largeText);
             btn.appendChild(smallText);
@@ -178,11 +181,12 @@
         }
     
         function showMissing(){
+            removeMissingTiles();
             const container = document.getElementById(Containers.tiles);
             const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
     
             const missingItems = dbValues.filter(element => !buttons.some(button => 
-                button.getAttribute(TileData.TYPE) === element.type && button.getAttribute(TileData.NAME) === element.name));
+                button.getAttribute(TileData.TYPE) === element.Type && button.getAttribute(TileData.NAME) === element.Name));
             
             missingItems.forEach(item => {
                 const btn = addItemTile(item);
