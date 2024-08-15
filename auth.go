@@ -224,7 +224,7 @@ func setTokenTransportMean() {
 				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
 					app.server, token, uid)
 			},
-		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
+		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME_HOURS*time.Hour)
 	} else {
 		log.Printf("Using email transport via %s", MAGAZYN_BYSTRZE_EMAIL_ADDR)
 		pw.SetTransport("email", passwordless.NewSMTPTransport(
@@ -236,7 +236,7 @@ func setTokenTransportMean() {
 				os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS"),
 				SMTP_HOST),
 			emailWriter,
-		), passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME*time.Minute)
+		), passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME_HOURS*time.Minute)
 	}
 }
 
