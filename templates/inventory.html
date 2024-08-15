@@ -199,20 +199,39 @@
             const equipmentArray = [];
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
+
+            equipmentArray.push('Type,Name,Status');
+
             tiles.forEach(tile => {
-                const data = `${tile.getAttribute(TileData.TYPE)}, ${tile.getAttribute(TileData.NAME)}`;
-                equipmentArray.push(data);
+                const type = tile.getAttribute(TileData.TYPE);
+                const name = tile.getAttribute(TileData.NAME);
+                let status = '';
+
+                if (tile.classList.contains(TileClass.MISSING)) {
+                    status = 'Missing';
+                } else if (tile.classList.contains(TileClass.DUPLICATE)) {
+                    status = 'Duplicate';
+                } else if (tile.classList.contains(TileClass.EXTRA)) {
+                    status = 'Extra';
+                }
+
+                equipmentArray.push([type, name, status].join(','));
             });
-    
-            const blob = new Blob([equipmentArray.join('\n')], { type: 'text/plain' });
+
+            const csvContent = equipmentArray.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
+
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'equipment_list.txt';
+            a.download = 'equipment_list.csv';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+
+            URL.revokeObjectURL(url);
         }
+
     
         document.onkeydown = function(e) {
             if (e.key === 'Enter') {
