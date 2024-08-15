@@ -153,7 +153,19 @@
         }
     
         function filterList() {
-            alert("Filter function not implemented yet.");
+            const searchValue = document.getElementById('equipmentInput').value.trim().toLowerCase();
+            const container = document.getElementById(Containers.tiles);
+            const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
+
+            tiles.forEach(tile => {
+                const type = tile.getAttribute(TileData.TYPE).toLowerCase();
+                const name = tile.getAttribute(TileData.NAME).toLowerCase();
+                if (type.includes(searchValue) || name.includes(searchValue)) {
+                    tile.classList.remove('hidden');
+                } else {
+                    tile.classList.add('hidden');
+                }
+            });
         }
     
         function addItemTile(item){
