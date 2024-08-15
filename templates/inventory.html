@@ -13,6 +13,11 @@
 <body>
 
     <div id="listSection"></div>
+    <div class="space-bar"></div>
+    <div id="controlSection">
+        <button class="itemTypeButton" item-type="kayak">Kajak</button>
+        <button class="itemTypeButton" item-type="paddle">Wiosło</button>
+    </div>
     <div id="controlSection">
         <input type="text" id="equipmentInput" placeholder="ID sprzętu">
     </div>
@@ -21,20 +26,49 @@
         <button class="inventoryButton" onclick="filterList()">Filtruj</button>
         <button class="inventoryButton" onclick="checkDuplicates()">Sprawdź</button>
         <button class="inventoryButton" onclick="downloadList()">Pobierz</button>
+        <a class="inventoryButton" href="/dashboard">Powrót</a>
     </div>
 
     <script>
-        let equipmentArray = ["WG11", "WG2", "NW3"];  // Example initial data
-        const dbValues = ["WG11", "WG2", "WG3"];  // Example DB values
+        let selectedButton = null;
+
+        // Get all the number buttons
+        const numberButtons = document.querySelectorAll('.itemTypeButton');
+
+        // Add event listeners to each number button
+        numberButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove the active class from all buttons
+                numberButtons.forEach(btn => btn.classList.remove('active'));
+
+                // Add the active class to the clicked button
+                this.classList.add('active');
+
+                // Store the selected button
+                selectedButton = this.getAttribute('item-type');
+            });
+        });
+
+        const EquipmentType = Object.freeze({
+        KAYAK:   { name: "kajak", hex: "#f00" },
+        PADDLE:  { name: "wiosło", hex: "#00f" },
+        });
+        let equipmentArray = [{name: "WG11",type: "paddle"}, {name:"WG2",type:"padle"}, {name:"WG11",type:"kayak"}];  // Example initial data
+        const dbValues = [{name: "WG11",type: "paddle"}, {name:"WG11",type:"kayak"}];  // Example DB values
 
         function addEquipment(value) {
             if (value) {
-                equipmentArray.push(value);
+                equipmentArray.push({name:value,type:selectedButton});
                 updateListView();
             }
         }
 
         function addFromInput() {
+            if (selectedButton) {
+                console.log(selectedButton);
+            } else {
+                console.log('No button was pressed.');
+            }
             const inputValue = document.getElementById('equipmentInput').value.trim();
             addEquipment(inputValue.toUpperCase());
             document.getElementById('equipmentInput').value = '';
@@ -46,7 +80,18 @@
             equipmentArray.forEach((item, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'equipment-tile';
-                btn.innerText = item;
+
+                const largeText = document.createElement('div');
+                largeText.classList.add('item-id');
+                largeText.textContent = item.name;
+
+                const smallText = document.createElement('div');
+                smallText.classList.add('item-type');
+                smallText.textContent = item.type;
+
+                btn.appendChild(largeText);
+                btn.appendChild(smallText);
+
                 btn.onclick = () => removeEquipment(index);
                 listSection.appendChild(btn);
             });
