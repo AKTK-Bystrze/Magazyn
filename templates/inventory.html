@@ -17,7 +17,7 @@
     <div id="controlSection">
         <button class="itemTypeButton" item-type="kayak">Kajak</button>
         <button class="itemTypeButton" item-type="paddle">Wiosło</button>
-        <button class="itemTypeButton" item-type="rope">Rztutka</button>
+        <button class="itemTypeButton" item-type="rope">Rzutka</button>
         <button class="itemTypeButton" item-type="life_jacket">Kamizelka</button>
         <button class="itemTypeButton" item-type="jacket">Kurtka</button>
         <button class="itemTypeButton" item-type="helmet">Kask</button>
@@ -89,6 +89,7 @@
         function addEquipment(value) {
             if (value) {
                 removeMissingTiles();
+                showAllTiles();
                 const item = {Name: value, Type: selectedItemTyp};
                 const duplicates = isDuplicate(item);
                 const extra = isExtra(item);
@@ -167,6 +168,13 @@
                 }
             });
         }
+
+        function showAllTiles(){
+            const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
+            tiles.forEach(tile => {
+                tile.classList.remove('hidden');
+            });
+        }
     
         function addItemTile(item){
             const btn = document.createElement('button');
@@ -194,6 +202,7 @@
     
         function showMissing(){
             removeMissingTiles();
+            showAllTiles();
             const container = document.getElementById(Containers.tiles);
             const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
     
@@ -208,6 +217,7 @@
         }
     
         function downloadList() {
+            showAllTiles();
             const equipmentArray = [];
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
