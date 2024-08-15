@@ -170,6 +170,7 @@
         }
 
         function showAllTiles(){
+            const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
             tiles.forEach(tile => {
                 tile.classList.remove('hidden');
