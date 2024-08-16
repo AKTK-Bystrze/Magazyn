@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -421,4 +422,28 @@ func dbBackupHandler(w http.ResponseWriter, r *http.Request) {
 		print("Error copying file:", err)
 	}
 
+}
+
+func inventory(w http.ResponseWriter, r *http.Request) {
+	itemsWithReservations, err := app.getItems(queryConfigItems{withCurReservation: false})
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+	var items []Item
+	for _, record := range itemsWithReservations {
+		items = append(items, record.Item)
+	}
+	json, err := json.Marshal(items)
+	if err != nil {
+		fmt.Println("Error parsing items to json")
+		return
+	}
+	app.renderTemplate(w, r, "inventory.html", &struct {
+		Json string
+		templateData
+	}{
+		Json: string(json),
+	})
 }
