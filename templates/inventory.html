@@ -1,15 +1,16 @@
-
 {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Equipment Manager</title>
     {{ template "stylesInclude" dict "DataTables" true}} {{ template
-        "scriptsInclude" dict "DataTables" true }}
-   
+    "scriptsInclude" dict "DataTables" true }}
+
 </head>
+
 <body>
 
     <div id="listSection"></div>
@@ -38,44 +39,44 @@
 
     <script>
         const TileData = Object.freeze({
-            NAME:   'data-item-name',
-            TYPE:  'data-item-type',
+            NAME: 'data-item-name',
+            TYPE: 'data-item-type',
         });
         const TileClass = Object.freeze({
-            EXTRA:   'db-extra',
-            DUPLICATE:  'duplicate',
+            EXTRA: 'db-extra',
+            DUPLICATE: 'duplicate',
             MISSING: 'missing',
             BASE: 'equipment-tile'
         });
         const Containers = Object.freeze({
-            tiles:   'listSection',
+            tiles: 'listSection',
         });
         const dbValues = JSON.parse("{{ .Json }}");
-    
+
         let selectedItemTyp = null;
         const itemTypeButtons = document.querySelectorAll('.itemTypeButton');
         itemTypeButtons.forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 itemTypeButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
                 selectedItemTyp = this.getAttribute('item-type');
             });
         });
 
-        function isDuplicate(item){
+        function isDuplicate(item) {
             const container = document.getElementById(Containers.tiles);
             const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
             const itemTypeTiles = buttons.filter(button => button.getAttribute(TileData.TYPE) === item.Type);
             const duplicates = itemTypeTiles.filter(button => button.getAttribute(TileData.NAME) === item.Name);
             return duplicates;
         }
-    
-        function isExtra(item){
+
+        function isExtra(item) {
             const itemTypeDbItems = dbValues.filter(dbItem => dbItem.Type === item.Type);
             const duplicates = itemTypeDbItems.filter(dbItem => dbItem.Name === item.Name);
             return duplicates.length === 0;
         }
-    
+
         function readFromInput() {
             if (!selectedItemTyp) {
                 alert("Wybierz rodzaj sprzętu");
@@ -85,12 +86,12 @@
                 document.getElementById('equipmentInput').value = '';
             }
         }
-    
+
         function addEquipment(value) {
             if (value) {
                 removeMissingTiles();
                 showAllTiles();
-                const item = {Name: value, Type: selectedItemTyp};
+                const item = { Name: value, Type: selectedItemTyp };
                 const duplicates = isDuplicate(item);
                 const extra = isExtra(item);
                 const tile = addItemTile(item);
@@ -104,55 +105,62 @@
                     tile.classList.add(TileClass.EXTRA);
                 }
                 sortTiles();
+                saveInventory();
             }
         }
-    
-        function removeMissingTiles(){
+
+        function saveInventory() {
+            const container = document.getElementById(Containers.tiles);
+            const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
+            localStorage.setItem('inventory', buttons);
+        }
+
+        function removeMissingTiles() {
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.MISSING}`));
             tiles.forEach(tile => {
                 tile.remove();
             });
         }
-    
+
         function sortTiles() {
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
-    
+
             tiles.sort((a, b) => {
                 const typeA = a.getAttribute(TileData.TYPE);
                 const typeB = b.getAttribute(TileData.TYPE);
                 if (typeA < typeB) return -1;
                 if (typeA > typeB) return 1;
-    
+
                 const nameA = a.getAttribute(TileData.NAME);
                 const nameB = b.getAttribute(TileData.NAME);
                 if (nameA < nameB) return -1;
                 if (nameA > nameB) return 1;
-    
+
                 return 0;
             });
-    
+
             container.innerHTML = '';
             tiles.forEach(button => {
                 container.appendChild(button);
             });
         }
-    
-        function removeTile(tile){
-            if(tile.classList.contains(TileClass.MISSING)){
+
+        function removeTile(tile) {
+            if (tile.classList.contains(TileClass.MISSING)) {
                 return
             }
             tile.remove();
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
-    
-            const duplicates = isDuplicate({Name: tile.getAttribute(TileData.NAME), Type: tile.getAttribute(TileData.TYPE)});
+
+            const duplicates = isDuplicate({ Name: tile.getAttribute(TileData.NAME), Type: tile.getAttribute(TileData.TYPE) });
             if (duplicates.length === 1) {
                 duplicates[0].classList.remove(TileClass.DUPLICATE);
             }
         }
-    
+
         function filterList() {
             const searchValue = document.getElementById('equipmentInput').value.trim().toLowerCase();
             const container = document.getElementById(Containers.tiles);
@@ -169,54 +177,54 @@
             });
         }
 
-        function showAllTiles(){
+        function showAllTiles() {
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
             tiles.forEach(tile => {
                 tile.classList.remove('hidden');
             });
         }
-    
-        function addItemTile(item){
+
+        function addItemTile(item) {
             const btn = document.createElement('button');
             btn.classList.add(TileClass.BASE);
             btn.setAttribute(TileData.TYPE, item.Type);
             btn.setAttribute(TileData.NAME, item.Name);
-    
+
             const largeText = document.createElement('div');
             largeText.classList.add(TileData.NAME);
             largeText.textContent = item.Name;
-    
+
             const smallText = document.createElement('div');
             smallText.classList.add(TileData.TYPE);
             smallText.textContent = item.Type;
-    
+
             btn.appendChild(largeText);
             btn.appendChild(smallText);
-    
-            btn.addEventListener('click', function() {
+
+            btn.addEventListener('click', function () {
                 removeTile(this);
             });
             document.getElementById(Containers.tiles).appendChild(btn);
             return btn;
         }
-    
-        function showMissing(){
+
+        function showMissing() {
             removeMissingTiles();
             showAllTiles();
             const container = document.getElementById(Containers.tiles);
             const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
-    
-            const missingItems = dbValues.filter(element => !buttons.some(button => 
+
+            const missingItems = dbValues.filter(element => !buttons.some(button =>
                 button.getAttribute(TileData.TYPE) === element.Type && button.getAttribute(TileData.NAME) === element.Name));
-            
+
             missingItems.forEach(item => {
                 const btn = addItemTile(item);
                 btn.classList.add(TileClass.MISSING);
                 container.appendChild(btn);
             });
         }
-    
+
         function downloadList() {
             showAllTiles();
             const equipmentArray = [];
@@ -247,7 +255,7 @@
 
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'inwentaryzacja_'+ getTimeNow() +'.csv';
+            a.download = 'inwentaryzacja_' + getTimeNow() + '.csv';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -255,7 +263,7 @@
             URL.revokeObjectURL(url);
         }
 
-        function getTimeNow(){
+        function getTimeNow() {
             let currentDate = new Date();
 
             let hours = currentDate.getHours().toString().padStart(2, '0');
@@ -268,15 +276,15 @@
             return formattedTime
         }
 
-    
-        document.onkeydown = function(e) {
+        document.onkeydown = function (e) {
             if (e.key === 'Enter') {
                 readFromInput();
             } else if (e.key === 'Backspace') {
-                document.getElementById('equipmentInput').value = 
+                document.getElementById('equipmentInput').value =
                     document.getElementById('equipmentInput').value.slice(0, -1);
             }
         };
     </script>
 </body>
+
 </html>
