@@ -103,7 +103,6 @@
             const buttonData = Array.from(buttons).map(button => ({
                 Name: button.getAttribute(TileData.NAME),
                 Type: button.getAttribute(TileData.TYPE),
-                // class: button.className
             }));
             localStorage.setItem(INVENTORY, JSON.stringify(buttonData));
         }
@@ -211,6 +210,7 @@
             if (duplicates.length === 1) {
                 duplicates[0].classList.remove(TileClass.DUPLICATE);
             }
+            saveInventory();
         }
 
         function filterList() {
@@ -290,6 +290,7 @@
 
         function downloadList() {
             showAllTiles();
+            saveInventory();
             const equipmentArray = [];
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
