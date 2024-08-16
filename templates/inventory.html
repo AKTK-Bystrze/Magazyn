@@ -30,7 +30,7 @@
     </div>
     <div id="controlSection">
         <button class="inventoryButton" onclick="readFromInput()">Dodaj</button>
-        <button class="inventoryButton" onclick="filterList()">Filtruj</button>
+        <button id="filterButton" class="inventoryButton" onclick="filterList()">Filtruj</button>
         <button class="inventoryButton" onclick="sortTiles()">Sortuj</button>
         <button class="inventoryButton" onclick="downloadList()">Pobierz</button>
         <button class="inventoryButton" onclick="showMissing()">Sprawdź</button>
@@ -45,6 +45,7 @@
             TYPE: 'data-item-type',
         });
         const INVENTORY = "inventory"
+        const INPUT = "equipmentInput"
         const TileClass = Object.freeze({
             EXTRA: 'db-extra',
             DUPLICATE: 'duplicate',
@@ -60,6 +61,18 @@
         loadPreviousInventory();
         showAllTiles();
         setUpItemTypeButtons();
+        document.addEventListener('keydown', handleEnterBackspaceKeys);
+
+        function handleEnterBackspaceKeys(e) {
+            if (e.key === 'Enter') {
+                readFromInput();
+            } else if (e.key === 'Backspace') {
+                let inputElement = document.getElementById(INPUT);
+                if (inputElement) {
+                    inputElement.value = inputElement.value.slice(0, -1);
+                }
+            }
+        }
 
         function setUpItemTypeButtons() {
             const itemTypeButtons = document.querySelectorAll('.itemTypeButton');
@@ -118,10 +131,14 @@
             if (!selectedItemType) {
                 alert("Wybierz rodzaj sprzętu");
             } else {
-                const inputValue = document.getElementById('equipmentInput').value.trim();
-                addEquipment(inputValue.toUpperCase());
-                document.getElementById('equipmentInput').value = '';
+                addEquipment(getInput());
             }
+        }
+
+        function getInput() {
+            const value = document.getElementById(INPUT).value.trim().toLowerCase();
+            document.getElementById(INPUT).value = '';
+            return value;
         }
 
         function addEquipment(value) {
@@ -197,7 +214,16 @@
         }
 
         function filterList() {
-            const searchValue = document.getElementById('equipmentInput').value.trim().toLowerCase();
+            const button = document.getElementById("filterButton");
+            const searchValue = getInput();
+            if (searchValue.length == 0) {
+                if (button.classList.contains("active")) {
+                    button.classList.remove("active")
+                    showAllTiles();
+                }
+                return;
+            }
+            button.classList.add("active")
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
 
@@ -213,6 +239,8 @@
         }
 
         function showAllTiles() {
+            const button = document.getElementById("filterButton");
+            button.classList.remove("active")
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
             tiles.forEach(tile => {
@@ -310,15 +338,6 @@
             let formattedTime = `${hours}:${minutes}_${day}/${month}/${year}`;
             return formattedTime
         }
-
-        document.onkeydown = function (e) {
-            if (e.key === 'Enter') {
-                readFromInput();
-            } else if (e.key === 'Backspace') {
-                document.getElementById('equipmentInput').value =
-                    document.getElementById('equipmentInput').value.slice(0, -1);
-            }
-        };
 
     </script>
 </body>
