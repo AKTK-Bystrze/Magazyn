@@ -38,6 +38,7 @@
         text-align: center;
         font-size: 14px;
         height: 40px;
+        flex-direction: column;
     }
     .equipment-tile:hover{
       background-color: deepskyblue;
@@ -48,15 +49,15 @@
     .equipment-tile.db-extra {
         background-color: green;
     }
-    .equipment-tile.list-extra {
+    .equipment-tile.missing {
         background-color: red;
     }
     #controlSection {
         display: flex;
-        flex-wrap: wrap;          /* Allows buttons to wrap if needed */
-        justify-content: space-between;  /* Distribute buttons evenly */
-        width: 100%;               /* Ensure container takes full width */
-        height: 100%;              /* Ensure container takes full height */
+        flex-wrap: wrap;          
+        justify-content: space-between;  
+        width: 100%;               
+        height: 100%;              
         box-sizing: border-box;  
     }
     #equipmentInput {
@@ -71,7 +72,7 @@
     .inventoryButton {
         border-radius: 5px;
         flex-grow: 1;             
-        flex-basis: calc(33.33% - 10px); 
+        flex-basis: calc(25% - 10px); 
         height: auto;              
         margin: 5px;               
         padding: 10px;             
@@ -84,5 +85,43 @@
     .inventoryButton:hover {
         background-color: deepskyblue;
     }
+
+    .item-id {
+        font-size: 12px;
+        }
+
+    .item-type {
+        font-size: 6px;
+    }
+    .itemTypeButton{
+        border-radius: 5px;
+        flex-grow: 1;             
+        flex-basis: calc(25% - 10px); 
+        height: auto;              
+        margin: 5px;               
+        padding: 10px;             
+        box-sizing: border-box;    
+        text-align: center;        
+        font-size: 18px;          
+        border: none;
+        background-color: lightblue;
+        }
+    .itemTypeButton.active {
+            background-color: #2196F3;
+            border-color: #0D47A1;
+        }
+    .inventoryButton.active{
+      background-color: #2196F3;
+      border-color: #0D47A1;
+    }
+    .itemTypeButton:hover {
+        background-color: deepskyblue;
+    }
+    .space-bar{
+      background-color: black;
+      height: 3px;
+      display:inline-block
+    }
+    .hidden { display: none; }
   </style>
 {{ end }}
