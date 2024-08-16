@@ -131,12 +131,12 @@
             if (!selectedItemType) {
                 alert("Wybierz rodzaj sprzętu");
             } else {
-                addEquipment(getInput());
+                addEquipment(getInput().toUpperCase());
             }
         }
 
         function getInput() {
-            const value = document.getElementById(INPUT).value.trim().toLowerCase();
+            const value = document.getElementById(INPUT).value.trim();
             document.getElementById(INPUT).value = '';
             return value;
         }
@@ -215,7 +215,7 @@
 
         function filterList() {
             const button = document.getElementById("filterButton");
-            const searchValue = getInput();
+            const searchValue = getInput().toLowerCase();
             if (searchValue.length == 0) {
                 if (button.classList.contains("active")) {
                     button.classList.remove("active")
