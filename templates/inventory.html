@@ -34,14 +34,17 @@
         <button class="inventoryButton" onclick="sortTiles()">Sortuj</button>
         <button class="inventoryButton" onclick="downloadList()">Pobierz</button>
         <button class="inventoryButton" onclick="showMissing()">Sprawdź</button>
+        <button class="inventoryButton" onclick="clearStorage()">Usuń wszystko</button>
         <a class="inventoryButton" href="/dashboard">Powrót</a>
     </div>
 
     <script>
+
         const TileData = Object.freeze({
             NAME: 'data-item-name',
             TYPE: 'data-item-type',
         });
+        const INVENTORY = "inventory"
         const TileClass = Object.freeze({
             EXTRA: 'db-extra',
             DUPLICATE: 'duplicate',
@@ -52,16 +55,50 @@
             tiles: 'listSection',
         });
         const dbValues = JSON.parse("{{ .Json }}");
+        let selectedItemType = null;
 
-        let selectedItemTyp = null;
-        const itemTypeButtons = document.querySelectorAll('.itemTypeButton');
-        itemTypeButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                itemTypeButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                selectedItemTyp = this.getAttribute('item-type');
+        loadPreviousInventory();
+        showAllTiles();
+        setUpItemTypeButtons();
+
+        function setUpItemTypeButtons() {
+            const itemTypeButtons = document.querySelectorAll('.itemTypeButton');
+            itemTypeButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    itemTypeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedItemType = this.getAttribute('item-type');
+                });
             });
-        });
+        }
+
+        function loadPreviousInventory() {
+            if (localStorage.getItem(INVENTORY) !== null) {
+                let savedInventory = JSON.parse(localStorage.getItem(INVENTORY));
+                const container = document.getElementById(Containers.tiles);
+                savedInventory.forEach(data => {
+                    addTile(data.Name, data.Type)
+                });
+            }
+        }
+
+        function saveInventory() {
+            const container = document.getElementById(Containers.tiles);
+            const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
+            const buttonsWithoutMissing = dbValues.filter(element => !buttons.some(button =>
+                button.classList.contains(TileClass.MISSING)));
+            const buttonData = Array.from(buttons).map(button => ({
+                Name: button.getAttribute(TileData.NAME),
+                Type: button.getAttribute(TileData.TYPE),
+                // class: button.className
+            }));
+            localStorage.setItem(INVENTORY, JSON.stringify(buttonData));
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            location.reload();
+        }
 
         function isDuplicate(item) {
             const container = document.getElementById(Containers.tiles);
@@ -78,7 +115,7 @@
         }
 
         function readFromInput() {
-            if (!selectedItemTyp) {
+            if (!selectedItemType) {
                 alert("Wybierz rodzaj sprzętu");
             } else {
                 const inputValue = document.getElementById('equipmentInput').value.trim();
@@ -91,28 +128,26 @@
             if (value) {
                 removeMissingTiles();
                 showAllTiles();
-                const item = { Name: value, Type: selectedItemTyp };
-                const duplicates = isDuplicate(item);
-                const extra = isExtra(item);
-                const tile = addItemTile(item);
-                if (duplicates.length > 0) {
-                    tile.classList.add(TileClass.DUPLICATE);
-                    duplicates.forEach(duplicate => {
-                        duplicate.classList.add(TileClass.DUPLICATE);
-                    });
-                }
-                if (extra) {
-                    tile.classList.add(TileClass.EXTRA);
-                }
+                addTile(value, selectedItemType)
                 sortTiles();
                 saveInventory();
             }
         }
 
-        function saveInventory() {
-            const container = document.getElementById(Containers.tiles);
-            const buttons = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));
-            localStorage.setItem('inventory', buttons);
+        function addTile(name, type) {
+            const item = { Name: name, Type: type };
+            const duplicates = isDuplicate(item);
+            const extra = isExtra(item);
+            const tile = addItemTile(item);
+            if (duplicates.length > 0) {
+                tile.classList.add(TileClass.DUPLICATE);
+                duplicates.forEach(duplicate => {
+                    duplicate.classList.add(TileClass.DUPLICATE);
+                });
+            }
+            if (extra) {
+                tile.classList.add(TileClass.EXTRA);
+            }
         }
 
         function removeMissingTiles() {
@@ -284,6 +319,7 @@
                     document.getElementById('equipmentInput').value.slice(0, -1);
             }
         };
+
     </script>
 </body>
 
