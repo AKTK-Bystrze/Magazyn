@@ -103,7 +103,6 @@
             const buttonData = Array.from(buttons).map(button => ({
                 Name: button.getAttribute(TileData.NAME),
                 Type: button.getAttribute(TileData.TYPE),
-                // class: button.className
             }));
             localStorage.setItem(INVENTORY, JSON.stringify(buttonData));
         }
@@ -131,12 +130,12 @@
             if (!selectedItemType) {
                 alert("Wybierz rodzaj sprzętu");
             } else {
-                addEquipment(getInput());
+                addEquipment(getInput().toUpperCase());
             }
         }
 
         function getInput() {
-            const value = document.getElementById(INPUT).value.trim().toLowerCase();
+            const value = document.getElementById(INPUT).value.trim();
             document.getElementById(INPUT).value = '';
             return value;
         }
@@ -211,11 +210,12 @@
             if (duplicates.length === 1) {
                 duplicates[0].classList.remove(TileClass.DUPLICATE);
             }
+            saveInventory();
         }
 
         function filterList() {
             const button = document.getElementById("filterButton");
-            const searchValue = getInput();
+            const searchValue = getInput().toLowerCase();
             if (searchValue.length == 0) {
                 if (button.classList.contains("active")) {
                     button.classList.remove("active")
@@ -290,6 +290,7 @@
 
         function downloadList() {
             showAllTiles();
+            saveInventory();
             const equipmentArray = [];
             const container = document.getElementById(Containers.tiles);
             const tiles = Array.from(container.querySelectorAll(`.${TileClass.BASE}`));

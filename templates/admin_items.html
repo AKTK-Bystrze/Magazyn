@@ -15,6 +15,7 @@
         <thead>
           <tr>
             <th>ID</th>
+            <th>Typ</th>
             <th>Nazwa</th>
             <th>Opis</th>
             <th>Stan</th>
@@ -27,6 +28,7 @@
             <td>{{ .ID }}</td>
             <td><a href="/admin/item/show?id={{ .ID }}">{{ .Name }}</a></td>
             <td>{{ .Description }}</td>
+            <td>{{ .Type }}</td>
             <td>{{ template "itemStatus" . }}</td>
             <td>
               {{ if .CurrentReservation.ID }} {{ with $reservation :=
