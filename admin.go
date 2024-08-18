@@ -159,11 +159,11 @@ func handleReturnedStatus(reservation Reservation, w http.ResponseWriter) error 
 			return err
 		}
 		userCredits = userCredits + oldRentalCost - newRentalCost
-		err = updateUserCredits(reservation, userCredits, w)
+		err = updateReservationEndDate(reservation, now, w)
 		if err != nil {
 			return err
 		}
-		err = updateReservationEndDate(reservation, now, w)
+		err = updateUserCredits(reservation, userCredits, w)
 		if err != nil {
 			return err
 		}
