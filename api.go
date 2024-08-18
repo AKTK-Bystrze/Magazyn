@@ -120,7 +120,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	timeFrom = timeFrom.Add(time.Duration(15-timeFrom.Minute()%15) * time.Minute)
 	var timeTo time.Time = timeFrom.Add(24 * time.Hour)
 	var location, err = time.LoadLocation("Europe/Warsaw")
-	app.Debug("%v search from %v to %v", getUserName(r), timeFrom, timeTo)
+	app.Debug("%v search from %v to %v", getUserName(r), timeFrom.UTC(), timeTo.UTC())
 	if err != nil {
 		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

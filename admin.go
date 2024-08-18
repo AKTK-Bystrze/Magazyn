@@ -47,7 +47,7 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	newStatus := r.FormValue("status")
 	id, _ := strconv.Atoi(reservationID)
 	reservation, err := app.getReservation(id)
-	app.Debug("%v setStatusHandler reservation id %v, status %v", getUserName(r), id, newStatus)
+	app.Debug("%v setStatusHandler reservation_id %v status %v", getUserName(r), id, newStatus)
 	if err != nil {
 		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
@@ -71,7 +71,7 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	updateReservationStatus(*reservation, newStatus, w)
-	app.Debug("%v sucessfully changed status to %v for reservation %v", getUserName(r), newStatus, id)
+	app.Debug("%v changed status to %v for reservation %v", getUserName(r), newStatus, id)
 }
 
 func updateReservationStatus(reservation Reservation, status string, w http.ResponseWriter) {
@@ -237,7 +237,7 @@ func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	app.Debug("%v set itemid %v status %v id ", getUserName(r), itemID, status)
+	app.Debug("%v set itemid %v status %v", getUserName(r), itemID, status)
 	http.Redirect(w, r, "/admin/items", http.StatusSeeOther)
 }
 
