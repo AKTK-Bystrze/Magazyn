@@ -34,6 +34,7 @@ func calculateRentalCost(itemID int, start_time time.Time, end_time time.Time) (
 	duration := end_time.Sub(start_time)
 	rentalCost, err = getItemRentalCost(item.Type)
 	days := int(math.Max(duration.Hours()/24, 1))
+	app.Debug("Item: %v, start %v end %v days %v cost %v", item.Type, start_time, end_time, days, rentalCost*days)
 	return rentalCost * days, err
 }
 
@@ -56,6 +57,7 @@ func getItemRentalCost(itemType string) (int, error) {
 	case wetsuitItemType:
 		return wetsuitItemCost, nil
 	default:
+		app.Err("unknown item type", itemType)
 		return 0, errors.New("unknown item type")
 	}
 }
@@ -63,5 +65,6 @@ func getItemRentalCost(itemType string) (int, error) {
 func canRent(userID int, rentalCost int) (bool, int, error) {
 	userCredits, err := app.getUserCredits(userID)
 	canRentResult := (userCredits > rentalCost)
+	app.Debug("userCredits %v rentalCost %v canRent %v", userCredits, rentalCost, canRentResult)
 	return canRentResult, userCredits, err
 }

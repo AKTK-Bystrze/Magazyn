@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/smtp"
 	"os"
@@ -30,7 +29,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if isSignedIn(session) {
 		err := app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", session.Values["UserInfo"])
 		if err != nil {
-			app.Err(err.Error())
+			app.Err("%v %v", getUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
 			return
 		}
@@ -66,7 +65,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	var u tmpUser
 	session, err := app.store.Get(r, SESSION_NAME)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		c := &http.Cookie{
 			Name:     SESSION_NAME,
 			Value:    "",
@@ -81,8 +80,8 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	if isSignedIn(session) {
 		err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
 		if err != nil {
-			app.Err(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			app.Err("%v %v", getUserName(r), err.Error())
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		if u.Role == "admin" {
@@ -115,7 +114,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = ?", recipient)
 		}
 		if err != nil {
-			app.Err(err.Error())
+			app.Err("%v %v", getUserName(r), err.Error())
 			if err := app.templates.ExecuteTemplate(w, "tokenGenerated.html", struct {
 				Strategy   string
 				Recipient  string
@@ -127,15 +126,15 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 				UserID:     uid,
 				TokenError: tokenError,
 			}); err != nil {
-				app.Err("couldn't render template: " + err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				app.Err("%v %v", getUserName(r), err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 			return
 		}
 		uid = fmt.Sprint(u.ID)
 	}
 
-	log.Println("strategy=", strategy, "recipient=", recipient, "uid=", uid, "token=", token)
+	app.Info("strategy %v recipient %v uid %v token %v", strategy, recipient, uid, token)
 
 	if strategy == "" {
 		// No strategy specified in request, so send the user back to
@@ -150,8 +149,8 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		err := pw.RequestToken(ctx, strategy, uid, recipient)
 
 		if err != nil {
-			app.Err(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			app.Err("%v %v", getUserName(r), err.Error())
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 	} else {
@@ -164,8 +163,8 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
 			if err != nil {
-				app.Err(err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				app.Err("%v %v", getUserName(r), err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
 			if u.Role == "admin" {
@@ -188,7 +187,8 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		} else if err != nil {
 			// Some other unexpected error occurred.
-			http.Error(w, "Failed veryfing error: "+err.Error(), http.StatusInternalServerError)
+			app.Err("%v %v", getUserName(r), err.Error())
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		} else {
 			// User entered bad token. Set token error string then fall
@@ -212,13 +212,14 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:     uid,
 		TokenError: tokenError,
 	}); err != nil {
-		app.Err("couldn't render template: %v", err)
+		app.Err("%v %v", getUserName(r), err.Error())
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
 
 func setTokenTransportMean() {
 	if SEND_COOKIE_TO_STDOUT {
-		log.Println("No email transport specified, printing codes to stdout")
+		app.Info("No email transport specified, printing codes to stdout")
 		pw.SetTransport("debug", passwordless.LogTransport{
 			MessageFunc: func(token, uid string) string {
 				return fmt.Sprintf("Login at %s/token?strategy=debug&token=%s&uid=%s",
@@ -226,7 +227,7 @@ func setTokenTransportMean() {
 			},
 		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME_HOURS*time.Hour)
 	} else {
-		log.Printf("Using email transport via %s", MAGAZYN_BYSTRZE_EMAIL_ADDR)
+		app.Info("Using email transport via %s", MAGAZYN_BYSTRZE_EMAIL_ADDR)
 		pw.SetTransport("email", passwordless.NewSMTPTransport(
 			SMTP_HOST+":"+SMTP_PORT,
 			MAGAZYN_BYSTRZE_EMAIL_ADDR,

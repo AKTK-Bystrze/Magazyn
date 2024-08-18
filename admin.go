@@ -10,13 +10,6 @@ import (
 	"time"
 )
 
-func If[T any](cond bool, vtrue, vfalse T) T {
-	if cond {
-		return vtrue
-	}
-	return vfalse
-}
-
 func (app AppState) adminCheck(w http.ResponseWriter, r *http.Request) bool {
 	// Check if user is authenticated as admin
 	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
@@ -31,7 +24,7 @@ func (app AppState) adminCheck(w http.ResponseWriter, r *http.Request) bool {
 func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	reservations, err := app.getReservations(queryConfigReservation{users: true})
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -46,6 +39,7 @@ func adminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
+		app.Err("%v Failed to parse set status form %v", getUserName(r), err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -53,8 +47,9 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	newStatus := r.FormValue("status")
 	id, _ := strconv.Atoi(reservationID)
 	reservation, err := app.getReservation(id)
+	app.Debug("%v setStatusHandler reservation id %v, status %v", getUserName(r), id, newStatus)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
@@ -65,11 +60,12 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		handleReturnedStatus(*reservation, w)
 	}
 	if reservation.EndTime.Before(reservation.StartTime) {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "Reservation end time has to be after the start time", http.StatusBadRequest)
 		return
 	}
 	updateReservationStatus(*reservation, newStatus, w)
+	app.Debug("%v sucessfully changed status to %v for reservation %v", getUserName(r), newStatus, id)
 }
 
 func updateReservationStatus(reservation Reservation, status string, w http.ResponseWriter) {
@@ -84,7 +80,7 @@ func updateReservationStatus(reservation Reservation, status string, w http.Resp
 		if err != nil {
 			app.Err(err.Error())
 		} else {
-			app.Err("Failed to update reservation status")
+			app.Err("Failed to update reservation status %v", err)
 		}
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
@@ -94,10 +90,11 @@ func updateReservationStatus(reservation Reservation, status string, w http.Resp
 }
 
 func handleDeniedStatus(reservation Reservation, w http.ResponseWriter) {
+	app.Debug("handling status denied")
 	rentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
 	if err != nil {
 		app.Err(err.Error())
-		http.Error(w, "Couldn't calculate rental cost", http.StatusBadRequest)
+		http.Error(w, "Can't calculate rental cost", http.StatusBadRequest)
 		return
 	}
 	updatedCredits := reservation.User.Credits + rentalCost
@@ -117,7 +114,7 @@ func updateUserCredits(reservation Reservation, credits int, w http.ResponseWrit
 		if err != nil {
 			app.Err(err.Error())
 		} else {
-			app.Err("Failed to update user credits")
+			app.Err("Failed to update user credits %v", err)
 		}
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
@@ -127,9 +124,12 @@ func updateUserCredits(reservation Reservation, credits int, w http.ResponseWrit
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
+	//todo verify
+	app.Info("%v Updated user (id: %v) credits to %v", u.Name, u.ID, credits)
 }
 
 func handleReturnedStatus(reservation Reservation, w http.ResponseWriter) {
+	app.Debug("Handling status returned")
 	now := time.Now()
 	year, month, day := now.Date()
 	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
@@ -139,6 +139,11 @@ func handleReturnedStatus(reservation Reservation, w http.ResponseWriter) {
 	if !today.Equal(dateOnly) {
 		userCredits := reservation.User.Credits
 		oldRentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
+		if err != nil {
+			app.Err(err.Error())
+			http.Error(w, "Server Error", http.StatusInternalServerError)
+			return
+		}
 		newRentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, now)
 		if err != nil {
 			app.Err(err.Error())
@@ -153,7 +158,7 @@ func handleReturnedStatus(reservation Reservation, w http.ResponseWriter) {
 func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
 	items, err := app.getItems(queryConfigItems{withCurReservation: true})
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -166,44 +171,36 @@ func adminItemsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func adminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
-	// check if it's a POST request
-	if r.Method != http.MethodPost {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	// parse form values
 	err := r.ParseForm()
 	if err != nil {
+		app.Err("%v Form parsing error %v", getUserName(r), err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	// get the item ID and status from form values
 	itemID, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
+		app.Err("%v Can't get id from form %v", getUserName(r), err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	status := r.FormValue("status")
 
-	// update item status in the database
 	stmt, err := app.db.Prepare("UPDATE items SET i_status = ? WHERE i_id = ?")
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	_, err = stmt.Exec(status, itemID)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-
-	// redirect to the admin items page
+	app.Debug("%v set itemid %v status %v id ", getUserName(r), itemID, status)
 	http.Redirect(w, r, "/admin/items", http.StatusSeeOther)
 }
 
@@ -256,7 +253,7 @@ func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 		orderByStart: true,
 	})
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -265,7 +262,7 @@ func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	uname, err := app.getUsername(userID)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -292,23 +289,23 @@ type tmpReservationAudit struct {
 func reservationHandler(w http.ResponseWriter, r *http.Request) {
 	var location, err = time.LoadLocation("Europe/Warsaw")
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "Localization error", http.StatusInternalServerError)
 		return
 	}
 	reservationID, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-
+	app.Debug("%v ReservationHandler reservationID %v", getUserName(r), reservationID)
 	// Get the reservation from the database
 	var t tmpReservation
 	udb := app.db.Unsafe()
 	err = udb.Get(&t, "SELECT * FROM reservations r JOIN users u ON r.r_user_id = u.u_id JOIN items i ON r.r_item_id = i.i_id WHERE r_id = ?", reservationID)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -320,29 +317,29 @@ func reservationHandler(w http.ResponseWriter, r *http.Request) {
 	var history []ReservationAudit
 	rows, err := udb.Queryx("SELECT ra.*,u.u_username FROM reservation_audit ra JOIN users u ON ra.ra_user_id == u.u_id WHERE ra_reservation_id = ? ORDER BY ra_change_date", reservationID)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	for rows.Next() {
-		var r ReservationAudit
+		var audit ReservationAudit
 		var t tmpReservationAudit
 		err := rows.StructScan(&t)
 		if err != nil {
-			app.Err(err.Error())
+			app.Err("%v %v", getUserName(r), err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		//	work around sqlx to better handle embedded structures and JOINs
-		r = t.ReservationAudit
-		r.User = t.User
+		audit = t.ReservationAudit
+		audit.User = t.User
 		//  TODO: update timestamps to localtime
-		r.ChangeDate = r.ChangeDate.In(location)
-		history = append(history, r)
+		audit.ChangeDate = audit.ChangeDate.In(location)
+		history = append(history, audit)
 	}
 	if err = rows.Err(); err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -366,6 +363,7 @@ func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from query string
 	itemID, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
@@ -377,7 +375,7 @@ func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
 		users:        true,
 	})
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -386,7 +384,7 @@ func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	item, err := app.getItem(itemID)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -406,9 +404,10 @@ func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func dbBackupHandler(w http.ResponseWriter, r *http.Request) {
-	dbPath := "./magazyn.db"
+	dbPath := DATABASE_PATH
 	file, err := os.Open(dbPath)
 	if err != nil {
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
 	}
@@ -419,7 +418,9 @@ func dbBackupHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(w, file)
 	if err != nil {
-		print("Error copying file:", err)
+		app.Err("%v Error copying file %v", getUserName(r), err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusNotFound)
+		return
 	}
 
 }
@@ -427,7 +428,7 @@ func dbBackupHandler(w http.ResponseWriter, r *http.Request) {
 func inventory(w http.ResponseWriter, r *http.Request) {
 	itemsWithReservations, err := app.getItems(queryConfigItems{withCurReservation: false})
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -437,7 +438,7 @@ func inventory(w http.ResponseWriter, r *http.Request) {
 	}
 	json, err := json.Marshal(items)
 	if err != nil {
-		fmt.Println("Error parsing items to json")
+		app.Err("%v Error parsing items to json %v", getUserName(r), err)
 		return
 	}
 	app.renderTemplate(w, r, "inventory.html", &struct {

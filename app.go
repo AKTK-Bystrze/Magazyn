@@ -24,8 +24,29 @@ type queryConfigReservation struct {
 	orderDesc    bool
 }
 
+func (app AppState) setLogger() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+}
+
+func (app AppState) Debug(format string, a ...interface{}) {
+	log.Output(2, fmt.Sprintf("\tDEBUG:\t "+format, a...))
+}
+
+func (AppState) Info(format string, a ...interface{}) {
+	log.Output(2, fmt.Sprintf("\tINFO:\t "+format, a...))
+}
+
+func (AppState) Warn(format string, a ...interface{}) {
+	log.Output(2, fmt.Sprintf("\tWARN:\t "+format, a...))
+}
+
 func (app AppState) Err(format string, a ...interface{}) {
-	log.Output(2, fmt.Sprintf("ERR:\t"+format, a...))
+	log.Output(2, fmt.Sprintf("\tERR:\t"+format, a...))
+}
+
+func (AppState) Fatal(v ...any) {
+	log.Output(2, "FATAL ERROR")
+	log.Fatal(v)
 }
 
 func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation, error) {
@@ -75,6 +96,7 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 		var t tmpReservation
 		err := rows.StructScan(&t)
 		if err != nil {
+			app.Err(err.Error())
 			return nil, err
 		}
 		//	work around sqlx to better handle embedded structures and JOINs
@@ -88,6 +110,7 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 		reservations = append(reservations, r)
 	}
 	if err = rows.Err(); err != nil {
+		app.Err(err.Error())
 		return nil, err
 	}
 	return reservations, nil
@@ -253,6 +276,7 @@ func (app AppState) getReservation(id int) (*Reservation, error) {
 	var t tmpReservation
 	err = row.StructScan(&t)
 	if err != nil {
+		app.Err("Can't get reservation id for id %v %v", id, err)
 		return nil, err
 	}
 	//	work around sqlx to better handle embedded structures and JOINs
