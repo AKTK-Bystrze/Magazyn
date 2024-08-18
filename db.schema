@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     r_item_id INTEGER NOT NULL,
     r_user_id INTEGER NOT NULL,
     r_start_time DATETIME NOT NULL,
-    r_end_time DATETIME CHECK ( r_end_time > r_start_time ) NOT NULL,
+    r_end_time DATETIME CHECK ( r_end_time >= r_start_time ) NOT NULL,
     r_status TEXT CHECK ( r_status IN ('pending', 'approved', 'rented', 'returned', 'denied')) NOT NULL DEFAULT 'pending',
 		r_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		r_changeby_uid INTEGER NOT NULL,
