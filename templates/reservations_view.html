@@ -11,14 +11,15 @@
                 },
               body: formData,
           })
-          .then(response => response.text())
-          .then(responseData => {
-              alert("Zmieniono status rezerwacji");//here should be a prompt message to a user that doesn't require action
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            alert("Nie udało sięzmienić statusu rezerwacji")
-          });
+          .then(response => {
+              if(response.ok){
+                alert("Zmieniono status rezerwacji");
+              }else{
+                error = response.statusText
+                console.error('Error:', error);
+                alert("UWAGA! Nie możesz zmienić statusu rezerwacji: " + error)
+              }
+              response.text()})
           
         }
       </script>
@@ -120,14 +121,15 @@
                 },
                 body: formData,
             })
-            .then(response => response.text())
-            .then(responseData => {
-                alert("Zmieniono status rezerwacji"); // Display a non-action-required prompt
-            })
-            .catch(error => {
+            .then(response => {
+              if(response.ok){
+                alert("Zmieniono status rezerwacji");
+              }else{
+                error = response.statusText
                 console.error('Error:', error);
-                alert("Nie udało się zmienić statusu rezerwacji");
-            });
+                alert("UWAGA! Nie możesz zmienić statusu rezerwacji: " + error)
+              }
+              response.text()})
         }
         </script>
       {{ else }}
