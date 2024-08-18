@@ -2,5 +2,6 @@
 bystrze_sprzet
 magazyn.db
 /.vscode
+/scratch
 __*
 *.exe
