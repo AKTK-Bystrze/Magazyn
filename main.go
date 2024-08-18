@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -57,7 +56,7 @@ func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl 
 	data.SetURL(r.URL.String())
 	err := app.templates.ExecuteTemplate(w, tmpl, data)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "Template error", http.StatusInternalServerError)
 	}
 }
@@ -70,20 +69,12 @@ func (app AppState) renderTemplateNoData(w http.ResponseWriter, tmpl string) {
 	}
 }
 
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//  TODO: improve logging
-		log.Println(strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-		next.ServeHTTP(w, r)
-	})
-}
-
 func validUserMiddlware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := app.store.Get(r, SESSION_NAME)
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
-			//  TODO: call Logout here ??
+			app.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
@@ -95,6 +86,7 @@ func validUserMiddlware(next http.Handler) http.Handler {
 		}
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "UserInfo", uinfo)
+		app.Info("%v %v %v %v", uinfo.Name, strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -131,7 +123,7 @@ func main() {
 
 	db, err := sqlx.Open("sqlite3", DATABASE_NAME)
 	if err != nil {
-		log.Fatal(err)
+		app.Fatal(err)
 	}
 	defer db.Close()
 	app.db = db
@@ -171,10 +163,8 @@ func main() {
 
 	app.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
 
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	app.setLogger()
 
-	//  log all requests
-	router.Use(loggingMiddleware)
 	router.HandleFunc("/", Login).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("GET")
 	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
@@ -204,6 +194,6 @@ func main() {
 
 	router.PathPrefix("/").Handler(userRouter)
 
-	log.Printf("Server starting on %s...\n", addr)
-	log.Fatal(http.ListenAndServe(addr, router))
+	app.Info("Server starting on %v", addr)
+	app.Fatal(http.ListenAndServe(addr, router))
 }

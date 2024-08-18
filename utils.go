@@ -13,11 +13,16 @@ import (
 	"github.com/johnsto/go-passwordless/v2"
 )
 
-// Error represents an error that is displayed to the user.
-type Error struct {
-	Name        string
-	Description string
-	Error       error
+func If[T any](cond bool, vtrue, vfalse T) T {
+	if cond {
+		return vtrue
+	}
+	return vfalse
+}
+
+func getUserName(r *http.Request) string {
+	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
+	return If(ok, uinfo.Name, "unknown")
 }
 
 func isSignedIn(s *sessions.Session) bool {

@@ -5,4 +5,4 @@ docker push gcr.io/magazynbystrze/app
 gcloud run deploy app --image gcr.io/magazynbystrze/app --platform managed --region europe-central2 --allow-unauthenticated
 #create and populate db. Can get current one from a server using admin's /db/backup endpoint
 sqlite3 magazyn.db < db.schema
-sqlite3 magazyn.db ".read db_test.data"
+sqlite3 magazyn.db ".read utils/db_test.data"

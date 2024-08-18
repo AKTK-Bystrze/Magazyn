@@ -12,7 +12,7 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
 		orderDesc:   true,
 	})
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
