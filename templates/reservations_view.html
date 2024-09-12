@@ -41,11 +41,11 @@
         {{ else if eq .Status "returned" }}{{ $class = "badge badge-success" }}{{ $txt = "Zwrocony" }}
         {{ end }}
         {{ if and $.ChangeStatus (.StartTime.After (AddHours Now -6)) }}
-        <form method="POST" id="reservation_{{ .ID }}" action="javascript:setReservationStatus({{ .ID }})">
+        <form method="POST" id="reservation_{{ .ID }}" action="javascript:void(0);">
           <input type="hidden" name="reservation_id" value="{{ .ID }}">
           <input type="hidden" name="url" value="{{ $.URL }}">
           <div class="form-group">
-            <select class="form-control {{ $class }}" name="status" onchange="this.form.submit()" autocomplete=off>
+            <select class="form-control {{ $class }}" id="reservation_{{ .ID }}" name="status" onchange="javascript:setReservationStatus({{ .ID }}, 'reservation', this.value)" autocomplete=off>
               <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
               <option value="approved" {{ if eq .Status "approved" }}selected{{ end }}>Potwierdzony</option>
               <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
@@ -91,10 +91,13 @@
       responsive: true,
     });
   });
-  function setReservationStatus(reservationId, formPrefix = 'reservation') {
+  function setReservationStatus(reservationId, formPrefix, status=null) {
     var formData = $("#" + formPrefix + "_" + reservationId).serialize();
-    var form = document.getElementById(formPrefix + "_" + reservationId);
-    var formData2 = new FormData(form);
+    if(status !== null){
+      let params = new URLSearchParams(formData);
+      params.set('status', status);
+      formData = params.toString();
+    }
     fetch('/admin/setStatus', {
       method: 'PUT',
       headers: {
