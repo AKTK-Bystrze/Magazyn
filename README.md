@@ -9,6 +9,7 @@
 - [Passwordless authentication](#passwordless-authentication)
   - [Konfiguracja](#konfiguracja)
 - [Zmienne środowiskowe](#zmienne-środowiskowe)
+- [Release](#release)
 - [Testy](#testy)
 
 
@@ -95,6 +96,15 @@ Zmienne środowiskowe pobierane przez aplikację:
 - MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
 - SMTP_HOST np: smtp.gmail.com
 - SMTP_PORT np: 587
+
+# Release
+
+Wersja dostępna dla użytkownika jest oznaczona poprzez git tag w historii commitów:
+
+```cmd
+git tag -a <tag-name> -m "<message>"
+git tag -a v.1.0.0 -m "First release"
+```
 
 # Testy
 
