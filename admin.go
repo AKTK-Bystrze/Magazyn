@@ -53,7 +53,8 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
-	if reservation.Status == DENIED {
+	var oldStatus = reservation.Status
+	if oldStatus == DENIED {
 		err = handlePreviousStatusDenied(*reservation, w)
 		if err != nil {
 			return
@@ -77,7 +78,7 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	updateReservationStatus(*reservation, newStatus, w)
-	app.Debug("%v changed status to %v for reservation %v", getUserName(r), newStatus, id)
+	app.Debug("%v changed status from %v to %v for reservation %v", getUserName(r), oldStatus, newStatus, id)
 }
 
 func handlePreviousStatusDenied(reservation Reservation, w http.ResponseWriter) error {
@@ -127,9 +128,10 @@ func handleDeniedStatus(reservation Reservation, w http.ResponseWriter) error {
 	return err
 }
 
-func updateUserCredits(reservation Reservation, credits int, w http.ResponseWriter) error {
+func updateUserCredits(reservation Reservation, newCredits int, w http.ResponseWriter) error {
 	u := reservation.User
-	result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, credits, u.ID)
+	var oldCredits = u.Credits
+	result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, newCredits, u.ID)
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "Cant update users credits", http.StatusBadRequest)
@@ -150,7 +152,7 @@ func updateUserCredits(reservation Reservation, credits int, w http.ResponseWrit
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
-	app.Info("%v Updated user (id: %v) credits to %v", u.Name, u.ID, credits)
+	app.Info("%v Updated user (id: %v) credits from %v to %v", u.Name, u.ID, oldCredits, newCredits)
 	return nil
 }
 
