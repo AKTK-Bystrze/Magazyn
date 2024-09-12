@@ -38,6 +38,14 @@ type Reservation struct {
 	User      User
 }
 
+const (
+	DENIED   = "denied"
+	RETURNED = "returned"
+	APPROVED = "approved"
+	PENDING  = "pending"
+	RENTED   = "rented"
+)
+
 type ReservationAudit struct {
 	ID         int       `db:"ra_id"`
 	R_ID       int       `db:"ra_reservation_id"`
@@ -48,7 +56,7 @@ type ReservationAudit struct {
 
 const (
 	COOKIE_VALIDITY_TIME_HOURS = 6
-	SEND_COOKIE_TO_STDOUT      = false
+	SEND_COOKIE_TO_STDOUT      = true
 	TOKEN_LENGTH               = 10
 	COOKIE_KEY_LENGTH          = 16
 

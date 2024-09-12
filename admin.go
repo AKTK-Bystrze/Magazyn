@@ -53,13 +53,13 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
-	if newStatus == "denied" {
+	if newStatus == DENIED {
 		err = handleDeniedStatus(*reservation, w)
 		if err != nil {
 			return
 		}
 	}
-	if newStatus == "returned" {
+	if newStatus == RETURNED {
 		err = handleReturnedStatus(*reservation, w)
 		if err != nil {
 			return
@@ -258,7 +258,7 @@ func pastFutureReservations(reservations []Reservation) ([]Reservation, []Reserv
 		} else if res.StartTime.After(now) ||
 			res.StartTime.After(now12hearlier) ||
 			(res.StartTime.Before(now) && res.EndTime.After(now) ||
-				res.Status == "rented") {
+				res.Status == RENTED) {
 			// Reservation is upcoming
 			currentReservations = append(currentReservations, res)
 		} else {
