@@ -53,6 +53,12 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
+	if reservation.Status == DENIED {
+		err = handlePreviousStatusDenied(*reservation, w)
+		if err != nil {
+			return
+		}
+	}
 	if newStatus == DENIED {
 		err = handleDeniedStatus(*reservation, w)
 		if err != nil {
@@ -72,6 +78,19 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	updateReservationStatus(*reservation, newStatus, w)
 	app.Debug("%v changed status to %v for reservation %v", getUserName(r), newStatus, id)
+}
+
+func handlePreviousStatusDenied(reservation Reservation, w http.ResponseWriter) error {
+	app.Debug("Old reservation status is %v, charge user for rental cost", DENIED)
+	rentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "Can't calculate rental cost", http.StatusBadRequest)
+		return err
+	}
+	updatedCredits := reservation.User.Credits - rentalCost
+	err = updateUserCredits(reservation, updatedCredits, w)
+	return err
 }
 
 func updateReservationStatus(reservation Reservation, status string, w http.ResponseWriter) {
