@@ -38,6 +38,14 @@ type Reservation struct {
 	User      User
 }
 
+const (
+	DENIED   = "denied"
+	RETURNED = "returned"
+	APPROVED = "approved"
+	PENDING  = "pending"
+	RENTED   = "rented"
+)
+
 type ReservationAudit struct {
 	ID         int       `db:"ra_id"`
 	R_ID       int       `db:"ra_reservation_id"`

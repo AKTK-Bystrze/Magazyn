@@ -2,9 +2,11 @@ import sqlite3
 import csv
 from pathlib import Path
 
+# Script for migrating CSV data to database
 # Connect to the SQLite database (or create it if it doesn't exist)
 conn = sqlite3.connect('magazyn.db')
 cursor = conn.cursor()
+#CSV file with newest data
 csv_file_path = Path("C:/Users/uzytkownik/Downloads/Inwentaryzacja sprzętu 08.2024.csv")
 
 with csv_file_path.open('r', encoding='utf-8') as file:

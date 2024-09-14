@@ -53,13 +53,20 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
-	if newStatus == "denied" {
+	var oldStatus = reservation.Status
+	if oldStatus == DENIED {
+		err = handlePreviousStatusDenied(*reservation, w)
+		if err != nil {
+			return
+		}
+	}
+	if newStatus == DENIED {
 		err = handleDeniedStatus(*reservation, w)
 		if err != nil {
 			return
 		}
 	}
-	if newStatus == "returned" {
+	if newStatus == RETURNED {
 		err = handleReturnedStatus(*reservation, w)
 		if err != nil {
 			return
@@ -71,7 +78,20 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	updateReservationStatus(*reservation, newStatus, w)
-	app.Debug("%v changed status to %v for reservation %v", getUserName(r), newStatus, id)
+	app.Debug("%v changed status from %v to %v for reservation %v", getUserName(r), oldStatus, newStatus, id)
+}
+
+func handlePreviousStatusDenied(reservation Reservation, w http.ResponseWriter) error {
+	app.Debug("Old reservation status is %v, charge user for rental cost", DENIED)
+	rentalCost, err := calculateRentalCost(reservation.Item.ID, reservation.StartTime, reservation.EndTime)
+	if err != nil {
+		app.Err(err.Error())
+		http.Error(w, "Can't calculate rental cost", http.StatusBadRequest)
+		return err
+	}
+	updatedCredits := reservation.User.Credits - rentalCost
+	err = updateUserCredits(reservation, updatedCredits, w)
+	return err
 }
 
 func updateReservationStatus(reservation Reservation, status string, w http.ResponseWriter) {
@@ -108,9 +128,10 @@ func handleDeniedStatus(reservation Reservation, w http.ResponseWriter) error {
 	return err
 }
 
-func updateUserCredits(reservation Reservation, credits int, w http.ResponseWriter) error {
+func updateUserCredits(reservation Reservation, newCredits int, w http.ResponseWriter) error {
 	u := reservation.User
-	result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, credits, u.ID)
+	var oldCredits = u.Credits
+	result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, newCredits, u.ID)
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "Cant update users credits", http.StatusBadRequest)
@@ -131,7 +152,7 @@ func updateUserCredits(reservation Reservation, credits int, w http.ResponseWrit
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
-	app.Info("%v Updated user (id: %v) credits to %v", u.Name, u.ID, credits)
+	app.Info("%v Updated user (id: %v) credits from %v to %v", u.Name, u.ID, oldCredits, newCredits)
 	return nil
 }
 
@@ -258,7 +279,7 @@ func pastFutureReservations(reservations []Reservation) ([]Reservation, []Reserv
 		} else if res.StartTime.After(now) ||
 			res.StartTime.After(now12hearlier) ||
 			(res.StartTime.Before(now) && res.EndTime.After(now) ||
-				res.Status == "rented") {
+				res.Status == RENTED) {
 			// Reservation is upcoming
 			currentReservations = append(currentReservations, res)
 		} else {

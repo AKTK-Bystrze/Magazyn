@@ -82,7 +82,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		}
 		defer stmt.Close()
 
-		status := "pending"
+		status := PENDING
 		_, err = stmt.Exec(itemID, userID, userID, startTime.UTC().Format(OUT_TIME_FMT), endTime.UTC().Format(OUT_TIME_FMT), status)
 		if err != nil {
 			app.Err("%v %v", getUserName(r), err.Error())
