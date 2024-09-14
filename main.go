@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"path/filepath"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
@@ -48,6 +50,18 @@ func (data *templateData) SetUser(uinfo *tmpUser) {
 
 func (data *templateData) SetURL(url string) {
 	data.URL = url
+}
+
+func collectTemplatePaths(patterns ...string) ([]string, error) {
+	var paths []string
+	for _, pattern := range patterns {
+		files, err := filepath.Glob(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("error collecting template paths for pattern %s: %w", pattern, err)
+		}
+		paths = append(paths, files...)
+	}
+	return paths, nil
 }
 
 func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
@@ -160,10 +174,21 @@ func main() {
 	pw = passwordless.New(tokStore)
 
 	setTokenTransportMean()
-
-	app.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
-
 	app.setLogger()
+
+	patterns := []string{
+		"templates/*.html",
+		"templates/home/*.html",
+	}
+	templatePaths, err := collectTemplatePaths(patterns...)
+	if err != nil {
+		app.Fatal("Error collecting template paths: %v", err)
+	}
+
+	app.templates, err = template.New("").Funcs(funcMap).ParseFiles(templatePaths...)
+	if err != nil {
+		app.Fatal("Error parsing templates: %v", err)
+	}
 
 	router.HandleFunc("/", homePage).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("GET")

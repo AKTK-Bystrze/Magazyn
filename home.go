@@ -5,7 +5,7 @@ import (
 )
 
 func homePage(w http.ResponseWriter, r *http.Request) {
-	app.renderTemplateNoData(w, "home/home.html")
+	app.renderTemplateNoData(w, "home.html")
 }
 
 // home gets list of main tiles and list of side tiles
