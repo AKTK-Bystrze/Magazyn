@@ -1,0 +1,51 @@
+{{ define "small_tile" }}
+<style>
+:root {
+            --orange: #fab702;
+            --black: #191919;
+            --grey: #202020;
+            --blue: #333333;
+            --light-grey: #959595;
+        }
+    .small-news-tile {
+        margin-bottom: 20px;
+        margin-top: 20px;
+        border: 1px solid var(--orange);
+        background-color: var(--grey);
+        border-radius: 8px;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+    }
+    .header-row {
+        align-items: center;
+        background-color: var(--blue);
+        color: var(--header-text-color);
+        padding: 5px;
+    }
+    .vertical-bar {
+        width: 5px;
+        height: 100%;
+        background-color: var(--orange);
+        margin-right: 5px;
+    }
+    .header-text {
+        font-weight: bold;
+        font-size: 1em;
+    }
+    .text-content {
+        padding: 10px;
+        margin-top: 10;
+    }
+</style>
+
+<div class="small-news-tile">
+    <div class="header-row">
+        <div class="vertical-bar"></div>
+        <div class="header-text">News Header</div>
+    </div>
+    <div class="text-content">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
+    </div>
+</div>
+
+{{end}}
