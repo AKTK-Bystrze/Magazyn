@@ -1,0 +1,49 @@
+{{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>###BYSTRZE - Akademicki Klub Turysyki Kajakowej</title>
+    <link rel="stylesheet" href="home.css">
+    {{ template "stylesInclude" }}
+</head>
+<body>
+    <header>
+        <div class="left-column">
+            <h1>Bystrze</h1>
+            <h2>Akademicki Klub Turysyki Kajakowej</h2>
+        </div>
+        <div class="right-column menu">
+            <div class="menu">Menu</div>
+        </div>
+    </header>
+
+    <main>
+        <div class="left-column">
+            <div class="tile">
+                <h2>Tile 1</h2>
+                <img src="https://via.placeholder.com/400" alt="Image 1">
+                <p>Content for the first tile goes here.</p>
+            </div>
+            <div class="tile">
+                <h2>Tile 2</h2>
+                <img src="https://via.placeholder.com/400" alt="Image 2">
+                <p>Content for the second tile goes here.</p>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="tile">
+                <h2>Tile 3</h2>
+                <img src="https://via.placeholder.com/400" alt="Image 3">
+                <p>Content for the third tile goes here.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Footer content goes here.</p>
+    </footer>
+</body>
+</html>

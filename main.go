@@ -165,7 +165,7 @@ func main() {
 
 	app.setLogger()
 
-	router.HandleFunc("/", Login).Methods("GET")
+	router.HandleFunc("/", homePage).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("GET")
 	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
 
