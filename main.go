@@ -52,16 +52,51 @@ func (data *templateData) SetURL(url string) {
 	data.URL = url
 }
 
-func collectTemplatePaths(patterns ...string) ([]string, error) {
-	var paths []string
-	for _, pattern := range patterns {
-		files, err := filepath.Glob(pattern)
-		if err != nil {
-			return nil, fmt.Errorf("error collecting template paths for pattern %s: %w", pattern, err)
-		}
-		paths = append(paths, files...)
+func loadTemplates() {
+	funcMap := template.FuncMap{
+		"Now": time.Now,
+		"Before": func(t1, t2 time.Time) bool {
+			return t1.Before(t2)
+		},
+		"After": func(t1, t2 time.Time) bool {
+			return t1.After(t2)
+		},
+		"AddHours": func(t time.Time, d int) time.Time {
+			return t.Add(time.Duration(d) * time.Hour)
+		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
 	}
-	return paths, nil
+
+	patterns := []string{
+		"templates/*.html",
+		"templates/*/*.html",
+	}
+	files := []string{}
+	for _, dir := range patterns {
+		ff, err := filepath.Glob(dir)
+		if err != nil {
+			panic(err)
+		}
+		files = append(files, ff...)
+	}
+	var err error
+	app.templates, err = template.New("").Funcs(funcMap).ParseFiles(files...)
+	if err != nil {
+		app.Fatal("Error parsing templates: %v", err)
+	}
 }
 
 func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
@@ -142,32 +177,7 @@ func main() {
 	defer db.Close()
 	app.db = db
 	app.server = os.Args[3]
-	funcMap := template.FuncMap{
-		"Now": time.Now,
-		"Before": func(t1, t2 time.Time) bool {
-			return t1.Before(t2)
-		},
-		"After": func(t1, t2 time.Time) bool {
-			return t1.After(t2)
-		},
-		"AddHours": func(t time.Time, d int) time.Time {
-			return t.Add(time.Duration(d) * time.Hour)
-		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-	}
+
 	validateCOOKIE_KEY()
 	app.store = sessions.NewCookieStore(COOKIE_KEY)
 	tokStore := passwordless.NewMemStore()
@@ -176,19 +186,7 @@ func main() {
 	setTokenTransportMean()
 	app.setLogger()
 
-	patterns := []string{
-		"templates/*.html",
-		"templates/home/*.html",
-	}
-	templatePaths, err := collectTemplatePaths(patterns...)
-	if err != nil {
-		app.Fatal("Error collecting template paths: %v", err)
-	}
-
-	app.templates, err = template.New("").Funcs(funcMap).ParseFiles(templatePaths...)
-	if err != nil {
-		app.Fatal("Error parsing templates: %v", err)
-	}
+	loadTemplates()
 
 	router.HandleFunc("/", homePage).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("GET")
