@@ -31,7 +31,7 @@ WORKDIR /app
 COPY --from=builder /app/main .
 COPY  magazyn.db .
 RUN mkdir /app/templates
-COPY /templates/*.html /app/templates/
+COPY /templates /app/templates/
 EXPOSE 8080
 
 CMD ["./main", "", "8080", "https://app-ibkb4wrviq-lm.a.run.app/"]
