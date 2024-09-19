@@ -30,7 +30,7 @@
       return;
     }
 
-    fetch(`/news/${newsId}?type=${newsType}`, {
+    fetch(`ninja/news/${newsId}?type=${newsType}`, {
       method: 'DELETE',
     })
     .then(response => {

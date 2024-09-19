@@ -21,7 +21,7 @@
                     {{template "big_tile" dict "newsData" . "UserInfo" $.UserInfo "URL" $.URL}}
                 {{end}}
                 {{if .UserInfo}}
-                    {{if or (eq .UserInfo.Role "ninja") (eq .UserInfo.Role "SuperAdmin" )}}
+                    {{ if contains "ninja" .UserInfo.Role }}
                         {{ template "create_new_tile" "BigNews"}}
                     {{end}}
                 {{end}}
@@ -32,7 +32,7 @@
                     {{template "small_tile" dict "newsData" . "UserInfo" $.UserInfo "URL" $.URL}}
                 {{end}}
                 {{if .UserInfo}}
-                    {{if or (eq .UserInfo.Role "ninja") (eq .UserInfo.Role "SuperAdmin")}}
+                    {{ if contains "ninja" .UserInfo.Role }}
                         {{ template "create_new_tile" "SmallNews"}}
                     {{end}}
                 {{end}}

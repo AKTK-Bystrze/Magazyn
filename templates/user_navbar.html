@@ -17,7 +17,7 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ml-auto">
-        {{ if eq .Role "admin" }}
+        {{ if contains "admin" .Role }}
         <li class="nav-item">
           <a class="nav-link" href="/admin/reservations">Rezerwacje</a>
         </li>

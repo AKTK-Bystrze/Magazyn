@@ -78,6 +78,9 @@ func loadTemplates() {
 			}
 			return dict, nil
 		},
+		"contains": func(substring, str string) bool {
+			return strings.Contains(str, substring)
+		},
 	}
 
 	patterns := []string{
@@ -131,12 +134,15 @@ func validUserMiddlware(next http.Handler) http.Handler {
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
 			app.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			if r.RequestURI != "/" {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+			}
+			homePage(w, r)
 			return
 		}
 		var uinfo tmpUser
 		err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
-		if err != nil || (uinfo.Role != "user" && uinfo.Role != "admin") {
+		if err != nil || !isRoleValid(uinfo.Role) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
@@ -145,6 +151,15 @@ func validUserMiddlware(next http.Handler) http.Handler {
 		app.Info("%v %v %v %v", uinfo.Name, strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func isRoleValid(userRole string) bool {
+	for _, privilige := range PRIVILIGES {
+		if strings.Contains(userRole, privilige) {
+			return true
+		}
+	}
+	return false
 }
 
 func adminHandler(h http.Handler) http.Handler {
@@ -203,11 +218,12 @@ func main() {
 
 	loadTemplates()
 
-	router.HandleFunc("/", homePage).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("GET")
 	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
 	userRouter := mux.NewRouter()
 	userRouter.Use(validUserMiddlware)
+	userRouter.HandleFunc("/", homePage).Methods("GET")
+	adminRouter := userRouter.PathPrefix("/admin").Subrouter()
 	//  every logged-in user
 	userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
 	userRouter.HandleFunc("/search", SearchHandler).Methods("GET", "POST")
@@ -215,7 +231,6 @@ func main() {
 	userRouter.HandleFunc("/reserve", ReserveItem).Methods("POST")
 
 	//  enforce users with admin role
-	adminRouter := userRouter.PathPrefix("/admin").Subrouter()
 	adminRouter.Use(adminHandler)
 	//  admin
 	adminRouter.HandleFunc("/reservations", adminDashboardHandler).Methods("GET")
@@ -234,6 +249,8 @@ func main() {
 	//  ninja
 	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")
 	ninjaRouter.HandleFunc("/news/{newsId}", deleteNewsHandler).Methods("DELETE")
+
+	router.PathPrefix("/").Handler(userRouter)
 
 	app.Info("Server starting on %v", addr)
 	app.Fatal(http.ListenAndServe(addr, router))

@@ -1,5 +1,5 @@
 {{ define "big_tile" }}
-<div class="big-news-tile" id="BigNews{{.ID}}">
+<div class="big-news-tile" id="BigNews{{.newsData.ID}}">
     <div class="big-tile-date-column">
         <div>{{ .newsData.CreatedTimeMonth }}</div>
         <div>{{ .newsData.CreatedTimeDay }}</div>
@@ -10,8 +10,8 @@
         <div class="tile-text-content">{{ .newsData.Content }}</div>
     </div>
     {{if .UserInfo}}
-        {{if or (eq .UserInfo.Role "ninja") (eq .UserInfo.Role "SuperAdmin")}}
-        <button type="button" onclick="deleteNews({{ .ID }}, 'BigNews')">Delete</button>
+        {{ if contains "ninja" .UserInfo.Role }}
+        <button type="button" onclick="deleteNews({{ .newsData.ID }}, 'BigNews')">Delete</button>
         {{end}}
     {{end}}
     
