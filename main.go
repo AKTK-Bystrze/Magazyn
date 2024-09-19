@@ -100,13 +100,20 @@ func loadTemplates() {
 }
 
 func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
-	uinfo := r.Context().Value("UserInfo").(tmpUser)
-	data.SetUser(&uinfo)
-	data.SetURL(r.URL.String())
-	err := app.templates.ExecuteTemplate(w, tmpl, data)
-	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
-		http.Error(w, "Template error", http.StatusInternalServerError)
+	if uinfo, ok := r.Context().Value("UserInfo").(tmpUser); ok {
+		data.SetUser(&uinfo)
+		data.SetURL(r.URL.String())
+		err := app.templates.ExecuteTemplate(w, tmpl, data)
+		if err != nil {
+			app.Err("%v %v", getUserName(r), err.Error())
+			http.Error(w, "Template error", http.StatusInternalServerError)
+		}
+	} else {
+		err := app.templates.ExecuteTemplate(w, tmpl, data)
+		if err != nil {
+			app.Err("%v %v", getUserName(r), err.Error())
+			http.Error(w, "Template error", http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -201,9 +208,6 @@ func main() {
 	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
 	userRouter := mux.NewRouter()
 	userRouter.Use(validUserMiddlware)
-
-	adminRouter := userRouter.PathPrefix("/admin/").Subrouter()
-	ninjaRouter := userRouter.PathPrefix("/ninja/").Subrouter()
 	//  every logged-in user
 	userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
 	userRouter.HandleFunc("/search", SearchHandler).Methods("GET", "POST")
@@ -211,6 +215,7 @@ func main() {
 	userRouter.HandleFunc("/reserve", ReserveItem).Methods("POST")
 
 	//  enforce users with admin role
+	adminRouter := userRouter.PathPrefix("/admin").Subrouter()
 	adminRouter.Use(adminHandler)
 	//  admin
 	adminRouter.HandleFunc("/reservations", adminDashboardHandler).Methods("GET")
@@ -224,6 +229,7 @@ func main() {
 	adminRouter.HandleFunc("/inventory", inventory).Methods("GET")
 
 	//  enforce users with ninja role
+	ninjaRouter := userRouter.PathPrefix("/ninja").Subrouter()
 	ninjaRouter.Use(ninjaHandler)
 	//  ninja
 	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")

@@ -18,18 +18,24 @@
         <main>
             <div class="left-column">
                 {{range .BigNews}}
-                    {{template "big_tile" .}}
+                    {{template "big_tile" dict "newsData" . "UserInfo" $.UserInfo "URL" $.URL}}
                 {{end}}
-                <!-- TODO if user is logged in -->
-                {{ template "create_new_tile" "BigNews"}}
+                {{if .UserInfo}}
+                    {{if or (eq .UserInfo.Role "ninja") (eq .UserInfo.Role "SuperAdmin" )}}
+                        {{ template "create_new_tile" "BigNews"}}
+                    {{end}}
+                {{end}}
             </div>
     
             <div class="right-column">
                 {{ range .SmallNews }}
-                    {{template "small_tile" .}}
+                    {{template "small_tile" dict "newsData" . "UserInfo" $.UserInfo "URL" $.URL}}
                 {{end}}
-                <!-- TODO if user is logged in -->
-                {{ template "create_new_tile" "SmallNews"}}
+                {{if .UserInfo}}
+                    {{if or (eq .UserInfo.Role "ninja") (eq .UserInfo.Role "SuperAdmin")}}
+                        {{ template "create_new_tile" "SmallNews"}}
+                    {{end}}
+                {{end}}
             </div>
         </main>
       </div>

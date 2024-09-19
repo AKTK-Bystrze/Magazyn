@@ -18,18 +18,15 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bigNewsData := parseBigNewsData(bigNews)
-	err = app.templates.ExecuteTemplate(w, "home.html", &struct {
+
+	app.renderTemplate(w, r, "home.html", &struct {
 		BigNews   []BigNewsData
 		SmallNews []News
+		templateData
 	}{
-		bigNewsData,
-		smallNews,
+		BigNews:   bigNewsData,
+		SmallNews: smallNews,
 	})
-
-	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
-		http.Error(w, "Template error", http.StatusInternalServerError)
-	}
 }
 
 type BigNewsData struct {

@@ -1,11 +1,16 @@
 {{ define "small_tile" }}
 <div class="small-news-tile" id="SmallNews{{.ID}}">
     <div class="small-tile-header">
-        {{ .Header }}
+        {{ .newsData.Header }}
     </div>
     <div class="tile-text-content">
-        {{ .Content }} 
+        {{ .newsData.Content }} 
     </div>
+    {{if .UserInfo}}
+    {{if or (eq .UserInfo.Role "ninja") (eq .UserInfo.Role "SuperAdmin")}}
     <button type="button" onclick="deleteNews({{ .ID }}, 'SmallNews')">Delete</button>
+    {{end}}
+{{end}}
+    
 </div>
 {{end}}
