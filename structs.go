@@ -43,7 +43,7 @@ type News struct {
 	CreatedTime time.Time `db:"n_created_time"`
 	Header      string    `db:"n_header"`
 	Content     string    `db:"n_content"`
-	Author      User
+	Author      string    `db:"n_author"`
 }
 
 const (

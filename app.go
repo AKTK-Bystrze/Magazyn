@@ -292,28 +292,9 @@ func (app AppState) getReservation(id int) (*Reservation, error) {
 }
 
 func (app AppState) getBigNews() ([]News, error) {
-	newsList := []News{
-		{
-			ID:          1,
-			CreatedTime: time.Now(),
-			Header:      "Breaking News",
-			Content:     "Something amazing happened!",
-			Author:      User{Name: "John Doe", Email: "john@example.com"},
-		},
-		{
-			ID:          2,
-			CreatedTime: time.Now().AddDate(0, 0, -1), // Yesterday's date
-			Header:      "Tech News",
-			Content:     "New tech gadget released.",
-			Author:      User{Name: "Jane Doe", Email: "jane@example.com"},
-		},
-		{
-			ID:          3,
-			CreatedTime: time.Now().AddDate(0, 0, -2), // Two days ago
-			Header:      "Sports Update",
-			Content:     "Local team wins championship!",
-			Author:      User{Name: "Mike Smith", Email: "mike@example.com"},
-		},
+	newsList, err := app.getAllNews("big_news")
+	if err != nil {
+		return nil, err
 	}
 	sort.Slice(newsList, func(i, j int) bool {
 		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
@@ -322,31 +303,39 @@ func (app AppState) getBigNews() ([]News, error) {
 }
 
 func (app AppState) getSmallNews() ([]News, error) {
-	newsList := []News{
-		{
-			ID:          1,
-			CreatedTime: time.Now(),
-			Header:      "Breaking News",
-			Content:     "Something amazing happened!",
-			Author:      User{Name: "John Doe", Email: "john@example.com"},
-		},
-		{
-			ID:          2,
-			CreatedTime: time.Now().AddDate(0, 0, -1), // Yesterday's date
-			Header:      "Tech News",
-			Content:     "New tech gadget released.",
-			Author:      User{Name: "Jane Doe", Email: "jane@example.com"},
-		},
-		{
-			ID:          3,
-			CreatedTime: time.Now().AddDate(0, 0, -2), // Two days ago
-			Header:      "Sports Update",
-			Content:     "Local team wins championship!",
-			Author:      User{Name: "Mike Smith", Email: "mike@example.com"},
-		},
+	newsList, err := app.getAllNews("small_news")
+	if err != nil {
+		return nil, err
 	}
 	sort.Slice(newsList, func(i, j int) bool {
 		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
 	})
+	return newsList, nil
+}
+
+func (app AppState) getAllNews(newsType string) ([]News, error) {
+	query := `
+		SELECT n_id, n_created_time, n_header, n_content, n_author
+		FROM ` + newsType
+
+	rows, err := app.db.Queryx(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var newsList []News
+
+	for rows.Next() {
+		var news News
+
+		err := rows.Scan(&news.ID, &news.CreatedTime, &news.Header, &news.Content, &news.Author)
+		if err != nil {
+			return nil, err
+		}
+		newsList = append(newsList, news)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return newsList, nil
 }

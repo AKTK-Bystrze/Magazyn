@@ -38,7 +38,7 @@ type BigNewsData struct {
 	CreatedTimeMonth string
 	Header           string
 	Content          string
-	Author           User
+	Author           string
 }
 
 func parseBigNewsData(news []News) []BigNewsData {
