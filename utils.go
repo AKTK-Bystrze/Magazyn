@@ -25,6 +25,11 @@ func getUserName(r *http.Request) string {
 	return If(ok, uinfo.Name, "unknown")
 }
 
+func getUserId(r *http.Request) int64 {
+	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
+	return If(ok, uinfo.ID, -1)
+}
+
 func isSignedIn(s *sessions.Session) bool {
 	return s != nil && s.Values["UserInfo"] != nil
 }

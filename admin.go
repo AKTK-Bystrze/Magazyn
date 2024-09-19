@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -76,7 +77,7 @@ func setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Reservation end time has to be after the start time", http.StatusBadRequest)
 		return
 	}
-	updateReservationStatus(*reservation, newStatus, w)
+	updateReservationStatus(*reservation, newStatus, w, int(getUserId(r)))
 	app.Debug("%v changed status from %v to %v for reservation %v", getUserName(r), oldStatus, newStatus, id)
 }
 
@@ -93,8 +94,8 @@ func handlePreviousStatusDenied(reservation Reservation, w http.ResponseWriter) 
 	return err
 }
 
-func updateReservationStatus(reservation Reservation, status string, w http.ResponseWriter) {
-	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, reservation.User.ID, reservation.ID)
+func updateReservationStatus(reservation Reservation, status string, w http.ResponseWriter, changingUserId int) {
+	result, err := app.db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, changingUserId, reservation.ID)
 	if err != nil {
 		app.Err(err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
