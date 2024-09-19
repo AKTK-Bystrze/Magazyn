@@ -1,25 +1,17 @@
 {{ define "big_tile" }}
-<div class="news-tile">
-    <div class="date-column">
+<div class="big-news-tile">
+    <div class="big-tile-date-column">
         <div>JAN</div>
         <div>20</div>
     </div>
-    <div class="content-column">
-        <div class="header">Nagłówek</div>
-        <div class="author">Jestem Autorem</div>
-        <div class="text-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+    <div class="big-tile-content-column">
+        <div class="big-tile-header">Nagłówek</div>
+        <div class="big-tile-author">Jestem Autorem</div>
+        <div class="tile-text-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
     </div>
 </div>
 <style>
-:root {
-            --orange: #fab702;
-            --black: #191919;
-            --grey: #202020;
-            --blue: #333333;
-            --light-grey: #959595;
-        }
-
-    .news-tile {
+    .big-news-tile {
         display: flex;
         border: 1px solid var(--orange);
         color:white;
@@ -30,27 +22,24 @@
         background-color: var(--grey);
         font-family: Arial, sans-serif;
     }
-    .date-column {
+    .big-tile-date-column {
         width: 50px;
         background-color: var(--orange);
         text-align: center;
         padding: 10px;
     }
-    .content-column {
+    .big-tile-content-column {
         padding: 10px;
         flex: 1;
     }
-    .header {
+    .big-tile-header {
         font-weight: bold;
         font-size: 1.2em;
     }
-    .author {
+    .big-tile-author {
         font-style: italic;
         color: var(--light-grey);
         margin-top: 5px;
-    }
-    .text-content {
-        margin-top: 10px;
     }
 </style>
 {{end}}
