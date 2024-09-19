@@ -178,6 +178,14 @@ func ninjaHandler(h http.Handler) http.Handler {
 	})
 }
 
+func superAdminHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.hasSuperAdminPrivilege(w, r) {
+			h.ServeHTTP(w, r)
+		}
+	})
+}
+
 //  TODO: this is unused, left as a reminder how to build wrappers for handler
 /*
 func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, r *http.Request) {
@@ -249,6 +257,12 @@ func main() {
 	//  ninja
 	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")
 	ninjaRouter.HandleFunc("/news/{newsId}", deleteNewsHandler).Methods("DELETE")
+	//  enforce users with superAdmin role
+	superAdminRouter := userRouter.PathPrefix("/superAdmin").Subrouter()
+	superAdminRouter.Use(superAdminHandler)
+	//  superAdmin
+	superAdminRouter.HandleFunc("/users", updateUser).Methods("PUT")
+	superAdminRouter.HandleFunc("/users", getUsers).Methods("GET")
 
 	router.PathPrefix("/").Handler(userRouter)
 
