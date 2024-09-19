@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 )
 
@@ -288,4 +289,53 @@ func (app AppState) getReservation(id int) (*Reservation, error) {
 	r.EndTime = r.EndTime.In(location)
 	r.CreatedAt = r.CreatedAt.In(location)
 	return &r, nil
+}
+
+func (app AppState) getBigNews() ([]News, error) {
+	newsList, err := app.getAllNews("big_news")
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(newsList, func(i, j int) bool {
+		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
+	})
+	return newsList, nil
+}
+
+func (app AppState) getSmallNews() ([]News, error) {
+	newsList, err := app.getAllNews("small_news")
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(newsList, func(i, j int) bool {
+		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
+	})
+	return newsList, nil
+}
+
+func (app AppState) getAllNews(newsType string) ([]News, error) {
+	query := `
+		SELECT n_id, n_created_time, n_header, n_content, n_author
+		FROM ` + newsType
+
+	rows, err := app.db.Queryx(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var newsList []News
+
+	for rows.Next() {
+		var news News
+
+		err := rows.Scan(&news.ID, &news.CreatedTime, &news.Header, &news.Content, &news.Author)
+		if err != nil {
+			return nil, err
+		}
+		newsList = append(newsList, news)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return newsList, nil
 }

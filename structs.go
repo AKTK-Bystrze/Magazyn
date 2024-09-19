@@ -38,6 +38,14 @@ type Reservation struct {
 	User      User
 }
 
+type News struct {
+	ID          int64     `db:"n_id"`
+	CreatedTime time.Time `db:"n_created_time"`
+	Header      string    `db:"n_header"`
+	Content     string    `db:"n_content"`
+	Author      string    `db:"n_author"`
+}
+
 const (
 	DENIED   = "denied"
 	RETURNED = "returned"
@@ -53,6 +61,15 @@ type ReservationAudit struct {
 	ChangeDate time.Time `db:"ra_change_date"`
 	User       User
 }
+
+const (
+	ADMIN      = "admin"
+	NINJA      = "ninja"
+	USER       = "user"
+	SUPERADMIN = "superAdmin"
+)
+
+var PRIVILIGES = []string{ADMIN, NINJA, USER, SUPERADMIN}
 
 const (
 	COOKIE_VALIDITY_TIME_HOURS = 6

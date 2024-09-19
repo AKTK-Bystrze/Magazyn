@@ -1,7 +1,7 @@
 {{ define "navbar" }}
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container">
-    <a class="navbar-brand" href="#">Magazyn Bystrze</a>
+    <a class="navbar-brand" href="/">Magazyn Bystrze</a>
     <a class="nav-link">{{.Name}}</a>
     <a class="nav-link">Godzinki : {{.Credits}}</a>
     <button
@@ -17,7 +17,7 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ml-auto">
-        {{ if eq .Role "admin" }}
+        {{ if contains "admin" .Role }}
         <li class="nav-item">
           <a class="nav-link" href="/admin/reservations">Rezerwacje</a>
         </li>

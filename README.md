@@ -105,6 +105,10 @@ Wersja dostępna dla użytkownika jest oznaczona poprzez git tag w historii comm
 git tag -a <tag-name> -m "<message>"
 git tag -a v.1.0.0 -m "First release"
 ```
+Sprawdź poprzednie tagi
+```cmd
+git tag -n
+```
 
 # Testy
 

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"path/filepath"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
@@ -50,14 +52,71 @@ func (data *templateData) SetURL(url string) {
 	data.URL = url
 }
 
-func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
-	uinfo := r.Context().Value("UserInfo").(tmpUser)
-	data.SetUser(&uinfo)
-	data.SetURL(r.URL.String())
-	err := app.templates.ExecuteTemplate(w, tmpl, data)
+func loadTemplates() {
+	funcMap := template.FuncMap{
+		"Now": time.Now,
+		"Before": func(t1, t2 time.Time) bool {
+			return t1.Before(t2)
+		},
+		"After": func(t1, t2 time.Time) bool {
+			return t1.After(t2)
+		},
+		"AddHours": func(t time.Time, d int) time.Time {
+			return t.Add(time.Duration(d) * time.Hour)
+		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+		"contains": func(substring, str string) bool {
+			return strings.Contains(str, substring)
+		},
+	}
+
+	patterns := []string{
+		"templates/*.html",
+		"templates/*/*.html",
+	}
+	files := []string{}
+	for _, dir := range patterns {
+		ff, err := filepath.Glob(dir)
+		if err != nil {
+			panic(err)
+		}
+		files = append(files, ff...)
+	}
+	var err error
+	app.templates, err = template.New("").Funcs(funcMap).ParseFiles(files...)
 	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
-		http.Error(w, "Template error", http.StatusInternalServerError)
+		app.Fatal("Error parsing templates: %v", err)
+	}
+}
+
+func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
+	if uinfo, ok := r.Context().Value("UserInfo").(tmpUser); ok {
+		data.SetUser(&uinfo)
+		data.SetURL(r.URL.String())
+		err := app.templates.ExecuteTemplate(w, tmpl, data)
+		if err != nil {
+			app.Err("%v %v", getUserName(r), err.Error())
+			http.Error(w, "Template error", http.StatusInternalServerError)
+		}
+	} else {
+		err := app.templates.ExecuteTemplate(w, tmpl, data)
+		if err != nil {
+			app.Err("%v %v", getUserName(r), err.Error())
+			http.Error(w, "Template error", http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -75,12 +134,15 @@ func validUserMiddlware(next http.Handler) http.Handler {
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
 			app.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			if r.RequestURI != "/" {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+			}
+			homePage(w, r)
 			return
 		}
 		var uinfo tmpUser
 		err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
-		if err != nil || (uinfo.Role != "user" && uinfo.Role != "admin") {
+		if err != nil || !isRoleValid(uinfo.Role) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
@@ -91,9 +153,26 @@ func validUserMiddlware(next http.Handler) http.Handler {
 	})
 }
 
+func isRoleValid(userRole string) bool {
+	for _, privilige := range PRIVILIGES {
+		if strings.Contains(userRole, privilige) {
+			return true
+		}
+	}
+	return false
+}
+
 func adminHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.adminCheck(w, r) {
+		if app.hasAdminPrivilege(w, r) {
+			h.ServeHTTP(w, r)
+		}
+	})
+}
+
+func ninjaHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.hasNinjaPrivilege(w, r) {
 			h.ServeHTTP(w, r)
 		}
 	})
@@ -128,51 +207,23 @@ func main() {
 	defer db.Close()
 	app.db = db
 	app.server = os.Args[3]
-	funcMap := template.FuncMap{
-		"Now": time.Now,
-		"Before": func(t1, t2 time.Time) bool {
-			return t1.Before(t2)
-		},
-		"After": func(t1, t2 time.Time) bool {
-			return t1.After(t2)
-		},
-		"AddHours": func(t time.Time, d int) time.Time {
-			return t.Add(time.Duration(d) * time.Hour)
-		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-	}
+
 	validateCOOKIE_KEY()
 	app.store = sessions.NewCookieStore(COOKIE_KEY)
 	tokStore := passwordless.NewMemStore()
 	pw = passwordless.New(tokStore)
 
 	setTokenTransportMean()
-
-	app.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob("templates/*.html"))
-
 	app.setLogger()
 
-	router.HandleFunc("/", Login).Methods("GET")
+	loadTemplates()
+
 	router.HandleFunc("/login", Login).Methods("GET")
 	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
-
 	userRouter := mux.NewRouter()
 	userRouter.Use(validUserMiddlware)
-
-	adminRouter := userRouter.PathPrefix("/admin/").Subrouter()
+	userRouter.HandleFunc("/", homePage).Methods("GET")
+	adminRouter := userRouter.PathPrefix("/admin").Subrouter()
 	//  every logged-in user
 	userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
 	userRouter.HandleFunc("/search", SearchHandler).Methods("GET", "POST")
@@ -191,6 +242,13 @@ func main() {
 	adminRouter.HandleFunc("/reservation/show", reservationHandler).Methods("GET")
 	adminRouter.HandleFunc("/db/backup", dbBackupHandler).Methods("GET")
 	adminRouter.HandleFunc("/inventory", inventory).Methods("GET")
+
+	//  enforce users with ninja role
+	ninjaRouter := userRouter.PathPrefix("/ninja").Subrouter()
+	ninjaRouter.Use(ninjaHandler)
+	//  ninja
+	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")
+	ninjaRouter.HandleFunc("/news/{newsId}", deleteNewsHandler).Methods("DELETE")
 
 	router.PathPrefix("/").Handler(userRouter)
 

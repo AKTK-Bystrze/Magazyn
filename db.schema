@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     u_username TEXT NOT NULL UNIQUE,
     u_password_hash TEXT,
     u_email TEXT NOT NULL UNIQUE,
-    u_role TEXT CHECK ( u_role IN ('admin', 'user') ) NOT NULL DEFAULT 'user',
+    u_role TEXT NOT NULL DEFAULT 'user',
     u_credits INTEGER
 );
 
@@ -41,6 +41,22 @@ CREATE TABLE reservation_audit (
     ra_change_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(ra_reservation_id) REFERENCES reservation(r_id),
     FOREIGN KEY(ra_user_id) REFERENCES users(u_id)
+);
+
+CREATE TABLE IF NOT EXISTS big_news (
+    n_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    n_created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    n_header      TEXT,
+    n_content     TEXT,
+    n_author TEXT
+);
+
+CREATE TABLE IF NOT EXISTS small_news (
+    n_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    n_created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    n_header      TEXT,
+    n_content     TEXT,
+    n_author TEXT
 );
 
 CREATE TRIGGER log_reservation_insert

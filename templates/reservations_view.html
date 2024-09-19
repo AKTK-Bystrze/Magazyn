@@ -18,12 +18,12 @@
     {{ range .Reservations }}
     <tr>
       <td>
-        {{ if eq $.UserInfo.Role "admin" }}<small><a href="/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{
+        {{ if contains "admin" $.UserInfo.Role }}<small><a href="/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{
             .CreatedAt.Format $DATE_FORMAT_OUT }}</a></small>
         {{ else }}<small>#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</small>{{ end }}
       </td>
       {{ if not $.HideItem }}<td>
-        {{ if eq $.UserInfo.Role "admin" }}
+        {{ if contains "admin" $.UserInfo.Role }}
         <a href="/admin/item/show?id={{ .Item.ID }}">{{ .Item.Name }}</a>
         {{ else }}{{ .Item.Name }}{{ end }}
       </td>

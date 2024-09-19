@@ -1,0 +1,46 @@
+{{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYSTRZE - Akademicki Klub Turysyki Kajakowej</title>
+    {{ template "stylesInclude" dict "DataTables" false}} {{ template
+        "scriptsInclude" dict "DataTables" false }}
+    {{ template "stylesHome" }}
+    {{ template "scriptsHome" }}
+</head>
+<body>
+    <header>
+        {{template "home_navbar"}}
+    </header>
+    <div class="container">
+        <main>
+            <div class="left-column">
+                {{range .BigNews}}
+                    {{template "big_tile" dict "newsData" . "UserInfo" $.UserInfo "URL" $.URL}}
+                {{end}}
+                {{if .UserInfo}}
+                    {{ if contains "ninja" .UserInfo.Role }}
+                        {{ template "create_new_tile" "BigNews"}}
+                    {{end}}
+                {{end}}
+            </div>
+    
+            <div class="right-column">
+                {{ range .SmallNews }}
+                    {{template "small_tile" dict "newsData" . "UserInfo" $.UserInfo "URL" $.URL}}
+                {{end}}
+                {{if .UserInfo}}
+                    {{ if contains "ninja" .UserInfo.Role }}
+                        {{ template "create_new_tile" "SmallNews"}}
+                    {{end}}
+                {{end}}
+            </div>
+        </main>
+      </div>
+    <footer>
+        <p>Footer content goes here.</p>
+    </footer>
+</body>
+</html>
