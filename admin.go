@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-func (app AppState) adminCheck(w http.ResponseWriter, r *http.Request) bool {
+func (app AppState) hasAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	// Check if user is authenticated as admin
 	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
-	if !ok || uinfo.Role != "admin" {
+	if !ok || uinfo.Role != "admin" && uinfo.Role != "superAdmin" {
 		app.Err("Non-admin user (%s) attempts to access admin API", If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)
 		return false

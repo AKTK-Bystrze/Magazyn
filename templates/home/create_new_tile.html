@@ -1,6 +1,6 @@
 {{ define "create_new_tile" }}
 <div class="small-news-tile">
-    <form id="new-news-form">
+    <form id="new-news-form-{{ . }}">
         <input type="hidden" name="type" value={{ . }}>
         <div class="small-tile-header">
             <input type="text" name="header" placeholder="Enter header" required>
@@ -8,7 +8,7 @@
         <div class="tile-text-content">
             <textarea name="content" placeholder="Enter content" required></textarea>
         </div>
-        <button type="button" onclick="createNews()">Submit News</button>
+        <button type="button" onclick="createNews({{.}})">Submit News</button>
     </form>
 </div>
 {{ end }}

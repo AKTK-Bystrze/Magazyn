@@ -142,7 +142,15 @@ func validUserMiddlware(next http.Handler) http.Handler {
 
 func adminHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.adminCheck(w, r) {
+		if app.hasAdminPrivilege(w, r) {
+			h.ServeHTTP(w, r)
+		}
+	})
+}
+
+func ninjaHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.hasNinjaPrivilege(w, r) {
 			h.ServeHTTP(w, r)
 		}
 	})
@@ -191,11 +199,11 @@ func main() {
 	router.HandleFunc("/", homePage).Methods("GET")
 	router.HandleFunc("/login", Login).Methods("GET")
 	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
-
 	userRouter := mux.NewRouter()
 	userRouter.Use(validUserMiddlware)
 
 	adminRouter := userRouter.PathPrefix("/admin/").Subrouter()
+	ninjaRouter := userRouter.PathPrefix("/ninja/").Subrouter()
 	//  every logged-in user
 	userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
 	userRouter.HandleFunc("/search", SearchHandler).Methods("GET", "POST")
@@ -215,7 +223,10 @@ func main() {
 	adminRouter.HandleFunc("/db/backup", dbBackupHandler).Methods("GET")
 	adminRouter.HandleFunc("/inventory", inventory).Methods("GET")
 
-	router.PathPrefix("/").Handler(userRouter)
+	//  enforce users with ninja role
+	ninjaRouter.Use(ninjaHandler)
+	//  ninja
+	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")
 
 	app.Info("Server starting on %v", addr)
 	app.Fatal(http.ListenAndServe(addr, router))
