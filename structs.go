@@ -38,6 +38,14 @@ type Reservation struct {
 	User      User
 }
 
+type News struct {
+	ID          int64     `db:"n_id"`
+	CreatedTime time.Time `db:"n_created_time"`
+	Header      string    `db:"n_header"`
+	Content     string    `db:"n_content"`
+	Author      User
+}
+
 const (
 	DENIED   = "denied"
 	RETURNED = "returned"

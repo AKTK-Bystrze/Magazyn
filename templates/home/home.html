@@ -14,7 +14,19 @@
         {{template "home_navbar"}}
     </header>
     <div class="container">
-        {{ template "home_content" }}
+        <main>
+            <div class="left-column">
+                {{range .BigNews}}
+                    {{template "big_tile" .}}
+                {{end}}
+            </div>
+    
+            <div class="right-column">
+                {{ range .SmallNews }}
+                    {{template "small_tile" .}}
+                {{end}}
+            </div>
+        </main>
       </div>
     <footer>
         <p>Footer content goes here.</p>

@@ -1,13 +1,13 @@
 {{ define "big_tile" }}
 <div class="big-news-tile">
     <div class="big-tile-date-column">
-        <div>JAN</div>
-        <div>20</div>
+        <div>{{ .CreatedTimeMonth }}</div>
+        <div>{{ .CreatedTimeDay }}</div>
     </div>
     <div class="big-tile-content-column">
-        <div class="big-tile-header">Nagłówek</div>
-        <div class="big-tile-author">Jestem Autorem</div>
-        <div class="tile-text-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+        <div class="big-tile-header">{{ .Header }}</div>
+        <div class="big-tile-author">{{ .Author.Name }}</div>
+        <div class="tile-text-content">{{ .Content }}</div>
     </div>
 </div>
 <style>

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 )
 
@@ -288,4 +289,64 @@ func (app AppState) getReservation(id int) (*Reservation, error) {
 	r.EndTime = r.EndTime.In(location)
 	r.CreatedAt = r.CreatedAt.In(location)
 	return &r, nil
+}
+
+func (app AppState) getBigNews() ([]News, error) {
+	newsList := []News{
+		{
+			ID:          1,
+			CreatedTime: time.Now(),
+			Header:      "Breaking News",
+			Content:     "Something amazing happened!",
+			Author:      User{Name: "John Doe", Email: "john@example.com"},
+		},
+		{
+			ID:          2,
+			CreatedTime: time.Now().AddDate(0, 0, -1), // Yesterday's date
+			Header:      "Tech News",
+			Content:     "New tech gadget released.",
+			Author:      User{Name: "Jane Doe", Email: "jane@example.com"},
+		},
+		{
+			ID:          3,
+			CreatedTime: time.Now().AddDate(0, 0, -2), // Two days ago
+			Header:      "Sports Update",
+			Content:     "Local team wins championship!",
+			Author:      User{Name: "Mike Smith", Email: "mike@example.com"},
+		},
+	}
+	sort.Slice(newsList, func(i, j int) bool {
+		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
+	})
+	return newsList, nil
+}
+
+func (app AppState) getSmallNews() ([]News, error) {
+	newsList := []News{
+		{
+			ID:          1,
+			CreatedTime: time.Now(),
+			Header:      "Breaking News",
+			Content:     "Something amazing happened!",
+			Author:      User{Name: "John Doe", Email: "john@example.com"},
+		},
+		{
+			ID:          2,
+			CreatedTime: time.Now().AddDate(0, 0, -1), // Yesterday's date
+			Header:      "Tech News",
+			Content:     "New tech gadget released.",
+			Author:      User{Name: "Jane Doe", Email: "jane@example.com"},
+		},
+		{
+			ID:          3,
+			CreatedTime: time.Now().AddDate(0, 0, -2), // Two days ago
+			Header:      "Sports Update",
+			Content:     "Local team wins championship!",
+			Author:      User{Name: "Mike Smith", Email: "mike@example.com"},
+		},
+	}
+	sort.Slice(newsList, func(i, j int) bool {
+		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
+	})
+	return newsList, nil
 }

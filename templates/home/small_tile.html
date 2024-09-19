@@ -1,10 +1,10 @@
 {{ define "small_tile" }}
 <div class="small-news-tile">
     <div class="small-tile-header">
-        News Header
+        {{ .Header }}
     </div>
     <div class="tile-text-content">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
+        {{ .Content }} 
     </div>
 </div>
 <style>
