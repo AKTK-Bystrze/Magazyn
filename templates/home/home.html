@@ -8,6 +8,7 @@
     {{ template "stylesInclude" dict "DataTables" false}} {{ template
         "scriptsInclude" dict "DataTables" false }}
     {{ template "stylesHome" }}
+    {{ template "scriptsHome" }}
 </head>
 <body>
     <header>
@@ -19,12 +20,14 @@
                 {{range .BigNews}}
                     {{template "big_tile" .}}
                 {{end}}
+                {{ template "create_new_tile" "BigNews"}}
             </div>
     
             <div class="right-column">
                 {{ range .SmallNews }}
                     {{template "small_tile" .}}
                 {{end}}
+                {{ template "create_new_tile" "SmallNews"}}
             </div>
         </main>
       </div>

@@ -1,0 +1,24 @@
+{{ define "scriptsHome" }}
+<script>
+    function createNews() {
+    var formData = new FormData(document.getElementById('new-news-form'));
+
+    fetch('/news/add', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('News submitted successfully');
+        } else {
+            alert('Failed to submit news');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    });
+}
+</script>
+{{end}}
