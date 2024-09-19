@@ -90,7 +90,7 @@ func deleteNewsHandler(w http.ResponseWriter, r *http.Request) {
 func (app AppState) hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
 	if !ok || !strings.Contains(uinfo.Role, "ninja") {
-		app.Err("Non-ninja user (%s) attempts to access admin API", If(ok, uinfo.Name, "unknown"))
+		app.Err("Non-ninja user (%s) attempts to access ninja API", If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)
 		return false
 	}
