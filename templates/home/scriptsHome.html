@@ -24,5 +24,28 @@
         alert("Błąd sieci: " + error);
       });
   }
+
+  function deleteNews(newsId,newsType) {
+    if (!confirm("Are you sure you want to delete this news item?")) {
+      return;
+    }
+
+    fetch(`/news/${newsId}?type=${newsType}`, {
+      method: 'DELETE',
+    })
+    .then(response => {
+      if (response.ok) {
+        document.getElementById(newsType + newsId).remove();
+        alert("News item deleted successfully");
+      } else {
+        console.error('Error:', response.statusText);
+        alert("Failed to delete news item: " + response.statusText);
+      }
+    })
+    .catch(error => {
+      console.error('Network error:', error);
+      alert("Network error: " + error);
+    });
+  }
 </script>
 {{end}}

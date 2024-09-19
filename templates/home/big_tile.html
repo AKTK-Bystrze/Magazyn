@@ -1,5 +1,5 @@
 {{ define "big_tile" }}
-<div class="big-news-tile">
+<div class="big-news-tile" id="BigNews{{.ID}}">
     <div class="big-tile-date-column">
         <div>{{ .CreatedTimeMonth }}</div>
         <div>{{ .CreatedTimeDay }}</div>
@@ -9,5 +9,6 @@
         <div class="big-tile-author">{{ .Author }}</div>
         <div class="tile-text-content">{{ .Content }}</div>
     </div>
+    <button type="button" onclick="deleteNews({{ .ID }}, 'BigNews')">Delete</button>
 </div>
 {{end}}

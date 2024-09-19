@@ -227,6 +227,7 @@ func main() {
 	ninjaRouter.Use(ninjaHandler)
 	//  ninja
 	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")
+	ninjaRouter.HandleFunc("/news/{newsId}", deleteNewsHandler).Methods("DELETE")
 
 	app.Info("Server starting on %v", addr)
 	app.Fatal(http.ListenAndServe(addr, router))

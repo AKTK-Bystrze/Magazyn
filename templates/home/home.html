@@ -20,6 +20,7 @@
                 {{range .BigNews}}
                     {{template "big_tile" .}}
                 {{end}}
+                <!-- TODO if user is logged in -->
                 {{ template "create_new_tile" "BigNews"}}
             </div>
     
@@ -27,6 +28,7 @@
                 {{ range .SmallNews }}
                     {{template "small_tile" .}}
                 {{end}}
+                <!-- TODO if user is logged in -->
                 {{ template "create_new_tile" "SmallNews"}}
             </div>
         </main>

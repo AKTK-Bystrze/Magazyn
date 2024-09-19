@@ -1,10 +1,11 @@
 {{ define "small_tile" }}
-<div class="small-news-tile">
+<div class="small-news-tile" id="SmallNews{{.ID}}">
     <div class="small-tile-header">
         {{ .Header }}
     </div>
     <div class="tile-text-content">
         {{ .Content }} 
     </div>
+    <button type="button" onclick="deleteNews({{ .ID }}, 'SmallNews')">Delete</button>
 </div>
 {{end}}
