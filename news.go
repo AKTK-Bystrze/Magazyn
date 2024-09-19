@@ -51,6 +51,7 @@ func createNewsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.Debug("%v save %v with header %v ", getUserName(r), newsType, news.Header)
+	w.WriteHeader(http.StatusOK)
 }
 
 func getDBTable(newsType string) string {
