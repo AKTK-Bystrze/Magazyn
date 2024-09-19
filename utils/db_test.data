@@ -16,6 +16,16 @@ INSERT INTO users (u_id, u_username, u_role, u_email, u_credits) VALUES
 (3, 'admin2', 'admin', 'dummy2@email.com', 200),
 (4, 'admin3', 'admin', 'dummy3@email.com', 10);
 
+INSERT INTO big_news (n_id, n_created_time, n_header, n_content, n_author) VALUES
+(1, '2024-09-14 15:04:05', 'Breaking bigNews', 'Something amazing happened!', 'John Doe'),
+(2, '2024-09-13 15:04:05', 'Tech bigNews', 'New tech gadget released.', 'Jane Doe'),
+(3, '2024-09-12 15:04:05', 'Sports Update', 'Local team wins championship!', 'Mike Smith');
+
+INSERT INTO small_news (n_id, n_created_time, n_header, n_content, n_author) VALUES
+(1, '2024-09-14 15:04:05', 'Breaking smallNews', 'Something amazing happened!', 'John Doe'),
+(2, '2024-09-13 15:04:05', 'Tech smallNews', 'New tech gadget released.', 'Jane Doe'),
+(3, '2024-09-12 15:04:05', 'Sports Update', 'Local team wins championship!', 'Mike Smith');
+
 INSERT INTO reservations (r_id, r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) VALUES
 (0, datetime('2023-04-01 10:00:00', 'utc'), datetime('2023-04-05 10:00:00', 'utc'), 1, 0, 0, 'pending', datetime('2023-03-02 16:05', 'utc')),
 (1, datetime('2023-04-01 12:00:00', 'utc'), datetime('2023-04-03 18:00:00', 'utc'), 2, 1, 1, 'pending', datetime('2023-03-04 20:13', 'utc')),
