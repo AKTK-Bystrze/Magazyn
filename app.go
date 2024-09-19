@@ -50,6 +50,31 @@ func (AppState) Fatal(v ...any) {
 	log.Fatal(v)
 }
 
+func (app AppState) getUsers() ([]User, error) {
+	query := `SELECT u_id, u_username, u_email, u_credits FROM users`
+
+	rows, err := app.db.Queryx(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var users []User
+
+	for rows.Next() {
+		var user User
+
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Credits)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation, error) {
 	var location, err = time.LoadLocation("Europe/Warsaw")
 	if err != nil {
