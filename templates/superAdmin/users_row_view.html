@@ -2,7 +2,6 @@
 {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }}
 {{ if .Users }}
 {{/* style because of: https://github.com/DataTables/Responsive/issues/40 */}}
- <!-- TODO USER TABLE, for each user add filed to modify usersCredits -->
 <table class="table" id="{{ .TableId }}" style="width: 100%">
   <thead>
     <tr>
@@ -15,7 +14,6 @@
   <tbody>
    {{ range .Users }}
   <tr>
-    <!-- <form id="User-form-{{.ID}}" method="POST" action="/superAdmin/users"> -->
       <td>
         {{.Name}}
       </td>
@@ -28,7 +26,6 @@
       <td>
         <button type="button" onclick="userAction('{{.ID}}')">Aktualizuj</button>
       </td>
-    <!-- </form> -->
   </tr>
 {{ end }}
   </tbody>
