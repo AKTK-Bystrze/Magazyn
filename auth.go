@@ -16,6 +16,7 @@ var (
 	ERROR_MSG_TOKEN_NOT_FOUND = "token_not_found"
 )
 
+// todo should tmpUser and User be both in use insted of one?
 type tmpUser struct {
 	ID      int64  `db:"u_id"`
 	Name    string `db:"u_username"`
@@ -25,9 +26,9 @@ type tmpUser struct {
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	session, _ := app.store.Get(r, SESSION_NAME)
-	var u tmpUser
 	if isSignedIn(session) {
-		err := app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", session.Values["UserInfo"])
+		userID := int(r.Context().Value("UserInfo").(tmpUser).ID)
+		u, err := app.getUser(userID)
 		if err != nil {
 			app.Err("%v %v", getUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)

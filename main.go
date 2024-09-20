@@ -142,7 +142,8 @@ func validUserMiddlware(next http.Handler) http.Handler {
 		}
 		var uinfo tmpUser
 		err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
-		if err != nil || !isRoleValid(uinfo.Role) {
+
+		if err != nil || !areRolesValid(uinfo.Role) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
@@ -155,11 +156,23 @@ func validUserMiddlware(next http.Handler) http.Handler {
 
 func isRoleValid(userRole string) bool {
 	for _, privilige := range PRIVILIGES {
-		if strings.Contains(userRole, privilige) {
+		if strings.Compare(userRole, privilige) == 0 {
 			return true
 		}
 	}
 	return false
+}
+
+func areRolesValid(priviliges string) bool {
+	priviligesList := strings.Fields(priviliges)
+	var newRole string
+	for _, p := range priviligesList {
+		if isRoleValid(string(p)) {
+			newRole += p
+		}
+	}
+	priviliges = strings.ReplaceAll(priviliges, " ", "")
+	return strings.Compare(newRole, priviliges) == 0
 }
 
 func adminHandler(h http.Handler) http.Handler {
@@ -173,6 +186,14 @@ func adminHandler(h http.Handler) http.Handler {
 func ninjaHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.hasNinjaPrivilege(w, r) {
+			h.ServeHTTP(w, r)
+		}
+	})
+}
+
+func superAdminHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.hasSuperAdminPrivilege(w, r) {
 			h.ServeHTTP(w, r)
 		}
 	})
@@ -249,6 +270,12 @@ func main() {
 	//  ninja
 	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")
 	ninjaRouter.HandleFunc("/news/{newsId}", deleteNewsHandler).Methods("DELETE")
+	//  enforce users with superAdmin role
+	superAdminRouter := userRouter.PathPrefix("/superAdmin").Subrouter()
+	superAdminRouter.Use(superAdminHandler)
+	//  superAdmin
+	superAdminRouter.HandleFunc("/users", updateUser).Methods("PUT")
+	superAdminRouter.HandleFunc("/users", getUsers).Methods("GET")
 
 	router.PathPrefix("/").Handler(userRouter)
 
