@@ -18,14 +18,38 @@ INSERT INTO users (u_id, u_username, u_role, u_email, u_credits) VALUES
 (5, 'superAdmin', 'superAdmin admin ninja', 'dummy4@email.com', 10);
 
 INSERT INTO big_news (n_id, n_created_time, n_header, n_content, n_author) VALUES
-(1, '2024-09-14 15:04:05', 'Breaking bigNews', 'Something amazing happened!', 'John Doe'),
-(2, '2024-09-13 15:04:05', 'Tech bigNews', 'New tech gadget released.', 'Jane Doe'),
-(0, '2024-09-12 15:04:05', 'Sports Update', 'Local team wins championship!', 'Mike Smith');
+(1, '2024-01-23 15:04:05', 'Kurs Kajakarstwa Górskiego 2024', 'Zapraszamy do wzięcia udziału w naszym tegorocznym kursie kajakarstwa górskiego! Zapisy właśnie ruszyły.
+
+A jeśli jeszcze nie jesteś pewien/pewna czy jesteś w dobrym miejscu to zapraszamy do naszej siedziby 29 stycznia 2024 na godzinę 19 na spotkanie informacyjne. Odpowiemy na wszelkie pytania, rozwiejemy wątpliwości i z radością przyjmiemy Wasze zgłoszenie!
+
+Zachęcamy do śledzenia wydarzenia – LINK DO WYDARZENIA oraz zapisów – FORMULARZ ZGŁOSZENIOWY', 'Marzena'),
+(2, '2023-12-12 15:04:05', 'Aktualizacja Regulaminu „Ranking”', 'Nastała ta chwila: Ogłaszamy aktualizację regulaminu „Ranking”.
+
+Regulamin można odnaleźć na naszej stronie w zakładce „Sprawy Klubowe” oraz został rozdystrybuowany drogą mailową do członków Stowarzyszenia AKTK „Bystrze”.', 'Marzena'),
+(0, '2023-12-06 15:04:05', 'Do źródeł Nilu ’93 – spotkanie z okazji 30 rocznicy', 'Wszystkich miłośników kajakarstwa, wszelakich sportów, wypraw bliższych i dalszych oraz eksploracji zapraszamy na spotkanie upamiętniające 30 rocznicę wyprawy eksploracyjnej „Do źródeł Nilu 93”, których efektem było pierwsze spłyniecie 100 km rzeki Rukarara w Rwandzie oraz paru pomniejszych rzek w Ugandzie i Tanzanii.
+
+Spotkanie będzie miało niepowtarzalny charakter – w stylu retro!
+
+Uczestnicy opowiedzą o tym, jak w tamtych czasach organizowało się takie wyprawy oraz z czym eksploratorzy musieli się mierzyć w czasach bez ogólnodostępnego Internetu.
+
+Materiały prezentowane będą w oparciu o sprzęt wykorzystywany ówcześnie do rejestracji – magnetowidy, kasety VHS, klisze i wiele, wiele więcej…
+
+Szykuje się prawdziwy skok do przeszłości!
+
+Kiedy: 24 listopada 2023
+O której: 20:00
+Gdzie: Akademicki Klub Żeglarski AGH
+Wstęp wolny
+
+Więcej informacji na naszym profilu FB', 'Marzena');
 
 INSERT INTO small_news (n_id, n_created_time, n_header, n_content, n_author) VALUES
-(1, '2024-09-14 15:04:05', 'Breaking smallNews', 'Something amazing happened!', 'John Doe'),
-(2, '2024-09-13 15:04:05', 'Tech smallNews', 'New tech gadget released.', 'Jane Doe'),
-(0, '2024-09-12 15:04:05', 'Sports Update', 'Local team wins championship!', 'Mike Smith');
+(1, '2024-09-14 15:04:05', 'Kontakt', 'Zastanawiasz się nas znaleźć?
+
+Władysława Reymonta 21a
+30-059 Kraków
+zarzadbystrze@gmail.com', 'John Doe'),
+(2, '2024-09-13 15:04:05', 'Kategorie', 'Bez kategorii', 'Jane Doe');
 
 INSERT INTO reservations (r_id, r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) VALUES
 (0, datetime('2023-04-01 10:00:00', 'utc'), datetime('2023-04-05 10:00:00', 'utc'), 1, 0, 0, 'pending', datetime('2023-03-02 16:05', 'utc')),
