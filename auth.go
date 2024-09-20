@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/securecookie"
@@ -27,7 +28,7 @@ type tmpUser struct {
 func Login(w http.ResponseWriter, r *http.Request) {
 	session, _ := app.store.Get(r, SESSION_NAME)
 	if isSignedIn(session) {
-		userID := int(r.Context().Value("UserInfo").(tmpUser).ID)
+		userID := session.Values["UserInfo"].(int)
 		u, err := app.getUser(userID)
 		if err != nil {
 			app.Err("%v %v", getUserName(r), err.Error())
@@ -35,7 +36,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		target := "/dashboard"
-		if u.Role == "admin" {
+		if strings.Contains(u.Role, "admin") {
 			target = "/admin/reservations"
 		}
 		http.Redirect(w, r, target, http.StatusSeeOther)
