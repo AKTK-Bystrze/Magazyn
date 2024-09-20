@@ -1,6 +1,7 @@
-package emailService
+package main
 
 import (
+	"bystrze/services/structs"
 	"context"
 	"io"
 	"net/smtp"
@@ -9,7 +10,7 @@ import (
 	"github.com/johnsto/go-passwordless/v2"
 )
 
-func SendEmail(receiver User, subject string, message string) error {
+func SendEmail(receiver structs.User, subject string, message string) error {
 
 	senderEmail := MAGAZYN_BYSTRZE_EMAIL_ADDR
 	senderPassword := os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS")
@@ -27,7 +28,7 @@ func formatEmailMsg(subject string, message string) []byte {
 // emailWriter writes the token to email form.
 func emailWriter(ctx context.Context, token, uid, recipient string, w io.Writer) error {
 	e := &passwordless.Email{
-		Subject: APP_NAME + " signin",
+		Subject: structs.APP_NAME + " signin",
 		To:      recipient,
 	}
 
@@ -36,14 +37,14 @@ func emailWriter(ctx context.Context, token, uid, recipient string, w io.Writer)
 
 	// TODO move it to template
 	text := "You (or someone who knows your email address) wants " +
-		"to sign in to the " + APP_NAME + " website.\n\n" +
+		"to sign in to the " + structs.APP_NAME + " website.\n\n" +
 		"Your PIN is " + token + " - or use the following link: " +
 		link + "\n\n" +
 		"(If you were did not request or were not expecting this email, " +
 		"you can safely ignore it.)"
 	html := "<!doctype html><html><body>" +
 		"<p>You (or someone who knows your email address) wants " +
-		"to sign in to the " + APP_NAME + ".</p>" +
+		"to sign in to the " + structs.APP_NAME + ".</p>" +
 		"<p>Your PIN is <b>" + token + "</b> - or <a href=\"" + link + "\">" +
 		"click here</a> to sign in automatically.</p>" +
 		"<p>(If you did not request or were not expecting this email, " +

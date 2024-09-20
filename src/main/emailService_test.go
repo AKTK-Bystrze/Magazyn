@@ -1,12 +1,13 @@
-package emailService
+package main
 
 import (
+	"bystrze/services/structs"
 	"testing"
 )
 
 func TestEmailService(t *testing.T) {
 	t.Skip("SKIP TEST")
-	receiver := User{
+	receiver := structs.User{
 		ID:    1,
 		Name:  "Name",
 		Email: MAGAZYN_BYSTRZE_EMAIL_ADDR,

@@ -1,17 +1,8 @@
-package main
+package structs
 
 import (
-	"github.com/gorilla/sessions"
-
 	"time"
 )
-
-type AppState struct {
-	db        Database
-	templates Templates
-	store     sessions.Store
-	server    string
-}
 
 type Item struct {
 	ID          int    `db:"i_id"`
@@ -73,7 +64,7 @@ var PRIVILIGES = []string{ADMIN, NINJA, USER, SUPERADMIN}
 
 const (
 	COOKIE_VALIDITY_TIME_HOURS = 6
-	SEND_COOKIE_TO_STDOUT      = false
+	SEND_COOKIE_TO_STDOUT      = true
 	TOKEN_LENGTH               = 10
 	COOKIE_KEY_LENGTH          = 16
 

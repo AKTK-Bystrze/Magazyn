@@ -1,4 +1,4 @@
-package credits
+package main
 
 import (
 	"errors"
@@ -25,7 +25,7 @@ const (
 	wetsuitItemCost    = 1
 )
 
-func calculateRentalCost(itemID int, start_time time.Time, end_time time.Time) (int, error) {
+func CalculateRentalCost(itemID int, start_time time.Time, end_time time.Time) (int, error) {
 	item, err := app.getItem(itemID)
 	if err != nil {
 		return 0, err
@@ -62,7 +62,7 @@ func getItemRentalCost(itemType string) (int, error) {
 	}
 }
 
-func canRent(userID int, rentalCost int) (bool, int, error) {
+func CanRent(userID int, rentalCost int) (bool, int, error) {
 	userCredits, err := app.getUserCredits(userID)
 	canRentResult := (userCredits > rentalCost)
 	app.Debug("userCredits %v rentalCost %v canRent %v", userCredits, rentalCost, canRentResult)

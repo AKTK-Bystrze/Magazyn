@@ -1,6 +1,8 @@
-package auth
+package main
 
 import (
+	"bystrze/services/structs"
+	"bystrze/services/utils"
 	"fmt"
 	"net/http"
 	"net/smtp"
@@ -18,7 +20,7 @@ var (
 )
 
 // todo should tmpUser and User be both in use insted of one?
-type tmpUser struct {
+type TmpUser struct {
 	ID      int64  `db:"u_id"`
 	Name    string `db:"u_username"`
 	Role    string `db:"u_role"`
@@ -26,12 +28,12 @@ type tmpUser struct {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.store.Get(r, SESSION_NAME)
-	if isSignedIn(session) {
+	session, _ := app.store.Get(r, structs.SESSION_NAME)
+	if utils.IsSignedIn(session) {
 		userID := session.Values["UserInfo"].(int)
-		u, err := app.getUser(userID)
+		u, err := app.GetUser(userID)
 		if err != nil {
-			app.Err("%v %v", getUserName(r), err.Error())
+			app.Err("%v %v", utils.GetUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
 			return
 		}
@@ -54,7 +56,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.store.Get(r, SESSION_NAME)
+	session, _ := app.store.Get(r, structs.SESSION_NAME)
 	for key := range session.Values {
 		delete(session.Values, key)
 	}
@@ -62,14 +64,14 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func tokenHandler(w http.ResponseWriter, r *http.Request) {
+func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	target := "/dashboard"
-	var u tmpUser
-	session, err := app.store.Get(r, SESSION_NAME)
+	var u utils.TmpUser
+	session, err := app.store.Get(r, structs.SESSION_NAME)
 	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
 		c := &http.Cookie{
-			Name:     SESSION_NAME,
+			Name:     structs.SESSION_NAME,
 			Value:    "",
 			Path:     "/",
 			Expires:  time.Unix(0, 0),
@@ -79,10 +81,10 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, c)
 	}
 
-	if isSignedIn(session) {
+	if utils.IsSignedIn(session) {
 		err = app.db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
 		if err != nil {
-			app.Err("%v %v", getUserName(r), err.Error())
+			app.Err("%v %v", utils.GetUserName(r), err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -116,7 +118,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = ?", recipient)
 		}
 		if err != nil {
-			app.Err("%v %v", getUserName(r), err.Error())
+			app.Err("%v %v", utils.GetUserName(r), err.Error())
 			if err := app.templates.ExecuteTemplate(w, "tokenGenerated.html", struct {
 				Strategy   string
 				Recipient  string
@@ -128,7 +130,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 				UserID:     uid,
 				TokenError: tokenError,
 			}); err != nil {
-				app.Err("%v %v", getUserName(r), err.Error())
+				app.Err("%v %v", utils.GetUserName(r), err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 			return
@@ -151,7 +153,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		err := pw.RequestToken(ctx, strategy, uid, recipient)
 
 		if err != nil {
-			app.Err("%v %v", getUserName(r), err.Error())
+			app.Err("%v %v", utils.GetUserName(r), err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -165,7 +167,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 
 			err = app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
 			if err != nil {
-				app.Err("%v %v", getUserName(r), err.Error())
+				app.Err("%v %v", utils.GetUserName(r), err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
@@ -189,7 +191,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		} else if err != nil {
 			// Some other unexpected error occurred.
-			app.Err("%v %v", getUserName(r), err.Error())
+			app.Err("%v %v", utils.GetUserName(r), err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		} else {
@@ -214,20 +216,20 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:     uid,
 		TokenError: tokenError,
 	}); err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
 
-func setTokenTransportMean() {
-	if SEND_COOKIE_TO_STDOUT {
+func SetTokenTransportMean() {
+	if structs.SEND_COOKIE_TO_STDOUT {
 		app.Info("No email transport specified, printing codes to stdout")
 		pw.SetTransport("debug", passwordless.LogTransport{
 			MessageFunc: func(token, uid string) string {
 				return fmt.Sprintf("\tDEBUG:\t Login at %s/token?strategy=debug&token=%s&uid=%s",
 					app.server, token, uid)
 			},
-		}, passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME_HOURS*time.Hour)
+		}, passwordless.NewCrockfordGenerator(structs.TOKEN_LENGTH), structs.COOKIE_VALIDITY_TIME_HOURS*time.Hour)
 	} else {
 		app.Info("Using email transport via %s", MAGAZYN_BYSTRZE_EMAIL_ADDR)
 		pw.SetTransport("email", passwordless.NewSMTPTransport(
@@ -239,13 +241,13 @@ func setTokenTransportMean() {
 				os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS"),
 				SMTP_HOST),
 			emailWriter,
-		), passwordless.NewCrockfordGenerator(TOKEN_LENGTH), COOKIE_VALIDITY_TIME_HOURS*time.Minute)
+		), passwordless.NewCrockfordGenerator(structs.TOKEN_LENGTH), structs.COOKIE_VALIDITY_TIME_HOURS*time.Minute)
 	}
 }
 
-func validateCOOKIE_KEY() {
+func ValidateCOOKIE_KEY() {
 	if len(COOKIE_KEY) == 0 {
 		app.Err("KEY_COOKIE_STORE not defined; using random key")
-		COOKIE_KEY = securecookie.GenerateRandomKey(COOKIE_KEY_LENGTH)
+		COOKIE_KEY = securecookie.GenerateRandomKey(structs.COOKIE_KEY_LENGTH)
 	}
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bystrze/services/auth"
+	"bystrze/services/structs"
 	"bystrze/services/utils"
 	"context"
 	"errors"
@@ -22,12 +22,12 @@ import (
 )
 
 var (
-	pw                          Passwordless
+	pw                          utils.Passwordless
 	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
 	app                         AppState
 	tmpl                        *template.Template
 	MAGAZYN_BYSTRZE_EMAIL_ADDR  = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
-	MAGAZYN_BYSTRZE_EMAIL_LOGIN = getEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
+	MAGAZYN_BYSTRZE_EMAIL_LOGIN = utils.GetEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
 	SMTP_HOST                   = os.Getenv("SMTP_HOST")
 	SMTP_PORT                   = os.Getenv("SMTP_PORT")
 )
@@ -37,16 +37,16 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type templateData struct {
-	UserInfo auth.tmpUser
+	UserInfo utils.TmpUser
 	URL      string
 }
 
 type templateDataIfce interface {
-	SetUser(*tmpUser)
+	SetUser(*utils.TmpUser)
 	SetURL(string)
 }
 
-func (data *templateData) SetUser(uinfo *tmpUser) {
+func (data *templateData) SetUser(uinfo *utils.TmpUser) {
 	data.UserInfo = *uinfo
 }
 
@@ -105,18 +105,18 @@ func loadTemplates() {
 }
 
 func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
-	if uinfo, ok := r.Context().Value("UserInfo").(tmpUser); ok {
+	if uinfo, ok := r.Context().Value("UserInfo").(utils.TmpUser); ok {
 		data.SetUser(&uinfo)
 		data.SetURL(r.URL.String())
 		err := app.templates.ExecuteTemplate(w, tmpl, data)
 		if err != nil {
-			app.Err("%v %v", utils.getUserName(r), err.Error())
+			app.Err("%v %v", utils.GetUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
 		}
 	} else {
 		err := app.templates.ExecuteTemplate(w, tmpl, data)
 		if err != nil {
-			app.Err("%v %v", getUserName(r), err.Error())
+			app.Err("%v %v", utils.GetUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
 		}
 	}
@@ -132,17 +132,17 @@ func (app AppState) renderTemplateNoData(w http.ResponseWriter, tmpl string) {
 
 func validUserMiddlware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := app.store.Get(r, SESSION_NAME)
+		session, _ := app.store.Get(r, structs.SESSION_NAME)
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
 			app.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
 			if r.RequestURI != "/" {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
-			homePage(w, r)
+			HomePage(w, r)
 			return
 		}
-		var uinfo tmpUser
+		var uinfo utils.TmpUser
 		err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
 
 		if err != nil || !areRolesValid(uinfo.Role) {
@@ -157,7 +157,7 @@ func validUserMiddlware(next http.Handler) http.Handler {
 }
 
 func isRoleValid(userRole string) bool {
-	for _, privilige := range PRIVILIGES {
+	for _, privilige := range structs.PRIVILIGES {
 		if strings.Compare(userRole, privilige) == 0 {
 			return true
 		}
@@ -223,7 +223,7 @@ func main() {
 	//  TODO: .StrictSlash ???
 	router := mux.NewRouter()
 
-	db, err := sqlx.Open("sqlite3", DATABASE_NAME)
+	db, err := sqlx.Open("sqlite3", structs.DATABASE_NAME)
 	if err != nil {
 		app.Fatal(err)
 	}
@@ -231,21 +231,21 @@ func main() {
 	app.db = db
 	app.server = os.Args[3]
 
-	validateCOOKIE_KEY()
+	ValidateCOOKIE_KEY()
 	app.store = sessions.NewCookieStore(COOKIE_KEY)
 	tokStore := passwordless.NewMemStore()
 	pw = passwordless.New(tokStore)
 
-	setTokenTransportMean()
+	SetTokenTransportMean()
 	app.setLogger()
 
 	loadTemplates()
 
 	router.HandleFunc("/login", Login).Methods("GET")
-	router.HandleFunc("/token", tokenHandler).Methods("POST", "GET")
+	router.HandleFunc("/token", TokenHandler).Methods("POST", "GET")
 	userRouter := mux.NewRouter()
 	userRouter.Use(validUserMiddlware)
-	userRouter.HandleFunc("/", homePage).Methods("GET")
+	userRouter.HandleFunc("/", HomePage).Methods("GET")
 	adminRouter := userRouter.PathPrefix("/admin").Subrouter()
 	//  every logged-in user
 	userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
@@ -256,28 +256,28 @@ func main() {
 	//  enforce users with admin role
 	adminRouter.Use(adminHandler)
 	//  admin
-	adminRouter.HandleFunc("/reservations", adminDashboardHandler).Methods("GET")
-	adminRouter.HandleFunc("/setStatus", setStatusHandler).Methods("PUT")
-	adminRouter.HandleFunc("/items", adminItemsHandler).Methods("GET")
-	adminRouter.HandleFunc("/item/status", adminItemStatusHandler).Methods("POST")
+	adminRouter.HandleFunc("/reservations", AdminDashboardHandler).Methods("GET")
+	adminRouter.HandleFunc("/setStatus", SetStatusHandler).Methods("PUT")
+	adminRouter.HandleFunc("/items", AdminItemsHandler).Methods("GET")
+	adminRouter.HandleFunc("/item/status", AdminItemStatusHandler).Methods("POST")
 	adminRouter.HandleFunc("/item/show", AdminShowItemHandler).Methods("GET")
 	adminRouter.HandleFunc("/user/show", AdminShowUserHandler).Methods("GET")
-	adminRouter.HandleFunc("/reservation/show", reservationHandler).Methods("GET")
-	adminRouter.HandleFunc("/db/backup", dbBackupHandler).Methods("GET")
-	adminRouter.HandleFunc("/inventory", inventory).Methods("GET")
+	adminRouter.HandleFunc("/reservation/show", ReservationHandler).Methods("GET")
+	adminRouter.HandleFunc("/db/backup", DbBackupHandler).Methods("GET")
+	adminRouter.HandleFunc("/inventory", Inventory).Methods("GET")
 
 	//  enforce users with ninja role
 	ninjaRouter := userRouter.PathPrefix("/ninja").Subrouter()
 	ninjaRouter.Use(ninjaHandler)
 	//  ninja
-	ninjaRouter.HandleFunc("/news", createNewsHandler).Methods("POST")
-	ninjaRouter.HandleFunc("/news/{newsId}", deleteNewsHandler).Methods("DELETE")
+	ninjaRouter.HandleFunc("/news", CreateNewsHandler).Methods("POST")
+	ninjaRouter.HandleFunc("/news/{newsId}", DeleteNewsHandler).Methods("DELETE")
 	//  enforce users with superAdmin role
 	superAdminRouter := userRouter.PathPrefix("/superAdmin").Subrouter()
 	superAdminRouter.Use(superAdminHandler)
 	//  superAdmin
-	superAdminRouter.HandleFunc("/users", updateUser).Methods("PUT")
-	superAdminRouter.HandleFunc("/users", getUsers).Methods("GET")
+	superAdminRouter.HandleFunc("/users", UpdateUser).Methods("PUT")
+	superAdminRouter.HandleFunc("/users", GetUsers).Methods("GET")
 
 	router.PathPrefix("/").Handler(userRouter)
 

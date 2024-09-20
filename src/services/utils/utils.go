@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bystrze/services/auth"
 	"context"
 	"database/sql"
 	"io"
@@ -21,21 +20,29 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 	return vfalse
 }
 
-func getUserName(r *http.Request) string {
-	uinfo, ok := r.Context().Value("UserInfo").(auth.tmpUser)
+// todo should TmpUser and User be both in use insted of one?
+type TmpUser struct {
+	ID      int64  `db:"u_id"`
+	Name    string `db:"u_username"`
+	Role    string `db:"u_role"`
+	Credits int    `db:"u_credits"`
+}
+
+func GetUserName(r *http.Request) string {
+	uinfo, ok := r.Context().Value("UserInfo").(TmpUser)
 	return If(ok, uinfo.Name, "unknown")
 }
 
-func getUserId(r *http.Request) int64 {
-	uinfo, ok := r.Context().Value("UserInfo").(auth.tmpUser)
+func GetUserId(r *http.Request) int64 {
+	uinfo, ok := r.Context().Value("UserInfo").(TmpUser)
 	return If(ok, uinfo.ID, -1)
 }
 
-func isSignedIn(s *sessions.Session) bool {
+func IsSignedIn(s *sessions.Session) bool {
 	return s != nil && s.Values["UserInfo"] != nil
 }
 
-func getEmailUsername(email string) string {
+func GetEmailUsername(email string) string {
 	usernameAndDomain := strings.Split(email, "@")
 	return usernameAndDomain[0]
 }

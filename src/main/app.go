@@ -1,19 +1,33 @@
 package main
 
 import (
+	"bystrze/services/structs"
+	"bystrze/services/utils"
+	"net/http"
+	"strings"
+
 	"database/sql"
 	"fmt"
 	"log"
 	"sort"
 	"time"
+
+	"github.com/gorilla/sessions"
 )
 
 const OUT_TIME_FMT = "2006-01-02 15:04:05"
 
 type tmpReservation struct {
-	Reservation
-	Item
-	User
+	structs.Reservation
+	structs.Item
+	structs.User
+}
+
+type AppState struct {
+	db        utils.Database
+	templates utils.Templates
+	store     sessions.Store
+	server    string
 }
 
 type queryConfigReservation struct {
@@ -45,18 +59,48 @@ func (app AppState) Err(format string, a ...interface{}) {
 	log.Output(2, fmt.Sprintf("\tERR:\t"+format, a...))
 }
 
+func (app AppState) hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
+	uinfo, ok := r.Context().Value("UserInfo").(utils.TmpUser)
+	if !ok || !strings.Contains(uinfo.Role, "ninja") {
+		app.Err("Non-ninja user (%s) attempts to access ninja API", utils.If(ok, uinfo.Name, "unknown"))
+		http.Redirect(w, r, "/", http.StatusFound)
+		return false
+	}
+	return true
+}
+
+func (app AppState) hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
+	uinfo, ok := r.Context().Value("UserInfo").(utils.TmpUser)
+	if !ok || !strings.Contains(uinfo.Role, structs.SUPERADMIN) {
+		app.Err("Non-SuperAdmin user (%s) attempts to access superAdmin API", utils.If(ok, uinfo.Name, "unknown"))
+		http.Redirect(w, r, "/", http.StatusFound)
+		return false
+	}
+	return true
+}
+
 func (AppState) Fatal(v ...any) {
 	log.Output(2, "FATAL ERROR")
 	log.Fatal(v)
 }
 
-func (app AppState) getUser(userId int) (tmpUser, error) {
-	var u tmpUser
+func (app AppState) hasAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
+	uinfo, ok := r.Context().Value("UserInfo").(utils.TmpUser)
+	if !ok || !strings.Contains(uinfo.Role, "admin") {
+		app.Err("Non-admin user (%s) attempts to access admin API", utils.If(ok, uinfo.Name, "unknown"))
+		http.Redirect(w, r, "/", http.StatusFound)
+		return false
+	}
+	return true
+}
+
+func (app AppState) GetUser(userId int) (utils.TmpUser, error) {
+	var u utils.TmpUser
 	err := app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", userId)
 	return u, err
 }
 
-func (app AppState) getUsers() ([]tmpUser, error) {
+func (app AppState) GetUsers() ([]utils.TmpUser, error) {
 	query := `SELECT u_id, u_username, u_role, u_credits FROM users`
 
 	rows, err := app.db.Queryx(query)
@@ -64,10 +108,10 @@ func (app AppState) getUsers() ([]tmpUser, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var users []tmpUser
+	var users []utils.TmpUser
 
 	for rows.Next() {
-		var user tmpUser
+		var user utils.TmpUser
 
 		err := rows.Scan(&user.ID, &user.Name, &user.Role, &user.Credits)
 		if err != nil {
@@ -81,11 +125,11 @@ func (app AppState) getUsers() ([]tmpUser, error) {
 	return users, nil
 }
 
-func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation, error) {
+func (app AppState) getReservations(conf queryConfigReservation) ([]structs.Reservation, error) {
 	var location, err = time.LoadLocation("Europe/Warsaw")
 	if err != nil {
 		app.Err(err.Error())
-		return []Reservation{}, err
+		return []structs.Reservation{}, err
 	}
 	// Retrieve all reservations from database
 	query := "SELECT r.*, i.i_id, i.i_name, i.i_description "
@@ -122,9 +166,9 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]Reservation,
 	}
 	defer rows.Close()
 
-	var reservations []Reservation
+	var reservations []structs.Reservation
 	for rows.Next() {
-		var r Reservation
+		var r structs.Reservation
 		var t tmpReservation
 		err := rows.StructScan(&t)
 		if err != nil {
@@ -162,14 +206,14 @@ type tmpItem2 struct {
 	Status    sql.NullString `db:"r_status"`
 	Username  sql.NullString `db:"u_username"`
 	UserID    sql.NullInt64  `db:"u_id"`
-	Item
+	structs.Item
 }
 
 type tmpItem struct {
-	Item
+	structs.Item
 	CurrentReservation struct {
 		Valid bool
-		Reservation
+		structs.Reservation
 	}
 }
 
@@ -250,7 +294,7 @@ func (app AppState) checkAvailability(start time.Time, end time.Time, itemID int
 	return true, nil
 }
 
-func (app AppState) getUsername(id int) (string, error) {
+func (app AppState) GetUserName(id int) (string, error) {
 	query := `SELECT u_username FROM users WHERE u_id = ?`
 	row := app.db.QueryRow(query, id)
 	var uname string
@@ -274,10 +318,10 @@ func (app AppState) getUserCredits(id int) (int, error) {
 	return credits, nil
 }
 
-func (app AppState) getItem(id int) (*Item, error) {
+func (app AppState) getItem(id int) (*structs.Item, error) {
 	query := `SELECT * FROM items WHERE i_id = ?`
 	row := app.db.QueryRowx(query, id)
-	var item Item
+	var item structs.Item
 	err := row.StructScan(&item)
 	if err != nil {
 		app.Err(err.Error())
@@ -286,7 +330,7 @@ func (app AppState) getItem(id int) (*Item, error) {
 	return &item, nil
 }
 
-func (app AppState) getReservation(id int) (*Reservation, error) {
+func (app AppState) getReservation(id int) (*structs.Reservation, error) {
 	query := `SELECT 
 		r.r_id, r.r_start_time, r.r_end_time, r.r_status, r.r_created_at,
 		i.i_id, i.i_name, i.i_description, i.i_status, i.i_type,
@@ -304,7 +348,7 @@ func (app AppState) getReservation(id int) (*Reservation, error) {
 		return nil, err
 	}
 	row := app.db.QueryRowx(query, id)
-	var r Reservation
+	var r structs.Reservation
 	var t tmpReservation
 	err = row.StructScan(&t)
 	if err != nil {
@@ -322,7 +366,7 @@ func (app AppState) getReservation(id int) (*Reservation, error) {
 	return &r, nil
 }
 
-func (app AppState) getBigNews() ([]News, error) {
+func (app AppState) getBigNews() ([]structs.News, error) {
 	newsList, err := app.getAllNews("big_news")
 	if err != nil {
 		return nil, err
@@ -333,7 +377,7 @@ func (app AppState) getBigNews() ([]News, error) {
 	return newsList, nil
 }
 
-func (app AppState) getSmallNews() ([]News, error) {
+func (app AppState) getSmallNews() ([]structs.News, error) {
 	newsList, err := app.getAllNews("small_news")
 	if err != nil {
 		return nil, err
@@ -344,7 +388,7 @@ func (app AppState) getSmallNews() ([]News, error) {
 	return newsList, nil
 }
 
-func (app AppState) getAllNews(newsType string) ([]News, error) {
+func (app AppState) getAllNews(newsType string) ([]structs.News, error) {
 	query := `
 		SELECT n_id, n_created_time, n_header, n_content, n_author
 		FROM ` + newsType
@@ -354,10 +398,10 @@ func (app AppState) getAllNews(newsType string) ([]News, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var newsList []News
+	var newsList []structs.News
 
 	for rows.Next() {
-		var news News
+		var news structs.News
 
 		err := rows.Scan(&news.ID, &news.CreatedTime, &news.Header, &news.Content, &news.Author)
 		if err != nil {

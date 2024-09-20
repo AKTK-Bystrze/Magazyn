@@ -1,6 +1,9 @@
-package auth
+package main
 
 import (
+	"bystrze/services/structs"
+	"bystrze/services/utils"
+
 	"context"
 	"database/sql"
 	"fmt"
@@ -49,8 +52,8 @@ func (a *AppState) Login(w http.ResponseWriter, r *http.Request) {
 	Login(w, r)
 }
 
-func (a *AppState) tokenHandler(w http.ResponseWriter, r *http.Request) {
-	tokenHandler(w, r)
+func (a *AppState) TokenHandler(w http.ResponseWriter, r *http.Request) {
+	TokenHandler(w, r)
 }
 
 type MockPasswordless struct {
@@ -95,7 +98,7 @@ func (m *mockTemplate) ExecuteTemplate(wr io.Writer, name string, data any) erro
 
 type MockDatabase struct {
 	mock.Mock
-	user tmpUser
+	user utils.TmpUser
 }
 
 func (m *MockDatabase) Exec(query string, args ...interface{}) (sql.Result, error) {
@@ -132,7 +135,7 @@ func (m *MockDatabase) QueryRowx(query string, args ...interface{}) *sqlx.Row {
 }
 
 type MockSessionStore struct {
-	store SessionStore
+	store utils.SessionStore
 	mock.Mock
 }
 
@@ -149,7 +152,7 @@ func (m *MockSessionStore) Save(r *http.Request, w http.ResponseWriter, s *sessi
 
 func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 	mockStore := new(MockStore)
-	session := sessions.NewSession(nil, SESSION_NAME)
+	session := sessions.NewSession(nil, structs.SESSION_NAME)
 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 	mockStore.session = *session
 	mockTemplate := new(mockTemplate)
@@ -189,13 +192,13 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 
 	for _, tc := range testCases {
 		mockStore := new(MockStore)
-		session := sessions.NewSession(nil, SESSION_NAME)
+		session := sessions.NewSession(nil, structs.SESSION_NAME)
 		session.Values = map[interface{}]interface{}{}
 		session.Values["UserInfo"] = TEST_UID_NB
 		session.Values["recipient"] = tc.role
 		mockStore.session = *session
 		mockTemplate := new(mockTemplate)
-		tmpUser := tmpUser{
+		tmpUser := utils.TmpUser{
 			Role: tc.role,
 		}
 		mockDatabase := new(MockDatabase)
@@ -231,13 +234,13 @@ func Test_Login_userIsSignedIn_redirectToDashboard(t *testing.T) {
 
 func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T) {
 	mockStore := new(MockStore)
-	session := sessions.NewSession(nil, SESSION_NAME)
+	session := sessions.NewSession(nil, structs.SESSION_NAME)
 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 	session.Values["recipient"] = TEST_EMAIL
 	mockStore.session = *session
 	mockTemplate := new(mockTemplate)
 	mockTemplate.On("ExecuteTemplate", mock.Anything, "tokenGenerated.html", mock.Anything).Return(nil)
-	tmpUser := tmpUser{
+	tmpUser := utils.TmpUser{
 		Role: "user",
 		ID:   TEST_UID_NB,
 	}
@@ -261,7 +264,7 @@ func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T
 	req.Form.Add("uid", TEST_UID_STR)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(app.tokenHandler)
+	handler := http.HandlerFunc(app.TokenHandler)
 
 	handler.ServeHTTP(recorder, req)
 	mockTemplate.AssertExpectations(t)
@@ -278,12 +281,12 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 
 	for _, tc := range testCases {
 		mockStore := new(MockStore)
-		session := sessions.NewSession(new(MockSessionStore), SESSION_NAME)
+		session := sessions.NewSession(new(MockSessionStore), structs.SESSION_NAME)
 		session.Values = map[interface{}]interface{}{"UserInfo": nil}
 		session.Values["recipient"] = tc.role
 		mockStore.session = *session
 		mockTemplate := new(mockTemplate)
-		tmpUser := tmpUser{
+		tmpUser := utils.TmpUser{
 			Role: tc.role,
 			ID:   TEST_UID_NB,
 		}
@@ -308,7 +311,7 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 		req.Form.Add("uid", TEST_UID_STR)
 
 		recorder := httptest.NewRecorder()
-		handler := http.HandlerFunc(app.tokenHandler)
+		handler := http.HandlerFunc(app.TokenHandler)
 
 		handler.ServeHTTP(recorder, req)
 		if tc.role == "admin" {
@@ -326,7 +329,7 @@ func Test_tokenHandler_userProvideValidToken_redirectToDashBoard(t *testing.T) {
 
 func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *testing.T) {
 	mockStore := new(MockStore)
-	session := sessions.NewSession(new(MockSessionStore), SESSION_NAME)
+	session := sessions.NewSession(new(MockSessionStore), structs.SESSION_NAME)
 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 	session.Values["recipient"] = TEST_ROLE
 	mockStore.session = *session
@@ -342,7 +345,7 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 		UserID:     TEST_UID_STR,
 		TokenError: ERROR_MSG_WRONG_TOKEN,
 	}).Return(nil)
-	tmpUser := tmpUser{
+	tmpUser := utils.TmpUser{
 		Role: TEST_ROLE,
 		ID:   TEST_UID_NB,
 	}
@@ -367,7 +370,7 @@ func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *te
 	req.Form.Add("uid", TEST_UID_STR)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(app.tokenHandler)
+	handler := http.HandlerFunc(app.TokenHandler)
 
 	handler.ServeHTTP(recorder, req)
 	mockPW.AssertExpectations(t)
@@ -385,13 +388,13 @@ func Test_tokenHandler_userIsSignedIn_Redirect(t *testing.T) {
 
 	for _, tc := range testCases {
 		mockStore := new(MockStore)
-		session := sessions.NewSession(new(MockSessionStore), SESSION_NAME)
+		session := sessions.NewSession(new(MockSessionStore), structs.SESSION_NAME)
 		session.Values = map[interface{}]interface{}{}
 		session.Values["UserInfo"] = TEST_UID_NB
 		session.Values["recipient"] = tc.role
 		mockStore.session = *session
 		mockDatabase := new(MockDatabase)
-		tmpUser := tmpUser{
+		tmpUser := utils.TmpUser{
 			Role: tc.role,
 			ID:   TEST_UID_NB,
 		}
@@ -407,7 +410,7 @@ func Test_tokenHandler_userIsSignedIn_Redirect(t *testing.T) {
 		}
 
 		recorder := httptest.NewRecorder()
-		handler := http.HandlerFunc(app.tokenHandler)
+		handler := http.HandlerFunc(app.TokenHandler)
 
 		handler.ServeHTTP(recorder, req)
 		if tc.role == "admin" {

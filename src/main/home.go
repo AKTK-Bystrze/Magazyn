@@ -1,19 +1,21 @@
-package home
+package main
 
 import (
+	"bystrze/services/structs"
+	"bystrze/services/utils"
 	"net/http"
 )
 
-func homePage(w http.ResponseWriter, r *http.Request) {
+func HomePage(w http.ResponseWriter, r *http.Request) {
 	smallNews, err := app.getSmallNews()
 	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
 	bigNews, err := app.getBigNews()
 	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
@@ -21,7 +23,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 
 	app.renderTemplate(w, r, "home.html", &struct {
 		BigNews   []BigNewsData
-		SmallNews []News
+		SmallNews []structs.News
 		templateData
 	}{
 		BigNews:   bigNewsData,
@@ -38,7 +40,7 @@ type BigNewsData struct {
 	Author           string
 }
 
-func parseBigNewsData(news []News) []BigNewsData {
+func parseBigNewsData(news []structs.News) []BigNewsData {
 	var bigNewsDataList []BigNewsData
 	for _, news := range news {
 		bigNewsData := BigNewsData{

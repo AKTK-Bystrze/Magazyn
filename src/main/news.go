@@ -1,31 +1,32 @@
-package news
+package main
 
 import (
+	"bystrze/services/structs"
+	"bystrze/services/utils"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
 
-func createNewsHandler(w http.ResponseWriter, r *http.Request) {
+func CreateNewsHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		app.Err("%v Form parsing error %v", getUserName(r), err)
+		app.Err("%v Form parsing error %v", utils.GetUserName(r), err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	newsType := r.FormValue("type")
 	if err != nil {
-		app.Err("%v Can't get newsType %v", getUserName(r), err)
+		app.Err("%v Can't get newsType %v", utils.GetUserName(r), err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	news := News{
+	news := structs.News{
 		Header:  r.FormValue("header"),
 		Content: r.FormValue("content"),
-		Author:  getUserName(r),
+		Author:  utils.GetUserName(r),
 	}
 
 	if news.Header == "" || news.Content == "" || news.Author == "" {
@@ -34,24 +35,24 @@ func createNewsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	newsType = getDBTable(newsType)
 	if newsType == "" {
-		app.Err("%v %v", getUserName(r), "Unknown news type")
+		app.Err("%v %v", utils.GetUserName(r), "Unknown news type")
 		http.Error(w, "DB error", http.StatusBadRequest)
 	}
 	query := fmt.Sprintf(`INSERT INTO %v (n_header, n_content, n_author) VALUES (?, ?, ?)`, newsType)
 	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
 
 	_, err = app.db.Exec(query, news.Header, news.Content, news.Author)
 	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
 
-	app.Debug("%v save %v with header %v ", getUserName(r), newsType, news.Header)
+	app.Debug("%v save %v with header %v ", utils.GetUserName(r), newsType, news.Header)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -65,13 +66,13 @@ func getDBTable(newsType string) string {
 	}
 }
 
-func deleteNewsHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteNewsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	newsID := vars["newsId"]
 	newsType := r.URL.Query().Get("type")
 	newsType = getDBTable(newsType)
 	if newsType == "" {
-		app.Err("%v %v", getUserName(r), "Missing news type")
+		app.Err("%v %v", utils.GetUserName(r), "Missing news type")
 		http.Error(w, "Missing news type", http.StatusBadRequest)
 		return
 	}
@@ -79,20 +80,10 @@ func deleteNewsHandler(w http.ResponseWriter, r *http.Request) {
 	query := fmt.Sprintf("DELETE FROM %v WHERE n_id = ?", newsType)
 	_, err := app.db.Exec(query, newsID)
 	if err != nil {
-		app.Err("%v %v", getUserName(r), err.Error())
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
 		http.Error(w, "Failed to delete news item", http.StatusInternalServerError)
 		return
 	}
-	app.Debug("%v deleted %v with id %v ", getUserName(r), newsType, newsID)
+	app.Debug("%v deleted %v with id %v ", utils.GetUserName(r), newsType, newsID)
 	w.WriteHeader(http.StatusOK)
-}
-
-func (app AppState) hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
-	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
-	if !ok || !strings.Contains(uinfo.Role, "ninja") {
-		app.Err("Non-ninja user (%s) attempts to access ninja API", If(ok, uinfo.Name, "unknown"))
-		http.Redirect(w, r, "/", http.StatusFound)
-		return false
-	}
-	return true
 }
