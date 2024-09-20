@@ -1,6 +1,7 @@
-package main
+package utils
 
 import (
+	"bystrze/services/auth"
 	"context"
 	"database/sql"
 	"io"
@@ -21,12 +22,12 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 }
 
 func getUserName(r *http.Request) string {
-	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
+	uinfo, ok := r.Context().Value("UserInfo").(auth.tmpUser)
 	return If(ok, uinfo.Name, "unknown")
 }
 
 func getUserId(r *http.Request) int64 {
-	uinfo, ok := r.Context().Value("UserInfo").(tmpUser)
+	uinfo, ok := r.Context().Value("UserInfo").(auth.tmpUser)
 	return If(ok, uinfo.ID, -1)
 }
 

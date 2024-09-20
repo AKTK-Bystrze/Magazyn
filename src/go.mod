@@ -1,4 +1,4 @@
-module bystrze_sprzet
+module bystrze
 
 go 1.19
 

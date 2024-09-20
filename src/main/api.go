@@ -1,6 +1,10 @@
 package main
 
 import (
+	"bystrze/services/auth"
+	"bystrze/services/credits"
+	"bystrze/services/utils"
+
 	"net/http"
 	"strconv"
 	"time"
@@ -62,7 +66,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	// get user ID
 	userID := int(r.Context().Value("UserInfo").(tmpUser).ID)
-	rentalCost, err := calculateRentalCost(itemID, startTime, endTime)
+	rentalCost, err := credits.calculateRentalCost(itemID, startTime, endTime)
 	if err != nil {
 		app.Err("%v %v", getUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

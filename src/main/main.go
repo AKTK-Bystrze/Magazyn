@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bystrze/services/auth"
+	"bystrze/services/utils"
 	"context"
 	"errors"
 	"fmt"
@@ -35,7 +37,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type templateData struct {
-	UserInfo tmpUser
+	UserInfo auth.tmpUser
 	URL      string
 }
 
@@ -108,7 +110,7 @@ func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl 
 		data.SetURL(r.URL.String())
 		err := app.templates.ExecuteTemplate(w, tmpl, data)
 		if err != nil {
-			app.Err("%v %v", getUserName(r), err.Error())
+			app.Err("%v %v", utils.getUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
 		}
 	} else {
