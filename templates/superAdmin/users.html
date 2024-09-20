@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Rezerwacje uzytkownika</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {{ template "stylesInclude" dict "DataTables" true}}
+    <style>
+      .row {
+        margin-bottom: 10px;
+      }
+    </style>
+    {{ template "scriptsInclude" dict "DataTables" true }}
+  </head>
+  <body>
+    {{ template "navbar" .UserInfo }}
+    <div class="container">
+      <h2 class="my-3">Użytkownicy</h2>
+      <!-- TODO USER TABLE, for each user add filed to modify usersCredits -->
+      <div class="tab-content" id="myTabContent">
+        <div
+          class="tab-pane fade show active"
+          id="next24"
+          role="tabpanel"
+          aria-labelledby="next24-tab"
+        >
+          {{ template "users_row_view" dict "Users"
+          .Users "TableId" "DataTable-users" }}
+        </div>
+      </div>
+       <!-- TODO USER TABLE, for each user add filed to modify usersCredits -->
+    </div>
+  </body>
+</html>

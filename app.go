@@ -50,20 +50,26 @@ func (AppState) Fatal(v ...any) {
 	log.Fatal(v)
 }
 
-func (app AppState) getUsers() ([]User, error) {
-	query := `SELECT u_id, u_username, u_email, u_credits FROM users`
+func (app AppState) getUser(userId int) (tmpUser, error) {
+	var u tmpUser
+	err := app.db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", userId)
+	return u, err
+}
+
+func (app AppState) getUsers() ([]tmpUser, error) {
+	query := `SELECT u_id, u_username, u_role, u_credits FROM users`
 
 	rows, err := app.db.Queryx(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var users []User
+	var users []tmpUser
 
 	for rows.Next() {
-		var user User
+		var user tmpUser
 
-		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Credits)
+		err := rows.Scan(&user.ID, &user.Name, &user.Role, &user.Credits)
 		if err != nil {
 			return nil, err
 		}
