@@ -9,7 +9,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"sort"
 	"time"
 
 	"github.com/gorilla/sessions"
@@ -23,22 +22,7 @@ type tmpReservation struct {
 	structs.User
 }
 
-type AppState struct {
-	db        utils.Database
-	templates utils.Templates
-	store     sessions.Store
-	server    string
-}
-
-type queryConfigReservation struct {
-	oneUser      bool
-	oneItem      bool
-	selectionId  int
-	users        bool
-	orderByStart bool
-	orderDesc    bool
-}
-
+// logger
 func (app AppState) setLogger() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
@@ -59,6 +43,52 @@ func (app AppState) Err(format string, a ...interface{}) {
 	log.Output(2, fmt.Sprintf("\tERR:\t"+format, a...))
 }
 
+func (AppState) Fatal(v ...any) {
+	log.Output(2, "FATAL ERROR")
+	log.Fatal(v)
+}
+
+type queryConfigReservation struct {
+	oneUser      bool
+	oneItem      bool
+	selectionId  int
+	users        bool
+	orderByStart bool
+	orderDesc    bool
+}
+
+type queryConfigItems struct {
+	available          bool
+	withCurReservation bool
+	startTime          time.Time
+	endTime            time.Time
+}
+
+type tmpItem2 struct {
+	ID        sql.NullInt64  `db:"r_id"`
+	StartTime sql.NullTime   `db:"r_start_time"`
+	EndTime   sql.NullTime   `db:"r_end_time"`
+	Status    sql.NullString `db:"r_status"`
+	Username  sql.NullString `db:"u_username"`
+	UserID    sql.NullInt64  `db:"u_id"`
+	structs.Item
+}
+
+type tmpItem struct {
+	structs.Item
+	CurrentReservation struct {
+		Valid bool
+		structs.Reservation
+	}
+}
+
+type AppState struct {
+	db        utils.Database
+	templates utils.Templates
+	store     sessions.Store
+	server    string
+}
+
 func (app AppState) hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	uinfo, ok := r.Context().Value("UserInfo").(utils.TmpUser)
 	if !ok || !strings.Contains(uinfo.Role, "ninja") {
@@ -77,11 +107,6 @@ func (app AppState) hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Reques
 		return false
 	}
 	return true
-}
-
-func (AppState) Fatal(v ...any) {
-	log.Output(2, "FATAL ERROR")
-	log.Fatal(v)
 }
 
 func (app AppState) hasAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
@@ -190,31 +215,6 @@ func (app AppState) getReservations(conf queryConfigReservation) ([]structs.Rese
 		return nil, err
 	}
 	return reservations, nil
-}
-
-type queryConfigItems struct {
-	available          bool
-	withCurReservation bool
-	startTime          time.Time
-	endTime            time.Time
-}
-
-type tmpItem2 struct {
-	ID        sql.NullInt64  `db:"r_id"`
-	StartTime sql.NullTime   `db:"r_start_time"`
-	EndTime   sql.NullTime   `db:"r_end_time"`
-	Status    sql.NullString `db:"r_status"`
-	Username  sql.NullString `db:"u_username"`
-	UserID    sql.NullInt64  `db:"u_id"`
-	structs.Item
-}
-
-type tmpItem struct {
-	structs.Item
-	CurrentReservation struct {
-		Valid bool
-		structs.Reservation
-	}
 }
 
 func (app AppState) getItems(conf queryConfigItems) ([]tmpItem, error) {
@@ -364,53 +364,4 @@ func (app AppState) getReservation(id int) (*structs.Reservation, error) {
 	r.EndTime = r.EndTime.In(location)
 	r.CreatedAt = r.CreatedAt.In(location)
 	return &r, nil
-}
-
-func (app AppState) getBigNews() ([]structs.News, error) {
-	newsList, err := app.getAllNews("big_news")
-	if err != nil {
-		return nil, err
-	}
-	sort.Slice(newsList, func(i, j int) bool {
-		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
-	})
-	return newsList, nil
-}
-
-func (app AppState) getSmallNews() ([]structs.News, error) {
-	newsList, err := app.getAllNews("small_news")
-	if err != nil {
-		return nil, err
-	}
-	sort.Slice(newsList, func(i, j int) bool {
-		return newsList[i].CreatedTime.After(newsList[j].CreatedTime)
-	})
-	return newsList, nil
-}
-
-func (app AppState) getAllNews(newsType string) ([]structs.News, error) {
-	query := `
-		SELECT n_id, n_created_time, n_header, n_content, n_author
-		FROM ` + newsType
-
-	rows, err := app.db.Queryx(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var newsList []structs.News
-
-	for rows.Next() {
-		var news structs.News
-
-		err := rows.Scan(&news.ID, &news.CreatedTime, &news.Header, &news.Content, &news.Author)
-		if err != nil {
-			return nil, err
-		}
-		newsList = append(newsList, news)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	return newsList, nil
 }

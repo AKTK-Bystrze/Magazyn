@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bystrze/apps/pages"
+	"bystrze/apps/pages/home"
 	"bystrze/services/structs"
 	"bystrze/services/utils"
 	"context"
@@ -54,7 +56,7 @@ func (data *templateData) SetURL(url string) {
 	data.URL = url
 }
 
-func loadTemplates() {
+func getFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
 		"Now": time.Now,
 		"Before": func(t1, t2 time.Time) bool {
@@ -84,7 +86,40 @@ func loadTemplates() {
 			return strings.Contains(str, substring)
 		},
 	}
+	return funcMap
+}
 
+func loadTemplates() {
+
+	funcMap := template.FuncMap{
+		"Now": time.Now,
+		"Before": func(t1, t2 time.Time) bool {
+			return t1.Before(t2)
+		},
+		"After": func(t1, t2 time.Time) bool {
+			return t1.After(t2)
+		},
+		"AddHours": func(t time.Time, d int) time.Time {
+			return t.Add(time.Duration(d) * time.Hour)
+		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+		"contains": func(substring, str string) bool {
+			return strings.Contains(str, substring)
+		},
+	}
 	patterns := []string{
 		"templates/*.html",
 		"templates/*/*.html",
@@ -139,7 +174,7 @@ func validUserMiddlware(next http.Handler) http.Handler {
 			if r.RequestURI != "/" {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
-			HomePage(w, r)
+			home.HomePage(w, r)
 			return
 		}
 		var uinfo utils.TmpUser
@@ -220,9 +255,6 @@ func main() {
 
 	addr := fmt.Sprintf("%s:%s", os.Args[1], os.Args[2])
 
-	//  TODO: .StrictSlash ???
-	router := mux.NewRouter()
-
 	db, err := sqlx.Open("sqlite3", structs.DATABASE_NAME)
 	if err != nil {
 		app.Fatal(err)
@@ -241,11 +273,12 @@ func main() {
 
 	loadTemplates()
 
+	router := mux.NewRouter()
 	router.HandleFunc("/login", Login).Methods("GET")
 	router.HandleFunc("/token", TokenHandler).Methods("POST", "GET")
 	userRouter := mux.NewRouter()
 	userRouter.Use(validUserMiddlware)
-	userRouter.HandleFunc("/", HomePage).Methods("GET")
+
 	adminRouter := userRouter.PathPrefix("/admin").Subrouter()
 	//  every logged-in user
 	userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
@@ -269,9 +302,7 @@ func main() {
 	//  enforce users with ninja role
 	ninjaRouter := userRouter.PathPrefix("/ninja").Subrouter()
 	ninjaRouter.Use(ninjaHandler)
-	//  ninja
-	ninjaRouter.HandleFunc("/news", CreateNewsHandler).Methods("POST")
-	ninjaRouter.HandleFunc("/news/{newsId}", DeleteNewsHandler).Methods("DELETE")
+
 	//  enforce users with superAdmin role
 	superAdminRouter := userRouter.PathPrefix("/superAdmin").Subrouter()
 	superAdminRouter.Use(superAdminHandler)
@@ -280,7 +311,10 @@ func main() {
 	superAdminRouter.HandleFunc("/users", GetUsers).Methods("GET")
 
 	router.PathPrefix("/").Handler(userRouter)
-
+	pages.CreatePagesApp(app.db, getFuncMap(), app.store, app.templates, addr, "PAGES", userRouter)
+	// //  ninja
+	// ninjaRouter.HandleFunc("/news", pages.CreateNewsHandler).Methods("POST")
+	// ninjaRouter.HandleFunc("/news/{newsId}", pages.DeleteNewsHandler).Methods("DELETE")
 	app.Info("Server starting on %v", addr)
 	app.Fatal(http.ListenAndServe(addr, router))
 }
