@@ -26,7 +26,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	appState.App.RenderTemplate(w, r, "home.html", &struct {
 		BigNews   []BigNewsData
 		SmallNews []news.News
-		*apps.TemplateData
+		apps.TemplateData
 	}{
 		BigNews:   bigNewsData,
 		SmallNews: smallNews,
