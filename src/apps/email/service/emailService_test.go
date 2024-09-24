@@ -1,6 +1,7 @@
-package main
+package service
 
 import (
+	"bystrze/apps/email/appState"
 	"bystrze/services/structs"
 	"testing"
 )
@@ -10,7 +11,7 @@ func TestEmailService(t *testing.T) {
 	receiver := structs.User{
 		ID:    1,
 		Name:  "Name",
-		Email: MAGAZYN_BYSTRZE_EMAIL_ADDR,
+		Email: appState.MAGAZYN_BYSTRZE_EMAIL_ADDR,
 	}
 	result := SendEmail(receiver, "Test email", "This is a test message, please ignore.")
 	if result != nil {

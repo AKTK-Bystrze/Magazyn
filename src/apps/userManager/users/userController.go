@@ -1,11 +1,4 @@
-package main
-
-import (
-	"bystrze/services/structs"
-	"bystrze/services/utils"
-
-	"net/http"
-)
+package users
 
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
 	// search for reserved items in the db

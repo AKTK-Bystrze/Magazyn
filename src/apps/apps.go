@@ -14,6 +14,8 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+const OUT_TIME_FMT = "2006-01-02 15:04:05"
+
 type App struct {
 	Db        utils.Database   //setted by main
 	FuncMap   template.FuncMap //setted by main and shared by apps. Can be appended by app
@@ -118,4 +120,26 @@ func (data *TemplateData) SetUser(uinfo *utils.TmpUser) {
 
 func (data *TemplateData) SetURL(url string) {
 	data.URL = url
+}
+
+func DbBackupHandler(w http.ResponseWriter, r *http.Request) {
+	dbPath := structs.DATABASE_PATH
+	file, err := os.Open(dbPath)
+	if err != nil {
+		app.Err("%v %v", utils.GetUserName(r), err.Error())
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+	defer file.Close()
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(OUT_TIME_FMT)+structs.DATABASE_NAME)
+
+	_, err = io.Copy(w, file)
+	if err != nil {
+		app.Err("%v Error copying file %v", utils.GetUserName(r), err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusNotFound)
+		return
+	}
+
 }

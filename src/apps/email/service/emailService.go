@@ -1,6 +1,7 @@
-package main
+package service
 
 import (
+	"bystrze/apps/email/appState"
 	"bystrze/services/structs"
 	"context"
 	"io"
@@ -12,12 +13,12 @@ import (
 
 func SendEmail(receiver structs.User, subject string, message string) error {
 
-	senderEmail := MAGAZYN_BYSTRZE_EMAIL_ADDR
+	senderEmail := appState.MAGAZYN_BYSTRZE_EMAIL_ADDR
 	senderPassword := os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS")
 
 	receiverEmail := []string{receiver.Email}
-	auth := smtp.PlainAuth("", senderEmail, senderPassword, SMTP_HOST)
-	err := smtp.SendMail(SMTP_HOST+":"+SMTP_PORT, auth, senderEmail, receiverEmail, formatEmailMsg(subject, message))
+	auth := smtp.PlainAuth("", senderEmail, senderPassword, appState.SMTP_HOST)
+	err := smtp.SendMail(appState.SMTP_HOST+":"+appState.SMTP_PORT, auth, senderEmail, receiverEmail, formatEmailMsg(subject, message))
 	return err
 }
 
@@ -26,13 +27,13 @@ func formatEmailMsg(subject string, message string) []byte {
 }
 
 // emailWriter writes the token to email form.
-func emailWriter(ctx context.Context, token, uid, recipient string, w io.Writer) error {
+func EmailWriter(ctx context.Context, token, uid, recipient string, w io.Writer) error {
 	e := &passwordless.Email{
 		Subject: structs.APP_NAME + " signin",
 		To:      recipient,
 	}
 
-	link := app.server + "/token" +
+	link := appState.App.Server + "/token" +
 		"?strategy=email&token=" + token + "&uid=" + uid
 
 	// TODO move it to template

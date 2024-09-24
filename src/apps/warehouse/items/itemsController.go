@@ -1,13 +1,8 @@
-package main
+package items
 
-import (
-	"bystrze/services/utils"
-	"bystrze/services/structs"
-
-	"net/http"
-	"strconv"
-	"time"
-)
+func SearchHandler(w http.ResponseWriter, r *http.Request) {
+	SearchItems(w, r, "")
+}
 
 func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	var location, err = time.LoadLocation("Europe/Warsaw")

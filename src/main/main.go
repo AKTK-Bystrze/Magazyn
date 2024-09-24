@@ -34,28 +34,6 @@ var (
 	SMTP_PORT                   = os.Getenv("SMTP_PORT")
 )
 
-func SearchHandler(w http.ResponseWriter, r *http.Request) {
-	SearchItems(w, r, "")
-}
-
-type templateData struct {
-	UserInfo utils.TmpUser
-	URL      string
-}
-
-type templateDataIfce interface {
-	SetUser(*utils.TmpUser)
-	SetURL(string)
-}
-
-func (data *templateData) SetUser(uinfo *utils.TmpUser) {
-	data.UserInfo = *uinfo
-}
-
-func (data *templateData) SetURL(url string) {
-	data.URL = url
-}
-
 func getFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
 		"Now": time.Now,
@@ -139,103 +117,6 @@ func loadTemplates() {
 	}
 }
 
-func (app AppState) renderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data templateDataIfce) {
-	if uinfo, ok := r.Context().Value("UserInfo").(utils.TmpUser); ok {
-		data.SetUser(&uinfo)
-		data.SetURL(r.URL.String())
-		err := app.templates.ExecuteTemplate(w, tmpl, data)
-		if err != nil {
-			app.Err("%v %v", utils.GetUserName(r), err.Error())
-			http.Error(w, "Template error", http.StatusInternalServerError)
-		}
-	} else {
-		err := app.templates.ExecuteTemplate(w, tmpl, data)
-		if err != nil {
-			app.Err("%v %v", utils.GetUserName(r), err.Error())
-			http.Error(w, "Template error", http.StatusInternalServerError)
-		}
-	}
-}
-
-func (app AppState) renderTemplateNoData(w http.ResponseWriter, tmpl string) {
-	err := app.templates.ExecuteTemplate(w, tmpl, nil)
-	if err != nil {
-		app.Err(err.Error())
-		http.Error(w, "Template error", http.StatusInternalServerError)
-	}
-}
-
-func validUserMiddlware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := app.store.Get(r, structs.SESSION_NAME)
-		uid, ok := session.Values["UserInfo"].(int)
-		if !ok {
-			app.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-			if r.RequestURI != "/" {
-				http.Redirect(w, r, "/", http.StatusSeeOther)
-			}
-			home.HomePage(w, r)
-			return
-		}
-		var uinfo utils.TmpUser
-		err := app.db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
-
-		if err != nil || !areRolesValid(uinfo.Role) {
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-			return
-		}
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, "UserInfo", uinfo)
-		app.Info("%v %v %v %v", uinfo.Name, strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func isRoleValid(userRole string) bool {
-	for _, privilige := range structs.PRIVILIGES {
-		if strings.Compare(userRole, privilige) == 0 {
-			return true
-		}
-	}
-	return false
-}
-
-func areRolesValid(priviliges string) bool {
-	priviligesList := strings.Fields(priviliges)
-	var newRole string
-	for _, p := range priviligesList {
-		if isRoleValid(string(p)) {
-			newRole += p
-		}
-	}
-	priviliges = strings.ReplaceAll(priviliges, " ", "")
-	return strings.Compare(newRole, priviliges) == 0
-}
-
-func adminHandler(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.hasAdminPrivilege(w, r) {
-			h.ServeHTTP(w, r)
-		}
-	})
-}
-
-func ninjaHandler(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.hasNinjaPrivilege(w, r) {
-			h.ServeHTTP(w, r)
-		}
-	})
-}
-
-func superAdminHandler(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.hasSuperAdminPrivilege(w, r) {
-			h.ServeHTTP(w, r)
-		}
-	})
-}
-
 //  TODO: this is unused, left as a reminder how to build wrappers for handler
 /*
 func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, r *http.Request) {
@@ -262,14 +143,6 @@ func main() {
 	defer db.Close()
 	app.db = db
 	app.server = os.Args[3]
-
-	ValidateCOOKIE_KEY()
-	app.store = sessions.NewCookieStore(COOKIE_KEY)
-	tokStore := passwordless.NewMemStore()
-	pw = passwordless.New(tokStore)
-
-	SetTokenTransportMean()
-	app.setLogger()
 
 	loadTemplates()
 
