@@ -1,17 +1,17 @@
 package auth
 
 import (
+	"bystrze/apps/common"
+	"bystrze/apps/common/models"
+	sessionPkg "bystrze/apps/common/session"
 	emailConst "bystrze/apps/email/appState"
 	emailService "bystrze/apps/email/service"
 	app "bystrze/apps/userManager/appState"
-	"bystrze/apps/userManager/users"
-	"bystrze/services/structs"
-	"bystrze/services/utils"
+
 	"fmt"
 	"net/http"
 	"net/smtp"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gorilla/securecookie"
@@ -23,59 +23,14 @@ var (
 	ERROR_MSG_TOKEN_NOT_FOUND = "token_not_found"
 )
 
-// todo should tmpUser and User be both in use insted of one?
-type TmpUser struct {
-	ID      int64  `db:"u_id"`
-	Name    string `db:"u_username"`
-	Role    string `db:"u_role"`
-	Credits int    `db:"u_credits"`
-}
-
-func Login(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.App.Store.Get(r, structs.SESSION_NAME)
-	if utils.IsSignedIn(session) {
-		userID := session.Values["UserInfo"].(int)
-		u, err := users.GetUser(userID)
-		if err != nil {
-			app.App.Err("%v %v", utils.GetUserName(r), err.Error())
-			http.Error(w, "Template error", http.StatusInternalServerError)
-			return
-		}
-		target := "/dashboard"
-		if strings.Contains(u.Role, "admin") {
-			target = "/admin/reservations"
-		}
-		http.Redirect(w, r, target, http.StatusSeeOther)
-		return
-	} else {
-		app.App.Templates.ExecuteTemplate(w, "login.html", struct {
-			Strategies map[string]passwordless.Strategy
-			Msg        string
-		}{
-			Strategies: app.Pw.ListStrategies(nil),
-			Msg:        "",
-		})
-		return
-	}
-}
-
-func Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.App.Store.Get(r, structs.SESSION_NAME)
-	for key := range session.Values {
-		delete(session.Values, key)
-	}
-	session.Save(r, w)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
 func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	target := "/dashboard"
-	var u utils.TmpUser
-	session, err := app.App.Store.Get(r, structs.SESSION_NAME)
+	var u models.User
+	session, err := app.App.Store.Get(r, common.SESSION_NAME)
 	if err != nil {
-		app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+		app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 		c := &http.Cookie{
-			Name:     structs.SESSION_NAME,
+			Name:     common.SESSION_NAME,
 			Value:    "",
 			Path:     "/",
 			Expires:  time.Unix(0, 0),
@@ -85,10 +40,10 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, c)
 	}
 
-	if utils.IsSignedIn(session) {
+	if sessionPkg.IsSignedIn(session) {
 		err = app.App.Db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
 		if err != nil {
-			app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -122,7 +77,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			err = app.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = ?", recipient)
 		}
 		if err != nil {
-			app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 			if err := app.App.Templates.ExecuteTemplate(w, "tokenGenerated.html", struct {
 				Strategy   string
 				Recipient  string
@@ -134,7 +89,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 				UserID:     uid,
 				TokenError: tokenError,
 			}); err != nil {
-				app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+				app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 			return
@@ -157,7 +112,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		err := app.Pw.RequestToken(ctx, strategy, uid, recipient)
 
 		if err != nil {
-			app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -171,7 +126,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 
 			err = app.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
 			if err != nil {
-				app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+				app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
@@ -195,7 +150,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		} else if err != nil {
 			// Some other unexpected error occurred.
-			app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		} else {
@@ -220,20 +175,20 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:     uid,
 		TokenError: tokenError,
 	}); err != nil {
-		app.App.Err("%v %v", utils.GetUserName(r), err.Error())
+		app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
 
 func SetTokenTransportMean() {
-	if structs.SEND_COOKIE_TO_STDOUT {
+	if common.SEND_COOKIE_TO_STDOUT {
 		app.App.Info("No email transport specified, printing codes to stdout")
 		app.Pw.SetTransport("debug", passwordless.LogTransport{
 			MessageFunc: func(token, uid string) string {
 				return fmt.Sprintf("\tDEBUG:\t Login at %s/token?strategy=debug&token=%s&uid=%s",
 					app.App.Server, token, uid)
 			},
-		}, passwordless.NewCrockfordGenerator(structs.TOKEN_LENGTH), structs.COOKIE_VALIDITY_TIME_HOURS*time.Hour)
+		}, passwordless.NewCrockfordGenerator(common.TOKEN_LENGTH), common.COOKIE_VALIDITY_TIME_HOURS*time.Hour)
 	} else {
 		app.App.Info("Using email transport via %s", emailConst.MAGAZYN_BYSTRZE_EMAIL_ADDR)
 		app.Pw.SetTransport("email", passwordless.NewSMTPTransport(
@@ -245,17 +200,13 @@ func SetTokenTransportMean() {
 				os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS"),
 				emailConst.SMTP_HOST),
 			emailService.EmailWriter,
-		), passwordless.NewCrockfordGenerator(structs.TOKEN_LENGTH), structs.COOKIE_VALIDITY_TIME_HOURS*time.Minute)
+		), passwordless.NewCrockfordGenerator(common.TOKEN_LENGTH), common.COOKIE_VALIDITY_TIME_HOURS*time.Minute)
 	}
 }
 
 func ValidateCOOKIE_KEY() {
 	if len(app.COOKIE_KEY) == 0 {
 		app.App.Err("KEY_COOKIE_STORE not defined; using random key")
-		app.COOKIE_KEY = securecookie.GenerateRandomKey(structs.COOKIE_KEY_LENGTH)
+		app.COOKIE_KEY = securecookie.GenerateRandomKey(common.COOKIE_KEY_LENGTH)
 	}
-}
-
-func IsSignedIn(s *sessions.Session) bool {
-	return s != nil && s.Values["UserInfo"] != nil
 }

@@ -1,4 +1,4 @@
-package main
+package common
 
 const (
 	COOKIE_VALIDITY_TIME_HOURS = 6
@@ -11,3 +11,12 @@ const (
 	DATABASE_NAME = "magazyn.db"
 	DATABASE_PATH = "./magazyn.db"
 )
+
+const (
+	ADMIN      = "admin"
+	NINJA      = "ninja"
+	USER       = "user"
+	SUPERADMIN = "superAdmin"
+)
+
+var PRIVILIGES = []string{ADMIN, NINJA, USER, SUPERADMIN}

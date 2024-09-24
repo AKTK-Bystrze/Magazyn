@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	App                         apps.App
-	Pw                          Passwordless
-	COOKIE_KEY                  []byte
+	App        apps.App
+	Pw         Passwordless
+	COOKIE_KEY []byte
 )
 
 type Passwordless interface {
@@ -30,7 +30,6 @@ const (
 	COOKIE_KEY_LENGTH          = 16
 
 	APP_NAME      = "E-magazyn Bystrze"
-	SESSION_NAME  = "magazynBystrze"
 	DATABASE_NAME = "magazyn.db"
 	DATABASE_PATH = "./magazyn.db"
 )

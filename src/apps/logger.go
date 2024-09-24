@@ -1,8 +1,10 @@
 package apps
 
 import (
+	"bystrze/apps/common/session"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -24,6 +26,10 @@ func (App) Warn(format string, a ...interface{}) {
 
 func (app App) Err(format string, a ...interface{}) {
 	log.Output(2, fmt.Sprintf("\tERR:\t"+format, a...))
+}
+
+func (app App) ErrSession(r *http.Request, e error) {
+	log.Output(2, fmt.Sprintf("\tERR:\t %v %v", session.GetSessionUserName(r), e.Error()))
 }
 
 func (App) Fatal(v ...any) {

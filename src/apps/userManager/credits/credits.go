@@ -1,8 +1,9 @@
 package credits
 
 import (
-	app "bystrze/apps/userManager/appState"
-	"bystrze/apps/warehouse/items"
+	"bystrze/apps/common/models"
+	"bystrze/apps/userManager/appState"
+	"net/http"
 
 	"errors"
 	"math"
@@ -28,56 +29,52 @@ const (
 	wetsuitItemCost    = 1
 )
 
-func updateUserCredits(reservation structs.Reservation, newCredits int, w http.ResponseWriter) error {
+func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.ResponseWriter) error {
 	u := reservation.User
 	var oldCredits = u.Credits
-	result, err := app.db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, newCredits, u.ID)
+	result, err := appState.App.Db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, newCredits, u.ID)
 	if err != nil {
-		app.Err(err.Error())
+		appState.App.Err(err.Error())
 		http.Error(w, "Cant update users credits", http.StatusBadRequest)
 		return err
 	}
 	numRows, err := result.RowsAffected()
 	if err != nil || numRows != 1 {
 		if err != nil {
-			app.Err(err.Error())
+			appState.App.Err(err.Error())
 		} else {
-			app.Err("Failed to update user credits %v", err)
+			appState.App.Err("Failed to update user credits %v", err)
 		}
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
 	if err != nil {
-		app.Err(err.Error())
+		appState.App.Err(err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
-	app.Info("%v Updated user (id: %v) credits from %v to %v", u.Name, u.ID, oldCredits, newCredits)
+	appState.App.Info("%v Updated user (id: %v) credits from %v to %v", u.Name, u.ID, oldCredits, newCredits)
 	return nil
 }
 
-func (app AppState) getUserCredits(id int) (int, error) {
+func getUserCredits(id int) (int, error) {
 	query := `SELECT u_credits FROM users WHERE u_id = ?`
-	row := app.db.QueryRow(query, id)
+	row := appState.App.Db.QueryRow(query, id)
 	var credits int
 	err := row.Scan(&credits)
 	if err != nil {
-		app.Err(err.Error())
+		appState.App.Err(err.Error())
 		return 0, err
 	}
 	return credits, nil
 }
 
-func CalculateRentalCost(itemID int, start_time time.Time, end_time time.Time) (int, error) {
-	item, err := items.GetItem(itemID)
-	if err != nil {
-		return 0, err
-	}
+func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.Time) (int, error) {
 	var rentalCost int
 	duration := end_time.Sub(start_time)
-	rentalCost, err = getItemRentalCost(item.Type)
+	rentalCost, err := getItemRentalCost(item.Type)
 	days := int(math.Max(duration.Hours()/24, 1))
-	app.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type, start_time, end_time, days, rentalCost*days)
+	appState.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type, start_time, end_time, days, rentalCost*days)
 	return rentalCost * days, err
 }
 
@@ -100,7 +97,7 @@ func getItemRentalCost(itemType string) (int, error) {
 	case wetsuitItemType:
 		return wetsuitItemCost, nil
 	default:
-		app.App.Err("unknown item type", itemType)
+		appState.App.Err("unknown item type", itemType)
 		return 0, errors.New("unknown item type")
 	}
 }
@@ -108,7 +105,7 @@ func getItemRentalCost(itemType string) (int, error) {
 func CanRent(userID int, rentalCost int) (bool, int, error) {
 	userCredits, err := GetUserCredits(userID)
 	canRentResult := (userCredits > rentalCost)
-	app.App.Debug("userCredits %v rentalCost %v canRent %v", userCredits, rentalCost, canRentResult)
+	appState.App.Debug("userCredits %v rentalCost %v canRent %v", userCredits, rentalCost, canRentResult)
 	return canRentResult, userCredits, err
 }
 
@@ -118,11 +115,11 @@ func GetUserCredits(userID int) (int, error) {
 
 func retriveUserCredits(userId int) (int, error) {
 	query := `SELECT u_credits FROM users WHERE u_id = ?`
-	row := app.App.Db.QueryRow(query, userId)
+	row := appState.App.Db.QueryRow(query, userId)
 	var credits int
 	err := row.Scan(&credits)
 	if err != nil {
-		app.App.Err(err.Error())
+		appState.App.Err(err.Error())
 		return 0, err
 	}
 	return credits, nil

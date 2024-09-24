@@ -1,45 +1,52 @@
 package apps
 
 import (
-	"bystrze/services/utils"
+	"bystrze/apps/common/models"
+	"bystrze/apps/common/session"
+	"database/sql"
 	"errors"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/jmoiron/sqlx"
 )
 
 const OUT_TIME_FMT = "2006-01-02 15:04:05"
 
 type App struct {
-	Db        utils.Database   //setted by main
+	Db        Database //setted by main
+	DbPath    string   //setted by main
+	DbName    string
 	FuncMap   template.FuncMap //setted by main and shared by apps. Can be appended by app
 	Store     sessions.Store   //setted by main and shared by apps
 	Server    string           //setted by main. *Do app need it?
 	AppName   string           //setted by main
 	Router    *mux.Router      //setted by main, updated by app
 	Logger    *log.Logger      //setted by app
-	Templates utils.Templates  //setted by app
+	Templates Templates        //setted by app
 }
 
 func (app App) RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data TemplateDataIfce) {
-	if uinfo, ok := r.Context().Value("UserInfo").(utils.TmpUser); ok {
+	if uinfo, ok := r.Context().Value("UserInfo").(models.User); ok {
 		data.SetUser(&uinfo)
 		data.SetURL(r.URL.String())
 		err := app.Templates.ExecuteTemplate(w, tmpl, data)
 		if err != nil {
-			app.Err("%v %v", utils.GetUserName(r), err.Error())
+			app.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
 		}
 	} else {
 		err := app.Templates.ExecuteTemplate(w, tmpl, data)
 		if err != nil {
-			app.Err("%v %v", utils.GetUserName(r), err.Error())
+			app.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
 		}
 	}
@@ -105,16 +112,16 @@ func (app App) RenderTemplateNoData(w http.ResponseWriter, tmpl string) {
 }
 
 type TemplateData struct {
-	UserInfo utils.TmpUser
+	UserInfo models.User
 	URL      string
 }
 
 type TemplateDataIfce interface {
-	SetUser(*utils.TmpUser)
+	SetUser(*models.User)
 	SetURL(string)
 }
 
-func (data *TemplateData) SetUser(uinfo *utils.TmpUser) {
+func (data *TemplateData) SetUser(uinfo *models.User) {
 	data.UserInfo = *uinfo
 }
 
@@ -122,24 +129,39 @@ func (data *TemplateData) SetURL(url string) {
 	data.URL = url
 }
 
-func DbBackupHandler(w http.ResponseWriter, r *http.Request) {
-	dbPath := structs.DATABASE_PATH
+func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
+	dbPath := a.DbPath
 	file, err := os.Open(dbPath)
 	if err != nil {
-		app.Err("%v %v", utils.GetUserName(r), err.Error())
+		a.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
 	}
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(OUT_TIME_FMT)+structs.DATABASE_NAME)
+	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(OUT_TIME_FMT)+a.DbName)
 
 	_, err = io.Copy(w, file)
 	if err != nil {
-		app.Err("%v Error copying file %v", utils.GetUserName(r), err)
+		a.Err("%v Error copying file %v", session.GetSessionUserName(r), err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusNotFound)
 		return
 	}
 
+}
+
+type Database interface {
+	Exec(query string, args ...any) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
+	Query(query string, args ...any) (*sql.Rows, error)
+	Get(dest interface{}, query string, args ...interface{}) error
+	Prepare(query string) (*sql.Stmt, error)
+	Unsafe() *sqlx.DB
+	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
+	QueryRowx(query string, args ...interface{}) *sqlx.Row
+}
+
+type Templates interface {
+	ExecuteTemplate(wr io.Writer, name string, data any) error
 }

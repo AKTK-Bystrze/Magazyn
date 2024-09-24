@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bystrze/apps/common"
+	"bystrze/apps/email"
+	"bystrze/apps/email/service"
 	"bystrze/apps/pages"
-	"bystrze/apps/pages/home"
-	"bystrze/services/structs"
-	"bystrze/services/utils"
-	"context"
+	"bystrze/apps/userManager"
+	"bystrze/apps/warehouse"
 	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -19,17 +21,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
-	"github.com/johnsto/go-passwordless/v2"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
-	pw                          utils.Passwordless
 	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
-	app                         AppState
-	tmpl                        *template.Template
 	MAGAZYN_BYSTRZE_EMAIL_ADDR  = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
-	MAGAZYN_BYSTRZE_EMAIL_LOGIN = utils.GetEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
+	MAGAZYN_BYSTRZE_EMAIL_LOGIN = service.GetEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
 	SMTP_HOST                   = os.Getenv("SMTP_HOST")
 	SMTP_PORT                   = os.Getenv("SMTP_PORT")
 )
@@ -67,7 +65,7 @@ func getFuncMap() template.FuncMap {
 	return funcMap
 }
 
-func loadTemplates() {
+func loadTemplates() *template.Template {
 
 	funcMap := template.FuncMap{
 		"Now": time.Now,
@@ -111,22 +109,12 @@ func loadTemplates() {
 		files = append(files, ff...)
 	}
 	var err error
-	app.templates, err = template.New("").Funcs(funcMap).ParseFiles(files...)
+	templates, err := template.New("").Funcs(funcMap).ParseFiles(files...)
 	if err != nil {
-		app.Fatal("Error parsing templates: %v", err)
+		log.Fatal("Error parsing templates: " + err.Error())
 	}
+	return templates
 }
-
-//  TODO: this is unused, left as a reminder how to build wrappers for handler
-/*
-func loggedUserHandler(h func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-  return func(w http.ResponseWriter, r *http.Request) {
-    if app.checkLoggedIn(w, r) {
-      h(w, r)
-    }
-  }
-}
-*/
 
 func main() {
 	if len(os.Args) != 4 {
@@ -135,59 +123,24 @@ func main() {
 	}
 
 	addr := fmt.Sprintf("%s:%s", os.Args[1], os.Args[2])
-
-	db, err := sqlx.Open("sqlite3", structs.DATABASE_NAME)
+	db, err := sqlx.Open("sqlite3", common.DATABASE_NAME)
 	if err != nil {
-		app.Fatal(err)
+		log.Fatal(err)
 	}
 	defer db.Close()
-	app.db = db
-	app.server = os.Args[3]
-
-	loadTemplates()
-
+	server := os.Args[3]
+	store := sessions.NewCookieStore(COOKIE_KEY)
+	templates := loadTemplates()
 	router := mux.NewRouter()
-	router.HandleFunc("/login", Login).Methods("GET")
-	router.HandleFunc("/token", TokenHandler).Methods("POST", "GET")
-	userRouter := mux.NewRouter()
-	userRouter.Use(validUserMiddlware)
+	// router.Use(access.ValidUserMiddlware) //todo find place to use this validator
 
-	adminRouter := userRouter.PathPrefix("/admin").Subrouter()
-	//  every logged-in user
-	userRouter.HandleFunc("/dashboard", UserDashboard).Methods("GET")
-	userRouter.HandleFunc("/search", SearchHandler).Methods("GET", "POST")
-	userRouter.HandleFunc("/logout", Logout).Methods("GET")
-	userRouter.HandleFunc("/reserve", ReserveItem).Methods("POST")
+	email.CreateEmailApp(db, getFuncMap(), store, templates, server, "PAGES", router,
+		MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
+	userManager.CreateUserManagerApp(db, getFuncMap(), store, templates, server, "PAGES", router,
+		COOKIE_KEY)
+	warehouse.CreateWarehouseApp(db, getFuncMap(), store, templates, server, "WAREHOUSE", router)
+	pages.CreatePagesApp(db, getFuncMap(), store, templates, server, "PAGES", router)
 
-	//  enforce users with admin role
-	adminRouter.Use(adminHandler)
-	//  admin
-	adminRouter.HandleFunc("/reservations", AdminDashboardHandler).Methods("GET")
-	adminRouter.HandleFunc("/setStatus", SetStatusHandler).Methods("PUT")
-	adminRouter.HandleFunc("/items", AdminItemsHandler).Methods("GET")
-	adminRouter.HandleFunc("/item/status", AdminItemStatusHandler).Methods("POST")
-	adminRouter.HandleFunc("/item/show", AdminShowItemHandler).Methods("GET")
-	adminRouter.HandleFunc("/user/show", AdminShowUserHandler).Methods("GET")
-	adminRouter.HandleFunc("/reservation/show", ReservationHandler).Methods("GET")
-	adminRouter.HandleFunc("/db/backup", DbBackupHandler).Methods("GET")
-	adminRouter.HandleFunc("/inventory", Inventory).Methods("GET")
-
-	//  enforce users with ninja role
-	ninjaRouter := userRouter.PathPrefix("/ninja").Subrouter()
-	ninjaRouter.Use(ninjaHandler)
-
-	//  enforce users with superAdmin role
-	superAdminRouter := userRouter.PathPrefix("/superAdmin").Subrouter()
-	superAdminRouter.Use(superAdminHandler)
-	//  superAdmin
-	superAdminRouter.HandleFunc("/users", UpdateUser).Methods("PUT")
-	superAdminRouter.HandleFunc("/users", GetUsers).Methods("GET")
-
-	router.PathPrefix("/").Handler(userRouter)
-	pages.CreatePagesApp(app.db, getFuncMap(), app.store, app.templates, addr, "PAGES", userRouter)
-	// //  ninja
-	// ninjaRouter.HandleFunc("/news", pages.CreateNewsHandler).Methods("POST")
-	// ninjaRouter.HandleFunc("/news/{newsId}", pages.DeleteNewsHandler).Methods("DELETE")
-	app.Info("Server starting on %v", addr)
-	app.Fatal(http.ListenAndServe(addr, router))
+	log.Print("Server starting on: " + addr)
+	log.Fatal(http.ListenAndServe(addr, router))
 }

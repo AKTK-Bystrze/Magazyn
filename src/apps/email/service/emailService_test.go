@@ -1,14 +1,14 @@
 package service
 
 import (
+	"bystrze/apps/common/models"
 	"bystrze/apps/email/appState"
-	"bystrze/services/structs"
 	"testing"
 )
 
 func TestEmailService(t *testing.T) {
 	t.Skip("SKIP TEST")
-	receiver := structs.User{
+	receiver := models.User{
 		ID:    1,
 		Name:  "Name",
 		Email: appState.MAGAZYN_BYSTRZE_EMAIL_ADDR,

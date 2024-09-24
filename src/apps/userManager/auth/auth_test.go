@@ -152,7 +152,7 @@ package auth
 
 // func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 // 	mockStore := new(MockStore)
-// 	session := sessions.NewSession(nil, structs.SESSION_NAME)
+// 	session := sessions.NewSession(nil, structs.common.SESSION_NAME)
 // 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 	mockStore.session = *session
 // 	mockTemplate := new(mockTemplate)
@@ -192,7 +192,7 @@ package auth
 
 // 	for _, tc := range testCases {
 // 		mockStore := new(MockStore)
-// 		session := sessions.NewSession(nil, structs.SESSION_NAME)
+// 		session := sessions.NewSession(nil, structs.common.SESSION_NAME)
 // 		session.Values = map[interface{}]interface{}{}
 // 		session.Values["UserInfo"] = TEST_UID_NB
 // 		session.Values["recipient"] = tc.role
@@ -234,7 +234,7 @@ package auth
 
 // func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T) {
 // 	mockStore := new(MockStore)
-// 	session := sessions.NewSession(nil, structs.SESSION_NAME)
+// 	session := sessions.NewSession(nil, structs.common.SESSION_NAME)
 // 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 	session.Values["recipient"] = TEST_EMAIL
 // 	mockStore.session = *session
@@ -281,7 +281,7 @@ package auth
 
 // 	for _, tc := range testCases {
 // 		mockStore := new(MockStore)
-// 		session := sessions.NewSession(new(MockSessionStore), structs.SESSION_NAME)
+// 		session := sessions.NewSession(new(MockSessionStore), structs.common.SESSION_NAME)
 // 		session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 		session.Values["recipient"] = tc.role
 // 		mockStore.session = *session
@@ -329,7 +329,7 @@ package auth
 
 // func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *testing.T) {
 // 	mockStore := new(MockStore)
-// 	session := sessions.NewSession(new(MockSessionStore), structs.SESSION_NAME)
+// 	session := sessions.NewSession(new(MockSessionStore), structs.common.SESSION_NAME)
 // 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 	session.Values["recipient"] = TEST_ROLE
 // 	mockStore.session = *session
@@ -388,7 +388,7 @@ package auth
 
 // 	for _, tc := range testCases {
 // 		mockStore := new(MockStore)
-// 		session := sessions.NewSession(new(MockSessionStore), structs.SESSION_NAME)
+// 		session := sessions.NewSession(new(MockSessionStore), structs.common.SESSION_NAME)
 // 		session.Values = map[interface{}]interface{}{}
 // 		session.Values["UserInfo"] = TEST_UID_NB
 // 		session.Values["recipient"] = tc.role

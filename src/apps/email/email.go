@@ -3,16 +3,15 @@ package email
 import (
 	"bystrze/apps"
 	"bystrze/apps/email/appState"
-	"bystrze/services/utils"
 	"html/template"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
-func CreateEmailApp(db utils.Database, funcMap template.FuncMap, store sessions.Store,
-	t utils.Templates, server string, appName string, router *mux.Router,
-	MAGAZYN_BYSTRZE_EMAIL_ADDR, string, MAGAZYN_BYSTRZE_EMAIL_LOGIN string, SMTP_HOST string, SMTP_PORT string) apps.App {
+func CreateEmailApp(db apps.Database, funcMap template.FuncMap, store sessions.Store,
+	t apps.Templates, server string, appName string, router *mux.Router,
+	MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN string, SMTP_HOST string, SMTP_PORT string) apps.App {
 	appState.App = apps.App{
 		Db:        db,
 		FuncMap:   funcMap,

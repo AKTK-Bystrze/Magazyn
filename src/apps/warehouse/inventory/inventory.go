@@ -1,24 +1,34 @@
 package inventory
 
+import (
+	"bystrze/apps"
+	"bystrze/apps/common/models"
+	"bystrze/apps/common/session"
+	"bystrze/apps/email/appState"
+	"bystrze/apps/warehouse/items"
+	"encoding/json"
+	"net/http"
+)
+
 func Inventory(w http.ResponseWriter, r *http.Request) {
-	itemsWithReservations, err := app.getItems(queryConfigItems{withCurReservation: false})
+	itemsWithReservations, err := items.GetItems(models.QueryConfigItems{WithCurReservation: false})
 	if err != nil {
-		app.Err("%v %v", utils.GetUserName(r), err.Error())
+		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
-	var items []structs.Item
+	var items []models.Item
 	for _, record := range itemsWithReservations {
 		items = append(items, record.Item)
 	}
 	json, err := json.Marshal(items)
 	if err != nil {
-		app.Err("%v Error parsing items to json %v", utils.GetUserName(r), err)
+		appState.App.Err("%v Error parsing items to json %v", session.GetSessionUserName(r), err)
 		return
 	}
-	app.renderTemplate(w, r, "inventory.html", &struct {
+	appState.App.RenderTemplate(w, r, "inventory.html", &struct {
 		Json string
-		templateData
+		apps.TemplateData
 	}{
 		Json: string(json),
 	})
