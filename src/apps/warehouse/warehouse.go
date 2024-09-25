@@ -32,26 +32,32 @@ func CreateWarehouseApp(db apps.Database, funcMap template.FuncMap, store sessio
 }
 
 func updateRouter(router *mux.Router) *mux.Router {
-	//items user
-	rentalUserRouter := router.PathPrefix("/rental").Subrouter()
+	//rental
+	rentalRouter := router.PathPrefix("/rental").Subrouter()
+	rentalRouter.Use(access.ValidUserMiddlware)
+	//rental user
+	rentalUserRouter := rentalRouter.PathPrefix("/user").Subrouter()
 	rentalUserRouter.HandleFunc("/search", items.SearchHandler).Methods("GET", "POST")
 	rentalUserRouter.HandleFunc("/reserve", items.ReserveItem).Methods("POST")
-	//items Admin
-	itemRouter := router.PathPrefix("/items").Subrouter()
-	itemRouter.Use(access.AdminHandler)
-	itemRouter.HandleFunc("/", controllers.AdminItemsHandler).Methods("GET") //todo refactor controlles package from usersManager here?
-	itemRouter.HandleFunc("/item/status", controllers.AdminItemStatusHandler).Methods("POST")
-	itemRouter.HandleFunc("/item/show", controllers.AdminShowItemHandler).Methods("GET")
 	//rental admin
-	rentalAdminRouter := rentalUserRouter.PathPrefix("/admin").Subrouter()
+	rentalAdminRouter := rentalRouter.PathPrefix("/admin").Subrouter()
 	rentalAdminRouter.Use(access.AdminHandler)
 	rentalAdminRouter.HandleFunc("/reservations", controllers.AdminDashboardHandler).Methods("GET")
 	rentalAdminRouter.HandleFunc("/setStatus", rental.SetStatusHandler).Methods("PUT")
 	rentalAdminRouter.HandleFunc("/reservation/show", rental.ReservationHandler).Methods("GET")
+	//items admin
+	itemRouter := router.PathPrefix("/items").Subrouter()
+	itemRouter.Use(access.ValidUserMiddlware) //todo ??
+	itemRouter.Use(access.AdminHandler)
+	itemRouter.HandleFunc("/admin", controllers.AdminItemsHandler).Methods("GET") //todo refactor controlles package from usersManager here?
+	itemRouter.HandleFunc("/admin/item/status", controllers.AdminItemStatusHandler).Methods("POST")
+	itemRouter.HandleFunc("/admin/item/show", controllers.AdminShowItemHandler).Methods("GET")
+
 	//inventory
 	inventoryRouter := router.PathPrefix("/inventory").Subrouter()
+	inventoryRouter.Use(access.ValidUserMiddlware) //todo??
 	inventoryRouter.Use(access.AdminHandler)
-	inventoryRouter.HandleFunc("/", inventory.Inventory).Methods("GET")
+	inventoryRouter.HandleFunc("/admin", inventory.Inventory).Methods("GET") //todo?? will it work
 
 	return router
 }

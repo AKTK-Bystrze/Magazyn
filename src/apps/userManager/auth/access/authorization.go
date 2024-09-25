@@ -17,7 +17,7 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
 			appState.App.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-			if r.RequestURI != "/" {
+			if r.RequestURI != "/pages/home" {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
 			home.HomePage(w, r)

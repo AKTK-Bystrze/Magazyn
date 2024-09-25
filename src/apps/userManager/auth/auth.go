@@ -24,7 +24,7 @@ var (
 )
 
 func TokenHandler(w http.ResponseWriter, r *http.Request) {
-	target := "/dashboard"
+	target := "/users/user/dashboard"
 	var u models.User
 	session, err := app.App.Store.Get(r, common.SESSION_NAME)
 	if err != nil {

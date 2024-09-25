@@ -7,6 +7,7 @@ import (
 	"bystrze/apps/pages/news"
 	"bystrze/apps/userManager/auth/access"
 	"html/template"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -30,10 +31,19 @@ func CreatePagesApp(db apps.Database, funcMap template.FuncMap, store sessions.S
 }
 
 func updateRouter(router *mux.Router) *mux.Router {
-	router.HandleFunc("/", home.HomePage).Methods("GET")
-	pagesRouter := router.PathPrefix("/pages").Subrouter()
-	pagesRouter.Use(access.NinjaHandler)
-	pagesRouter.HandleFunc("/news", news.CreateNewsHandler).Methods("POST")
-	pagesRouter.HandleFunc("/news/{newsId}", news.DeleteNewsHandler).Methods("DELETE")
+	router.HandleFunc("/", redirectToHome).Methods("GET")
+
+	allRouter := router.PathPrefix("/pages").Subrouter()
+	allRouter.Use(access.ValidUserMiddlware)
+	allRouter.HandleFunc("/home", home.HomePage).Methods("GET")
+
+	ninjaRouter := allRouter.PathPrefix("/ninja").Subrouter()
+	ninjaRouter.HandleFunc("/news", news.CreateNewsHandler).Methods("POST")
+	ninjaRouter.HandleFunc("/news/{newsId}", news.DeleteNewsHandler).Methods("DELETE")
 	return router
+}
+
+func redirectToHome(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/pages/home", http.StatusTemporaryRedirect)
+	return
 }

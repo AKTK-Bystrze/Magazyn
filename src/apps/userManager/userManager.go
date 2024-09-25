@@ -43,17 +43,20 @@ func updateRouter(router *mux.Router) *mux.Router {
 	router.HandleFunc("/token", auth.TokenHandler).Methods("POST", "GET")
 
 	//users privilige
-	userRouter := router.PathPrefix("/users").Subrouter()
+	usersRouter := router.PathPrefix("/users").Subrouter()
+	usersRouter.Use(access.ValidUserMiddlware)
+	userRouter := usersRouter.PathPrefix("/user").Subrouter()
 	userRouter.HandleFunc("/logout", controllers.Logout).Methods("GET")
 	userRouter.HandleFunc("/dashboard", controllers.UserDashboard).Methods("GET")
 
 	//admin privilige
-	adminRouter := router.PathPrefix("/admin").Subrouter()
+	adminRouter := usersRouter.PathPrefix("/admin").Subrouter()
 	adminRouter.Use(access.AdminHandler)
 	adminRouter.HandleFunc("/user/show", controllers.AdminShowUserHandler).Methods("GET")
 
 	// superAdmin privilige
-	superAdminRouter := userRouter.PathPrefix("/superAdmin").Subrouter()
+	superAdminRouter := usersRouter.PathPrefix("/superAdmin").Subrouter()
+	// superAdminRouter.Use(access.ValidUserMiddlware) //tood???
 	superAdminRouter.Use(access.SuperAdminHandler)
 	//  superAdmin
 	superAdminRouter.HandleFunc("/users", controllers.UpdateUser).Methods("PUT")

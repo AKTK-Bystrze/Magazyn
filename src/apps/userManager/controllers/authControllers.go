@@ -30,7 +30,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Template error", http.StatusInternalServerError)
 			return
 		}
-		target := "/dashboard"
+		target := "/users/dashboard"
 		if strings.Contains(u.Role, "admin") {
 			target = "/admin/reservations"
 		}
