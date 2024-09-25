@@ -185,7 +185,7 @@ func SetTokenTransportMean() {
 		app.App.Info("No email transport specified, printing codes to stdout")
 		app.Pw.SetTransport("debug", passwordless.LogTransport{
 			MessageFunc: func(token, uid string) string {
-				return fmt.Sprintf("\tDEBUG:\t Login at %s/token?strategy=debug&token=%s&uid=%s",
+				return fmt.Sprintf("\tDEBUG:\t Login at %s/users/token?strategy=debug&token=%s&uid=%s",
 					app.App.Server, token, uid)
 			},
 		}, passwordless.NewCrockfordGenerator(common.TOKEN_LENGTH), common.COOKIE_VALIDITY_TIME_HOURS*time.Hour)
