@@ -39,26 +39,24 @@ func CreateUserManagerApp(db apps.Database, funcMap template.FuncMap, store sess
 }
 
 func updateRouter(router *mux.Router) *mux.Router {
-	router.HandleFunc("/login", controllers.Login).Methods("GET")
-	router.HandleFunc("/token", auth.TokenHandler).Methods("POST", "GET")
-
-	//users privilige
-	usersRouter := router.PathPrefix("/users").Subrouter()
-	usersRouter.Use(access.ValidUserMiddlware)
-	userRouter := usersRouter.PathPrefix("/user").Subrouter()
+	//all
+	allRouter := router.PathPrefix("/users").Subrouter()
+	allRouter.HandleFunc("/login", controllers.Login).Methods("GET")
+	allRouter.HandleFunc("/token", auth.TokenHandler).Methods("POST", "GET")
+	//users
+	userRouter := allRouter.PathPrefix("/user").Subrouter()
+	userRouter.Use(access.ValidUserMiddlware)
 	userRouter.HandleFunc("/logout", controllers.Logout).Methods("GET")
 	userRouter.HandleFunc("/dashboard", controllers.UserDashboard).Methods("GET")
-
-	//admin privilige
-	adminRouter := usersRouter.PathPrefix("/admin").Subrouter()
+	//admin
+	adminRouter := allRouter.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(access.ValidUserMiddlware) //todo needed ??
 	adminRouter.Use(access.AdminHandler)
 	adminRouter.HandleFunc("/user/show", controllers.AdminShowUserHandler).Methods("GET")
-
-	// superAdmin privilige
-	superAdminRouter := usersRouter.PathPrefix("/superAdmin").Subrouter()
-	// superAdminRouter.Use(access.ValidUserMiddlware) //tood???
+	//superAdmin
+	superAdminRouter := allRouter.PathPrefix("/superAdmin").Subrouter()
+	superAdminRouter.Use(access.ValidUserMiddlware) //tood needed ???
 	superAdminRouter.Use(access.SuperAdminHandler)
-	//  superAdmin
 	superAdminRouter.HandleFunc("/users", controllers.UpdateUser).Methods("PUT")
 	superAdminRouter.HandleFunc("/users", controllers.GetUsersController).Methods("GET")
 

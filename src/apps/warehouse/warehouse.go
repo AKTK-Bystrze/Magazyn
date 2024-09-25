@@ -32,32 +32,24 @@ func CreateWarehouseApp(db apps.Database, funcMap template.FuncMap, store sessio
 }
 
 func updateRouter(router *mux.Router) *mux.Router {
-	//rental
-	rentalRouter := router.PathPrefix("/rental").Subrouter()
-	rentalRouter.Use(access.ValidUserMiddlware)
-	//rental user
-	rentalUserRouter := rentalRouter.PathPrefix("/user").Subrouter()
-	rentalUserRouter.HandleFunc("/search", items.SearchHandler).Methods("GET", "POST")
-	rentalUserRouter.HandleFunc("/reserve", items.ReserveItem).Methods("POST")
-	//rental admin
-	rentalAdminRouter := rentalRouter.PathPrefix("/admin").Subrouter()
-	rentalAdminRouter.Use(access.AdminHandler)
-	rentalAdminRouter.HandleFunc("/reservations", controllers.AdminDashboardHandler).Methods("GET")
-	rentalAdminRouter.HandleFunc("/setStatus", rental.SetStatusHandler).Methods("PUT")
-	rentalAdminRouter.HandleFunc("/reservation/show", rental.ReservationHandler).Methods("GET")
-	//items admin
-	itemRouter := router.PathPrefix("/items").Subrouter()
-	itemRouter.Use(access.ValidUserMiddlware) //todo ??
-	itemRouter.Use(access.AdminHandler)
-	itemRouter.HandleFunc("/admin", controllers.AdminItemsHandler).Methods("GET") //todo refactor controlles package from usersManager here?
-	itemRouter.HandleFunc("/admin/item/status", controllers.AdminItemStatusHandler).Methods("POST")
-	itemRouter.HandleFunc("/admin/item/show", controllers.AdminShowItemHandler).Methods("GET")
-
-	//inventory
-	inventoryRouter := router.PathPrefix("/inventory").Subrouter()
-	inventoryRouter.Use(access.ValidUserMiddlware) //todo??
-	inventoryRouter.Use(access.AdminHandler)
-	inventoryRouter.HandleFunc("/admin", inventory.Inventory).Methods("GET") //todo?? will it work
+	warehouseRouter := router.PathPrefix("/warehouse").Subrouter()
+	warehouseRouter.Use(access.ValidUserMiddlware)
+	// user
+	userRouter := warehouseRouter.PathPrefix("/user").Subrouter()
+	userRouter.HandleFunc("/search", items.SearchHandler).Methods("GET", "POST")
+	userRouter.HandleFunc("/reserve", items.ReserveItem).Methods("POST")
+	// admin
+	adminRouter := warehouseRouter.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(access.AdminHandler)
+	adminRouter.HandleFunc("/reservations", controllers.AdminDashboardHandler).Methods("GET")
+	adminRouter.HandleFunc("/setStatus", rental.SetStatusHandler).Methods("PUT")
+	adminRouter.HandleFunc("/reservation/show", rental.ReservationHandler).Methods("GET")
+	adminRouter.HandleFunc("/inventory", inventory.Inventory).Methods("GET")
+	adminRouter.HandleFunc("/items", controllers.AdminItemsHandler).Methods("GET") //todo refactor controlles package from usersManager here?
+	//item admin
+	adminItemRouter := adminRouter.PathPrefix("/item").Subrouter()
+	adminItemRouter.HandleFunc("/status", controllers.AdminItemStatusHandler).Methods("POST")
+	adminItemRouter.HandleFunc("/show", controllers.AdminShowItemHandler).Methods("GET")
 
 	return router
 }

@@ -36,7 +36,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			Expires:  time.Unix(0, 0),
 			HttpOnly: true,
 		}
-		target = "/login"
+		target = "/users/login"
 		http.SetCookie(w, c)
 	}
 
@@ -48,7 +48,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if u.Role == "admin" {
-			target = "/admin/reservations"
+			target = "rental/admin/reservations"
 		}
 		session.AddFlash("already_signed_in")
 		session.Save(r, w)
@@ -104,7 +104,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		// the signin page as we can't do anything without it.
 		session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
 		session.Save(r, w)
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/users/login", http.StatusTemporaryRedirect)
 		return
 	} else if token == "" {
 		// No token provided in request, so generate a new one and send it
@@ -131,7 +131,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if u.Role == "admin" {
-				target = "/admin/reservations"
+				target = "rental/admin/reservations"
 			}
 			session.Values["UserInfo"] = int(u.ID)
 			session.Values["recipient"] = recipient
@@ -146,7 +146,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			// way, the user will need to attempt sign-in again.
 			session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
 			session.Save(r, w)
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "/users/login", http.StatusTemporaryRedirect)
 			return
 		} else if err != nil {
 			// Some other unexpected error occurred.

@@ -32,7 +32,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		target := "/users/dashboard"
 		if strings.Contains(u.Role, "admin") {
-			target = "/admin/reservations"
+			target = "rental/admin/reservations"
 		}
 		http.Redirect(w, r, target, http.StatusSeeOther)
 		return

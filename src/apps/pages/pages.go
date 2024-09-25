@@ -31,12 +31,12 @@ func CreatePagesApp(db apps.Database, funcMap template.FuncMap, store sessions.S
 }
 
 func updateRouter(router *mux.Router) *mux.Router {
+	//all
 	router.HandleFunc("/", redirectToHome).Methods("GET")
-
 	allRouter := router.PathPrefix("/pages").Subrouter()
 	allRouter.Use(access.ValidUserMiddlware)
 	allRouter.HandleFunc("/home", home.HomePage).Methods("GET")
-
+	//ninja
 	ninjaRouter := allRouter.PathPrefix("/ninja").Subrouter()
 	ninjaRouter.HandleFunc("/news", news.CreateNewsHandler).Methods("POST")
 	ninjaRouter.HandleFunc("/news/{newsId}", news.DeleteNewsHandler).Methods("DELETE")
