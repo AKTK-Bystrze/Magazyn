@@ -132,14 +132,15 @@ func main() {
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	templates := loadTemplates()
 	router := mux.NewRouter()
-	// router.Use(access.ValidUserMiddlware) //todo find place to use this validator
 
 	email.CreateEmailApp(db, getFuncMap(), store, templates, server, "PAGES", router,
 		MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
 	userManager.CreateUserManagerApp(db, getFuncMap(), store, templates, server, "PAGES", router,
 		COOKIE_KEY)
-	warehouse.CreateWarehouseApp(db, getFuncMap(), store, templates, server, "WAREHOUSE", router)
-	pages.CreatePagesApp(db, getFuncMap(), store, templates, server, "PAGES", router)
+	warehouse.CreateWarehouseApp(db, common.DATABASE_PATH, common.DATABASE_NAME,
+		getFuncMap(), store, templates, server, "WAREHOUSE", router)
+	pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME,
+		getFuncMap(), store, templates, server, "PAGES", router)
 
 	log.Print("Server starting on: " + addr)
 	log.Fatal(http.ListenAndServe(addr, router))

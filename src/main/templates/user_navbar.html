@@ -19,7 +19,7 @@
       <ul class="navbar-nav ml-auto">
         {{ if contains "superAdmin" .Role }}
         <li class="nav-item">
-          <a class="nav-link" href="/superAdmin/users">Użytkownicy</a>
+          <a class="nav-link" href="/users/superAdmin/users">Użytkownicy</a>
         </li>
         {{end}}
         {{ if contains "admin" .Role }}
@@ -27,10 +27,10 @@
           <a class="nav-link" href="/warehouse/admin/reservations">Rezerwacje</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/admin/items">Sprzet</a>
+          <a class="nav-link" href="/warehouse/admin/items">Sprzet</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/admin/inventory">Inwentaryzacja</a>
+          <a class="nav-link" href="/warehouse/admin/inventory">Inwentaryzacja</a>
         </li>
         {{ end }}
         <li class="nav-item">

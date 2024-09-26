@@ -13,10 +13,12 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-func CreatePagesApp(db apps.Database, funcMap template.FuncMap, store sessions.Store,
+func CreatePagesApp(db apps.Database, dbPath string, dbName string, funcMap template.FuncMap, store sessions.Store,
 	t apps.Templates, server string, appName string, router *mux.Router) apps.App {
 	appState.App = apps.App{
 		Db:        db,
+		DbPath:    dbPath,
+		DbName:    dbName,
 		FuncMap:   funcMap,
 		Store:     store,
 		Server:    server,
@@ -33,17 +35,21 @@ func CreatePagesApp(db apps.Database, funcMap template.FuncMap, store sessions.S
 func updateRouter(router *mux.Router) *mux.Router {
 	//all
 	router.HandleFunc("/", redirectToHome).Methods("GET")
-	allRouter := router.PathPrefix("/pages").Subrouter()
-	allRouter.Use(access.ValidUserMiddlware)
-	allRouter.HandleFunc("/home", home.HomePage).Methods("GET")
+	pagesRouter := router.PathPrefix("/pages").Subrouter()
+	pagesRouter.Use(access.ValidUserMiddlware)
+	pagesRouter.HandleFunc("/home", home.HomePage).Methods("GET")
 	//ninja
-	ninjaRouter := allRouter.PathPrefix("/ninja").Subrouter()
+	ninjaRouter := pagesRouter.PathPrefix("/ninja").Subrouter()
+	ninjaRouter.Use(access.NinjaHandler)
 	ninjaRouter.HandleFunc("/news", news.CreateNewsHandler).Methods("POST")
 	ninjaRouter.HandleFunc("/news/{newsId}", news.DeleteNewsHandler).Methods("DELETE")
+	//superAdmin
+	superAdminRouter := pagesRouter.PathPrefix("/superAdmin").Subrouter()
+	superAdminRouter.Use(access.SuperAdminHandler)
+	superAdminRouter.HandleFunc("/db/backup", appState.App.DbBackupHandler).Methods("GET")
 	return router
 }
 
 func redirectToHome(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/pages/home", http.StatusTemporaryRedirect)
-	return
 }

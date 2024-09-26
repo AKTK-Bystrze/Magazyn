@@ -53,7 +53,7 @@
 					<p class="mb-1"><strong>ID:</strong> {{ .ID }}</p>
 					<p class="mb-1"><strong>Type:</strong> {{ .Type }}</p>
 					<div class="text">
-						<form method="POST" action="/reserve">
+						<form method="POST" action="/warehouse/user/reserve">
 							<input type="hidden" name="start_time" value="{{ $.StartTime.Format "2006-01-02T15:04" }}">
 							<input type="hidden" name="end_time" value="{{ $.EndTime.Format "2006-01-02T15:04" }}">
 							<input type="hidden" name="item_id" value="{{ .ID }}">

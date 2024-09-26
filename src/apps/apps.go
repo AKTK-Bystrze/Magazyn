@@ -130,8 +130,7 @@ func (data *TemplateData) SetURL(url string) {
 }
 
 func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
-	dbPath := a.DbPath
-	file, err := os.Open(dbPath)
+	file, err := os.Open(a.DbPath)
 	if err != nil {
 		a.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "File not found", http.StatusNotFound)

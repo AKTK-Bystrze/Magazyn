@@ -2,7 +2,7 @@
 <script>
   function createNews(newsType) {
     var formData = $("#new-news-form-" + newsType).serialize();
-    fetch('/ninja/news', {
+    fetch('/pages/ninja/news', {
       method: 'POST',
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"

@@ -26,7 +26,7 @@
           {{ range .Items }}
           <tr>
             <td>{{ .ID }}</td>
-            <td><a href="/admin/item/show?id={{ .ID }}">{{ .Name }}</a></td>
+            <td><a href="/warehouse/admin/item/show?id={{ .ID }}">{{ .Name }}</a></td>
             <td>{{ .Description }}</td>
             <td>{{ .Type }}</td>
             <td>{{ template "itemStatus" . }}</td>
@@ -38,7 +38,7 @@
                 $reservation }}
               </p>
               <p>
-                <a href="/admin/reservation/show?id={{ $reservation.ID }}"
+                <a href="/warehouse/admin/reservation/show?id={{ $reservation.ID }}"
                   >{{ $reservation.StartTime.Format $DATE_FORMAT_OUT }} - {{
                   $reservation.EndTime.Format $DATE_FORMAT_OUT }}</a
                 >

@@ -18,19 +18,19 @@
     {{ range .Reservations }}
     <tr>
       <td>
-        {{ if contains "admin" $.UserInfo.Role }}<small><a href="/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{
+        {{ if contains "admin" $.UserInfo.Role }}<small><a href="/warehouse/admin/reservation/show?id={{ .ID }}">#{{ .ID }} - {{
             .CreatedAt.Format $DATE_FORMAT_OUT }}</a></small>
         {{ else }}<small>#{{ .ID }} - {{ .CreatedAt.Format $DATE_FORMAT_OUT }}</small>{{ end }}
       </td>
       {{ if not $.HideItem }}<td>
         {{ if contains "admin" $.UserInfo.Role }}
-        <a href="/admin/item/show?id={{ .Item.ID }}">{{ .Item.Name }}</a>
+        <a href="/warehouse/admin/item/show?id={{ .Item.ID }}">{{ .Item.Name }}</a>
         {{ else }}{{ .Item.Name }}{{ end }}
       </td>
       {{ end }}
       <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
       <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
-      {{ if $.ShowUser }}<td><a href="/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
+      {{ if $.ShowUser }}<td><a href="/users/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
       <td>
         {{ $class := "" }}
         {{ $txt := "" }}
@@ -98,7 +98,7 @@
       params.set('status', status);
       formData = params.toString();
     }
-    fetch('/admin/setStatus', {
+    fetch('/warehouse/admin/setStatus', {
       method: 'PUT',
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"

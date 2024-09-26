@@ -75,7 +75,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		user.Role = userRole
 	}
 
-	appState.App.Debug("%v Requested update of user: %v credits %v, role %v", session.GetSessionUserName(r), user.Name, user.Credits, user.Role)
+	appState.App.Debug("%v Requested update of user: %v", session.GetSessionUserName(r), user.Name)
 	query := `UPDATE users SET u_credits = %v, u_role = '%v' WHERE u_id IN (%v)`
 	queryCompleted := fmt.Sprintf(query, user.Credits, user.Role, userID)
 
