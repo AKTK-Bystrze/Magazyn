@@ -13,10 +13,10 @@ const (
 )
 
 const (
-	ADMIN      = "admin"
-	NINJA      = "ninja"
-	USER       = "user"
-	SUPERADMIN = "superAdmin"
+	ROLE_ADMIN      = "admin"
+	ROLE_NINJA      = "ninja"
+	ROLE_USER       = "user"
+	ROLE_SUPERADMIN = "superAdmin"
 )
 
-var PRIVILIGES = []string{ADMIN, NINJA, USER, SUPERADMIN}
+var ROLES = []string{ROLE_ADMIN, ROLE_NINJA, ROLE_USER, ROLE_SUPERADMIN}

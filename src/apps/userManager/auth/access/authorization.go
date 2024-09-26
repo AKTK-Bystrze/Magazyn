@@ -38,7 +38,7 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 }
 
 func isRoleValid(userRole string) bool {
-	for _, privilige := range common.PRIVILIGES {
+	for _, privilige := range common.ROLES {
 		if strings.Compare(userRole, privilige) == 0 {
 			return true
 		}
@@ -94,7 +94,7 @@ func hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
 
 func hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	uinfo, ok := r.Context().Value("UserInfo").(models.User)
-	if !ok || !strings.Contains(uinfo.Role, common.SUPERADMIN) {
+	if !ok || !strings.Contains(uinfo.Role, common.ROLE_SUPERADMIN) {
 		appState.App.Err("Non-SuperAdmin user (%s) attempts to access superAdmin API", session.If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)
 		return false
