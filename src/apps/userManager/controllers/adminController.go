@@ -74,7 +74,7 @@ func AdminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	appState.App.Debug("%v set itemid %v status %v", session.GetSessionUserName(r), itemID, status)
-	http.Redirect(w, r, "/admin/items", http.StatusSeeOther)
+	http.Redirect(w, r, "/warehouse/admin/items", http.StatusSeeOther)
 }
 
 func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {

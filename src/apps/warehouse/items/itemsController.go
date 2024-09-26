@@ -120,7 +120,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		}
 
 		msg := "Zarezerwowano"
-		http.Redirect(w, r, "/search?msg="+msg, http.StatusFound)
+		http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusFound)
 	} else {
 		msg := "Nie możesz wypożyczyć sprzętu"
 		SearchItems(w, r, msg)

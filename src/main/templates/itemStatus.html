@@ -1,5 +1,5 @@
 {{ define "itemStatus" }}
-  <form class="form-inline" method="POST" action="/admin/item/status">
+  <form class="form-inline" method="POST" action="/warehouse/admin/item/status">
     <input type="hidden" name="id" value="{{ .ID }}">
     {{ $class := "badge badge-secondary" }}
     {{ if eq .Status "ok" }}{{ $class = "badge badge-success" }}{{ end }}
