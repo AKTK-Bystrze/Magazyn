@@ -2,9 +2,9 @@ package warehouse
 
 import (
 	"bystrze/apps"
-	"bystrze/apps/pages/appState"
 	"bystrze/apps/userManager/auth/access"
 	"bystrze/apps/userManager/controllers"
+	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/warehouse/inventory"
 	"bystrze/apps/warehouse/items"
 	"bystrze/apps/warehouse/rental"

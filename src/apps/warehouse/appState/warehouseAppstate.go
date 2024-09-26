@@ -1,4 +1,4 @@
-package appstate
+package appState
 
 import "bystrze/apps"
 

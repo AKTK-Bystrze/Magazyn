@@ -3,8 +3,7 @@ package rental
 import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
-	"bystrze/apps/email/appState"
-	appstate "bystrze/apps/warehouse/appState"
+	"bystrze/apps/warehouse/appState"
 	"time"
 )
 
@@ -32,7 +31,7 @@ func GetReservation(id int) (*models.Reservation, error) {
 	if err != nil {
 		return nil, err
 	}
-	row := appstate.App.Db.QueryRowx(query, id)
+	row := appState.App.Db.Unsafe().QueryRowx(query, id)
 	var r models.Reservation
 	var t models.TmpReservation
 	err = row.StructScan(&t)
