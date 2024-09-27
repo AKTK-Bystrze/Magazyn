@@ -34,14 +34,14 @@ func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.Re
 	var oldCredits = u.Credits
 	result, err := appState.App.Db.Exec(`UPDATE users SET u_credits = ? WHERE u_id = ?`, newCredits, u.ID)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("UpdateUserCredits %v", err.Error())
 		http.Error(w, "Cant update users credits", http.StatusBadRequest)
 		return err
 	}
 	numRows, err := result.RowsAffected()
 	if err != nil || numRows != 1 {
 		if err != nil {
-			appState.App.Err(err.Error())
+			appState.App.Err("UpdateUserCredits %v", err.Error())
 		} else {
 			appState.App.Err("Failed to update user credits %v", err)
 		}
@@ -49,7 +49,7 @@ func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.Re
 		return err
 	}
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("UpdateUserCredits %v", err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
@@ -63,7 +63,7 @@ func getUserCredits(id int) (int, error) {
 	var credits int
 	err := row.Scan(&credits)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("GetUserCredits %v", err.Error())
 		return 0, err
 	}
 	return credits, nil
@@ -119,7 +119,7 @@ func retriveUserCredits(userId int) (int, error) {
 	var credits int
 	err := row.Scan(&credits)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("retriveUserCredits %v", err.Error())
 		return 0, err
 	}
 	return credits, nil

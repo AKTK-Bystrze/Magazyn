@@ -142,13 +142,13 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 		userCredits := reservation.User.Credits
 		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 		if err != nil {
-			appState.App.Err(err.Error())
+			appState.App.Err("handleReturnedStatus %v", err.Error())
 			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
 			return err
 		}
 		newRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, now)
 		if err != nil {
-			appState.App.Err(err.Error())
+			appState.App.Err("handleReturnedStatus %v", err.Error())
 			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
 			return err
 		}
@@ -168,14 +168,14 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 func updateReservationEndDate(reservation models.Reservation, newEndTime time.Time, w http.ResponseWriter) error {
 	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_end_time = ?,r_changeby_uid = ? WHERE r_id = ?`, newEndTime.UTC(), reservation.User.ID, reservation.ID)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("updateReservationEndDate %v", err.Error())
 		http.Error(w, "Can't update reservation ", http.StatusInternalServerError)
 		return err
 	}
 	numRows, err := result.RowsAffected()
 	if err != nil || numRows != 1 {
 		if err != nil {
-			appState.App.Err(err.Error())
+			appState.App.Err("updateReservationEndDate %v", err.Error())
 		} else {
 			appState.App.Err("Failed to update reservation end time %v", err)
 		}
@@ -190,7 +190,7 @@ func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseW
 	appState.App.Debug("Old reservation status is %v, charge user for rental cost", models.DENIED)
 	rentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("handlePreviousStatusDenied %v", err.Error())
 		http.Error(w, "Can't calculate rental cost", http.StatusBadRequest)
 		return err
 	}
@@ -202,14 +202,14 @@ func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseW
 func updateReservationStatus(reservation models.Reservation, status string, w http.ResponseWriter, changingUserId int) {
 	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, changingUserId, reservation.ID)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("updateReservationStatus %v", err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
 	numRows, err := result.RowsAffected()
 	if err != nil || numRows != 1 {
 		if err != nil {
-			appState.App.Err(err.Error())
+			appState.App.Err("updateReservationStatus %v", err.Error())
 		} else {
 			appState.App.Err("Failed to update reservation status %v", err)
 		}
@@ -224,7 +224,7 @@ func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter) e
 	appState.App.Debug("handling status denied")
 	rentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("handleDeniedStatus %v", err.Error())
 		http.Error(w, "Can't calculate rental cost", http.StatusBadRequest)
 		return err
 	}

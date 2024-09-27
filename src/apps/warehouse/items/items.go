@@ -25,7 +25,7 @@ func GetItem(itemID int) (*models.Item, error) {
 	var item models.Item
 	err := row.StructScan(&item)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("GetItem %v", err.Error())
 		return nil, err
 	}
 	return &item, nil
@@ -34,7 +34,7 @@ func GetItem(itemID int) (*models.Item, error) {
 func GetItems(conf models.QueryConfigItems) ([]models.TmpItem, error) {
 	var location, err = time.LoadLocation("Europe/Warsaw")
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("GetItems %v", err.Error())
 		return []models.TmpItem{}, err
 	}
 	// Get all items from the database
@@ -99,7 +99,7 @@ func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error)
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("CheckAvailability %v", err.Error())
 		return false, err
 	}
 	if count > 0 {

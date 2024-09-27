@@ -62,7 +62,7 @@ type QueryConfigReservation struct {
 func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) {
 	var location, err = time.LoadLocation("Europe/Warsaw")
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("GetReservations %v", err.Error())
 		return []models.Reservation{}, err
 	}
 	// Retrieve all reservations from database
@@ -95,7 +95,7 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 	rows, err := udb.Queryx(query, conf.SelectionId)
 
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("GetReservations %v", err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -106,7 +106,7 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 		var t models.TmpReservation
 		err := rows.StructScan(&t)
 		if err != nil {
-			appState.App.Err(err.Error())
+			appState.App.Err("GetReservations %v", err.Error())
 			return nil, err
 		}
 		//	work around sqlx to better handle embedded structures and JOINs
@@ -120,7 +120,7 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 		reservations = append(reservations, r)
 	}
 	if err = rows.Err(); err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("GetReservations %v", err.Error())
 		return nil, err
 	}
 	return reservations, nil

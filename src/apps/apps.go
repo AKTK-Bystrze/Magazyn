@@ -106,7 +106,7 @@ func (a *App) LoadTemplates() {
 func (app App) RenderTemplateNoData(w http.ResponseWriter, tmpl string) {
 	err := app.Templates.ExecuteTemplate(w, tmpl, nil)
 	if err != nil {
-		app.Err(err.Error())
+		app.Err("RenderTemplateNoData: %v", err.Error())
 		http.Error(w, "Template error", http.StatusInternalServerError)
 	}
 }

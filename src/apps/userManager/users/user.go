@@ -50,7 +50,7 @@ func GetUserName(id int) (string, error) {
 	var uname string
 	err := row.Scan(&uname)
 	if err != nil {
-		appState.App.Err(err.Error())
+		appState.App.Err("GetUserName %v", err.Error())
 		return "", err
 	}
 	return uname, nil
