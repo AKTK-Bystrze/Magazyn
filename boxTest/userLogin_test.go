@@ -59,24 +59,24 @@ func getLatestEmailContent() (string, error) {
 }
 
 func TestLoginScenario(t *testing.T) {
-	email := "test@example.com"
+	userEmail := "kursant1@bystrzeEmail.com"
 	client := resty.New()
 	resp, err := client.R().
 		Get("http://localhost:8080/users/login")
 	if err != nil {
-		log.Printf("Login response %v", resp)
-		t.Fatalf("Failed to send login request: %v", err)
+		log.Printf("/users/login response %v", resp)
+		t.Fatalf("Failed request: %v", err)
 	}
 
 	resp, err = client.R().
 		SetFormData(map[string]string{
 			"strategy":  "email",
-			"recipient": email,
+			"recipient": userEmail,
 		}).
 		Post("http://localhost:8080/users/token")
 	if err != nil {
-		log.Printf("Token response %v", resp)
-		t.Fatalf("Failed to send login request: %v", err)
+		log.Printf("/users/token response %v", resp)
+		t.Fatalf("Failed request: %v", err)
 	}
 
 	// Step 4: Wait for email to be sent
