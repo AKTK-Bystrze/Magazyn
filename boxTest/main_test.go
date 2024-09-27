@@ -14,6 +14,7 @@ const (
 	TEST_DB_NAME     = "test_db"
 	SNTP_SERVER_NAME = "mailhog"
 	DOCKERFILE_PATH  = "."
+	NETWORK_NO_WEB   = "test_network_no_web"
 )
 
 func runCommand(command string, args ...string) string {
@@ -41,9 +42,19 @@ func createDB() {
 	log.Print("Test db created")
 }
 
+func createDockerNetwork(networkName string) {
+	output := runCommand("docker", "network", "ls", "--filter", "name="+networkName, "--format", "{{.Name}}")
+	if strings.TrimSpace(output) == networkName {
+		log.Printf("Docker network named %v already exists", networkName)
+		return
+	}
+	runCommand("docker", "network", "create", networkName)
+	log.Printf("Docker network named %v created", networkName)
+}
+
 func startMailHogSMTPServer() {
 	log.Print("Creating SMTP server...")
-	runCommand("docker", "run", "--name", SNTP_SERVER_NAME, "-d", "-p", "1025:1025", "-p", "8025:8025", "mailhog/mailhog")
+	runCommand("docker", "run", "--name", SNTP_SERVER_NAME, "--network="+NETWORK_NO_WEB, "-d", "-p", "1025:1025", "-p", "8025:8025", "mailhog/mailhog")
 	log.Print("SMTP server created")
 }
 
@@ -51,7 +62,7 @@ func buildTestApp() {
 	log.Print("Creating test app...")
 	goToDir("..")
 	runCommand("docker", "build", "-t", TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "EMAIL_PASS=password", DOCKERFILE_PATH)
-	runCommand("docker", "run", "--name", TEST_APP_NAME, "-d", "-p", "8080:8080", "-e", "SMTP_HOST=localhost", "-e", "SMTP_PORT=1025", TEST_APP_NAME)
+	runCommand("docker", "run", "--name", TEST_APP_NAME, "--network="+NETWORK_NO_WEB, "-d", "-p", "8080:8080", "-e", "SMTP_HOST=mailhog", "-e", "SMTP_PORT=1025", TEST_APP_NAME)
 	time.Sleep(5 * time.Second)
 	goToDir("boxTest")
 	log.Print("test up created")
@@ -119,7 +130,8 @@ func containerExists(containerName string) bool {
 
 func setup() {
 	log.Print("Setting up for test...")
-	createDB()
+	// createDB() //TODO: make dockerfile get dbName
+	createDockerNetwork(NETWORK_NO_WEB)
 	startMailHogSMTPServer()
 	buildTestApp()
 	log.Print("Setting up is done")
@@ -140,14 +152,14 @@ func TestMain(m *testing.M) {
 	}
 	var code = 0
 	for _, tc := range testCases {
-		startTime := time.Now() // Capture the start time
+		// startTime := time.Now() // Capture the start time
 		log.Printf("START TEST %v", tc.name)
 		t := &testing.T{}
 		testResult := tc.run()
 		if testResult == 1 {
 			code = testResult
 		}
-		printContainerLogs(TEST_APP_NAME, startTime) // Print logs after each test
+		// printContainerLogs(TEST_APP_NAME, startTime) // Print logs after each test
 		if code != 0 {
 			t.Fail() // Mark the test as failed if the exit code is not 0
 		}
