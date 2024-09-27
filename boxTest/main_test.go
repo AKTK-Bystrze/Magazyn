@@ -50,8 +50,8 @@ func startMailHogSMTPServer() {
 func buildTestApp() {
 	log.Print("Creating test app...")
 	goToDir("..")
-	runCommand("docker", "build", "-t", TEST_APP_NAME, "--build-arg", "EMAIL=test_app@gmail.com", "--build-arg", "EMAIL_PASS=password", DOCKERFILE_PATH)
-	runCommand("docker", "run", "--name", TEST_APP_NAME, "-d", "--network", "host", "-e", "SMTP_HOST=localhost", "-e", "SMTP_PORT=1025", TEST_APP_NAME)
+	runCommand("docker", "build", "-t", TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "EMAIL_PASS=password", DOCKERFILE_PATH)
+	runCommand("docker", "run", "--name", TEST_APP_NAME, "-d", "-p", "8080:8080", "-e", "SMTP_HOST=localhost", "-e", "SMTP_PORT=1025", TEST_APP_NAME)
 	time.Sleep(5 * time.Second)
 	goToDir("boxTest")
 	log.Print("test up created")
