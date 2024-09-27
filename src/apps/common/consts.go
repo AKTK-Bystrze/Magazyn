@@ -2,7 +2,7 @@ package common
 
 const (
 	COOKIE_VALIDITY_TIME_HOURS = 6
-	SEND_COOKIE_TO_STDOUT      = true
+	SEND_COOKIE_TO_STDOUT      = false
 	TOKEN_LENGTH               = 10
 	COOKIE_KEY_LENGTH          = 16
 
