@@ -1,7 +1,8 @@
 package main
 
 import (
-	"boxTest/common"
+	"boxTest/common/consts"
+	"boxTest/common/helpers"
 	"log"
 	"os"
 	"strings"
@@ -19,8 +20,8 @@ func goToDir(dir string) {
 func buildTestApp() {
 	log.Print("Creating test app...")
 	goToDir("..")
-	common.RunCommand("docker", "build", "-t", common.TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "EMAIL_PASS=password", common.DOCKERFILE_PATH)
-	common.RunCommand("docker", "run", "--name", common.TEST_APP_NAME, "-d", "-p", "8080:8080", "-e", "SMTP_HOST="+common.SMTP_SERVER_NAME, "-e", "SMTP_PORT="+common.SMTP_PORT, common.TEST_APP_NAME)
+	helpers.RunCommand(false, "docker", "build", "-t", consts.TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "EMAIL_PASS=password", consts.DOCKERFILE_PATH)
+	helpers.RunCommand(false, "docker", "run", "--name", consts.TEST_APP_NAME, "-d", "-p", "8080:8080", "-e", "SMTP_HOST="+consts.SMTP_SERVER_NAME, "-e", "SMTP_PORT="+consts.SMTP_PORT, consts.TEST_APP_NAME)
 	time.Sleep(5 * time.Second)
 	goToDir("boxTest")
 	log.Print("test app created")
@@ -28,18 +29,18 @@ func buildTestApp() {
 
 func cleanup() {
 	log.Print("Cleaning previous test leftovers...")
-	containersToClean := []string{common.TEST_APP_NAME}
+	containersToClean := []string{consts.TEST_APP_NAME}
 	for _, app := range containersToClean {
 		if containerExists(app) {
-			common.RunCommand("docker", "stop", app)
-			common.RunCommand("docker", "rm", app)
+			helpers.RunCommand(false, "docker", "stop", app)
+			helpers.RunCommand(false, "docker", "rm", app)
 			log.Printf("Removed %s", app)
 		}
 	}
 
-	if dbExists(common.TEST_DB_NAME) {
+	if dbExists(consts.TEST_DB_NAME) {
 		os.Remove("test.db")
-		log.Printf("Removed %s", common.TEST_DB_NAME)
+		log.Printf("Removed %s", consts.TEST_DB_NAME)
 	}
 	log.Print("Cleaning up is done")
 }
@@ -54,7 +55,7 @@ func dbExists(dbPath string) bool {
 }
 
 func containerExists(containerName string) bool {
-	output := common.RunCommand("docker", "ps", "-a", "--format", "{{.Names}}")
+	output := helpers.RunCommand(false, "docker", "ps", "-a", "--format", "{{.Names}}")
 	for _, name := range strings.Split(output, "\n") {
 		if name == containerName {
 			return true
@@ -78,21 +79,21 @@ func TestMain(m *testing.M) {
 		run  func() int
 	}{
 		{"userLogin_test", func() int { return m.Run() }},
-		// {"TestExample2", func() int { return m.Run() }},
 		// Add more tests here as needed
 	}
 	var code = 0
 	for _, tc := range testCases {
-		// startTime := time.Now() // Capture the start time
+		startTime := time.Now()
 		log.Printf("START TEST %v", tc.name)
 		t := &testing.T{}
 		testResult := tc.run()
 		if testResult == 1 {
-			log.Printf("Test %v failed", tc.name)
+			log.Printf("TEST %v FAILED", tc.name)
+			log.Print("\n" + helpers.GetContainerLogs(consts.TEST_APP_NAME, startTime))
 			t.Fail()
 			code = testResult
+			log.Printf("TEST %v FAILED", tc.name)
 		}
-		// printContainerLogs(TEST_APP_NAME, startTime) // Print logs after each test
 	}
 	os.Exit(code)
 }
