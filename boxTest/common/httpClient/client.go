@@ -30,6 +30,10 @@ func PostFormRequest(url string, formData url.Values) *http.Response {
 	return resp
 }
 
+func RestartDefaultClient() {
+	DefaultClient = CreateHttpClient()
+}
+
 func CreateHttpClient() http.Client {
 	jar, err := cookiejar.New(nil)
 	if err != nil {

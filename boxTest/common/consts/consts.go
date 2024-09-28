@@ -12,5 +12,8 @@ const (
 
 //test_app
 const (
-	UserName1 = "kursant1"
+	UserName1      = "kursant1"
+	AdminName1     = "admin1"
+	SuperAdminName = "superAdmin"
+	NinjaName      = "ninja"
 )

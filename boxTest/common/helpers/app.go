@@ -35,7 +35,7 @@ func LoginAs(userName string) error {
 	loginTime := time.Now()
 	httpClient.PostFormRequest("http://localhost:8080/users/token", url.Values{
 		"strategy":  {"debug"},
-		"recipient": {consts.UserName1},
+		"recipient": {userName},
 	})
 	loginLink := getLoginLinkFromLogs(loginTime)
 	resp = httpClient.

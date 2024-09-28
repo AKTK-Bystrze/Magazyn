@@ -153,3 +153,9 @@ Konwencja nazewnictwa : Test_metodaTestowana_testowanyStan_oczekiwanyRezultat
 Przykład Test_isAdult_ageLessThan18_false
 
 ## E2E testy
+Stworzenie aktualnego środowiska testowego od nowa oraz uruchomienie wszystkich boxtestów:
+
+```cmd
+cd boxtext
+go test .
+```
