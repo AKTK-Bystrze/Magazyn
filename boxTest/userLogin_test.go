@@ -1,128 +1,79 @@
 package main
 
 import (
-	"encoding/json"
+	"boxTest/common"
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/go-resty/resty/v2"
 )
 
 // test
 var (
-	userEmail    = "kursant1@bystrzeEmail.com"
-	userPassword = "password"
+	userName = "kursant1"
 )
 
-// Function to check if the item contains the token
-func hasToken(item string, token string) bool {
-	return strings.Contains(item, token)
-}
-
-// Function to extract the token from the item
-func extractToken(item string) string {
-	// Example logic to extract the token from the email content
-	// Assuming the token follows "Your PIN is " and ends before " - or click here"
-	startIndex := strings.Index(item, "Your PIN is ")
+func getLoginLinkFromLogs(since time.Time) string {
+	// Login at http://localhost:8080/users/token?strategy=debug&token=r98dsr7zrh&uid=1
+	logs := common.PrintContainerLogs(common.TEST_APP_NAME, since)
+	startIndex := strings.Index(logs, "Login at ")
 	if startIndex == -1 {
 		return ""
 	}
-	startIndex += len("Your PIN is ")
-	endIndex := strings.Index(item[startIndex:], " - or click here")
-	if endIndex == -1 {
-		return ""
-	}
-	return item[startIndex : startIndex+endIndex]
-}
-
-func getLatestEmailContent() (string, error) {
-	resp, err := http.Get("http://localhost:8025/api/v2/messages") // MailHog API endpoint
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	var result struct {
-		Items []struct {
-			Content string `json:"Content"`
-		} `json:"items"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
-	}
-
-	if len(result.Items) > 0 {
-		return result.Items[0].Content, nil // Return the content of the most recent email
-	}
-
-	return "", nil // No emails found
+	startIndex += len("Login at ")
+	return strings.TrimSpace(logs[startIndex:])
 }
 
 func TestLoginScenario(t *testing.T) {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatalf("Failed to create cookie jar: %v", err)
+	}
 
-	client := resty.New()
-	resp, err := client.R().
+	// Create an http.Client that uses the CookieJar
+	client := &http.Client{
+		Jar: jar,
+	}
+	resp, err := client.
 		Get("http://localhost:8080/users/login")
 	if err != nil {
 		log.Printf("/users/login response %v", resp)
 		t.Fatalf("Failed request: %v", err)
 	}
-
-	resp, err = client.R().
-		SetFormData(map[string]string{
-			"strategy":  "email",
-			"recipient": userEmail,
-		}).
-		Post("http://localhost:8080/users/token")
+	loginTime := time.Now()
+	resp, err = client.
+		PostForm("http://localhost:8080/users/token",
+			url.Values{
+				"strategy":  {"debug"},
+				"recipient": {userName},
+			})
 	if err != nil {
 		log.Printf("/users/token response %v", resp)
 		t.Fatalf("Failed request: %v", err)
 	}
 
-	// Step 4: Wait for email to be sent
-	time.Sleep(5 * time.Second) // Wait for email to arrive
-
-	// Step 5: Retrieve email content from MailHog
-	emailContent, err := getLatestEmailContent()
-
-	if err != nil {
-		log.Printf("email content %v", emailContent)
-		t.Fatalf("Failed to get email content: %v", err)
-	}
-	// Extract the token from the email content
-	token := extractToken(emailContent)
+	loginLink := getLoginLinkFromLogs(loginTime)
 
 	// Step 5: Check if the token was found
-	if token == "" {
-		t.Error("Failed to extract token from email")
+	if loginLink == "" {
+		t.Error("Failed to extract login link from logs")
 	} else {
-		fmt.Println("Extracted token:", token)
-
-		// TODO just go to link and not insert id like below
-		// // Step 6: Send token verification request
-		// // This is assuming you have a user ID to send along with the token
-		// userID := "your_user_id_here" // Replace with actual user ID
-		// resp, err := client.R().
-		// 	SetFormData(map[string]string{
-		// 		"strategy":  "email",
-		// 		"recipient": email,
-		// 		"uid":       userID,
-		// 		"token":     token,
-		// 	}).
-		// 	Post("http://localhost:8080/verify_token") // Replace with actual token verification endpoint
-
+		fmt.Println("Extracted login link: ", loginLink)
+		//TODO what to do with the session cookie that is in the browser "bystrzeMagazyn"
+		resp, err = client.
+			Get(loginLink)
 		if err != nil {
-			t.Fatalf("Failed to verify token: %v", err)
+			log.Printf("loginLink response %v", resp)
+			t.Fatalf("Failed request: %v", err)
 		}
 
 		// Step 7: Check the response from the verification
-		if resp.StatusCode() != http.StatusOK {
-			t.Errorf("Unexpected status code: got %v, want %v", resp.StatusCode(), http.StatusOK)
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
 		}
 	}
 }
