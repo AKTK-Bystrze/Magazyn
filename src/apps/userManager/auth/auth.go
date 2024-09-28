@@ -48,7 +48,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if u.Role == "admin" {
-			target = "warehouse/admin/reservations"
+			target = "/warehouse/admin/reservations"
 		}
 		session.AddFlash("already_signed_in")
 		session.Save(r, w)
@@ -131,7 +131,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if u.Role == "admin" {
-				target = "warehouse/admin/reservations"
+				target = "/warehouse/admin/reservations"
 			}
 			session.Values["UserInfo"] = int(u.ID)
 			session.Values["recipient"] = recipient
