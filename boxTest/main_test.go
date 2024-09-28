@@ -9,14 +9,6 @@ import (
 	"time"
 )
 
-const (
-	TEST_APP_NAME    = "test_app"
-	TEST_DB_NAME     = "test_db"
-	SNTP_SERVER_NAME = "mailhog"
-	DOCKERFILE_PATH  = "."
-	NETWORK_NO_WEB   = "test_network_no_web"
-)
-
 func runCommand(command string, args ...string) string {
 	log.Printf("Running command: %s %v", command, args)
 	cmd := exec.Command(command, args...)
@@ -52,21 +44,25 @@ func createDockerNetwork(networkName string) {
 	log.Printf("Docker network named %v created", networkName)
 }
 
-func startMailHogSMTPServer() {
-	log.Print("Creating SMTP server...")
-	runCommand("docker", "run", "--name", SNTP_SERVER_NAME, "--network="+NETWORK_NO_WEB, "-d", "-p", "1025:1025", "-p", "8025:8025", "mailhog/mailhog")
-	log.Print("SMTP server created")
-}
+// func startSMTPServer() {
+// 	log.Print("Creating SMTP server...")
+// 	// exec.Command("docker-compose", "-f", DOCKERFILE_PATH, "up", "-d")
+// 	runCommand("docker-compose", "-f", DOCKERYML_PATH, "up", "-d")
+// 	// runCommand("docker", "run", "--name", SMTP_SERVER_NAME, "--network="+NETWORK_NO_WEB, "-d", "-p",
+// 	// 	SMTP_PORT+":"+SMTP_PORT, "-p", "8025:8080", "greenmail/standalone:1.6.6",
+// 	// 	"JAVA_OPTS=-Dgreenmail.verbose")
+// 	log.Print("SMTP server created")
+// }
 
-func buildTestApp() {
-	log.Print("Creating test app...")
-	goToDir("..")
-	runCommand("docker", "build", "-t", TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "EMAIL_PASS=password", DOCKERFILE_PATH)
-	runCommand("docker", "run", "--name", TEST_APP_NAME, "--network="+NETWORK_NO_WEB, "-d", "-p", "8080:8080", "-e", "SMTP_HOST=mailhog", "-e", "SMTP_PORT=1025", TEST_APP_NAME)
-	time.Sleep(5 * time.Second)
-	goToDir("boxTest")
-	log.Print("test up created")
-}
+// func buildTestApp() {
+// 	log.Print("Creating test app...")
+// 	goToDir("..")
+// 	runCommand("docker", "build", "-t", TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "EMAIL_PASS=password", DOCKERFILE_PATH)
+// 	runCommand("docker", "run", "--name", TEST_APP_NAME, "--network="+NETWORK_NO_WEB, "-d", "-p", "8080:8080", "-e", "SMTP_HOST="+SMTP_SERVER_NAME, "-e", "SMTP_PORT="+SMTP_PORT, TEST_APP_NAME)
+// 	time.Sleep(5 * time.Second)
+// 	goToDir("boxTest")
+// 	log.Print("test app created")
+// }
 
 func cleanup() {
 	log.Print("Cleaning previous test leftovers...")
@@ -75,10 +71,10 @@ func cleanup() {
 		runCommand("docker", "rm", TEST_APP_NAME)
 		log.Printf("Removed %s", TEST_APP_NAME)
 	}
-	if containerExists(SNTP_SERVER_NAME) {
-		runCommand("docker", "stop", SNTP_SERVER_NAME)
-		runCommand("docker", "rm", SNTP_SERVER_NAME)
-		log.Printf("Removed %s", SNTP_SERVER_NAME)
+	if containerExists(SMTP_SERVER_NAME) {
+		runCommand("docker", "stop", SMTP_SERVER_NAME)
+		runCommand("docker", "rm", SMTP_SERVER_NAME)
+		log.Printf("Removed %s", SMTP_SERVER_NAME)
 	}
 	if dbExists(TEST_DB_NAME) {
 		os.Remove("test.db")
@@ -131,9 +127,9 @@ func containerExists(containerName string) bool {
 func setup() {
 	log.Print("Setting up for test...")
 	// createDB() //TODO: make dockerfile get dbName
-	createDockerNetwork(NETWORK_NO_WEB)
-	startMailHogSMTPServer()
-	buildTestApp()
+	// createDockerNetwork(NETWORK_NO_WEB)
+	CreateYaml()
+	runCommand("docker-compose", "-f", DOCKERYML_PATH, "up", "-d")
 	log.Print("Setting up is done")
 }
 

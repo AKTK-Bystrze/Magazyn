@@ -12,6 +12,12 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+// test
+var (
+	userEmail    = "kursant1@bystrzeEmail.com"
+	userPassword = "password"
+)
+
 // Function to check if the item contains the token
 func hasToken(item string, token string) bool {
 	return strings.Contains(item, token)
@@ -33,7 +39,6 @@ func extractToken(item string) string {
 	return item[startIndex : startIndex+endIndex]
 }
 
-// Function to get the latest email content from MailHog
 func getLatestEmailContent() (string, error) {
 	resp, err := http.Get("http://localhost:8025/api/v2/messages") // MailHog API endpoint
 	if err != nil {
@@ -59,7 +64,7 @@ func getLatestEmailContent() (string, error) {
 }
 
 func TestLoginScenario(t *testing.T) {
-	userEmail := "kursant1@bystrzeEmail.com"
+
 	client := resty.New()
 	resp, err := client.R().
 		Get("http://localhost:8080/users/login")
