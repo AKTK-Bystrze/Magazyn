@@ -18,7 +18,7 @@ COPY src/ ./
 RUN go build -o main ./main
 
 # Production Stage
-FROM frolvlad/alpine-glibc:latest
+FROM frolvlad/alpine-glibc:latest AS production
 
 # Set build arguments for environment variables
 ARG EMAIL
@@ -51,6 +51,11 @@ COPY src/main/templates/ /app/templates/
 
 # Expose port 8080 for the application
 EXPOSE 8080
+
+# Stage 3: Test Image
+FROM production AS test
+# Install test dependencies (mock libraries, tools, etc.) for tests
+RUN apk --no-cache add bash busybox-extras
 
 # Command to run the application
 CMD ["./main", "", "8080", "http://localhost:8080"]

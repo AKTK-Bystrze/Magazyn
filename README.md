@@ -20,6 +20,7 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
 - [Testy](#testy)
   - [Unit testy](#unit-testy)
   - [E2E testy](#e2e-testy)
+    - [obraz](#obraz)
 
 # Jak uruchomić
 ## Zmienne środowiskowe
@@ -134,8 +135,7 @@ np:
 
 # Release
 
-Wersja dostępna dla użytkownika jest oznaczona poprzez git tag w historii commitów:
-
+Wersja produkcyjna jest oznaczona poprzez git tag w historii commitów:
 ```cmd
 git tag -a <tag-name> -m "<message>"
 git tag -a v.1.0.0 -m "First release"
@@ -144,7 +144,7 @@ Sprawdź poprzednie tagi
 ```cmd
 git tag -n
 ```
-
+Obraz budownay z flagą `"--target production"`
 # Testy
 
 ## Unit testy
@@ -153,6 +153,8 @@ Konwencja nazewnictwa : Test_metodaTestowana_testowanyStan_oczekiwanyRezultat
 Przykład Test_isAdult_ageLessThan18_false
 
 ## E2E testy
+Obraz wykorzysytwany do testów jest z flagą `"--target test"`
+
 Stworzenie nowego środowiska testowego
 ```cmd
 go run envSetUp.go 
