@@ -12,6 +12,7 @@ var (
 )
 
 func GetRequest(url string) *http.Response {
+	log.Printf("Get \t%v", url)
 	resp, err := DefaultClient.
 		Get(url)
 	if err != nil {
@@ -21,6 +22,7 @@ func GetRequest(url string) *http.Response {
 }
 
 func PostFormRequest(url string, formData url.Values) *http.Response {
+	log.Printf("Post \t$%v\n\t%v", url, formData)
 	resp, err := DefaultClient.
 		PostForm(url, formData)
 	if err != nil {
@@ -31,6 +33,7 @@ func PostFormRequest(url string, formData url.Values) *http.Response {
 }
 
 func RestartDefaultClient() {
+	log.Print("Restart default client")
 	DefaultClient = CreateHttpClient()
 }
 

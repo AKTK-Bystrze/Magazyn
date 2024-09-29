@@ -1,4 +1,4 @@
-package main
+package env
 
 import (
 	"boxTest/common/consts"
@@ -20,7 +20,7 @@ func goToDir(dir string) {
 func buildTestApp() {
 	log.Print("Creating test app...")
 	goToDir("..")
-	helpers.RunCommand(false, "docker", "build", "-t", consts.TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "EMAIL_PASS=password", consts.DOCKERFILE_PATH)
+	helpers.RunCommand(false, "docker", "build", "-t", consts.TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "COOKIE_KEY="+consts.COOKIE_KEY, "--build-arg", "EMAIL_PASS=password", consts.DOCKERFILE_PATH)
 	helpers.RunCommand(false, "docker", "run", "--name", consts.TEST_APP_NAME, "-d", "-p", "8080:8080", "-e", "SMTP_HOST="+consts.SMTP_SERVER_NAME, "-e", "SMTP_PORT="+consts.SMTP_PORT, consts.TEST_APP_NAME)
 	time.Sleep(5 * time.Second)
 	goToDir("boxTest")
@@ -31,7 +31,7 @@ func cleanup() {
 	log.Print("Cleaning previous test leftovers...")
 	containersToClean := []string{consts.TEST_APP_NAME}
 	for _, app := range containersToClean {
-		if containerExists(app) {
+		if ContainerExists(app) {
 			helpers.RunCommand(false, "docker", "stop", app)
 			helpers.RunCommand(false, "docker", "rm", app)
 			log.Printf("Removed %s", app)
@@ -54,7 +54,7 @@ func dbExists(dbPath string) bool {
 	return true
 }
 
-func containerExists(containerName string) bool {
+func ContainerExists(containerName string) bool {
 	output := helpers.RunCommand(false, "docker", "ps", "-a", "--format", "{{.Names}}")
 	for _, name := range strings.Split(output, "\n") {
 		if name == containerName {
@@ -71,9 +71,12 @@ func setup() {
 	log.Print("Setting up is done")
 }
 
-func TestMain(m *testing.M) {
+func EnviromentSetUP() {
 	cleanup()
 	setup()
+}
+
+func RunTests(m *testing.M) {
 	testCases := []struct {
 		name string
 		run  func() int
@@ -81,6 +84,7 @@ func TestMain(m *testing.M) {
 		{"userLogin_test", func() int { return m.Run() }},
 		// Add more tests here as needed
 	}
+	log.Printf("Running tests %v", testCases)
 	var code = 0
 	for _, tc := range testCases {
 		startTime := time.Now()

@@ -1,7 +1,8 @@
-package helpers
+package app
 
 import (
 	"boxTest/common/consts"
+	"boxTest/common/helpers"
 	"boxTest/common/httpClient"
 	"fmt"
 	"log"
@@ -12,7 +13,7 @@ import (
 )
 
 func getLoginLinkFromLogs(since time.Time) string {
-	logs := GetContainerLogs(consts.TEST_APP_NAME, since)
+	logs := helpers.GetContainerLogs(consts.TEST_APP_NAME, since)
 	startIndex := strings.Index(logs, "Login at ")
 	if startIndex == -1 {
 		return ""
@@ -26,14 +27,14 @@ func getLoginLinkFromLogs(since time.Time) string {
 }
 
 func LoginAs(userName string) error {
-	httpClient.DefaultClient = httpClient.CreateHttpClient()
-	resp := httpClient.GetRequest("http://localhost:8080/users/login")
+	log.Printf("Login \t$%v", userName)
+	resp := httpClient.GetRequest(consts.Localhost + "/users/login")
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Can't get login page: got %v, want %v", resp.StatusCode, http.StatusOK)
 	}
 
 	loginTime := time.Now()
-	httpClient.PostFormRequest("http://localhost:8080/users/token", url.Values{
+	httpClient.PostFormRequest(consts.Localhost+"/users/token", url.Values{
 		"strategy":  {"debug"},
 		"recipient": {userName},
 	})
@@ -43,6 +44,16 @@ func LoginAs(userName string) error {
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
 		return fmt.Errorf("can't login as %v", userName)
+	}
+	return nil
+}
+
+func LogOut() error {
+	log.Printf("Logout")
+	resp := httpClient.GetRequest(consts.Localhost + "/users/user/logout")
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
+		return fmt.Errorf("can't logout")
 	}
 	return nil
 }
