@@ -8,6 +8,7 @@ const (
 	DOCKERFILE_PATH  = "."
 	NETWORK_NO_WEB   = "test_network_no_web"
 	SMTP_PORT        = "3465"
+	COOKIE_KEY       = ""
 )
 
 //test_app
@@ -16,4 +17,6 @@ const (
 	AdminName1     = "admin1"
 	SuperAdminName = "superAdmin"
 	NinjaName      = "ninja"
+	Localhost      = "http://localhost:8080"
+	CookeName      = "bystrzeMagazyn"
 )
