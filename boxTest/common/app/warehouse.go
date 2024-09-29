@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	URL_search  = "/warehouse/user/search"
-	URL_reserve = "/warehouse/user/reserve"
+	URL_search    = "/warehouse/user/search"
+	URL_reserve   = "/warehouse/user/reserve"
+	URL_dashboard = "/users/user/dashboard"
 )
 
 type Item struct {
@@ -70,6 +71,10 @@ func ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
 			"item_id":    {itemID},
 		})
+}
+
+func Dashboard() {
+	httpClient.GetRequest(consts.Localhost + URL_dashboard)
 }
 
 func SearchItem(item string) {

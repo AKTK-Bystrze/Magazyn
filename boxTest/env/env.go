@@ -19,10 +19,23 @@ func goToDir(dir string) {
 
 func buildTestApp() {
 	log.Print("Creating test app...")
+	// pwd, _ := os.Getwd()
 	goToDir("..")
-	helpers.RunCommand(false, "docker", "build", "-t", consts.TEST_APP_NAME, "--build-arg", "EMAIL=test_app@bystrzeMail.com", "--build-arg", "COOKIE_KEY="+consts.COOKIE_KEY, "--build-arg", "EMAIL_PASS=password", consts.DOCKERFILE_PATH)
-	helpers.RunCommand(false, "docker", "run", "--name", consts.TEST_APP_NAME, "-d", "-p", "8080:8080", "-e", "SMTP_HOST="+consts.SMTP_SERVER_NAME, "-e", "SMTP_PORT="+consts.SMTP_PORT, consts.TEST_APP_NAME)
-	time.Sleep(5 * time.Second)
+	helpers.RunCommand(false, "docker", "build",
+		"-t", consts.TEST_APP_NAME,
+		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
+		"--build-arg", "COOKIE_KEY="+consts.COOKIE_KEY,
+		"--build-arg", "EMAIL_PASS=password",
+		consts.DOCKERFILE_PATH)
+	helpers.RunCommand(false, "docker", "run",
+		"--name", consts.TEST_APP_NAME,
+		"-d",
+		"-p", "8080:8080",
+		"-e", "SMTP_HOST="+consts.SMTP_SERVER_NAME,
+		"-e", "SMTP_PORT="+consts.SMTP_PORT,
+		consts.TEST_APP_NAME)
+
+	time.Sleep(2 * time.Second)
 	goToDir("boxTest")
 	log.Print("test app created")
 }
