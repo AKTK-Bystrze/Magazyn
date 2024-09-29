@@ -5,10 +5,7 @@ import (
 	"boxTest/common/consts"
 	"boxTest/common/httpClient"
 	"testing"
-	"time"
 )
-
-var waitToLoadPage = 1 * time.Second
 
 func Test_user(t *testing.T) {
 	httpClient.RestartDefaultClient()
@@ -16,7 +13,6 @@ func Test_user(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	time.Sleep(waitToLoadPage)
 	app.LogOut()
 }
 
@@ -26,7 +22,6 @@ func Test_admin(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	time.Sleep(waitToLoadPage)
 	app.LogOut()
 }
 
@@ -36,7 +31,6 @@ func Test_superAdmin(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	time.Sleep(waitToLoadPage)
 	app.LogOut()
 }
 
@@ -46,6 +40,5 @@ func Test_ninja(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	time.Sleep(waitToLoadPage)
 	app.LogOut()
 }

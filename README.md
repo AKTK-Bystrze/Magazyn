@@ -157,7 +157,7 @@ Stworzenie nowego środowiska testowego
 ```cmd
 go run envSetUp.go 
 ```
-Uruchomienie wszystkich testów
+Uruchomienie wszystkich z logami (-v)
 ```cmd
-go test .
+go test . -v
 ```
