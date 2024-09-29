@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +26,25 @@ type Item struct {
 	Type        string
 }
 
+type Reservation struct {
+	ID          int       `json:"id"`
+	ItemID      int       `json:"item_id"`
+	UserID      int       `json:"user_id"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+	ChangeByUID int       `json:"change_by_uid"`
+}
+
+type ReservationAudit struct {
+	ID            int       `json:"id"`
+	ReservationID int       `json:"reservation_id"`
+	UserID        int       `json:"user_id"`
+	Status        string    `json:"status"`
+	ChangeDate    time.Time `json:"change_date"`
+}
+
 func GetAvaiableItems(timeStart time.Time, timeStop time.Time) []Item {
 	resp := httpClient.PostFormRequest(consts.Localhost+URL_search,
 		url.Values{
@@ -42,7 +62,7 @@ func GetAvaiableItems(timeStart time.Time, timeStop time.Time) []Item {
 	var availableItems []Item
 	itemList := doc.Find("#item-list")
 	if itemList.Length() == 0 {
-		log.Println("No element found with ID #item-list.")
+		log.Fatalf("No element found with ID #item-list.")
 	} else {
 		itemList.Find(".list-group-item").Each(func(i int, s *goquery.Selection) {
 			name := s.Find("h4.mb-1").Text()
@@ -79,4 +99,24 @@ func Dashboard() {
 
 func SearchItem(item string) {
 	// httpClient.PostFormRequest(URL_search)
+}
+
+func ReservationExists(reservations []Reservation, startTime, endTime time.Time, itemID string, user consts.User) bool {
+	id, _ := strconv.Atoi(itemID)
+	for _, reservation := range reservations {
+		loc := time.UTC
+		rst := reservation.StartTime.In(loc)
+		rst = rst.Truncate(time.Minute)
+		st := startTime.In(loc)
+		st = st.Truncate(time.Minute)
+		ret := reservation.EndTime.In(loc)
+		ret = ret.Truncate(time.Minute)
+		et := endTime.In(loc)
+		et = et.Truncate(time.Minute)
+		// log.Printf("r%v - %v\n t%v - %v", rst, st, ret, et)
+		if rst.Equal(st) && ret.Equal(et) && reservation.ItemID == id && reservation.Status == consts.PENDING && reservation.UserID == int(user.ID) {
+			return true
+		}
+	}
+	return false
 }
