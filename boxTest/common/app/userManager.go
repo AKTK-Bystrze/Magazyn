@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+var (
+	URL_login  = "/users/login"
+	URL_token  = "/users/token"
+	URL_logout = "/users/user/logout"
+)
+
 func getLoginLinkFromLogs(since time.Time) string {
 	logs := helpers.GetContainerLogs(consts.TEST_APP_NAME, since)
 	startIndex := strings.Index(logs, "Login at ")
@@ -28,13 +34,13 @@ func getLoginLinkFromLogs(since time.Time) string {
 
 func LoginAs(userName string) error {
 	log.Printf("Login \t$%v", userName)
-	resp := httpClient.GetRequest(consts.Localhost + "/users/login")
+	resp := httpClient.GetRequest(consts.Localhost + URL_login)
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Can't get login page: got %v, want %v", resp.StatusCode, http.StatusOK)
 	}
 
 	loginTime := time.Now()
-	httpClient.PostFormRequest(consts.Localhost+"/users/token", url.Values{
+	httpClient.PostFormRequest(consts.Localhost+URL_token, url.Values{
 		"strategy":  {"debug"},
 		"recipient": {userName},
 	})
@@ -50,7 +56,7 @@ func LoginAs(userName string) error {
 
 func LogOut() error {
 	log.Printf("Logout")
-	resp := httpClient.GetRequest(consts.Localhost + "/users/user/logout")
+	resp := httpClient.GetRequest(consts.Localhost + URL_logout)
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
 		return fmt.Errorf("can't logout")

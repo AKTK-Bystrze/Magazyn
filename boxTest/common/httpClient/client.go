@@ -18,6 +18,9 @@ func GetRequest(url string) *http.Response {
 	if err != nil {
 		log.Fatalf("Failed request %v\n\tResp: %v\n\tErr: %v", url, resp, err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("Response code %v is different than %v \n%v", resp.StatusCode, http.StatusOK, resp)
+	}
 	return resp
 }
 
@@ -28,6 +31,9 @@ func PostFormRequest(url string, formData url.Values) *http.Response {
 	if err != nil {
 		log.Printf("/users/token response %v", resp)
 		log.Fatalf("Failed request: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("Response code %v is different than %v \n%v", resp.StatusCode, http.StatusOK, resp)
 	}
 	return resp
 }

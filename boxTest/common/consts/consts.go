@@ -11,12 +11,23 @@ const (
 	COOKIE_KEY       = ""
 )
 
-//test_app
+const (
+	Localhost   = "http://localhost:8080"
+	CookeName   = "bystrzeMagazyn"
+	TIME_FORMAT = "2006-01-02T15:04"
+)
+
+const (
+	KayakB1 = "B1"
+)
+
+var ITMEMS = []string{KayakB1}
+
 const (
 	UserName1      = "kursant1"
 	AdminName1     = "admin1"
 	SuperAdminName = "superAdmin"
 	NinjaName      = "ninja"
-	Localhost      = "http://localhost:8080"
-	CookeName      = "bystrzeMagazyn"
 )
+
+var USERS = []string{UserName1, AdminName1, SuperAdminName, NinjaName}
