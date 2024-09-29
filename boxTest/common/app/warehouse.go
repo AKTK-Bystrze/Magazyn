@@ -64,7 +64,6 @@ func extractValue(text string) string {
 }
 
 func ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
-
 	httpClient.PostFormRequest(consts.Localhost+URL_reserve,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},

@@ -29,7 +29,7 @@ func PostFormRequest(url string, formData url.Values) *http.Response {
 	resp, err := DefaultClient.
 		PostForm(url, formData)
 	if err != nil {
-		log.Printf("/users/token response %v", resp)
+		log.Printf("%v response %v", url, resp)
 		log.Fatalf("Failed request: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {

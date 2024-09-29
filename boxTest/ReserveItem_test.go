@@ -4,6 +4,7 @@ import (
 	"boxTest/common/app"
 	"boxTest/common/consts"
 	"boxTest/common/httpClient"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -11,20 +12,22 @@ import (
 func reserveItemScenario(username string) error {
 	httpClient.RestartDefaultClient()
 	app.LoginAs(username)
-	//get items list
 	httpClient.GetRequest(consts.Localhost + app.URL_search)
-	now := time.Now()
+	now := time.Now().Add(10 * time.Minute)
 	nextWeek := now.Add(7 * 24 * time.Hour)
 	items := app.GetAvaiableItems(now, nextWeek)
-
-	// print(data)
-	//get item id from list
-	//reserve item
-	// app.ReserveItem(consts.UserName1)
+	reservedItem := pickRandomItem(items)
+	app.ReserveItem(reservedItem.ID, now, nextWeek)
 	//find reservation in reservations view
 	//verify reservation in db
 	//verify item satus in db
 	return nil
+}
+
+func pickRandomItem(items []app.Item) app.Item {
+	rand.Seed(time.Now().UnixNano())
+	randomIndex := rand.Intn(len(items))
+	return items[randomIndex]
 }
 
 func Test_reserveItem(t *testing.T) {
