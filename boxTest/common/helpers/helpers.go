@@ -25,6 +25,5 @@ func RunCommand(printOutput bool, command string, args ...string) string {
 	if printOutput {
 		log.Print("Command result: ", string(output))
 	}
-
 	return string(output)
 }

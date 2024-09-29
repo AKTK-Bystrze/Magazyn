@@ -3,7 +3,7 @@ package consts
 //enviroment
 const (
 	TEST_APP_NAME    = "test_app"
-	TEST_DB_NAME     = "test_db"
+	TEST_DB_PATH     = "/app/db/magazyn.db"
 	SMTP_SERVER_NAME = "test_server"
 	DOCKERFILE_PATH  = "."
 	NETWORK_NO_WEB   = "test_network_no_web"

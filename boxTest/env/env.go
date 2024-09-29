@@ -51,9 +51,9 @@ func cleanup() {
 		}
 	}
 
-	if dbExists(consts.TEST_DB_NAME) {
+	if dbExists(consts.TEST_DB_PATH) {
 		os.Remove("test.db")
-		log.Printf("Removed %s", consts.TEST_DB_NAME)
+		log.Printf("Removed %s", consts.TEST_DB_PATH)
 	}
 	log.Print("Cleaning up is done")
 }

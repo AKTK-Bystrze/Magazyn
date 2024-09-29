@@ -3,6 +3,7 @@ package main
 import (
 	"boxTest/common/app"
 	"boxTest/common/consts"
+	"boxTest/common/db"
 	"boxTest/common/httpClient"
 	"math/rand"
 	"testing"
@@ -18,8 +19,11 @@ func reserveItemScenario(username string) error {
 	items := app.GetAvaiableItems(now, nextWeek)
 	reservedItem := pickRandomItem(items)
 	app.ReserveItem(reservedItem.ID, now, nextWeek)
-	//find reservation in reservations view
+	app.Dashboard() //TODO //find reservation in reservations view
 	//verify reservation in db
+	reservation := db.GetReservations()
+	print(reservation)
+
 	//verify item satus in db
 	return nil
 }
