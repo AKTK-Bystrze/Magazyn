@@ -22,6 +22,7 @@ func buildTestApp() {
 	// pwd, _ := os.Getwd()
 	goToDir("..")
 	helpers.RunCommand(false, "docker", "build",
+		"--target", "test",
 		"-t", consts.TEST_APP_NAME,
 		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
 		"--build-arg", "COOKIE_KEY="+consts.COOKIE_KEY,
@@ -29,6 +30,7 @@ func buildTestApp() {
 		consts.DOCKERFILE_PATH)
 	helpers.RunCommand(false, "docker", "run",
 		"--name", consts.TEST_APP_NAME,
+		"--cap-add=SYS_TIME",
 		"-d",
 		"-p", "8080:8080",
 		"-e", "SMTP_HOST="+consts.SMTP_SERVER_NAME,
