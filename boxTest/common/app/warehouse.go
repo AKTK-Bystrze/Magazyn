@@ -14,9 +14,11 @@ import (
 )
 
 var (
-	URL_search    = "/warehouse/user/search"
-	URL_reserve   = "/warehouse/user/reserve"
-	URL_dashboard = "/users/user/dashboard"
+	URL_search       = "/warehouse/user/search"
+	URL_reserve      = "/warehouse/user/reserve"
+	URL_dashboard    = "/users/user/dashboard"
+	URL_reservations = "/warehouse/admin/reservations"
+	URL_setStatus    = "/warehouse/admin/setStatus"
 )
 
 type Item struct {
@@ -119,4 +121,21 @@ func ReservationExists(reservations []Reservation, startTime, endTime time.Time,
 		}
 	}
 	return false
+}
+
+func SetReservationStatus(reservationId int, status string) {
+	//call endpoint
+}
+
+func Reservations() {
+	httpClient.GetRequest(consts.Localhost + URL_reservations)
+}
+
+func ChangeReservationStatus(reservationId int, itemId int, status string) {
+	httpClient.PostFormRequest(consts.Localhost+URL_setStatus, url.Values{ //405 Method Not Allowed 405
+		"reservation_id": {strconv.Itoa(reservationId)},
+		"url":            {URL_setStatus},
+		"item_id":        {strconv.Itoa(itemId)},
+		"status":         {status},
+	})
 }

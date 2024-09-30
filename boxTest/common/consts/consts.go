@@ -1,6 +1,6 @@
 package consts
 
-//enviroment
+// enviroment
 const (
 	TEST_APP_NAME    = "test_app"
 	TEST_DB_PATH     = "/app/magazyn.db"
@@ -35,6 +35,8 @@ const (
 	PENDING  = "pending"
 	RENTED   = "rented"
 )
+
+var RESERVATION_STATUSES = []string{PENDING, APPROVED, RENTED, RETURNED, DENIED}
 
 type User struct {
 	ID      int64  `db:"u_id"`
