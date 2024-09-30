@@ -20,7 +20,6 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
 - [Testy](#testy)
   - [Unit testy](#unit-testy)
   - [E2E testy](#e2e-testy)
-    - [obraz](#obraz)
 
 # Jak uruchomić
 ## Zmienne środowiskowe

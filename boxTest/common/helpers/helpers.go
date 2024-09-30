@@ -1,8 +1,10 @@
 package helpers
 
 import (
+	"boxTest/common/consts"
 	"log"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -13,17 +15,36 @@ func GetContainerLogs(containerName string, since time.Time) string {
 }
 
 func RunCommand(printOutput bool, command string, args ...string) string {
+	res, err := RunCommandError(printOutput, command, args...)
+	if err != nil {
+		log.Fatalf("Error running command: %s %v\nOutput: %s\n", command, args, res)
+	}
+	return res
+}
+
+func RunCommandError(printOutput bool, command string, args ...string) (string, error) {
 	if printOutput {
 		log.Printf("Running command: %s %v", command, args)
 	}
 	cmd := exec.Command(command, args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatalf("Error running command: %s %v\nOutput: %s\n", command, args, output)
-		return string(output)
+		log.Printf("Error running command: %s %v\nOutput: %s\n", command, args, output)
+		return string(output), err
 	}
 	if printOutput {
 		log.Print("Command result: ", string(output))
 	}
-	return string(output)
+	return string(output), nil
+}
+
+func SetContainerTimeForWhile(timeToSet time.Time, containerName string) {
+	timeFormated := strings.ReplaceAll(timeToSet.Format(consts.TIME_FORMAT), "T", " ")
+	RunCommand(false, "docker", "exec", containerName, "date", "-s", timeFormated)
+	res := RunCommand(false, "docker", "exec", containerName, "date")
+	if res == "" {
+		log.Fatalf("can't change time on %v", containerName)
+	} else {
+		log.Printf("container %v time set to %v", containerName, res)
+	}
 }

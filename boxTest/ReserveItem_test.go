@@ -16,7 +16,7 @@ func reserveItemScenario(user consts.User) error {
 	app.LoginAs(user.Name)
 	httpClient.GetRequest(consts.Localhost + app.URL_search)
 	now := time.Now().Add(10 * time.Minute)
-	nextWeek := now.Add(7 * 24 * time.Hour)
+	nextWeek := now.AddDate(0, 0, 7)
 	items := app.GetAvaiableItems(now, nextWeek)
 	reservedItem := pickRandomItem(items)
 	app.ReserveItem(reservedItem.ID, now, nextWeek)
@@ -25,6 +25,7 @@ func reserveItemScenario(user consts.User) error {
 	if !app.ReservationExists(reservations, now, nextWeek, reservedItem.ID, user) {
 		return errors.New("Missing reservation in db for" + user.Name)
 	}
+	//TODO check users credits in db and
 	return nil
 }
 
