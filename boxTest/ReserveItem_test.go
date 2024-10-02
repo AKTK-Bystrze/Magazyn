@@ -22,7 +22,7 @@ func reserveItemScenario(user consts.User) error {
 	app.ReserveItem(reservedItem.ID, now, nextWeek)
 	app.Dashboard() //TODO //find reservation in reservations view
 	reservations := db.GetReservations()
-	if !app.ReservationExists(reservations, now, nextWeek, reservedItem.ID, user) {
+	if !app.ReservationExists(reservations, now, nextWeek, reservedItem.ID, user) { //todo redo -> getReservationBYProvidingAlldata except id
 		return errors.New("Missing reservation in db for" + user.Name)
 	}
 	//TODO check users credits in db and

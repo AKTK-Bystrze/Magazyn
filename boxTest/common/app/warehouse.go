@@ -132,7 +132,7 @@ func Reservations() {
 }
 
 func ChangeReservationStatus(reservationId int, itemId int, status string) {
-	httpClient.PostFormRequest(consts.Localhost+URL_setStatus, url.Values{ //405 Method Not Allowed 405
+	httpClient.PutRequest(consts.Localhost+URL_setStatus, url.Values{
 		"reservation_id": {strconv.Itoa(reservationId)},
 		"url":            {URL_setStatus},
 		"item_id":        {strconv.Itoa(itemId)},

@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+func ParseDateToDBFormat(time time.Time) string {
+	return strings.ReplaceAll(time.Format(consts.TIME_FORMAT), "T", " ")
+}
+
 var RESERVATIONS = []app.Reservation{
 	{
 		ID:          0,
@@ -81,19 +85,32 @@ func GetReservations() []app.Reservation {
 func GetReservationById(reservationID int) app.Reservation {
 	query := fmt.Sprintf("SELECT * FROM reservations WHERE r_id = %d;", reservationID)
 	reservationsString := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
-	return parseToReservation(reservationsString) //todo verify
+	return parseToReservation(reservationsString)
+}
+
+func GetReservationByCreateTime(createTime time.Time) app.Reservation {
+	reservations := GetReservations()
+	for _, reservation := range reservations {
+		resTime := reservation.CreatedAt
+		searchedTime := createTime.Truncate(time.Minute)
+		if searchedTime.Format(consts.TIME_FORMAT) == resTime.Format(consts.TIME_FORMAT) {
+			return reservation
+		}
+	}
+	log.Fatalf("Can't find reservation with createdTime %v", createTime)
+	return app.Reservation{}
 }
 
 func AddReservation(reservation app.Reservation) {
 	query := fmt.Sprintf(`INSERT INTO reservations ( r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) 
 						  VALUES ( datetime('%s', 'utc'), datetime('%s', 'utc'), %d, %d, %d, '%s', datetime('%s', 'utc'))`,
-		reservation.StartTime.UTC().Format("2006-01-02 15:04:05"),
-		reservation.EndTime.UTC().Format("2006-01-02 15:04:05"),
+		reservation.StartTime.Format(consts.DB_TIME_FORMAT),
+		reservation.EndTime.Format(consts.DB_TIME_FORMAT),
 		reservation.ItemID,
 		reservation.UserID,
 		reservation.ChangeByUID,
 		reservation.Status,
-		reservation.CreatedAt.UTC().Format("2006-01-02 15:04:05"))
+		reservation.CreatedAt.Format(consts.TIME_FORMAT))
 	result := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
 	if result != "" {
 		log.Fatalf("failed to add reservation %v %v", reservation, result)
@@ -101,6 +118,7 @@ func AddReservation(reservation app.Reservation) {
 }
 
 func parseToReservation(line string) app.Reservation {
+	location, _ := time.LoadLocation("Europe/Berlin")
 	fields := strings.Split(line, "|")
 	if len(fields) != 8 {
 		log.Fatalf("unexpected output format for reservation: %s", line)
@@ -108,26 +126,29 @@ func parseToReservation(line string) app.Reservation {
 	var r app.Reservation
 	var err error
 	if r.ID, err = parseInt(fields[0]); err != nil {
-		log.Fatalf("Parsing error: %s", line)
+		log.Fatalf("r_ID arsing error: %s", line)
 	}
 	if r.ItemID, err = parseInt(fields[1]); err != nil {
-		log.Fatalf("Parsing error: %s", line)
+		log.Fatalf("I_ID Parsing error: %s", line)
 	}
 	if r.UserID, err = parseInt(fields[2]); err != nil {
-		log.Fatalf("Parsing error: %s", line)
+		log.Fatalf("U_ID Parsing error: %s", line)
 	}
-	if r.StartTime, err = parseDateTime(fields[3]); err != nil {
-		log.Fatalf("Parsing error: %s", line)
+	if r.StartTime, err = time.Parse(consts.DB_TIME_FORMAT, fields[3]); err != nil {
+		log.Fatalf("Start time parsing error: %s", line)
 	}
-	if r.EndTime, err = parseDateTime(fields[4]); err != nil {
-		log.Fatalf("Parsing error: %s", line)
+	r.StartTime = r.StartTime.In(location)
+	if r.EndTime, err = time.Parse(consts.DB_TIME_FORMAT, fields[4]); err != nil {
+		log.Fatalf("End Time parsing error: %s", line)
 	}
+	r.EndTime = r.EndTime.In(location)
 	r.Status = fields[5]
-	if r.CreatedAt, err = parseDateTime(fields[6]); err != nil {
-		log.Fatalf("Parsing error: %s", line)
+	if r.CreatedAt, err = time.Parse(consts.DB_TIME_FORMAT, fields[6]); err != nil {
+		log.Fatalf("Status parsing error: %s", line)
 	}
+	r.CreatedAt = r.CreatedAt.In(location)
 	if r.ChangeByUID, err = parseInt(fields[7]); err != nil {
-		log.Fatalf("Parsing error: %s", line)
+		log.Fatalf("changedByUID parsing error: %s", line)
 	}
 	return r
 }
@@ -189,5 +210,5 @@ func parseInt(value string) (int, error) {
 }
 
 func parseDateTime(value string) (time.Time, error) {
-	return time.Parse("2006-01-02 15:04:05", value) // Adjust the format as necessary
+	return time.Parse(consts.TIME_FORMAT, value) // Adjust the format as necessary
 }

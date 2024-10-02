@@ -95,12 +95,12 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	newStatus := r.FormValue("status")
 	id, _ := strconv.Atoi(reservationID)
 	reservation, err := GetReservation(id)
-	appState.App.Debug("%v setStatusHandler reservation_id %v status %v", session.GetSessionUserName(r), id, newStatus)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
+	appState.App.Debug("%v setStatusHandler reservation_id %v status %v", session.GetSessionUserName(r), id, newStatus)
 	var oldStatus = reservation.Status
 	if oldStatus == models.DENIED {
 		err = handlePreviousStatusDenied(*reservation, w)
