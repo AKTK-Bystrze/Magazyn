@@ -13,8 +13,12 @@ var (
 )
 
 func GetRequestDefClient(url string) *http.Response {
+	return GetRequest(url, DefaultClient)
+}
+
+func GetRequest(url string, client http.Client) *http.Response {
 	log.Printf("Get \t%v", url)
-	resp, err := DefaultClient.
+	resp, err := client.
 		Get(url)
 	if err != nil {
 		log.Fatalf("Failed request %v\n\tResp: %v\n\tErr: %v", url, resp, err)
