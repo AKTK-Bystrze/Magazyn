@@ -1,38 +1,42 @@
-package main
+package scenarios
 
 import (
 	"boxTest/common/app"
+	"boxTest/tests"
 	"time"
 )
 
 var (
-	userClient = app.UserClient{
+	user = app.UserClient{
 		Name:   app.UserName1,
 		Client: app.CreateHttpClient(),
 	}
-	adminClient = app.UserClient{
+	admin = app.UserClient{
 		Name:   app.AdminName1,
 		Client: app.CreateHttpClient(),
 	}
 )
 
 func testSetUp() {
-	userClient = app.UserClient{
+	user = app.UserClient{
 		Name:   app.UserName1,
 		Client: app.CreateHttpClient(),
 	}
-	userClient.Login()
-	adminClient = app.UserClient{
+	user.Login()
+	admin = app.UserClient{
 		Name:   app.AdminName1,
 		Client: app.CreateHttpClient(),
 	}
-	adminClient.Login()
+	admin.Login()
 }
 
 func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
-
 	//user search for a item
+	items := user.GetAvaiableItems(reservationStart, reservationEnd)
+	reservedItem := tests.PickRandomItem(items)
 	//user reserve item for today
+	user.ReserveItem(reservedItem.ID, reservationStart, reservationEnd)
+	//TODO
 	// - check db reservation status
 	// - check db user's credits
 	// - check item availability

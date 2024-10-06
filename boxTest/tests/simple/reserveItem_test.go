@@ -1,11 +1,11 @@
-package main
+package simple
 
 import (
 	"boxTest/common/app"
 	"boxTest/common/consts"
 	"boxTest/common/db"
+	"boxTest/tests"
 	"errors"
-	"math/rand"
 	"testing"
 	"time"
 )
@@ -20,7 +20,7 @@ func reserveItemScenario(user app.User) error {
 	now := time.Now().Add(10 * time.Minute)
 	nextWeek := now.AddDate(0, 0, 7)
 	items := client.GetAvaiableItems(now, nextWeek)
-	reservedItem := pickRandomItem(items)
+	reservedItem := tests.PickRandomItem(items)
 	client.ReserveItem(reservedItem.ID, now, nextWeek)
 	client.Dashboard()
 	reservations := db.GetReservations()
@@ -29,12 +29,6 @@ func reserveItemScenario(user app.User) error {
 	}
 	//TODO check users credits in db and
 	return nil
-}
-
-func pickRandomItem(items []app.Item) app.Item {
-	rand.Seed(time.Now().UnixNano())
-	randomIndex := rand.Intn(len(items))
-	return items[randomIndex]
 }
 
 func Test_reserveItem(t *testing.T) {
