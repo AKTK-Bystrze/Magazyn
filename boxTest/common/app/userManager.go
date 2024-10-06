@@ -2,7 +2,7 @@ package app
 
 import (
 	"boxTest/common/consts"
-	"boxTest/common/helpers"
+	"boxTest/env"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,7 +18,7 @@ var (
 )
 
 func getLoginLinkFromLogs(since time.Time) string {
-	logs := helpers.GetContainerLogs(consts.TEST_APP_NAME, since)
+	logs := env.GetContainerLogs(consts.TEST_APP_NAME, since)
 	startIndex := strings.Index(logs, "Login at ")
 	if startIndex == -1 {
 		return ""

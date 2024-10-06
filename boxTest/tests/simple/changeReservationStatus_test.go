@@ -3,7 +3,6 @@ package main
 import (
 	"boxTest/common/app"
 	"boxTest/common/db"
-	"boxTest/common/httpClient"
 	"fmt"
 	"log"
 	"testing"
@@ -26,7 +25,6 @@ func changeReservationStatus(reservation app.Reservation, client app.UserClient)
 }
 
 func Test_changeReservationStatusFromEachToEach(t *testing.T) {
-	httpClient.RestartDefaultClient()
 	// reservation := app.Reservation{
 	// 	StartTime:   time.Now().Truncate(time.Minute),
 	// 	EndTime:     time.Now().AddDate(0, 0, 7).Truncate(time.Minute),
@@ -36,6 +34,8 @@ func Test_changeReservationStatusFromEachToEach(t *testing.T) {
 	// 	Status:      consts.PENDING,
 	// 	ChangeByUID: int(consts.USERS_MAP["kursant1"].ID),
 	// } //todo inserting in db doesn't work. App doesn't see it.
+
+	//TODO test is not working :/ App doesn't see changes made by test that is why
 	reservation := db.RESERVATIONS[0]
 	admin := app.UserClient{
 		Name:   app.AdminName1,

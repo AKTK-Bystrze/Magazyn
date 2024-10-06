@@ -1,10 +1,10 @@
 package db
 
 import (
-	"boxTest/common/helpers"
+	"boxTest/env"
 )
 
 func execSQLiteQueryInContainer(containerName, dbFilePath, query string) string {
-	res := helpers.RunCommand(false, "docker", "exec", containerName, "sqlite3", dbFilePath, query)
+	res := env.RunCommand(false, "docker", "exec", containerName, "sqlite3", dbFilePath, query)
 	return res
 }
