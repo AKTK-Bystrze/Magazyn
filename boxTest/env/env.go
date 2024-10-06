@@ -2,7 +2,6 @@ package env
 
 import (
 	"boxTest/common/consts"
-	"boxTest/common/helpers"
 	"log"
 	"os"
 	"strings"
@@ -21,14 +20,14 @@ func buildTestApp() {
 	log.Print("Creating test app...")
 	// pwd, _ := os.Getwd()
 	goToDir("..")
-	helpers.RunCommand(false, "docker", "build",
+	RunCommand(false, "docker", "build",
 		"--target", "test",
 		"-t", consts.TEST_APP_NAME,
 		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
 		"--build-arg", "COOKIE_KEY="+consts.COOKIE_KEY,
 		"--build-arg", "EMAIL_PASS=password",
 		consts.DOCKERFILE_PATH)
-	helpers.RunCommand(false, "docker", "run",
+	RunCommand(false, "docker", "run",
 		"--name", consts.TEST_APP_NAME,
 		"--cap-add=SYS_TIME",
 		"-d",
@@ -47,8 +46,8 @@ func cleanup() {
 	containersToClean := []string{consts.TEST_APP_NAME}
 	for _, app := range containersToClean {
 		if ContainerExists(app) {
-			helpers.RunCommand(false, "docker", "stop", app)
-			helpers.RunCommand(false, "docker", "rm", app)
+			RunCommand(false, "docker", "stop", app)
+			RunCommand(false, "docker", "rm", app)
 			log.Printf("Removed %s", app)
 		}
 	}
@@ -70,7 +69,7 @@ func dbExists(dbPath string) bool {
 }
 
 func ContainerExists(containerName string) bool {
-	output := helpers.RunCommand(false, "docker", "ps", "-a", "--format", "{{.Names}}")
+	output := RunCommand(false, "docker", "ps", "-a", "--format", "{{.Names}}")
 	for _, name := range strings.Split(output, "\n") {
 		if name == containerName {
 			return true
@@ -108,7 +107,7 @@ func RunTests(m *testing.M) {
 		testResult := tc.run()
 		if testResult == 1 {
 			log.Printf("TEST %v FAILED", tc.name)
-			log.Print("\n" + helpers.GetContainerLogs(consts.TEST_APP_NAME, startTime))
+			log.Print("\n" + GetContainerLogs(consts.TEST_APP_NAME, startTime))
 			t.Fail()
 			code = testResult
 			log.Printf("TEST %v FAILED", tc.name)

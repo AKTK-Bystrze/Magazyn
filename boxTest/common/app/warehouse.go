@@ -2,7 +2,6 @@ package app
 
 import (
 	"boxTest/common/consts"
-	"boxTest/common/httpClient"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -21,34 +20,21 @@ var (
 	URL_setStatus    = "/warehouse/admin/setStatus"
 )
 
-type Item struct {
-	ID          string
-	Name        string
-	Description string
-	Type        string
+func (uc UserClient) GoToReservations() {
+	uc.GetRequest(consts.Localhost + URL_reservations)
 }
 
-type Reservation struct {
-	ID          int       `json:"id"`
-	ItemID      int       `json:"item_id"`
-	UserID      int       `json:"user_id"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	ChangeByUID int       `json:"change_by_uid"`
+func (uc UserClient) ChangeReservationStatus(reservationId int, itemId int, status string) {
+	uc.PutRequest(consts.Localhost+URL_setStatus, url.Values{
+		"reservation_id": {strconv.Itoa(reservationId)},
+		"url":            {URL_setStatus},
+		"item_id":        {strconv.Itoa(itemId)},
+		"status":         {status},
+	})
 }
 
-type ReservationAudit struct {
-	ID            int       `json:"id"`
-	ReservationID int       `json:"reservation_id"`
-	UserID        int       `json:"user_id"`
-	Status        string    `json:"status"`
-	ChangeDate    time.Time `json:"change_date"`
-}
-
-func GetAvaiableItems(timeStart time.Time, timeStop time.Time) []Item {
-	resp := httpClient.PostFormRequestDefClient(consts.Localhost+URL_search,
+func (uc UserClient) GetAvaiableItems(timeStart time.Time, timeStop time.Time) []Item {
+	resp := uc.PostFormRequest(consts.Localhost+URL_search,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
@@ -86,8 +72,8 @@ func extractValue(text string) string {
 	return strings.TrimSpace(strings.Split(text, ":")[1])
 }
 
-func ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
-	httpClient.PostFormRequestDefClient(consts.Localhost+URL_reserve,
+func (uc UserClient) ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
+	uc.PostFormRequest(consts.Localhost+URL_reserve,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
@@ -95,15 +81,19 @@ func ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
 		})
 }
 
-func Dashboard() {
-	httpClient.GetRequestDefClient(consts.Localhost + URL_dashboard)
+func (uc UserClient) Dashboard() {
+	uc.GetRequest(consts.Localhost + URL_dashboard)
 }
 
-func SearchItem(item string) {
+func (uc UserClient) SearchItem(item string) {
 	// httpClient.PostFormRequest(URL_search)
 }
 
-func ReservationExists(reservations []Reservation, startTime, endTime time.Time, itemID string, user consts.User) bool {
+func (uc UserClient) SetReservationStatus(reservationId int, status string) {
+	//call endpoint
+}
+
+func ReservationExists(reservations []Reservation, startTime, endTime time.Time, itemID string, user User) bool {
 	id, _ := strconv.Atoi(itemID)
 	for _, reservation := range reservations {
 		loc := time.UTC
@@ -116,26 +106,9 @@ func ReservationExists(reservations []Reservation, startTime, endTime time.Time,
 		et := endTime.In(loc)
 		et = et.Truncate(time.Minute)
 		// log.Printf("r%v - %v\n t%v - %v", rst, st, ret, et)
-		if rst.Equal(st) && ret.Equal(et) && reservation.ItemID == id && reservation.Status == consts.PENDING && reservation.UserID == int(user.ID) {
+		if rst.Equal(st) && ret.Equal(et) && reservation.ItemID == id && reservation.Status == PENDING && reservation.UserID == int(user.ID) {
 			return true
 		}
 	}
 	return false
-}
-
-func SetReservationStatus(reservationId int, status string) {
-	//call endpoint
-}
-
-func Reservations() {
-	httpClient.GetRequestDefClient(consts.Localhost + URL_reservations)
-}
-
-func ChangeReservationStatus(reservationId int, itemId int, status string) {
-	httpClient.PutRequestDefClient(consts.Localhost+URL_setStatus, url.Values{
-		"reservation_id": {strconv.Itoa(reservationId)},
-		"url":            {URL_setStatus},
-		"item_id":        {strconv.Itoa(itemId)},
-		"status":         {status},
-	})
 }

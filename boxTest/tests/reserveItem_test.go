@@ -11,8 +11,11 @@ import (
 	"time"
 )
 
-func reserveItemScenario(user consts.User) error {
-	httpClient.RestartDefaultClient()
+func reserveItemScenario(user app.User) error {
+	client := UserClient{
+		Name user.Name,
+		Client CreateHttpClient(),
+	}
 	app.LoginAsDefClient(user.Name)
 	httpClient.GetRequestDefClient(consts.Localhost + app.URL_search)
 	now := time.Now().Add(10 * time.Minute)
@@ -36,7 +39,7 @@ func pickRandomItem(items []app.Item) app.Item {
 }
 
 func Test_reserveItem(t *testing.T) {
-	for _, user := range consts.USERS {
+	for _, user := range db.USERS {
 		err := reserveItemScenario(user)
 		if err != nil {
 			t.Errorf("reserve item scenario for %v failed %v", user.Name, err)

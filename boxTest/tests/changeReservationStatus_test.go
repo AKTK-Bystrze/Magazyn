@@ -2,7 +2,6 @@ package main
 
 import (
 	"boxTest/common/app"
-	"boxTest/common/consts"
 	"boxTest/common/db"
 	"boxTest/common/httpClient"
 	"fmt"
@@ -10,13 +9,13 @@ import (
 	"testing"
 )
 
-func changeReservationStatus(reservation app.Reservation) error {
-	for _, newStatus := range consts.RESERVATION_STATUSES {
+func changeReservationStatus(reservation app.Reservation, client app.UserClient) error {
+	for _, newStatus := range app.RESERVATION_STATUSES {
 		if newStatus != reservation.Status {
 			oldStatus := reservation.Status
 			log.Printf("change reservation status from %v to %v", oldStatus, newStatus)
 			db.GetReservations()
-			app.ChangeReservationStatus(reservation.ID, reservation.ItemID, newStatus)
+			client.ChangeReservationStatus(reservation.ID, reservation.ItemID, newStatus)
 			reservationChanged := db.GetReservationById(reservation.ID)
 			if reservationChanged.Status != newStatus {
 				return fmt.Errorf("Reservation %v status should be %v, was %v", reservationChanged, newStatus, oldStatus)
@@ -38,13 +37,17 @@ func Test_changeReservationStatusFromEachToEach(t *testing.T) {
 	// 	ChangeByUID: int(consts.USERS_MAP["kursant1"].ID),
 	// } //todo inserting in db doesn't work. App doesn't see it.
 	reservation := db.RESERVATIONS[0]
-	app.LoginAsDefClient(consts.AdminName1)
-	app.Reservations()
-	for _, status := range consts.RESERVATION_STATUSES {
+	admin := app.UserClient{
+		Name:   app.AdminName1,
+		Client: app.CreateHttpClient(),
+	}
+	admin.Login()
+	admin.GoToReservations()
+	for _, status := range app.RESERVATION_STATUSES {
 		reservation.Status = status
 		db.AddReservation(reservation)
 		reservation.ID = db.GetReservationByCreateTime(reservation.CreatedAt).ID
-		err := changeReservationStatus(reservation)
+		err := changeReservationStatus(reservation, admin)
 		if err != nil {
 			t.Errorf("change status reservation scenario failed for reservation %v status %v", reservation, status)
 		}

@@ -3,7 +3,6 @@ package app
 import (
 	"boxTest/common/consts"
 	"boxTest/common/helpers"
-	"boxTest/common/httpClient"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,40 +31,31 @@ func getLoginLinkFromLogs(since time.Time) string {
 	return loginLink
 }
 
-func LoginAs(userName string, client http.Client) error {
-	log.Printf("Login \t$%v", userName)
-	resp := httpClient.GetRequest(consts.Localhost+URL_login, client)
+func (uc UserClient) Login() error {
+	log.Printf("Login \t$%v", uc.Name)
+	resp := uc.GetRequest(consts.Localhost + URL_login)
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Can't get login page: got %v, want %v", resp.StatusCode, http.StatusOK)
 	}
 
 	loginTime := time.Now()
-	httpClient.PostFormRequest(consts.Localhost+URL_token, url.Values{
+	uc.PostFormRequest(consts.Localhost+URL_token, url.Values{
 		"strategy":  {"debug"},
-		"recipient": {userName},
-	},
-		client)
+		"recipient": {uc.Name},
+	})
 	loginLink := getLoginLinkFromLogs(loginTime)
-	resp = httpClient.
-		GetRequest(loginLink, client)
+	resp = uc.
+		GetRequest(loginLink)
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
-		return fmt.Errorf("can't login as %v", userName)
+		return fmt.Errorf("can't login as %v", uc.Name)
 	}
 	return nil
 }
 
-func LoginAsDefClient(userName string) error {
-	return LoginAs(userName, httpClient.DefaultClient)
-}
-
-func LogOutDefClient() error {
-	return LogOutAs(httpClient.DefaultClient)
-}
-
-func LogOutAs(client http.Client) error {
-	log.Printf("Logout")
-	resp := httpClient.GetRequest(consts.Localhost+URL_logout, client)
+func (uc UserClient) LogOut() error {
+	log.Printf("Logout %v", uc.Name)
+	resp := uc.GetRequest(consts.Localhost + URL_logout)
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
 		return fmt.Errorf("can't logout")
