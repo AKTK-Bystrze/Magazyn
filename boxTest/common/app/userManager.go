@@ -34,19 +34,19 @@ func getLoginLinkFromLogs(since time.Time) string {
 
 func LoginAs(userName string) error {
 	log.Printf("Login \t$%v", userName)
-	resp := httpClient.GetRequest(consts.Localhost + URL_login)
+	resp := httpClient.GetRequestDefClient(consts.Localhost + URL_login)
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Can't get login page: got %v, want %v", resp.StatusCode, http.StatusOK)
 	}
 
 	loginTime := time.Now()
-	httpClient.PostFormRequest(consts.Localhost+URL_token, url.Values{
+	httpClient.PostFormRequestDefClient(consts.Localhost+URL_token, url.Values{
 		"strategy":  {"debug"},
 		"recipient": {userName},
 	})
 	loginLink := getLoginLinkFromLogs(loginTime)
 	resp = httpClient.
-		GetRequest(loginLink)
+		GetRequestDefClient(loginLink)
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
 		return fmt.Errorf("can't login as %v", userName)
@@ -56,7 +56,7 @@ func LoginAs(userName string) error {
 
 func LogOut() error {
 	log.Printf("Logout")
-	resp := httpClient.GetRequest(consts.Localhost + URL_logout)
+	resp := httpClient.GetRequestDefClient(consts.Localhost + URL_logout)
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
 		return fmt.Errorf("can't logout")

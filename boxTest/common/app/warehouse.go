@@ -48,7 +48,7 @@ type ReservationAudit struct {
 }
 
 func GetAvaiableItems(timeStart time.Time, timeStop time.Time) []Item {
-	resp := httpClient.PostFormRequest(consts.Localhost+URL_search,
+	resp := httpClient.PostFormRequestDefClient(consts.Localhost+URL_search,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
@@ -87,7 +87,7 @@ func extractValue(text string) string {
 }
 
 func ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
-	httpClient.PostFormRequest(consts.Localhost+URL_reserve,
+	httpClient.PostFormRequestDefClient(consts.Localhost+URL_reserve,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
@@ -96,7 +96,7 @@ func ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
 }
 
 func Dashboard() {
-	httpClient.GetRequest(consts.Localhost + URL_dashboard)
+	httpClient.GetRequestDefClient(consts.Localhost + URL_dashboard)
 }
 
 func SearchItem(item string) {
@@ -128,11 +128,11 @@ func SetReservationStatus(reservationId int, status string) {
 }
 
 func Reservations() {
-	httpClient.GetRequest(consts.Localhost + URL_reservations)
+	httpClient.GetRequestDefClient(consts.Localhost + URL_reservations)
 }
 
 func ChangeReservationStatus(reservationId int, itemId int, status string) {
-	httpClient.PutRequest(consts.Localhost+URL_setStatus, url.Values{
+	httpClient.PutRequestDefClient(consts.Localhost+URL_setStatus, url.Values{
 		"reservation_id": {strconv.Itoa(reservationId)},
 		"url":            {URL_setStatus},
 		"item_id":        {strconv.Itoa(itemId)},

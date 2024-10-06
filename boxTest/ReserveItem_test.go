@@ -14,13 +14,13 @@ import (
 func reserveItemScenario(user consts.User) error {
 	httpClient.RestartDefaultClient()
 	app.LoginAs(user.Name)
-	httpClient.GetRequest(consts.Localhost + app.URL_search)
+	httpClient.GetRequestDefClient(consts.Localhost + app.URL_search)
 	now := time.Now().Add(10 * time.Minute)
 	nextWeek := now.AddDate(0, 0, 7)
 	items := app.GetAvaiableItems(now, nextWeek)
 	reservedItem := pickRandomItem(items)
 	app.ReserveItem(reservedItem.ID, now, nextWeek)
-	app.Dashboard() //TODO //find reservation in reservations view
+	app.Dashboard()
 	reservations := db.GetReservations()
 	if !app.ReservationExists(reservations, now, nextWeek, reservedItem.ID, user) { //todo redo -> getReservationBYProvidingAlldata except id
 		return errors.New("Missing reservation in db for" + user.Name)

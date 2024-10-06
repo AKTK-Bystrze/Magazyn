@@ -12,7 +12,7 @@ var (
 	DefaultClient = http.Client{}
 )
 
-func GetRequest(url string) *http.Response {
+func GetRequestDefClient(url string) *http.Response {
 	log.Printf("Get \t%v", url)
 	resp, err := DefaultClient.
 		Get(url)
@@ -25,7 +25,7 @@ func GetRequest(url string) *http.Response {
 	return resp
 }
 
-func PostFormRequest(url string, formData url.Values) *http.Response {
+func PostFormRequestDefClient(url string, formData url.Values) *http.Response {
 	log.Printf("Post \t$%v\n\t%v", url, formData)
 	resp, err := DefaultClient.
 		PostForm(url, formData)
@@ -39,7 +39,7 @@ func PostFormRequest(url string, formData url.Values) *http.Response {
 	return resp
 }
 
-func PutRequest(url string, formData url.Values) *http.Response {
+func PutRequestDefClient(url string, formData url.Values) *http.Response {
 	log.Printf("PUT \t%v\n\t%v", url, formData)
 	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(formData.Encode()))
 	if err != nil {
