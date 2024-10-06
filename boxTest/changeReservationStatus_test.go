@@ -38,7 +38,7 @@ func Test_changeReservationStatusFromEachToEach(t *testing.T) {
 	// 	ChangeByUID: int(consts.USERS_MAP["kursant1"].ID),
 	// } //todo inserting in db doesn't work. App doesn't see it.
 	reservation := db.RESERVATIONS[0]
-	app.LoginAs(consts.AdminName1)
+	app.LoginAsDefClient(consts.AdminName1)
 	app.Reservations()
 	for _, status := range consts.RESERVATION_STATUSES {
 		reservation.Status = status

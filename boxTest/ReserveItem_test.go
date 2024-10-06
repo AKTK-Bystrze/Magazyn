@@ -13,7 +13,7 @@ import (
 
 func reserveItemScenario(user consts.User) error {
 	httpClient.RestartDefaultClient()
-	app.LoginAs(user.Name)
+	app.LoginAsDefClient(user.Name)
 	httpClient.GetRequestDefClient(consts.Localhost + app.URL_search)
 	now := time.Now().Add(10 * time.Minute)
 	nextWeek := now.AddDate(0, 0, 7)

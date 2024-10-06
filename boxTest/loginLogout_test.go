@@ -9,36 +9,36 @@ import (
 
 func Test_user(t *testing.T) {
 	httpClient.RestartDefaultClient()
-	err := app.LoginAs(consts.UserName1)
+	err := app.LoginAsDefClient(consts.UserName1)
 	if err != nil {
 		t.Fail()
 	}
-	app.LogOut()
+	app.LogOutDefClient()
 }
 
 func Test_admin(t *testing.T) {
 	httpClient.RestartDefaultClient()
-	err := app.LoginAs(consts.AdminName1)
+	err := app.LoginAsDefClient(consts.AdminName1)
 	if err != nil {
 		t.Fail()
 	}
-	app.LogOut()
+	app.LogOutDefClient()
 }
 
 func Test_superAdmin(t *testing.T) {
 	httpClient.RestartDefaultClient()
-	err := app.LoginAs(consts.SuperAdminName)
+	err := app.LoginAsDefClient(consts.SuperAdminName)
 	if err != nil {
 		t.Fail()
 	}
-	app.LogOut()
+	app.LogOutDefClient()
 }
 
 func Test_ninja(t *testing.T) {
 	httpClient.RestartDefaultClient()
-	err := app.LoginAs(consts.NinjaName)
+	err := app.LoginAsDefClient(consts.NinjaName)
 	if err != nil {
 		t.Fail()
 	}
-	app.LogOut()
+	app.LogOutDefClient()
 }

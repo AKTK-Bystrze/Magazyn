@@ -32,7 +32,7 @@ func getLoginLinkFromLogs(since time.Time) string {
 	return loginLink
 }
 
-func LoginAs(userName string) error {
+func LoginAsDefClient(userName string) error {
 	log.Printf("Login \t$%v", userName)
 	resp := httpClient.GetRequestDefClient(consts.Localhost + URL_login)
 	if resp.StatusCode != http.StatusOK {
@@ -54,7 +54,7 @@ func LoginAs(userName string) error {
 	return nil
 }
 
-func LogOut() error {
+func LogOutDefClient() error {
 	log.Printf("Logout")
 	resp := httpClient.GetRequestDefClient(consts.Localhost + URL_logout)
 	if resp.StatusCode != http.StatusOK {
