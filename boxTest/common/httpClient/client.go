@@ -30,8 +30,12 @@ func GetRequest(url string, client http.Client) *http.Response {
 }
 
 func PostFormRequestDefClient(url string, formData url.Values) *http.Response {
+	return PostFormRequest(url, formData, DefaultClient)
+}
+
+func PostFormRequest(url string, formData url.Values, client http.Client) *http.Response {
 	log.Printf("Post \t$%v\n\t%v", url, formData)
-	resp, err := DefaultClient.
+	resp, err := client.
 		PostForm(url, formData)
 	if err != nil {
 		log.Printf("%v response %v", url, resp)
