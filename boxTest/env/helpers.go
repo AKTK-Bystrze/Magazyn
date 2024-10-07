@@ -46,6 +46,6 @@ func SetContainerTimeForWhile(timeToSet time.Time, containerName string) {
 	if res == "" {
 		log.Fatalf("can't change time on %v", containerName)
 	} else {
-		log.Printf("container %v time set to %v", containerName, res)
+		log.Printf("WARN! time set to %v for container to %v", res, containerName)
 	}
 }

@@ -56,7 +56,7 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.APPROVED)
 	// - chek db reservation status
 	//admin gives item the same day
-	admin.ChangeReservationStatus(reservedItem.ID, reservation.ID, app.RENTED)
+	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RENTED)
 	// - check db reservation status
 	//user return item the selected day
 	env.SetContainerTimeForWhile(reservationEnd.Add(-time.Hour), consts.TEST_APP_NAME)
@@ -71,7 +71,7 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 
 func Test_reservationScenario(t *testing.T) {
 	testSetUp()
-	reservationStart := time.Now()
+	reservationStart := time.Now().Add(30 * time.Minute)
 	reservationEnd := time.Now().AddDate(0, 0, 7)
 	baseScenario(reservationStart, reservationEnd)
 }

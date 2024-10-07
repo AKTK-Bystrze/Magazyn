@@ -123,13 +123,19 @@ func ByStatus(status string) ConditionFunc {
 
 func ByStartTime(start time.Time) ConditionFunc {
 	return func(res app.Reservation) bool {
-		return res.StartTime.Equal(start)
+		loc, _ := time.LoadLocation("Europe/Warsaw")
+		formatedTime := start.In(loc)
+		formatedTime = formatedTime.Truncate(time.Minute)
+		return res.StartTime.Equal(formatedTime)
 	}
 }
 
 func ByEndTime(end time.Time) ConditionFunc {
 	return func(res app.Reservation) bool {
-		return res.EndTime.Equal(end)
+		loc := time.UTC
+		formatedTime := end.In(loc)
+		formatedTime = formatedTime.Truncate(time.Minute)
+		return res.EndTime.Equal(formatedTime)
 	}
 }
 
@@ -169,7 +175,7 @@ func AddReservation(reservation app.Reservation) {
 }
 
 func parseToReservation(line string) app.Reservation {
-	location, _ := time.LoadLocation("Europe/Berlin")
+	location, _ := time.LoadLocation("Europe/Warsaw")
 	fields := strings.Split(line, "|")
 	if len(fields) != 8 {
 		log.Fatalf("unexpected output format for reservation: %s", line)
