@@ -50,7 +50,7 @@ func (uc UserClient) ChangeReservationStatus(reservationId int, itemId int, stat
 	})
 }
 
-func (uc UserClient) GetAvaiableItems(timeStart time.Time, timeStop time.Time) []Item {
+func (uc UserClient) GetAvailableItems(timeStart time.Time, timeStop time.Time) []Item {
 	resp := uc.PostFormRequest(consts.Localhost+URL_search,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
@@ -76,7 +76,7 @@ func (uc UserClient) GetAvaiableItems(timeStart time.Time, timeStop time.Time) [
 			id = extractValue(id)
 			id_int, err := strconv.Atoi(id)
 			if err != nil {
-				log.Fatalf("GetAvaiableItems: cant parse id from %v", id)
+				log.Fatalf("GetavailableItems: cant parse id from %v", id)
 			}
 			itemType := s.Find("p.mb-1").Eq(2).Text()
 			availableItems = append(availableItems, Item{

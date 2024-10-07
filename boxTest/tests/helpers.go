@@ -13,6 +13,16 @@ func PickRandomItem(items []app.Item) app.Item {
 	return items[randomIndex]
 }
 
+func IsItemAvailable(searchedItem app.Item, items []app.Item) bool {
+	wasFound := false
+	for _, item := range items {
+		if item.ID == searchedItem.ID {
+			wasFound = true
+		}
+	}
+	return wasFound
+}
+
 func CalculateCost(item string, duration time.Duration) int {
 	days := int(duration.Hours() / 24)
 	switch item {

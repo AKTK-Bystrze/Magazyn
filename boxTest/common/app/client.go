@@ -29,7 +29,7 @@ func (uc UserClient) GetRequest(url string) *http.Response {
 	log.Printf("Get \t%v", url)
 	resp, err := uc.Client.Get(url)
 	if err != nil {
-		log.Fatalf("Failed request %v\n\tResp: %v\n\tErr: %v", url, resp, err)
+		log.Fatalf("Failed Get request %v\n\tResp: %v\n\tErr: %v", url, resp, err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Response code %v is different than %v \n%v", resp.StatusCode, http.StatusOK, resp)
@@ -43,7 +43,7 @@ func (uc UserClient) PostFormRequest(url string, formData url.Values) *http.Resp
 		PostForm(url, formData)
 	if err != nil {
 		log.Printf("%v response %v", url, resp)
-		log.Fatalf("Failed request: %v", err)
+		log.Fatalf("Failed post with form request: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Response code %v is different than %v \n%v", resp.StatusCode, http.StatusOK, resp)
@@ -60,7 +60,7 @@ func (uc UserClient) PutRequest(url string, formData url.Values) *http.Response 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := uc.Client.Do(req)
 	if err != nil {
-		log.Fatalf("Failed request: %v", err)
+		log.Fatalf("Failed put request: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Response code %v is different than %v \n%v", resp.StatusCode, http.StatusOK, resp)

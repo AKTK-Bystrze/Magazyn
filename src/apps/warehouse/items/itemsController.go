@@ -67,7 +67,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	ret, err := CheckAvailability(startTime, endTime, itemID)
 	if err != nil || !ret {
 		msg := "Przedmiot nie jest juz dostepny w tym terminie"
-		appState.App.Debug("%v item unavaiable in this date", session.GetSessionUserName(r))
+		appState.App.Debug("%v item unavailable in this date", session.GetSessionUserName(r))
 		SearchItems(w, r, msg)
 		return
 	}

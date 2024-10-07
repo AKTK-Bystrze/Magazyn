@@ -17,6 +17,7 @@ var (
 )
 
 func testSetUp() {
+	log.Print("TestSetUp, logIn user1 and admin1...")
 	user = app.UserClient{
 		User:   db.USERS_MAP[app.UserName1],
 		Client: app.CreateHttpClient(),
@@ -29,9 +30,15 @@ func testSetUp() {
 	admin.Login()
 }
 
+func testTearDown() {
+	log.Print("test clean up, logOut user1 and admin1...")
+	user.LogOut()
+	admin.LogOut()
+}
+
 func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 	userBefore := db.GetUserById(int(user.User.ID))
-	items := user.GetAvaiableItems(reservationStart, reservationEnd)
+	items := user.GetAvailableItems(reservationStart, reservationEnd)
 	reservedItem := tests.PickRandomItem(items)
 	correctCost := tests.CalculateCost(reservedItem.Type, reservationEnd.Sub(reservationStart))
 	correctUserCredits := userBefore.Credits - correctCost
@@ -55,10 +62,11 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 		log.Fatalf("Only one reservation this type should exists %v", reservationsFound)
 	}
 	reservation := reservationsFound[0]
-	// - check item availability TODO
 
-	items = user.GetAvaiableItems(reservationStart, reservationEnd)
-
+	items = user.GetAvailableItems(reservationStart, reservationEnd)
+	if tests.IsItemAvailable(reservedItem, items) {
+		log.Fatal("Reserved item shouldn't be available when reserved")
+	}
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.APPROVED)
 	// - chek db reservation status TODO
 
@@ -75,11 +83,16 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, correctUserCredits)
 	}
 	// - check db reservation status
-	// - check item avaiablity
+	items = user.GetAvailableItems(reservationStart, reservationEnd)
+	if tests.IsItemAvailable(reservedItem, items) {
+		log.Fatal("Reserved item should be available after closed reservation")
+	}
 }
 
 func Test_reservationScenario(t *testing.T) {
+	testTearDown()
 	testSetUp()
+	defer testTearDown()
 	reservationStart := time.Now().Add(30 * time.Minute)
 	reservationEnd := time.Now().AddDate(0, 0, 7)
 	baseScenario(reservationStart, reservationEnd)

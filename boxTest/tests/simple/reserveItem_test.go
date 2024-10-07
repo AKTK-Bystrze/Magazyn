@@ -19,7 +19,7 @@ func reserveItemScenario(user app.User) error {
 	client.GetRequest(consts.Localhost + app.URL_search)
 	now := time.Now().Add(10 * time.Minute)
 	nextWeek := now.AddDate(0, 0, 7)
-	items := client.GetAvaiableItems(now, nextWeek)
+	items := client.GetAvailableItems(now, nextWeek)
 	reservedItem := tests.PickRandomItem(items)
 	client.ReserveItem(reservedItem.ID, now, nextWeek)
 	client.Dashboard()
