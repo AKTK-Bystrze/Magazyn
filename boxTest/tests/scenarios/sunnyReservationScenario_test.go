@@ -40,14 +40,16 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 	userBefore := db.GetUserById(int(user.User.ID))
 	items := user.GetAvailableItems(reservationStart, reservationEnd)
 	reservedItem := tests.PickRandomItem(items)
-	correctCost := tests.CalculateCost(reservedItem.Type, reservationEnd.Sub(reservationStart))
-	correctUserCredits := userBefore.Credits - correctCost
+	expectedCost := tests.CalculateCost(reservedItem.Type, reservationEnd.Sub(reservationStart))
+	expectedUserCredits := userBefore.Credits - expectedCost
+	log.Printf("Expected reservation cost %v, user credits before %v, user credits after %v",
+		expectedCost, userBefore.Credits, expectedUserCredits)
 
 	user.ReserveItem(reservedItem.ID, reservationStart, reservationEnd)
 
 	userAfter := db.GetUserById(int(user.User.ID))
-	if userAfter.Credits != correctUserCredits {
-		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, correctUserCredits)
+	if userAfter.Credits != expectedUserCredits {
+		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, expectedUserCredits)
 	}
 	reservation := db.GetReservation(
 		db.ByItemID(reservedItem.ID),
@@ -56,7 +58,6 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 		db.ByStartTime(reservationStart),
 		db.ByEndTime(reservationEnd),
 	)
-
 	items = user.GetAvailableItems(reservationStart, reservationEnd)
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item shouldn't be available when reserved")
@@ -79,8 +80,8 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 		log.Fatalf("status didn't change in db")
 	}
 	userAfter = db.GetUserById(int(user.User.ID))
-	if userAfter.Credits != correctUserCredits {
-		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, correctUserCredits)
+	if userAfter.Credits != expectedUserCredits {
+		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, expectedUserCredits)
 	}
 	items = user.GetAvailableItems(reservationStart, reservationEnd)
 	if tests.IsItemAvailable(reservedItem, items) {
@@ -89,16 +90,25 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 }
 
 func Test_reservationScenario(t *testing.T) {
-	testSetUp()
-	defer testTearDown()
-	reservationStart := time.Now().Add(30 * time.Minute)
-	reservationEnd := time.Now().AddDate(0, 0, 7)
-	baseScenario(reservationStart, reservationEnd)
+	testCases := []struct {
+		name      string
+		startTime time.Time
+		endTime   time.Time
+	}{
+		{"1 week reservation", time.Now().Add(30 * time.Minute), time.Now().AddDate(0, 0, 7)},
+		{"1 day reservation", tests.CreateNextDayAt(8), tests.CreateNextDayAt(16)},
+		{"2 day reservation", tests.CreateNextDayAt(8), time.Now().AddDate(0, 0, 7)},
+	}
+	for _, tc := range testCases {
+		testSetUp()
+		defer testTearDown()
+		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
+		baseScenario(tc.startTime, tc.endTime)
+		log.Printf("TEST reservation case %v PASSED", tc.name)
+	}
+
 }
 
-//cases:
-//1 day reservation
-//2 weekend reservation
-//1 wekk reservation
-//reservation is in the future
-//reservation is ended quicker
+//TODO
+//reservation is in the future, item should be available before the reservation
+//reservation is ended quicker, item should be available quicker and cost should be updated

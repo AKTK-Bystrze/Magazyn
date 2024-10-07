@@ -86,7 +86,7 @@ func GetReservation(conditions ...ConditionFunc) app.Reservation {
 	reservations := GetReservations()
 	reservationsFound := FindReservations(reservations, conditions...)
 	if len(reservationsFound) != 1 {
-		log.Fatalf("Found one then more reservation for this criteria. %v", reservationsFound)
+		log.Fatalf("Didn't find reservation for this criteria. Reservations found: %v", reservationsFound)
 	}
 	return reservationsFound[0]
 }
@@ -195,33 +195,34 @@ func parseToReservation(line string) app.Reservation {
 	if len(fields) != 8 {
 		log.Fatalf("unexpected output format for reservation: %s", line)
 	}
+
 	var r app.Reservation
-	var err error
-	if r.ID, err = parseInt(fields[0]); err != nil {
-		log.Fatalf("r_ID arsing error: %s", line)
+
+	parseIntField := func(value string, fieldName string) int {
+		v, err := parseInt(value)
+		if err != nil {
+			log.Fatalf("%s parsing error: %s", fieldName, line)
+		}
+		return v
 	}
-	if r.ItemID, err = parseInt(fields[1]); err != nil {
-		log.Fatalf("I_ID Parsing error: %s", line)
+
+	parseTimeField := func(value string, fieldName string) time.Time {
+		t, err := time.Parse(consts.TIME_FORMAT, value)
+		if err != nil {
+			log.Fatalf("%s parsing error: %s err %v", fieldName, line, err)
+		}
+		return t.In(location)
 	}
-	if r.UserID, err = parseInt(fields[2]); err != nil {
-		log.Fatalf("U_ID Parsing error: %s", line)
-	}
-	if r.StartTime, err = time.Parse(consts.DB_TIME_FORMAT, fields[3]); err != nil {
-		log.Fatalf("Start time parsing error: %s", line)
-	}
-	r.StartTime = r.StartTime.In(location)
-	if r.EndTime, err = time.Parse(consts.DB_TIME_FORMAT, fields[4]); err != nil {
-		log.Fatalf("End Time parsing error: %s", line)
-	}
-	r.EndTime = r.EndTime.In(location)
+
+	r.ID = parseIntField(fields[0], "ID")
+	r.ItemID = parseIntField(fields[1], "ItemID")
+	r.UserID = parseIntField(fields[2], "UserID")
+	r.StartTime = parseTimeField(fields[3], "StartTime")
+	r.EndTime = parseTimeField(fields[4], "EndTime")
 	r.Status = fields[5]
-	if r.CreatedAt, err = time.Parse(consts.DB_TIME_FORMAT, fields[6]); err != nil {
-		log.Fatalf("Status parsing error: %s", line)
-	}
-	r.CreatedAt = r.CreatedAt.In(location)
-	if r.ChangeByUID, err = parseInt(fields[7]); err != nil {
-		log.Fatalf("changedByUID parsing error: %s", line)
-	}
+	r.CreatedAt = parseTimeField(fields[6], "CreatedAt")
+	r.ChangeByUID = parseIntField(fields[7], "ChangeByUID")
+
 	return r
 }
 

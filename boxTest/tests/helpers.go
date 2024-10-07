@@ -23,6 +23,14 @@ func IsItemAvailable(searchedItem app.Item, items []app.Item) bool {
 	return wasFound
 }
 
+func CreateNextDayAt(hour int) time.Time {
+	now := time.Now().Add(24 * time.Hour)
+	year, month, day := now.Date()
+	location := now.Location()
+
+	return time.Date(year, month, day, hour, 0, 0, 0, location)
+}
+
 func CalculateCost(item string, duration time.Duration) int {
 	days := int(duration.Hours() / 24)
 	switch item {
