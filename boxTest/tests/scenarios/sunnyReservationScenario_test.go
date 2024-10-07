@@ -49,40 +49,39 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 	if userAfter.Credits != correctUserCredits {
 		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, correctUserCredits)
 	}
-	reservations := db.GetReservations()
-	reservationsFound := db.FindReservations(
-		reservations,
+	reservation := db.GetReservation(
 		db.ByItemID(reservedItem.ID),
 		db.ByStatus(app.PENDING),
 		db.ByUserID(int(user.User.ID)),
 		db.ByStartTime(reservationStart),
 		db.ByEndTime(reservationEnd),
 	)
-	if len(reservationsFound) != 1 {
-		log.Fatalf("Only one reservation this type should exists %v", reservationsFound)
-	}
-	reservation := reservationsFound[0]
 
 	items = user.GetAvailableItems(reservationStart, reservationEnd)
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item shouldn't be available when reserved")
 	}
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.APPROVED)
-	// - chek db reservation status TODO
-
+	reservation = db.GetReservation(db.ByID(reservation.ID))
+	if reservation.Status != app.APPROVED {
+		log.Fatalf("status didn't change in db")
+	}
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RENTED)
-	// - check db reservation status TODO
+	reservation = db.GetReservation(db.ByID(reservation.ID))
+	if reservation.Status != app.RENTED {
+		log.Fatalf("status didn't change in db")
+	}
 
 	env.SetContainerTimeForWhile(reservationEnd.Add(-time.Hour), consts.TEST_APP_NAME)
-	// - check db reservation status TODO
-
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RETURNED)
-
+	reservation = db.GetReservation(db.ByID(reservation.ID))
+	if reservation.Status != app.RETURNED {
+		log.Fatalf("status didn't change in db")
+	}
 	userAfter = db.GetUserById(int(user.User.ID))
 	if userAfter.Credits != correctUserCredits {
 		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, correctUserCredits)
 	}
-	// - check db reservation status
 	items = user.GetAvailableItems(reservationStart, reservationEnd)
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item should be available after closed reservation")
@@ -90,7 +89,6 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 }
 
 func Test_reservationScenario(t *testing.T) {
-	testTearDown()
 	testSetUp()
 	defer testTearDown()
 	reservationStart := time.Now().Add(30 * time.Minute)

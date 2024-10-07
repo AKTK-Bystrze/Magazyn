@@ -19,7 +19,7 @@ var (
 
 func getLoginLinkFromLogs(since time.Time) string {
 	logs := env.GetContainerLogs(consts.TEST_APP_NAME, since)
-	startIndex := strings.Index(logs, "Login at ")
+	startIndex := strings.LastIndex(logs, "Login at ")
 	if startIndex == -1 {
 		return ""
 	}

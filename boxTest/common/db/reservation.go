@@ -82,6 +82,15 @@ func GetReservations() []app.Reservation {
 	return parseToReservationsList(reservationsString)
 }
 
+func GetReservation(conditions ...ConditionFunc) app.Reservation {
+	reservations := GetReservations()
+	reservationsFound := FindReservations(reservations, conditions...)
+	if len(reservationsFound) != 1 {
+		log.Fatalf("Found one then more reservation for this criteria. %v", reservationsFound)
+	}
+	return reservationsFound[0]
+}
+
 // ConditionFunc type that defines the condition for flexible filtering
 type ConditionFunc func(res app.Reservation) bool
 
@@ -106,6 +115,12 @@ func FindReservations(reservations []app.Reservation, conditions ...ConditionFun
 func ByItemID(itemID int) ConditionFunc {
 	return func(res app.Reservation) bool {
 		return res.ItemID == itemID
+	}
+}
+
+func ByID(reservationID int) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.ID == reservationID
 	}
 }
 
