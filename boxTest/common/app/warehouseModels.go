@@ -14,7 +14,7 @@ const (
 )
 
 type Item struct {
-	ID          string
+	ID          int
 	Name        string
 	Description string
 	Type        string

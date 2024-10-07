@@ -56,9 +56,14 @@ func (uc UserClient) GetAvaiableItems(timeStart time.Time, timeStop time.Time) [
 			name := s.Find("h4.mb-1").Text()
 			description := s.Find("p.mb-1").Eq(0).Text()
 			id := s.Find("p.mb-1").Eq(1).Text()
+			id = extractValue(id)
+			id_int, err := strconv.Atoi(id)
+			if err != nil {
+				log.Fatalf("GetAvaiableItems: cant parse id from %v", id)
+			}
 			itemType := s.Find("p.mb-1").Eq(2).Text()
 			availableItems = append(availableItems, Item{
-				ID:          extractValue(id),
+				ID:          id_int,
 				Name:        name,
 				Description: description,
 				Type:        extractValue(itemType),
@@ -72,12 +77,12 @@ func extractValue(text string) string {
 	return strings.TrimSpace(strings.Split(text, ":")[1])
 }
 
-func (uc UserClient) ReserveItem(itemID string, timeStart time.Time, timeStop time.Time) {
+func (uc UserClient) ReserveItem(itemID int, timeStart time.Time, timeStop time.Time) {
 	uc.PostFormRequest(consts.Localhost+URL_reserve,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
-			"item_id":    {itemID},
+			"item_id":    {strconv.Itoa(itemID)},
 		})
 }
 
@@ -85,16 +90,7 @@ func (uc UserClient) Dashboard() {
 	uc.GetRequest(consts.Localhost + URL_dashboard)
 }
 
-func (uc UserClient) SearchItem(item string) {
-	// httpClient.PostFormRequest(URL_search)
-}
-
-func (uc UserClient) SetReservationStatus(reservationId int, status string) {
-	//call endpoint
-}
-
-func ReservationExists(reservations []Reservation, startTime, endTime time.Time, itemID string, user User) bool {
-	id, _ := strconv.Atoi(itemID)
+func ReservationExists(reservations []Reservation, startTime, endTime time.Time, itemID int, user User) bool {
 	for _, reservation := range reservations {
 		loc := time.UTC
 		rst := reservation.StartTime.In(loc)
@@ -106,7 +102,7 @@ func ReservationExists(reservations []Reservation, startTime, endTime time.Time,
 		et := endTime.In(loc)
 		et = et.Truncate(time.Minute)
 		// log.Printf("r%v - %v\n t%v - %v", rst, st, ret, et)
-		if rst.Equal(st) && ret.Equal(et) && reservation.ItemID == id && reservation.Status == PENDING && reservation.UserID == int(user.ID) {
+		if rst.Equal(st) && ret.Equal(et) && reservation.ItemID == itemID && reservation.Status == PENDING && reservation.UserID == int(user.ID) {
 			return true
 		}
 	}

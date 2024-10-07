@@ -9,7 +9,7 @@ import (
 )
 
 type UserClient struct {
-	Name   string
+	User   User
 	Client http.Client
 }
 

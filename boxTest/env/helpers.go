@@ -38,6 +38,7 @@ func RunCommandError(printOutput bool, command string, args ...string) (string, 
 	return string(output), nil
 }
 
+// Works for a while till system synchronize it
 func SetContainerTimeForWhile(timeToSet time.Time, containerName string) {
 	timeFormated := strings.ReplaceAll(timeToSet.Format(consts.TIME_FORMAT), "T", " ")
 	RunCommand(false, "docker", "exec", containerName, "date", "-s", timeFormated)

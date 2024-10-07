@@ -12,7 +12,7 @@ import (
 
 func reserveItemScenario(user app.User) error {
 	client := app.UserClient{
-		Name:   user.Name,
+		User:   user,
 		Client: app.CreateHttpClient(),
 	}
 	client.Login()

@@ -38,7 +38,7 @@ func Test_changeReservationStatusFromEachToEach(t *testing.T) {
 	//TODO test is not working :/ App doesn't see changes made by test that is why
 	reservation := db.RESERVATIONS[0]
 	admin := app.UserClient{
-		Name:   app.AdminName1,
+		User:   db.USERS_MAP[app.AdminName1],
 		Client: app.CreateHttpClient(),
 	}
 	admin.Login()

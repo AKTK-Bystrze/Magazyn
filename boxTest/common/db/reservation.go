@@ -82,6 +82,57 @@ func GetReservations() []app.Reservation {
 	return parseToReservationsList(reservationsString)
 }
 
+// ConditionFunc type that defines the condition for flexible filtering
+type ConditionFunc func(res app.Reservation) bool
+
+func FindReservations(reservations []app.Reservation, conditions ...ConditionFunc) []app.Reservation {
+	var result []app.Reservation
+	for _, res := range reservations {
+		match := true
+		for _, condition := range conditions {
+			if !condition(res) {
+				match = false
+				break
+			}
+		}
+		if match {
+			result = append(result, res)
+		}
+	}
+	return result
+}
+
+// Example conditions that can be passed to FindReservations
+func ByItemID(itemID int) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.ItemID == itemID
+	}
+}
+
+func ByUserID(userID int) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.UserID == userID
+	}
+}
+
+func ByStatus(status string) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.Status == status
+	}
+}
+
+func ByStartTime(start time.Time) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.StartTime.Equal(start)
+	}
+}
+
+func ByEndTime(end time.Time) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.EndTime.Equal(end)
+	}
+}
+
 func GetReservationById(reservationID int) app.Reservation {
 	query := fmt.Sprintf("SELECT * FROM reservations WHERE r_id = %d;", reservationID)
 	reservationsString := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
