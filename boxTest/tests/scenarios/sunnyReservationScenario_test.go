@@ -30,13 +30,19 @@ func testSetUp() {
 }
 
 func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
-	//user search for a item
+	userBefore := db.GetUserById(int(user.User.ID))
 	items := user.GetAvaiableItems(reservationStart, reservationEnd)
 	reservedItem := tests.PickRandomItem(items)
-	//user reserve item for today
+	correctCost := tests.CalculateCost(reservedItem.Type, reservationEnd.Sub(reservationStart))
+	correctUserCredits := userBefore.Credits - correctCost
+
 	user.ReserveItem(reservedItem.ID, reservationStart, reservationEnd)
+
+	userAfter := db.GetUserById(int(user.User.ID))
+	if userAfter.Credits != correctUserCredits {
+		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, correctUserCredits)
+	}
 	reservations := db.GetReservations()
-	//find by user, item, status, time start, time end
 	reservationsFound := db.FindReservations(
 		reservations,
 		db.ByItemID(reservedItem.ID),
@@ -44,29 +50,32 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 		db.ByUserID(int(user.User.ID)),
 		db.ByStartTime(reservationStart),
 		db.ByEndTime(reservationEnd),
-	) //todo found 0 time formatting?
+	)
 	if len(reservationsFound) != 1 {
 		log.Fatalf("Only one reservation this type should exists %v", reservationsFound)
 	}
 	reservation := reservationsFound[0]
-	// - check db reservation status
-	// - check db user's credits
-	// - check item availability
-	//admin approves item the same day
+	// - check item availability TODO
+
+	items = user.GetAvaiableItems(reservationStart, reservationEnd)
+
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.APPROVED)
-	// - chek db reservation status
-	//admin gives item the same day
+	// - chek db reservation status TODO
+
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RENTED)
-	// - check db reservation status
-	//user return item the selected day
+	// - check db reservation status TODO
+
 	env.SetContainerTimeForWhile(reservationEnd.Add(-time.Hour), consts.TEST_APP_NAME)
-	// - check db user's credits
+	// - check db reservation status TODO
+
+	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RETURNED)
+
+	userAfter = db.GetUserById(int(user.User.ID))
+	if userAfter.Credits != correctUserCredits {
+		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, correctUserCredits)
+	}
 	// - check db reservation status
-	//addmin approves item return
-	admin.ChangeReservationStatus(reservedItem.ID, reservation.ID, app.RETURNED)
-	// - check db user's credits
-	// - check db reservation status
-	// - check item
+	// - check item avaiablity
 }
 
 func Test_reservationScenario(t *testing.T) {

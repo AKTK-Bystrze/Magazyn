@@ -18,6 +18,23 @@ var (
 	URL_dashboard    = "/users/user/dashboard"
 	URL_reservations = "/warehouse/admin/reservations"
 	URL_setStatus    = "/warehouse/admin/setStatus"
+
+	COST_KAYAK       = 4
+	KAYAK            = "kayak"
+	COST_PADDLE      = 2
+	PADDLE           = "paddle"
+	COST_LIFE_JACKET = 1
+	LIFE_JACKET      = "life_jacket"
+	COST_HELMET      = 1
+	HELMET           = "helmet"
+	COST_JACKET      = 1
+	JACKET           = "jacket"
+	COST_SPRAY_SKIRT = 1
+	SPRAY_SKIRT      = "spray_skirt"
+	COST_ROPE        = 1
+	ROPE             = "rope"
+	COST_WETSUIT     = 1
+	WETSUIT          = "wetsuit"
 )
 
 func (uc UserClient) GoToReservations() {
@@ -101,7 +118,6 @@ func ReservationExists(reservations []Reservation, startTime, endTime time.Time,
 		ret = ret.Truncate(time.Minute)
 		et := endTime.In(loc)
 		et = et.Truncate(time.Minute)
-		// log.Printf("r%v - %v\n t%v - %v", rst, st, ret, et)
 		if rst.Equal(st) && ret.Equal(et) && reservation.ItemID == itemID && reservation.Status == PENDING && reservation.UserID == int(user.ID) {
 			return true
 		}
