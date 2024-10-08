@@ -1,4 +1,4 @@
-package simple
+package warehouseTests
 
 import (
 	"boxTest/common/app"
@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func changeReservationStatus(reservation app.Reservation, client app.UserClient) error {
+func changeReservationStatusWithUser(reservation app.Reservation, client app.UserClient) error {
 	for _, newStatus := range app.RESERVATION_STATUSES {
 		if newStatus != reservation.Status {
 			oldStatus := reservation.Status
@@ -47,7 +47,7 @@ func Test_changeReservationStatusFromEachToEach(t *testing.T) {
 		reservation.Status = status
 		db.AddReservation(reservation)
 		reservation.ID = db.GetReservationByCreateTime(reservation.CreatedAt).ID
-		err := changeReservationStatus(reservation, admin)
+		err := changeReservationStatusWithUser(reservation, admin)
 		if err != nil {
 			t.Errorf("change status reservation scenario failed for reservation %v status %v", reservation, status)
 		}

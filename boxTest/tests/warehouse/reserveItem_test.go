@@ -1,4 +1,4 @@
-package simple
+package warehouseTests
 
 import (
 	"boxTest/common/app"

@@ -1,4 +1,4 @@
-package simple
+package userManagerTests
 
 import (
 	"boxTest/common/app"
