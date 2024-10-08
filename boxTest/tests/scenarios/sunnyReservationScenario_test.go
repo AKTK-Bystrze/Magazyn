@@ -79,15 +79,16 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time, reservat
 	checkReservationAudits(reservation.ID, reservationTransitions)
 }
 
-func Test_reservationScenario(t *testing.T) {
+func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 	testCases := []struct {
 		name      string
 		startTime time.Time
 		endTime   time.Time
 	}{
-		{"1 week reservation", time.Now().Add(30 * time.Minute), time.Now().AddDate(0, 0, 7)},
-		{"1 day reservation", tests.CreateNextDayAt(8), tests.CreateNextDayAt(16)},
-		{"2 day reservation", tests.CreateNextDayAt(8), time.Now().AddDate(0, 0, 3)},
+		{"Reservation take today return next week", time.Now(), time.Now().AddDate(0, 0, 7)},
+		{"Reservation take today return tomorrow", time.Now(), tests.CreateNextDayAt(23)},
+		{"Reservation take today return today", time.Now(), time.Now().Add(time.Hour)},
+		{"Reservation take today return day after tomorrow", time.Now(), time.Now().AddDate(0, 0, 2)},
 	}
 	for _, tc := range testCases {
 		testSetUp()
@@ -107,85 +108,68 @@ func Test_reservationScenario(t *testing.T) {
 
 }
 
-// func Test_reservationInFuture(t *testing.T) {
-// 	testSetUp()
-// 	defer testTearDown()
-// 	reservationStart := time.Now().AddDate(0, 0, 7)
-// 	reservationEnd := reservationStart.AddDate(0, 0, 4)
+func Test_reservationMadeInFuture(t *testing.T) {
+	testCases := []struct {
+		name      string
+		startTime time.Time
+		endTime   time.Time
+	}{
+		{"Reservation take tomorrow return next week", time.Now().AddDate(0, 0, 1), time.Now().AddDate(0, 0, 7)},
+		{"Reservation take next week return after week", time.Now().AddDate(0, 0, 7), time.Now().AddDate(0, 0, 14)},
+		{"Reservation take next week return same day", time.Now().AddDate(0, 0, 7), time.Now().AddDate(0, 0, 7).Add(time.Hour)},
+	}
+	for _, tc := range testCases {
+		testSetUp()
+		defer testTearDown()
+		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
+		changesHistory := changeHistory{
+			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
+			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
+			app.RENTED:   {status: app.RENTED, timestamp: tc.startTime},
+			app.RETURNED: {status: app.RETURNED, timestamp: tc.endTime},
+		}
 
-// 	reservationRentedTime := reservationStart
-// 	reservationReturnedTime := reservationEnd
-// 	changes := []struct {
-// 		status string
-// 		date   time.Time
-// 	}{
-// 		{app.PENDING, time.Now()},
-// 		{app.APPROVED, time.Now()},
-// 		{app.RENTED, reservationRentedTime},
-// 		{app.RETURNED, reservationReturnedTime},
-// 	}
-// 	log.Printf("Test reservation in future since %v till %v", reservationStart, reservationEnd)
-// 	userBefore := db.GetUserById(int(user.User.ID))
-// 	items := user.GetAvailableItems(reservationStart, reservationEnd)
-// 	reservedItem := tests.PickRandomItem(items)
-// 	expectedCost := tests.CalculateCost(reservedItem.Type, reservationEnd.Sub(reservationStart))
-// 	expectedUserCredits := userBefore.Credits - expectedCost
-// 	log.Printf("Expected reservation cost %v, user credits before %v, user credits after %v",
-// 		expectedCost, userBefore.Credits, expectedUserCredits)
+		baseScenario(tc.startTime, tc.endTime, changesHistory)
+		testTearDown()
+		log.Printf("TEST reservation case %v PASSED", tc.name)
+	}
+}
 
-// 	user.ReserveItem(reservedItem.ID, reservationStart, reservationEnd)
+//TODO
+//reservation started ealier - IT IS NOT HANDLED IN THE APP
 
-// 	userAfter := db.GetUserById(int(user.User.ID))
-// 	if userAfter.Credits != expectedUserCredits {
-// 		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, expectedUserCredits)
-// 	}
-// 	reservation := db.GetReservation(
-// 		db.ByItemID(reservedItem.ID),
-// 		db.ByStatus(app.PENDING),
-// 		db.ByUserID(int(user.User.ID)),
-// 		db.ByStartTime(reservationStart),
-// 		db.ByEndTime(reservationEnd),
-// 	)
-// 	items = user.GetAvailableItems(reservationStart, reservationEnd)
-// 	if tests.IsItemAvailable(reservedItem, items) {
-// 		log.Fatal("Reserved item shouldn't be available when reserved")
-// 	}
-// 	items = user.GetAvailableItems(time.Now(), reservationStart.AddDate(0, 0, -1))
-// 	if !tests.IsItemAvailable(reservedItem, items) {
-// 		log.Fatal("Reserved item should be available before reservation")
-// 	}
-// 	items = user.GetAvailableItems(reservationEnd.AddDate(0, 0, 1), reservationEnd.AddDate(0, 0, 2))
-// 	if !tests.IsItemAvailable(reservedItem, items) {
-// 		log.Fatal("Reserved item should be available after reservation")
-// 	}
-// 	admin.ChangeReservationStatus(reservation, app.APPROVED)
-// 	reservation = db.GetReservation(db.ByID(reservation.ID))
-// 	if reservation.Status != app.APPROVED {
-// 		log.Fatalf("status didn't change in db")
-// 	}
-// 	env.SetContainerTime(reservationRentedTime, consts.TEST_APP_NAME)
-// 	admin.ChangeReservationStatus(reservation, app.RENTED)
-// 	reservation = db.GetReservation(db.ByID(reservation.ID))
-// 	if reservation.Status != app.RENTED {
-// 		log.Fatalf("status didn't change in db")
-// 	}
+func Test_reservationNotAsPlanned(t *testing.T) {
 
-// 	env.SetContainerTime(reservationReturnedTime, consts.TEST_APP_NAME)
-// 	admin.ChangeReservationStatus(reservation, app.RETURNED)
-// 	reservation = db.GetReservation(db.ByID(reservation.ID))
-// 	if reservation.Status != app.RETURNED {
-// 		log.Fatalf("status didn't change in db")
-// 	}
-// 	userAfter = db.GetUserById(int(user.User.ID))
-// 	if userAfter.Credits != expectedUserCredits {
-// 		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, expectedUserCredits)
-// 	}
-// 	items = user.GetAvailableItems(reservationStart, reservationEnd)
-// 	if tests.IsItemAvailable(reservedItem, items) {
-// 		log.Fatal("Reserved item should be available after closed reservation")
-// 	}
-// 	checkReservationAudits(reservation.ID, changes)
-// }
+	testCases := []struct {
+		name      string
+		startTime time.Time
+		endTime   time.Time
+	}{
+		{"Reservation started earlier than planned, returned on time", time.Now().AddDate(0, 0, 7), time.Now().AddDate(0, 0, 14)},
+		{"Reservation started later than planned, returned on time", time.Now().AddDate(0, 0, 7), time.Now().AddDate(0, 0, 7).Add(time.Hour)},
+		{"Reservation started on time, returned earlier than planned", time.Now().AddDate(0, 0, 7), time.Now().AddDate(0, 0, 7).Add(time.Hour)},
+		{"Reservation started on time, returned later than planned", time.Now().AddDate(0, 0, 7), time.Now().AddDate(0, 0, 7).Add(time.Hour)},
+	}
+	for _, tc := range testCases {
+		testSetUp()
+		defer testTearDown()
+		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
+		changesHistory := changeHistory{
+			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
+			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
+			app.RENTED:   {status: app.RENTED, timestamp: tc.startTime},
+			app.RETURNED: {status: app.RETURNED, timestamp: tc.endTime},
+		}
+
+		baseScenario(tc.startTime, tc.endTime, changesHistory)
+		testTearDown()
+		log.Printf("TEST reservation case %v PASSED", tc.name)
+	}
+}
+
+func Test_reservationAdminDoesNoting(t *testing.T) {
+	// reservation where admin does nothing
+}
 
 func checkCredits(userId int, correctValue int) {
 	userAfter := db.GetUserById(userId)
@@ -263,8 +247,3 @@ func checkReservationAudits(reservationId int, expectedChangesHistory changeHist
 		}
 	}
 }
-
-//TODO
-//reservation in future started ealier - IT IS NOT HANDLED IN THE APP
-//reservation is ended quicker, item should be available quicker and cost should be updated
-//reservation where admin does nothing for future and now
