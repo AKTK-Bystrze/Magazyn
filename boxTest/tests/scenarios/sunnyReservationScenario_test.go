@@ -62,6 +62,10 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item shouldn't be available when reserved")
 	}
+	items = user.GetAvailableItems(reservationStart, reservationEnd.AddDate(0, 0, 1))
+	if tests.IsItemAvailable(reservedItem, items) {
+		log.Fatal("Reserved item shouldn't be available in overlapping durations")
+	}
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.APPROVED)
 	reservation = db.GetReservation(db.ByID(reservation.ID))
 	if reservation.Status != app.APPROVED {
@@ -73,7 +77,7 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 		log.Fatalf("status didn't change in db")
 	}
 
-	env.SetContainerTimeForWhile(reservationEnd.Add(-time.Hour), consts.TEST_APP_NAME)
+	env.SetContainerTimeForWhile(reservationEnd, consts.TEST_APP_NAME)
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RETURNED)
 	reservation = db.GetReservation(db.ByID(reservation.ID))
 	if reservation.Status != app.RETURNED {
@@ -87,6 +91,7 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item should be available after closed reservation")
 	}
+	//todo check reservation dates for statuses (transitions dates)
 }
 
 func Test_reservationScenario(t *testing.T) {
@@ -109,6 +114,75 @@ func Test_reservationScenario(t *testing.T) {
 
 }
 
+func Test_reservationInFuture(t *testing.T) {
+	testSetUp()
+	defer testTearDown()
+	reservationStart := time.Now().AddDate(0, 0, 7)
+	reservationEnd := reservationStart.AddDate(0, 0, 4)
+	log.Printf("Test reservation in future since %v till %v", reservationStart, reservationEnd)
+	userBefore := db.GetUserById(int(user.User.ID))
+	items := user.GetAvailableItems(reservationStart, reservationEnd)
+	reservedItem := tests.PickRandomItem(items)
+	expectedCost := tests.CalculateCost(reservedItem.Type, reservationEnd.Sub(reservationStart))
+	expectedUserCredits := userBefore.Credits - expectedCost
+	log.Printf("Expected reservation cost %v, user credits before %v, user credits after %v",
+		expectedCost, userBefore.Credits, expectedUserCredits)
+
+	user.ReserveItem(reservedItem.ID, reservationStart, reservationEnd)
+
+	userAfter := db.GetUserById(int(user.User.ID))
+	if userAfter.Credits != expectedUserCredits {
+		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, expectedUserCredits)
+	}
+	reservation := db.GetReservation(
+		db.ByItemID(reservedItem.ID),
+		db.ByStatus(app.PENDING),
+		db.ByUserID(int(user.User.ID)),
+		db.ByStartTime(reservationStart),
+		db.ByEndTime(reservationEnd),
+	)
+	items = user.GetAvailableItems(reservationStart, reservationEnd)
+	if tests.IsItemAvailable(reservedItem, items) {
+		log.Fatal("Reserved item shouldn't be available when reserved")
+	}
+	items = user.GetAvailableItems(time.Now(), reservationStart.AddDate(0, 0, -1))
+	if !tests.IsItemAvailable(reservedItem, items) {
+		log.Fatal("Reserved item should be available before reservation")
+	}
+	items = user.GetAvailableItems(reservationEnd.AddDate(0, 0, 1), reservationEnd.AddDate(0, 0, 2))
+	if !tests.IsItemAvailable(reservedItem, items) {
+		log.Fatal("Reserved item should be available after reservation")
+	}
+	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.APPROVED)
+	reservation = db.GetReservation(db.ByID(reservation.ID))
+	if reservation.Status != app.APPROVED {
+		log.Fatalf("status didn't change in db")
+	}
+	env.SetContainerTimeForWhile(reservationStart, consts.TEST_APP_NAME)
+	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RENTED)
+	reservation = db.GetReservation(db.ByID(reservation.ID))
+	if reservation.Status != app.RENTED {
+		log.Fatalf("status didn't change in db")
+	}
+
+	env.SetContainerTimeForWhile(reservationEnd, consts.TEST_APP_NAME)
+	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RETURNED)
+	reservation = db.GetReservation(db.ByID(reservation.ID))
+	if reservation.Status != app.RETURNED {
+		log.Fatalf("status didn't change in db")
+	}
+	userAfter = db.GetUserById(int(user.User.ID))
+	if userAfter.Credits != expectedUserCredits {
+		log.Fatalf("User cost is %v, should be %v", userAfter.Credits, expectedUserCredits)
+	}
+	items = user.GetAvailableItems(reservationStart, reservationEnd)
+	if tests.IsItemAvailable(reservedItem, items) {
+		log.Fatal("Reserved item should be available after closed reservation")
+	}
+	//todo check reservation dates for statuses
+}
+
 //TODO
-//reservation is in the future, item should be available before the reservation
+//reservation in future started ealier - IT IS NOT HANDLED IN THE APP
 //reservation is ended quicker, item should be available quicker and cost should be updated
+//reservation where admin does nothing for future and now
