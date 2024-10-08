@@ -31,12 +31,23 @@ func testSetUp() {
 }
 
 func testTearDown() {
-	log.Print("test clean up, logOut user1 and admin1...")
+	log.Print("test clean up, reverts time, logOut user1 and admin1...")
 	user.LogOut()
 	admin.LogOut()
+	env.RevertContainerTime(consts.TEST_APP_NAME)
 }
 
 func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
+	reservationReturnedTime := reservationEnd
+	changes := []struct {
+		status string
+		date   time.Time
+	}{
+		{app.PENDING, time.Now()},
+		{app.APPROVED, time.Now()},
+		{app.RENTED, time.Now()},
+		{app.RETURNED, reservationReturnedTime},
+	}
 	userBefore := db.GetUserById(int(user.User.ID))
 	items := user.GetAvailableItems(reservationStart, reservationEnd)
 	reservedItem := tests.PickRandomItem(items)
@@ -77,7 +88,7 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 		log.Fatalf("status didn't change in db")
 	}
 
-	env.SetContainerTimeForWhile(reservationEnd, consts.TEST_APP_NAME)
+	env.SetContainerTimeForWhile(reservationReturnedTime, consts.TEST_APP_NAME)
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RETURNED)
 	reservation = db.GetReservation(db.ByID(reservation.ID))
 	if reservation.Status != app.RETURNED {
@@ -91,7 +102,7 @@ func baseScenario(reservationStart time.Time, reservationEnd time.Time) {
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item should be available after closed reservation")
 	}
-	//todo check reservation dates for statuses (transitions dates)
+	checkReservationAudits(reservation.ID, changes)
 }
 
 func Test_reservationScenario(t *testing.T) {
@@ -109,6 +120,7 @@ func Test_reservationScenario(t *testing.T) {
 		defer testTearDown()
 		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
 		baseScenario(tc.startTime, tc.endTime)
+		testTearDown()
 		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
 
@@ -191,10 +203,10 @@ func Test_reservationInFuture(t *testing.T) {
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item should be available after closed reservation")
 	}
-	checkReservationStatuses(reservation.ID, changes)
+	checkReservationAudits(reservation.ID, changes)
 }
 
-func checkReservationStatuses(reservationId int, changes []struct {
+func checkReservationAudits(reservationId int, changes []struct {
 	status string
 	date   time.Time
 }) {
