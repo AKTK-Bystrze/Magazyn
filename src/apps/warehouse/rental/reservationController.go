@@ -120,6 +120,12 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if newStatus == models.RENTED {
+		err = handleRentedStatus(*reservation, w)
+		if err != nil {
+			return
+		}
+	}
 	if reservation.EndTime.Before(reservation.StartTime) {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "Reservation end time has to be after the start time", http.StatusBadRequest)
@@ -127,6 +133,42 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	updateReservationStatus(*reservation, newStatus, w, int(session.GetSessionUserId(r)))
 	appState.App.Debug("%v changed status from %v to %v for reservation %v", session.GetSessionUserName(r), oldStatus, newStatus, id)
+}
+
+func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) error {
+	appState.App.Debug("Handling status rented")
+	now := time.Now()
+	year, month, day := now.Date()
+	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+
+	year, month, day = reservation.StartTime.Date()
+	reservationStartTime := time.Date(year, month, day, 0, 0, 0, 0, reservation.StartTime.Location())
+	if !today.Equal(reservationStartTime) {
+		appState.App.Debug("Reservation start time %v is different than today %v. Update reservation", reservationStartTime, today)
+		userCredits := reservation.User.Credits
+		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
+		if err != nil {
+			appState.App.Err("handleRentedStatus %v", err.Error())
+			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
+			return err
+		}
+		newRentalCost, err := credits.CalculateRentalCost(reservation.Item, now, reservation.EndTime)
+		if err != nil {
+			appState.App.Err("handleRentedStatus %v", err.Error())
+			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
+			return err
+		}
+		userCredits = userCredits + oldRentalCost - newRentalCost
+		err = updateReservationsDate(reservation, "r_start_time", now, w)
+		if err != nil {
+			return err
+		}
+		err = credits.UpdateUserCredits(reservation, userCredits, w)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter) error {
@@ -153,7 +195,7 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 			return err
 		}
 		userCredits = userCredits + oldRentalCost - newRentalCost
-		err = updateReservationEndDate(reservation, now, w)
+		err = updateReservationsDate(reservation, "r_end_time", now, w)
 		if err != nil {
 			return err
 		}
@@ -165,9 +207,15 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 	return nil
 }
 
-func updateReservationEndDate(reservation models.Reservation, newEndTime time.Time, w http.ResponseWriter) error {
-	newEndTimeFormated := newEndTime.Format("2006-01-02 15:04:05")
-	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_end_time = ?,r_changeby_uid = ? WHERE r_id = ?`, newEndTimeFormated, reservation.User.ID, reservation.ID)
+func updateReservationsDate(reservation models.Reservation, field string, newTime time.Time, w http.ResponseWriter) error {
+	if field != "r_end_time" && field != "r_start_time" {
+		appState.App.Err("Wrong parameter used in method updateReservationsDate %v", field)
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
+	}
+	newTimeFormated := newTime.Format("2006-01-02 15:04:05")
+	query := fmt.Sprintf(`UPDATE reservations SET %v = ?,r_changeby_uid = ? WHERE r_id = ?`, field)
+	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
 	if err != nil {
 		appState.App.Err("updateReservationEndDate %v", err.Error())
 		http.Error(w, "Can't update reservation ", http.StatusInternalServerError)
@@ -183,7 +231,7 @@ func updateReservationEndDate(reservation models.Reservation, newEndTime time.Ti
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
-	appState.App.Debug("Successfuly updated reservation end time to %v", newEndTime)
+	appState.App.Debug("Successfuly updated reservation end time to %v", newTime)
 	return nil
 }
 

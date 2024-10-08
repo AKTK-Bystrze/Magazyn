@@ -142,7 +142,6 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 		testTearDown()
 		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
-
 }
 
 func Test_reservationMadeInFuture(t *testing.T) {
@@ -200,9 +199,6 @@ func Test_reservationMadeInFuture(t *testing.T) {
 	}
 }
 
-//TODO
-//reservation started ealier - IT IS NOT HANDLED IN THE APP
-
 func Test_reservationNotAsPlanned(t *testing.T) {
 	testSetUp()
 	items := user.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
@@ -211,34 +207,34 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 	nextWeek := time.Now().AddDate(0, 0, 7)
 	twoWeeks := time.Now().AddDate(0, 0, 14)
 	testCases := []testCase{
-		// {
-		// 	"Reservation started earlier than planned, returned on time",
-		// 	nextWeek,
-		// 	twoWeeks,
-		// 	changeHistory{
-		// 		app.PENDING:  {status: app.PENDING, timestamp: now},
-		// 		app.APPROVED: {status: app.APPROVED, timestamp: now},
-		// 		app.RENTED:   {status: app.RENTED, timestamp: now.AddDate(0, 0, 3)},
-		// 		app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
-		// 	},
-		// 	reservedItem,
-		// 	0,
-		// 	0,
-		// },
-		// {
-		// 	"Reservation started later than planned, returned on time",
-		// 	nextWeek,
-		// 	twoWeeks,
-		// 	changeHistory{
-		// 		app.PENDING:  {status: app.PENDING, timestamp: now},
-		// 		app.APPROVED: {status: app.APPROVED, timestamp: now},
-		// 		app.RENTED:   {status: app.RENTED, timestamp: nextWeek.AddDate(0, 0, 2)},
-		// 		app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
-		// 	},
-		// 	reservedItem,
-		// 	0,
-		// 	0,
-		// },
+		{
+			"Reservation started earlier than planned, returned on time",
+			nextWeek,
+			twoWeeks,
+			changeHistory{
+				app.PENDING:  {status: app.PENDING, timestamp: now},
+				app.APPROVED: {status: app.APPROVED, timestamp: now},
+				app.RENTED:   {status: app.RENTED, timestamp: now.AddDate(0, 0, 3)},
+				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
+			},
+			reservedItem,
+			0,
+			0,
+		},
+		{
+			"Reservation started later than planned, returned on time",
+			nextWeek,
+			twoWeeks,
+			changeHistory{
+				app.PENDING:  {status: app.PENDING, timestamp: now},
+				app.APPROVED: {status: app.APPROVED, timestamp: now},
+				app.RENTED:   {status: app.RENTED, timestamp: nextWeek.AddDate(0, 0, 2)},
+				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
+			},
+			reservedItem,
+			0,
+			0,
+		},
 		{
 			"Reservation started on time, returned earlier than planned",
 			nextWeek,
