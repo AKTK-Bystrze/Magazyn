@@ -17,8 +17,7 @@ func goToDir(dir string) {
 }
 
 func buildTestApp() {
-	log.Print("Creating test app...")
-	// pwd, _ := os.Getwd()
+	log.Print("Building and running test app...")
 	goToDir("..")
 	RunCommand(false, "docker", "build",
 		"--target", "test",

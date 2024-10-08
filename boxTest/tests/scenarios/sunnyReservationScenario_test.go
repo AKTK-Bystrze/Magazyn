@@ -135,7 +135,7 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 			app.RETURNED: {status: app.RETURNED, timestamp: tc.endTime},
 		}
 		tc.transition = changesHistory
-		expectedCost := tests.CalculateCost(reservedItem.Type, tc.endTime.Sub(tc.startTime))
+		expectedCost := tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
 		tc.creditsWhenCreated = expectedCost
 		tc.creditsWhenReturned = expectedCost
 		baseScenario(tc)
@@ -164,7 +164,7 @@ func Test_reservationMadeInFuture(t *testing.T) {
 			name:                "Reservation take next week return after week",
 			startTime:           time.Now().AddDate(0, 0, 7),
 			endTime:             time.Now().AddDate(0, 0, 14),
-			transition:          make(changeHistory), // Empty changeHistory
+			transition:          make(changeHistory),
 			item:                reservedItem,
 			creditsWhenCreated:  0,
 			creditsWhenReturned: 0,
@@ -173,7 +173,7 @@ func Test_reservationMadeInFuture(t *testing.T) {
 			name:                "Reservation take next week return same day",
 			startTime:           time.Now().AddDate(0, 0, 7),
 			endTime:             time.Now().AddDate(0, 0, 7).Add(time.Hour),
-			transition:          make(changeHistory), // Empty changeHistory
+			transition:          make(changeHistory),
 			item:                reservedItem,
 			creditsWhenCreated:  0,
 			creditsWhenReturned: 0,
@@ -191,7 +191,7 @@ func Test_reservationMadeInFuture(t *testing.T) {
 			app.RETURNED: {status: app.RETURNED, timestamp: tc.endTime},
 		}
 		tc.transition = changesHistory
-		expectedCost := tests.CalculateCost(reservedItem.Type, tc.endTime.Sub(tc.startTime))
+		expectedCost := tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
 		tc.creditsWhenCreated = expectedCost
 		tc.creditsWhenReturned = expectedCost
 		baseScenario(tc)
@@ -203,60 +203,99 @@ func Test_reservationMadeInFuture(t *testing.T) {
 //TODO
 //reservation started ealier - IT IS NOT HANDLED IN THE APP
 
-// func Test_reservationNotAsPlanned(t *testing.T) {
-// 	now := time.Now()
-// 	nextWeek := time.Now().AddDate(0, 0, 7)
-// 	twoWeeks := time.Now().AddDate(0, 0, 14)
-// 	testCases := []testCase{
-// 		{"Reservation started earlier than planned, returned on time", nextWeek, twoWeeks,
-// 			changeHistory{
-// 				app.PENDING:  {status: app.PENDING, timestamp: now},
-// 				app.APPROVED: {status: app.APPROVED, timestamp: now},
-// 				app.RENTED:   {status: app.RENTED, timestamp: now.AddDate(0, 0, 3)},
-// 				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
-// 			}, 10, 20},
-// 		{"Reservation started later than planned, returned on time", nextWeek, twoWeeks,
-// 			changeHistory{
-// 				app.PENDING:  {status: app.PENDING, timestamp: now},
-// 				app.APPROVED: {status: app.APPROVED, timestamp: now},
-// 				app.RENTED:   {status: app.RENTED, timestamp: nextWeek.AddDate(0, 0, 2)},
-// 				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
-// 			}},
-// 		{"Reservation started on time, returned earlier than planned", nextWeek, twoWeeks,
-// 			changeHistory{
-// 				app.PENDING:  {status: app.PENDING, timestamp: now},
-// 				app.APPROVED: {status: app.APPROVED, timestamp: now},
-// 				app.RENTED:   {status: app.RENTED, timestamp: nextWeek},
-// 				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks.AddDate(0, 0, -2)},
-// 			}},
-// 		{"Reservation started on time, returned later than planned", nextWeek, twoWeeks,
-// 			changeHistory{
-// 				app.PENDING:  {status: app.PENDING, timestamp: now},
-// 				app.APPROVED: {status: app.APPROVED, timestamp: now},
-// 				app.RENTED:   {status: app.RENTED, timestamp: nextWeek},
-// 				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks.AddDate(0, 0, 2)},
-// 			}},
-// 	}
-// 	for _, tc := range testCases {
-// 		testSetUp()
-// 		defer testTearDown()
-// 		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
-// 		baseScenario(tc.startTime, tc.endTime, tc.transition)
-// 		testTearDown()
-// 		log.Printf("TEST reservation case %v PASSED", tc.name)
-// 	}
-// }
-
-func Test_reservationAdminDoesNoting(t *testing.T) {
-	// reservation where admin does nothing
+func Test_reservationNotAsPlanned(t *testing.T) {
+	testSetUp()
+	items := user.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	reservedItem := tests.PickRandomItem(items)
+	now := time.Now()
+	nextWeek := time.Now().AddDate(0, 0, 7)
+	twoWeeks := time.Now().AddDate(0, 0, 14)
+	testCases := []testCase{
+		// {
+		// 	"Reservation started earlier than planned, returned on time",
+		// 	nextWeek,
+		// 	twoWeeks,
+		// 	changeHistory{
+		// 		app.PENDING:  {status: app.PENDING, timestamp: now},
+		// 		app.APPROVED: {status: app.APPROVED, timestamp: now},
+		// 		app.RENTED:   {status: app.RENTED, timestamp: now.AddDate(0, 0, 3)},
+		// 		app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
+		// 	},
+		// 	reservedItem,
+		// 	0,
+		// 	0,
+		// },
+		// {
+		// 	"Reservation started later than planned, returned on time",
+		// 	nextWeek,
+		// 	twoWeeks,
+		// 	changeHistory{
+		// 		app.PENDING:  {status: app.PENDING, timestamp: now},
+		// 		app.APPROVED: {status: app.APPROVED, timestamp: now},
+		// 		app.RENTED:   {status: app.RENTED, timestamp: nextWeek.AddDate(0, 0, 2)},
+		// 		app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
+		// 	},
+		// 	reservedItem,
+		// 	0,
+		// 	0,
+		// },
+		{
+			"Reservation started on time, returned earlier than planned",
+			nextWeek,
+			twoWeeks,
+			changeHistory{
+				app.PENDING:  {status: app.PENDING, timestamp: now},
+				app.APPROVED: {status: app.APPROVED, timestamp: now},
+				app.RENTED:   {status: app.RENTED, timestamp: nextWeek},
+				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks.AddDate(0, 0, -2)}, //should be 6
+			},
+			reservedItem,
+			0,
+			0,
+		},
+		{
+			"Reservation started on time, returned later than planned",
+			nextWeek,
+			twoWeeks,
+			changeHistory{
+				app.PENDING:  {status: app.PENDING, timestamp: now},
+				app.APPROVED: {status: app.APPROVED, timestamp: now},
+				app.RENTED:   {status: app.RENTED, timestamp: nextWeek},
+				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks.AddDate(0, 0, 2)},
+			},
+			reservedItem,
+			0,
+			0,
+		},
+	}
+	for _, tc := range testCases {
+		testSetUp()
+		defer testTearDown()
+		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
+		tc.creditsWhenReturned = tests.CalculateCost(
+			reservedItem.Type,
+			tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
+		log.Printf("TEST reservation case:\n\t %v since %v till %v, credits when reservation is created %v, credits when returned %v",
+			tc.name, tc.startTime, tc.endTime, tc.creditsWhenCreated, tc.creditsWhenReturned)
+		baseScenario(tc)
+		testTearDown()
+		log.Printf("TEST reservation case %v PASSED", tc.name)
+	}
 }
 
-func checkCredits(userBefore app.User, rentCost int) {
+func Test_reservationAdminDoesNoting(t *testing.T) {
+	// reservations where admin does nothing
+
+}
+
+func checkCredits(userBefore app.User, expectedCost int) {
 	log.Print("check user credits ")
 	userAfter := db.GetUserById(int(userBefore.ID))
-	expectedCredits := userBefore.Credits - rentCost
-	if userAfter.Credits != expectedCredits {
-		log.Fatalf("User credits is %v, should be %v", userAfter.Credits, expectedCredits)
+	expectedUserCreditsAfter := userBefore.Credits - expectedCost
+	if userAfter.Credits != expectedUserCreditsAfter {
+		calculatedCost := userAfter.Credits - userBefore.Credits
+		log.Fatalf("User credits is %v, should be %v\n expected cost %v calculated cost %v",
+			userAfter.Credits, expectedUserCreditsAfter, expectedCost, calculatedCost)
 	}
 }
 

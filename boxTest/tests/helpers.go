@@ -41,10 +41,15 @@ func IsSameDay(date1, date2 time.Time) bool {
 		date1.Day() == date2.Day()
 }
 
-func CalculateCost(item string, duration time.Duration) int {
-	days := int(duration.Hours() / 24)
-	if days == 0 {
-		days = 1
+func CalculateCost(item string, start time.Time, end time.Time) int {
+	startDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	endDate := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
+
+	duration := endDate.Sub(startDate)
+	days := int(duration.Hours()/24) + 1
+	if days/days == -1 {
+		log.Printf("Wrong subtraction")
+		days = days * -1
 	}
 	log.Printf("calculate cost for item %v for %v days", item, days)
 	switch item {

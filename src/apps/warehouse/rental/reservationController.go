@@ -166,7 +166,8 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 }
 
 func updateReservationEndDate(reservation models.Reservation, newEndTime time.Time, w http.ResponseWriter) error {
-	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_end_time = ?,r_changeby_uid = ? WHERE r_id = ?`, newEndTime.UTC(), reservation.User.ID, reservation.ID)
+	newEndTimeFormated := newEndTime.Format("2006-01-02 15:04:05")
+	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_end_time = ?,r_changeby_uid = ? WHERE r_id = ?`, newEndTimeFormated, reservation.User.ID, reservation.ID)
 	if err != nil {
 		appState.App.Err("updateReservationEndDate %v", err.Error())
 		http.Error(w, "Can't update reservation ", http.StatusInternalServerError)

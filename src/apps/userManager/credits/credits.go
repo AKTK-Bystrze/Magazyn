@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"errors"
-	"math"
 	"time"
 )
 
@@ -71,9 +70,12 @@ func getUserCredits(id int) (int, error) {
 
 func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.Time) (int, error) {
 	var rentalCost int
-	duration := end_time.Sub(start_time)
 	rentalCost, err := getItemRentalCost(item.Type)
-	days := int(math.Max(duration.Hours()/24, 1))
+	startDate := time.Date(start_time.Year(), start_time.Month(), start_time.Day(), 0, 0, 0, 0, start_time.Location())
+	endDate := time.Date(end_time.Year(), end_time.Month(), end_time.Day(), 0, 0, 0, 0, end_time.Location())
+
+	duration := endDate.Sub(startDate)
+	days := int(duration.Hours()/24) + 1
 	appState.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type, start_time, end_time, days, rentalCost*days)
 	return rentalCost * days, err
 }
