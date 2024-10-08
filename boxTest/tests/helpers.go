@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+var (
+	LOCATION, _ = time.LoadLocation("Europe/Warsaw")
+)
+
 func PickRandomItem(items []app.Item) app.Item {
 	rand.Seed(time.Now().UnixNano())
 	randomIndex := rand.Intn(len(items))
@@ -29,6 +33,12 @@ func CreateNextDayAt(hour int) time.Time {
 	location := now.Location()
 
 	return time.Date(year, month, day, hour, 0, 0, 0, location)
+}
+
+func IsSameDay(date1, date2 time.Time) bool {
+	return date1.Year() == date2.Year() &&
+		date1.Month() == date2.Month() &&
+		date1.Day() == date2.Day()
 }
 
 func CalculateCost(item string, duration time.Duration) int {

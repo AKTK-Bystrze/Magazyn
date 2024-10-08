@@ -119,6 +119,18 @@ func Test_reservationInFuture(t *testing.T) {
 	defer testTearDown()
 	reservationStart := time.Now().AddDate(0, 0, 7)
 	reservationEnd := reservationStart.AddDate(0, 0, 4)
+
+	reservationRentedTime := reservationStart
+	reservationReturnedTime := reservationEnd
+	changes := []struct {
+		status string
+		date   time.Time
+	}{
+		{app.PENDING, time.Now()},
+		{app.APPROVED, time.Now()},
+		{app.RENTED, reservationRentedTime},
+		{app.RETURNED, reservationReturnedTime},
+	}
 	log.Printf("Test reservation in future since %v till %v", reservationStart, reservationEnd)
 	userBefore := db.GetUserById(int(user.User.ID))
 	items := user.GetAvailableItems(reservationStart, reservationEnd)
@@ -158,14 +170,14 @@ func Test_reservationInFuture(t *testing.T) {
 	if reservation.Status != app.APPROVED {
 		log.Fatalf("status didn't change in db")
 	}
-	env.SetContainerTimeForWhile(reservationStart, consts.TEST_APP_NAME)
+	env.SetContainerTimeForWhile(reservationRentedTime, consts.TEST_APP_NAME)
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RENTED)
 	reservation = db.GetReservation(db.ByID(reservation.ID))
 	if reservation.Status != app.RENTED {
 		log.Fatalf("status didn't change in db")
 	}
 
-	env.SetContainerTimeForWhile(reservationEnd, consts.TEST_APP_NAME)
+	env.SetContainerTimeForWhile(reservationReturnedTime, consts.TEST_APP_NAME)
 	admin.ChangeReservationStatus(reservation.ID, reservedItem.ID, app.RETURNED)
 	reservation = db.GetReservation(db.ByID(reservation.ID))
 	if reservation.Status != app.RETURNED {
@@ -179,10 +191,25 @@ func Test_reservationInFuture(t *testing.T) {
 	if tests.IsItemAvailable(reservedItem, items) {
 		log.Fatal("Reserved item should be available after closed reservation")
 	}
-	//todo check reservation dates for statuses
+	checkReservationStatuses(reservation.ID, changes)
+}
+
+func checkReservationStatuses(reservationId int, changes []struct {
+	status string
+	date   time.Time
+}) {
+	history := db.GetReservationAudit(reservationId)
+	for i, audit := range history {
+		if audit.Auditor != admin.User.Name &&
+			tests.IsSameDay(audit.ChangeDate, changes[i].date) &&
+			audit.Status != changes[i].status {
+			log.Fatalf("Reservation change should be %v but is %v", changes[i], audit)
+		}
+	}
 }
 
 //TODO
+//reuse base scenario and divide it into methods
 //reservation in future started ealier - IT IS NOT HANDLED IN THE APP
 //reservation is ended quicker, item should be available quicker and cost should be updated
 //reservation where admin does nothing for future and now

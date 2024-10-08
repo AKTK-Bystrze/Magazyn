@@ -37,6 +37,7 @@ type ReservationAudit struct {
 	UserID        int       `json:"user_id"`
 	Status        string    `json:"status"`
 	ChangeDate    time.Time `json:"change_date"`
+	Auditor       string
 }
 
 var ITMEMS = []string{KayakB1}
