@@ -95,6 +95,8 @@ func extractValue(text string) string {
 }
 
 func (uc UserClient) ReserveItem(itemID int, timeStart time.Time, timeStop time.Time) {
+	tmp := timeStart.Format(consts.TIME_FORMAT)
+	log.Print(tmp)
 	uc.PostFormRequest(consts.Localhost+URL_reserve,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},

@@ -33,6 +33,10 @@ func CreateNextDayAt(hour int) time.Time {
 
 func CalculateCost(item string, duration time.Duration) int {
 	days := int(duration.Hours() / 24)
+	if days == 0 {
+		days = 1
+	}
+	log.Printf("calculate cost for item %v for %v days", item, days)
 	switch item {
 	case app.KAYAK:
 		return int(days) * app.COST_KAYAK

@@ -207,7 +207,7 @@ func parseToReservation(line string) app.Reservation {
 	}
 
 	parseTimeField := func(value string, fieldName string) time.Time {
-		t, err := time.Parse(consts.TIME_FORMAT, value)
+		t, err := time.Parse(consts.DB_TIME_FORMAT, value)
 		if err != nil {
 			log.Fatalf("%s parsing error: %s err %v", fieldName, line, err)
 		}
