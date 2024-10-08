@@ -41,11 +41,11 @@ func (uc UserClient) GoToReservations() {
 	uc.GetRequest(consts.Localhost + URL_reservations)
 }
 
-func (uc UserClient) ChangeReservationStatus(reservationId int, itemId int, status string) {
+func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string) {
 	uc.PutRequest(consts.Localhost+URL_setStatus, url.Values{
-		"reservation_id": {strconv.Itoa(reservationId)},
+		"reservation_id": {strconv.Itoa(reservation.ID)},
 		"url":            {URL_setStatus},
-		"item_id":        {strconv.Itoa(itemId)},
+		"item_id":        {strconv.Itoa(reservation.ItemID)},
 		"status":         {status},
 	})
 }

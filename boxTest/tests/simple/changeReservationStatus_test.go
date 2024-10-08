@@ -14,7 +14,7 @@ func changeReservationStatus(reservation app.Reservation, client app.UserClient)
 			oldStatus := reservation.Status
 			log.Printf("change reservation status from %v to %v", oldStatus, newStatus)
 			db.GetReservations()
-			client.ChangeReservationStatus(reservation.ID, reservation.ItemID, newStatus)
+			client.ChangeReservationStatus(reservation, newStatus)
 			reservationChanged := db.GetReservationById(reservation.ID)
 			if reservationChanged.Status != newStatus {
 				return fmt.Errorf("Reservation %v status should be %v, was %v", reservationChanged, newStatus, oldStatus)

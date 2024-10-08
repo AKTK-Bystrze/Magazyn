@@ -39,17 +39,17 @@ func RunCommandError(printOutput bool, command string, args ...string) (string, 
 }
 
 // Works for a while till system synchronize it. Oppening browser does synchronise time
-func SetContainerTimeForWhile(timeToSet time.Time, containerName string) {
+func SetContainerTime(timeToSet time.Time, containerName string) {
 	timeFormated := strings.ReplaceAll(timeToSet.Format(consts.TIME_FORMAT), "T", " ")
 	RunCommand(false, "docker", "exec", containerName, "date", "-s", timeFormated)
 	res := RunCommand(false, "docker", "exec", containerName, "date")
 	if res == "" {
 		log.Fatalf("can't change time on %v", containerName)
 	} else {
-		log.Printf("WARN! time set to %v for container to %v", res, containerName)
+		log.Printf("Set time to %v for container %v", res, containerName)
 	}
 }
 
 func RevertContainerTime(containerName string) {
-	SetContainerTimeForWhile(time.Now(), containerName)
+	SetContainerTime(time.Now(), containerName)
 }
