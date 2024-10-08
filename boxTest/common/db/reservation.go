@@ -174,6 +174,11 @@ func GetReservationByCreateTime(createTime time.Time) app.Reservation {
 	return app.Reservation{}
 }
 
+func RemoveReservations() {
+	log.Printf("Removing all reservations")
+	execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, "DELETE FROM reservations;")
+}
+
 func AddReservation(reservation app.Reservation) {
 	query := fmt.Sprintf(`INSERT INTO reservations ( r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) 
 						  VALUES ( datetime('%s', 'utc'), datetime('%s', 'utc'), %d, %d, %d, '%s', datetime('%s', 'utc'))`,
@@ -201,7 +206,7 @@ func parseToReservation(line string) app.Reservation {
 	parseIntField := func(value string, fieldName string) int {
 		v, err := parseInt(value)
 		if err != nil {
-			log.Fatalf("%s parsing error: %s", fieldName, line)
+			log.Fatalf("Reservation %s parsing error: %s", fieldName, line)
 		}
 		return v
 	}
@@ -223,7 +228,7 @@ func parseToReservation(line string) app.Reservation {
 func ParseDateField(value string, fieldName string) time.Time {
 	t, err := time.Parse(consts.DB_TIME_FORMAT, value)
 	if err != nil {
-		log.Fatalf("%s parsing error: %s err %v", fieldName, err)
+		log.Fatalf("%s parsing error: %s value %v", fieldName, err, value)
 	}
 	return t.In(tests.LOCATION)
 }

@@ -4,6 +4,7 @@ import (
 	"boxTest/common/app"
 	"boxTest/common/consts"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -42,4 +43,9 @@ func GetReservationAudit(reservationId int) []app.ReservationAudit {
 		reservationId)
 	reservationsAuditString := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
 	return parseToReservationAudits(reservationsAuditString)
+}
+
+func RemoveAudits() {
+	log.Printf("Removing all reservations audits")
+	execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, "DELETE FROM reservation_audit;")
 }
