@@ -65,7 +65,7 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 		expectedCost := tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
 		tc.creditsWhenCreated = expectedCost
 		tc.creditsWhenReturned = expectedCost
-		BaseScenario(tc, nil)
+		BaseScenario(tc)
 		testTearDown()
 		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
@@ -75,7 +75,35 @@ func Test_reservationMadeInFuture(t *testing.T) {
 	testSetUp()
 	items := user.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	testCases := testCaseNotAsPlanned
+	testCases := []testCase{
+		{
+			name:                "Reservation take tomorrow return next week",
+			startTime:           time.Now().AddDate(0, 0, 1),
+			endTime:             time.Now().AddDate(0, 0, 7),
+			transition:          make(changeHistory),
+			item:                app.Item{},
+			creditsWhenCreated:  0,
+			creditsWhenReturned: 0,
+		},
+		{
+			name:                "Reservation take next week return after week",
+			startTime:           time.Now().AddDate(0, 0, 7),
+			endTime:             time.Now().AddDate(0, 0, 14),
+			transition:          make(changeHistory),
+			item:                app.Item{},
+			creditsWhenCreated:  0,
+			creditsWhenReturned: 0,
+		},
+		{
+			name:                "Reservation take next week return same day",
+			startTime:           time.Now().AddDate(0, 0, 7),
+			endTime:             time.Now().AddDate(0, 0, 7).Add(time.Hour),
+			transition:          make(changeHistory),
+			item:                app.Item{},
+			creditsWhenCreated:  0,
+			creditsWhenReturned: 0,
+		},
+	}
 	for _, tc := range testCases {
 		testSetUp()
 		defer testTearDown()
@@ -91,7 +119,7 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		tc.creditsWhenCreated = expectedCost
 		tc.creditsWhenReturned = expectedCost
 		tc.item = reservedItem
-		BaseScenario(tc, nil)
+		BaseScenario(tc)
 		testTearDown()
 		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
@@ -171,7 +199,7 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 			tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
 		log.Printf("TEST reservation case:\n\t %v since %v till %v, credits when reservation is created %v, credits when returned %v",
 			tc.name, tc.startTime, tc.endTime, tc.creditsWhenCreated, tc.creditsWhenReturned)
-		BaseScenario(tc, nil)
+		BaseScenario(tc)
 		testTearDown()
 		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}

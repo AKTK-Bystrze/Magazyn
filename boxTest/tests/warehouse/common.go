@@ -11,37 +11,8 @@ import (
 )
 
 var (
-	user                 = app.UserClient{}
-	admin                = app.UserClient{}
-	testCaseNotAsPlanned = []testCase{
-		{
-			name:                "Reservation take tomorrow return next week",
-			startTime:           time.Now().AddDate(0, 0, 1),
-			endTime:             time.Now().AddDate(0, 0, 7),
-			transition:          make(changeHistory),
-			item:                app.Item{},
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
-		},
-		{
-			name:                "Reservation take next week return after week",
-			startTime:           time.Now().AddDate(0, 0, 7),
-			endTime:             time.Now().AddDate(0, 0, 14),
-			transition:          make(changeHistory),
-			item:                app.Item{},
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
-		},
-		{
-			name:                "Reservation take next week return same day",
-			startTime:           time.Now().AddDate(0, 0, 7),
-			endTime:             time.Now().AddDate(0, 0, 7).Add(time.Hour),
-			transition:          make(changeHistory),
-			item:                app.Item{},
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
-		},
-	}
+	user  = app.UserClient{}
+	admin = app.UserClient{}
 )
 
 type changeHistory map[string]change
@@ -86,7 +57,7 @@ func testTearDown() {
 	db.RemoveAudits()
 }
 
-func BaseScenario(tc testCase, skipAdminActions []string) {
+func BaseScenario(tc testCase) {
 	userBefore := db.GetUserById(int(user.User.ID))
 	reserveWithTimestamp(tc.transition[app.PENDING], tc.startTime, tc.endTime, tc.item.ID)
 	checkCredits(userBefore, tc.creditsWhenCreated)
@@ -98,21 +69,22 @@ func BaseScenario(tc testCase, skipAdminActions []string) {
 		db.ByEndTime(tc.endTime),
 	)
 	checkItemAvailability(tc.startTime, tc.endTime, tc.item, user)
-	if !shouldSkipAction(app.APPROVED, skipAdminActions) {
-		changeReservationStatusWithTimestamp(tc.transition[app.APPROVED], reservation)
-	}
-	if !shouldSkipAction(app.RENTED, skipAdminActions) {
-		changeReservationStatusWithTimestamp(tc.transition[app.RENTED], reservation)
-	}
-	if !shouldSkipAction(app.RETURNED, skipAdminActions) {
-		changeReservationStatusWithTimestamp(tc.transition[app.RETURNED], reservation)
-	}
+	adminActions(tc.transition, reservation)
 	checkCredits(userBefore, tc.creditsWhenReturned)
 	items := user.GetAvailableItems(tc.startTime, tc.endTime)
 	if tests.IsItemAvailable(tc.item, items) {
 		log.Fatal("Reserved item should be available after closed reservation")
 	}
 	checkReservationAudits(reservation.ID, tc.transition)
+}
+
+func adminActions(actions changeHistory, reservation app.Reservation) {
+	for actionName, action := range actions {
+		if contains(app.ADMIN_ACTIONS, actionName) {
+			log.Printf("Performing action for key: %v, status: %v", actionName, action)
+			changeReservationStatusWithTimestamp(action, reservation)
+		}
+	}
 }
 
 func checkCredits(userBefore app.User, expectedCost int) {
@@ -197,10 +169,9 @@ func checkReservationAudits(reservationId int, expectedChangesHistory changeHist
 	}
 }
 
-func shouldSkipAction(target string, list []string) bool {
+func contains(list []string, key string) bool {
 	for _, item := range list {
-		if item == target {
-			log.Printf("%v skipped", target)
+		if item == key {
 			return true
 		}
 	}
