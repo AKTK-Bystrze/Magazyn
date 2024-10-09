@@ -24,7 +24,6 @@ func reservationAdminSkippedActions(transitions changeHistory) {
 		}}
 	for _, tc := range testCases {
 		testSetUp()
-		defer testTearDown()
 		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
 		tc.transition = transitions
 		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
