@@ -17,12 +17,12 @@ INSERT INTO items (i_name, i_description, i_status, i_type) VALUES
 
 
 INSERT INTO users (u_id, u_username, u_role, u_email, u_credits) VALUES
-(0, 'kursant2', 'user', 'kursant2@bystrzeEmail.pl', 100),
-(1, 'kursant1', 'user', 'kursant1@bystrzeEmail.com', 200),
-(2, 'admin1', 'admin', 'admin1@bystrzeEmail.com', 200),
-(3, 'admin2', 'admin ninja', 'admin2@bystrzeEmail.com', 200),
-(4, 'ninja', 'ninja', 'ninja@bystrzeEmail.com', 100),
-(5, 'superAdmin', 'superAdmin admin ninja', 'superAdmin@bystrzeEmail.com', 100);
+(0, 'kursant2', 'user', 'kursant2@bystrzeEmail.pl', 900),
+(1, 'kursant1', 'user', 'kursant1@bystrzeEmail.com', 900),
+(2, 'admin1', 'admin', 'admin1@bystrzeEmail.com', 900),
+(3, 'admin2', 'admin ninja', 'admin2@bystrzeEmail.com', 900),
+(4, 'ninja', 'ninja', 'ninja@bystrzeEmail.com', 900),
+(5, 'superAdmin', 'superAdmin admin ninja', 'superAdmin@bystrzeEmail.com', 900);
 
 INSERT INTO big_news (n_id, n_created_time, n_header, n_content, n_author) VALUES
 (1, '2024-01-23 15:04:05', 'Kurs Kajakarstwa Górskiego 2024', 'Zapraszamy do wzięcia udziału w naszym tegorocznym kursie kajakarstwa górskiego! Zapisy właśnie ruszyły.
