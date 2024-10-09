@@ -2,7 +2,6 @@ package warehouseTests
 
 import (
 	"boxTest/common/app"
-	"boxTest/common/consts"
 	"boxTest/common/db"
 	"boxTest/env"
 	"boxTest/tests"
@@ -52,7 +51,7 @@ func testTearDown() {
 	log.Print("test clean up...")
 	user.LogOut()
 	admin.LogOut()
-	env.RevertContainerTime(consts.TEST_APP_NAME)
+	env.RevertContainerTime(env.TEST_APP_NAME)
 	db.RemoveReservations()
 	db.RemoveAudits()
 }
@@ -168,15 +167,15 @@ func checkItemAvailabilityWhileReserved(reservationStart time.Time, reservationE
 }
 
 func reserveWithTimestamp(change change, reservationStart time.Time, reservationEnd time.Time, itemId int) {
-	env.SetContainerTime(change.timestamp.Add(-1*time.Minute), consts.TEST_APP_NAME)
+	env.SetContainerTime(change.timestamp.Add(-1*time.Minute), env.TEST_APP_NAME)
 	user.ReserveItem(itemId, reservationStart, reservationEnd)
-	env.RevertContainerTime(consts.TEST_APP_NAME)
+	env.RevertContainerTime(env.TEST_APP_NAME)
 }
 
 func changeReservationStatusWithTimestamp(change change, reservation app.Reservation) {
-	env.SetContainerTime(change.timestamp.Add(-1*time.Minute), consts.TEST_APP_NAME)
+	env.SetContainerTime(change.timestamp.Add(-1*time.Minute), env.TEST_APP_NAME)
 	changeReservationStatus(change.status, reservation)
-	env.RevertContainerTime(consts.TEST_APP_NAME)
+	env.RevertContainerTime(env.TEST_APP_NAME)
 }
 
 func changeReservationStatus(status string, reservation app.Reservation) {

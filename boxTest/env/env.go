@@ -1,12 +1,24 @@
 package env
 
 import (
-	"boxTest/common/consts"
 	"log"
 	"os"
 	"strings"
 	"testing"
 	"time"
+)
+
+const (
+	TEST_APP_NAME    = "test_app"
+	TEST_DB_PATH     = "/app/magazyn.db"
+	SMTP_SERVER_NAME = "test_server"
+	DOCKERFILE_PATH  = "."
+	NETWORK_NO_WEB   = "test_network_no_web"
+	SMTP_PORT        = "3465"
+	COOKIE_KEY       = ""
+
+	Localhost = "http://localhost:8080"
+	CookeName = "bystrzeMagazyn"
 )
 
 func goToDir(dir string) {
@@ -17,12 +29,22 @@ func goToDir(dir string) {
 }
 
 func createTestDB() {
+	// Run the first command
+	log.Print("Createing DB...")
+	goToDir("..")
+	RunCommand(false, "sh", "-c", "sqlite3 magazyn.db < db.schema")
+	RunCommand(false, "sh", "-c", "sqlite3 magazyn.db \".read boxTest/db_test.data\"")
+	goToDir("boxTest")
+	log.Print("DB created")
+
 	//todo
 	//create db file according to schema
 	//append test data
 	//edits dockerfile to take db by given path
 	//test db should be in /boxtest
-	//update deploy script to take db that is in main catalog and is called prod_db
+	//update deploy script to take db that is in main catalog and is called bystrze
+	//create deploy script with mock of getting prod db
+	//decploy script runs tests before deploying
 }
 
 func buildTestApp() {
@@ -30,19 +52,19 @@ func buildTestApp() {
 	goToDir("..")
 	RunCommand(false, "docker", "build",
 		"--target", "test",
-		"-t", consts.TEST_APP_NAME,
+		"-t", TEST_APP_NAME,
 		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
-		"--build-arg", "COOKIE_KEY="+consts.COOKIE_KEY,
+		"--build-arg", "COOKIE_KEY="+COOKIE_KEY,
 		"--build-arg", "EMAIL_PASS=password",
-		consts.DOCKERFILE_PATH)
+		DOCKERFILE_PATH)
 	RunCommand(false, "docker", "run",
-		"--name", consts.TEST_APP_NAME,
+		"--name", TEST_APP_NAME,
 		"--cap-add=SYS_TIME",
 		"-d",
 		"-p", "8080:8080",
-		"-e", "SMTP_HOST="+consts.SMTP_SERVER_NAME,
-		"-e", "SMTP_PORT="+consts.SMTP_PORT,
-		consts.TEST_APP_NAME)
+		"-e", "SMTP_HOST="+SMTP_SERVER_NAME,
+		"-e", "SMTP_PORT="+SMTP_PORT,
+		TEST_APP_NAME)
 
 	time.Sleep(2 * time.Second)
 	goToDir("boxTest")
@@ -51,7 +73,7 @@ func buildTestApp() {
 
 func cleanup() {
 	log.Print("Cleaning previous test leftovers...")
-	containersToClean := []string{consts.TEST_APP_NAME}
+	containersToClean := []string{TEST_APP_NAME}
 	for _, app := range containersToClean {
 		if ContainerExists(app) {
 			RunCommand(false, "docker", "stop", app)
@@ -60,9 +82,9 @@ func cleanup() {
 		}
 	}
 
-	if dbExists(consts.TEST_DB_PATH) {
+	if dbExists(TEST_DB_PATH) {
 		os.Remove("test.db")
-		log.Printf("Removed %s", consts.TEST_DB_PATH)
+		log.Printf("Removed %s", TEST_DB_PATH)
 	}
 	log.Print("Cleaning up is done")
 }
@@ -116,7 +138,7 @@ func RunTests(m *testing.M) {
 		testResult := tc.run()
 		if testResult == 1 {
 			log.Printf("TEST %v FAILED", tc.name)
-			log.Print("\n" + GetContainerLogs(consts.TEST_APP_NAME, startTime))
+			log.Print("\n" + GetContainerLogs(TEST_APP_NAME, startTime))
 			t.Fail()
 			code = testResult
 			log.Printf("TEST %v FAILED", tc.name)

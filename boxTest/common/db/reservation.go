@@ -3,6 +3,7 @@ package db
 import (
 	"boxTest/common/app"
 	"boxTest/common/consts"
+	"boxTest/env"
 	"boxTest/tests"
 	"fmt"
 	"log"
@@ -75,7 +76,7 @@ var RESERVATIONS = []app.Reservation{
 
 func GetReservations() []app.Reservation {
 	query := "SELECT * FROM reservations;"
-	reservationsString := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
+	reservationsString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, query)
 	return parseToReservationsList(reservationsString)
 }
 
@@ -151,13 +152,13 @@ func ByEndTime(end time.Time) ConditionFunc {
 
 func GetReservationById(reservationID int) app.Reservation {
 	query := fmt.Sprintf("SELECT * FROM reservations WHERE r_id = %d;", reservationID)
-	reservationsString := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
+	reservationsString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, query)
 	return parseToReservation(reservationsString)
 }
 
 func RemoveReservations() {
 	log.Printf("Removing all reservations")
-	execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, "DELETE FROM reservations;")
+	execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, "DELETE FROM reservations;")
 }
 
 func AddReservation(reservation app.Reservation) {
@@ -170,7 +171,7 @@ func AddReservation(reservation app.Reservation) {
 		reservation.ChangeByUID,
 		reservation.Status,
 		reservation.CreatedAt.Format(consts.TIME_FORMAT))
-	result := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
+	result := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, query)
 	if result != "" {
 		log.Fatalf("failed to add reservation %v %v", reservation, result)
 	}

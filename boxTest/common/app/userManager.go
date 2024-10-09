@@ -1,7 +1,6 @@
 package app
 
 import (
-	"boxTest/common/consts"
 	"boxTest/env"
 	"fmt"
 	"log"
@@ -18,7 +17,7 @@ var (
 )
 
 func getLoginLinkFromLogs(since time.Time) string {
-	logs := env.GetContainerLogs(consts.TEST_APP_NAME, since)
+	logs := env.GetContainerLogs(env.TEST_APP_NAME, since)
 	startIndex := strings.LastIndex(logs, "Login at ")
 	if startIndex == -1 {
 		return ""
@@ -33,13 +32,13 @@ func getLoginLinkFromLogs(since time.Time) string {
 
 func (uc UserClient) Login() error {
 	log.Printf("Login \t$%v", uc.User.Name)
-	resp := uc.GetRequest(consts.Localhost + URL_login)
+	resp := uc.GetRequest(env.Localhost + URL_login)
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Can't get login page: got %v, want %v", resp.StatusCode, http.StatusOK)
 	}
 
 	loginTime := time.Now()
-	uc.PostFormRequest(consts.Localhost+URL_token, url.Values{
+	uc.PostFormRequest(env.Localhost+URL_token, url.Values{
 		"strategy":  {"debug"},
 		"recipient": {uc.User.Name},
 	})
@@ -55,7 +54,7 @@ func (uc UserClient) Login() error {
 
 func (uc UserClient) LogOut() error {
 	log.Printf("Logout %v", uc.User.Name)
-	resp := uc.GetRequest(consts.Localhost + URL_logout)
+	resp := uc.GetRequest(env.Localhost + URL_logout)
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Unexpected status code: got %v, want %v", resp.StatusCode, http.StatusOK)
 		return fmt.Errorf("can't logout")

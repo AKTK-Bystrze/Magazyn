@@ -2,6 +2,7 @@ package app
 
 import (
 	"boxTest/common/consts"
+	"boxTest/env"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -38,11 +39,11 @@ var (
 )
 
 func (uc UserClient) GoToReservations() {
-	uc.GetRequest(consts.Localhost + URL_reservations)
+	uc.GetRequest(env.Localhost + URL_reservations)
 }
 
 func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string) {
-	uc.PutRequest(consts.Localhost+URL_setStatus, url.Values{
+	uc.PutRequest(env.Localhost+URL_setStatus, url.Values{
 		"reservation_id": {strconv.Itoa(reservation.ID)},
 		"url":            {URL_setStatus},
 		"item_id":        {strconv.Itoa(reservation.ItemID)},
@@ -51,7 +52,7 @@ func (uc UserClient) ChangeReservationStatus(reservation Reservation, status str
 }
 
 func (uc UserClient) GetAvailableItems(timeStart time.Time, timeStop time.Time) []Item {
-	resp := uc.PostFormRequest(consts.Localhost+URL_search,
+	resp := uc.PostFormRequest(env.Localhost+URL_search,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
@@ -97,7 +98,7 @@ func extractValue(text string) string {
 func (uc UserClient) ReserveItem(itemID int, timeStart time.Time, timeStop time.Time) {
 	tmp := timeStart.Format(consts.TIME_FORMAT)
 	log.Print(tmp)
-	uc.PostFormRequest(consts.Localhost+URL_reserve,
+	uc.PostFormRequest(env.Localhost+URL_reserve,
 		url.Values{
 			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
 			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
@@ -106,7 +107,7 @@ func (uc UserClient) ReserveItem(itemID int, timeStart time.Time, timeStop time.
 }
 
 func (uc UserClient) Dashboard() {
-	uc.GetRequest(consts.Localhost + URL_dashboard)
+	uc.GetRequest(env.Localhost + URL_dashboard)
 }
 
 func ReservationExists(reservations []Reservation, startTime, endTime time.Time, itemID int, user User) bool {
