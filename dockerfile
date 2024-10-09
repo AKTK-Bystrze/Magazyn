@@ -43,7 +43,7 @@ WORKDIR /app
 COPY --from=builder /app/main . 
 
 # Copy the SQLite database
-COPY magazyn.db .
+COPY ${DB_PATH} .
 
 # Copy templates
 RUN mkdir -p /app/templates

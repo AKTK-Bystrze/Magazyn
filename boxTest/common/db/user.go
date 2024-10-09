@@ -20,7 +20,7 @@ var USERS_MAP = map[string]app.User{
 
 func GetUserById(id int) app.User {
 	query := fmt.Sprintf("SELECT * FROM users WHERE u_id = %d;", id)
-	userString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, query)
+	userString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, query)
 	return parseToUser(userString)
 }
 

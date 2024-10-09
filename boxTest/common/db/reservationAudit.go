@@ -41,11 +41,11 @@ func parseToReservationAudits(auditString string) []app.ReservationAudit {
 func GetReservationAudit(reservationId int) []app.ReservationAudit {
 	query := fmt.Sprintf("SELECT ra.*,u.u_username FROM reservation_audit ra JOIN users u ON ra.ra_user_id == u.u_id WHERE ra_reservation_id = %v ORDER BY ra_change_date",
 		reservationId)
-	reservationsAuditString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, query)
+	reservationsAuditString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, query)
 	return parseToReservationAudits(reservationsAuditString)
 }
 
 func RemoveAudits() {
 	log.Printf("Removing all reservations audits")
-	execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, "DELETE FROM reservation_audit;")
+	execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, "DELETE FROM reservation_audit;")
 }

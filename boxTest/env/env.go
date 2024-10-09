@@ -9,13 +9,14 @@ import (
 )
 
 const (
-	TEST_APP_NAME    = "test_app"
-	TEST_DB_PATH     = "/app/magazyn.db"
-	SMTP_SERVER_NAME = "test_server"
-	DOCKERFILE_PATH  = "."
-	NETWORK_NO_WEB   = "test_network_no_web"
-	SMTP_PORT        = "3465"
-	COOKIE_KEY       = ""
+	TEST_APP_NAME        = "test_app"
+	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
+	DB_PATH_IN_PROJ      = "bystrze_test.db"
+	SMTP_SERVER_NAME     = "test_server"
+	DOCKERFILE_PATH      = "."
+	NETWORK_NO_WEB       = "test_network_no_web"
+	SMTP_PORT            = "3465"
+	COOKIE_KEY           = ""
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
@@ -32,8 +33,8 @@ func createTestDB() {
 	// Run the first command
 	log.Print("Createing DB...")
 	goToDir("..")
-	RunCommand(false, "sh", "-c", "sqlite3 magazyn.db < db.schema")
-	RunCommand(false, "sh", "-c", "sqlite3 magazyn.db \".read boxTest/db_test.data\"")
+	RunCommand(true, "sh", "-c", "sqlite3 bystrze_test.db < db.schema")
+	RunCommand(true, "sh", "-c", "sqlite3 bystrze_test.db \".read boxTest/db_test.data\"")
 	goToDir("boxTest")
 	log.Print("DB created")
 
@@ -56,6 +57,7 @@ func buildTestApp() {
 		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
 		"--build-arg", "COOKIE_KEY="+COOKIE_KEY,
 		"--build-arg", "EMAIL_PASS=password",
+		"--build-arg", "DB_PATH=bystrze_test.db",
 		DOCKERFILE_PATH)
 	RunCommand(false, "docker", "run",
 		"--name", TEST_APP_NAME,
@@ -82,9 +84,9 @@ func cleanup() {
 		}
 	}
 
-	if dbExists(TEST_DB_PATH) {
-		os.Remove("test.db")
-		log.Printf("Removed %s", TEST_DB_PATH)
+	if dbExists(DB_PATH_IN_PROJ) {
+		os.Remove(DB_PATH_IN_PROJ)
+		log.Printf("Removed %s", DB_PATH_IN_PROJ)
 	}
 	log.Print("Cleaning up is done")
 }

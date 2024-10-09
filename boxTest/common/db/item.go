@@ -11,7 +11,7 @@ func GetAvailableItems(startTime, endTime string) []app.Item {
 	query := "SELECT i_id, i_name, i_description, i_status, i_type FROM items " +
 		"WHERE i_id NOT IN (SELECT r_item_id FROM reservations WHERE r_start_time < ? AND r_end_time > ? AND r_status != 'denied') " +
 		"AND i_status = 'ok';"
-	itemsString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.TEST_DB_PATH, fmt.Sprintf(query, startTime, endTime))
+	itemsString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, fmt.Sprintf(query, startTime, endTime))
 	return parseToItemList(itemsString)
 }
 
