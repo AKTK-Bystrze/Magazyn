@@ -68,14 +68,33 @@ func BaseScenario(tc testCase) {
 		db.ByStartTime(tc.startTime),
 		db.ByEndTime(tc.endTime),
 	)
-	checkItemAvailability(tc.startTime, tc.endTime, tc.item, user)
+	checkItemAvailabilityWhileReserved(tc.startTime, tc.endTime, tc.item, user)
 	adminActions(tc.transition, reservation)
 	checkCredits(userBefore, tc.creditsWhenReturned)
-	items := user.GetAvailableItems(tc.startTime, tc.endTime)
-	if tests.IsItemAvailable(tc.item, items) {
-		log.Fatal("Reserved item should be available after closed reservation")
-	}
+	checkItemAvailabilityAfterReservation(tc)
 	checkReservationAudits(reservation.ID, tc.transition)
+}
+
+func checkItemAvailabilityAfterReservation(tc testCase) {
+	log.Print("Check item avaiablity after the reservation")
+	keys := getKeys(tc.transition)
+	if contains(keys, app.DENIED) {
+		items := user.GetAvailableItems(tc.startTime, tc.endTime)
+		if !tests.IsItemAvailable(tc.item, items) {
+			log.Fatal("Reserved item should be available after reservation is done within reservation time due to denial")
+		}
+	}
+	var endTime time.Time
+	if contains(keys, app.RETURNED) {
+		endTime = tc.transition[app.RETURNED].timestamp
+	} else {
+		endTime = tc.endTime
+	}
+	items := user.GetAvailableItems(endTime.AddDate(0, 0, 1), endTime.AddDate(0, 0, 1).Add(2*time.Hour))
+	if !tests.IsItemAvailable(tc.item, items) {
+		log.Fatal("Reserved item should be available after reservation is is finished")
+	}
+
 }
 
 func adminActions(actions changeHistory, reservation app.Reservation) {
@@ -100,8 +119,6 @@ func checkCredits(userBefore app.User, expectedCost int) {
 
 func expectedCostAtTheEndBasedOnActions(actions changeHistory, startTime time.Time, endTime time.Time, reservedItem string) int {
 	actionsToPerformByAdmin := getKeys(actions)
-	//if no rented then start from starting
-	//if no returned then finish on ending
 	reservationSince := startTime
 	reservationTill := endTime
 	if contains(actionsToPerformByAdmin, app.RENTED) {
@@ -110,10 +127,13 @@ func expectedCostAtTheEndBasedOnActions(actions changeHistory, startTime time.Ti
 	if contains(actionsToPerformByAdmin, app.RETURNED) {
 		reservationTill = actions[app.RETURNED].timestamp
 	}
+	if contains(actionsToPerformByAdmin, app.DENIED) {
+		return 0
+	}
 	return tests.CalculateCost(reservedItem, reservationSince, reservationTill)
 }
 
-func checkItemAvailability(reservationStart time.Time, reservationEnd time.Time, reservedItem app.Item, user app.UserClient) {
+func checkItemAvailabilityWhileReserved(reservationStart time.Time, reservationEnd time.Time, reservedItem app.Item, user app.UserClient) {
 	log.Printf("Check item availability")
 	log.Printf("Check item availability - same time")
 	items := user.GetAvailableItems(reservationStart, reservationEnd)
@@ -167,7 +187,7 @@ func changeReservationStatus(status string, reservation app.Reservation) {
 	}
 }
 
-func checkReservationAudits(reservationId int, expectedChangesHistory changeHistory) { //todo update expectedChangesHistory based on skiped actions
+func checkReservationAudits(reservationId int, expectedChangesHistory changeHistory) {
 	log.Print("check reservation history")
 	history := db.GetReservationAudit(reservationId)
 	if len(history) != len(expectedChangesHistory) {

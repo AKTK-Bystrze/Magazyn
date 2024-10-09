@@ -3,6 +3,7 @@ package tests
 import (
 	"boxTest/common/app"
 	"log"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -18,13 +19,12 @@ func PickRandomItem(items []app.Item) app.Item {
 }
 
 func IsItemAvailable(searchedItem app.Item, items []app.Item) bool {
-	wasFound := false
 	for _, item := range items {
 		if item.ID == searchedItem.ID {
-			wasFound = true
+			return true
 		}
 	}
-	return wasFound
+	return false
 }
 
 func CreateNextDayAt(hour int) time.Time {
@@ -46,11 +46,7 @@ func CalculateCost(item string, start time.Time, end time.Time) int {
 	endDate := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
 
 	duration := endDate.Sub(startDate)
-	days := int(duration.Hours()/24) + 1
-	if days/days == -1 {
-		log.Printf("Wrong subtraction")
-		days = days * -1
-	}
+	days := int(math.Abs(duration.Hours()/24) + 1)
 	log.Printf("calculate cost for item %v for %v days", item, days)
 	switch item {
 	case app.KAYAK:
