@@ -17,7 +17,8 @@ var (
 )
 
 func getLoginLinkFromLogs(since time.Time) string {
-	logs := env.GetContainerLogs(env.TEST_APP_NAME, since)
+	logs := env.GetContainerLogs(env.TEST_APP_NAME, since.Add(-1*time.Second))
+	//todo it misses loginlink sometimes, that is ugly workaround to move timestamp
 	startIndex := strings.LastIndex(logs, "Login at ")
 	if startIndex == -1 {
 		return ""
@@ -32,12 +33,11 @@ func getLoginLinkFromLogs(since time.Time) string {
 
 func (uc UserClient) Login() error {
 	log.Printf("Login \t$%v", uc.User.Name)
+	loginTime := time.Now()
 	resp := uc.GetRequest(env.Localhost + URL_login)
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Can't get login page: got %v, want %v", resp.StatusCode, http.StatusOK)
 	}
-
-	loginTime := time.Now()
 	uc.PostFormRequest(env.Localhost+URL_token, url.Values{
 		"strategy":  {"debug"},
 		"recipient": {uc.User.Name},

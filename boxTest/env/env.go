@@ -1,10 +1,12 @@
 package env
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -13,8 +15,8 @@ import (
 
 const (
 	TEST_APP_NAME        = "test_app"
-	DB_PATH_IN_CONTAINER = "/app/bystrze_test.db"
-	DB_PATH_IN_PROJ      = "bystrze_test.db"
+	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
+	DB_PATH_IN_PROJ      = "magazyn.db"
 	SMTP_SERVER_NAME     = "test_server"
 	DOCKERFILE_PATH      = "../"
 	NETWORK_NO_WEB       = "test_network_no_web"
@@ -107,29 +109,18 @@ func EnviromentSetUP() {
 	setup()
 }
 
-func RunTests(m *testing.M) {
-	testCases := []struct {
-		name string
-		run  func() int
-	}{
-		{"userLogin_test", func() int { return m.Run() }},
-		// todo add running all thests from the test app packages with correct timeout
-		// Add more tests here as needed
+func RunTests() {
+	log.Print("Running all tests...")
+	var timeout = 10 * time.Minute
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "go", "test", "./tests/...")
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("error running tests: %v. Output: %v", err, string(output))
 	}
-	log.Printf("Running tests %v", testCases)
-	var code = 0
-	for _, tc := range testCases {
-		startTime := time.Now()
-		log.Printf("START TEST %v", tc.name)
-		t := &testing.T{}
-		testResult := tc.run()
-		if testResult == 1 {
-			log.Printf("TEST %v FAILED", tc.name)
-			log.Print("\n" + GetContainerLogs(TEST_APP_NAME, startTime))
-			t.Fail()
-			code = testResult
-			log.Printf("TEST %v FAILED", tc.name)
-		}
-	}
-	os.Exit(code)
+	log.Print("Tests logs")
+	fmt.Println(string(output))
 }

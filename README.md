@@ -155,14 +155,18 @@ Obraz wykorzysytwany do testów jest z flagą `"--target test"`
 
 Stworzenie nowego środowiska testowego
 ```cmd
-go run envSetUp.go 
+go run main.go --setUp
 ```
 
 Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min
 ```cmd
 go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
 ```
-Uruchomienie wszystkich z logami (-v)
+Uruchomienie wszystkich testów
 ```cmd
-go test . -v
+go run main.go --tests 
+```
+Wyczyszczenie cache. Testy które przeszły nie zostaną wykonane ponownie.
+cmd```
+go clean -testcache
 ```
