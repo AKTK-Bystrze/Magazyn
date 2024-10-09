@@ -8,44 +8,67 @@ import (
 	"time"
 )
 
-func reservationWithAdminSkippedActions(actionsToSkip []string) {
+func reservationAdminSkippedActions(transitions changeHistory) {
 	testSetUp()
 	items := user.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	testCases := testCaseNotAsPlanned
+	testCases := []testCase{
+		{
+			name:                "Reservation with skipped admin actions",
+			startTime:           time.Now().AddDate(0, 0, 1),
+			endTime:             time.Now().AddDate(0, 0, 7),
+			transition:          make(changeHistory),
+			item:                app.Item{},
+			creditsWhenCreated:  0,
+			creditsWhenReturned: 0,
+		}}
 	for _, tc := range testCases {
 		testSetUp()
 		defer testTearDown()
 		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
-		changesHistory := changeHistory{
-			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
-			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
-			app.RENTED:   {status: app.RENTED, timestamp: tc.startTime},
-			app.RETURNED: {status: app.RETURNED, timestamp: tc.endTime},
-		}
+		changesHistory := transitions
 		tc.transition = changesHistory
-		expectedCost := tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
-		tc.creditsWhenCreated = expectedCost
-		tc.creditsWhenReturned = expectedCost
+		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
+		tc.creditsWhenReturned = tests.CalculateCost(reservedItem.Type, tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
 		tc.item = reservedItem
-		BaseScenario(tc, actionsToSkip)
+		BaseScenario(tc)
 		testTearDown()
 		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
 }
 
 func Test_reservationAdminDoesNoting(t *testing.T) {
-	reservationWithAdminSkippedActions([]string{app.APPROVED, app.RENTED, app.RETURNED})
+	reservationAdminSkippedActions(changeHistory{
+		app.PENDING: {status: app.PENDING, timestamp: time.Now()},
+	})
 }
 
 func Test_reservationAdminDoesntApprove(t *testing.T) {
-	reservationWithAdminSkippedActions([]string{app.APPROVED})
+	reservationAdminSkippedActions(
+		changeHistory{
+			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
+			app.RENTED:   {status: app.RENTED, timestamp: time.Now().AddDate(0, 0, 2)},
+			app.RETURNED: {status: app.RETURNED, timestamp: time.Now().AddDate(0, 0, 8)},
+		},
+	)
 }
 
 func Test_AdminDoesntRent(t *testing.T) {
-	reservationWithAdminSkippedActions([]string{app.RENTED})
+	reservationAdminSkippedActions(
+		changeHistory{
+			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
+			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
+			app.RETURNED: {status: app.RETURNED, timestamp: time.Now().AddDate(0, 0, 8)},
+		},
+	)
 }
 
 func Test_AdminDoesntReturn(t *testing.T) {
-	reservationWithAdminSkippedActions([]string{app.RETURNED})
+	reservationAdminSkippedActions(
+		changeHistory{
+			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
+			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
+			app.RENTED:   {status: app.RENTED, timestamp: time.Now().AddDate(0, 0, 2)},
+		},
+	)
 }

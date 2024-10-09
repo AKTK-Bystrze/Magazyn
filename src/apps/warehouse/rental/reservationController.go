@@ -231,7 +231,7 @@ func updateReservationsDate(reservation models.Reservation, field string, newTim
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
-	appState.App.Debug("Successfuly updated reservation end time to %v", newTime)
+	appState.App.Debug("Successfuly updated reservation %v to %v", field, newTime)
 	return nil
 }
 

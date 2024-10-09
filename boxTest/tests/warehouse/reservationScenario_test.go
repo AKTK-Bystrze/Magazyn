@@ -194,9 +194,7 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 		testSetUp()
 		defer testTearDown()
 		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
-		tc.creditsWhenReturned = tests.CalculateCost(
-			reservedItem.Type,
-			tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
+		tc.creditsWhenReturned = tests.CalculateCost(reservedItem.Type, tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
 		log.Printf("TEST reservation case:\n\t %v since %v till %v, credits when reservation is created %v, credits when returned %v",
 			tc.name, tc.startTime, tc.endTime, tc.creditsWhenCreated, tc.creditsWhenReturned)
 		BaseScenario(tc)

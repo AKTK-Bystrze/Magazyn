@@ -158,6 +158,11 @@ Stworzenie nowego środowiska testowego
 ```cmd
 go run envSetUp.go 
 ```
+
+Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min
+```cmd
+go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
+```
 Uruchomienie wszystkich z logami (-v)
 ```cmd
 go test . -v

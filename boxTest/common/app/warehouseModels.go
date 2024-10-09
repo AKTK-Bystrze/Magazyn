@@ -43,3 +43,5 @@ type ReservationAudit struct {
 var ITMEMS = []string{KayakB1}
 
 var RESERVATION_STATUSES = []string{PENDING, APPROVED, RENTED, RETURNED, DENIED}
+
+var ADMIN_ACTIONS = []string{APPROVED, RENTED, RETURNED, DENIED}
