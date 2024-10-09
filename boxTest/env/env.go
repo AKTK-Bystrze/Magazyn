@@ -39,7 +39,7 @@ func createTestDB() {
 
 func buildTestApp() {
 	log.Print("Building and running test app...")
-	RunCommand(true, "docker", "build",
+	RunCommand(false, "docker", "build",
 		"--target", "test",
 		"-t", TEST_APP_NAME,
 		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
