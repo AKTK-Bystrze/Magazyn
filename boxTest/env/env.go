@@ -16,6 +16,15 @@ func goToDir(dir string) {
 	}
 }
 
+func createTestDB() {
+	//todo
+	//create db file according to schema
+	//append test data
+	//edits dockerfile to take db by given path
+	//test db should be in /boxtest
+	//update deploy script to take db that is in main catalog and is called prod_db
+}
+
 func buildTestApp() {
 	log.Print("Building and running test app...")
 	goToDir("..")
@@ -79,7 +88,7 @@ func ContainerExists(containerName string) bool {
 
 func setup() {
 	log.Print("Setting up for test...")
-	// createDB() //TODO
+	createTestDB()
 	buildTestApp()
 	log.Print("Setting up is done")
 }
@@ -95,6 +104,7 @@ func RunTests(m *testing.M) {
 		run  func() int
 	}{
 		{"userLogin_test", func() int { return m.Run() }},
+		// todo add running all thests from the test app packages with correct timeout
 		// Add more tests here as needed
 	}
 	log.Printf("Running tests %v", testCases)

@@ -20,7 +20,7 @@ func loginThenLogout(user app.User) error {
 }
 
 func Test_allUsers(t *testing.T) {
-	for _, user := range db.USERS {
+	for _, user := range db.USERS_MAP {
 		err := loginThenLogout(user)
 		if err != nil {
 			t.Errorf("Login and logout for %v failed %v", user.Name, err)

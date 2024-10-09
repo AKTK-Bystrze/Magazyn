@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-func ParseDateToDBFormat(time time.Time) string {
-	return strings.ReplaceAll(time.Format(consts.TIME_FORMAT), "T", " ")
-}
-
 var RESERVATIONS = []app.Reservation{
 	{
 		ID:          0,
@@ -92,7 +88,6 @@ func GetReservation(conditions ...ConditionFunc) app.Reservation {
 	return reservationsFound[0]
 }
 
-// ConditionFunc type that defines the condition for flexible filtering
 type ConditionFunc func(res app.Reservation) bool
 
 func FindReservations(reservations []app.Reservation, conditions ...ConditionFunc) []app.Reservation {
@@ -112,7 +107,6 @@ func FindReservations(reservations []app.Reservation, conditions ...ConditionFun
 	return result
 }
 
-// Example conditions that can be passed to FindReservations
 func ByItemID(itemID int) ConditionFunc {
 	return func(res app.Reservation) bool {
 		return res.ItemID == itemID
@@ -159,19 +153,6 @@ func GetReservationById(reservationID int) app.Reservation {
 	query := fmt.Sprintf("SELECT * FROM reservations WHERE r_id = %d;", reservationID)
 	reservationsString := execSQLiteQueryInContainer(consts.TEST_APP_NAME, consts.TEST_DB_PATH, query)
 	return parseToReservation(reservationsString)
-}
-
-func GetReservationByCreateTime(createTime time.Time) app.Reservation {
-	reservations := GetReservations()
-	for _, reservation := range reservations {
-		resTime := reservation.CreatedAt
-		searchedTime := createTime.Truncate(time.Minute)
-		if searchedTime.Format(consts.TIME_FORMAT) == resTime.Format(consts.TIME_FORMAT) {
-			return reservation
-		}
-	}
-	log.Fatalf("Can't find reservation with createdTime %v", createTime)
-	return app.Reservation{}
 }
 
 func RemoveReservations() {
@@ -233,7 +214,7 @@ func ParseDateField(value string, fieldName string) time.Time {
 	return t.In(tests.LOCATION)
 }
 
-func parseToReservationsList(output string) []app.Reservation { //todo verify after changes
+func parseToReservationsList(output string) []app.Reservation {
 	var reservations []app.Reservation
 	lines := strings.Split(output, "\n")
 	lines = lines[:len(lines)-1]
