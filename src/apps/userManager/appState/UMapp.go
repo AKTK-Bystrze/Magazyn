@@ -28,8 +28,4 @@ const (
 	SEND_COOKIE_TO_STDOUT      = true
 	TOKEN_LENGTH               = 10
 	COOKIE_KEY_LENGTH          = 16
-
-	APP_NAME      = "E-magazyn Bystrze"
-	DATABASE_NAME = "magazyn.db"
-	DATABASE_PATH = "./magazyn.db"
 )

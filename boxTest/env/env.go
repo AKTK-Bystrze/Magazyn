@@ -13,7 +13,7 @@ import (
 
 const (
 	TEST_APP_NAME        = "test_app"
-	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
+	DB_PATH_IN_CONTAINER = "/app/bystrze_test.db"
 	DB_PATH_IN_PROJ      = "bystrze_test.db"
 	SMTP_SERVER_NAME     = "test_server"
 	DOCKERFILE_PATH      = "../"
@@ -35,10 +35,6 @@ func createTestDB() {
 	applySQLFromFile(db, "../db.schema")
 	applySQLFromFile(db, "../boxTest/db_test.data")
 	log.Print("DB created")
-
-	//update deploy script to take db that is in main catalog and is called bystrze
-	//create deploy script with mock of getting prod db
-	//decploy script runs tests before deploying
 }
 
 func buildTestApp() {

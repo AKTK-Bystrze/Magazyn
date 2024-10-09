@@ -12,7 +12,7 @@ COPY src/go.mod src/go.sum ./
 RUN go mod download
 
 # Now copy the entire source code (all .go files and other necessary files)
-COPY /src ./
+COPY  /src ./
 
 # Build the Go application
 RUN go build -o main ./main
@@ -44,7 +44,7 @@ WORKDIR /app
 COPY --from=builder /app/main . 
 
 # Copy the SQLite database
-COPY ${DB_PATH} magazyn.db
+COPY ${DB_PATH} ./magazyn.db
 
 # Copy templates
 RUN mkdir -p /app/templates
@@ -59,4 +59,4 @@ FROM production AS test
 RUN apk --no-cache add bash busybox-extras
 
 # Command to run the application
-CMD ["./main", "", "8080", "http://localhost:8080"]
+CMD ["./main", "", "8080", "http://localhost:8080", "./magazyn.db"]

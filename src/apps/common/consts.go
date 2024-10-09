@@ -6,10 +6,13 @@ const (
 	TOKEN_LENGTH               = 10
 	COOKIE_KEY_LENGTH          = 16
 
-	APP_NAME      = "E-magazyn Bystrze"
-	SESSION_NAME  = "magazynBystrze"
-	DATABASE_NAME = "magazyn.db"
-	DATABASE_PATH = "./magazyn.db"
+	APP_NAME     = "E-magazyn Bystrze"
+	SESSION_NAME = "magazynBystrze"
+)
+
+var (
+	DATABASE_PATH string
+	DATABASE_NAME string
 )
 
 const (

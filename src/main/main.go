@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -117,18 +118,19 @@ func loadTemplates() *template.Template {
 }
 
 func main() {
-	if len(os.Args) != 4 {
-		fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN\n", os.Args[0])
+	if len(os.Args) != 5 {
+		fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN DB_PATH\n", os.Args[0])
 		os.Exit(1)
 	}
-
 	addr := fmt.Sprintf("%s:%s", os.Args[1], os.Args[2])
-	db, err := sqlx.Open("sqlite3", common.DATABASE_NAME)
+	server := os.Args[3]
+	common.DATABASE_PATH = os.Args[4]
+	common.DATABASE_NAME = path.Base(common.DATABASE_PATH)
+	db, err := sqlx.Open("sqlite3", common.DATABASE_PATH)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	server := os.Args[3]
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	templates := loadTemplates()
 	router := mux.NewRouter()
