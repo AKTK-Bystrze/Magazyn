@@ -26,10 +26,9 @@ func reservationAdminSkippedActions(transitions changeHistory) {
 		testSetUp()
 		defer testTearDown()
 		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
-		changesHistory := transitions
-		tc.transition = changesHistory
+		tc.transition = transitions
 		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
-		tc.creditsWhenReturned = tests.CalculateCost(reservedItem.Type, tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
+		tc.creditsWhenReturned = expectedCostAtTheEndBasedOnActions(transitions, tc.startTime, tc.endTime, reservedItem.Type)
 		tc.item = reservedItem
 		BaseScenario(tc)
 		testTearDown()
@@ -64,6 +63,16 @@ func Test_AdminDoesntRent(t *testing.T) {
 }
 
 func Test_AdminDoesntReturn(t *testing.T) {
+	reservationAdminSkippedActions(
+		changeHistory{
+			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
+			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
+			app.RENTED:   {status: app.RENTED, timestamp: time.Now().AddDate(0, 0, 2)},
+		},
+	)
+}
+
+func Test_AdminCancelReservation(t *testing.T) {
 	reservationAdminSkippedActions(
 		changeHistory{
 			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},

@@ -98,6 +98,21 @@ func checkCredits(userBefore app.User, expectedCost int) {
 	}
 }
 
+func expectedCostAtTheEndBasedOnActions(actions changeHistory, startTime time.Time, endTime time.Time, reservedItem string) int {
+	actionsToPerformByAdmin := getKeys(actions)
+	//if no rented then start from starting
+	//if no returned then finish on ending
+	reservationSince := startTime
+	reservationTill := endTime
+	if contains(actionsToPerformByAdmin, app.RENTED) {
+		reservationSince = actions[app.RENTED].timestamp
+	}
+	if contains(actionsToPerformByAdmin, app.RETURNED) {
+		reservationTill = actions[app.RETURNED].timestamp
+	}
+	return tests.CalculateCost(reservedItem, reservationSince, reservationTill)
+}
+
 func checkItemAvailability(reservationStart time.Time, reservationEnd time.Time, reservedItem app.Item, user app.UserClient) {
 	log.Printf("Check item availability")
 	log.Printf("Check item availability - same time")
@@ -176,4 +191,12 @@ func contains(list []string, key string) bool {
 		}
 	}
 	return false
+}
+
+func getKeys(ch changeHistory) []string {
+	keys := make([]string, 0, len(ch))
+	for key := range ch {
+		keys = append(keys, key)
+	}
+	return keys
 }
