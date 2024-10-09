@@ -6,6 +6,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -13,7 +16,7 @@ const (
 	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
 	DB_PATH_IN_PROJ      = "bystrze_test.db"
 	SMTP_SERVER_NAME     = "test_server"
-	DOCKERFILE_PATH      = "."
+	DOCKERFILE_PATH      = "../"
 	NETWORK_NO_WEB       = "test_network_no_web"
 	SMTP_PORT            = "3465"
 	COOKIE_KEY           = ""
@@ -22,27 +25,17 @@ const (
 	CookeName = "bystrzeMagazyn"
 )
 
-func goToDir(dir string) {
-	err := os.Chdir(dir)
-	if err != nil {
-		log.Fatal("Can't change dir to " + dir)
-	}
-}
-
 func createTestDB() {
-	// Run the first command
-	log.Print("Createing DB...")
-	goToDir("..")
-	RunCommand(true, "sh", "-c", "sqlite3 bystrze_test.db < db.schema")
-	RunCommand(true, "sh", "-c", "sqlite3 bystrze_test.db \".read boxTest/db_test.data\"")
-	goToDir("boxTest")
+	log.Print("Creating DB...")
+	db, err := sqlx.Open("sqlite3", DB_PATH_IN_PROJ)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	applySQLFromFile(db, "../db.schema")
+	applySQLFromFile(db, "../boxTest/db_test.data")
 	log.Print("DB created")
 
-	//todo
-	//create db file according to schema
-	//append test data
-	//edits dockerfile to take db by given path
-	//test db should be in /boxtest
 	//update deploy script to take db that is in main catalog and is called bystrze
 	//create deploy script with mock of getting prod db
 	//decploy script runs tests before deploying
@@ -50,14 +43,13 @@ func createTestDB() {
 
 func buildTestApp() {
 	log.Print("Building and running test app...")
-	goToDir("..")
-	RunCommand(false, "docker", "build",
+	RunCommand(true, "docker", "build",
 		"--target", "test",
 		"-t", TEST_APP_NAME,
 		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
 		"--build-arg", "COOKIE_KEY="+COOKIE_KEY,
 		"--build-arg", "EMAIL_PASS=password",
-		"--build-arg", "DB_PATH=bystrze_test.db",
+		"--build-arg", "DB_PATH=./boxTest/"+DB_PATH_IN_PROJ,
 		DOCKERFILE_PATH)
 	RunCommand(false, "docker", "run",
 		"--name", TEST_APP_NAME,
@@ -69,7 +61,6 @@ func buildTestApp() {
 		TEST_APP_NAME)
 
 	time.Sleep(2 * time.Second)
-	goToDir("boxTest")
 	log.Print("test app created")
 }
 
@@ -93,10 +84,8 @@ func cleanup() {
 
 func dbExists(dbPath string) bool {
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		log.Print("db doesn't exit")
 		return false
 	}
-	log.Print("db exists")
 	return true
 }
 

@@ -12,7 +12,7 @@ COPY src/go.mod src/go.sum ./
 RUN go mod download
 
 # Now copy the entire source code (all .go files and other necessary files)
-COPY src/ ./
+COPY /src ./
 
 # Build the Go application
 RUN go build -o main ./main
@@ -23,6 +23,7 @@ FROM frolvlad/alpine-glibc:latest AS production
 # Set build arguments for environment variables
 ARG EMAIL
 ARG EMAIL_PASS 
+ARG DB_PATH
 
 # Configure environment variables
 ENV MAGAZYN_BYSTRZE_EMAIL_ADDR=${EMAIL}
@@ -43,7 +44,7 @@ WORKDIR /app
 COPY --from=builder /app/main . 
 
 # Copy the SQLite database
-COPY ${DB_PATH} .
+COPY ${DB_PATH} magazyn.db
 
 # Copy templates
 RUN mkdir -p /app/templates

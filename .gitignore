@@ -1,6 +1,6 @@
 .*.swp
 bystrze_sprzet
-magazyn.db
+*.db
 /.vscode
 /scratch
 __*

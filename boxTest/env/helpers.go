@@ -2,10 +2,13 @@ package env
 
 import (
 	"boxTest/common/consts"
+	"io/ioutil"
 	"log"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func GetContainerLogs(containerName string, since time.Time) string {
@@ -52,4 +55,16 @@ func SetContainerTime(timeToSet time.Time, containerName string) {
 
 func RevertContainerTime(containerName string) {
 	SetContainerTime(time.Now(), containerName)
+}
+
+func applySQLFromFile(db *sqlx.DB, filepath string) {
+	content, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		log.Fatalf("failed to read file %s: %w", filepath, err)
+	}
+
+	_, err = db.Exec(string(content))
+	if err != nil {
+		log.Fatalf("failed to execute SQL from file %s: %w", filepath, err)
+	}
 }
