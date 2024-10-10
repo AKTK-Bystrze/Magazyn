@@ -31,9 +31,15 @@ const (
 
 func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.ResponseWriter) error {
 	u := reservation.User
+	u, err := users.GetUserById(int(u.ID))
+	if err != nil {
+		appState.App.Err("UpdateUserCredits %v", err.Error())
+		http.Error(w, "Cant get user", http.StatusBadRequest)
+		return err
+	}
 	var oldCredits = u.Credits
 	u.Credits = newCredits
-	err := users.UpdateUser(u)
+	err = users.UpdateUser(u)
 	if err != nil {
 		appState.App.Err("UpdateUserCredits %v", err.Error())
 		http.Error(w, "Cant update users credits", http.StatusBadRequest)
