@@ -2,7 +2,6 @@ package env
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -153,7 +152,7 @@ func RunTests() {
 				log.Printf("Unknown exit code %v Err %v", exitCode, err)
 			}
 			log.Printf("\tLOGS\n")
-			fmt.Println(string(output))
+			log.Print(string(output))
 			log.Printf("\tFAILED: %v", tc.name)
 		} else {
 			passedTests = append(passedTests, tc.name)
