@@ -4,9 +4,8 @@ import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/userManager/credits"
-	"fmt"
+	"bystrze/apps/warehouse/appState"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,10 +25,8 @@ func ReservationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	appState.App.Debug("%v ReservationHandler reservationID %v", session.GetSessionUserName(r), reservationID)
-	// Get the reservation from the database
-	var t models.TmpReservation
-	udb := appState.App.Db.Unsafe()
-	err = udb.Get(&t, "SELECT * FROM reservations r JOIN users u ON r.r_user_id = u.u_id JOIN items i ON r.r_item_id = i.i_id WHERE r_id = ?", reservationID)
+
+	t, err := GetReservation(reservationID)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -39,33 +36,9 @@ func ReservationHandler(w http.ResponseWriter, r *http.Request) {
 	t.EndTime = t.EndTime.In(location)
 	t.CreatedAt = t.CreatedAt.In(location)
 
-	// Get the history of changes to the reservation
-	var history []models.ReservationAudit
-	rows, err := udb.Queryx("SELECT ra.*,u.u_username FROM reservation_audit ra JOIN users u ON ra.ra_user_id == u.u_id WHERE ra_reservation_id = ? ORDER BY ra_change_date", reservationID)
+	history, err := GetReservationHistory(reservationID)
 	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	for rows.Next() {
-		var audit models.ReservationAudit
-		var t models.TmpReservationAudit
-		err := rows.StructScan(&t)
-		if err != nil {
-			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		//	work around sqlx to better handle embedded structures and JOINs
-		audit = t.ReservationAudit
-		audit.User = t.User
-		//  TODO: update timestamps to localtime
-		audit.ChangeDate = audit.ChangeDate.In(location)
-		history = append(history, audit)
-	}
-	if err = rows.Err(); err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+		appState.App.Err("%v %v %v", session.GetSessionUserName(r), "Can't get reservation history", err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -76,7 +49,7 @@ func ReservationHandler(w http.ResponseWriter, r *http.Request) {
 		ReservationHistory []models.ReservationAudit
 		apps.TemplateData
 	}{
-		Reservation:        t.Reservation,
+		Reservation:        *t,
 		ReservationHistory: history,
 	}
 	data.Reservation.User = t.User
@@ -131,7 +104,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Reservation end time has to be after the start time", http.StatusBadRequest)
 		return
 	}
-	updateReservationStatus(*reservation, newStatus, w, int(session.GetSessionUserId(r)))
+	UpdateReservationStatus(*reservation, newStatus, w, int(session.GetSessionUserId(r)))
 	appState.App.Debug("%v changed status from %v to %v for reservation %v", session.GetSessionUserName(r), oldStatus, newStatus, id)
 }
 
@@ -159,7 +132,7 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) e
 			return err
 		}
 		userCredits = userCredits + oldRentalCost - newRentalCost
-		err = updateReservationsDate(reservation, "r_start_time", now, w)
+		err = UpdateReservationsDate(reservation, "r_start_time", now, w)
 		if err != nil {
 			return err
 		}
@@ -195,7 +168,7 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 			return err
 		}
 		userCredits = userCredits + oldRentalCost - newRentalCost
-		err = updateReservationsDate(reservation, "r_end_time", now, w)
+		err = UpdateReservationsDate(reservation, "r_end_time", now, w)
 		if err != nil {
 			return err
 		}
@@ -204,34 +177,6 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 			return err
 		}
 	}
-	return nil
-}
-
-func updateReservationsDate(reservation models.Reservation, field string, newTime time.Time, w http.ResponseWriter) error {
-	if field != "r_end_time" && field != "r_start_time" {
-		appState.App.Err("Wrong parameter used in method updateReservationsDate %v", field)
-		http.Error(w, "DB Error", http.StatusInternalServerError)
-		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
-	}
-	newTimeFormated := newTime.Format("2006-01-02 15:04:05")
-	query := fmt.Sprintf(`UPDATE reservations SET %v = ?,r_changeby_uid = ? WHERE r_id = ?`, field)
-	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
-	if err != nil {
-		appState.App.Err("updateReservationEndDate %v", err.Error())
-		http.Error(w, "Can't update reservation ", http.StatusInternalServerError)
-		return err
-	}
-	numRows, err := result.RowsAffected()
-	if err != nil || numRows != 1 {
-		if err != nil {
-			appState.App.Err("updateReservationEndDate %v", err.Error())
-		} else {
-			appState.App.Err("Failed to update reservation end time %v", err)
-		}
-		http.Error(w, "DB Error", http.StatusInternalServerError)
-		return err
-	}
-	appState.App.Debug("Successfuly updated reservation %v to %v", field, newTime)
 	return nil
 }
 
@@ -246,27 +191,6 @@ func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseW
 	updatedCredits := reservation.User.Credits - rentalCost
 	err = credits.UpdateUserCredits(reservation, updatedCredits, w)
 	return err
-}
-
-func updateReservationStatus(reservation models.Reservation, status string, w http.ResponseWriter, changingUserId int) {
-	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, changingUserId, reservation.ID)
-	if err != nil {
-		appState.App.Err("updateReservationStatus %v", err.Error())
-		http.Error(w, "DB Error", http.StatusInternalServerError)
-		return
-	}
-	numRows, err := result.RowsAffected()
-	if err != nil || numRows != 1 {
-		if err != nil {
-			appState.App.Err("updateReservationStatus %v", err.Error())
-		} else {
-			appState.App.Err("Failed to update reservation status %v", err)
-		}
-		http.Error(w, "DB Error", http.StatusInternalServerError)
-		return
-	}
-	response := fmt.Sprintf("id: %d", reservation.ID)
-	w.Write([]byte(response))
 }
 
 func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter) error {

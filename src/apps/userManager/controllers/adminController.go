@@ -88,7 +88,7 @@ func AdminShowUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	historicalReservations, next24HReservations, upcomingReservations := rental.PastFutureReservations(reservations)
+	historicalReservations, next24HReservations, upcomingReservations := rental.GetPastFutureReservations(reservations)
 
 	uname, err := users.GetUserName(userID)
 	if err != nil {
@@ -132,7 +132,7 @@ func AdminShowItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	historicalReservations, next24HReservations, upcomingReservations := rental.PastFutureReservations(reservations)
+	historicalReservations, next24HReservations, upcomingReservations := rental.GetPastFutureReservations(reservations)
 
 	item, err := items.GetItem(itemID)
 	if err != nil {

@@ -4,8 +4,10 @@ import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/userManager/credits"
+	"bystrze/apps/userManager/users"
+	"bystrze/apps/warehouse/appState"
+	"bystrze/apps/warehouse/rental"
 	"net/http"
 	"strconv"
 	"time"
@@ -91,36 +93,32 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 	if canRentResult {
-		stmt, err := appState.App.Db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
-		if err != nil {
-			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-			http.Error(w, "DB error", http.StatusBadRequest)
-			return
-		}
-		defer stmt.Close()
-
+		user, err := users.GetUserById(userID)
 		status := models.PENDING
-		_, err = stmt.Exec(itemID, userID, userID, startTime.UTC().Format(OUT_TIME_FMT), endTime.UTC().Format(OUT_TIME_FMT), status)
+
+		item, err := GetItem(itemID)
+		if err != nil {
+			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+			http.Error(w, "DB error", http.StatusBadRequest)
+			return
+		}
+		reservation := models.Reservation{
+			StartTime: startTime,
+			EndTime:   endTime,
+			Status:    status,
+			Item:      *item,
+			User:      user,
+		}
+		err = rental.AddReservation(reservation)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "DB error", http.StatusBadRequest)
 			return
 		}
 
-		stmt_update_credits, err := appState.App.Db.Prepare(`UPDATE users SET u_credits = ? WHERE u_id = ?`)
-		if err != nil {
-			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-			http.Error(w, "DB error", http.StatusBadRequest)
-			return
-		}
-		defer stmt_update_credits.Close()
 		credits_left := userCredits - rentalCost
-		_, err = stmt_update_credits.Exec(credits_left, userID)
-		if err != nil {
-			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-			http.Error(w, "DB error", http.StatusBadRequest)
-			return
-		}
+		user.Credits = credits_left
+		users.UpdateUser(user)
 		appState.App.Debug("%v reserved item %v since %v till %v", session.GetSessionUserName(r), itemID, startTime, endTime)
 		msg := "Zarezerwowano"
 		http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusFound)

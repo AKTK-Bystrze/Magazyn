@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"database/sql"
@@ -18,8 +19,6 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 )
-
-const OUT_TIME_FMT = "2006-01-02 15:04:05"
 
 type App struct {
 	Db        Database       //setted by main
@@ -140,7 +139,7 @@ func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(OUT_TIME_FMT)+a.DbName)
+	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(common.OUT_TIME_FMT)+a.DbName)
 
 	_, err = io.Copy(w, file)
 	if err != nil {

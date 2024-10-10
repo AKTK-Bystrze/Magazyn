@@ -2,10 +2,22 @@ package rental
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/warehouse/appState"
+	"fmt"
+	"net/http"
 	"time"
 )
+
+type QueryConfigReservation struct {
+	OneUser      bool
+	OneItem      bool
+	SelectionId  int
+	Users        bool
+	OrderByStart bool
+	OrderDesc    bool
+}
 
 type ReservationViewData struct {
 	UpcomingReservations   *[]models.Reservation
@@ -48,15 +60,6 @@ func GetReservation(id int) (*models.Reservation, error) {
 	r.EndTime = r.EndTime.In(location)
 	r.CreatedAt = r.CreatedAt.In(location)
 	return &r, nil
-}
-
-type QueryConfigReservation struct {
-	OneUser      bool
-	OneItem      bool
-	SelectionId  int
-	Users        bool
-	OrderByStart bool
-	OrderDesc    bool
 }
 
 func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) {
@@ -126,7 +129,7 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 	return reservations, nil
 }
 
-func PastFutureReservations(reservations []models.Reservation) ([]models.Reservation, []models.Reservation, []models.Reservation) {
+func GetPastFutureReservations(reservations []models.Reservation) ([]models.Reservation, []models.Reservation, []models.Reservation) {
 	// Group reservations into current, upcoming and historical
 	var upcomingReservations []models.Reservation
 	var historicalReservations []models.Reservation
@@ -152,4 +155,100 @@ func PastFutureReservations(reservations []models.Reservation) ([]models.Reserva
 		}
 	}
 	return historicalReservations, currentReservations, upcomingReservations
+}
+
+func AddReservation(reservation models.Reservation) error {
+	//.UTC().Format(OUT_TIME_FMT)
+	stmt, err := appState.App.Db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		appState.App.Err("%v %v", "Cant create reservation", err.Error())
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(reservation.Item.ID,
+		reservation.User.ID,
+		reservation.User.ID,
+		reservation.StartTime.UTC().Format(common.OUT_TIME_FMT),
+		reservation.EndTime.UTC().Format(common.OUT_TIME_FMT),
+		reservation.Status)
+	if err != nil {
+		appState.App.Err("%v %v", "canr insert reservation", err.Error())
+		return err
+	}
+	return nil
+}
+
+func UpdateReservationStatus(reservation models.Reservation, status string, w http.ResponseWriter, changingUserId int) {
+	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, changingUserId, reservation.ID)
+	if err != nil {
+		appState.App.Err("updateReservationStatus %v", err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+	numRows, err := result.RowsAffected()
+	if err != nil || numRows != 1 {
+		if err != nil {
+			appState.App.Err("updateReservationStatus %v", err.Error())
+		} else {
+			appState.App.Err("Failed to update reservation status %v", err)
+		}
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+	response := fmt.Sprintf("id: %d", reservation.ID)
+	w.Write([]byte(response))
+}
+
+func UpdateReservationsDate(reservation models.Reservation, field string, newTime time.Time, w http.ResponseWriter) error {
+	if field != "r_end_time" && field != "r_start_time" {
+		appState.App.Err("Wrong parameter used in method updateReservationsDate %v", field)
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
+	}
+	newTimeFormated := newTime.Format("2006-01-02 15:04:05")
+	query := fmt.Sprintf(`UPDATE reservations SET %v = ?,r_changeby_uid = ? WHERE r_id = ?`, field)
+	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
+	if err != nil {
+		appState.App.Err("updateReservationEndDate %v", err.Error())
+		http.Error(w, "Can't update reservation ", http.StatusInternalServerError)
+		return err
+	}
+	numRows, err := result.RowsAffected()
+	if err != nil || numRows != 1 {
+		if err != nil {
+			appState.App.Err("updateReservationEndDate %v", err.Error())
+		} else {
+			appState.App.Err("Failed to update reservation end time %v", err)
+		}
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return err
+	}
+	appState.App.Debug("Successfuly updated reservation %v to %v", field, newTime)
+	return nil
+}
+
+func GetReservationHistory(reservationID int) ([]models.ReservationAudit, error) {
+	udb := appState.App.Db.Unsafe()
+	var history []models.ReservationAudit
+	rows, err := udb.Queryx("SELECT ra.*,u.u_username FROM reservation_audit ra JOIN users u ON ra.ra_user_id == u.u_id WHERE ra_reservation_id = ? ORDER BY ra_change_date", reservationID)
+	if err != nil {
+		appState.App.Err("%v %v", "Scanning history", err.Error())
+		return nil, err
+	}
+	for rows.Next() {
+		var audit models.ReservationAudit
+		var t models.TmpReservationAudit
+		err := rows.StructScan(&t)
+		if err != nil {
+			appState.App.Err("%v %v", "Scanning history", err.Error())
+			return nil, err
+		}
+		//	work around sqlx to better handle embedded structures and JOINs
+		audit = t.ReservationAudit
+		audit.User = t.User
+		//  TODO: update timestamps to localtime
+		audit.ChangeDate = audit.ChangeDate.In(common.LOCATION)
+		history = append(history, audit)
+	}
+	return history, nil
 }

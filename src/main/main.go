@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -27,6 +28,7 @@ var (
 )
 
 func main() {
+	common.LOCATION, _ = time.LoadLocation("Europe/Warsaw")
 	if len(os.Args) != 5 {
 		fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN DB_PATH\n", os.Args[0])
 		os.Exit(1)

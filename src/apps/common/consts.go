@@ -1,5 +1,7 @@
 package common
 
+import "time"
+
 const (
 	COOKIE_VALIDITY_TIME_HOURS = 6
 	SEND_COOKIE_TO_STDOUT      = true
@@ -13,6 +15,8 @@ const (
 var (
 	DATABASE_PATH string
 	DATABASE_NAME string
+	LOCATION      *time.Location
+	OUT_TIME_FMT  = "2006-01-02 15:04:05"
 )
 
 const (
