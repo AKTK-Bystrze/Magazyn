@@ -45,7 +45,7 @@ func updateRouter(router *mux.Router) *mux.Router {
 	adminRouter.HandleFunc("/reservation/show", rental.ReservationHandler).Methods("GET")
 	adminRouter.HandleFunc("/inventory", inventory.Inventory).Methods("GET")
 	adminRouter.HandleFunc("/db/backup", appState.App.DbBackupHandler).Methods("Get")
-	adminRouter.HandleFunc("/items", controllers.AdminItemsHandler).Methods("GET") //todo refactor controlles package from usersManager here?
+	adminRouter.HandleFunc("/items", controllers.AdminItemsHandler).Methods("GET")
 	//item admin
 	adminItemRouter := adminRouter.PathPrefix("/item").Subrouter()
 	adminItemRouter.HandleFunc("/status", controllers.AdminItemStatusHandler).Methods("POST")

@@ -131,7 +131,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
-	var availableItems []models.TmpItem
+	var availableItems []models.TmpItemWithReservation
 	var timeFrom time.Time = time.Now()
 	timeFrom = timeFrom.Add(time.Duration(15-timeFrom.Minute()%15) * time.Minute)
 	var timeTo time.Time = timeFrom.Add(24 * time.Hour)
@@ -184,7 +184,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 
 	// render the search results template with the available items list
 	appState.App.RenderTemplate(w, r, "search.html", &struct {
-		AvailableItems []models.TmpItem
+		AvailableItems []models.TmpItemWithReservation
 		StartTime      time.Time
 		EndTime        time.Time
 		Msg            string

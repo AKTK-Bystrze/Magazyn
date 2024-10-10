@@ -158,7 +158,6 @@ func GetPastFutureReservations(reservations []models.Reservation) ([]models.Rese
 }
 
 func AddReservation(reservation models.Reservation) error {
-	//.UTC().Format(OUT_TIME_FMT)
 	stmt, err := appState.App.Db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		appState.App.Err("%v %v", "Cant create reservation", err.Error())
@@ -205,7 +204,7 @@ func UpdateReservationsDate(reservation models.Reservation, field string, newTim
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
 	}
-	newTimeFormated := newTime.Format("2006-01-02 15:04:05")
+	newTimeFormated := newTime.Format(common.OUT_TIME_FMT)
 	query := fmt.Sprintf(`UPDATE reservations SET %v = ?,r_changeby_uid = ? WHERE r_id = ?`, field)
 	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
 	if err != nil {

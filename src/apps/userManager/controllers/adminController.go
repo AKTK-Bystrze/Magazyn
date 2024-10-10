@@ -36,7 +36,7 @@ func AdminItemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	appState.App.RenderTemplate(w, r, "admin_items.html", &struct {
-		Items []models.TmpItem
+		Items []models.TmpItemWithReservation
 		apps.TemplateData
 	}{
 		Items: items,
