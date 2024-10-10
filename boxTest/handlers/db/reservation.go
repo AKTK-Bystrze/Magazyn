@@ -11,69 +11,6 @@ import (
 	"time"
 )
 
-var RESERVATIONS = []app.Reservation{
-	{
-		ID:          0,
-		StartTime:   time.Date(2023, 4, 1, 10, 0, 0, 0, time.UTC),
-		EndTime:     time.Date(2023, 4, 5, 10, 0, 0, 0, time.UTC),
-		ItemID:      1,
-		UserID:      0,
-		ChangeByUID: 0,
-		Status:      "pending",
-		CreatedAt:   time.Date(2023, 3, 2, 16, 5, 0, 0, time.UTC),
-	},
-	{
-		ID:          1,
-		StartTime:   time.Date(2023, 4, 1, 12, 0, 0, 0, time.UTC),
-		EndTime:     time.Date(2023, 4, 3, 18, 0, 0, 0, time.UTC),
-		ItemID:      2,
-		UserID:      1,
-		ChangeByUID: 1,
-		Status:      "pending",
-		CreatedAt:   time.Date(2023, 3, 4, 20, 13, 0, 0, time.UTC),
-	},
-	{
-		ID:          2,
-		StartTime:   time.Date(2023, 4, 3, 16, 0, 0, 0, time.UTC),
-		EndTime:     time.Date(2023, 4, 5, 18, 0, 0, 0, time.UTC),
-		ItemID:      3,
-		UserID:      1,
-		ChangeByUID: 1,
-		Status:      "pending",
-		CreatedAt:   time.Date(2023, 3, 7, 21, 37, 0, 0, time.UTC),
-	},
-	{
-		ID:          3,
-		StartTime:   time.Date(2023, 4, 4, 8, 0, 0, 0, time.UTC),
-		EndTime:     time.Date(2023, 4, 7, 12, 0, 0, 0, time.UTC),
-		ItemID:      2,
-		UserID:      0,
-		ChangeByUID: 0,
-		Status:      "pending",
-		CreatedAt:   time.Date(2023, 3, 8, 9, 14, 0, 0, time.UTC),
-	},
-	{
-		ID:          4,
-		StartTime:   time.Date(2023, 4, 5, 10, 0, 0, 0, time.UTC),
-		EndTime:     time.Date(2023, 4, 5, 18, 0, 0, 0, time.UTC),
-		ItemID:      1,
-		UserID:      1,
-		ChangeByUID: 1,
-		Status:      "pending",
-		CreatedAt:   time.Date(2023, 3, 9, 10, 23, 0, 0, time.UTC),
-	},
-	{
-		ID:          5,
-		StartTime:   time.Date(2023, 4, 7, 10, 0, 0, 0, time.UTC),
-		EndTime:     time.Date(2023, 4, 9, 12, 0, 0, 0, time.UTC),
-		ItemID:      1,
-		UserID:      0,
-		ChangeByUID: 0,
-		Status:      "pending",
-		CreatedAt:   time.Date(2023, 3, 9, 21, 37, 0, 0, time.UTC),
-	},
-}
-
 func GetReservations() []app.Reservation {
 	query := "SELECT * FROM reservations;"
 	reservationsString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, query)
