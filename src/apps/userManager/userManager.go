@@ -6,6 +6,7 @@ import (
 	"bystrze/apps/userManager/auth"
 	"bystrze/apps/userManager/auth/access"
 	"bystrze/apps/userManager/controllers"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -21,6 +22,8 @@ func CreateUserManagerApp(db apps.Database, store sessions.Store,
 		AppName: appName,
 		Router:  router,
 	}
+	appState.UnauthorizedRedirectHandler = controllers.Login
+	appState.PublicURIs = []string{}
 	appState.App.SetLogger()
 	appState.App.LoadTemplates()
 	appState.App.Router = updateRouter(appState.App.Router)
@@ -37,6 +40,7 @@ func CreateUserManagerApp(db apps.Database, store sessions.Store,
 
 func updateRouter(router *mux.Router) *mux.Router {
 	//all
+	router.HandleFunc("/", redirectToLogin).Methods("GET")
 	allRouter := router.PathPrefix("/users").Subrouter()
 	allRouter.HandleFunc("/login", controllers.Login).Methods("GET")
 	allRouter.HandleFunc("/token", auth.TokenHandler).Methods("POST", "GET")
@@ -60,4 +64,8 @@ func updateRouter(router *mux.Router) *mux.Router {
 	superAdminRouter.HandleFunc("/db/backup", appState.App.DbBackupHandler).Methods("Get")
 
 	return router
+}
+
+func redirectToLogin(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/users/login", http.StatusTemporaryRedirect)
 }

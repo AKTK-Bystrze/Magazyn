@@ -4,7 +4,6 @@ import (
 	"bystrze/apps/common"
 	"bystrze/apps/email"
 	"bystrze/apps/email/service"
-	"bystrze/apps/pages"
 	"bystrze/apps/userManager"
 	"bystrze/apps/warehouse"
 	"fmt"
@@ -44,13 +43,13 @@ func main() {
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	router := mux.NewRouter()
 
-	email.CreateEmailApp(db, store, server, "PAGES", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
+	email.CreateEmailApp(db, store, server, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
 
-	userManager.CreateUserManagerApp(db, store, server, "PAGES", router, COOKIE_KEY)
+	userManager.CreateUserManagerApp(db, store, server, "USER_MANAGER", router, COOKIE_KEY)
 
 	warehouse.CreateWarehouseApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "WAREHOUSE", router)
 
-	pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)
+	// pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)
 
 	log.Print("Server starting on: " + addr)
 	log.Fatal(http.ListenAndServe(addr, router))

@@ -4,7 +4,6 @@ import (
 	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/pages/home"
 	"bystrze/apps/userManager/appState"
 	"context"
 	"net/http"
@@ -17,10 +16,10 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
 			appState.App.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-			if r.RequestURI != "/pages/home" {
+			if !isURIpublic(r.RequestURI) {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
-			home.HomePage(w, r)
+			appState.UnauthorizedRedirectHandler(w, r)
 			return
 		}
 		var uinfo models.User
@@ -35,6 +34,15 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 		appState.App.Info("%v %v %v %v", uinfo.Name, strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func isURIpublic(uri string) bool {
+	for _, publicURI := range appState.PublicURIs {
+		if publicURI == uri {
+			return true
+		}
+	}
+	return false
 }
 
 func isRoleValid(userRole string) bool {

@@ -3,15 +3,18 @@ package appState
 import (
 	"bystrze/apps"
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/johnsto/go-passwordless/v2"
 )
 
 var (
-	App        apps.App
-	Pw         Passwordless
-	COOKIE_KEY []byte
+	App                         apps.App
+	Pw                          Passwordless
+	COOKIE_KEY                  []byte
+	UnauthorizedRedirectHandler func(w http.ResponseWriter, r *http.Request)
+	PublicURIs                  []string
 )
 
 type Passwordless interface {

@@ -12,7 +12,7 @@ import (
 	"github.com/johnsto/go-passwordless/v2"
 )
 
-// is it needed only for testing?
+// needed only for testing
 func SendEmail(receiver models.User, subject string, message string) error {
 
 	senderEmail := appState.MAGAZYN_BYSTRZE_EMAIL_ADDR
