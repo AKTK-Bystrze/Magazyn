@@ -29,36 +29,61 @@ var (
 )
 
 func main() {
-	var err error
-	common.LOCATION, err = time.LoadLocation("Europe/Warsaw")
+	setLocation()
+	IP, PORT, SERVER := getArgs()
+	ADDR := fmt.Sprintf("%s:%s", IP, PORT)
+	db := setDb()
+	defer db.Close()
+	setDebugMode()
+	store := sessions.NewCookieStore(COOKIE_KEY)
+	router := mux.NewRouter()
+
+	email.CreateEmailApp(db, store, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
+	userManager.CreateUserManagerApp(db, store, SERVER, "ACCOUNTS", router, COOKIE_KEY)
+	warehouse.CreateWarehouseApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, SERVER, "WAREHOUSE", router)
+	// pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)
+
+	log.Print("Server starting on: " + ADDR)
+	log.Fatal(http.ListenAndServe(ADDR, router))
+}
+
+func setDebugMode() {
+	debugEnv, err := strconv.ParseBool(os.Getenv("DEBUG"))
 	if err != nil {
-		log.Fatalf("Can't get locat time zone")
+		log.Printf("Can't parse DEBUG env %v to bool Err: %v", os.Getenv("DEBUG"), err)
 	}
-	if len(os.Args) != 5 {
-		fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN DB_PATH\n", os.Args[0])
-		os.Exit(1)
+	if os.Getenv("DEBUG") == "" || debugEnv {
+		common.SEND_COOKIE_TO_STDOUT = true
+	} else {
+		common.SEND_COOKIE_TO_STDOUT = false
 	}
-	addr := fmt.Sprintf("%s:%s", os.Args[1], os.Args[2])
-	server := os.Args[3]
-	common.DATABASE_PATH = os.Args[4]
+}
+
+func setDb() *sqlx.DB {
 	common.DATABASE_NAME = path.Base(common.DATABASE_PATH)
 	db, err := sqlx.Open("sqlite3", common.DATABASE_PATH)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-	common.SEND_COOKIE_TO_STDOUT, _ = strconv.ParseBool(os.Getenv("DEBUG"))
-	store := sessions.NewCookieStore(COOKIE_KEY)
-	router := mux.NewRouter()
+	return db
+}
 
-	email.CreateEmailApp(db, store, server, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
+func getArgs() (string, string, string) {
+	if len(os.Args) != 5 {
+		fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN DB_PATH\n", os.Args[0])
+		os.Exit(1)
+	}
+	IP := os.Args[1]
+	PORT := os.Args[2]
+	SERVER := os.Args[3]
+	common.DATABASE_PATH = os.Args[4]
+	return IP, PORT, SERVER
+}
 
-	userManager.CreateUserManagerApp(db, store, server, "USER_MANAGER", router, COOKIE_KEY)
-
-	warehouse.CreateWarehouseApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "WAREHOUSE", router)
-
-	// pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)
-
-	log.Print("Server starting on: " + addr)
-	log.Fatal(http.ListenAndServe(addr, router))
+func setLocation() {
+	var err error
+	common.LOCATION, err = time.LoadLocation("Europe/Warsaw")
+	if err != nil {
+		log.Fatalf("Can't get locat time zone")
+	}
 }
