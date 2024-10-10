@@ -14,17 +14,16 @@ import (
 )
 
 func CreatePagesApp(db apps.Database, dbPath string, dbName string, funcMap template.FuncMap, store sessions.Store,
-	t apps.Templates, server string, appName string, router *mux.Router) apps.App {
+	server string, appName string, router *mux.Router) apps.App {
 	appState.App = apps.App{
-		Db:        db,
-		DbPath:    dbPath,
-		DbName:    dbName,
-		FuncMap:   funcMap,
-		Store:     store,
-		Server:    server,
-		AppName:   appName,
-		Router:    router,
-		Templates: t,
+		Db:      db,
+		DbPath:  dbPath,
+		DbName:  dbName,
+		FuncMap: funcMap,
+		Store:   store,
+		Server:  server,
+		AppName: appName,
+		Router:  router,
 	}
 	appState.App.SetLogger()
 	appState.App.LoadTemplates()
