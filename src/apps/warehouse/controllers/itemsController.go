@@ -40,7 +40,8 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	appState.App.Debug("%v search for %v since %v till %v", session.GetSessionUserName(r), itemID, startTime, endTime)
+	appState.App.Debug("%v search for %v since %v till %v", session.GetSessionUserName(r), itemID,
+		startTime.Format(common.OUT_TIME_FMT), endTime.Format(common.OUT_TIME_FMT))
 	//  admins can make reservation in the past
 	//  TODO: currently only for themselves
 	if startTime.Before(time.Now()) &&
@@ -113,12 +114,14 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		credits_left := userCredits - rentalCost
 		user.Credits = credits_left
 		users.UpdateUser(user)
-		appState.App.Debug("%v reserved item %v since %v till %v", session.GetSessionUserName(r), itemID, startTime, endTime)
+		appState.App.Debug("%v reserved item %v since %v till %v", session.GetSessionUserName(r),
+			itemID, startTime.Format(common.OUT_TIME_FMT), endTime.Format(common.OUT_TIME_FMT))
 		msg := "Zarezerwowano"
 		http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusFound)
 	} else {
 		msg := "Nie możesz wypożyczyć sprzętu"
-		appState.App.Debug("%v can't reserve item %v since %v till %v", session.GetSessionUserName(r), itemID, startTime, endTime)
+		appState.App.Debug("%v can't reserve item %v since %v till %v", session.GetSessionUserName(r), itemID,
+			startTime.Format(common.OUT_TIME_FMT), endTime.Format(common.OUT_TIME_FMT))
 		SearchItems(w, r, msg)
 		return
 	}

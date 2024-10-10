@@ -1,6 +1,7 @@
 package credits
 
 import (
+	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
@@ -57,7 +58,8 @@ func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.T
 
 	duration := endDate.Sub(startDate)
 	days := int(duration.Hours()/24) + 1
-	appState.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type, start_time, end_time, days, rentalCost*days)
+	appState.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type,
+		start_time.Format(common.OUT_TIME_FMT), end_time.Format(common.OUT_TIME_FMT), days, rentalCost*days)
 	return rentalCost * days, err
 }
 

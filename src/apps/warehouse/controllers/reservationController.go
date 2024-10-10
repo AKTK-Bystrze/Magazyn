@@ -113,7 +113,8 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) e
 	year, month, day = reservation.StartTime.Date()
 	reservationStartTime := time.Date(year, month, day, 0, 0, 0, 0, reservation.StartTime.Location())
 	if !today.Equal(reservationStartTime) {
-		appState.App.Debug("Reservation start time %v is different than today %v. Update reservation", reservationStartTime, today)
+		appState.App.Debug("Reservation start time %v is different than today %v. Update reservation",
+			reservationStartTime.Format(common.OUT_TIME_FMT), today.Format(common.OUT_TIME_FMT))
 		userCredits := reservation.User.Credits
 		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 		if err != nil {
@@ -149,7 +150,8 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 	year, month, day = reservation.EndTime.Date()
 	reservationEndTime := time.Date(year, month, day, 0, 0, 0, 0, reservation.EndTime.Location())
 	if !today.Equal(reservationEndTime) {
-		appState.App.Debug("Reservation end time %v is different than today %v. Update reservation", reservationEndTime, today)
+		appState.App.Debug("Reservation end time %v is different than today %v. Update reservation",
+			reservationEndTime.Format(common.OUT_TIME_FMT), today.Format(common.OUT_TIME_FMT))
 		userCredits := reservation.User.Credits
 		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 		if err != nil {
