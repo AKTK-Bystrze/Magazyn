@@ -2,6 +2,7 @@ package rental
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/userManager/credits"
@@ -12,12 +13,6 @@ import (
 )
 
 func ReservationHandler(w http.ResponseWriter, r *http.Request) {
-	var location, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-		http.Error(w, "Localization error", http.StatusInternalServerError)
-		return
-	}
 	reservationID, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
@@ -32,9 +27,9 @@ func ReservationHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	t.StartTime = t.StartTime.In(location)
-	t.EndTime = t.EndTime.In(location)
-	t.CreatedAt = t.CreatedAt.In(location)
+	t.StartTime = t.StartTime.In(common.LOCATION)
+	t.EndTime = t.EndTime.In(common.LOCATION)
+	t.CreatedAt = t.CreatedAt.In(common.LOCATION)
 
 	history, err := GetReservationHistory(reservationID)
 	if err != nil {

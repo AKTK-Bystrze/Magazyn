@@ -29,7 +29,11 @@ var (
 )
 
 func main() {
-	common.LOCATION, _ = time.LoadLocation("Europe/Warsaw")
+	var err error
+	common.LOCATION, err = time.LoadLocation("Europe/Warsaw")
+	if err != nil {
+		log.Fatalf("Can't get locat time zone")
+	}
 	if len(os.Args) != 5 {
 		fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN DB_PATH\n", os.Args[0])
 		os.Exit(1)

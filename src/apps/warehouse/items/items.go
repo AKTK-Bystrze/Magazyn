@@ -31,11 +31,6 @@ func GetItem(itemID int) (*models.Item, error) {
 }
 
 func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, error) {
-	var location, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		appState.App.Err("GetItems %v", err.Error())
-		return []models.TmpItemWithReservation{}, err
-	}
 	// Get all items from the database
 	query := "SELECT i_id, i_name, i_description, i_status, i_type "
 	if conf.WithCurReservation {
@@ -76,8 +71,8 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 		if tmpItem.ID.Valid {
 			out.CurrentReservation.Valid = true
 			out.CurrentReservation.ID = tmpItem.ID.Int64
-			out.CurrentReservation.StartTime = tmpItem.StartTime.Time.In(location)
-			out.CurrentReservation.EndTime = tmpItem.EndTime.Time.In(location)
+			out.CurrentReservation.StartTime = tmpItem.StartTime.Time.In(common.LOCATION)
+			out.CurrentReservation.EndTime = tmpItem.EndTime.Time.In(common.LOCATION)
 			out.CurrentReservation.Status = tmpItem.Status.String
 			out.CurrentReservation.User.Name = tmpItem.Username.String
 			out.CurrentReservation.User.ID = tmpItem.UserID.Int64

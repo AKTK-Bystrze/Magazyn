@@ -2,6 +2,7 @@ package items
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/userManager/credits"
@@ -18,14 +19,6 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReserveItem(w http.ResponseWriter, r *http.Request) {
-	var location, err = time.LoadLocation("Europe/Warsaw")
-
-	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-	// get parameters
 	itemID, err := strconv.Atoi(r.FormValue("item_id"))
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
@@ -33,14 +26,14 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startTime, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), location)
+	startTime, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), common.LOCATION)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	endTime, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), location)
+	endTime, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), common.LOCATION)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -135,24 +128,18 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	var timeFrom time.Time = time.Now()
 	timeFrom = timeFrom.Add(time.Duration(15-timeFrom.Minute()%15) * time.Minute)
 	var timeTo time.Time = timeFrom.Add(24 * time.Hour)
-	var location, err = time.LoadLocation("Europe/Warsaw")
 	appState.App.Debug("%v search from %v to %v", session.GetSessionUserName(r), timeFrom.UTC(), timeTo.UTC())
-	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
 
 	if r.FormValue("start_time") != "" && r.FormValue("end_time") != "" {
 		// parse the dates from the request
 		//timeFrom, err := time.Parse("2006-01-02T00:00", r.FormValue("start_time"))
-		timeFrom, err = time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), location)
+		timeFrom, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), common.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "Invalid start_time parameter", http.StatusBadRequest)
 			return
 		}
-		timeTo, err = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), location)
+		timeTo, err = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), common.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "Invalid end_time parameter", http.StatusBadRequest)

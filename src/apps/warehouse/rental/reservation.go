@@ -39,14 +39,10 @@ func GetReservation(id int) (*models.Reservation, error) {
 		users u ON r.r_user_id = u.u_id
 	WHERE 
 		r.r_id = ?`
-	var location, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		return nil, err
-	}
 	row := appState.App.Db.Unsafe().QueryRowx(query, id)
 	var r models.Reservation
 	var t models.TmpReservation
-	err = row.StructScan(&t)
+	err := row.StructScan(&t)
 	if err != nil {
 		appState.App.Err("Can't get reservation id for id %v %v", id, err)
 		return nil, err
@@ -56,18 +52,13 @@ func GetReservation(id int) (*models.Reservation, error) {
 	r.Item = t.Item
 	r.User = t.User
 	//  TODO: update time to localtime (CEST)
-	r.StartTime = r.StartTime.In(location)
-	r.EndTime = r.EndTime.In(location)
-	r.CreatedAt = r.CreatedAt.In(location)
+	r.StartTime = r.StartTime.In(common.LOCATION)
+	r.EndTime = r.EndTime.In(common.LOCATION)
+	r.CreatedAt = r.CreatedAt.In(common.LOCATION)
 	return &r, nil
 }
 
 func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) {
-	var location, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		appState.App.Err("GetReservations %v", err.Error())
-		return []models.Reservation{}, err
-	}
 	// Retrieve all reservations from database
 	query := "SELECT r.*, i.i_id, i.i_name, i.i_description "
 	if conf.Users {
@@ -117,9 +108,9 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 		r.Item = t.Item
 		r.User = t.User
 		//  TODO: update time to localtime (CEST)
-		r.StartTime = r.StartTime.In(location)
-		r.EndTime = r.EndTime.In(location)
-		r.CreatedAt = r.CreatedAt.In(location)
+		r.StartTime = r.StartTime.In(common.LOCATION)
+		r.EndTime = r.EndTime.In(common.LOCATION)
+		r.CreatedAt = r.CreatedAt.In(common.LOCATION)
 		reservations = append(reservations, r)
 	}
 	if err = rows.Err(); err != nil {
