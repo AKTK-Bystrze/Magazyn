@@ -1,19 +1,11 @@
 package news
 
 import (
+	"bystrze/apps/common/models"
 	"bystrze/apps/pages/appState"
 	"fmt"
 	"sort"
-	"time"
 )
-
-type News struct {
-	ID          int64     `db:"n_id"`
-	CreatedTime time.Time `db:"n_created_time"`
-	Header      string    `db:"n_header"`
-	Content     string    `db:"n_content"`
-	Author      string    `db:"n_author"`
-}
 
 func DeleteNewsByID(newsType string, newsID string) error {
 	query := fmt.Sprintf("DELETE FROM %v WHERE n_id = ?", newsType)
@@ -21,7 +13,7 @@ func DeleteNewsByID(newsType string, newsID string) error {
 	return err
 }
 
-func InsertNews(newsType string, news News) (int64, error) {
+func InsertNews(newsType string, news models.News) (int64, error) {
 	query := fmt.Sprintf(`INSERT INTO %v (n_header, n_content, n_author) VALUES (?, ?, ?)`, newsType)
 	result, err := appState.App.Db.Exec(query, news.Header, news.Content, news.Author)
 	if err != nil {
@@ -31,7 +23,7 @@ func InsertNews(newsType string, news News) (int64, error) {
 	return 0, err
 }
 
-func RetriveAllNewsByType(newsType string) ([]News, error) {
+func RetriveAllNewsByType(newsType string) ([]models.News, error) {
 	query := `
 		SELECT n_id, n_created_time, n_header, n_content, n_author
 		FROM ` + newsType
@@ -41,10 +33,10 @@ func RetriveAllNewsByType(newsType string) ([]News, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var newsList []News
+	var newsList []models.News
 
 	for rows.Next() {
-		var news News
+		var news models.News
 
 		err := rows.Scan(&news.ID, &news.CreatedTime, &news.Header, &news.Content, &news.Author)
 		if err != nil {
@@ -58,17 +50,7 @@ func RetriveAllNewsByType(newsType string) ([]News, error) {
 	return newsList, nil
 }
 
-func GetDBTable(newsType string) string {
-	if newsType == "SmallNews" {
-		return "small_news"
-	} else if newsType == "BigNews" {
-		return "big_news"
-	} else {
-		return ""
-	}
-}
-
-func GetBigNews() ([]News, error) {
+func GetBigNews() ([]models.News, error) {
 	newsList, err := RetriveAllNewsByType("big_news")
 	if err != nil {
 		return nil, err
@@ -79,7 +61,7 @@ func GetBigNews() ([]News, error) {
 	return newsList, nil
 }
 
-func GetSmallNews() ([]News, error) {
+func GetSmallNews() ([]models.News, error) {
 	newsList, err := RetriveAllNewsByType("small_news")
 	if err != nil {
 		return nil, err

@@ -1,20 +1,11 @@
 package home
 
-import "bystrze/apps/pages/news"
+import "bystrze/apps/common/models"
 
-type BigNewsData struct {
-	ID               int64
-	CreatedTimeDay   string
-	CreatedTimeMonth string
-	Header           string
-	Content          string
-	Author           string
-}
-
-func parseBigNewsData(news []news.News) []BigNewsData {
-	var bigNewsDataList []BigNewsData
+func ParseBigNewsData(news []models.News) []models.BigNewsData {
+	var bigNewsDataList []models.BigNewsData
 	for _, news := range news {
-		bigNewsData := BigNewsData{
+		bigNewsData := models.BigNewsData{
 			ID:               news.ID,
 			CreatedTimeDay:   news.CreatedTime.Format("02"),
 			CreatedTimeMonth: news.CreatedTime.Format("Jan"),

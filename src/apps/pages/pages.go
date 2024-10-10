@@ -3,10 +3,8 @@ package pages
 import (
 	"bystrze/apps"
 	"bystrze/apps/pages/appState"
-	"bystrze/apps/pages/home"
-	"bystrze/apps/pages/news"
+	"bystrze/apps/pages/controllers"
 	"bystrze/apps/userManager/auth/access"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -31,22 +29,18 @@ func CreatePagesApp(db apps.Database, dbPath string, dbName string, store sessio
 
 func updateRouter(router *mux.Router) *mux.Router {
 	//all
-	router.HandleFunc("/", redirectToHome).Methods("GET")
+	router.HandleFunc("/", controllers.RedirectToHome).Methods("GET")
 	pagesRouter := router.PathPrefix("/pages").Subrouter()
 	pagesRouter.Use(access.ValidUserMiddlware)
-	pagesRouter.HandleFunc("/home", home.HomePage).Methods("GET")
+	pagesRouter.HandleFunc("/home", controllers.HomePage).Methods("GET")
 	//ninja
 	ninjaRouter := pagesRouter.PathPrefix("/ninja").Subrouter()
 	ninjaRouter.Use(access.NinjaHandler)
-	ninjaRouter.HandleFunc("/news", news.CreateNewsHandler).Methods("POST")
-	ninjaRouter.HandleFunc("/news/{newsId}", news.DeleteNewsHandler).Methods("DELETE")
+	ninjaRouter.HandleFunc("/news", controllers.CreateNewsHandler).Methods("POST")
+	ninjaRouter.HandleFunc("/news/{newsId}", controllers.DeleteNewsHandler).Methods("DELETE")
 	//superAdmin
 	superAdminRouter := pagesRouter.PathPrefix("/superAdmin").Subrouter()
 	superAdminRouter.Use(access.SuperAdminHandler)
 	superAdminRouter.HandleFunc("/db/backup", appState.App.DbBackupHandler).Methods("GET")
 	return router
-}
-
-func redirectToHome(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/pages/home", http.StatusTemporaryRedirect)
 }

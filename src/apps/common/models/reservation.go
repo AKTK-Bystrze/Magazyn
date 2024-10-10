@@ -2,6 +2,15 @@ package models
 
 import "time"
 
+//reservationStatus
+const (
+	DENIED   = "denied"
+	RETURNED = "returned"
+	APPROVED = "approved"
+	PENDING  = "pending"
+	RENTED   = "rented"
+)
+
 type TmpReservation struct {
 	Reservation
 	Item
