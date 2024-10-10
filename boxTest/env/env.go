@@ -162,4 +162,9 @@ func RunTests() {
 	}
 	log.Printf("Tessts passed : \n %v", passedTests)
 	log.Printf("Tessts failed : \n %v", failedTests)
+	if len(failedTests) != 0 {
+		os.Exit(1)
+	} else {
+		os.Exit(0)
+	}
 }
