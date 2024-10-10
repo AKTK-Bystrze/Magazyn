@@ -35,7 +35,7 @@ Zmienne środowiskowe pobierane przez aplikację:
 - MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
 - SMTP_HOST np: smtp.gmail.com
 - SMTP_PORT np: 587
-
+- DEBUG - tryb debugowania true lub false
 ### Konfiguracja
 
 * Ustaw zmienną środowiskową
