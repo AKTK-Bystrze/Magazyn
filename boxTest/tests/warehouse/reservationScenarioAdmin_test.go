@@ -3,7 +3,6 @@ package warehouseTests
 import (
 	"boxTest/handlers/app"
 	"boxTest/tests"
-	"log"
 	"testing"
 	"time"
 )
@@ -29,18 +28,16 @@ func reservationAdminSkippedActions(transitions changeHistory, testName string) 
 		}}
 	for _, tc := range testCases {
 		testSetUp()
-		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
 		tc.transition = transitions
 		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
 		tc.creditsWhenReturned = expectedCostAtTheEndBasedOnActions(transitions, tc.startTime, tc.endTime, reservedItem.Type)
 		tc.item = reservedItem
 		BaseScenario(tc)
 		testTearDown()
-		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
 }
 
-func Test_reservationAdminDoesNoting(t *testing.T) {
+func Test_reservationAdminDoesNothing(t *testing.T) {
 	reservationAdminSkippedActions(changeHistory{
 		app.PENDING: {status: app.PENDING, timestamp: time.Now()},
 	},

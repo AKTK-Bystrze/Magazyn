@@ -3,7 +3,6 @@ package warehouseTests
 import (
 	"boxTest/handlers/app"
 	"boxTest/tests"
-	"log"
 	"testing"
 	"time"
 )
@@ -53,7 +52,6 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 
 	for _, tc := range testCases {
 		testSetUp()
-		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
 		changesHistory := changeHistory{
 			app.PENDING:  {status: app.PENDING, timestamp: tc.startTime},
 			app.APPROVED: {status: app.APPROVED, timestamp: tc.startTime},
@@ -66,7 +64,6 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 		tc.creditsWhenReturned = expectedCost
 		BaseScenario(tc)
 		testTearDown()
-		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
 }
 
@@ -105,7 +102,6 @@ func Test_reservationMadeInFuture(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		testSetUp()
-		log.Printf("TEST reservation case:\n\t %v since %v till %v", tc.name, tc.startTime, tc.endTime)
 		changesHistory := changeHistory{
 			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
 			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
@@ -119,7 +115,6 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		tc.item = reservedItem
 		BaseScenario(tc)
 		testTearDown()
-		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
 }
 
@@ -192,10 +187,7 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 		testSetUp()
 		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
 		tc.creditsWhenReturned = tests.CalculateCost(reservedItem.Type, tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
-		log.Printf("TEST reservation case:\n\t %v since %v till %v, credits when reservation is created %v, credits when returned %v",
-			tc.name, tc.startTime, tc.endTime, tc.creditsWhenCreated, tc.creditsWhenReturned)
 		BaseScenario(tc)
 		testTearDown()
-		log.Printf("TEST reservation case %v PASSED", tc.name)
 	}
 }
