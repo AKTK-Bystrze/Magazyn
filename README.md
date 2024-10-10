@@ -24,6 +24,7 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
   - [BoxTest](#boxtest)
     - [Budowa](#budowa-1)
     - [Run](#run-1)
+    - [Uwagi](#uwagi)
 
 # Jak uruchomić
 ## Zmienne środowiskowe
@@ -176,8 +177,12 @@ go run main.go --tests
 Wyczyszczenie cache. Testy które przeszły nie zostaną wykonane ponownie.
 cmd```
 go clean -testcache
+### Uwagi
 ```
 Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min
 ```cmd
 go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
 ```
+BoxTesty nie są stabilne, zdarza się, że:
+- podczas logowania brak loginlink co powoduje GET request na "". Prawdopodobnie zbyt krótki zakres sprawdzanych logów
+- podczas testów rezerwacji, changeshistory (zmiana statusu wypożyczenia np approve->rented->returned) zmienia swoją kolejność 
