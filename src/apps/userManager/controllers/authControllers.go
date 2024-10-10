@@ -20,11 +20,15 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func RedirectToLogin(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/users/login", http.StatusTemporaryRedirect)
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
 	session, _ := app.App.Store.Get(r, common.SESSION_NAME)
 	if sessionPkg.IsSignedIn(session) {
 		userID := session.Values["UserInfo"].(int)
-		u, err := users.GetUser(userID)
+		u, err := users.GetUserById(userID)
 		if err != nil {
 			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 			http.Error(w, "Template error", http.StatusInternalServerError)
