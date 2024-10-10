@@ -4,7 +4,7 @@ import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/email/appState"
+	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
 	"bystrze/apps/warehouse/items"
 	"bystrze/apps/warehouse/rental"

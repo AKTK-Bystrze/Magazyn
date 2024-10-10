@@ -4,7 +4,7 @@ import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/email/appState"
+	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/userManager/credits"
 	"net/http"
 	"strconv"

@@ -25,7 +25,7 @@ type App struct {
 	Db        Database       //setted by main
 	DbPath    string         //setted by main
 	DbName    string         //setted by main
-	Store     sessions.Store //setted by main and shared by apps
+	Store     sessions.Store //setted by main
 	Server    string         //setted by main. *Do app need it?
 	AppName   string         //setted by main
 	Router    *mux.Router    //setted by main, updated by app

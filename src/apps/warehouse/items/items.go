@@ -2,7 +2,7 @@ package items
 
 import (
 	"bystrze/apps/common/models"
-	"bystrze/apps/email/appState"
+	"bystrze/apps/warehouse/appState"
 	"database/sql"
 	"time"
 )
