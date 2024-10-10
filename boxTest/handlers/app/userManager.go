@@ -24,6 +24,7 @@ func getLoginLinkFromLogs(since time.Time) string {
 		return ""
 	}
 	startIndex += len("Login at ")
+	//get endIndex - link happen to have extra chars
 	loginLink := strings.TrimSpace(logs[startIndex:])
 	if loginLink == "" {
 		log.Fatal("Failed to extract login link from logs")
