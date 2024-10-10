@@ -75,3 +75,19 @@ func GetUserName(id int) (string, error) {
 	}
 	return uname, nil
 }
+
+func GetUserCredits(userID int) (int, error) {
+	return retriveUserCredits(userID)
+}
+
+func retriveUserCredits(userId int) (int, error) {
+	query := `SELECT u_credits FROM users WHERE u_id = ?`
+	row := appState.App.Db.QueryRow(query, userId)
+	var credits int
+	err := row.Scan(&credits)
+	if err != nil {
+		appState.App.Err("retriveUserCredits %v", err.Error())
+		return 0, err
+	}
+	return credits, nil
+}
