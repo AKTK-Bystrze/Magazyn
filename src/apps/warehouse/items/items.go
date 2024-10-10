@@ -107,3 +107,12 @@ func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error)
 	}
 	return true, nil
 }
+
+func UpdateItemStatus(itemID int, status string) error {
+	stmt, err := appState.App.Db.Prepare("UPDATE items SET i_status = ? WHERE i_id = ?")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(status, itemID)
+	return err
+}

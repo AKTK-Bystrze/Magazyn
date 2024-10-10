@@ -5,6 +5,7 @@ import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/userManager/appState"
+	"bystrze/apps/userManager/users"
 	"context"
 	"net/http"
 	"strings"
@@ -23,8 +24,7 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 			return
 		}
 		var uinfo models.User
-		err := appState.App.Db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
-
+		uinfo, err := users.GetUserById(uid)
 		if err != nil || !AreRolesValid(uinfo.Role) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return

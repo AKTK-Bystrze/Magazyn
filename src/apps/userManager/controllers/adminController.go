@@ -59,15 +59,7 @@ func AdminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status := r.FormValue("status")
-
-	stmt, err := appState.App.Db.Prepare("UPDATE items SET i_status = ? WHERE i_id = ?")
-	if err != nil {
-		appState.App.ErrSession(r, err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = stmt.Exec(status, itemID)
+	err = items.UpdateItemStatus(itemID, status)
 	if err != nil {
 		appState.App.ErrSession(r, err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
