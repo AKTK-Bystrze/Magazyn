@@ -10,6 +10,15 @@ import (
 	"time"
 )
 
+// reservationStatus
+const (
+	DENIED   = "denied"
+	RETURNED = "returned"
+	APPROVED = "approved"
+	PENDING  = "pending"
+	RENTED   = "rented"
+)
+
 type QueryConfigReservation struct {
 	OneUser      bool
 	OneItem      bool
@@ -137,7 +146,7 @@ func GetPastFutureReservations(reservations []models.Reservation) ([]models.Rese
 		} else if res.StartTime.After(now) ||
 			res.StartTime.After(now12hearlier) ||
 			(res.StartTime.Before(now) && res.EndTime.After(now) ||
-				res.Status == models.RENTED) {
+				res.Status == RENTED) {
 			// Reservation is upcoming
 			currentReservations = append(currentReservations, res)
 		} else {

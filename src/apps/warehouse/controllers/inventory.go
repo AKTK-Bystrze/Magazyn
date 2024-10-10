@@ -1,4 +1,4 @@
-package inventory
+package controllers
 
 import (
 	"bystrze/apps"

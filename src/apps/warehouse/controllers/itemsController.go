@@ -1,4 +1,4 @@
-package items
+package controllers
 
 import (
 	"bystrze/apps"
@@ -8,6 +8,7 @@ import (
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/userManager/users"
 	"bystrze/apps/warehouse/appState"
+	"bystrze/apps/warehouse/items"
 	"bystrze/apps/warehouse/rental"
 	"net/http"
 	"strconv"
@@ -59,7 +60,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if item is available for the given time period
-	ret, err := CheckAvailability(startTime, endTime, itemID)
+	ret, err := items.CheckAvailability(startTime, endTime, itemID)
 	if err != nil || !ret {
 		msg := "Przedmiot nie jest juz dostepny w tym terminie"
 		appState.App.Debug("%v item unavailable in this date", session.GetSessionUserName(r))
@@ -69,7 +70,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	// get user ID
 	userID := int(r.Context().Value("UserInfo").(models.User).ID)
-	item, err := GetItem(itemID)
+	item, err := items.GetItem(itemID)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -87,9 +88,9 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	}
 	if canRentResult {
 		user, err := users.GetUserById(userID)
-		status := models.PENDING
+		status := rental.PENDING
 
-		item, err := GetItem(itemID)
+		item, err := items.GetItem(itemID)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "DB error", http.StatusBadRequest)
@@ -147,7 +148,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 		}
 
 		if timeTo.After(timeFrom) {
-			availableItems, err = GetItems(models.QueryConfigItems{
+			availableItems, err = items.GetItems(models.QueryConfigItems{
 				Available: true,
 				StartTime: timeFrom.UTC(),
 				EndTime:   timeTo.UTC(),

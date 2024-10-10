@@ -1,4 +1,4 @@
-package rental
+package controllers
 
 import (
 	"bystrze/apps"
@@ -7,6 +7,7 @@ import (
 	"bystrze/apps/common/session"
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/warehouse/appState"
+	"bystrze/apps/warehouse/rental"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,7 +22,7 @@ func ReservationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	appState.App.Debug("%v ReservationHandler reservationID %v", session.GetSessionUserName(r), reservationID)
 
-	t, err := GetReservation(reservationID)
+	t, err := rental.GetReservation(reservationID)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -31,7 +32,7 @@ func ReservationHandler(w http.ResponseWriter, r *http.Request) {
 	t.EndTime = t.EndTime.In(common.LOCATION)
 	t.CreatedAt = t.CreatedAt.In(common.LOCATION)
 
-	history, err := GetReservationHistory(reservationID)
+	history, err := rental.GetReservationHistory(reservationID)
 	if err != nil {
 		appState.App.Err("%v %v %v", session.GetSessionUserName(r), "Can't get reservation history", err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -62,7 +63,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	reservationID := r.FormValue("reservation_id")
 	newStatus := r.FormValue("status")
 	id, _ := strconv.Atoi(reservationID)
-	reservation, err := GetReservation(id)
+	reservation, err := rental.GetReservation(id)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
@@ -70,25 +71,25 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	appState.App.Debug("%v setStatusHandler reservation_id %v status %v", session.GetSessionUserName(r), id, newStatus)
 	var oldStatus = reservation.Status
-	if oldStatus == models.DENIED {
+	if oldStatus == rental.DENIED {
 		err = handlePreviousStatusDenied(*reservation, w)
 		if err != nil {
 			return
 		}
 	}
-	if newStatus == models.DENIED {
+	if newStatus == rental.DENIED {
 		err = handleDeniedStatus(*reservation, w)
 		if err != nil {
 			return
 		}
 	}
-	if newStatus == models.RETURNED {
+	if newStatus == rental.RETURNED {
 		err = handleReturnedStatus(*reservation, w)
 		if err != nil {
 			return
 		}
 	}
-	if newStatus == models.RENTED {
+	if newStatus == rental.RENTED {
 		err = handleRentedStatus(*reservation, w)
 		if err != nil {
 			return
@@ -99,7 +100,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Reservation end time has to be after the start time", http.StatusBadRequest)
 		return
 	}
-	UpdateReservationStatus(*reservation, newStatus, w, int(session.GetSessionUserId(r)))
+	rental.UpdateReservationStatus(*reservation, newStatus, w, int(session.GetSessionUserId(r)))
 	appState.App.Debug("%v changed status from %v to %v for reservation %v", session.GetSessionUserName(r), oldStatus, newStatus, id)
 }
 
@@ -127,7 +128,7 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) e
 			return err
 		}
 		userCredits = userCredits + oldRentalCost - newRentalCost
-		err = UpdateReservationsDate(reservation, "r_start_time", now, w)
+		err = rental.UpdateReservationsDate(reservation, "r_start_time", now, w)
 		if err != nil {
 			return err
 		}
@@ -163,7 +164,7 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 			return err
 		}
 		userCredits = userCredits + oldRentalCost - newRentalCost
-		err = UpdateReservationsDate(reservation, "r_end_time", now, w)
+		err = rental.UpdateReservationsDate(reservation, "r_end_time", now, w)
 		if err != nil {
 			return err
 		}
@@ -176,7 +177,7 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 }
 
 func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseWriter) error {
-	appState.App.Debug("Old reservation status is %v, charge user for rental cost", models.DENIED)
+	appState.App.Debug("Old reservation status is %v, charge user for rental cost", rental.DENIED)
 	rentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 	if err != nil {
 		appState.App.Err("handlePreviousStatusDenied %v", err.Error())
