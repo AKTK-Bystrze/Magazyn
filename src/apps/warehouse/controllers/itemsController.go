@@ -27,14 +27,14 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startTime, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), common.LOCATION)
+	startTime, err := time.ParseInLocation(common.IN_TIME_FMT, r.FormValue("start_time"), common.LOCATION)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	endTime, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), common.LOCATION)
+	endTime, err := time.ParseInLocation(common.IN_TIME_FMT, r.FormValue("end_time"), common.LOCATION)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -133,8 +133,6 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 		timeFrom.UTC().Format(common.OUT_TIME_FMT), timeTo.UTC().Format(common.OUT_TIME_FMT))
 
 	if r.FormValue("start_time") != "" && r.FormValue("end_time") != "" {
-		// parse the dates from the request
-		//timeFrom, err := time.Parse("2006-01-02T00:00", r.FormValue("start_time"))
 		timeFrom, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), common.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
