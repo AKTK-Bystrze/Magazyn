@@ -59,7 +59,7 @@ func testTearDown() {
 }
 
 func BaseScenario(tc testCase) {
-	log.Printf("TESTCASE \n\n%v\n\n", tc)
+	log.Printf("\n\n\tTESTCASE\n%v\n\n", tc)
 	userBefore := db.GetUserById(int(user.User.ID))
 	reserveWithTimestamp(tc.transition[app.PENDING], tc.startTime, tc.endTime, tc.item.ID)
 	checkCredits(userBefore, tc.creditsWhenCreated)
@@ -75,7 +75,7 @@ func BaseScenario(tc testCase) {
 	checkCredits(userBefore, tc.creditsWhenReturned)
 	checkItemAvailabilityAfterReservation(tc)
 	checkReservationAudits(reservation.ID, tc.transition)
-	log.Printf("TESTCASE PASSED \n\n%v\n\n", tc)
+	log.Printf("\n\n\tTESTCASE PASSED\n%v\n\n", tc)
 }
 
 func checkItemAvailabilityAfterReservation(tc testCase) {
