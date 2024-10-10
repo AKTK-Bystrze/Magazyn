@@ -170,7 +170,7 @@ Stworzenie nowego środowiska testowego
 ```cmd
 go run main.go --setUp
 ```
-Uruchomienie wszystkich testów
+Uruchomienie wszystkich testów z listy. 
 ```cmd
 go run main.go --tests 
 ```

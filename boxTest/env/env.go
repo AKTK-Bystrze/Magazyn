@@ -111,20 +111,23 @@ func EnviromentSetUP() {
 
 func RunTests() {
 	WAREHOUSE := "boxTest/tests/warehouse"
+	USEER_MANAGER := "boxTest/tests/userManager"
 	testsCMD := []struct {
 		name     string
 		timeout  int
 		location string
 	}{
-		{"Test_reservationMadeAndStartedSameTime", 50, WAREHOUSE},
-		{"Test_reservationMadeInFuture", 50, WAREHOUSE},
-		{"Test_reservationNotAsPlanned", 90, WAREHOUSE},
-		{"Test_reservationAdminDoesNothing", 30, WAREHOUSE},
-		{"Test_reservationAdminDoesntApprove", 20, WAREHOUSE},
-		{"Test_AdminDoesntRent", 30, WAREHOUSE},
-		{"Test_AdminDoesntReturn", 30, WAREHOUSE},
-		{"Test_AdminDeniesReservation", 30, WAREHOUSE},
-		{"Test_AdminDeniesReservationAfterApproving", 20, WAREHOUSE},
+		{"Test_allUsers_loginAndlogut", 20, USEER_MANAGER},
+		{"Test_allUsers_loginSameTime", 30, USEER_MANAGER},
+		{"Test_reservationMadeAndStartedSameTime", 60, WAREHOUSE},
+		{"Test_reservationMadeInFuture", 60, WAREHOUSE},
+		{"Test_reservationNotAsPlanned", 100, WAREHOUSE},
+		{"Test_reservationAdminDoesNothing", 40, WAREHOUSE},
+		{"Test_reservationAdminDoesntApprove", 30, WAREHOUSE},
+		{"Test_AdminDoesntRent", 40, WAREHOUSE},
+		{"Test_AdminDoesntReturn", 40, WAREHOUSE},
+		{"Test_AdminDeniesReservation", 40, WAREHOUSE},
+		{"Test_AdminDeniesReservationAfterApproving", 30, WAREHOUSE},
 		//add test here
 	}
 	var failedTests []string
@@ -140,15 +143,23 @@ func RunTests() {
 		cmd := exec.CommandContext(ctx, "go.exe", "test", "-run", tc.name, tc.location)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			passedTests = append(passedTests, tc.name)
-			log.Printf("\tPASSED: %v", tc.name)
-		} else {
 			failedTests = append(failedTests, tc.name)
 			log.Printf("\tFAILED: %v", tc.name)
-			log.Printf("\n\n\tLOGS\n\n")
+			if exitError, ok := err.(*exec.ExitError); ok {
+				exitCode := exitError.ExitCode()
+				log.Printf("Exit code %v Err %v", exitCode, err)
+			} else {
+				exitCode := exitError.ExitCode()
+				log.Printf("Unknown exit code %v Err %v", exitCode, err)
+			}
+			log.Printf("\tLOGS\n")
 			fmt.Println(string(output))
-			log.Printf("\nFAILED: %v \n", tc.name)
+			log.Printf("\tFAILED: %v", tc.name)
+		} else {
+			passedTests = append(passedTests, tc.name)
+			log.Printf("\tPASSED: %v", tc.name)
 		}
+
 	}
 	log.Printf("Tessts passed : \n %v", passedTests)
 	log.Printf("Tessts failed : \n %v", failedTests)
