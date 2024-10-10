@@ -3,6 +3,7 @@ package users
 import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/userManager/appState"
+	"fmt"
 )
 
 // // todo should TmpUser and User be both in use insted of one?
@@ -54,6 +55,13 @@ func GetUsers() ([]models.User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func UpdateUser(user models.User) error {
+	query := `UPDATE users SET u_credits = %v, u_role = '%v' WHERE u_id IN (%v)`
+	queryCompleted := fmt.Sprintf(query, user.Credits, user.Role, user.ID)
+	_, err := appState.App.Db.Exec(queryCompleted)
+	return err
 }
 
 func GetUserName(id int) (string, error) {
