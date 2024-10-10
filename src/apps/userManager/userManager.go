@@ -42,7 +42,7 @@ func updateRouter(router *mux.Router) *mux.Router {
 	router.HandleFunc("/", controllers.RedirectToLogin).Methods("GET")
 	allRouter := router.PathPrefix("/users").Subrouter()
 	allRouter.HandleFunc("/login", controllers.Login).Methods("GET")
-	allRouter.HandleFunc("/token", auth.TokenHandler).Methods("POST", "GET")
+	allRouter.HandleFunc("/token", controllers.TokenHandler).Methods("POST", "GET")
 	//users
 	userRouter := allRouter.PathPrefix("/user").Subrouter()
 	userRouter.Use(access.ValidUserMiddlware)

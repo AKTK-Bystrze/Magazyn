@@ -21,13 +21,13 @@ func GetUserById(userId int) (models.User, error) {
 
 func GetUserByEmail(email string) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get("SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_email = ?", email)
+	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_email = ?", email)
 	return u, err
 }
 
 func GetByUserName(name string) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get("SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = ?", name)
+	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = ?", name)
 	return u, err
 }
 
@@ -66,8 +66,4 @@ func GetUserName(id int) (string, error) {
 		return "", err
 	}
 	return uname, nil
-}
-
-func patchUser(user models.User) (models.User, error) {
-	return models.User{}, nil
 }
