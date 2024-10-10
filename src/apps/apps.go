@@ -85,6 +85,8 @@ func (a *App) LoadTemplates() {
 	patterns := []string{
 		"templates/*.html",
 		"templates/*/*.html",
+		"templates/*/*/*.html",
+		"templates/*/*/*/*.html",
 	}
 	files := []string{}
 

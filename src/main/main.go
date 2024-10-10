@@ -100,6 +100,8 @@ func loadTemplates() *template.Template {
 	patterns := []string{
 		"templates/*.html",
 		"templates/*/*.html",
+		"templates/*/*/*.html",
+		"templates/*/*/*/*.html",
 	}
 	files := []string{}
 	for _, dir := range patterns {
@@ -137,10 +139,13 @@ func main() {
 
 	email.CreateEmailApp(db, getFuncMap(), store, templates, server, "PAGES", router,
 		MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
+
 	userManager.CreateUserManagerApp(db, getFuncMap(), store, templates, server, "PAGES", router,
 		COOKIE_KEY)
+
 	warehouse.CreateWarehouseApp(db, common.DATABASE_PATH, common.DATABASE_NAME,
-		getFuncMap(), store, templates, server, "WAREHOUSE", router)
+		getFuncMap(), store, server, "WAREHOUSE", router)
+
 	pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME,
 		getFuncMap(), store, templates, server, "PAGES", router)
 
