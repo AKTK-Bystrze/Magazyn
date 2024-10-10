@@ -110,17 +110,46 @@ func EnviromentSetUP() {
 }
 
 func RunTests() {
-	log.Print("Running all tests...")
-	var timeout = 10 * time.Minute
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, "go", "test", "./tests/...")
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Fatalf("error running tests: %v. Output: %v", err, string(output))
+	WAREHOUSE := "boxTest/tests/warehouse"
+	testsCMD := []struct {
+		name     string
+		timeout  int
+		location string
+	}{
+		{"Test_reservationMadeAndStartedSameTime", 50, WAREHOUSE},
+		{"Test_reservationMadeInFuture", 50, WAREHOUSE},
+		{"Test_reservationNotAsPlanned", 90, WAREHOUSE},
+		{"Test_reservationAdminDoesNothing", 30, WAREHOUSE},
+		{"Test_reservationAdminDoesntApprove", 20, WAREHOUSE},
+		{"Test_AdminDoesntRent", 30, WAREHOUSE},
+		{"Test_AdminDoesntReturn", 30, WAREHOUSE},
+		{"Test_AdminDeniesReservation", 30, WAREHOUSE},
+		{"Test_AdminDeniesReservationAfterApproving", 20, WAREHOUSE},
+		//add test here
 	}
-	log.Print("Tests logs")
-	fmt.Println(string(output))
+	var failedTests []string
+	var passedTests []string
+	log.Print("Running all tests from the list...")
+	for _, tc := range testsCMD {
+		log.Printf("RUNNING %v", tc.name)
+
+		timeout := time.Duration(tc.timeout) * time.Second
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		cmd := exec.CommandContext(ctx, "go.exe", "test", "-run", tc.name, tc.location)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			passedTests = append(passedTests, tc.name)
+			log.Printf("PASSED: %v", tc.name)
+		} else {
+			failedTests = append(failedTests, tc.name)
+			log.Printf("FAILED: %v", tc.name)
+			log.Printf("\n\n\tLOGS\n\n")
+			fmt.Println(string(output))
+			log.Printf("\nFAILED: %v \n", tc.name)
+		}
+	}
+	log.Printf("Tessts passed : \n %v", passedTests)
+	log.Printf("Tessts failed : \n %v", failedTests)
 }
