@@ -6,20 +6,18 @@ import (
 	"bystrze/apps/pages/home"
 	"bystrze/apps/pages/news"
 	"bystrze/apps/userManager/auth/access"
-	"html/template"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
-func CreatePagesApp(db apps.Database, dbPath string, dbName string, funcMap template.FuncMap, store sessions.Store,
+func CreatePagesApp(db apps.Database, dbPath string, dbName string, store sessions.Store,
 	server string, appName string, router *mux.Router) apps.App {
 	appState.App = apps.App{
 		Db:      db,
 		DbPath:  dbPath,
 		DbName:  dbName,
-		FuncMap: funcMap,
 		Store:   store,
 		Server:  server,
 		AppName: appName,

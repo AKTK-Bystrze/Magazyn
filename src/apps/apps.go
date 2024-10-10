@@ -22,16 +22,15 @@ import (
 const OUT_TIME_FMT = "2006-01-02 15:04:05"
 
 type App struct {
-	Db        Database //setted by main
-	DbPath    string   //setted by main
-	DbName    string
-	FuncMap   template.FuncMap //setted by main and shared by apps. Can be appended by app
-	Store     sessions.Store   //setted by main and shared by apps
-	Server    string           //setted by main. *Do app need it?
-	AppName   string           //setted by main
-	Router    *mux.Router      //setted by main, updated by app
-	Logger    *log.Logger      //setted by app
-	Templates Templates        //setted by app
+	Db        Database       //setted by main
+	DbPath    string         //setted by main
+	DbName    string         //setted by main
+	Store     sessions.Store //setted by main and shared by apps
+	Server    string         //setted by main. *Do app need it?
+	AppName   string         //setted by main
+	Router    *mux.Router    //setted by main, updated by app
+	Logger    *log.Logger    //setted by app
+	Templates Templates      //setted by app
 }
 
 func (app App) RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data TemplateDataIfce) {

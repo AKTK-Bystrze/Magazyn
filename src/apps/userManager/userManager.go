@@ -6,18 +6,16 @@ import (
 	"bystrze/apps/userManager/auth"
 	"bystrze/apps/userManager/auth/access"
 	"bystrze/apps/userManager/controllers"
-	"html/template"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/johnsto/go-passwordless/v2"
 )
 
-func CreateUserManagerApp(db apps.Database, funcMap template.FuncMap, store sessions.Store,
+func CreateUserManagerApp(db apps.Database, store sessions.Store,
 	server string, appName string, router *mux.Router, COOKIE_KEY []byte) apps.App {
 	appState.App = apps.App{
 		Db:      db,
-		FuncMap: funcMap,
 		Store:   store,
 		Server:  server,
 		AppName: appName,

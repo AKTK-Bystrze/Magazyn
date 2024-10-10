@@ -8,19 +8,17 @@ import (
 	"bystrze/apps/warehouse/inventory"
 	"bystrze/apps/warehouse/items"
 	"bystrze/apps/warehouse/rental"
-	"html/template"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
-func CreateWarehouseApp(db apps.Database, dbPath string, dbName string, funcMap template.FuncMap, store sessions.Store,
+func CreateWarehouseApp(db apps.Database, dbPath string, dbName string, store sessions.Store,
 	server string, appName string, router *mux.Router) apps.App {
 	appState.App = apps.App{
 		Db:      db,
 		DbPath:  dbPath,
 		DbName:  dbName,
-		FuncMap: funcMap,
 		Store:   store,
 		Server:  server,
 		AppName: appName,
