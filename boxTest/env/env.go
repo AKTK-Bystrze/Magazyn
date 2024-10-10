@@ -16,7 +16,7 @@ import (
 const (
 	TEST_APP_NAME        = "test_app"
 	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
-	DB_PATH_IN_PROJ      = "magazyn.db"
+	DB_PATH_IN_PROJ      = "bystrze_test.db"
 	SMTP_SERVER_NAME     = "test_server"
 	DOCKERFILE_PATH      = "../"
 	NETWORK_NO_WEB       = "test_network_no_web"
