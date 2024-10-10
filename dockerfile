@@ -24,6 +24,7 @@ FROM frolvlad/alpine-glibc:latest AS production
 ARG EMAIL
 ARG EMAIL_PASS 
 ARG DB_PATH
+ARG DEBUG
 
 # Configure environment variables
 ENV MAGAZYN_BYSTRZE_EMAIL_ADDR=${EMAIL}
@@ -31,6 +32,7 @@ ENV MAGAZYN_BYSTRZE_EMAIL_PASS=${EMAIL_PASS}
 ENV COOKIE_KEY=${COOKIE_KEY}
 ENV SMTP_HOST=smtp.gmail.com
 ENV SMTP_PORT=587
+ENV DEBUg=${DEBUG}
 
 # Install dependencies and configure timezone
 RUN apk --no-cache add sqlite tzdata

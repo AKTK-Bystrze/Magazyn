@@ -55,6 +55,7 @@ func buildTestApp() {
 		"-p", "8080:8080",
 		"-e", "SMTP_HOST="+SMTP_SERVER_NAME,
 		"-e", "SMTP_PORT="+SMTP_PORT,
+		"-e", "DEBUG=true",
 		TEST_APP_NAME)
 
 	time.Sleep(2 * time.Second)

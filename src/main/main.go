@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -42,6 +43,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+	common.SEND_COOKIE_TO_STDOUT, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	router := mux.NewRouter()
 
