@@ -129,7 +129,8 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	var timeFrom time.Time = time.Now()
 	timeFrom = timeFrom.Add(time.Duration(15-timeFrom.Minute()%15) * time.Minute)
 	var timeTo time.Time = timeFrom.Add(24 * time.Hour)
-	appState.App.Debug("%v search from %v to %v", session.GetSessionUserName(r), timeFrom.UTC(), timeTo.UTC())
+	appState.App.Debug("%v search from %v to %v", session.GetSessionUserName(r),
+		timeFrom.UTC().Format(common.OUT_TIME_FMT), timeTo.UTC().Format(common.OUT_TIME_FMT))
 
 	if r.FormValue("start_time") != "" && r.FormValue("end_time") != "" {
 		// parse the dates from the request
