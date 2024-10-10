@@ -141,10 +141,10 @@ func RunTests() {
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			passedTests = append(passedTests, tc.name)
-			log.Printf("PASSED: %v", tc.name)
+			log.Printf("\tPASSED: %v", tc.name)
 		} else {
 			failedTests = append(failedTests, tc.name)
-			log.Printf("FAILED: %v", tc.name)
+			log.Printf("\tFAILED: %v", tc.name)
 			log.Printf("\n\n\tLOGS\n\n")
 			fmt.Println(string(output))
 			log.Printf("\nFAILED: %v \n", tc.name)
