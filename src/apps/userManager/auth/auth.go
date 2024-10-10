@@ -7,6 +7,9 @@ import (
 	emailConst "bystrze/apps/email/appState"
 	emailService "bystrze/apps/email/service"
 	app "bystrze/apps/userManager/appState"
+	"bystrze/apps/userManager/controllers"
+	"bystrze/apps/userManager/users"
+	"log"
 
 	"fmt"
 	"net/http"
@@ -22,6 +25,11 @@ var (
 	ERROR_MSG_WRONG_TOKEN     = "Wprowadzony kod jest niepoprawny."
 	ERROR_MSG_TOKEN_NOT_FOUND = "token_not_found"
 )
+
+func handleErrorWithRedirect(w http.ResponseWriter, r *http.Request, err error) {
+	app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
 
 func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	target := "/users/user/dashboard"
@@ -41,11 +49,14 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if sessionPkg.IsSignedIn(session) {
-		err = app.App.Db.Get(&u, "SELECT u_username, u_id, u_role FROM users WHERE u_id = ?", session.Values["UserInfo"])
+		userID, ok := session.Values["UserInfo"].(int)
+		if !ok {
+			log.Println("UserInfo is not a int")
+			handleErrorWithRedirect(w, r, err)
+		}
+		u, err := users.GetUserById(userID)
 		if err != nil {
-			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
+			handleErrorWithRedirect(w, r, err)
 		}
 		if u.Role == "admin" {
 			target = "/warehouse/admin/reservations"
@@ -72,9 +83,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	if uid == "" {
 		// Lookup user ID.
 		if strategy == "email" {
-			err = app.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_email = ?", recipient)
+			u, err = users.GetUserByEmail(recipient)
 		} else {
-			err = app.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = ?", recipient)
+			u, err = users.GetByUserName(recipient)
 		}
 		if err != nil {
 			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
@@ -104,7 +115,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		// the signin page as we can't do anything without it.
 		session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
 		session.Save(r, w)
-		http.Redirect(w, r, "/users/login", http.StatusTemporaryRedirect)
+		controllers.RedirectToLogin(w, r)
 		return
 	} else if token == "" {
 		// No token provided in request, so generate a new one and send it
@@ -112,9 +123,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		err := app.Pw.RequestToken(ctx, strategy, uid, recipient)
 
 		if err != nil {
-			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
+			handleErrorWithRedirect(w, r, err)
 		}
 	} else {
 		// User has provided a token, verify it against provided uid.
@@ -124,7 +133,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			// User provided a valid token! We can safely use the uid as it
 			// is validated alongside the token.
 
-			err = app.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
+			u, err = users.GetUserById(int(u.ID))
 			if err != nil {
 				app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -146,13 +155,11 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			// way, the user will need to attempt sign-in again.
 			session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
 			session.Save(r, w)
-			http.Redirect(w, r, "/users/login", http.StatusTemporaryRedirect)
+			controllers.RedirectToLogin(w, r)
 			return
 		} else if err != nil {
 			// Some other unexpected error occurred.
-			app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
+			handleErrorWithRedirect(w, r, err)
 		} else {
 			// User entered bad token. Set token error string then fall
 			// through to template.

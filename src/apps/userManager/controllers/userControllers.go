@@ -48,7 +48,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	user, err := users.GetUser(userID)
+	user, err := users.GetUserById(userID)
 	if err != nil {
 		appState.App.Err("%v Can't get user %v", session.GetSessionUserName(r), err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
