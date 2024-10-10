@@ -1,8 +1,8 @@
 package userManagerTests
 
 import (
-	"boxTest/common/app"
-	"boxTest/common/db"
+	"boxTest/handlers/app"
+	"boxTest/handlers/db"
 	"errors"
 	"testing"
 )

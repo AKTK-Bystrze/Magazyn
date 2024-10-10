@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"boxTest/common/app"
+	"boxTest/handlers/app"
 	"log"
 	"math"
 	"math/rand"

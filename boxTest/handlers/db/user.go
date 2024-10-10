@@ -1,8 +1,8 @@
 package db
 
 import (
-	"boxTest/common/app"
 	"boxTest/env"
+	"boxTest/handlers/app"
 	"fmt"
 	"log"
 	"strconv"

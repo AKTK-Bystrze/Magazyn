@@ -1,5 +1,7 @@
 # Magazyn
-Repozytorium na serwis webowy do rezerwowania sprzętu AKTK Bystrze oraz stron publicznych.
+Repozytorium aplikacji klubowego magazynu. Składa się z 2 projektów go:
+1. bystrze, w /src - klubowa aplikacja
+2. boxTest, w /boxTest - aplikacja testująca
 
 Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
 
@@ -12,14 +14,16 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
   - [Passwordless authentication](#passwordless-authentication)
     - [Konfiguracja](#konfiguracja-1)
   - [Baza danych](#baza-danych)
-  - [deploy](#deploy)
-- [Architektura](#architektura)
+  - [Run](#run)
+- [Budowa](#budowa)
   - [Apps](#apps)
   - [API](#api)
 - [Release](#release)
 - [Testy](#testy)
   - [Unit testy](#unit-testy)
-  - [E2E testy](#e2e-testy)
+  - [BoxTest](#boxtest)
+    - [Budowa](#budowa-1)
+    - [Run](#run-1)
 
 # Jak uruchomić
 ## Zmienne środowiskowe
@@ -85,21 +89,18 @@ Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_ADDR**, **SMT
 
 * Stwórz bazę 
 ```cmd
-sqlite3 magazyn.db < db.schema
-```
-* Zapełnij bazę
-```powershell
-sqlite3 magazyn.db ".read db_test.data"
+sqlite3 magazyn_prod.db < db.schema
+sqlite3 magazyn_prod.db ".read boxTest/db_test.data" 
 ```
 
-## deploy
+## Run
 ```cmd
 go install
 go build
 bystrze_sprzet.exe 127.0.0.1 8080 http://localhost:8080
 ```
 
-# Architektura
+# Budowa
 Dwie główne lokalizacje:
 - main - server, baza danych, templates
 - apps - aplikacje serwisu Bystrze
@@ -143,6 +144,9 @@ Sprawdź poprzednie tagi
 git tag -n
 ```
 Obraz budownay z flagą `"--target production"`
+```cmd
+docker build --target production -t magazyn_bystrze . --build-arg EMAIL=EMAIL --build-arg EMAIL_PASS="PASS" DB_PATH=./magazyn_prod.db
+```
 # Testy
 
 ## Unit testy
@@ -150,17 +154,20 @@ Konwencja nazewnictwa : Test_metodaTestowana_testowanyStan_oczekiwanyRezultat
 
 Przykład Test_isAdult_ageLessThan18_false
 
-## E2E testy
-Obraz wykorzysytwany do testów jest z flagą `"--target test"`
-
+## BoxTest
+### Budowa
+- env - operacje na środowisku testowym. Budowa bazy testowej, aplikacji itd.
+- handlers - podzielone na /app i /db. Metody do wykonywania operacji takich jak rezerwacja, zmiana statusu rezerwacji itp a w przypadku /db wykonywania operacji na bazie
+- tests - podzielone na testy dotyczące konkretnej aplikacji (apps)
+- testUtils - współdzielone metody wykorzystywane w testach
+### Run
+Box testy. Obraz do testów jest z flagą `"--target test"`
+```cmd
+docker build --target test -t $TEST_APP_NAME --build-arg EMAIL=test_app@bystrzeMail.com --build-arg EMAIL_PASS=password --build-arg DB_PATH="./boxTest/test_db" -f $DOCKERFILE_PATH .
+```
 Stworzenie nowego środowiska testowego
 ```cmd
 go run main.go --setUp
-```
-
-Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min
-```cmd
-go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
 ```
 Uruchomienie wszystkich testów
 ```cmd
@@ -169,4 +176,8 @@ go run main.go --tests
 Wyczyszczenie cache. Testy które przeszły nie zostaną wykonane ponownie.
 cmd```
 go clean -testcache
+```
+Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min
+```cmd
+go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
 ```

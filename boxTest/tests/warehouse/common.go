@@ -1,9 +1,9 @@
 package warehouseTests
 
 import (
-	"boxTest/common/app"
-	"boxTest/common/db"
 	"boxTest/env"
+	"boxTest/handlers/app"
+	"boxTest/handlers/db"
 	"boxTest/tests"
 	"log"
 	"time"

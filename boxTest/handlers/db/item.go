@@ -1,7 +1,7 @@
 package db
 
 import (
-	"boxTest/common/app"
+	"boxTest/handlers/app"
 	"boxTest/env"
 	"fmt"
 	"strings"

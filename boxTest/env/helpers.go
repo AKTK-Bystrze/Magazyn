@@ -1,7 +1,7 @@
 package env
 
 import (
-	"boxTest/common/consts"
+	"boxTest/handlers/consts"
 	"io/ioutil"
 	"log"
 	"os/exec"

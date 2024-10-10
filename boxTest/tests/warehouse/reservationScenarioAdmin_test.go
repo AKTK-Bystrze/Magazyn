@@ -1,7 +1,7 @@
 package warehouseTests
 
 import (
-	"boxTest/common/app"
+	"boxTest/handlers/app"
 	"boxTest/tests"
 	"log"
 	"testing"

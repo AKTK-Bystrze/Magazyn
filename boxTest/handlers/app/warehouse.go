@@ -1,7 +1,7 @@
 package app
 
 import (
-	"boxTest/common/consts"
+	"boxTest/handlers/consts"
 	"boxTest/env"
 	"io/ioutil"
 	"log"

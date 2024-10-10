@@ -1,9 +1,9 @@
 package db
 
 import (
-	"boxTest/common/app"
-	"boxTest/common/consts"
 	"boxTest/env"
+	"boxTest/handlers/app"
+	"boxTest/handlers/consts"
 	"boxTest/tests"
 	"fmt"
 	"log"
