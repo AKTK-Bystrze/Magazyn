@@ -168,7 +168,7 @@ docker build --target test -t $TEST_APP_NAME --build-arg EMAIL=test_app@bystrzeM
 ```
 Stworzenie nowego środowiska testowego
 ```cmd
-go run main.go --setUp
+go run main.go --env
 ```
 Uruchomienie wszystkich testów z listy. 
 ```cmd

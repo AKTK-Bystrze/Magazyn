@@ -1,7 +1,7 @@
 # test app
 go clean -testcache
 go cd boxTest
-go run main.go --setUp
+go run main.go --env
 go go run main.go --tests 
 #OPTIONAL
 #create and populate db. Can get current one from a server using admin's /db/backup endpoint
