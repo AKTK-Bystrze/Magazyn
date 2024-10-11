@@ -30,7 +30,6 @@ func (tc TestCase) toString(result string) {
 	sb.WriteString("Transition History:\n")
 	sb.WriteString(tc.Transition.toString())
 
-	// Assuming app.Item has its own String method or fields to convert to string representation
 	sb.WriteString(fmt.Sprintf("Item Details: %+v\n", tc.Item))
 	log.Printf("\n\tTESTCASE %v\n%v\n", result, sb.String())
 }

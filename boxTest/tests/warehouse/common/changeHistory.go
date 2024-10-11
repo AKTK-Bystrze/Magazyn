@@ -40,13 +40,12 @@ func NewChangeHistoryBuilder() *ChangeHistoryBuilder {
 	}
 }
 
-// AddChange adds a change to the builder, returning the builder for chaining.
 func (b *ChangeHistoryBuilder) AddChange(key string, value Change) *ChangeHistoryBuilder {
 	b.changeHistory.changes = append(b.changeHistory.changes, struct {
 		Key   string
 		Value Change
 	}{Key: key, Value: value})
-	return b // Return the builder for chaining
+	return b
 }
 
 func (ch *ChangeHistory) GetChanges() []struct {
