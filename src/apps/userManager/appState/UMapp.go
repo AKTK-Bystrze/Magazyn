@@ -9,9 +9,18 @@ import (
 	"github.com/johnsto/go-passwordless/v2"
 )
 
+const (
+	LOGIN_LINK_VALIDITY_MIN = 10
+	TOKEN_LENGTH            = 10
+	COOKIE_KEY_LENGTH       = 16
+	APP_NAME                = "E-magazyn Bystrze"
+	SESSION_NAME            = "magazynBystrze"
+)
+
 var (
 	App                         apps.App
 	Pw                          Passwordless
+	SEND_COOKIE_TO_STDOUT       = true
 	COOKIE_KEY                  []byte
 	UnauthorizedRedirectHandler func(w http.ResponseWriter, r *http.Request)
 	PublicURIs                  []string
@@ -25,10 +34,3 @@ type Passwordless interface {
 	SetTransport(name string, t passwordless.Transport, g passwordless.TokenGenerator, ttl time.Duration) passwordless.Strategy
 	VerifyToken(ctx context.Context, uid string, token string) (bool, error)
 }
-
-const (
-	COOKIE_VALIDITY_TIME_HOURS = 6
-	SEND_COOKIE_TO_STDOUT      = true
-	TOKEN_LENGTH               = 10
-	COOKIE_KEY_LENGTH          = 16
-)

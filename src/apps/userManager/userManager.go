@@ -12,7 +12,7 @@ import (
 	"github.com/johnsto/go-passwordless/v2"
 )
 
-func CreateUserManagerApp(db apps.Database, store sessions.Store,
+func CreateUserManagerApp(db apps.Database, store sessions.Store, send_link_to_console bool,
 	server string, appName string, router *mux.Router, COOKIE_KEY []byte) apps.App {
 	appState.App = apps.App{
 		Db:      db,
@@ -21,6 +21,7 @@ func CreateUserManagerApp(db apps.Database, store sessions.Store,
 		AppName: appName,
 		Router:  router,
 	}
+	appState.SEND_COOKIE_TO_STDOUT = send_link_to_console
 	appState.UnauthorizedRedirectHandler = controllers.Login
 	appState.PublicURIs = []string{}
 	appState.App.SetLogger()

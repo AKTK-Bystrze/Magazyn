@@ -13,7 +13,7 @@ import (
 
 func ValidUserMiddlware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := appState.App.Store.Get(r, common.SESSION_NAME)
+		session, _ := appState.App.Store.Get(r, appState.SESSION_NAME)
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
 			appState.App.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)

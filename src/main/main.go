@@ -34,12 +34,12 @@ func main() {
 	ADDR := fmt.Sprintf("%s:%s", IP, PORT)
 	db := setDb()
 	defer db.Close()
-	setDebugMode()
+	debug := setDebugMode()
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	router := mux.NewRouter()
 
 	email.CreateEmailApp(db, store, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
-	userManager.CreateUserManagerApp(db, store, SERVER, "ACCOUNTS", router, COOKIE_KEY)
+	userManager.CreateUserManagerApp(db, store, debug, SERVER, "ACCOUNTS", router, COOKIE_KEY)
 	warehouse.CreateWarehouseApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, SERVER, "WAREHOUSE", router)
 	// pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)
 
@@ -47,16 +47,18 @@ func main() {
 	log.Fatal(http.ListenAndServe(ADDR, router))
 }
 
-func setDebugMode() {
+func setDebugMode() bool {
+	var debug bool
 	debugEnv, err := strconv.ParseBool(os.Getenv("DEBUG"))
 	if err != nil {
 		log.Printf("Can't parse DEBUG env %v to bool Err: %v", os.Getenv("DEBUG"), err)
 	}
 	if os.Getenv("DEBUG") == "" || debugEnv {
-		common.SEND_COOKIE_TO_STDOUT = true
+		debug = true
 	} else {
-		common.SEND_COOKIE_TO_STDOUT = false
+		debug = false
 	}
+	return debug
 }
 
 func setDb() *sqlx.DB {

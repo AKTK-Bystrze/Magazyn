@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	sessionPkg "bystrze/apps/common/session"
 	app "bystrze/apps/userManager/appState"
@@ -10,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/johnsto/go-passwordless/v2"
 )
@@ -21,7 +19,7 @@ var (
 )
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.App.Store.Get(r, common.SESSION_NAME)
+	session, _ := app.App.Store.Get(r, app.SESSION_NAME)
 	for key := range session.Values {
 		delete(session.Values, key)
 	}
@@ -34,7 +32,7 @@ func RedirectToLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.App.Store.Get(r, common.SESSION_NAME)
+	session, _ := app.App.Store.Get(r, app.SESSION_NAME)
 	if sessionPkg.IsSignedIn(session) {
 		userID := session.Values["UserInfo"].(int)
 		u, err := users.GetUserById(userID)
@@ -64,14 +62,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	target := "/users/user/dashboard"
 	var u models.User
-	session, err := app.App.Store.Get(r, common.SESSION_NAME)
+	session, err := app.App.Store.Get(r, app.SESSION_NAME)
 	if err != nil {
 		app.App.Err("%v %v", sessionPkg.GetSessionUserName(r), err.Error())
 		c := &http.Cookie{
-			Name:     common.SESSION_NAME,
+			Name:     app.SESSION_NAME,
 			Value:    "",
 			Path:     "/",
-			Expires:  time.Unix(0, 0),
 			HttpOnly: true,
 		}
 		target = "/users/login"
@@ -158,7 +155,6 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// User has provided a token, verify it against provided uid.
 		valid, err := app.Pw.VerifyToken(ctx, uid, token)
-
 		if valid {
 			// User provided a valid token! We can safely use the uid as it
 			// is validated alongside the token.
