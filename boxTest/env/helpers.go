@@ -1,7 +1,6 @@
 package env
 
 import (
-	"boxTest/handlers/consts"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -43,7 +42,7 @@ func RunCommandError(printOutput bool, command string, args ...string) (string, 
 
 // Works for a while till system synchronize it. Oppening browser does synchronise time
 func SetContainerTime(timeToSet time.Time, containerName string) {
-	timeFormated := strings.ReplaceAll(timeToSet.Format(consts.TIME_FORMAT), "T", " ")
+	timeFormated := strings.ReplaceAll(timeToSet.Format(TIME_FORMAT), "T", " ")
 	RunCommand(false, "docker", "exec", containerName, "date", "-s", timeFormated)
 	res := RunCommand(false, "docker", "exec", containerName, "date")
 	if res == "" {

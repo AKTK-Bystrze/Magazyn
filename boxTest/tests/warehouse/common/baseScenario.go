@@ -64,7 +64,7 @@ func BaseScenario(tc TestCase) {
 func AdminActions(actions ChangeHistory, reservation app.Reservation) {
 	for actionName, action := range actions {
 		if contains(app.ADMIN_ACTIONS, actionName) {
-			log.Printf("Performing action for key: %v, status: %v", actionName, action)
+			log.Printf("Performing action %v", action.toString())
 			ChangeReservationStatusWithTimestamp(action, reservation)
 		}
 	}

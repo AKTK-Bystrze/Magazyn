@@ -24,6 +24,9 @@ const (
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
+
+	TIME_FORMAT    = "2006-01-02T15:04"
+	DB_TIME_FORMAT = "2006-01-02 15:04:05"
 )
 
 func createTestDB() {

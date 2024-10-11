@@ -1,6 +1,7 @@
 package common
 
 import (
+	"boxTest/env"
 	"boxTest/handlers/app"
 	"fmt"
 	"log"
@@ -21,17 +22,15 @@ type TestCase struct {
 func (tc TestCase) toString(result string) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Test Case: %s\n", tc.Name))
-	sb.WriteString(fmt.Sprintf("Start Time: %s\n", tc.StartTime.Format("2006-01-02 15:04:05")))
-	sb.WriteString(fmt.Sprintf("End Time: %s\n", tc.EndTime.Format("2006-01-02 15:04:05")))
+	sb.WriteString(fmt.Sprintf("Start Time: %s\n", tc.StartTime.Format(env.TIME_FORMAT)))
+	sb.WriteString(fmt.Sprintf("End Time: %s\n", tc.EndTime.Format(env.TIME_FORMAT)))
 	sb.WriteString(fmt.Sprintf("Credits When Created: %d\n", tc.CreditsWhenCreated))
 	sb.WriteString(fmt.Sprintf("Credits When Returned: %d\n", tc.CreditsWhenReturned))
 
 	sb.WriteString("Transition History:\n")
-	for key, change := range tc.Transition {
-		sb.WriteString(fmt.Sprintf("  Action: %s, Status: %s, Timestamp: %s\n", key, change.Status, change.Timestamp.Format("2006-01-02 15:04:05")))
-	}
+	sb.WriteString(tc.Transition.toString())
 
 	// Assuming app.Item has its own String method or fields to convert to string representation
 	sb.WriteString(fmt.Sprintf("Item Details: %+v\n", tc.Item))
-	log.Printf("\n\n\tTESTCASE %v\n%v\n\n", result, sb.String())
+	log.Printf("\n\tTESTCASE %v\n%v\n", result, sb.String())
 }

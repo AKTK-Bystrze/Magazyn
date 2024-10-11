@@ -3,7 +3,6 @@ package db
 import (
 	"boxTest/env"
 	"boxTest/handlers/app"
-	"boxTest/handlers/consts"
 	"boxTest/tests"
 	"fmt"
 	"log"
@@ -101,13 +100,13 @@ func RemoveReservations() {
 func AddReservation(reservation app.Reservation) {
 	query := fmt.Sprintf(`INSERT INTO reservations ( r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) 
 						  VALUES ( datetime('%s', 'utc'), datetime('%s', 'utc'), %d, %d, %d, '%s', datetime('%s', 'utc'))`,
-		reservation.StartTime.Format(consts.DB_TIME_FORMAT),
-		reservation.EndTime.Format(consts.DB_TIME_FORMAT),
+		reservation.StartTime.Format(env.DB_TIME_FORMAT),
+		reservation.EndTime.Format(env.DB_TIME_FORMAT),
 		reservation.ItemID,
 		reservation.UserID,
 		reservation.ChangeByUID,
 		reservation.Status,
-		reservation.CreatedAt.Format(consts.TIME_FORMAT))
+		reservation.CreatedAt.Format(env.TIME_FORMAT))
 	result := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, query)
 	if result != "" {
 		log.Fatalf("failed to add reservation %v %v", reservation, result)
@@ -145,7 +144,7 @@ func parseToReservation(line string) app.Reservation {
 }
 
 func ParseDateField(value string, fieldName string) time.Time {
-	t, err := time.Parse(consts.DB_TIME_FORMAT, value)
+	t, err := time.Parse(env.DB_TIME_FORMAT, value)
 	if err != nil {
 		log.Fatalf("%s parsing error: %s value %v", fieldName, err, value)
 	}

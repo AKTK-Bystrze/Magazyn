@@ -2,7 +2,6 @@ package app
 
 import (
 	"boxTest/env"
-	"boxTest/handlers/consts"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -54,8 +53,8 @@ func (uc UserClient) ChangeReservationStatus(reservation Reservation, status str
 func (uc UserClient) GetAvailableItems(timeStart time.Time, timeStop time.Time) []Item {
 	resp := uc.PostFormRequest(env.Localhost+URL_search,
 		url.Values{
-			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
-			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
+			"start_time": {timeStart.Format(env.TIME_FORMAT)},
+			"end_time":   {timeStop.Format(env.TIME_FORMAT)},
 		})
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -98,8 +97,8 @@ func extractValue(text string) string {
 func (uc UserClient) ReserveItem(itemID int, timeStart time.Time, timeStop time.Time) {
 	uc.PostFormRequest(env.Localhost+URL_reserve,
 		url.Values{
-			"start_time": {timeStart.Format(consts.TIME_FORMAT)},
-			"end_time":   {timeStop.Format(consts.TIME_FORMAT)},
+			"start_time": {timeStart.Format(env.TIME_FORMAT)},
+			"end_time":   {timeStop.Format(env.TIME_FORMAT)},
 			"item_id":    {strconv.Itoa(itemID)},
 		})
 }
