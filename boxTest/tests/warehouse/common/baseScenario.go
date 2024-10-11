@@ -88,7 +88,7 @@ func ExpectedCostAtTheEndBasedOnActions(actions *ChangeHistory, startTime time.T
 }
 
 func ReserveWithTimestamp(change Change, reservationStart time.Time, reservationEnd time.Time, itemId int) {
-	env.SetContainerTime(change.Timestamp.Add(-1*time.Minute), env.TEST_APP_NAME)
+	env.SetContainerTime(change.Timestamp.Add(-2*time.Minute), env.TEST_APP_NAME)
 	User.ReserveItem(itemId, reservationStart, reservationEnd)
 	env.RevertContainerTime(env.TEST_APP_NAME)
 }
