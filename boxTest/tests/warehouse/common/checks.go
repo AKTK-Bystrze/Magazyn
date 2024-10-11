@@ -8,15 +8,15 @@ import (
 	"time"
 )
 
-func CheckReservationAudits(reservationId int, expectedChangesHistory ChangeHistory) {
+func CheckReservationAudits(reservationId int, expectedChangesHistory *ChangeHistory) {
 	log.Print("check reservation history")
 	history := db.GetReservationAudit(reservationId)
-	if len(history) != len(expectedChangesHistory) {
+	if len(history) != len(expectedChangesHistory.changes) {
 		log.Fatal("Changes history has different length than expected")
 	}
 	keys := []string{app.PENDING, app.APPROVED, app.RENTED, app.RETURNED}
 	for i, audit := range history {
-		expectedChange := expectedChangesHistory[keys[i]]
+		expectedChange := expectedChangesHistory.GetChangeByKey(keys[i])
 		if audit.Auditor != Admin.User.Name &&
 			tests.IsSameDay(audit.ChangeDate, expectedChange.Timestamp) &&
 			audit.Status != expectedChange.Status {
@@ -61,7 +61,7 @@ func CheckItemAvailabilityWhileReserved(reservationStart time.Time, reservationE
 
 func CheckItemAvailabilityAfterReservation(tc TestCase) {
 	log.Print("Check item avaiablity after the reservation")
-	keys := getKeys(tc.Transition)
+	keys := tc.Transition.GetAllKeys()
 	if contains(keys, app.DENIED) {
 		items := User.GetAvailableItems(tc.StartTime, tc.EndTime)
 		if !tests.IsItemAvailable(tc.Item, items) {
@@ -70,7 +70,7 @@ func CheckItemAvailabilityAfterReservation(tc TestCase) {
 	}
 	var endTime time.Time
 	if contains(keys, app.RETURNED) {
-		endTime = tc.Transition[app.RETURNED].Timestamp
+		endTime = tc.Transition.GetChangeByKey(app.RETURNED).Timestamp
 	} else {
 		endTime = tc.EndTime
 	}

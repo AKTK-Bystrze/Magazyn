@@ -44,7 +44,7 @@ func TestTearDown() {
 func BaseScenario(tc TestCase) {
 	tc.toString("")
 	userBefore := db.GetUserById(int(User.User.ID))
-	ReserveWithTimestamp(tc.Transition[app.PENDING], tc.StartTime, tc.EndTime, tc.Item.ID)
+	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID)
 	CheckCredits(userBefore, tc.CreditsWhenCreated)
 	reservation := db.GetReservation(
 		db.ByItemID(tc.Item.ID),
@@ -61,38 +61,38 @@ func BaseScenario(tc TestCase) {
 	tc.toString("PASSED")
 }
 
-func AdminActions(actions ChangeHistory, reservation app.Reservation) {
-	for actionName, action := range actions {
-		if contains(app.ADMIN_ACTIONS, actionName) {
-			log.Printf("Performing action %v", action.toString())
-			ChangeReservationStatusWithTimestamp(action, reservation)
+func AdminActions(actions *ChangeHistory, reservation app.Reservation) {
+	actionsList := actions.GetChanges()
+	for _, change := range actionsList {
+		if contains(app.ADMIN_ACTIONS, change.Key) {
+			log.Printf("Performing action %v: %s", change.Key, change.Value.toString())
+			ChangeReservationStatusWithTimestamp(change.Value, reservation)
 		}
 	}
 }
 
-func ExpectedCostAtTheEndBasedOnActions(actions ChangeHistory, startTime time.Time, endTime time.Time, reservedItem string) int {
-	actionsToPerformByAdmin := getKeys(actions)
+func ExpectedCostAtTheEndBasedOnActions(actions *ChangeHistory, startTime time.Time, endTime time.Time, reservedItem string) int {
 	reservationSince := startTime
 	reservationTill := endTime
-	if contains(actionsToPerformByAdmin, app.RENTED) {
-		reservationSince = actions[app.RENTED].Timestamp
+	if actions.KeyExists(app.RENTED) {
+		reservationSince = actions.GetChangeByKey(app.RENTED).Timestamp
 	}
-	if contains(actionsToPerformByAdmin, app.RETURNED) {
-		reservationTill = actions[app.RETURNED].Timestamp
+	if actions.KeyExists(app.RETURNED) {
+		reservationTill = actions.GetChangeByKey(app.RETURNED).Timestamp
 	}
-	if contains(actionsToPerformByAdmin, app.DENIED) {
+	if actions.KeyExists(app.DENIED) {
 		return 0
 	}
 	return tests.CalculateCost(reservedItem, reservationSince, reservationTill)
 }
 
-func ReserveWithTimestamp(change change, reservationStart time.Time, reservationEnd time.Time, itemId int) {
+func ReserveWithTimestamp(change Change, reservationStart time.Time, reservationEnd time.Time, itemId int) {
 	env.SetContainerTime(change.Timestamp.Add(-1*time.Minute), env.TEST_APP_NAME)
 	User.ReserveItem(itemId, reservationStart, reservationEnd)
 	env.RevertContainerTime(env.TEST_APP_NAME)
 }
 
-func ChangeReservationStatusWithTimestamp(change change, reservation app.Reservation) {
+func ChangeReservationStatusWithTimestamp(change Change, reservation app.Reservation) {
 	env.SetContainerTime(change.Timestamp.Add(-1*time.Minute), env.TEST_APP_NAME)
 	ChangeReservationStatus(change.Status, reservation)
 	env.RevertContainerTime(env.TEST_APP_NAME)
@@ -113,12 +113,4 @@ func contains(list []string, key string) bool {
 		}
 	}
 	return false
-}
-
-func getKeys(ch ChangeHistory) []string {
-	keys := make([]string, 0, len(ch))
-	for key := range ch {
-		keys = append(keys, key)
-	}
-	return keys
 }

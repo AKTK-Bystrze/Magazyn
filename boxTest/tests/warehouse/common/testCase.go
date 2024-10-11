@@ -13,7 +13,7 @@ type TestCase struct {
 	Name                string
 	StartTime           time.Time
 	EndTime             time.Time
-	Transition          ChangeHistory
+	Transition          *ChangeHistory
 	Item                app.Item
 	CreditsWhenCreated  int
 	CreditsWhenReturned int
