@@ -6,14 +6,6 @@ import (
 	"fmt"
 )
 
-// // todo should TmpUser and User be both in use insted of one?
-// type TmpUser struct {
-// 	ID      int64  `db:"u_id"`
-// 	Name    string `db:"u_username"`
-// 	Role    string `db:"u_role"`
-// 	Credits int    `db:"u_credits"`
-// }
-
 func GetUserById(userId int) (models.User, error) {
 	var u models.User
 	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", userId)
