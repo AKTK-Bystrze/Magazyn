@@ -3,191 +3,192 @@ package warehouseTests
 import (
 	"boxTest/handlers/app"
 	"boxTest/tests"
+	"boxTest/tests/warehouse/common"
 	"testing"
 	"time"
 )
 
 func Test_reservationMadeAndStartedSameTime(t *testing.T) {
-	testSetUp()
-	items := user.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	common.TestSetUp()
+	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	testCases := []testCase{
+	testCases := []common.TestCase{
 		{
-			name:                "Reservation take today return next week",
-			startTime:           time.Now(),
-			endTime:             time.Now().AddDate(0, 0, 7),
-			transition:          make(changeHistory),
-			item:                reservedItem,
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
+			Name:                "Reservation take today return next week",
+			StartTime:           time.Now(),
+			EndTime:             time.Now().AddDate(0, 0, 7),
+			Transition:          make(common.ChangeHistory),
+			Item:                reservedItem,
+			CreditsWhenCreated:  0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			name:                "Reservation take today return tomorrow",
-			startTime:           time.Now(),
-			endTime:             tests.CreateNextDayAt(23),
-			transition:          make(changeHistory),
-			item:                reservedItem,
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
+			Name:                "Reservation take today return tomorrow",
+			StartTime:           time.Now(),
+			EndTime:             tests.CreateNextDayAt(23),
+			Transition:          make(common.ChangeHistory),
+			Item:                reservedItem,
+			CreditsWhenCreated:  0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			name:                "Reservation take today return today",
-			startTime:           time.Now(),
-			endTime:             time.Now().Add(time.Hour),
-			transition:          make(changeHistory),
-			item:                reservedItem,
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
+			Name:                "Reservation take today return today",
+			StartTime:           time.Now(),
+			EndTime:             time.Now().Add(time.Hour),
+			Transition:          make(common.ChangeHistory),
+			Item:                reservedItem,
+			CreditsWhenCreated:  0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			name:                "Reservation take today return day after tomorrow",
-			startTime:           time.Now(),
-			endTime:             time.Now().AddDate(0, 0, 2),
-			transition:          make(changeHistory),
-			item:                reservedItem,
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
+			Name:                "Reservation take today return day after tomorrow",
+			StartTime:           time.Now(),
+			EndTime:             time.Now().AddDate(0, 0, 2),
+			Transition:          make(common.ChangeHistory),
+			Item:                reservedItem,
+			CreditsWhenCreated:  0,
+			CreditsWhenReturned: 0,
 		},
 	}
 
 	for _, tc := range testCases {
-		testSetUp()
-		changesHistory := changeHistory{
-			app.PENDING:  {status: app.PENDING, timestamp: tc.startTime},
-			app.APPROVED: {status: app.APPROVED, timestamp: tc.startTime},
-			app.RENTED:   {status: app.RENTED, timestamp: tc.startTime},
-			app.RETURNED: {status: app.RETURNED, timestamp: tc.endTime},
+		common.TestSetUp()
+		changesHistory := common.ChangeHistory{
+			app.PENDING:  {Status: app.PENDING, Timestamp: tc.StartTime},
+			app.APPROVED: {Status: app.APPROVED, Timestamp: tc.StartTime},
+			app.RENTED:   {Status: app.RENTED, Timestamp: tc.StartTime},
+			app.RETURNED: {Status: app.RETURNED, Timestamp: tc.EndTime},
 		}
-		tc.transition = changesHistory
-		expectedCost := tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
-		tc.creditsWhenCreated = expectedCost
-		tc.creditsWhenReturned = expectedCost
-		BaseScenario(tc)
-		testTearDown()
+		tc.Transition = changesHistory
+		expectedCost := tests.CalculateCost(reservedItem.Type, tc.StartTime, tc.EndTime)
+		tc.CreditsWhenCreated = expectedCost
+		tc.CreditsWhenReturned = expectedCost
+		common.BaseScenario(tc)
+		common.TestTearDown()
 	}
 }
 
 func Test_reservationMadeInFuture(t *testing.T) {
-	testSetUp()
-	items := user.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	common.TestSetUp()
+	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	testCases := []testCase{
+	testCases := []common.TestCase{
 		{
-			name:                "Reservation take tomorrow return next week",
-			startTime:           time.Now().AddDate(0, 0, 1),
-			endTime:             time.Now().AddDate(0, 0, 7),
-			transition:          make(changeHistory),
-			item:                app.Item{},
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
+			Name:                "Reservation take tomorrow return next week",
+			StartTime:           time.Now().AddDate(0, 0, 1),
+			EndTime:             time.Now().AddDate(0, 0, 7),
+			Transition:          make(common.ChangeHistory),
+			Item:                app.Item{},
+			CreditsWhenCreated:  0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			name:                "Reservation take next week return after week",
-			startTime:           time.Now().AddDate(0, 0, 7),
-			endTime:             time.Now().AddDate(0, 0, 14),
-			transition:          make(changeHistory),
-			item:                app.Item{},
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
+			Name:                "Reservation take next week return after week",
+			StartTime:           time.Now().AddDate(0, 0, 7),
+			EndTime:             time.Now().AddDate(0, 0, 14),
+			Transition:          make(common.ChangeHistory),
+			Item:                app.Item{},
+			CreditsWhenCreated:  0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			name:                "Reservation take next week return same day",
-			startTime:           time.Now().AddDate(0, 0, 7),
-			endTime:             time.Now().AddDate(0, 0, 7).Add(time.Hour),
-			transition:          make(changeHistory),
-			item:                app.Item{},
-			creditsWhenCreated:  0,
-			creditsWhenReturned: 0,
+			Name:                "Reservation take next week return same day",
+			StartTime:           time.Now().AddDate(0, 0, 7),
+			EndTime:             time.Now().AddDate(0, 0, 7).Add(time.Hour),
+			Transition:          make(common.ChangeHistory),
+			Item:                app.Item{},
+			CreditsWhenCreated:  0,
+			CreditsWhenReturned: 0,
 		},
 	}
 	for _, tc := range testCases {
-		testSetUp()
-		changesHistory := changeHistory{
-			app.PENDING:  {status: app.PENDING, timestamp: time.Now()},
-			app.APPROVED: {status: app.APPROVED, timestamp: time.Now()},
-			app.RENTED:   {status: app.RENTED, timestamp: tc.startTime},
-			app.RETURNED: {status: app.RETURNED, timestamp: tc.endTime},
+		common.TestSetUp()
+		changesHistory := common.ChangeHistory{
+			app.PENDING:  {Status: app.PENDING, Timestamp: time.Now()},
+			app.APPROVED: {Status: app.APPROVED, Timestamp: time.Now()},
+			app.RENTED:   {Status: app.RENTED, Timestamp: tc.StartTime},
+			app.RETURNED: {Status: app.RETURNED, Timestamp: tc.EndTime},
 		}
-		tc.transition = changesHistory
-		expectedCost := tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
-		tc.creditsWhenCreated = expectedCost
-		tc.creditsWhenReturned = expectedCost
-		tc.item = reservedItem
-		BaseScenario(tc)
-		testTearDown()
+		tc.Transition = changesHistory
+		expectedCost := tests.CalculateCost(reservedItem.Type, tc.StartTime, tc.EndTime)
+		tc.CreditsWhenCreated = expectedCost
+		tc.CreditsWhenReturned = expectedCost
+		tc.Item = reservedItem
+		common.BaseScenario(tc)
+		common.TestTearDown()
 	}
 }
 
 func Test_reservationNotAsPlanned(t *testing.T) {
-	testSetUp()
-	items := user.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	common.TestSetUp()
+	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	now := time.Now()
 	nextWeek := time.Now().AddDate(0, 0, 7)
 	twoWeeks := time.Now().AddDate(0, 0, 14)
-	testCases := []testCase{
+	testCases := []common.TestCase{
 		{
-			"Reservation started earlier than planned, returned on time",
-			nextWeek,
-			twoWeeks,
-			changeHistory{
-				app.PENDING:  {status: app.PENDING, timestamp: now},
-				app.APPROVED: {status: app.APPROVED, timestamp: now},
-				app.RENTED:   {status: app.RENTED, timestamp: now.AddDate(0, 0, 3)},
-				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
+			Name: "Reservation started earlier than planned, returned on time",
+			StartTime: nextWeek,
+			EndTime: twoWeeks,
+			Transition: common.ChangeHistory{
+				app.PENDING:  {Status: app.PENDING, Timestamp: now},
+				app.APPROVED: {Status: app.APPROVED, Timestamp: now},
+				app.RENTED:   {Status: app.RENTED, Timestamp: now.AddDate(0, 0, 3)},
+				app.RETURNED: {Status: app.RETURNED, Timestamp: twoWeeks},
 			},
-			reservedItem,
-			0,
-			0,
+			Item: reservedItem,
+			CreditsWhenCreated: 0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			"Reservation started later than planned, returned on time",
-			nextWeek,
-			twoWeeks,
-			changeHistory{
-				app.PENDING:  {status: app.PENDING, timestamp: now},
-				app.APPROVED: {status: app.APPROVED, timestamp: now},
-				app.RENTED:   {status: app.RENTED, timestamp: nextWeek.AddDate(0, 0, 2)},
-				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks},
+			Name: "Reservation started later than planned, returned on time",
+			StartTime: nextWeek,
+			EndTime: twoWeeks,
+			Transition: common.ChangeHistory{
+				app.PENDING:  {Status: app.PENDING, Timestamp: now},
+				app.APPROVED: {Status: app.APPROVED, Timestamp: now},
+				app.RENTED:   {Status: app.RENTED, Timestamp: nextWeek.AddDate(0, 0, 2)},
+				app.RETURNED: {Status: app.RETURNED, Timestamp: twoWeeks},
 			},
-			reservedItem,
-			0,
-			0,
+			Item: reservedItem,
+			CreditsWhenCreated: 0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			"Reservation started on time, returned earlier than planned",
-			nextWeek,
-			twoWeeks,
-			changeHistory{
-				app.PENDING:  {status: app.PENDING, timestamp: now},
-				app.APPROVED: {status: app.APPROVED, timestamp: now},
-				app.RENTED:   {status: app.RENTED, timestamp: nextWeek},
-				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks.AddDate(0, 0, -2)}, //should be 6
+			Name: "Reservation started on time, returned earlier than planned",
+			StartTime: nextWeek,
+			EndTime: twoWeeks,
+			Transition: common.ChangeHistory{
+				app.PENDING:  {Status: app.PENDING, Timestamp: now},
+				app.APPROVED: {Status: app.APPROVED, Timestamp: now},
+				app.RENTED:   {Status: app.RENTED, Timestamp: nextWeek},
+				app.RETURNED: {Status: app.RETURNED, Timestamp: twoWeeks.AddDate(0, 0, -2)}, //should be 6
 			},
-			reservedItem,
-			0,
-			0,
+			Item: reservedItem,
+			CreditsWhenCreated: 0,
+			CreditsWhenReturned: 0,
 		},
 		{
-			"Reservation started on time, returned later than planned",
-			nextWeek,
-			twoWeeks,
-			changeHistory{
-				app.PENDING:  {status: app.PENDING, timestamp: now},
-				app.APPROVED: {status: app.APPROVED, timestamp: now},
-				app.RENTED:   {status: app.RENTED, timestamp: nextWeek},
-				app.RETURNED: {status: app.RETURNED, timestamp: twoWeeks.AddDate(0, 0, 2)},
+			Name: "Reservation started on time, returned later than planned",
+			StartTime: nextWeek,
+			EndTime: twoWeeks,
+			Transition: common.ChangeHistory{
+				app.PENDING:  {Status: app.PENDING, Timestamp: now},
+				app.APPROVED: {Status: app.APPROVED, Timestamp: now},
+				app.RENTED:   {Status: app.RENTED, Timestamp: nextWeek},
+				app.RETURNED: {Status: app.RETURNED, Timestamp: twoWeeks.AddDate(0, 0, 2)},
 			},
-			reservedItem,
-			0,
-			0,
+			Item: reservedItem,
+			CreditsWhenCreated: 0,
+			CreditsWhenReturned: 0,
 		},
 	}
 	for _, tc := range testCases {
-		testSetUp()
-		tc.creditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.startTime, tc.endTime)
-		tc.creditsWhenReturned = tests.CalculateCost(reservedItem.Type, tc.transition[app.RENTED].timestamp, tc.transition[app.RETURNED].timestamp)
-		BaseScenario(tc)
-		testTearDown()
+		common.TestSetUp()
+		tc.CreditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.StartTime, tc.EndTime)
+		tc.CreditsWhenReturned = tests.CalculateCost(reservedItem.Type, tc.Transition[app.RENTED].Timestamp, tc.Transition[app.RETURNED].Timestamp)
+		common.BaseScenario(tc)
+		common.TestTearDown()
 	}
 }
