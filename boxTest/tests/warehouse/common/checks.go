@@ -14,9 +14,8 @@ func CheckReservationAudits(reservationId int, expectedChangesHistory *ChangeHis
 	if len(history) != len(expectedChangesHistory.changes) {
 		log.Fatal("Changes history has different length than expected")
 	}
-	keys := []string{app.PENDING, app.APPROVED, app.RENTED, app.RETURNED}
-	for i, audit := range history {
-		expectedChange := expectedChangesHistory.GetChangeByKey(keys[i])
+	for _, audit := range history {
+		expectedChange := expectedChangesHistory.GetChangeByKey(audit.Status)
 		if audit.Auditor != Admin.User.Name &&
 			tests.IsSameDay(audit.ChangeDate, expectedChange.Timestamp) &&
 			audit.Status != expectedChange.Status {
