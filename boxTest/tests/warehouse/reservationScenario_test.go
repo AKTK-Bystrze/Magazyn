@@ -70,14 +70,11 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 
 func Test_reservationMadeInFuture(t *testing.T) {
 	common.TestSetUp()
-	now := time.Now()
-	nextWeek := now.AddDate(0, 0, 7)
-	twoWeeks := now.AddDate(0, 0, 14)
 	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	testCases := []common.TestCase{
 		{
-			Name:                "Reservation take tomorrow return next week", //todo
+			Name:                "Reservation take tomorrow return next week",
 			StartTime:           time.Now().AddDate(0, 0, 1),
 			EndTime:             time.Now().AddDate(0, 0, 7),
 			Transition:          common.NewChangeHistoryBuilder().Build(),
@@ -95,7 +92,7 @@ func Test_reservationMadeInFuture(t *testing.T) {
 			CreditsWhenReturned: 0,
 		},
 		{
-			Name:                "Reservation take next week return same day",
+			Name:                "Reservation take next week return the same day",
 			StartTime:           time.Now().AddDate(0, 0, 7),
 			EndTime:             time.Now().AddDate(0, 0, 7).Add(time.Hour),
 			Transition:          common.NewChangeHistoryBuilder().Build(),
@@ -109,8 +106,8 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		changesHistory := common.NewChangeHistoryBuilder().
 			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
 			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).
-			AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: nextWeek}).
-			AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: twoWeeks}).
+			AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: tc.StartTime}).
+			AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: tc.EndTime}).
 			Build()
 		tc.Transition = changesHistory
 		expectedCost := tests.CalculateCost(reservedItem.Type, tc.StartTime, tc.EndTime)
