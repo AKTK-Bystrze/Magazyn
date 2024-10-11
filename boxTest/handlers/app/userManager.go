@@ -16,20 +16,50 @@ var (
 	URL_logout = "/users/user/logout"
 )
 
-func getLoginLinkFromLogs(since time.Time) string {
+func getLoginLinkFromLogs(since time.Time, uid int64) string {
 	logs := env.GetContainerLogs(env.TEST_APP_NAME, since.Add(-1*time.Second))
-	//todo it misses loginlink sometimes, that is ugly workaround to move timestamp
-	startIndex := strings.LastIndex(logs, "Login at ")
-	if startIndex == -1 {
-		return ""
+
+	// Search for the most recent occurrence of "Login at" and the specific UID
+	loginLink := searchLoginLinkInLogs(logs, uid)
+	if loginLink != "" {
+		return loginLink
 	}
-	startIndex += len("Login at ")
-	//get endIndex - link happen to have extra chars
-	loginLink := strings.TrimSpace(logs[startIndex:])
-	if loginLink == "" {
-		log.Fatal("Failed to extract login link from logs")
+
+	// If not found, expand the search by getting earlier logs
+	for i := 1; i <= 3; i++ { // Arbitrary number of earlier logs to check, you can adjust this
+		logs = env.GetContainerLogs(env.TEST_APP_NAME, since.Add(-1*time.Duration(i)*time.Minute))
+		loginLink = searchLoginLinkInLogs(logs, uid)
+		if loginLink != "" {
+			return loginLink
+		}
 	}
-	return loginLink
+
+	// If still not found, log and return an empty string
+	log.Fatalf("Failed to extract login link for UID %d from logs", uid)
+	return ""
+}
+
+func searchLoginLinkInLogs(logs string, uid int64) string {
+	// Split logs into lines for easier processing
+	lines := strings.Split(logs, "\n")
+	uidStr := fmt.Sprintf("uid=%d", uid)
+
+	// Iterate over each log line
+	for i := len(lines) - 1; i >= 0; i-- { // Start from the latest logs and move backward
+		line := lines[i]
+
+		// Check if the line contains "Login at" and the correct uid
+		if strings.Contains(line, "Login at ") && strings.Contains(line, uidStr) {
+			// Extract the login link after "Login at"
+			startIndex := strings.Index(line, "Login at ") + len("Login at ")
+			loginLink := strings.TrimSpace(line[startIndex:])
+			if strings.Contains(loginLink, uidStr) {
+				return loginLink
+			}
+		}
+	}
+
+	return ""
 }
 
 func (uc UserClient) Login() error {
@@ -43,7 +73,7 @@ func (uc UserClient) Login() error {
 		"strategy":  {"debug"},
 		"recipient": {uc.User.Name},
 	})
-	loginLink := getLoginLinkFromLogs(loginTime)
+	loginLink := getLoginLinkFromLogs(loginTime, uc.User.ID)
 	resp = uc.
 		GetRequest(loginLink)
 	if resp.StatusCode != http.StatusOK {
