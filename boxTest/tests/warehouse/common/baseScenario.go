@@ -54,18 +54,18 @@ func BaseScenario(tc TestCase) {
 		db.ByEndTime(tc.EndTime),
 	)
 	CheckItemAvailabilityWhileReserved(tc.StartTime, tc.EndTime, tc.Item, User)
-	AdminActions(tc.Transition, reservation)
+	AdminChangeReservationStatus(tc.Transition, reservation)
 	CheckCredits(userBefore, tc.CreditsWhenReturned)
 	CheckItemAvailabilityAfterReservation(tc)
 	CheckReservationAudits(reservation.ID, tc.Transition)
 	tc.toString("PASSED")
 }
 
-func AdminActions(actions *ChangeHistory, reservation app.Reservation) {
+func AdminChangeReservationStatus(actions *ChangeHistory, reservation app.Reservation) {
 	actionsList := actions.GetChanges()
 	for _, change := range actionsList {
 		if contains(app.ADMIN_ACTIONS, change.Key) {
-			log.Printf("Performing action %v: %s", change.Key, change.Value.toString())
+			log.Printf("Admin changes reservation status %v: %s", change.Key, change.Value.toString())
 			ChangeReservationStatusWithTimestamp(change.Value, reservation)
 		}
 	}

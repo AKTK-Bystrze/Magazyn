@@ -55,7 +55,7 @@ func Test_reservationAdminDoesntApprove(t *testing.T) {
 	reservationAdminSkippedActions(changesHistory, "Admin doesn't change status to APPROVED")
 }
 
-func Test_AdminDoesntRent(t *testing.T) {
+func Test_AdminDoesntRent(t *testing.T) { //todo
 	changesHistory := common.NewChangeHistoryBuilder().
 		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
 		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).

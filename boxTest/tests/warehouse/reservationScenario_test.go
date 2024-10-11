@@ -77,7 +77,7 @@ func Test_reservationMadeInFuture(t *testing.T) {
 	reservedItem := tests.PickRandomItem(items)
 	testCases := []common.TestCase{
 		{
-			Name:                "Reservation take tomorrow return next week",
+			Name:                "Reservation take tomorrow return next week", //todo
 			StartTime:           time.Now().AddDate(0, 0, 1),
 			EndTime:             time.Now().AddDate(0, 0, 7),
 			Transition:          common.NewChangeHistoryBuilder().Build(),
