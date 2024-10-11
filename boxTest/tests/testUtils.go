@@ -47,7 +47,6 @@ func CalculateCost(item string, start time.Time, end time.Time) int {
 
 	duration := endDate.Sub(startDate)
 	days := int(math.Abs(duration.Hours()/24) + 1)
-	log.Printf("calculate cost for item %v for %v days", item, days)
 	switch item {
 	case app.KAYAK:
 		return int(days) * app.COST_KAYAK
