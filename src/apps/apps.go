@@ -1,9 +1,9 @@
 package apps
 
 import (
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
+	"bystrze/apps/common/timeSet"
 	"database/sql"
 	"errors"
 	"html/template"
@@ -139,7 +139,7 @@ func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(common.OUT_TIME_FMT)+a.DbName)
+	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(timeSet.OUT_TIME_FMT)+a.DbName)
 
 	_, err = io.Copy(w, file)
 	if err != nil {

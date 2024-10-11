@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"bystrze/apps"
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/warehouse/rental"
@@ -28,9 +28,9 @@ func ReservationHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	t.StartTime = t.StartTime.In(common.LOCATION)
-	t.EndTime = t.EndTime.In(common.LOCATION)
-	t.CreatedAt = t.CreatedAt.In(common.LOCATION)
+	t.StartTime = t.StartTime.In(timeSet.LOCATION)
+	t.EndTime = t.EndTime.In(timeSet.LOCATION)
+	t.CreatedAt = t.CreatedAt.In(timeSet.LOCATION)
 
 	history, err := rental.GetReservationHistory(reservationID)
 	if err != nil {
@@ -114,7 +114,7 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) e
 	reservationStartTime := time.Date(year, month, day, 0, 0, 0, 0, reservation.StartTime.Location())
 	if !today.Equal(reservationStartTime) {
 		appState.App.Debug("Reservation start time %v is different than today %v. Update reservation",
-			reservationStartTime.Format(common.OUT_TIME_FMT), today.Format(common.OUT_TIME_FMT))
+			reservationStartTime.Format(timeSet.OUT_TIME_FMT), today.Format(timeSet.OUT_TIME_FMT))
 		userCredits := reservation.User.Credits
 		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 		if err != nil {
@@ -151,7 +151,7 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 	reservationEndTime := time.Date(year, month, day, 0, 0, 0, 0, reservation.EndTime.Location())
 	if !today.Equal(reservationEndTime) {
 		appState.App.Debug("Reservation end time %v is different than today %v. Update reservation",
-			reservationEndTime.Format(common.OUT_TIME_FMT), today.Format(common.OUT_TIME_FMT))
+			reservationEndTime.Format(timeSet.OUT_TIME_FMT), today.Format(timeSet.OUT_TIME_FMT))
 		userCredits := reservation.User.Credits
 		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 		if err != nil {

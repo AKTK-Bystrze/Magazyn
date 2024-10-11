@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bystrze/apps/common"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/email"
 	"bystrze/apps/userManager"
 	"bystrze/apps/warehouse"
@@ -19,28 +19,27 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	COOKIE_KEY                 = []byte(os.Getenv("COOKIE_KEY"))
-	MAGAZYN_BYSTRZE_EMAIL_ADDR = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
-	SMTP_HOST                  = os.Getenv("SMTP_HOST")
-	SMTP_PORT                  = os.Getenv("SMTP_PORT")
-)
-
 func main() {
 	setLocation()
+
+	COOKIE_KEY := []byte(os.Getenv("COOKIE_KEY"))
+	MAGAZYN_BYSTRZE_EMAIL_ADDR := os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
+	SMTP_HOST := os.Getenv("SMTP_HOST")
+	SMTP_PORT := os.Getenv("SMTP_PORT")
+
 	IP, PORT, SERVER, DB_PATH := getArgs()
 	databaseName := path.Base(DB_PATH)
 	db := setDb(DB_PATH)
 	defer db.Close()
+
 	debug := setDebugMode()
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	router := mux.NewRouter()
 
 	email.CreateEmailApp(db, store, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, SMTP_HOST, SMTP_PORT)
-
 	userManager.CreateUserManagerApp(db, store, debug, SERVER, "ACCOUNTS", router, COOKIE_KEY)
 	warehouse.CreateWarehouseApp(db, DB_PATH, databaseName, store, SERVER, "WAREHOUSE", router)
-	// pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)
+	// pages.CreatePagesApp(db, timeSet.DATABASE_PATH, timeSet.DATABASE_NAME, store, server, "PAGES", router)
 
 	ADDR := fmt.Sprintf("%s:%s", IP, PORT)
 	log.Print("Server starting on: " + ADDR)
@@ -83,7 +82,7 @@ func getArgs() (string, string, string, string) {
 
 func setLocation() {
 	var err error
-	common.LOCATION, err = time.LoadLocation("Europe/Warsaw")
+	timeSet.LOCATION, err = time.LoadLocation("Europe/Warsaw")
 	if err != nil {
 		log.Fatalf("Can't get locat time zone")
 	}

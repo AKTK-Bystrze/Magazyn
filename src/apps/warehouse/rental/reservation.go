@@ -2,8 +2,8 @@ package rental
 
 import (
 	"bystrze/apps"
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/warehouse/appState"
 	"fmt"
 	"net/http"
@@ -61,9 +61,9 @@ func GetReservation(id int) (*models.Reservation, error) {
 	r.Item = t.Item
 	r.User = t.User
 	//  TODO: update time to localtime (CEST)
-	r.StartTime = r.StartTime.In(common.LOCATION)
-	r.EndTime = r.EndTime.In(common.LOCATION)
-	r.CreatedAt = r.CreatedAt.In(common.LOCATION)
+	r.StartTime = r.StartTime.In(timeSet.LOCATION)
+	r.EndTime = r.EndTime.In(timeSet.LOCATION)
+	r.CreatedAt = r.CreatedAt.In(timeSet.LOCATION)
 	return &r, nil
 }
 
@@ -117,9 +117,9 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 		r.Item = t.Item
 		r.User = t.User
 		//  TODO: update time to localtime (CEST)
-		r.StartTime = r.StartTime.In(common.LOCATION)
-		r.EndTime = r.EndTime.In(common.LOCATION)
-		r.CreatedAt = r.CreatedAt.In(common.LOCATION)
+		r.StartTime = r.StartTime.In(timeSet.LOCATION)
+		r.EndTime = r.EndTime.In(timeSet.LOCATION)
+		r.CreatedAt = r.CreatedAt.In(timeSet.LOCATION)
 		reservations = append(reservations, r)
 	}
 	if err = rows.Err(); err != nil {
@@ -167,8 +167,8 @@ func AddReservation(reservation models.Reservation) error {
 	_, err = stmt.Exec(reservation.Item.ID,
 		reservation.User.ID,
 		reservation.User.ID,
-		reservation.StartTime.UTC().Format(common.OUT_TIME_FMT),
-		reservation.EndTime.UTC().Format(common.OUT_TIME_FMT),
+		reservation.StartTime.UTC().Format(timeSet.OUT_TIME_FMT),
+		reservation.EndTime.UTC().Format(timeSet.OUT_TIME_FMT),
 		reservation.Status)
 	if err != nil {
 		appState.App.Err("%v %v", "canr insert reservation", err.Error())
@@ -204,7 +204,7 @@ func UpdateReservationsDate(reservation models.Reservation, field string, newTim
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
 	}
-	newTimeFormated := newTime.Format(common.OUT_TIME_FMT)
+	newTimeFormated := newTime.Format(timeSet.OUT_TIME_FMT)
 	query := fmt.Sprintf(`UPDATE reservations SET %v = ?,r_changeby_uid = ? WHERE r_id = ?`, field)
 	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
 	if err != nil {
@@ -222,7 +222,7 @@ func UpdateReservationsDate(reservation models.Reservation, field string, newTim
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return err
 	}
-	appState.App.Debug("Successfuly updated reservation %v to %v", field, newTime.Format(common.OUT_TIME_FMT))
+	appState.App.Debug("Successfuly updated reservation %v to %v", field, newTime.Format(timeSet.OUT_TIME_FMT))
 	return nil
 }
 
@@ -246,7 +246,7 @@ func GetReservationHistory(reservationID int) ([]models.ReservationAudit, error)
 		audit = t.ReservationAudit
 		audit.User = t.User
 		//  TODO: update timestamps to localtime
-		audit.ChangeDate = audit.ChangeDate.In(common.LOCATION)
+		audit.ChangeDate = audit.ChangeDate.In(timeSet.LOCATION)
 		history = append(history, audit)
 	}
 	return history, nil

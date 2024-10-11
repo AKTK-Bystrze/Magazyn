@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"bystrze/apps"
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/userManager/users"
 	"bystrze/apps/warehouse/appState"
@@ -27,21 +27,21 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startTime, err := time.ParseInLocation(common.IN_TIME_FMT, r.FormValue("start_time"), common.LOCATION)
+	startTime, err := time.ParseInLocation(timeSet.IN_TIME_FMT, r.FormValue("start_time"), timeSet.LOCATION)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	endTime, err := time.ParseInLocation(common.IN_TIME_FMT, r.FormValue("end_time"), common.LOCATION)
+	endTime, err := time.ParseInLocation(timeSet.IN_TIME_FMT, r.FormValue("end_time"), timeSet.LOCATION)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	appState.App.Debug("%v search for %v since %v till %v", session.GetSessionUserName(r), itemID,
-		startTime.Format(common.OUT_TIME_FMT), endTime.Format(common.OUT_TIME_FMT))
+		startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 	//  admins can make reservation in the past
 	//  TODO: currently only for themselves
 	if startTime.Before(time.Now()) &&
@@ -115,13 +115,13 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		user.Credits = credits_left
 		users.UpdateUser(user)
 		appState.App.Debug("%v reserved item %v since %v till %v", session.GetSessionUserName(r),
-			itemID, startTime.Format(common.OUT_TIME_FMT), endTime.Format(common.OUT_TIME_FMT))
+			itemID, startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 		msg := "Zarezerwowano"
 		http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusFound)
 	} else {
 		msg := "Nie możesz wypożyczyć sprzętu"
 		appState.App.Debug("%v can't reserve item %v since %v till %v", session.GetSessionUserName(r), itemID,
-			startTime.Format(common.OUT_TIME_FMT), endTime.Format(common.OUT_TIME_FMT))
+			startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 		SearchItems(w, r, msg)
 		return
 	}
@@ -133,16 +133,16 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	timeFrom = timeFrom.Add(time.Duration(15-timeFrom.Minute()%15) * time.Minute)
 	var timeTo time.Time = timeFrom.Add(24 * time.Hour)
 	appState.App.Debug("%v search from %v to %v", session.GetSessionUserName(r),
-		timeFrom.UTC().Format(common.OUT_TIME_FMT), timeTo.UTC().Format(common.OUT_TIME_FMT))
+		timeFrom.UTC().Format(timeSet.OUT_TIME_FMT), timeTo.UTC().Format(timeSet.OUT_TIME_FMT))
 
 	if r.FormValue("start_time") != "" && r.FormValue("end_time") != "" {
-		timeFrom, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), common.LOCATION)
+		timeFrom, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "Invalid start_time parameter", http.StatusBadRequest)
 			return
 		}
-		timeTo, err = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), common.LOCATION)
+		timeTo, err = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			http.Error(w, "Invalid end_time parameter", http.StatusBadRequest)

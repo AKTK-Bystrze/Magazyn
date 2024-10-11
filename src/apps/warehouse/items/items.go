@@ -1,8 +1,8 @@
 package items
 
 import (
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/warehouse/appState"
 	"database/sql"
 	"time"
@@ -51,8 +51,8 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
     ) AND i_status == 'ok' `
 	}
 	rows, err := appState.App.Db.Queryx(query,
-		conf.EndTime.Format(common.OUT_TIME_FMT),
-		conf.StartTime.Format(common.OUT_TIME_FMT))
+		conf.EndTime.Format(timeSet.OUT_TIME_FMT),
+		conf.StartTime.Format(timeSet.OUT_TIME_FMT))
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +71,8 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 		if tmpItem.ID.Valid {
 			out.CurrentReservation.Valid = true
 			out.CurrentReservation.ID = tmpItem.ID.Int64
-			out.CurrentReservation.StartTime = tmpItem.StartTime.Time.In(common.LOCATION)
-			out.CurrentReservation.EndTime = tmpItem.EndTime.Time.In(common.LOCATION)
+			out.CurrentReservation.StartTime = tmpItem.StartTime.Time.In(timeSet.LOCATION)
+			out.CurrentReservation.EndTime = tmpItem.EndTime.Time.In(timeSet.LOCATION)
 			out.CurrentReservation.Status = tmpItem.Status.String
 			out.CurrentReservation.User.Name = tmpItem.Username.String
 			out.CurrentReservation.User.ID = tmpItem.UserID.Int64
@@ -89,7 +89,7 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error) {
 	// check if the requested reservation period is outside of any existing reservation
 	query := `SELECT count(*) FROM reservations WHERE r_item_id=? AND r_end_time > ? AND r_start_time < ? AND r_status != 'denied'`
-	row := appState.App.Db.QueryRow(query, itemID, start.Format(common.OUT_TIME_FMT), end.Format(common.OUT_TIME_FMT))
+	row := appState.App.Db.QueryRow(query, itemID, start.Format(timeSet.OUT_TIME_FMT), end.Format(timeSet.OUT_TIME_FMT))
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
