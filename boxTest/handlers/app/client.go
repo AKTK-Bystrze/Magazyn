@@ -27,6 +27,9 @@ func CreateHttpClient() http.Client {
 
 func (uc UserClient) GetRequest(url string) *http.Response {
 	log.Printf("Get \t%v", url)
+	if url == "" {
+		log.Fatal("Empty GET request url!")
+	}
 	resp, err := uc.Client.Get(url)
 	if err != nil {
 		log.Fatalf("Failed Get request %v\n\tResp: %v\n\tErr: %v", url, resp, err)
@@ -39,6 +42,9 @@ func (uc UserClient) GetRequest(url string) *http.Response {
 
 func (uc UserClient) PostFormRequest(url string, formData url.Values) *http.Response {
 	log.Printf("Post \t$%v\n\t%v", url, formData)
+	if url == "" {
+		log.Fatal("Empty POST form request url!")
+	}
 	resp, err := uc.Client.
 		PostForm(url, formData)
 	if err != nil {
@@ -53,6 +59,9 @@ func (uc UserClient) PostFormRequest(url string, formData url.Values) *http.Resp
 
 func (uc UserClient) PutRequest(url string, formData url.Values) *http.Response {
 	log.Printf("PUT \t%v\n\t%v", url, formData)
+	if url == "" {
+		log.Fatal("Empty PUT request url!")
+	}
 	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(formData.Encode()))
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)

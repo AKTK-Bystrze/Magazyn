@@ -2,7 +2,6 @@ package env
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -16,7 +15,7 @@ import (
 const (
 	TEST_APP_NAME        = "test_app"
 	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
-	DB_PATH_IN_PROJ      = "magazyn.db"
+	DB_PATH_IN_PROJ      = "bystrze_test.db"
 	SMTP_SERVER_NAME     = "test_server"
 	DOCKERFILE_PATH      = "../"
 	NETWORK_NO_WEB       = "test_network_no_web"
@@ -25,6 +24,9 @@ const (
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
+
+	TIME_FORMAT    = "2006-01-02T15:04"
+	DB_TIME_FORMAT = "2006-01-02 15:04:05"
 )
 
 func createTestDB() {
@@ -56,6 +58,7 @@ func buildTestApp() {
 		"-p", "8080:8080",
 		"-e", "SMTP_HOST="+SMTP_SERVER_NAME,
 		"-e", "SMTP_PORT="+SMTP_PORT,
+		"-e", "DEBUG=true",
 		TEST_APP_NAME)
 
 	time.Sleep(2 * time.Second)
@@ -110,17 +113,62 @@ func EnviromentSetUP() {
 }
 
 func RunTests() {
-	log.Print("Running all tests...")
-	var timeout = 10 * time.Minute
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, "go", "test", "./tests/...")
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Fatalf("error running tests: %v. Output: %v", err, string(output))
+	WAREHOUSE := "boxTest/tests/warehouse"
+	USEER_MANAGER := "boxTest/tests/userManager"
+	testsCMD := []struct {
+		name     string
+		timeout  int
+		location string
+	}{
+		{"Test_allUsers_loginAndlogut", 60, USEER_MANAGER},
+		{"Test_allUsers_loginSameTime", 60, USEER_MANAGER},
+		{"Test_reservationMadeAndStartedSameTime", 150, WAREHOUSE},
+		{"Test_reservationMadeInFuture", 150, WAREHOUSE},
+		{"Test_reservationNotAsPlanned", 150, WAREHOUSE},
+		{"Test_reservationAdminDoesNothing", 60, WAREHOUSE},
+		{"Test_reservationAdminDoesntApprove", 60, WAREHOUSE},
+		{"Test_AdminDoesntRent", 60, WAREHOUSE},
+		{"Test_AdminDoesntReturn", 60, WAREHOUSE},
+		{"Test_AdminDeniesReservation", 60, WAREHOUSE},
+		{"Test_AdminDeniesReservationAfterApproving", 60, WAREHOUSE},
+		//add test here
 	}
-	log.Print("Tests logs")
-	fmt.Println(string(output))
+	var failedTests []string
+	var passedTests []string
+	log.Print("Running all tests from the list...")
+	for _, tc := range testsCMD {
+		log.Printf("RUNNING %v", tc.name)
+
+		timeout := time.Duration(tc.timeout) * time.Second
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		cmd := exec.CommandContext(ctx, "go.exe", "test", "-run", tc.name, tc.location)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			failedTests = append(failedTests, tc.name)
+			log.Printf("\tFAILED: %v", tc.name)
+			if exitError, ok := err.(*exec.ExitError); ok {
+				exitCode := exitError.ExitCode()
+				log.Printf("Exit code %v Err %v", exitCode, err)
+			} else {
+				exitCode := exitError.ExitCode()
+				log.Printf("Unknown exit code %v Err %v", exitCode, err)
+			}
+			log.Printf("\tLOGS\n")
+			log.Print(string(output))
+			log.Printf("\tFAILED: %v", tc.name)
+		} else {
+			passedTests = append(passedTests, tc.name)
+			log.Printf("\tPASSED: %v", tc.name)
+		}
+
+	}
+	log.Printf("Tessts passed : \n %v", passedTests)
+	log.Printf("Tessts failed : \n %v", failedTests)
+	if len(failedTests) != 0 {
+		os.Exit(1)
+	} else {
+		os.Exit(0)
+	}
 }

@@ -3,28 +3,23 @@ package pages
 import (
 	"bystrze/apps"
 	"bystrze/apps/pages/appState"
-	"bystrze/apps/pages/home"
-	"bystrze/apps/pages/news"
+	"bystrze/apps/pages/controllers"
 	"bystrze/apps/userManager/auth/access"
-	"html/template"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
-func CreatePagesApp(db apps.Database, dbPath string, dbName string, funcMap template.FuncMap, store sessions.Store,
-	t apps.Templates, server string, appName string, router *mux.Router) apps.App {
+func CreatePagesApp(db apps.Database, dbPath string, dbName string, store sessions.Store,
+	server string, appName string, router *mux.Router) apps.App {
 	appState.App = apps.App{
-		Db:        db,
-		DbPath:    dbPath,
-		DbName:    dbName,
-		FuncMap:   funcMap,
-		Store:     store,
-		Server:    server,
-		AppName:   appName,
-		Router:    router,
-		Templates: t,
+		Db:      db,
+		DbPath:  dbPath,
+		DbName:  dbName,
+		Store:   store,
+		Server:  server,
+		AppName: appName,
+		Router:  router,
 	}
 	appState.App.SetLogger()
 	appState.App.LoadTemplates()
@@ -34,22 +29,18 @@ func CreatePagesApp(db apps.Database, dbPath string, dbName string, funcMap temp
 
 func updateRouter(router *mux.Router) *mux.Router {
 	//all
-	router.HandleFunc("/", redirectToHome).Methods("GET")
+	router.HandleFunc("/", controllers.RedirectToHome).Methods("GET")
 	pagesRouter := router.PathPrefix("/pages").Subrouter()
 	pagesRouter.Use(access.ValidUserMiddlware)
-	pagesRouter.HandleFunc("/home", home.HomePage).Methods("GET")
+	pagesRouter.HandleFunc("/home", controllers.HomePage).Methods("GET")
 	//ninja
 	ninjaRouter := pagesRouter.PathPrefix("/ninja").Subrouter()
 	ninjaRouter.Use(access.NinjaHandler)
-	ninjaRouter.HandleFunc("/news", news.CreateNewsHandler).Methods("POST")
-	ninjaRouter.HandleFunc("/news/{newsId}", news.DeleteNewsHandler).Methods("DELETE")
+	ninjaRouter.HandleFunc("/news", controllers.CreateNewsHandler).Methods("POST")
+	ninjaRouter.HandleFunc("/news/{newsId}", controllers.DeleteNewsHandler).Methods("DELETE")
 	//superAdmin
 	superAdminRouter := pagesRouter.PathPrefix("/superAdmin").Subrouter()
 	superAdminRouter.Use(access.SuperAdminHandler)
 	superAdminRouter.HandleFunc("/db/backup", appState.App.DbBackupHandler).Methods("GET")
 	return router
-}
-
-func redirectToHome(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/pages/home", http.StatusTemporaryRedirect)
 }

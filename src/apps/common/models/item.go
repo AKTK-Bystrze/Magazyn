@@ -10,7 +10,7 @@ type Item struct {
 	Type        string `db:"i_type"`
 }
 
-type TmpItem struct {
+type TmpItemWithReservation struct {
 	Item
 	CurrentReservation struct {
 		Valid bool

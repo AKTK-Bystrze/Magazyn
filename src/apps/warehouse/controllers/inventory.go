@@ -1,10 +1,10 @@
-package inventory
+package controllers
 
 import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/email/appState"
+	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/warehouse/items"
 	"encoding/json"
 	"net/http"

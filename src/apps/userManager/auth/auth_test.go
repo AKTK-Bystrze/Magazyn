@@ -1,9 +1,11 @@
 package auth
 
 // import (
-// 	"bystrze/services/structs"
-// 	"bystrze/services/utils"
-
+// 	"bystrze/apps"
+// 	"bystrze/apps/common"
+// 	"bystrze/apps/common/models"
+// 	"bystrze/apps/common/session"
+// 	"bystrze/apps/userManager/controllers"
 // 	"context"
 // 	"database/sql"
 // 	"fmt"
@@ -48,14 +50,6 @@ package auth
 // 	return nil
 // }
 
-// func (a *AppState) Login(w http.ResponseWriter, r *http.Request) {
-// 	Login(w, r)
-// }
-
-// func (a *AppState) TokenHandler(w http.ResponseWriter, r *http.Request) {
-// 	TokenHandler(w, r)
-// }
-
 // type MockPasswordless struct {
 // 	mock.Mock
 // 	Strategies map[string]passwordless.Strategy
@@ -98,7 +92,7 @@ package auth
 
 // type MockDatabase struct {
 // 	mock.Mock
-// 	user utils.TmpUser
+// 	user models.User
 // }
 
 // func (m *MockDatabase) Exec(query string, args ...interface{}) (sql.Result, error) {
@@ -135,7 +129,7 @@ package auth
 // }
 
 // type MockSessionStore struct {
-// 	store utils.SessionStore
+// 	store session.SessionStore
 // 	mock.Mock
 // }
 
@@ -152,17 +146,17 @@ package auth
 
 // func Test_Login_userIsNotSignedIn_executeTemplateLogin(t *testing.T) {
 // 	mockStore := new(MockStore)
-// 	session := sessions.NewSession(nil, structs.common.SESSION_NAME)
+// 	session := sessions.NewSession(nil, common.SESSION_NAME)
 // 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 	mockStore.session = *session
 // 	mockTemplate := new(mockTemplate)
 // 	mockTemplate.On("ExecuteTemplate", mock.Anything, "login.html", mock.Anything).Return(nil)
 
-// 	app = AppState{
-// 		templates: mockTemplate,
-// 		store:     mockStore,
+// 	app := apps.App{
+// 		Store:     mockStore,
+// 		Templates: mockTemplate,
 // 	}
-// 	pw = new(MockPasswordless)
+// 	pw := new(MockPasswordless)
 
 // 	req, err := http.NewRequest("GET", "/login", nil)
 // 	if err != nil {
@@ -170,7 +164,7 @@ package auth
 // 	}
 
 // 	recorder := httptest.NewRecorder()
-// 	handler := http.HandlerFunc(app.Login)
+// 	handler := http.HandlerFunc(controllers.Login)
 
 // 	handler.ServeHTTP(recorder, req)
 
@@ -192,23 +186,23 @@ package auth
 
 // 	for _, tc := range testCases {
 // 		mockStore := new(MockStore)
-// 		session := sessions.NewSession(nil, structs.common.SESSION_NAME)
+// 		session := sessions.NewSession(nil, common.SESSION_NAME)
 // 		session.Values = map[interface{}]interface{}{}
 // 		session.Values["UserInfo"] = TEST_UID_NB
 // 		session.Values["recipient"] = tc.role
 // 		mockStore.session = *session
 // 		mockTemplate := new(mockTemplate)
-// 		tmpUser := utils.TmpUser{
+// 		tmpUser := models.User{
 // 			Role: tc.role,
 // 		}
 // 		mockDatabase := new(MockDatabase)
 // 		mockDatabase.user = tmpUser
-// 		app = AppState{
-// 			templates: mockTemplate,
-// 			store:     mockStore,
-// 			db:        mockDatabase,
+// 		app := apps.App{
+// 			Store:     mockStore,
+// 			Templates: mockTemplate,
+// 			Db:        mockDatabase,
 // 		}
-// 		pw = new(MockPasswordless)
+// 		pw := new(MockPasswordless)
 
 // 		req, err := http.NewRequest("GET", "/login", nil)
 // 		if err != nil {
@@ -216,7 +210,7 @@ package auth
 // 		}
 
 // 		recorder := httptest.NewRecorder()
-// 		handler := http.HandlerFunc(app.Login)
+// 		handler := http.HandlerFunc(controllers.Login)
 
 // 		handler.ServeHTTP(recorder, req)
 
@@ -234,26 +228,26 @@ package auth
 
 // func Test_tokenHandler_userLoggingWithValidEmail_SendEmailWithToken(t *testing.T) {
 // 	mockStore := new(MockStore)
-// 	session := sessions.NewSession(nil, structs.common.SESSION_NAME)
+// 	session := sessions.NewSession(nil, common.SESSION_NAME)
 // 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 	session.Values["recipient"] = TEST_EMAIL
 // 	mockStore.session = *session
 // 	mockTemplate := new(mockTemplate)
 // 	mockTemplate.On("ExecuteTemplate", mock.Anything, "tokenGenerated.html", mock.Anything).Return(nil)
-// 	tmpUser := utils.TmpUser{
+// 	tmpUser := models.User{
 // 		Role: "user",
 // 		ID:   TEST_UID_NB,
 // 	}
 // 	mockDatabase := new(MockDatabase)
 // 	mockDatabase.user = tmpUser
-// 	app = AppState{
-// 		templates: mockTemplate,
-// 		store:     mockStore,
-// 		db:        mockDatabase,
+// 	app := apps.App{
+// 		Templates: mockTemplate,
+// 		Store:     mockStore,
+// 		Db:        mockDatabase,
 // 	}
 // 	mockPW := new(MockPasswordless)
 // 	mockPW.On("RequestToken", mock.Anything, EMAIL, TEST_UID_STR, TEST_EMAIL).Return(nil)
-// 	pw = mockPW
+// 	pw := mockPW
 // 	req, err := http.NewRequest("GET", "/token", nil)
 // 	if err != nil {
 // 		t.Fatal(err)
@@ -264,7 +258,7 @@ package auth
 // 	req.Form.Add("uid", TEST_UID_STR)
 
 // 	recorder := httptest.NewRecorder()
-// 	handler := http.HandlerFunc(app.TokenHandler)
+// 	handler := http.HandlerFunc(controllers.TokenHandler)
 
 // 	handler.ServeHTTP(recorder, req)
 // 	mockTemplate.AssertExpectations(t)
@@ -281,25 +275,25 @@ package auth
 
 // 	for _, tc := range testCases {
 // 		mockStore := new(MockStore)
-// 		session := sessions.NewSession(new(MockSessionStore), structs.common.SESSION_NAME)
+// 		session := sessions.NewSession(new(MockSessionStore), common.SESSION_NAME)
 // 		session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 		session.Values["recipient"] = tc.role
 // 		mockStore.session = *session
 // 		mockTemplate := new(mockTemplate)
-// 		tmpUser := utils.TmpUser{
+// 		tmpUser := models.User{
 // 			Role: tc.role,
 // 			ID:   TEST_UID_NB,
 // 		}
 // 		mockDatabase := new(MockDatabase)
 // 		mockDatabase.user = tmpUser
-// 		app = AppState{
-// 			templates: mockTemplate,
-// 			store:     mockStore,
-// 			db:        mockDatabase,
+// 		app := apps.App{
+// 			Templates: mockTemplate,
+// 			Store:     mockStore,
+// 			Db:        mockDatabase,
 // 		}
 // 		mockPW := new(MockPasswordless)
 // 		mockPW.On("VerifyToken", mock.Anything, TEST_UID_STR, TEST_TOKEN).Return(true, nil)
-// 		pw = mockPW
+// 		pw := mockPW
 // 		req, err := http.NewRequest("GET", "/token", nil)
 // 		if err != nil {
 // 			t.Fatal(err)
@@ -311,7 +305,7 @@ package auth
 // 		req.Form.Add("uid", TEST_UID_STR)
 
 // 		recorder := httptest.NewRecorder()
-// 		handler := http.HandlerFunc(app.TokenHandler)
+// 		handler := http.HandlerFunc(controllers.TokenHandler)
 
 // 		handler.ServeHTTP(recorder, req)
 // 		if tc.role == "admin" {
@@ -329,7 +323,7 @@ package auth
 
 // func Test_tokenHandler_userProvideWrongToken_ExecuteTemplateWithTokenError(t *testing.T) {
 // 	mockStore := new(MockStore)
-// 	session := sessions.NewSession(new(MockSessionStore), structs.common.SESSION_NAME)
+// 	session := sessions.NewSession(new(MockSessionStore), common.SESSION_NAME)
 // 	session.Values = map[interface{}]interface{}{"UserInfo": nil}
 // 	session.Values["recipient"] = TEST_ROLE
 // 	mockStore.session = *session
@@ -343,22 +337,22 @@ package auth
 // 		Strategy:   EMAIL,
 // 		Recipient:  TEST_ROLE,
 // 		UserID:     TEST_UID_STR,
-// 		TokenError: ERROR_MSG_WRONG_TOKEN,
+// 		TokenError: controllers.ERROR_MSG_WRONG_TOKEN,
 // 	}).Return(nil)
-// 	tmpUser := utils.TmpUser{
+// 	tmpUser := models.User{
 // 		Role: TEST_ROLE,
 // 		ID:   TEST_UID_NB,
 // 	}
 // 	mockDatabase := new(MockDatabase)
 // 	mockDatabase.user = tmpUser
-// 	app = AppState{
-// 		templates: mockTemplate,
-// 		store:     mockStore,
-// 		db:        mockDatabase,
+// 	app := apps.App{
+// 		Templates: mockTemplate,
+// 		Store:     mockStore,
+// 		Db:        mockDatabase,
 // 	}
 // 	mockPW := new(MockPasswordless)
 // 	mockPW.On("VerifyToken", mock.Anything, TEST_UID_STR, TEST_TOKEN).Return(false, nil)
-// 	pw = mockPW
+// 	pw := mockPW
 // 	req, err := http.NewRequest("GET", "/token", nil)
 // 	if err != nil {
 // 		t.Fatal(err)
@@ -370,7 +364,7 @@ package auth
 // 	req.Form.Add("uid", TEST_UID_STR)
 
 // 	recorder := httptest.NewRecorder()
-// 	handler := http.HandlerFunc(app.TokenHandler)
+// 	handler := http.HandlerFunc(controllers.TokenHandler)
 
 // 	handler.ServeHTTP(recorder, req)
 // 	mockPW.AssertExpectations(t)
@@ -388,20 +382,20 @@ package auth
 
 // 	for _, tc := range testCases {
 // 		mockStore := new(MockStore)
-// 		session := sessions.NewSession(new(MockSessionStore), structs.common.SESSION_NAME)
+// 		session := sessions.NewSession(new(MockSessionStore), common.SESSION_NAME)
 // 		session.Values = map[interface{}]interface{}{}
 // 		session.Values["UserInfo"] = TEST_UID_NB
 // 		session.Values["recipient"] = tc.role
 // 		mockStore.session = *session
 // 		mockDatabase := new(MockDatabase)
-// 		tmpUser := utils.TmpUser{
+// 		tmpUser := models.User{
 // 			Role: tc.role,
 // 			ID:   TEST_UID_NB,
 // 		}
 // 		mockDatabase.user = tmpUser
-// 		app = AppState{
-// 			store: mockStore,
-// 			db:    mockDatabase,
+// 		app := apps.App{
+// 			Store: mockStore,
+// 			Db:    mockDatabase,
 // 		}
 
 // 		req, err := http.NewRequest("GET", "/token", nil)
@@ -410,7 +404,7 @@ package auth
 // 		}
 
 // 		recorder := httptest.NewRecorder()
-// 		handler := http.HandlerFunc(app.TokenHandler)
+// 		handler := http.HandlerFunc(controllers.TokenHandler)
 
 // 		handler.ServeHTTP(recorder, req)
 // 		if tc.role == "admin" {

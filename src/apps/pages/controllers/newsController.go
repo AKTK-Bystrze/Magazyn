@@ -1,8 +1,10 @@
-package news
+package controllers
 
 import (
+	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/pages/appState"
+	newsPkg "bystrze/apps/pages/news"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -12,14 +14,14 @@ func DeleteNewsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	newsID := vars["newsId"]
 	newsType := r.URL.Query().Get("type")
-	newsType = GetDBTable(newsType)
+	newsType = GetNewsTableName(newsType)
 	if newsType == "" {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), "Missing news type")
 		http.Error(w, "Missing news type", http.StatusBadRequest)
 		return
 	}
 
-	err := DeleteNewsByID(newsType, newsID)
+	err := newsPkg.DeleteNewsByID(newsType, newsID)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "Failed to delete news item", http.StatusInternalServerError)
@@ -27,6 +29,16 @@ func DeleteNewsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	appState.App.Debug("%v deleted %v with id %v ", session.GetSessionUserName(r), newsType, newsID)
 	w.WriteHeader(http.StatusOK)
+}
+
+func GetNewsTableName(newsType string) string {
+	if newsType == "SmallNews" {
+		return "small_news"
+	} else if newsType == "BigNews" {
+		return "big_news"
+	} else {
+		return ""
+	}
 }
 
 func CreateNewsHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +51,7 @@ func CreateNewsHandler(w http.ResponseWriter, r *http.Request) {
 
 	newsType := r.FormValue("type")
 
-	news := News{
+	news := models.News{
 		Header:  r.FormValue("header"),
 		Content: r.FormValue("content"),
 		Author:  session.GetSessionUserName(r),
@@ -49,13 +61,13 @@ func CreateNewsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Fields can't be empty", http.StatusBadRequest)
 		return
 	}
-	newsType = GetDBTable(newsType)
+	newsType = GetNewsTableName(newsType)
 	if newsType == "" {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), "Unknown news type")
 		http.Error(w, "DB error", http.StatusBadRequest)
 	}
 
-	_, err = InsertNews(newsType, news)
+	_, err = newsPkg.InsertNews(newsType, news)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)

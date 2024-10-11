@@ -35,7 +35,7 @@ Zmienne środowiskowe pobierane przez aplikację:
 - MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
 - SMTP_HOST np: smtp.gmail.com
 - SMTP_PORT np: 587
-
+- DEBUG - tryb debugowania true lub false
 ### Konfiguracja
 
 * Ustaw zmienną środowiskową
@@ -144,9 +144,9 @@ Sprawdź poprzednie tagi
 ```cmd
 git tag -n
 ```
-Obraz budownay z flagą `"--target production"`
+Obraz budownay z flagą `"--target production"` i `DEBUG=false`
 ```cmd
-docker build --target production -t magazyn_bystrze . --build-arg EMAIL=EMAIL --build-arg EMAIL_PASS="PASS" DB_PATH=./magazyn_prod.db
+docker build --target production -t magazyn_bystrze . --build-arg EMAIL=EMAIL --build-arg EMAIL_PASS="PASS" DB_PATH=./magazyn_prod.db DEBUG=false
 ```
 # Testy
 
@@ -162,15 +162,15 @@ Przykład Test_isAdult_ageLessThan18_false
 - tests - podzielone na testy dotyczące konkretnej aplikacji (apps)
 - testUtils - współdzielone metody wykorzystywane w testach
 ### Run
-Box testy. Obraz do testów jest z flagą `"--target test"`
+Box testy. Obraz do testów jest z flagą `"--target test"` i ` DEBUG=true`
 ```cmd
-docker build --target test -t $TEST_APP_NAME --build-arg EMAIL=test_app@bystrzeMail.com --build-arg EMAIL_PASS=password --build-arg DB_PATH="./boxTest/test_db" -f $DOCKERFILE_PATH .
+docker build --target test -t $TEST_APP_NAME --build-arg EMAIL=test_app@bystrzeMail.com --build-arg EMAIL_PASS=password --build-arg DB_PATH="./boxTest/test_db" -f $DOCKERFILE_PATH .  DEBUG=true
 ```
 Stworzenie nowego środowiska testowego
 ```cmd
-go run main.go --setUp
+go run main.go --env
 ```
-Uruchomienie wszystkich testów
+Uruchomienie wszystkich testów z listy. 
 ```cmd
 go run main.go --tests 
 ```

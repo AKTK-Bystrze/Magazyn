@@ -4,11 +4,10 @@ import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/email/appState"
+	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/auth/access"
 	"bystrze/apps/userManager/users"
 	"bystrze/apps/warehouse/rental"
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -48,7 +47,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	user, err := users.GetUser(userID)
+	user, err := users.GetUserById(userID)
 	if err != nil {
 		appState.App.Err("%v Can't get user %v", session.GetSessionUserName(r), err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -76,10 +75,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appState.App.Debug("%v Requested update of user: %v", session.GetSessionUserName(r), user.Name)
-	query := `UPDATE users SET u_credits = %v, u_role = '%v' WHERE u_id IN (%v)`
-	queryCompleted := fmt.Sprintf(query, user.Credits, user.Role, userID)
-
-	_, err = appState.App.Db.Exec(queryCompleted)
+	err = users.UpdateUser(user)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)

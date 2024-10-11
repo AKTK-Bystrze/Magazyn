@@ -12,6 +12,7 @@ COPY src/go.mod src/go.sum ./
 RUN go mod download
 
 # Now copy the entire source code (all .go files and other necessary files)
+# todo add skipping exe
 COPY  /src ./
 
 # Build the Go application
@@ -24,6 +25,7 @@ FROM frolvlad/alpine-glibc:latest AS production
 ARG EMAIL
 ARG EMAIL_PASS 
 ARG DB_PATH
+ARG DEBUG
 
 # Configure environment variables
 ENV MAGAZYN_BYSTRZE_EMAIL_ADDR=${EMAIL}
@@ -31,6 +33,7 @@ ENV MAGAZYN_BYSTRZE_EMAIL_PASS=${EMAIL_PASS}
 ENV COOKIE_KEY=${COOKIE_KEY}
 ENV SMTP_HOST=smtp.gmail.com
 ENV SMTP_PORT=587
+ENV DEBUg=${DEBUG}
 
 # Install dependencies and configure timezone
 RUN apk --no-cache add sqlite tzdata

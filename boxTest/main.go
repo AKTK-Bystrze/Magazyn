@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	setUpEnv := flag.Bool("setUp", false, "Set up the environment")
+	setUpEnv := flag.Bool("env", false, "Set up the environment")
 	runAllTests := flag.Bool("tests", false, "Run all tests")
 	flag.Parse()
 	if *setUpEnv {
@@ -18,6 +18,6 @@ func main() {
 		env.RunTests()
 	}
 	if !*setUpEnv && !*runAllTests {
-		fmt.Println("No flags provided. Please use --setUp or --tests.")
+		fmt.Println("No flags provided. Please use --env or --tests.")
 	}
 }

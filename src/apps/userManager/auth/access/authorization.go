@@ -1,31 +1,38 @@
 package access
 
 import (
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/email/appState"
-	"bystrze/apps/pages/home"
+	"bystrze/apps/userManager/appState"
+	"bystrze/apps/userManager/users"
 	"context"
 	"net/http"
 	"strings"
 )
 
+const (
+	ROLE_ADMIN      = "admin"
+	ROLE_NINJA      = "ninja"
+	ROLE_USER       = "user"
+	ROLE_SUPERADMIN = "superAdmin"
+)
+
+var ROLES = []string{ROLE_ADMIN, ROLE_NINJA, ROLE_USER, ROLE_SUPERADMIN}
+
 func ValidUserMiddlware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := appState.App.Store.Get(r, common.SESSION_NAME)
+		session, _ := appState.App.Store.Get(r, appState.SESSION_NAME)
 		uid, ok := session.Values["UserInfo"].(int)
 		if !ok {
 			appState.App.Warn("Unauthorized %v %v %v", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
-			if r.RequestURI != "/pages/home" {
+			if !isURIpublic(r.RequestURI) {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
-			home.HomePage(w, r)
+			appState.UnauthorizedRedirectHandler(w, r)
 			return
 		}
 		var uinfo models.User
-		err := appState.App.Db.Get(&uinfo, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = ?", uid)
-
+		uinfo, err := users.GetUserById(uid)
 		if err != nil || !AreRolesValid(uinfo.Role) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
@@ -37,8 +44,17 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 	})
 }
 
+func isURIpublic(uri string) bool {
+	for _, publicURI := range appState.PublicURIs {
+		if publicURI == uri {
+			return true
+		}
+	}
+	return false
+}
+
 func isRoleValid(userRole string) bool {
-	for _, privilige := range common.ROLES {
+	for _, privilige := range ROLES {
 		if strings.Compare(userRole, privilige) == 0 {
 			return true
 		}
@@ -94,7 +110,7 @@ func hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
 
 func hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	uinfo, ok := r.Context().Value("UserInfo").(models.User)
-	if !ok || !strings.Contains(uinfo.Role, common.ROLE_SUPERADMIN) {
+	if !ok || !strings.Contains(uinfo.Role, ROLE_SUPERADMIN) {
 		appState.App.Err("Non-SuperAdmin user (%s) attempts to access superAdmin API", session.If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)
 		return false

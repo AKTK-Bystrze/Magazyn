@@ -3,6 +3,7 @@ package apps
 import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
+	"bystrze/apps/common/timeSet"
 	"database/sql"
 	"errors"
 	"html/template"
@@ -19,19 +20,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const OUT_TIME_FMT = "2006-01-02 15:04:05"
-
 type App struct {
-	Db        Database //setted by main
-	DbPath    string   //setted by main
-	DbName    string
-	FuncMap   template.FuncMap //setted by main and shared by apps. Can be appended by app
-	Store     sessions.Store   //setted by main and shared by apps
-	Server    string           //setted by main. *Do app need it?
-	AppName   string           //setted by main
-	Router    *mux.Router      //setted by main, updated by app
-	Logger    *log.Logger      //setted by app
-	Templates Templates        //setted by app
+	Db        Database       //setted by main
+	DbPath    string         //setted by main
+	DbName    string         //setted by main
+	Store     sessions.Store //setted by main
+	Server    string         //setted by main. *Do app need it?
+	AppName   string         //setted by main
+	Router    *mux.Router    //setted by main, updated by app
+	Logger    *log.Logger    //setted by app
+	Templates Templates      //setted by app
 }
 
 func (app App) RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data TemplateDataIfce) {
@@ -85,6 +83,8 @@ func (a *App) LoadTemplates() {
 	patterns := []string{
 		"templates/*.html",
 		"templates/*/*.html",
+		"templates/*/*/*.html",
+		"templates/*/*/*/*.html",
 	}
 	files := []string{}
 
@@ -139,7 +139,7 @@ func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(OUT_TIME_FMT)+a.DbName)
+	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(timeSet.OUT_TIME_FMT)+a.DbName)
 
 	_, err = io.Copy(w, file)
 	if err != nil {

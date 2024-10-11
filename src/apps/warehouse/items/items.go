@@ -2,12 +2,11 @@ package items
 
 import (
 	"bystrze/apps/common/models"
-	"bystrze/apps/email/appState"
+	"bystrze/apps/common/timeSet"
+	"bystrze/apps/warehouse/appState"
 	"database/sql"
 	"time"
 )
-
-const OUT_TIME_FMT = "2006-01-02 15:04:05"
 
 type tmpItem2 struct {
 	ID        sql.NullInt64  `db:"r_id"`
@@ -31,12 +30,7 @@ func GetItem(itemID int) (*models.Item, error) {
 	return &item, nil
 }
 
-func GetItems(conf models.QueryConfigItems) ([]models.TmpItem, error) {
-	var location, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		appState.App.Err("GetItems %v", err.Error())
-		return []models.TmpItem{}, err
-	}
+func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, error) {
 	// Get all items from the database
 	query := "SELECT i_id, i_name, i_description, i_status, i_type "
 	if conf.WithCurReservation {
@@ -57,31 +51,31 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItem, error) {
     ) AND i_status == 'ok' `
 	}
 	rows, err := appState.App.Db.Queryx(query,
-		conf.EndTime.Format(OUT_TIME_FMT),
-		conf.StartTime.Format(OUT_TIME_FMT))
+		conf.EndTime.Format(timeSet.OUT_TIME_FMT),
+		conf.StartTime.Format(timeSet.OUT_TIME_FMT))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	// Store items in a slice
-	items := make([]models.TmpItem, 0)
+	items := make([]models.TmpItemWithReservation, 0)
 	for rows.Next() {
-		var tmp tmpItem2
-		if err := rows.StructScan(&tmp); err != nil {
+		var tmpItem tmpItem2
+		if err := rows.StructScan(&tmpItem); err != nil {
 			return nil, err
 		}
 
-		var out models.TmpItem
-		out.Item = tmp.Item
-		if tmp.ID.Valid {
+		var out models.TmpItemWithReservation
+		out.Item = tmpItem.Item
+		if tmpItem.ID.Valid {
 			out.CurrentReservation.Valid = true
-			out.CurrentReservation.ID = tmp.ID.Int64
-			out.CurrentReservation.StartTime = tmp.StartTime.Time.In(location)
-			out.CurrentReservation.EndTime = tmp.EndTime.Time.In(location)
-			out.CurrentReservation.Status = tmp.Status.String
-			out.CurrentReservation.User.Name = tmp.Username.String
-			out.CurrentReservation.User.ID = tmp.UserID.Int64
+			out.CurrentReservation.ID = tmpItem.ID.Int64
+			out.CurrentReservation.StartTime = tmpItem.StartTime.Time.In(timeSet.LOCATION)
+			out.CurrentReservation.EndTime = tmpItem.EndTime.Time.In(timeSet.LOCATION)
+			out.CurrentReservation.Status = tmpItem.Status.String
+			out.CurrentReservation.User.Name = tmpItem.Username.String
+			out.CurrentReservation.User.ID = tmpItem.UserID.Int64
 		}
 
 		items = append(items, out)
@@ -95,7 +89,7 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItem, error) {
 func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error) {
 	// check if the requested reservation period is outside of any existing reservation
 	query := `SELECT count(*) FROM reservations WHERE r_item_id=? AND r_end_time > ? AND r_start_time < ? AND r_status != 'denied'`
-	row := appState.App.Db.QueryRow(query, itemID, start.Format(OUT_TIME_FMT), end.Format(OUT_TIME_FMT))
+	row := appState.App.Db.QueryRow(query, itemID, start.Format(timeSet.OUT_TIME_FMT), end.Format(timeSet.OUT_TIME_FMT))
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
@@ -106,4 +100,13 @@ func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error)
 		return false, nil
 	}
 	return true, nil
+}
+
+func UpdateItemStatus(itemID int, status string) error {
+	stmt, err := appState.App.Db.Prepare("UPDATE items SET i_status = ? WHERE i_id = ?")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(status, itemID)
+	return err
 }

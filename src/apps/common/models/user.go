@@ -7,12 +7,3 @@ type User struct {
 	Role    string `db:"u_role"`
 	Credits int    `db:"u_credits"`
 }
-
-//reservationStatus
-const (
-	DENIED   = "denied"
-	RETURNED = "returned"
-	APPROVED = "approved"
-	PENDING  = "pending"
-	RENTED   = "rented"
-)

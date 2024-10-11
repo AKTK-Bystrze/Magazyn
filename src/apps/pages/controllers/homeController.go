@@ -1,9 +1,11 @@
-package home
+package controllers
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/pages/appState"
+	"bystrze/apps/pages/home"
 	"bystrze/apps/pages/news"
 	"net/http"
 )
@@ -21,14 +23,18 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return
 	}
-	bigNewsData := parseBigNewsData(bigNews)
+	bigNewsData := home.ParseBigNewsData(bigNews)
 
 	appState.App.RenderTemplate(w, r, "home.html", &struct {
-		BigNews   []BigNewsData
-		SmallNews []news.News
+		BigNews   []models.BigNewsData
+		SmallNews []models.News
 		apps.TemplateData
 	}{
 		BigNews:   bigNewsData,
 		SmallNews: smallNews,
 	})
+}
+
+func RedirectToHome(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/pages/home", http.StatusTemporaryRedirect)
 }

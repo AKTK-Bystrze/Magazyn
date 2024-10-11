@@ -6,24 +6,24 @@ import (
 	"bystrze/apps/userManager/auth"
 	"bystrze/apps/userManager/auth/access"
 	"bystrze/apps/userManager/controllers"
-	"html/template"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/johnsto/go-passwordless/v2"
 )
 
-func CreateUserManagerApp(db apps.Database, funcMap template.FuncMap, store sessions.Store,
-	t apps.Templates, server string, appName string, router *mux.Router, COOKIE_KEY []byte) apps.App {
+func CreateUserManagerApp(db apps.Database, store sessions.Store, send_link_to_console bool,
+	server string, appName string, router *mux.Router, COOKIE_KEY []byte) apps.App {
 	appState.App = apps.App{
-		Db:        db,
-		FuncMap:   funcMap,
-		Store:     store,
-		Server:    server,
-		AppName:   appName,
-		Router:    router,
-		Templates: t,
+		Db:      db,
+		Store:   store,
+		Server:  server,
+		AppName: appName,
+		Router:  router,
 	}
+	appState.SEND_COOKIE_TO_STDOUT = send_link_to_console
+	appState.UnauthorizedRedirectHandler = controllers.Login
+	appState.PublicURIs = []string{}
 	appState.App.SetLogger()
 	appState.App.LoadTemplates()
 	appState.App.Router = updateRouter(appState.App.Router)
@@ -40,9 +40,10 @@ func CreateUserManagerApp(db apps.Database, funcMap template.FuncMap, store sess
 
 func updateRouter(router *mux.Router) *mux.Router {
 	//all
+	router.HandleFunc("/", controllers.RedirectToLogin).Methods("GET")
 	allRouter := router.PathPrefix("/users").Subrouter()
 	allRouter.HandleFunc("/login", controllers.Login).Methods("GET")
-	allRouter.HandleFunc("/token", auth.TokenHandler).Methods("POST", "GET")
+	allRouter.HandleFunc("/token", controllers.TokenHandler).Methods("POST", "GET")
 	//users
 	userRouter := allRouter.PathPrefix("/user").Subrouter()
 	userRouter.Use(access.ValidUserMiddlware)

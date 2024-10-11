@@ -3,9 +3,30 @@ package rental
 import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/warehouse/appState"
+	"fmt"
+	"net/http"
 	"time"
 )
+
+// reservationStatus
+const (
+	DENIED   = "denied"
+	RETURNED = "returned"
+	APPROVED = "approved"
+	PENDING  = "pending"
+	RENTED   = "rented"
+)
+
+type QueryConfigReservation struct {
+	OneUser      bool
+	OneItem      bool
+	SelectionId  int
+	Users        bool
+	OrderByStart bool
+	OrderDesc    bool
+}
 
 type ReservationViewData struct {
 	UpcomingReservations   *[]models.Reservation
@@ -27,14 +48,10 @@ func GetReservation(id int) (*models.Reservation, error) {
 		users u ON r.r_user_id = u.u_id
 	WHERE 
 		r.r_id = ?`
-	var location, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		return nil, err
-	}
 	row := appState.App.Db.Unsafe().QueryRowx(query, id)
 	var r models.Reservation
 	var t models.TmpReservation
-	err = row.StructScan(&t)
+	err := row.StructScan(&t)
 	if err != nil {
 		appState.App.Err("Can't get reservation id for id %v %v", id, err)
 		return nil, err
@@ -44,27 +61,13 @@ func GetReservation(id int) (*models.Reservation, error) {
 	r.Item = t.Item
 	r.User = t.User
 	//  TODO: update time to localtime (CEST)
-	r.StartTime = r.StartTime.In(location)
-	r.EndTime = r.EndTime.In(location)
-	r.CreatedAt = r.CreatedAt.In(location)
+	r.StartTime = r.StartTime.In(timeSet.LOCATION)
+	r.EndTime = r.EndTime.In(timeSet.LOCATION)
+	r.CreatedAt = r.CreatedAt.In(timeSet.LOCATION)
 	return &r, nil
 }
 
-type QueryConfigReservation struct {
-	OneUser      bool
-	OneItem      bool
-	SelectionId  int
-	Users        bool
-	OrderByStart bool
-	OrderDesc    bool
-}
-
 func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) {
-	var location, err = time.LoadLocation("Europe/Warsaw")
-	if err != nil {
-		appState.App.Err("GetReservations %v", err.Error())
-		return []models.Reservation{}, err
-	}
 	// Retrieve all reservations from database
 	query := "SELECT r.*, i.i_id, i.i_name, i.i_description "
 	if conf.Users {
@@ -114,9 +117,9 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 		r.Item = t.Item
 		r.User = t.User
 		//  TODO: update time to localtime (CEST)
-		r.StartTime = r.StartTime.In(location)
-		r.EndTime = r.EndTime.In(location)
-		r.CreatedAt = r.CreatedAt.In(location)
+		r.StartTime = r.StartTime.In(timeSet.LOCATION)
+		r.EndTime = r.EndTime.In(timeSet.LOCATION)
+		r.CreatedAt = r.CreatedAt.In(timeSet.LOCATION)
 		reservations = append(reservations, r)
 	}
 	if err = rows.Err(); err != nil {
@@ -126,7 +129,7 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 	return reservations, nil
 }
 
-func PastFutureReservations(reservations []models.Reservation) ([]models.Reservation, []models.Reservation, []models.Reservation) {
+func GetPastFutureReservations(reservations []models.Reservation) ([]models.Reservation, []models.Reservation, []models.Reservation) {
 	// Group reservations into current, upcoming and historical
 	var upcomingReservations []models.Reservation
 	var historicalReservations []models.Reservation
@@ -143,7 +146,7 @@ func PastFutureReservations(reservations []models.Reservation) ([]models.Reserva
 		} else if res.StartTime.After(now) ||
 			res.StartTime.After(now12hearlier) ||
 			(res.StartTime.Before(now) && res.EndTime.After(now) ||
-				res.Status == models.RENTED) {
+				res.Status == RENTED) {
 			// Reservation is upcoming
 			currentReservations = append(currentReservations, res)
 		} else {
@@ -152,4 +155,99 @@ func PastFutureReservations(reservations []models.Reservation) ([]models.Reserva
 		}
 	}
 	return historicalReservations, currentReservations, upcomingReservations
+}
+
+func AddReservation(reservation models.Reservation) error {
+	stmt, err := appState.App.Db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		appState.App.Err("%v %v", "Cant create reservation", err.Error())
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(reservation.Item.ID,
+		reservation.User.ID,
+		reservation.User.ID,
+		reservation.StartTime.UTC().Format(timeSet.OUT_TIME_FMT),
+		reservation.EndTime.UTC().Format(timeSet.OUT_TIME_FMT),
+		reservation.Status)
+	if err != nil {
+		appState.App.Err("%v %v", "canr insert reservation", err.Error())
+		return err
+	}
+	return nil
+}
+
+func UpdateReservationStatus(reservation models.Reservation, status string, w http.ResponseWriter, changingUserId int) {
+	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, changingUserId, reservation.ID)
+	if err != nil {
+		appState.App.Err("updateReservationStatus %v", err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+	numRows, err := result.RowsAffected()
+	if err != nil || numRows != 1 {
+		if err != nil {
+			appState.App.Err("updateReservationStatus %v", err.Error())
+		} else {
+			appState.App.Err("Failed to update reservation status %v", err)
+		}
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+	response := fmt.Sprintf("id: %d", reservation.ID)
+	w.Write([]byte(response))
+}
+
+func UpdateReservationsDate(reservation models.Reservation, field string, newTime time.Time, w http.ResponseWriter) error {
+	if field != "r_end_time" && field != "r_start_time" {
+		appState.App.Err("Wrong parameter used in method updateReservationsDate %v", field)
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
+	}
+	newTimeFormated := newTime.Format(timeSet.OUT_TIME_FMT)
+	query := fmt.Sprintf(`UPDATE reservations SET %v = ?,r_changeby_uid = ? WHERE r_id = ?`, field)
+	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
+	if err != nil {
+		appState.App.Err("updateReservationEndDate %v", err.Error())
+		http.Error(w, "Can't update reservation ", http.StatusInternalServerError)
+		return err
+	}
+	numRows, err := result.RowsAffected()
+	if err != nil || numRows != 1 {
+		if err != nil {
+			appState.App.Err("updateReservationEndDate %v", err.Error())
+		} else {
+			appState.App.Err("Failed to update reservation end time %v", err)
+		}
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return err
+	}
+	appState.App.Debug("Successfuly updated reservation %v to %v", field, newTime.Format(timeSet.OUT_TIME_FMT))
+	return nil
+}
+
+func GetReservationHistory(reservationID int) ([]models.ReservationAudit, error) {
+	udb := appState.App.Db.Unsafe()
+	var history []models.ReservationAudit
+	rows, err := udb.Queryx("SELECT ra.*,u.u_username FROM reservation_audit ra JOIN users u ON ra.ra_user_id == u.u_id WHERE ra_reservation_id = ? ORDER BY ra_change_date", reservationID)
+	if err != nil {
+		appState.App.Err("%v %v", "Scanning history", err.Error())
+		return nil, err
+	}
+	for rows.Next() {
+		var audit models.ReservationAudit
+		var t models.TmpReservationAudit
+		err := rows.StructScan(&t)
+		if err != nil {
+			appState.App.Err("%v %v", "Scanning history", err.Error())
+			return nil, err
+		}
+		//	work around sqlx to better handle embedded structures and JOINs
+		audit = t.ReservationAudit
+		audit.User = t.User
+		//  TODO: update timestamps to localtime
+		audit.ChangeDate = audit.ChangeDate.In(timeSet.LOCATION)
+		history = append(history, audit)
+	}
+	return history, nil
 }
