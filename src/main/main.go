@@ -37,6 +37,7 @@ func main() {
 	router := mux.NewRouter()
 
 	email.CreateEmailApp(db, store, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, SMTP_HOST, SMTP_PORT)
+
 	userManager.CreateUserManagerApp(db, store, debug, SERVER, "ACCOUNTS", router, COOKIE_KEY)
 	warehouse.CreateWarehouseApp(db, DB_PATH, databaseName, store, SERVER, "WAREHOUSE", router)
 	// pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)

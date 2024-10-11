@@ -11,7 +11,7 @@ import (
 
 func CreateEmailApp(db apps.Database, store sessions.Store,
 	server string, appName string, router *mux.Router,
-	MAGAZYN_BYSTRZE_EMAIL_ADDR, string, SMTP_HOST string, SMTP_PORT string) apps.App {
+	MAGAZYN_BYSTRZE_EMAIL_ADDR, SMTP_HOST string, SMTP_PORT string) apps.App {
 	appState.App = apps.App{
 		Db:      db,
 		Store:   store,
