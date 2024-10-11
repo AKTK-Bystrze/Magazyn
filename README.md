@@ -183,6 +183,3 @@ Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min
 ```cmd
 go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
 ```
-BoxTesty nie są stabilne, zdarza się, że:
-- podczas logowania brak loginlink co powoduje GET request na "". Prawdopodobnie zbyt krótki zakres sprawdzanych logów
-- podczas testów rezerwacji, changeshistory (zmiana statusu wypożyczenia np approve->rented->returned) zmienia swoją kolejność 
