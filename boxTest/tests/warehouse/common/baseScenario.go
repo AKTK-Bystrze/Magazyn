@@ -6,6 +6,7 @@ import (
 	"boxTest/handlers/db"
 	"boxTest/tests"
 	"log"
+	"testing"
 	"time"
 )
 
@@ -113,4 +114,26 @@ func contains(list []string, key string) bool {
 		}
 	}
 	return false
+}
+
+func ShowTestRaport(t *testing.T, passedTests []string, failedTests []string) {
+	if len(failedTests) > 0 {
+		log.Printf("\n--- Test Summary ---\n")
+		log.Printf("Passed Tests: %d\n", len(passedTests))
+		for _, name := range passedTests {
+			log.Printf(" - %s\n", name)
+		}
+
+		log.Printf("\nFailed Tests: %d\n", len(failedTests))
+		for _, name := range failedTests {
+			log.Printf(" - %s\n", name)
+		}
+
+		t.Fail()
+	} else {
+		log.Printf("\nAll tests passed!\n")
+		for _, name := range passedTests {
+			log.Printf(" - %s\n", name)
+		}
+	}
 }
