@@ -3,7 +3,6 @@ package main
 import (
 	"bystrze/apps/common"
 	"bystrze/apps/email"
-	"bystrze/apps/email/service"
 	"bystrze/apps/userManager"
 	"bystrze/apps/warehouse"
 	"fmt"
@@ -21,28 +20,28 @@ import (
 )
 
 var (
-	COOKIE_KEY                  = []byte(os.Getenv("COOKIE_KEY"))
-	MAGAZYN_BYSTRZE_EMAIL_ADDR  = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
-	MAGAZYN_BYSTRZE_EMAIL_LOGIN = service.GetEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
-	SMTP_HOST                   = os.Getenv("SMTP_HOST")
-	SMTP_PORT                   = os.Getenv("SMTP_PORT")
+	COOKIE_KEY                 = []byte(os.Getenv("COOKIE_KEY"))
+	MAGAZYN_BYSTRZE_EMAIL_ADDR = os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
+	SMTP_HOST                  = os.Getenv("SMTP_HOST")
+	SMTP_PORT                  = os.Getenv("SMTP_PORT")
 )
 
 func main() {
 	setLocation()
-	IP, PORT, SERVER := getArgs()
-	ADDR := fmt.Sprintf("%s:%s", IP, PORT)
-	db := setDb()
+	IP, PORT, SERVER, DB_PATH := getArgs()
+	databaseName := path.Base(DB_PATH)
+	db := setDb(DB_PATH)
 	defer db.Close()
 	debug := setDebugMode()
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	router := mux.NewRouter()
 
-	email.CreateEmailApp(db, store, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, MAGAZYN_BYSTRZE_EMAIL_LOGIN, SMTP_HOST, SMTP_PORT)
+	email.CreateEmailApp(db, store, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, SMTP_HOST, SMTP_PORT)
 	userManager.CreateUserManagerApp(db, store, debug, SERVER, "ACCOUNTS", router, COOKIE_KEY)
-	warehouse.CreateWarehouseApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, SERVER, "WAREHOUSE", router)
+	warehouse.CreateWarehouseApp(db, DB_PATH, databaseName, store, SERVER, "WAREHOUSE", router)
 	// pages.CreatePagesApp(db, common.DATABASE_PATH, common.DATABASE_NAME, store, server, "PAGES", router)
 
+	ADDR := fmt.Sprintf("%s:%s", IP, PORT)
 	log.Print("Server starting on: " + ADDR)
 	log.Fatal(http.ListenAndServe(ADDR, router))
 }
@@ -61,16 +60,15 @@ func setDebugMode() bool {
 	return debug
 }
 
-func setDb() *sqlx.DB {
-	common.DATABASE_NAME = path.Base(common.DATABASE_PATH)
-	db, err := sqlx.Open("sqlite3", common.DATABASE_PATH)
+func setDb(path string) *sqlx.DB {
+	db, err := sqlx.Open("sqlite3", path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return db
 }
 
-func getArgs() (string, string, string) {
+func getArgs() (string, string, string, string) {
 	if len(os.Args) != 5 {
 		fmt.Fprintf(os.Stderr, "Usage: %s IP PORT DOMAIN DB_PATH\n", os.Args[0])
 		os.Exit(1)
@@ -78,8 +76,8 @@ func getArgs() (string, string, string) {
 	IP := os.Args[1]
 	PORT := os.Args[2]
 	SERVER := os.Args[3]
-	common.DATABASE_PATH = os.Args[4]
-	return IP, PORT, SERVER
+	DB_PATH := os.Args[4]
+	return IP, PORT, SERVER, DB_PATH
 }
 
 func setLocation() {

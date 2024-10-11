@@ -1,7 +1,6 @@
 package access
 
 import (
-	"bystrze/apps/common"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/userManager/appState"
@@ -10,6 +9,15 @@ import (
 	"net/http"
 	"strings"
 )
+
+const (
+	ROLE_ADMIN      = "admin"
+	ROLE_NINJA      = "ninja"
+	ROLE_USER       = "user"
+	ROLE_SUPERADMIN = "superAdmin"
+)
+
+var ROLES = []string{ROLE_ADMIN, ROLE_NINJA, ROLE_USER, ROLE_SUPERADMIN}
 
 func ValidUserMiddlware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +54,7 @@ func isURIpublic(uri string) bool {
 }
 
 func isRoleValid(userRole string) bool {
-	for _, privilige := range common.ROLES {
+	for _, privilige := range ROLES {
 		if strings.Compare(userRole, privilige) == 0 {
 			return true
 		}
@@ -102,7 +110,7 @@ func hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
 
 func hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	uinfo, ok := r.Context().Value("UserInfo").(models.User)
-	if !ok || !strings.Contains(uinfo.Role, common.ROLE_SUPERADMIN) {
+	if !ok || !strings.Contains(uinfo.Role, ROLE_SUPERADMIN) {
 		appState.App.Err("Non-SuperAdmin user (%s) attempts to access superAdmin API", session.If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)
 		return false

@@ -12,6 +12,7 @@ COPY src/go.mod src/go.sum ./
 RUN go mod download
 
 # Now copy the entire source code (all .go files and other necessary files)
+# todo add skipping exe
 COPY  /src ./
 
 # Build the Go application
