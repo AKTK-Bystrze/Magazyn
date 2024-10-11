@@ -73,22 +73,29 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	userID := int(r.Context().Value("UserInfo").(models.User).ID)
 	item, err := items.GetItem(itemID)
 	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+		appState.App.Err("%v Can't get item %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 	rentalCost, err := credits.CalculateRentalCost(*item, startTime, endTime)
 	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+		appState.App.Err("%v Can't caluculate renatl cost %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	canRentResult, userCredits, err := credits.CanRent(userID, rentalCost)
 	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+		appState.App.Err("%v Can't evaluate if can rent %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 	if canRentResult {
 		user, err := users.GetUserById(userID)
+		if err != nil {
+			appState.App.Err("%v Can't get user %v", session.GetSessionUserName(r), err.Error())
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 		status := rental.PENDING
 
 		item, err := items.GetItem(itemID)
