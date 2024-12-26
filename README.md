@@ -8,6 +8,7 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
 
 - [Magazyn](#magazyn)
 - [Jak uruchomić](#jak-uruchomić)
+  - [Args](#args)
   - [Zmienne środowiskowe](#zmienne-środowiskowe)
     - [Konfiguracja](#konfiguracja)
       - [Windows VS Code (GO)](#windows-vs-code-go)
@@ -27,6 +28,13 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
     - [Uwagi](#uwagi)
 
 # Jak uruchomić
+## Args
+
+["127.0.0.1", "8080", "http://localhost:8080", "../../magazyn.db"]
+1. IP "127.0.0.1"
+2. Port "8080"
+3. Server "http://localhost:8080"
+4. lokalizacja bazy danych "../../magazyn.db"
 ## Zmienne środowiskowe
 
 Zmienne środowiskowe pobierane przez aplikację:
