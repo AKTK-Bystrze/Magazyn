@@ -1,1 +1,0 @@
-heroku config:set EMAIL_PASS="PASS" DB_PATH=./magazyn_prod.db EMAIL=EMAIL
