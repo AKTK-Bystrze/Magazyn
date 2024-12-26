@@ -28,6 +28,11 @@ func main() {
 	SMTP_PORT := os.Getenv("SMTP_PORT")
 
 	IP, PORT, SERVER, DB_PATH := getArgs()
+	ENV_PORT := os.Getenv("PORT")
+	if ENV_PORT != "" {
+		PORT = ENV_PORT
+	}
+
 	databaseName := path.Base(DB_PATH)
 	db := setDb(DB_PATH)
 	defer db.Close()
