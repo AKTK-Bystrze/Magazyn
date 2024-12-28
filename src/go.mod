@@ -27,4 +27,5 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/johnsto/go-passwordless/v2 v2.0.0
+	github.com/lib/pq v1.2.0
 )

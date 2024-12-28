@@ -22,8 +22,6 @@ import (
 
 type App struct {
 	Db        Database       //setted by main
-	DbPath    string         //setted by main
-	DbName    string         //setted by main
 	Store     sessions.Store //setted by main
 	Server    string         //setted by main. *Do app need it?
 	AppName   string         //setted by main
@@ -130,7 +128,7 @@ func (data *TemplateData) SetURL(url string) {
 }
 
 func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
-	file, err := os.Open(a.DbPath)
+	file, err := os.Open("DB_PATH")
 	if err != nil {
 		a.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "File not found", http.StatusNotFound)
@@ -139,7 +137,7 @@ func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(timeSet.OUT_TIME_FMT)+a.DbName)
+	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(timeSet.OUT_TIME_FMT)+"DB_NAME")
 
 	_, err = io.Copy(w, file)
 	if err != nil {
