@@ -2,8 +2,6 @@
 FROM golang:1.20-buster AS builder
 
 ENV CGO_ENABLED=1
-RUN apt-get update && \
-    apt-get install -y gcc sqlite3 libsqlite3-dev
 
 WORKDIR /app
 
@@ -19,8 +17,8 @@ FROM frolvlad/alpine-glibc:latest AS production
 
 ARG EMAIL
 ARG EMAIL_PASS 
-ARG DSN 
-ARG DEBUG=False
+ARG DSN=postgres://postgres:postgres@localhost:5433/magazyn?sslmode=disable
+ARG DEBUG=True
 
 ENV MAGAZYN_BYSTRZE_EMAIL_ADDR=${EMAIL}
 ENV MAGAZYN_BYSTRZE_EMAIL_PASS=${EMAIL_PASS}
