@@ -69,12 +69,11 @@ func setDb(dsn string) *sqlx.DB {
 	if dsn == "" {
 		log.Fatal("DATABASE_URL is not set")
 	}
-
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
-
+	log.Printf("Connected to db: %v", dsn)
 	return db
 }
 
