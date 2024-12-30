@@ -8,19 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
 	TEST_APP_NAME        = "test_app"
 	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
-	DB_PATH_IN_PROJ      = "bystrze_test.db"
-	SMTP_SERVER_NAME     = "test_server"
-	DOCKERFILE_PATH      = "../"
-	NETWORK_NO_WEB       = "test_network_no_web"
-	SMTP_PORT            = "3465"
-	COOKIE_KEY           = ""
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
@@ -29,65 +22,45 @@ const (
 	DB_TIME_FORMAT = "2006-01-02 15:04:05"
 )
 
-func createTestDB() {
-	log.Print("Creating DB...")
-	db, err := sqlx.Open("sqlite3", DB_PATH_IN_PROJ)
+func composeContainers() {
+	projectRoot, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error getting current directory: %v\n", err)
+		os.Exit(1)
 	}
-	defer db.Close()
-	applySQLFromFile(db, "../db.schema")
-	applySQLFromFile(db, "../boxTest/db_test.data")
-	log.Print("DB created")
-}
+	cmd := exec.Command("docker-compose", "up", "--build", "-d")
+	cmd.Dir = projectRoot
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log.Println("Starting Docker Compose...")
+	err = cmd.Run()
+	if err != nil {
+		log.Printf("Error running Docker Compose: %v\n", err)
+		os.Exit(1)
+	}
 
-func buildTestApp() {
-	log.Print("Building and running test app...")
-	RunCommand(false, "docker", "build",
-		"--target", "test",
-		"-t", TEST_APP_NAME,
-		"--build-arg", "EMAIL=test_app@bystrzeMail.com",
-		"--build-arg", "COOKIE_KEY="+COOKIE_KEY,
-		"--build-arg", "EMAIL_PASS=password",
-		"--build-arg", "DB_PATH=./boxTest/"+DB_PATH_IN_PROJ,
-		DOCKERFILE_PATH)
-	RunCommand(false, "docker", "run",
-		"--name", TEST_APP_NAME,
-		"--cap-add=SYS_TIME",
-		"-d",
-		"-p", "8080:8080",
-		"-e", "SMTP_HOST="+SMTP_SERVER_NAME,
-		"-e", "SMTP_PORT="+SMTP_PORT,
-		"-e", "DEBUG=true",
-		TEST_APP_NAME)
-
-	time.Sleep(2 * time.Second)
-	log.Print("test app created")
+	log.Println("Docker Compose ran successfully.")
 }
 
 func cleanup() {
-	log.Print("Cleaning previous test leftovers...")
-	containersToClean := []string{TEST_APP_NAME}
-	for _, app := range containersToClean {
-		if ContainerExists(app) {
-			RunCommand(false, "docker", "stop", app)
-			RunCommand(false, "docker", "rm", app)
-			log.Printf("Removed %s", app)
-		}
+	log.Printf("Cleaning previous test leftovers")
+	projectRoot, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error getting current directory: %v\n", err)
+		os.Exit(1)
 	}
+	cmd := exec.Command("docker-compose", "down")
+	cmd.Dir = projectRoot
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	if dbExists(DB_PATH_IN_PROJ) {
-		os.Remove(DB_PATH_IN_PROJ)
-		log.Printf("Removed %s", DB_PATH_IN_PROJ)
+	log.Println("Starting Docker Compose down...")
+	err = cmd.Run()
+	if err != nil {
+		log.Printf("Error running Docker Compose down: %v\n", err)
+		os.Exit(1)
 	}
-	log.Print("Cleaning up is done")
-}
-
-func dbExists(dbPath string) bool {
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		return false
-	}
-	return true
+	log.Println("Cleaned successfully.")
 }
 
 func ContainerExists(containerName string) bool {
@@ -100,16 +73,9 @@ func ContainerExists(containerName string) bool {
 	return false
 }
 
-func setup() {
-	log.Print("Setting up for test...")
-	createTestDB()
-	buildTestApp()
-	log.Print("Setting up is done")
-}
-
 func EnviromentSetUP() {
 	cleanup()
-	setup()
+	composeContainers()
 }
 
 func RunTests() {
