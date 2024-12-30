@@ -33,12 +33,12 @@ type Reservation struct {
 }
 
 type ReservationAudit struct {
-	ID            int       `json:"ra_id"`
-	ReservationID int       `json:"ra_reservation_id"`
-	UserID        int       `json:"ra_user_id"`
-	Status        string    `json:"ra_status"`
-	ChangeDate    time.Time `json:"ra_change_date"`
-	Auditor       string
+	ID            int       `json:"id"`
+	ReservationID int       `json:"reservation_id"`
+	UserID        int       `json:"user_id"`
+	Status        string    `json:"status"`
+	ChangeDate    time.Time `json:"change_date"`
+	Auditor       string    `json:"auditor"`
 }
 
 var ITMEMS = []string{KayakB1}

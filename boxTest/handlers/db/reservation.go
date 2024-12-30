@@ -168,7 +168,6 @@ func AddReservation(reservation app.Reservation) error {
 
 // RemoveReservations removes all reservations from the database.
 func RemoveReservations() error {
-	env.ConnectToDB()
 	db := env.DB
 	query := "DELETE FROM reservations"
 	_, err := db.Exec(query)

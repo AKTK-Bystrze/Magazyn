@@ -12,10 +12,10 @@ func GetReservationAudit(reservationId int) []app.ReservationAudit {
 
 	// Define the query to get the reservation audit
 	query := `
-        SELECT id, reservation_id, action, changed_by, change_time, details
-        FROM reservation_audit
-        WHERE reservation_id = $1
-        ORDER BY change_time DESC
+SELECT ra_id, ra_reservation_id, ra_user_id, ra_status, ra_change_date
+     FROM reservation_audit
+     WHERE ra_reservation_id = $1
+     ORDER BY ra_change_date DESC;
     `
 
 	// Execute the query
@@ -28,7 +28,7 @@ func GetReservationAudit(reservationId int) []app.ReservationAudit {
 	// Loop through the results and scan each row into a ReservationAudit struct
 	for rows.Next() {
 		var audit app.ReservationAudit
-		if err := rows.Scan(&audit.ID, &audit.ReservationID, &audit.Status, &audit.UserID, &audit.ChangeDate, &audit.Auditor); err != nil {
+		if err := rows.Scan(&audit.ID, &audit.ReservationID, &audit.UserID, &audit.Status, &audit.ChangeDate); err != nil {
 			log.Fatalf("unable to scan row: %v", err)
 		}
 		audits = append(audits, audit)
