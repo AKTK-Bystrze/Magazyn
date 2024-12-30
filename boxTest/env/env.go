@@ -2,17 +2,19 @@ package env
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 const (
-	TEST_APP_NAME        = "test_app"
+	TEST_APP_NAME        = "boxtest-web-1"
+	TEST_DB_NAME         = "boxtest-db-1"
 	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
 
 	Localhost = "http://localhost:8080"
@@ -20,6 +22,10 @@ const (
 
 	TIME_FORMAT    = "2006-01-02T15:04"
 	DB_TIME_FORMAT = "2006-01-02 15:04:05"
+)
+
+var (
+	DB *sql.DB
 )
 
 func composeContainers() {
@@ -40,6 +46,14 @@ func composeContainers() {
 	}
 
 	log.Println("Docker Compose ran successfully.")
+}
+
+func ConnectToDB() {
+	var err error
+	DB, err = sql.Open("postgres", "postgres://postgres:postgres@localhost:5433/magazyn?sslmode=disable")
+	if err != nil {
+		log.Fatalf("unable to connect to database: %v", err)
+	}
 }
 
 func cleanup() {

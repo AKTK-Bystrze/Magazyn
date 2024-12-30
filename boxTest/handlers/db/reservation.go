@@ -3,33 +3,40 @@ package db
 import (
 	"boxTest/env"
 	"boxTest/handlers/app"
-	"boxTest/tests"
-	"fmt"
-	"log"
-	"strings"
+	"database/sql"
 	"time"
+
+	"fmt"
 )
-
-func GetReservations() []app.Reservation {
-	query := "SELECT * FROM reservations;"
-	reservationsString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, query)
-	return parseToReservationsList(reservationsString)
-}
-
-func GetReservation(conditions ...ConditionFunc) app.Reservation {
-	reservations := GetReservations()
-	reservationsFound := FindReservations(reservations, conditions...)
-	if len(reservationsFound) != 1 {
-		log.Fatalf("Didn't find reservation for this criteria. Reservations found: %v", reservationsFound)
-	}
-	return reservationsFound[0]
-}
 
 type ConditionFunc func(res app.Reservation) bool
 
-func FindReservations(reservations []app.Reservation, conditions ...ConditionFunc) []app.Reservation {
-	var result []app.Reservation
-	for _, res := range reservations {
+// getReservationsFromDB is the shared function that retrieves reservations from the database
+// based on the conditions provided and returns a list of filtered reservations.
+func getReservationsFromDB(conditions ...ConditionFunc) ([]app.Reservation, error) {
+	// Get the global DB connection
+	db := env.DB
+
+	// Base query to select all reservations
+	query := "SELECT r_id, r_item_id, r_user_id, r_start_time, r_end_time, r_status, r_created_at, r_changeby_uid FROM reservations"
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %v", err)
+	}
+	defer rows.Close()
+
+	// Initialize a slice to store filtered reservations
+	var reservations []app.Reservation
+
+	// Iterate over the rows and scan into Reservation struct
+	for rows.Next() {
+		var res app.Reservation
+		err := rows.Scan(&res.ID, &res.ItemID, &res.UserID, &res.StartTime, &res.EndTime, &res.Status, &res.CreatedAt, &res.ChangeByUID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+
+		// Apply the conditions to filter the results
 		match := true
 		for _, condition := range conditions {
 			if !condition(res) {
@@ -37,11 +44,82 @@ func FindReservations(reservations []app.Reservation, conditions ...ConditionFun
 				break
 			}
 		}
+
+		// If the reservation matches all conditions, append it to the result
 		if match {
-			result = append(result, res)
+			reservations = append(reservations, res)
 		}
 	}
-	return result
+
+	// Check for any iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error during row iteration: %v", err)
+	}
+
+	return reservations, nil
+}
+
+// GetReservations retrieves all reservations from the database based on conditions
+func GetReservations(conditions ...ConditionFunc) ([]app.Reservation, error) {
+	// Simply call the shared function to get filtered reservations
+	return getReservationsFromDB(conditions...)
+}
+
+// GetReservation retrieves a single reservation from the database based on conditions
+// It returns an error if more than one or no reservation matches the conditions
+func GetReservation(conditions ...ConditionFunc) app.Reservation {
+	reservations, err := getReservationsFromDB(conditions...)
+	if err != nil {
+		return app.Reservation{}
+	}
+
+	// If exactly one reservation is found, return it
+	if len(reservations) == 1 {
+		return reservations[0]
+	}
+
+	// If no reservations or more than one reservation is found, return an error
+	fmt.Errorf("expected one reservation, but found %d", len(reservations))
+	return app.Reservation{}
+}
+
+// Example condition function to filter by ID
+func ByID(reservationID int) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.ID == reservationID
+	}
+}
+
+// Example condition function to filter by status
+func ByStatus(status string) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.Status == status
+	}
+}
+
+// Example condition function to filter by user ID
+func ByUserID(userID int) ConditionFunc {
+	return func(res app.Reservation) bool {
+		return res.UserID == userID
+	}
+}
+
+// Example condition function to filter by start time
+func ByStartTime(start time.Time) ConditionFunc {
+	return func(res app.Reservation) bool {
+		loc, _ := time.LoadLocation("Europe/Warsaw")
+		formattedTime := start.In(loc).Truncate(time.Minute)
+		return res.StartTime.Equal(formattedTime)
+	}
+}
+
+// Example condition function to filter by end time
+func ByEndTime(end time.Time) ConditionFunc {
+	return func(res app.Reservation) bool {
+		loc := time.UTC
+		formattedTime := end.In(loc).Truncate(time.Minute)
+		return res.EndTime.Equal(formattedTime)
+	}
 }
 
 func ByItemID(itemID int) ConditionFunc {
@@ -50,123 +128,52 @@ func ByItemID(itemID int) ConditionFunc {
 	}
 }
 
-func ByID(reservationID int) ConditionFunc {
-	return func(res app.Reservation) bool {
-		return res.ID == reservationID
+// GetReservationByID retrieves a reservation by its ID.
+func GetReservationByID(reservationID int) (app.Reservation, error) {
+	db := env.DB
+	query := "SELECT r_id, r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at FROM reservations WHERE r_id = $1"
+	row := db.QueryRow(query, reservationID)
+
+	var r app.Reservation
+	err := row.Scan(&r.ID, &r.StartTime, &r.EndTime, &r.ItemID, &r.UserID, &r.ChangeByUID, &r.Status, &r.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return app.Reservation{}, fmt.Errorf("no reservation found with ID %d", reservationID)
+		}
+		return app.Reservation{}, fmt.Errorf("error scanning row: %v", err)
 	}
+
+	return r, nil
 }
 
-func ByUserID(userID int) ConditionFunc {
-	return func(res app.Reservation) bool {
-		return res.UserID == userID
-	}
-}
-
-func ByStatus(status string) ConditionFunc {
-	return func(res app.Reservation) bool {
-		return res.Status == status
-	}
-}
-
-func ByStartTime(start time.Time) ConditionFunc {
-	return func(res app.Reservation) bool {
-		loc, _ := time.LoadLocation("Europe/Warsaw")
-		formatedTime := start.In(loc)
-		formatedTime = formatedTime.Truncate(time.Minute)
-		return res.StartTime.Equal(formatedTime)
-	}
-}
-
-func ByEndTime(end time.Time) ConditionFunc {
-	return func(res app.Reservation) bool {
-		loc := time.UTC
-		formatedTime := end.In(loc)
-		formatedTime = formatedTime.Truncate(time.Minute)
-		return res.EndTime.Equal(formatedTime)
-	}
-}
-
-func GetReservationById(reservationID int) app.Reservation {
-	query := fmt.Sprintf("SELECT * FROM reservations WHERE r_id = %d;", reservationID)
-	reservationsString := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, query)
-	return parseToReservation(reservationsString)
-}
-
-func RemoveReservations() {
-	log.Printf("Removing all reservations")
-	execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, "DELETE FROM reservations;")
-}
-
-func AddReservation(reservation app.Reservation) {
-	query := fmt.Sprintf(`INSERT INTO reservations ( r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) 
-						  VALUES ( datetime('%s', 'utc'), datetime('%s', 'utc'), %d, %d, %d, '%s', datetime('%s', 'utc'))`,
-		reservation.StartTime.Format(env.DB_TIME_FORMAT),
-		reservation.EndTime.Format(env.DB_TIME_FORMAT),
+// AddReservation adds a new reservation to the database.
+func AddReservation(reservation app.Reservation) error {
+	db := env.DB
+	query := `INSERT INTO reservations (r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	_, err := db.Exec(query,
+		reservation.StartTime,
+		reservation.EndTime,
 		reservation.ItemID,
 		reservation.UserID,
 		reservation.ChangeByUID,
 		reservation.Status,
-		reservation.CreatedAt.Format(env.TIME_FORMAT))
-	result := execSQLiteQueryInContainer(env.TEST_APP_NAME, env.DB_PATH_IN_CONTAINER, query)
-	if result != "" {
-		log.Fatalf("failed to add reservation %v %v", reservation, result)
-	}
-}
-
-func parseToReservation(line string) app.Reservation {
-	fields := strings.Split(line, "|")
-	if len(fields) != 8 {
-		log.Fatalf("unexpected output format for reservation: %s", line)
-	}
-
-	var r app.Reservation
-
-	parseIntField := func(value string, fieldName string) int {
-		v, err := parseInt(value)
-		if err != nil {
-			log.Fatalf("Reservation %s parsing error: %s", fieldName, line)
-		}
-		return v
-	}
-
-	parseTimeField := ParseDateField
-
-	r.ID = parseIntField(fields[0], "ID")
-	r.ItemID = parseIntField(fields[1], "ItemID")
-	r.UserID = parseIntField(fields[2], "UserID")
-	r.StartTime = parseTimeField(fields[3], "StartTime")
-	r.EndTime = parseTimeField(fields[4], "EndTime")
-	r.Status = fields[5]
-	r.CreatedAt = parseTimeField(fields[6], "CreatedAt")
-	r.ChangeByUID = parseIntField(fields[7], "ChangeByUID")
-
-	return r
-}
-
-func ParseDateField(value string, fieldName string) time.Time {
-	t, err := time.Parse(env.DB_TIME_FORMAT, value)
+		reservation.CreatedAt,
+	)
 	if err != nil {
-		log.Fatalf("%s parsing error: %s value %v", fieldName, err, value)
+		return fmt.Errorf("failed to insert reservation: %v", err)
 	}
-	return t.In(tests.LOCATION)
+	return nil
 }
 
-func parseToReservationsList(output string) []app.Reservation {
-	var reservations []app.Reservation
-	lines := strings.Split(output, "\n")
-	lines = lines[:len(lines)-1]
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-		r := parseToReservation(line)
-		reservations = append(reservations, r)
+// RemoveReservations removes all reservations from the database.
+func RemoveReservations() error {
+	env.ConnectToDB()
+	db := env.DB
+	query := "DELETE FROM reservations"
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to remove reservations: %v", err)
 	}
-	return reservations
-}
-
-func parseInt(value string) (int, error) {
-	var i int
-	_, err := fmt.Sscanf(value, "%d", &i)
-	return i, err
+	return nil
 }
