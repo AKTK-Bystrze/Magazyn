@@ -17,7 +17,7 @@ FROM frolvlad/alpine-glibc:latest AS production
 
 ARG EMAIL
 ARG EMAIL_PASS 
-ARG DSN=postgres://postgres:postgres@localhost:5433/magazyn?sslmode=disable
+ARG DSN=postgres://postgres:postgres@localhost:5432/magazyn?sslmode=disable
 ARG DEBUG=True
 
 ENV MAGAZYN_BYSTRZE_EMAIL_ADDR=${EMAIL}
@@ -46,4 +46,4 @@ FROM production AS test
 
 RUN apk --no-cache add bash busybox-extras
 
-CMD ["./main","127.0.0.1", "8080", "http://localhost:8080"]
+CMD ["./main","0.0.0.0", "8080", "http://localhost:8080"]

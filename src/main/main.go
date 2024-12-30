@@ -71,7 +71,7 @@ func setDb(dsn string) *sqlx.DB {
 	}
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err)
+		log.Fatalf("Failed to connect to the database: %v %v", dsn, err)
 	}
 	log.Printf("Connected to db: %v", dsn)
 	return db
