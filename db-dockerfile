@@ -6,8 +6,8 @@ ENV POSTGRES_USER=postgres
 ENV POSTGRES_PASSWORD=postgres
 ENV POSTGRES_DB=magazyn
 
-# Copy the initialization SQL script to the Docker entrypoint directory
-COPY init.sql /docker-entrypoint-initdb.d/
+# Copy the schema SQL and data SQL scripts to the Docker entrypoint directory
+COPY schema.sql /docker-entrypoint-initdb.d/
 
 # Expose the default PostgreSQL port
 EXPOSE 5432
