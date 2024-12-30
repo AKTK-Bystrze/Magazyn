@@ -144,8 +144,8 @@ func RunTests() {
 		}
 
 	}
-	log.Printf("Tessts passed : \n %v", passedTests)
-	log.Printf("Tessts failed : \n %v", failedTests)
+	log.Printf("Tests passed : \n %v", passedTests)
+	log.Printf("Tests failed : \n %v", failedTests)
 	if len(failedTests) != 0 {
 		os.Exit(1)
 	} else {
