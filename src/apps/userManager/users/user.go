@@ -6,9 +6,13 @@ import (
 	"fmt"
 )
 
+const (
+	SELECT_USER_WHERE = "SELECT u_username, u_id, u_role, u_credits, u_enabled FROM users WHERE"
+)
+
 func GetUserById(userId int) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = $1", userId)
+	err := appState.App.Db.Get(&u, SELECT_USER_WHERE+" u_id = $1", userId)
 	if err != nil {
 		appState.App.Debug("Can't get user by id %v", userId)
 	}
@@ -17,7 +21,7 @@ func GetUserById(userId int) (models.User, error) {
 
 func GetUserByEmail(email string) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_email = $1", email)
+	err := appState.App.Db.Get(&u, SELECT_USER_WHERE+" u_email = $1", email)
 	if err != nil {
 		appState.App.Debug("Can't get user by email %v %v", email, err.Error())
 	}
@@ -26,7 +30,7 @@ func GetUserByEmail(email string) (models.User, error) {
 
 func GetByUserName(name string) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = $1", name)
+	err := appState.App.Db.Get(&u, SELECT_USER_WHERE+" u_username = $1", name)
 	if err != nil {
 		appState.App.Debug("Can't get user by name %v %v", name, err.Error())
 	}
