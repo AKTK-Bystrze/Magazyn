@@ -25,12 +25,10 @@ func main() {
 	MAGAZYN_BYSTRZE_EMAIL_ADDR := os.Getenv("MAGAZYN_BYSTRZE_EMAIL_ADDR")
 	SMTP_HOST := os.Getenv("SMTP_HOST")
 	SMTP_PORT := os.Getenv("SMTP_PORT")
-
-	IP, PORT, SERVER := getArgs()
-	ENV_PORT := os.Getenv("PORT")
-	if ENV_PORT != "" {
-		PORT = ENV_PORT
-	}
+	IP := os.Getenv("IP")
+	SERVER := os.Getenv("SERVER")
+	PORT := os.Getenv("PORT")
+	checkEnv(IP, PORT)
 
 	DSN := os.Getenv("DATABASE_URL")
 	db := setDb(DSN)
@@ -82,15 +80,11 @@ func setDb(dsn string) *sqlx.DB {
 	return db
 }
 
-func getArgs() (string, string, string) {
-	if len(os.Args) != 4 {
-		fmt.Fprintf(os.Stderr, "Wrong arguments. Use: %s IP PORT DOMAIN \n", os.Args[0])
+func checkEnv(ip string, port string) {
+	if ip == "" || port == "" {
+		log.Fatal("No IP or PORT os env \n")
 		os.Exit(1)
 	}
-	IP := os.Args[1]
-	PORT := os.Args[2]
-	SERVER := os.Args[3]
-	return IP, PORT, SERVER
 }
 
 func setLocation() {

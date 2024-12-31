@@ -31,7 +31,7 @@ func SetTokenTransportMean() {
 			smtp.PlainAuth(
 				"",
 				emailConst.MAGAZYN_BYSTRZE_EMAIL_LOGIN,
-				os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS"),
+				os.Getenv("MAGAZYN_BYSTRZE_EMAIL_PASS"),
 				emailConst.SMTP_HOST),
 			emailService.EmailWriter,
 		), passwordless.NewCrockfordGenerator(app.TOKEN_LENGTH), app.LOGIN_LINK_VALIDITY_MIN*time.Minute)

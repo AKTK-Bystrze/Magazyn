@@ -17,8 +17,10 @@ FROM frolvlad/alpine-glibc:latest AS production
 
 ARG EMAIL
 ARG EMAIL_PASS 
+ARG COOKIE_KEY
 ARG DSN=postgres://postgres:postgres@localhost:5432/magazyn?sslmode=disable
 ARG DEBUG=True
+ARG SERVER=http://localhost:8080
 
 ENV MAGAZYN_BYSTRZE_EMAIL_ADDR=${EMAIL}
 ENV MAGAZYN_BYSTRZE_EMAIL_PASS=${EMAIL_PASS}
@@ -27,6 +29,9 @@ ENV SMTP_HOST=smtp.gmail.com
 ENV SMTP_PORT=587
 ENV DEBUG=${DEBUG}
 ENV DATABASE_URL =${DSN}
+ENV IP=0.0.0.0
+ENV PORT=8080
+ENV SERVER=${SERVER}
 
 RUN apk --no-cache add sqlite tzdata
 ENV TZ=Europe/Warsaw
@@ -46,4 +51,4 @@ FROM production AS test
 
 RUN apk --no-cache add bash busybox-extras
 
-CMD ["./main","0.0.0.0", "8080", "http://localhost:8080"]
+CMD ["./main"]

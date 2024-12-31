@@ -40,7 +40,7 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
 Zmienne środowiskowe pobierane przez aplikację:
 - COOKIE_KEY - klucz ciasteczka. W przypadku braku generowana jest losowa wartość.
 - MAGAZYN_BYSTRZE_EMAIL_ADDR - adres konta email wykorzystywanego do wysyłania emaili przez aplikację.
-- MAGAZYM_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
+- MAGAZYN_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
 - SMTP_HOST np: smtp.gmail.com
 - SMTP_PORT np: 587
 - DEBUG - tryb debugowania true lub false
