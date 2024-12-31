@@ -8,6 +8,8 @@ require github.com/PuerkitoBio/goquery v1.10.0
 
 require github.com/mattn/go-sqlite3 v1.14.24
 
+require github.com/lib/pq v1.10.9 // indirect
+
 require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/jmoiron/sqlx v1.4.0

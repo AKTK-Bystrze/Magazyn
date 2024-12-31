@@ -18,6 +18,7 @@ type Item struct {
 	Name        string
 	Description string
 	Type        string
+	Status      string
 }
 
 type Reservation struct {
@@ -37,7 +38,7 @@ type ReservationAudit struct {
 	UserID        int       `json:"user_id"`
 	Status        string    `json:"status"`
 	ChangeDate    time.Time `json:"change_date"`
-	Auditor       string
+	Auditor       string    `json:"auditor"`
 }
 
 var ITMEMS = []string{KayakB1}

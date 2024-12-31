@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: . 
+      dockerfile: app-dockerfile  
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/magazyn?sslmode=disable
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    build:
+      context: . 
+      dockerfile: db-dockerfile
+    environment:
+      POSTGRES_DB: magazyn
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

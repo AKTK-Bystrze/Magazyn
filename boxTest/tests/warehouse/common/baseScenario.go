@@ -17,6 +17,7 @@ var (
 
 func TestSetUp() {
 	log.Print("\n\tSET UP...")
+	env.ConnectToDB()
 	User = app.UserClient{
 		User:   db.USERS_MAP[app.UserName1],
 		Client: app.CreateHttpClient(),

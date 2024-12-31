@@ -16,7 +16,7 @@ import (
 func SendEmail(receiver models.User, subject string, message string) error {
 
 	senderEmail := appState.MAGAZYN_BYSTRZE_EMAIL_ADDR
-	senderPassword := os.Getenv("MAGAZYM_BYSTRZE_EMAIL_PASS")
+	senderPassword := os.Getenv("MAGAZYN_BYSTRZE_EMAIL_PASS")
 
 	receiverEmail := []string{receiver.Email}
 	auth := smtp.PlainAuth("", senderEmail, senderPassword, appState.SMTP_HOST)

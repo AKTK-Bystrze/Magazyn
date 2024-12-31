@@ -7,7 +7,10 @@ import (
 	"bystrze/apps/warehouse/appState"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // reservationStatus
@@ -47,7 +50,7 @@ func GetReservation(id int) (*models.Reservation, error) {
 	JOIN 
 		users u ON r.r_user_id = u.u_id
 	WHERE 
-		r.r_id = ?`
+		r.r_id = $1`
 	row := appState.App.Db.Unsafe().QueryRowx(query, id)
 	var r models.Reservation
 	var t models.TmpReservation
@@ -79,9 +82,9 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 	}
 	query += " JOIN items i ON r.r_item_id = i.i_id "
 	if conf.OneUser {
-		query += " WHERE r.r_user_id = ? "
+		query += " WHERE r.r_user_id = $1 "
 	} else if conf.OneItem {
-		query += " WHERE i.i_id = ? "
+		query += " WHERE i.i_id = $1 "
 	}
 	if conf.OrderByStart {
 		query += " ORDER BY r.r_start_time "
@@ -95,7 +98,15 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 	}
 	//	allow columns without match in structure
 	udb := appState.App.Db.Unsafe()
-	rows, err := udb.Queryx(query, conf.SelectionId)
+
+	var rows *sqlx.Rows
+	var err error
+
+	if strings.Contains(query, "$1") {
+		rows, err = udb.Queryx(query, conf.SelectionId)
+	} else {
+		rows, err = udb.Queryx(query)
+	}
 
 	if err != nil {
 		appState.App.Err("GetReservations %v", err.Error())
@@ -158,7 +169,7 @@ func GetPastFutureReservations(reservations []models.Reservation) ([]models.Rese
 }
 
 func AddReservation(reservation models.Reservation) error {
-	stmt, err := appState.App.Db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES (?, ?, ?, ?, ?, ?)")
+	stmt, err := appState.App.Db.Prepare("INSERT INTO reservations (r_item_id, r_user_id, r_changeby_uid, r_start_time, r_end_time, r_status) VALUES ($1, $2, $3, $4, $5, $6)")
 	if err != nil {
 		appState.App.Err("%v %v", "Cant create reservation", err.Error())
 		return err
@@ -171,14 +182,14 @@ func AddReservation(reservation models.Reservation) error {
 		reservation.EndTime.UTC().Format(timeSet.OUT_TIME_FMT),
 		reservation.Status)
 	if err != nil {
-		appState.App.Err("%v %v", "canr insert reservation", err.Error())
+		appState.App.Debug("%v %v", "cant insert reservation", err.Error())
 		return err
 	}
 	return nil
 }
 
 func UpdateReservationStatus(reservation models.Reservation, status string, w http.ResponseWriter, changingUserId int) {
-	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_status = ?,r_changeby_uid = ? WHERE r_id = ?`, status, changingUserId, reservation.ID)
+	result, err := appState.App.Db.Exec(`UPDATE reservations SET r_status = $1,r_changeby_uid = $2 WHERE r_id = $3`, status, changingUserId, reservation.ID)
 	if err != nil {
 		appState.App.Err("updateReservationStatus %v", err.Error())
 		http.Error(w, "DB Error", http.StatusInternalServerError)
@@ -205,7 +216,7 @@ func UpdateReservationsDate(reservation models.Reservation, field string, newTim
 		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
 	}
 	newTimeFormated := newTime.Format(timeSet.OUT_TIME_FMT)
-	query := fmt.Sprintf(`UPDATE reservations SET %v = ?,r_changeby_uid = ? WHERE r_id = ?`, field)
+	query := fmt.Sprintf(`UPDATE reservations SET %v = $1,r_changeby_uid = $2 WHERE r_id = $3`, field)
 	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
 	if err != nil {
 		appState.App.Err("updateReservationEndDate %v", err.Error())
@@ -229,7 +240,7 @@ func UpdateReservationsDate(reservation models.Reservation, field string, newTim
 func GetReservationHistory(reservationID int) ([]models.ReservationAudit, error) {
 	udb := appState.App.Db.Unsafe()
 	var history []models.ReservationAudit
-	rows, err := udb.Queryx("SELECT ra.*,u.u_username FROM reservation_audit ra JOIN users u ON ra.ra_user_id == u.u_id WHERE ra_reservation_id = ? ORDER BY ra_change_date", reservationID)
+	rows, err := udb.Queryx("SELECT ra.*,u.u_username FROM reservation_audit ra JOIN users u ON ra.ra_user_id = u.u_id WHERE ra_reservation_id = $1 ORDER BY ra_change_date", reservationID)
 	if err != nil {
 		appState.App.Err("%v %v", "Scanning history", err.Error())
 		return nil, err

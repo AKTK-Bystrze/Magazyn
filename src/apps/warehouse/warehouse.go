@@ -10,12 +10,10 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-func CreateWarehouseApp(db apps.Database, dbPath string, dbName string, store sessions.Store,
+func CreateWarehouseApp(db apps.Database, store sessions.Store,
 	server string, appName string, router *mux.Router) apps.App {
 	appState.App = apps.App{
 		Db:      db,
-		DbPath:  dbPath,
-		DbName:  dbName,
 		Store:   store,
 		Server:  server,
 		AppName: appName,

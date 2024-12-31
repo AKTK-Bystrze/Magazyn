@@ -6,6 +6,8 @@ import (
 	"bystrze/apps/warehouse/appState"
 	"database/sql"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type tmpItem2 struct {
@@ -19,12 +21,12 @@ type tmpItem2 struct {
 }
 
 func GetItem(itemID int) (*models.Item, error) {
-	query := `SELECT * FROM items WHERE i_id = ?`
+	query := `SELECT * FROM items WHERE i_id = $1`
 	row := appState.App.Db.QueryRowx(query, itemID)
 	var item models.Item
 	err := row.StructScan(&item)
 	if err != nil {
-		appState.App.Err("GetItem %v", err.Error())
+		appState.App.Debug("GetItem %v %v", itemID, err.Error())
 		return nil, err
 	}
 	return &item, nil
@@ -40,20 +42,26 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 	query += " FROM items i "
 	if conf.WithCurReservation {
 		//  TODO: this search may require app-privided value for 'now'
-		query += ` LEFT JOIN reservations r ON i.i_id = r.r_item_id AND r.r_start_time <= datetime('now', 'localtime') AND r.r_end_time >= datetime('now', 'localtime') AND r.r_status != 'denied'
+		query += ` LEFT JOIN reservations r ON i.i_id = r.r_item_id AND r.r_start_time <= NOW() AND r.r_end_time >= NOW() AND r.r_status != 'denied'
     LEFT JOIN users u ON r.r_user_id = u.u_id  `
 	}
+	var rows *sqlx.Rows
+	var err error
 	if conf.Available {
 		query += ` WHERE i_id NOT IN (
       SELECT r_item_id
       FROM reservations
-      WHERE r_start_time < ? AND r_end_time > ? AND r_status != 'denied'
-    ) AND i_status == 'ok' `
+      WHERE r_start_time < $1 AND r_end_time > $2 AND r_status != 'denied'
+    ) AND i_status = 'ok' `
+		rows, err = appState.App.Db.Queryx(query,
+			conf.EndTime.Format(timeSet.OUT_TIME_FMT),
+			conf.StartTime.Format(timeSet.OUT_TIME_FMT))
+	} else {
+		rows, err = appState.App.Db.Queryx(query)
 	}
-	rows, err := appState.App.Db.Queryx(query,
-		conf.EndTime.Format(timeSet.OUT_TIME_FMT),
-		conf.StartTime.Format(timeSet.OUT_TIME_FMT))
+
 	if err != nil {
+		appState.App.Debug("GetItems %v %v %v", query, conf, err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -63,6 +71,7 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 	for rows.Next() {
 		var tmpItem tmpItem2
 		if err := rows.StructScan(&tmpItem); err != nil {
+			appState.App.Debug("GetItems %v %v %v", rows, conf, err.Error())
 			return nil, err
 		}
 
@@ -81,6 +90,7 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 		items = append(items, out)
 	}
 	if err := rows.Err(); err != nil {
+		appState.App.Debug("GetItems %v %v", conf, err.Error())
 		return nil, err
 	}
 	return items, nil
@@ -88,12 +98,12 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 
 func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error) {
 	// check if the requested reservation period is outside of any existing reservation
-	query := `SELECT count(*) FROM reservations WHERE r_item_id=? AND r_end_time > ? AND r_start_time < ? AND r_status != 'denied'`
+	query := `SELECT count(*) FROM reservations WHERE r_item_id=$1 AND r_end_time > $2 AND r_start_time < $3 AND r_status != 'denied'`
 	row := appState.App.Db.QueryRow(query, itemID, start.Format(timeSet.OUT_TIME_FMT), end.Format(timeSet.OUT_TIME_FMT))
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
-		appState.App.Err("CheckAvailability %v", err.Error())
+		appState.App.Debug("CheckAvailability %v %v %v %v", start, end, itemID, err.Error())
 		return false, err
 	}
 	if count > 0 {
@@ -103,10 +113,14 @@ func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error)
 }
 
 func UpdateItemStatus(itemID int, status string) error {
-	stmt, err := appState.App.Db.Prepare("UPDATE items SET i_status = ? WHERE i_id = ?")
+	stmt, err := appState.App.Db.Prepare("UPDATE items SET i_status = $1 WHERE i_id = $2")
 	if err != nil {
+		appState.App.Debug("UpdateItemStatus %v %v %v", itemID, status, err.Error())
 		return err
 	}
 	_, err = stmt.Exec(status, itemID)
+	if err != nil {
+		appState.App.Debug("UpdateItemStatus %v %v %v", itemID, status, err.Error())
+	}
 	return err
 }
