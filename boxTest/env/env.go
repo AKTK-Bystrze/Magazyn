@@ -44,8 +44,9 @@ func composeContainers() {
 		log.Printf("Error running Docker Compose: %v\n", err)
 		os.Exit(1)
 	}
-
-	log.Println("Docker Compose ran successfully.")
+	log.Printf("WAIT for app to deploy...")
+	time.Sleep(time.Second * 10)
+	log.Print("App deployed")
 }
 
 func ConnectToDB() {
