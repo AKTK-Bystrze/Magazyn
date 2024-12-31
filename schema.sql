@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
     u_password_hash TEXT,
     u_email TEXT NOT NULL UNIQUE,
     u_role TEXT NOT NULL DEFAULT 'user',
-    u_credits INTEGER
+    u_credits INTEGER,
+    u_enabled BOOLEAN DEFAULT FALSE
 );
 
 -- Create 'items' table

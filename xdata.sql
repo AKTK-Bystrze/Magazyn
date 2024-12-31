@@ -19,9 +19,9 @@ INSERT INTO items (i_name, i_description, i_status, i_type) VALUES
 
 -- Insert into users table
 INSERT INTO users ( u_username, u_role, u_email, u_credits) VALUES
-( 'kursant2', 'user', 'kursant2@bystrzeEmail.pl', 900),
-( 'kursant1', 'user', 'kursant1@bystrzeEmail.com', 900),
-( 'admin1', 'admin', 'admin1@bystrzeEmail.com', 900),
-( 'admin2', 'admin ninja', 'admin2@bystrzeEmail.com', 900),
-( 'ninja', 'ninja', 'ninja@bystrzeEmail.com', 900),
-( 'superAdmin', 'superAdmin admin ninja', 'superAdmin@bystrzeEmail.com', 900);
+( 'kursant2', 'user', 'kursant2@bystrzeEmail.pl', 900, TRUE),
+( 'kursant1', 'user', 'kursant1@bystrzeEmail.com', 900, TRUE),
+( 'admin1', 'admin', 'admin1@bystrzeEmail.com', 900, TRUE),
+( 'admin2', 'admin ninja', 'admin2@bystrzeEmail.com', 900, TRUE),
+( 'ninja', 'ninja', 'ninja@bystrzeEmail.com', 900, FALSE),
+( 'superAdmin', 'superAdmin admin ninja', 'superAdmin@bystrzeEmail.com', 900, TRUE);

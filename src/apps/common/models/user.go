@@ -6,4 +6,5 @@ type User struct {
 	Email   string `db:"u_email"`
 	Role    string `db:"u_role"`
 	Credits int    `db:"u_credits"`
+	Enabled bool   `db:"u_enabled"`
 }
