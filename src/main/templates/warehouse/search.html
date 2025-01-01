@@ -1,154 +1,160 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>Wyszukaj Sprzet</title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wyszukaj Sprzet</title>
     {{ template "stylesInclude" }}
     {{ template "scriptsInclude" }}
-	</head>
-	<body>
-		{{ template "navbar" .UserInfo }}
-		<div class="container">
-			<h2 class="my-3">Wyszukaj Sprzet</h2>
-			{{ if .Msg }}
-			<div class="alert alert-danger">{{ .Msg }}</div>
-			{{ end }}
-			{{ template "searchForm" . }}
-			<div hidden id="reservedItem-div">
-				<h2 class="mt-5">Zarezerwowany Sprzet:</h2>
-				<div class="list-group" id="reservedItem-list">
-				</div>
-			</div>
-			{{ if .AvailableItems }}
-			<h2 class="mt-5">Dostepny Sprzet:</h2>
-			<div class="input-group mb-3">
-				<input type="text" class="form-control" placeholder="Filtruj" id="item-search-input">
-				<div class="input-group-append">
-					<button class="btn btn-primary" type="button" id="item-search-button" >Filtruj</button>
-          <button class="btn btn-secondary" type="button" id="item-reset-button" >Resetuj</button>
-				</div>
-			</div>
-			<div class="list-group" id="item-list">
-				{{ range .AvailableItems }}
-				<a href="#" class="list-group-item list-group-item-action item" id="rent_item_{{ .ID }}">
-					<h4 class="mb-1" name="name">{{ .Name }}</h4>
-					<p class="mb-1" name="description">{{ .Description }}</p>
-					<p class="mb-1"><strong>ID:</strong> {{ .ID }}</p>
-					<p class="mb-1"><strong>Type:</strong> {{ .Type }}</p>
-					<div class="text">
-						<form method="POST" id="rent_form_{{ .ID }}" action="javascript:reserveItem({{ .ID }}, 'rent_form')">
-							<input type="hidden" name="start_time" value="{{ $.StartTime.Format "2006-01-02T15:04" }}">
-							<input type="hidden" name="end_time" value="{{ $.EndTime.Format "2006-01-02T15:04" }}">
-							<input type="hidden" name="item_id" value="{{ .ID }}">
-							<button type="submit" class="btn btn-primary">Rezerwuj</button>
-						</form>
-					</div>
-				</a>
-				{{ end }}
-			</div>
-			{{ end }}
-		</div>
-		<script type="text/javascript">
-			$(document).ready(function() {
-				// Filter the list on button click
-				$("#item-search-button").on("click", function() {
-					let filterValue = $("#item-search-input").val().toLowerCase();
-					$(".list-group .list-group-item").each(function() {
-						let text = $(this).text().toLowerCase();
-						if (text.indexOf(filterValue) > -1) {
-							$(this).show();
-						} else {
-							$(this).hide();
-						}
-					});
-				});
+</head>
 
-				// Filter the list on enter key press
-				$("#item-search-input").on("keypress", function(event) {
-					if (event.which === 13) {
-						event.preventDefault();
-						$("#item-search-button").click();
-					}
-				});
+<body>
+    {{ template "navbar" .UserInfo }}
 
-				$("#item-search-input").keyup(function(event) {
-		$("#item-search-button").click();
-				});
+    <div class="container">
+        <h2 class="my-3">Wyszukaj Sprzet</h2>
 
-				// Reset the filter
-				$("#item-reset-button").on("click", function() {
-					$("#item-search-input").val("");
-					$(".list-group .list-group-item").show();
-				});
+        {{ if .Msg }}
+        <div class="alert alert-danger">{{ .Msg }}</div>
+        {{ end }}
 
-			});
+        {{ template "searchForm" . }}
 
-			$("#start_time, #end_time").on("change", function() {
-				if (!moment($("#end_time").val()).isAfter($("#start_time").val(), 'second')) {
-				const startTime = moment($("#start_time").val());
-				const endTime = moment(startTime).add(1, "day");
-				$("#end_time").val(endTime.format("YYYY-MM-DDTHH:mm"));
-				} 
-			});
+        <div hidden id="reservedItem-div">
+            <h2 class="mt-5">Zarezerwowany Sprzet:</h2>
+            <div class="list-group" id="reservedItem-list"></div>
+        </div>
 
-			function reserveItem(reservationId, formPrefix, status = null) {
-				var formData = $("#" + formPrefix + "_" + reservationId).serialize();
-				fetch('/warehouse/user/reserve', {
-					method: 'POST',
-					headers: {
-						"Content-Type": "application/x-www-form-urlencoded"
-					},
-					body: formData,
-				})
-				.then(async response => {
-					if (response.ok) {
-						addItemToReservedList("rent_item",reservationId)
-						hideReservedItem(reservationId)
-						alert("zarezerwowano");
-					} else {
-						const errorData = await response.json();
-						if (errorData.error) {
-							alert("Błąd: " + errorData.error);
-						}
-					}
-				})
-				.catch(error => {
-					console.error('Network error:', error);
-					alert("Błąd sieci: " + error);
-				});
-			}
-			function addItemToReservedList(formPrefix,reservationId){
-				document.getElementById('reservedItem-div').removeAttribute('hidden');
-				const listContainer = document.getElementById('reservedItem-list');
-				const newItem = document.createElement('div');
-				newItem.className = 'list-group-item';
+        {{ if .AvailableItems }}
+        <h2 class="mt-5">Dostepny Sprzet:</h2>
 
-				const title = document.createElement('h4');
-				const description = document.createElement('p');
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Filtruj" id="item-search-input">
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="button" id="item-search-button">Filtruj</button>
+                <button class="btn btn-secondary" type="button" id="item-reset-button">Resetuj</button>
+            </div>
+        </div>
 
-				var id = formPrefix +'_' + reservationId;
+        <div class="list-group" id="item-list">
+            {{ range .AvailableItems }}
+            <a href="#" class="list-group-item list-group-item-action item" id="rent_item_{{ .ID }}">
+                <h4 class="mb-1" name="name">{{ .Name }}</h4>
+                <p class="mb-1" name="description">{{ .Description }}</p>
+                <p class="mb-1"><strong>ID:</strong> {{ .ID }}</p>
+                <p class="mb-1"><strong>Type:</strong> {{ .Type }}</p>
 
-				var itemLink = $('#' + id);
-				var titleValue = $('#' + id + ' h4[name="name"]');
-				var descriptionValue = $('#' + id + ' p[name="description"]');
+                <div class="text">
+                    <form method="POST" id="rent_form_{{ .ID }}" action="javascript:reserveItem({{ .ID }}, 'rent_form')">
+                        <input type="hidden" name="start_time" value="{{ $.StartTime.Format "2006-01-02T15:04" }}">
+                        <input type="hidden" name="end_time" value="{{ $.EndTime.Format "2006-01-02T15:04" }}">
+                        <input type="hidden" name="item_id" value="{{ .ID }}">
+                        <button type="submit" class="btn btn-primary">Rezerwuj</button>
+                    </form>
+                </div>
+            </a>
+            {{ end }}
+        </div>
+        {{ end }}
+    </div>
 
-				title.textContent = titleValue.text(); 
-				description.textContent = descriptionValue.text();
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // Filter the list on button click
+            $("#item-search-button").on("click", function () {
+                let filterValue = $("#item-search-input").val().toLowerCase();
+                $(".list-group .list-group-item").each(function () {
+                    let text = $(this).text().toLowerCase();
+                    $(this).toggle(text.indexOf(filterValue) > -1);
+                });
+            });
 
-				newItem.appendChild(title);
-				newItem.appendChild(description);
-				listContainer.appendChild(newItem);
-			}
-		function hideReservedItem(itemId){
-			const itemElement = document.getElementById(`rent_item_${itemId}`);
+            // Filter the list on enter key press
+            $("#item-search-input").on("keypress", function (event) {
+                if (event.which === 13) {
+                    event.preventDefault();
+                    $("#item-search-button").click();
+                }
+            });
 
-			if (itemElement) {
-				itemElement.remove();
-			} else {
-				console.log(`Item with ID ${itemId} not found.`);
-			}
-		}
-		</script>
-	</body>
+            // Reset the filter
+            $("#item-reset-button").on("click", function () {
+                $("#item-search-input").val("");
+                $(".list-group .list-group-item").show();
+            });
+
+            // Ensure the end time is after the start time
+            $("#start_time, #end_time").on("change", function () {
+                if (!moment($("#end_time").val()).isAfter($("#start_time").val(), 'second')) {
+                    const startTime = moment($("#start_time").val());
+                    const endTime = moment(startTime).add(1, "day");
+                    $("#end_time").val(endTime.format("YYYY-MM-DDTHH:mm"));
+                }
+            });
+        });
+
+        // Function to handle item reservation
+        function reserveItem(reservationId, formPrefix, status = null) {
+            var formData = $("#" + formPrefix + "_" + reservationId).serialize();
+            fetch('/warehouse/user/reserve', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData,
+            })
+                .then(async response => {
+                    if (response.ok) {
+                        addItemToReservedList("rent_item", reservationId);
+                        hideReservedItem(reservationId);
+                        alert("zarezerwowano");
+                    } else {
+                        const errorData = await response.json();
+                        if (errorData.error) {
+                            alert("Błąd: " + errorData.error);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Network error:', error);
+                    alert("Błąd sieci: " + error);
+                });
+        }
+
+        // Function to add item to reserved list
+        function addItemToReservedList(formPrefix, reservationId) {
+            document.getElementById('reservedItem-div').removeAttribute('hidden');
+            const listContainer = document.getElementById('reservedItem-list');
+            const newItem = document.createElement('div');
+            newItem.className = 'list-group-item';
+
+            const title = document.createElement('h4');
+            const description = document.createElement('p');
+
+            var id = formPrefix + '_' + reservationId;
+            var itemLink = $('#' + id);
+            var titleValue = $('#' + id + ' h4[name="name"]').text();
+            var descriptionValue = $('#' + id + ' p[name="description"]').text();
+
+            title.textContent = titleValue;
+            description.textContent = descriptionValue;
+
+            newItem.appendChild(title);
+            newItem.appendChild(description);
+            listContainer.appendChild(newItem);
+        }
+
+        // Function to hide the reserved item from the available list
+        function hideReservedItem(itemId) {
+            const itemElement = document.getElementById(`rent_item_${itemId}`);
+            if (itemElement) {
+                itemElement.remove();
+            } else {
+                console.log(`Item with ID ${itemId} not found.`);
+            }
+        }
+    </script>
+</body>
+
 </html>
