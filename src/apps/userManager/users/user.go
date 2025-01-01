@@ -6,9 +6,14 @@ import (
 	"fmt"
 )
 
+const (
+	SELECT_USER       = `SELECT u_id, u_username, u_role, u_credits, u_enabled FROM users`
+	SELECT_USER_WHERE = SELECT_USER + " WHERE"
+)
+
 func GetUserById(userId int) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_id = $1", userId)
+	err := appState.App.Db.Get(&u, SELECT_USER_WHERE+" u_id = $1", userId)
 	if err != nil {
 		appState.App.Debug("Can't get user by id %v", userId)
 	}
@@ -17,7 +22,7 @@ func GetUserById(userId int) (models.User, error) {
 
 func GetUserByEmail(email string) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_email = $1", email)
+	err := appState.App.Db.Get(&u, SELECT_USER_WHERE+" u_email = $1", email)
 	if err != nil {
 		appState.App.Debug("Can't get user by email %v %v", email, err.Error())
 	}
@@ -26,7 +31,7 @@ func GetUserByEmail(email string) (models.User, error) {
 
 func GetByUserName(name string) (models.User, error) {
 	var u models.User
-	err := appState.App.Db.Get(&u, "SELECT u_username, u_id, u_role, u_credits FROM users WHERE u_username = $1", name)
+	err := appState.App.Db.Get(&u, SELECT_USER_WHERE+" u_username = $1", name)
 	if err != nil {
 		appState.App.Debug("Can't get user by name %v %v", name, err.Error())
 	}
@@ -34,7 +39,7 @@ func GetByUserName(name string) (models.User, error) {
 }
 
 func GetUsers() ([]models.User, error) {
-	query := `SELECT u_id, u_username, u_role, u_credits FROM users`
+	query := SELECT_USER
 
 	rows, err := appState.App.Db.Queryx(query)
 	if err != nil {
@@ -47,7 +52,7 @@ func GetUsers() ([]models.User, error) {
 	for rows.Next() {
 		var user models.User
 
-		err := rows.Scan(&user.ID, &user.Name, &user.Role, &user.Credits)
+		err := rows.Scan(&user.ID, &user.Name, &user.Role, &user.Credits, &user.Enabled)
 		if err != nil {
 			appState.App.Debug("Can't get users %v", err.Error())
 			return nil, err
@@ -62,8 +67,8 @@ func GetUsers() ([]models.User, error) {
 }
 
 func UpdateUser(user models.User) error {
-	query := `UPDATE users SET u_credits = %v, u_role = '%v' WHERE u_id IN (%v)`
-	queryCompleted := fmt.Sprintf(query, user.Credits, user.Role, user.ID)
+	query := `UPDATE users SET u_credits = %v, u_role = '%v', u_enabled = %v WHERE u_id IN (%v)`
+	queryCompleted := fmt.Sprintf(query, user.Credits, user.Role, user.Enabled, user.ID)
 	_, err := appState.App.Db.Exec(queryCompleted)
 	if err != nil {
 		appState.App.Debug("UpdateUser %v %v", user.Name, err.Error())

@@ -216,3 +216,8 @@ func handleErrorWithRedirect(w http.ResponseWriter, r *http.Request, msg string,
 	app.App.Err("%v %v %v", sessionPkg.GetSessionUserName(r), msg, err.Error())
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
+
+func UserIsDisabled(w http.ResponseWriter, r *http.Request) {
+	app.App.Info("%v is disabled", sessionPkg.GetSessionUserName(r))
+	app.App.RenderTemplateNoData(w, "disabled.html")
+}
