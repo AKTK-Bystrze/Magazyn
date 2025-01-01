@@ -73,7 +73,16 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		user.Role = userRole
 	}
-
+	userEnabled := r.FormValue("enabled")
+	if userEnabled == "on" {
+		user.Enabled = true
+	} else if userEnabled == "" {
+		user.Enabled = false
+	} else {
+		appState.App.Err("%v invalid enbaled value", session.GetSessionUserName(r))
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 	appState.App.Debug("%v Requested update of user: %v", session.GetSessionUserName(r), user.Name)
 	err = users.UpdateUser(user)
 	if err != nil {
@@ -85,7 +94,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		appState.App.Debug("%v user requested changes for his own role, relogin is needed", session.GetSessionUserName(r))
 		Logout(w, r)
 	}
-	appState.App.Debug("%v updated user %v credits to %v and roles to %v", session.GetSessionUserName(r), user.Name, user.Credits, user.Role)
+	appState.App.Debug("%v updated user %v credits to %v roles to %v enabled to %v", session.GetSessionUserName(r), user.Name, user.Credits, user.Role, user.Enabled)
 	w.WriteHeader(http.StatusOK)
 }
 

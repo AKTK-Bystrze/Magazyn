@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	SELECT_USER_WHERE = "SELECT u_username, u_id, u_role, u_credits, u_enabled FROM users WHERE"
+	SELECT_USER       = `SELECT u_id, u_username, u_role, u_credits, u_enabled FROM users`
+	SELECT_USER_WHERE = SELECT_USER + " WHERE"
 )
 
 func GetUserById(userId int) (models.User, error) {
@@ -38,7 +39,7 @@ func GetByUserName(name string) (models.User, error) {
 }
 
 func GetUsers() ([]models.User, error) {
-	query := `SELECT u_id, u_username, u_role, u_credits FROM users`
+	query := SELECT_USER
 
 	rows, err := appState.App.Db.Queryx(query)
 	if err != nil {
@@ -51,7 +52,7 @@ func GetUsers() ([]models.User, error) {
 	for rows.Next() {
 		var user models.User
 
-		err := rows.Scan(&user.ID, &user.Name, &user.Role, &user.Credits)
+		err := rows.Scan(&user.ID, &user.Name, &user.Role, &user.Credits, &user.Enabled)
 		if err != nil {
 			appState.App.Debug("Can't get users %v", err.Error())
 			return nil, err
@@ -66,8 +67,8 @@ func GetUsers() ([]models.User, error) {
 }
 
 func UpdateUser(user models.User) error {
-	query := `UPDATE users SET u_credits = %v, u_role = '%v' WHERE u_id IN (%v)`
-	queryCompleted := fmt.Sprintf(query, user.Credits, user.Role, user.ID)
+	query := `UPDATE users SET u_credits = %v, u_role = '%v', u_enabled = %v WHERE u_id IN (%v)`
+	queryCompleted := fmt.Sprintf(query, user.Credits, user.Role, user.Enabled, user.ID)
 	_, err := appState.App.Db.Exec(queryCompleted)
 	if err != nil {
 		appState.App.Debug("UpdateUser %v %v", user.Name, err.Error())

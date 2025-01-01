@@ -8,6 +8,7 @@
       <th>Imie</th>
       <th>Uprawnienia</th>
       <th>Godzinki</th>
+      <th>Dostęp</th>
       <th>Akcje</th>
     </tr>
   </thead>
@@ -22,6 +23,9 @@
       </td>
       <td>
         <input type="text" placeholder="{{ .Credits }}" id="credits-{{.ID}}" name="credits">
+      </td>
+      <td>
+        <input type="checkbox" {{if .Enabled}}checked{{end}} id="enabled-{{.ID}}" name="enabled">
       </td>
       <td>
         <button type="button" class="btn btn-primary" onclick="userAction('{{.ID}}')">Aktualizuj</button>
@@ -44,16 +48,16 @@
     var formData = new FormData()
     var role = document.getElementById('role-' + userId);
     var credits = document.getElementById('credits-' + userId);
-    if(role.value == credits.value){
-      alert("Nie ma zmian do wprowadzenia")
-      return
-    }
+    var enabled = document.getElementById('enabled-' + userId);
     let params = new URLSearchParams(formData);
     if(role.value != ""){
       params.set('role', role.value);
     }
     if(credits.value != ''){
       params.set('credits', credits.value);
+    }
+    if(enabled.checked != ''){
+      params.set('enabled', enabled.value);
     }
     params.set('ID', userId);
     
