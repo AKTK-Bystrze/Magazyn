@@ -8,14 +8,11 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
 
 - [Magazyn](#magazyn)
 - [Jak uruchomić](#jak-uruchomić)
-  - [Args](#args)
   - [Zmienne środowiskowe](#zmienne-środowiskowe)
     - [Konfiguracja](#konfiguracja)
       - [Windows VS Code (GO)](#windows-vs-code-go)
   - [Passwordless authentication](#passwordless-authentication)
     - [Konfiguracja](#konfiguracja-1)
-  - [Baza danych](#baza-danych)
-  - [Run](#run)
 - [Budowa](#budowa)
   - [Apps](#apps)
   - [API](#api)
@@ -24,26 +21,37 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
   - [Unit testy](#unit-testy)
   - [BoxTest](#boxtest)
     - [Budowa](#budowa-1)
-    - [Run](#run-1)
+    - [Run](#run)
     - [Uwagi](#uwagi)
 
 # Jak uruchomić
-## Args
+1. Za pomocą docker-compose
+```bash
+docker-compose up --build -d
+```
+2. Uruchomić bazę danych postgres i aplikację lokalnie
+   1. Kontener postgres
+      ```bash
+      docker build -t postgres -f db-dockerfile .
+      ```
+   2. Aplikację uruchomić zgodnie z dalszą instrukcją
 
-["127.0.0.1", "8080", "http://localhost:8080", "../../magazyn.db"]
-1. IP "127.0.0.1"
-2. Port "8080"
-3. Server "http://localhost:8080"
-4. lokalizacja bazy danych "../../magazyn.db"
 ## Zmienne środowiskowe
 
 Zmienne środowiskowe pobierane przez aplikację:
+
+**wymagane**
+1. IP - aplikacji np "127.0.0.1"
+2. Port - aplikacji np "8080"
+3. Server - adres serwera potrzebny do zbudowania linku logowania np: "http://localhost:8080"
+   
+**opcjonalne**
 - COOKIE_KEY - klucz ciasteczka. W przypadku braku generowana jest losowa wartość.
 - MAGAZYN_BYSTRZE_EMAIL_ADDR - adres konta email wykorzystywanego do wysyłania emaili przez aplikację.
 - MAGAZYN_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
 - SMTP_HOST np: smtp.gmail.com
 - SMTP_PORT np: 587
-- DEBUG - tryb debugowania true lub false
+- DEBUG - tryb debugowania true lub false. True, link logowania pojawia się w terminalu. False, korzysta z poczty email
 ### Konfiguracja
 
 * Ustaw zmienną środowiskową
@@ -67,7 +75,7 @@ set cgo_enabled=1
             "env": {
                 "GO111MODULE": "on",
             },
-            "args": ["127.0.0.1", "8080", "http://localhost:8080", "../../magazyn.db"]
+            "args": []
         }
     ]
 }
@@ -81,7 +89,7 @@ set cgo_enabled=1
 Autentykacja jest realizowana za pomocą pakietu https://github.com/johnsto/go-passwordless. Token autentykacyjny jest przesyłany
 za pomocą emaila zdefiniowanego w **MAGAZYN_BYSTRZE_EMAIL_ADDR**.
 
- Parametr **SEND_COOKIE_TO_STDOUT** po ustawieniu na:
+ Parametr **DEBU** (SEND_COOKIE_TO_STDOUT) po ustawieniu na:
 - **true** 
 
 pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawany w terminalu. Na stronie należy podać "u_username" występujący w bazie
@@ -93,21 +101,6 @@ pozwala na authentykację poprzez email. Na stronie należy podać adres email w
 ### Konfiguracja 
 
 Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_ADDR**, **SMTP_HOST**, **SMTP_PORT**. Ponadto w przypadku **gmail** należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
-
-## Baza danych
-
-* Stwórz bazę 
-```cmd
-sqlite3 magazyn_prod.db < db.schema
-sqlite3 magazyn_prod.db ".read boxTest/db_test.data" 
-```
-
-## Run
-```cmd
-go install
-go build
-bystrze_sprzet.exe 127.0.0.1 8080 http://localhost:8080
-```
 
 # Budowa
 Dwie główne lokalizacje:
@@ -154,7 +147,7 @@ git tag -n
 ```
 Obraz budownay z flagą `"--target production"` i `DEBUG=false`
 ```cmd
-docker build --target production -t magazyn_bystrze . --build-arg EMAIL=EMAIL --build-arg EMAIL_PASS="PASS" DB_PATH=./magazyn_prod.db DEBUG=false
+docker build --target production -t magazyn_bystrze . --build-arg EMAIL=EMAIL --build-arg EMAIL_PASS="PASS" DEBUG=false
 ```
 # Testy
 
@@ -170,9 +163,9 @@ Przykład Test_isAdult_ageLessThan18_false
 - tests - podzielone na testy dotyczące konkretnej aplikacji (apps)
 - testUtils - współdzielone metody wykorzystywane w testach
 ### Run
-Box testy. Obraz do testów jest z flagą `"--target test"` i ` DEBUG=true`
+Box testy. Uruchamiane za pomocą docker-compose. Obraz do testów jest z flagą `"--target test"` i ` DEBUG=true`
 ```cmd
-docker build --target test -t $TEST_APP_NAME --build-arg EMAIL=test_app@bystrzeMail.com --build-arg EMAIL_PASS=password --build-arg DB_PATH="./boxTest/test_db" -f $DOCKERFILE_PATH .  DEBUG=true
+docker build --target test DEBUG=true
 ```
 Stworzenie nowego środowiska testowego
 ```cmd
@@ -183,11 +176,12 @@ Uruchomienie wszystkich testów z listy.
 go run main.go --tests 
 ```
 Wyczyszczenie cache. Testy które przeszły nie zostaną wykonane ponownie.
-cmd```
+```cmd
 go clean -testcache
-### Uwagi
 ```
-Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min
+
+### Uwagi
+1. Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min (trzeba ustawić jeżeli testy są uruchamiane pojedynczo. W main.go --tests timeout jest ustawiony)
 ```cmd
 go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
 ```
