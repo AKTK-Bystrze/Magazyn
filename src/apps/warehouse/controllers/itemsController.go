@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common/httpResponse"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/common/timeSet"
@@ -48,7 +49,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		r.Context().Value("UserInfo").(models.User).Role != "admin" {
 		msg := "Data wypozyczenia musi byc w przyszlosci"
 		appState.App.Debug("%v reservation date %v must be in the future %v", session.GetSessionUserName(r), startTime, time.Now())
-		SearchItems(w, r, msg)
+		httpResponse.ResponseErrorMsg(w, r, msg)
 		return
 	}
 
@@ -56,7 +57,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	if !endTime.After(startTime) {
 		msg := "Data zwrotu musi byc po dacie wypozyczenia"
 		appState.App.Debug("%v return %v date must be later then pickUp date %v ", session.GetSessionUserName(r), endTime, startTime)
-		SearchItems(w, r, msg)
+		httpResponse.ResponseErrorMsg(w, r, msg)
 		return
 	}
 
@@ -65,7 +66,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil || !ret {
 		msg := "Przedmiot nie jest juz dostepny w tym terminie"
 		appState.App.Debug("%v item unavailable in this date", session.GetSessionUserName(r))
-		SearchItems(w, r, msg)
+		httpResponse.ResponseErrorMsg(w, r, msg)
 		return
 	}
 
@@ -129,7 +130,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		msg := "Nie możesz wypożyczyć sprzętu"
 		appState.App.Debug("%v can't reserve item %v since %v till %v", session.GetSessionUserName(r), itemID,
 			startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
-		SearchItems(w, r, msg)
+		httpResponse.ResponseErrorMsg(w, r, msg)
 		return
 	}
 }
@@ -146,13 +147,15 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 		timeFrom, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-			http.Error(w, "Invalid start_time parameter", http.StatusBadRequest)
+			msg = "Invalid start_time parameter"
+			httpResponse.ResponseErrorMsg(w, r, msg)
 			return
 		}
 		timeTo, err = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-			http.Error(w, "Invalid end_time parameter", http.StatusBadRequest)
+			msg = "Invalid end_time parameter"
+			httpResponse.ResponseErrorMsg(w, r, msg)
 			return
 		}
 
