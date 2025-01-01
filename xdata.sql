@@ -18,7 +18,7 @@ INSERT INTO items (i_name, i_description, i_status, i_type) VALUES
 ('NW119', 'Rapa nizinna zielona', 'ok', 'paddle');
 
 -- Insert into users table
-INSERT INTO users ( u_username, u_role, u_email, u_credits) VALUES
+INSERT INTO users ( u_username, u_role, u_email, u_credits, u_enabled) VALUES
 ( 'kursant2', 'user', 'kursant2@bystrzeEmail.pl', 900, TRUE),
 ( 'kursant1', 'user', 'kursant1@bystrzeEmail.com', 900, TRUE),
 ( 'admin1', 'admin', 'admin1@bystrzeEmail.com', 900, TRUE),

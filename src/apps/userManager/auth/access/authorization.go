@@ -37,6 +37,10 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
+		if !uinfo.Enabled && r.URL.Path != "/users/user/disabled" && r.URL.Path != "/users/user/logout" {
+			http.Redirect(w, r, "/users/user/disabled", http.StatusSeeOther)
+			return
+		}
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "UserInfo", uinfo)
 		appState.App.Info("%v %v %v %v", uinfo.Name, strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
