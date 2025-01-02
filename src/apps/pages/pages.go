@@ -36,9 +36,5 @@ func updateRouter(router *mux.Router) *mux.Router {
 	ninjaRouter.Use(access.NinjaHandler)
 	ninjaRouter.HandleFunc("/news", controllers.CreateNewsHandler).Methods("POST")
 	ninjaRouter.HandleFunc("/news/{newsId}", controllers.DeleteNewsHandler).Methods("DELETE")
-	//superAdmin
-	superAdminRouter := pagesRouter.PathPrefix("/superAdmin").Subrouter()
-	superAdminRouter.Use(access.SuperAdminHandler)
-	superAdminRouter.HandleFunc("/db/backup", appState.App.DbBackupHandler).Methods("GET")
 	return router
 }

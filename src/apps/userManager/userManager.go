@@ -62,7 +62,5 @@ func updateRouter(router *mux.Router) *mux.Router {
 	superAdminRouter.HandleFunc("/users", controllers.UpdateUser).Methods("PUT")
 	superAdminRouter.HandleFunc("/users", controllers.GetUsersController).Methods("GET")
 
-	superAdminRouter.HandleFunc("/db/backup", appState.App.DbBackupHandler).Methods("Get")
-
 	return router
 }
