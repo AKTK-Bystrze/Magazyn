@@ -67,8 +67,12 @@ func UpdateUserCredits(reservation models.Reservation, creditsChange int, newCre
 		Description: changeDescription,
 		ChangeDate:  time.Now().In(timeSet.LOCATION),
 	}
-	InsertCreditsAudit(audit)
-	return nil
+	err = InsertCreditsAudit(audit)
+	if err != nil {
+		appState.App.Debug("Can't create credit audit %v", err.Error())
+	}
+
+	return err
 }
 
 func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.Time) (int, error) {
@@ -163,5 +167,6 @@ func InsertCreditsAudit(audit models.CreditsAudit) error {
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.Author_ID, audit.Value, &audit.Balance, audit.Description, audit.ChangeDate)
+	appState.App.Debug("Add credits audit author %v user %v balance %v description %v ", audit.Author_ID, audit.U_ID, &audit.Balance, audit.Description)
 	return err
 }

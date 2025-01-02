@@ -120,8 +120,12 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		}
 
 		credits_left := userCredits - rentalCost
-		user.Credits = credits_left
-		users.UpdateUser(user)
+		err = credits.UpdateUserCredits(reservation, rentalCost, credits_left, "RentedStatus Desc", int(session.GetSessionUserId(r)), w)
+		if err != nil {
+			msg := "DB error"
+			http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusInternalServerError)
+			return
+		}
 		appState.App.Debug("%v reserved item %v since %v till %v", session.GetSessionUserName(r),
 			itemID, startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 		msg := "Zarezerwowano"
