@@ -137,21 +137,19 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	var availableItems []models.TmpItemWithReservation
-	var timeFrom time.Time = time.Now()
-	timeFrom = timeFrom.Add(time.Duration(15-timeFrom.Minute()%15) * time.Minute)
-	var timeTo time.Time = timeFrom.Add(24 * time.Hour)
-	appState.App.Debug("%v search from %v to %v", session.GetSessionUserName(r),
-		timeFrom.UTC().Format(timeSet.OUT_TIME_FMT), timeTo.UTC().Format(timeSet.OUT_TIME_FMT))
+	var timeFrom time.Time
+	var timeTo time.Time
+	var err error
 
 	if r.FormValue("start_time") != "" && r.FormValue("end_time") != "" {
-		timeFrom, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("start_time"), timeSet.LOCATION)
+		timeFrom, err = time.ParseInLocation(timeSet.IN_TIME_FMT, r.FormValue("start_time"), timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			msg = "Invalid start_time parameter"
 			httpResponse.ResponseErrorMsg(w, r, msg)
 			return
 		}
-		timeTo, err = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end_time"), timeSet.LOCATION)
+		timeTo, err = time.ParseInLocation(timeSet.IN_TIME_FMT, r.FormValue("end_time"), timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 			msg = "Invalid end_time parameter"
@@ -175,12 +173,18 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 			msg = "Data zwrotu musi byc po dacie wypozyczenia"
 		}
 
+	} else {
+		timeFrom = time.Now()
+		timeFrom = timeFrom.Add(15 * time.Minute)
+		timeTo = timeFrom.Add(24 * time.Hour)
 	}
 
 	//  TODO: check for injection
 	if msg == "" {
 		msg = r.FormValue("msg")
 	}
+	appState.App.Debug("%v search from %v to %v", session.GetSessionUserName(r),
+		timeFrom.UTC(), timeTo.UTC())
 
 	// render the search results template with the available items list
 	appState.App.RenderTemplate(w, r, "search.html", &struct {
