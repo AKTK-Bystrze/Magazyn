@@ -3,14 +3,12 @@ package apps
 import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
-	"bystrze/apps/common/timeSet"
 	"database/sql"
 	"errors"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -125,27 +123,6 @@ func (data *TemplateData) SetUser(uinfo *models.User) {
 
 func (data *TemplateData) SetURL(url string) {
 	data.URL = url
-}
-
-func (a *App) DbBackupHandler(w http.ResponseWriter, r *http.Request) {
-	file, err := os.Open("DB_PATH")
-	if err != nil {
-		a.Err("%v %v", session.GetSessionUserName(r), err.Error())
-		http.Error(w, "File not found", http.StatusNotFound)
-		return
-	}
-	defer file.Close()
-
-	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename="+time.Now().UTC().Format(timeSet.OUT_TIME_FMT)+"DB_NAME")
-
-	_, err = io.Copy(w, file)
-	if err != nil {
-		a.Err("%v Error copying file %v", session.GetSessionUserName(r), err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusNotFound)
-		return
-	}
-
 }
 
 type Database interface {

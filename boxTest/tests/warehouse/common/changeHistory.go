@@ -18,7 +18,7 @@ type ChangeHistory struct {
 func (ch ChangeHistory) toString() string {
 	var sb strings.Builder
 	for _, entry := range ch.changes {
-		sb.WriteString(fmt.Sprintf("  Action: %s, Status: %s, Timestamp: %s\n", entry.Key, entry.Value.Status, entry.Value.Timestamp.Format(env.TIME_FORMAT)))
+		sb.WriteString(fmt.Sprintf("  Action: %s,\t Status: %s,\t Timestamp: %s\n", entry.Key, entry.Value.Status, entry.Value.Timestamp.Format(env.TIME_FORMAT)))
 	}
 	return sb.String()
 }
