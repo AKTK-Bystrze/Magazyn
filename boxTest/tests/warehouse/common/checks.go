@@ -25,7 +25,6 @@ func CheckReservationAudits(reservationId int, expectedChangesHistory *ChangeHis
 }
 
 func CheckItemAvailabilityWhileReserved(reservationStart time.Time, reservationEnd time.Time, reservedItem app.Item, user app.UserClient) {
-	log.Printf("Check item availability")
 	log.Printf("Check item availability - same time")
 	items := user.GetAvailableItems(reservationStart, reservationEnd)
 	if tests.IsItemAvailable(reservedItem, items) {
