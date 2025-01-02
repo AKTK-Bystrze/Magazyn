@@ -124,3 +124,16 @@ func UpdateItemStatus(itemID int, status string) error {
 	}
 	return err
 }
+
+func UpdateItemDescription(itemID int, description string) error {
+	stmt, err := appState.App.Db.Prepare("UPDATE items SET i_description = $1 WHERE i_id = $2")
+	if err != nil {
+		appState.App.Debug("UpdateItemDescription %v %v %v", itemID, description, err.Error())
+		return err
+	}
+	_, err = stmt.Exec(description, itemID)
+	if err != nil {
+		appState.App.Debug("UpdateItemDescription %v %v %v", itemID, description, err.Error())
+	}
+	return err
+}

@@ -44,6 +44,7 @@ func updateRouter(router *mux.Router) *mux.Router {
 	//item admin
 	adminItemRouter := adminRouter.PathPrefix("/item").Subrouter()
 	adminItemRouter.HandleFunc("/status", controllers.AdminItemStatusHandler).Methods("POST")
+	adminItemRouter.HandleFunc("/description", controllers.AdminItemStatusEdit).Methods("POST")
 	adminItemRouter.HandleFunc("/show", controllers.AdminShowItemHandler).Methods("GET")
 	//superAdmin
 	superAdminRouter := warehouseRouter.PathPrefix("/superAdmin").Subrouter()

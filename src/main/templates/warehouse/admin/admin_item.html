@@ -23,7 +23,15 @@
           </div>
           <div class="row">
             <div class="col-sm-2 col-md-2"><strong>Opis:</strong></div>
-            <div class="col-sm-8 col-md-10">{{ .Item.Description }}</div>
+            <div class="col-sm-8 col-md-10">
+              <form method="POST" action="/warehouse/admin/item/description">
+                  <input type="hidden" name="id" value={{ .Item.ID }}>
+                  <div class="tile-text-content">
+                      <textarea style="width: 100%; height: 100px;" name="description" required>{{ .Item.Description }}</textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Zapisz</button>
+              </form>
+          </div>
           </div>
           <div class="row">
             <div class="col-sm-2 col-md-2"><strong>Stan:</strong></div>

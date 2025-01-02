@@ -43,6 +43,32 @@ func AdminItemsHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func AdminItemStatusEdit(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		appState.App.Err("%v Form parsing error %v", session.GetSessionUserName(r), err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	itemID, err := strconv.Atoi(r.FormValue("id"))
+	if err != nil {
+		appState.App.Err("%v Can't get id from form %v", session.GetSessionUserName(r), err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	description := r.FormValue("description")
+	err = items.UpdateItemDescription(itemID, description)
+	if err != nil {
+		appState.App.ErrSession(r, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	appState.App.Debug("%v set itemid %v description to %v", session.GetSessionUserName(r), itemID, description)
+	http.Redirect(w, r, "/warehouse/admin/item/show?id="+r.FormValue("id"), http.StatusSeeOther)
+}
+
 func AdminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -65,7 +91,7 @@ func AdminItemStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	appState.App.Debug("%v set itemid %v status %v", session.GetSessionUserName(r), itemID, status)
+	appState.App.Debug("%v set itemid %v status to %v", session.GetSessionUserName(r), itemID, status)
 	http.Redirect(w, r, "/warehouse/admin/items", http.StatusSeeOther)
 }
 
