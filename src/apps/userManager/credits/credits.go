@@ -152,6 +152,6 @@ func InsertCreditsAudit(audit models.CreditsAudit, authorID int, userID int) err
 		(ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.AuthorName, audit.Value, &audit.Balance, audit.Description, audit.ChangeDate)
+	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.Author_ID, audit.Value, &audit.Balance, audit.Description, audit.ChangeDate)
 	return err
 }
