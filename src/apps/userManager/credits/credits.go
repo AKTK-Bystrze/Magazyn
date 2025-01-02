@@ -41,7 +41,8 @@ type CreditsAuditTmp struct {
 	ChangeDate  time.Time
 }
 
-func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.ResponseWriter) error {
+func UpdateUserCredits(reservation models.Reservation, creditsChange int, newCredits int, changeDescription string,
+	changeAuthorID int, w http.ResponseWriter) error {
 	u := reservation.User
 	u, err := users.GetUserById(int(u.ID))
 	if err != nil {
@@ -58,6 +59,15 @@ func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.Re
 		return err
 	}
 	appState.App.Info("%v Updated user (id: %v) credits from %v to %v", u.Name, u.ID, oldCredits, newCredits)
+	audit := models.CreditsAudit{
+		U_ID:        int(reservation.User.ID),
+		Author_ID:   &changeAuthorID,
+		Value:       creditsChange,
+		Balance:     newCredits,
+		Description: changeDescription,
+		ChangeDate:  time.Now().In(timeSet.LOCATION),
+	}
+	InsertCreditsAudit(audit)
 	return nil
 }
 
@@ -146,7 +156,7 @@ func GetUserCreditsAudits(userID int) ([]CreditsAuditTmp, error) {
 	return audits, nil
 }
 
-func InsertCreditsAudit(audit models.CreditsAudit, authorID int, userID int) error {
+func InsertCreditsAudit(audit models.CreditsAudit) error {
 	query := `
 		INSERT INTO credit_audit 
 		(ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date)
