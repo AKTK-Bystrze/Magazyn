@@ -50,6 +50,7 @@ func updateRouter(router *mux.Router) *mux.Router {
 	userRouter.HandleFunc("/logout", controllers.Logout).Methods("GET")
 	userRouter.HandleFunc("/dashboard", controllers.UserDashboard).Methods("GET")
 	userRouter.HandleFunc("/disabled", controllers.UserIsDisabled).Methods("GET")
+	userRouter.HandleFunc("/credits", controllers.CreditsHandler).Methods("GET")
 	//admin
 	adminRouter := allRouter.PathPrefix("/admin").Subrouter()
 	adminRouter.Use(access.ValidUserMiddlware) //todo needed ??

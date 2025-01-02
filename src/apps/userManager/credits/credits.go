@@ -5,6 +5,7 @@ import (
 	"bystrze/apps/common/timeSet"
 	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
+	"database/sql"
 	"net/http"
 
 	"errors"
@@ -29,6 +30,16 @@ const (
 	wetsuitItemType    = "wetsuit"
 	wetsuitItemCost    = 1
 )
+
+type CreditsAuditTmp struct {
+	ID          int
+	U_ID        int
+	AuthorName  string
+	Value       int
+	Balance     int
+	Description string
+	ChangeDate  time.Time
+}
 
 func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.ResponseWriter) error {
 	u := reservation.User
@@ -92,4 +103,55 @@ func CanRent(userID int, rentalCost int) (bool, int, error) {
 	canRentResult := (userCredits > rentalCost)
 	appState.App.Debug("userCredits %v rentalCost %v canRent %v", userCredits, rentalCost, canRentResult)
 	return canRentResult, userCredits, err
+}
+
+func GetUserCreditsAudits(userID int) ([]CreditsAuditTmp, error) {
+	query := `
+		SELECT ca_id, ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date
+		FROM credit_audit
+		WHERE ca_user_id = $1
+		ORDER BY ca_change_date DESC
+	`
+
+	rows, err := appState.App.Db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var audits []CreditsAuditTmp
+	for rows.Next() {
+		var audit CreditsAuditTmp
+		var authorID sql.NullInt64
+
+		err = rows.Scan(&audit.ID, &audit.U_ID, &authorID, &audit.Value, &audit.Balance, &audit.Description, &audit.ChangeDate)
+		if err != nil {
+			return nil, err
+		}
+
+		if authorID.Valid {
+			author, err := users.GetUserById(int(authorID.Int64))
+			if err != nil {
+				return nil, err
+			}
+
+			audit.AuthorName = author.Name
+		} else {
+			audit.AuthorName = "magazyn"
+		}
+
+		audits = append(audits, audit)
+	}
+
+	return audits, nil
+}
+
+func InsertCreditsAudit(audit models.CreditsAudit, authorID int, userID int) error {
+	query := `
+		INSERT INTO credit_audit 
+		(ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.AuthorName, audit.Value, &audit.Balance, audit.Description, audit.ChangeDate)
+	return err
 }
