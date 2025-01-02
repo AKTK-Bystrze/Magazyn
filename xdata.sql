@@ -25,3 +25,11 @@ INSERT INTO users ( u_username, u_role, u_email, u_credits, u_enabled) VALUES
 ( 'admin2', 'admin ninja', 'admin2@bystrzeEmail.com', 900, TRUE),
 ( 'ninja', 'ninja', 'ninja@bystrzeEmail.com', 900, FALSE),
 ( 'superAdmin', 'superAdmin admin ninja', 'superAdmin@bystrzeEmail.com', 900, TRUE);
+
+INSERT INTO credit_audit (ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date)
+VALUES 
+(1, 2, 100, 500, 'Admin added credits', '2025-01-01 10:00:00'),
+(1, NULL, 50, 550, 'App reward bonus', '2025-01-02 09:00:00'),
+(2, 3, -30, 470, 'Admin deducted credits', '2025-01-02 11:00:00'),
+(3, NULL, 20, 120, 'App loyalty reward', '2025-01-03 08:30:00'),
+(1, 2, -50, 500, 'Admin manual adjustment', '2025-01-03 14:45:00');
