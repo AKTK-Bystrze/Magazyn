@@ -16,6 +16,7 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
 - [Budowa](#budowa)
   - [Apps](#apps)
   - [API](#api)
+  - [Uprawnienia uzytkownika](#uprawnienia-uzytkownika)
 - [Release](#release)
 - [Testy](#testy)
   - [Unit testy](#unit-testy)
@@ -133,6 +134,12 @@ np:
 ```bash
 \warehouse\admin\reservation\show
 ```
+## Uprawnienia uzytkownika
+w `authorization.go` jest logika uprawnień. Istniejące uprawnienia są zdefiniowane w `var ROLES`:
+1. User - wypożyczenie sprzętu
+2. Ninja - uprawnienia aplikacji pages, zarządzanie newsami
+3. Admin - zarządzanie wypożyczeniami, zatwierdzanie, anulowanie itd. Zarządzenie sprzętem, opis i stan.
+4. SuperAdmin - zarządzanie użytkownikami, zmiana uprawnień, godzinek itd.
 
 # Release
 
