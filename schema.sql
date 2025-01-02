@@ -53,7 +53,7 @@ CREATE TABLE reservation_audit (
 CREATE TABLE credit_audit (
     ca_id SERIAL PRIMARY KEY,
     ca_user_id INT NOT NULL,
-    ca_author_id INT, -- NULL for app actions
+    ca_author_id INT NOT NULL,
     ca_value INT NOT NULL,
     ca_balance INT NOT NULL,
     ca_description TEXT NOT NULL,

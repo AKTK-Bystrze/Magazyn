@@ -82,7 +82,7 @@ func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.T
 	endDate := time.Date(end_time.Year(), end_time.Month(), end_time.Day(), 0, 0, 0, 0, end_time.Location())
 
 	duration := endDate.Sub(startDate)
-	days := int(duration.Hours()/24) + 1
+	days := int(duration.Hours()/24) + 1 //todo can't calculate 1 day correctly
 	appState.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type,
 		start_time.Format(timeSet.OUT_TIME_FMT), end_time.Format(timeSet.OUT_TIME_FMT), days, rentalCost*days)
 	return rentalCost * days, err
@@ -143,17 +143,12 @@ func GetUserCreditsAudits(userID int) ([]CreditsAuditTmp, error) {
 			return nil, err
 		}
 
-		if authorID.Valid {
-			author, err := users.GetUserById(int(authorID.Int64))
-			if err != nil {
-				return nil, err
-			}
-
-			audit.AuthorName = author.Name
-		} else {
-			audit.AuthorName = "magazyn"
+		author, err := users.GetUserById(int(authorID.Int64))
+		if err != nil {
+			return nil, err
 		}
 
+		audit.AuthorName = author.Name
 		audits = append(audits, audit)
 	}
 
@@ -166,7 +161,7 @@ func InsertCreditsAudit(audit models.CreditsAudit) error {
 		(ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.Author_ID, audit.Value, &audit.Balance, audit.Description, audit.ChangeDate)
-	appState.App.Debug("Add credits audit author %v user %v balance %v description %v ", audit.Author_ID, audit.U_ID, &audit.Balance, audit.Description)
+	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.Author_ID, audit.Value, audit.Balance, audit.Description, audit.ChangeDate)
+	appState.App.Debug("Add credits audit author %v user %v balance %v description %v ", audit.Author_ID, audit.U_ID, audit.Balance, audit.Description)
 	return err
 }
