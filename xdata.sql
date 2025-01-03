@@ -25,3 +25,4 @@ INSERT INTO users ( u_username, u_role, u_email, u_credits, u_enabled) VALUES
 ( 'admin2', 'admin ninja', 'admin2@bystrzeEmail.com', 900, TRUE),
 ( 'ninja', 'ninja', 'ninja@bystrzeEmail.com', 900, FALSE),
 ( 'superAdmin', 'superAdmin admin ninja', 'superAdmin@bystrzeEmail.com', 900, TRUE);
+

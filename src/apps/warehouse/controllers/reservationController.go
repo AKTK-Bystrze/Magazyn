@@ -72,25 +72,25 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	appState.App.Debug("%v setStatusHandler reservation_id %v status %v", session.GetSessionUserName(r), id, newStatus)
 	var oldStatus = reservation.Status
 	if oldStatus == rental.DENIED {
-		err = handlePreviousStatusDenied(*reservation, w)
+		err = handlePreviousStatusDenied(*reservation, w, r)
 		if err != nil {
 			return
 		}
 	}
 	if newStatus == rental.DENIED {
-		err = handleDeniedStatus(*reservation, w)
+		err = handleDeniedStatus(*reservation, w, r)
 		if err != nil {
 			return
 		}
 	}
 	if newStatus == rental.RETURNED {
-		err = handleReturnedStatus(*reservation, w)
+		err = handleReturnedStatus(*reservation, w, r)
 		if err != nil {
 			return
 		}
 	}
 	if newStatus == rental.RENTED {
-		err = handleRentedStatus(*reservation, w)
+		err = handleRentedStatus(*reservation, w, r)
 		if err != nil {
 			return
 		}
@@ -104,7 +104,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	appState.App.Debug("%v changed status from %v to %v for reservation %v", session.GetSessionUserName(r), oldStatus, newStatus, id)
 }
 
-func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) error {
+func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
 	appState.App.Debug("Handling status rented")
 	now := time.Now()
 	year, month, day := now.Date()
@@ -128,12 +128,14 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) e
 			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
 			return err
 		}
-		userCredits = userCredits + oldRentalCost - newRentalCost
+		creditsChange := +oldRentalCost - newRentalCost
+		userCredits = userCredits + creditsChange
 		err = rental.UpdateReservationsDate(reservation, "r_start_time", now, w)
 		if err != nil {
 			return err
 		}
-		err = credits.UpdateUserCredits(reservation, userCredits, w)
+		auditMsg := reservation.Item.Name + "\tWypozyczenie w innym terminie"
+		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			return err
 		}
@@ -141,7 +143,7 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter) e
 	return nil
 }
 
-func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter) error {
+func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
 	appState.App.Debug("Handling status returned")
 	now := time.Now()
 	year, month, day := now.Date()
@@ -165,12 +167,14 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
 			return err
 		}
-		userCredits = userCredits + oldRentalCost - newRentalCost
+		creditsChange := oldRentalCost - newRentalCost
+		userCredits = userCredits + creditsChange
 		err = rental.UpdateReservationsDate(reservation, "r_end_time", now, w)
 		if err != nil {
 			return err
 		}
-		err = credits.UpdateUserCredits(reservation, userCredits, w)
+		auditMsg := reservation.Item.Name + "\tZwrot w innym terminie"
+		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			return err
 		}
@@ -178,7 +182,7 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter)
 	return nil
 }
 
-func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseWriter) error {
+func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
 	appState.App.Debug("Old reservation status is %v, charge user for rental cost", rental.DENIED)
 	rentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 	if err != nil {
@@ -187,11 +191,12 @@ func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseW
 		return err
 	}
 	updatedCredits := reservation.User.Credits - rentalCost
-	err = credits.UpdateUserCredits(reservation, updatedCredits, w)
+	auditMsg := reservation.Item.Name + "\tWypożyczenie"
+	err = credits.UpdateUserCredits(reservation, -rentalCost, updatedCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 	return err
 }
 
-func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter) error {
+func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
 	appState.App.Debug("handling status denied")
 	rentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
 	if err != nil {
@@ -200,6 +205,7 @@ func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter) e
 		return err
 	}
 	updatedCredits := reservation.User.Credits + rentalCost
-	err = credits.UpdateUserCredits(reservation, updatedCredits, w)
+	auditMsg := reservation.Item.Name + "\tAnulowane"
+	err = credits.UpdateUserCredits(reservation, rentalCost, updatedCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 	return err
 }

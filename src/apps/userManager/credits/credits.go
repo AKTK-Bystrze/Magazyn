@@ -5,6 +5,8 @@ import (
 	"bystrze/apps/common/timeSet"
 	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
+
+	"database/sql"
 	"net/http"
 
 	"errors"
@@ -30,7 +32,18 @@ const (
 	wetsuitItemCost    = 1
 )
 
-func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.ResponseWriter) error {
+type CreditsAuditTmp struct {
+	ID          int
+	U_ID        int
+	AuthorName  string
+	Value       int
+	Balance     int
+	Description string
+	ChangeDate  time.Time
+}
+
+func UpdateUserCredits(reservation models.Reservation, creditsChange int, newCredits int, changeDescription string,
+	changeAuthorID int, w http.ResponseWriter) error {
 	u := reservation.User
 	u, err := users.GetUserById(int(u.ID))
 	if err != nil {
@@ -47,7 +60,20 @@ func UpdateUserCredits(reservation models.Reservation, newCredits int, w http.Re
 		return err
 	}
 	appState.App.Info("%v Updated user (id: %v) credits from %v to %v", u.Name, u.ID, oldCredits, newCredits)
-	return nil
+	audit := models.CreditsAudit{
+		U_ID:        int(reservation.User.ID),
+		Author_ID:   changeAuthorID,
+		Value:       creditsChange,
+		Balance:     newCredits,
+		Description: changeDescription,
+		ChangeDate:  time.Now().In(timeSet.LOCATION),
+	}
+	err = InsertCreditsAudit(audit)
+	if err != nil {
+		appState.App.Debug("Can't create credit audit %v", err.Error())
+	}
+
+	return err
 }
 
 func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.Time) (int, error) {
@@ -57,7 +83,7 @@ func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.T
 	endDate := time.Date(end_time.Year(), end_time.Month(), end_time.Day(), 0, 0, 0, 0, end_time.Location())
 
 	duration := endDate.Sub(startDate)
-	days := int(duration.Hours()/24) + 1
+	days := int(duration.Hours()/24) + 1 //todo can't calculate 1 day correctly
 	appState.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type,
 		start_time.Format(timeSet.OUT_TIME_FMT), end_time.Format(timeSet.OUT_TIME_FMT), days, rentalCost*days)
 	return rentalCost * days, err
@@ -92,4 +118,51 @@ func CanRent(userID int, rentalCost int) (bool, int, error) {
 	canRentResult := (userCredits > rentalCost)
 	appState.App.Debug("userCredits %v rentalCost %v canRent %v", userCredits, rentalCost, canRentResult)
 	return canRentResult, userCredits, err
+}
+
+func GetUserCreditsAudits(userID int) ([]CreditsAuditTmp, error) {
+	query := `
+		SELECT ca_id, ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date
+		FROM credit_audit
+		WHERE ca_user_id = $1
+		ORDER BY ca_change_date DESC
+	`
+
+	rows, err := appState.App.Db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var audits []CreditsAuditTmp
+	for rows.Next() {
+		var audit CreditsAuditTmp
+		var authorID sql.NullInt64
+
+		err = rows.Scan(&audit.ID, &audit.U_ID, &authorID, &audit.Value, &audit.Balance, &audit.Description, &audit.ChangeDate)
+		if err != nil {
+			return nil, err
+		}
+
+		author, err := users.GetUserById(int(authorID.Int64))
+		if err != nil {
+			return nil, err
+		}
+
+		audit.AuthorName = author.Name
+		audits = append(audits, audit)
+	}
+
+	return audits, nil
+}
+
+func InsertCreditsAudit(audit models.CreditsAudit) error {
+	query := `
+		INSERT INTO credit_audit 
+		(ca_user_id, ca_author_id, ca_value, ca_balance, ca_description, ca_change_date)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.Author_ID, audit.Value, audit.Balance, audit.Description, audit.ChangeDate)
+	appState.App.Debug("Credits audit author %v user %v balance %v description %v ", audit.Author_ID, audit.U_ID, audit.Balance, audit.Description)
+	return err
 }

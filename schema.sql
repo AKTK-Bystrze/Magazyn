@@ -4,8 +4,6 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS items CASCADE;
 DROP TABLE IF EXISTS reservations CASCADE;
 DROP TABLE IF EXISTS reservation_audit CASCADE;
-DROP TABLE IF EXISTS big_news CASCADE;
-DROP TABLE IF EXISTS small_news CASCADE;
 
 -- Create 'users' table
 CREATE TABLE IF NOT EXISTS users (
@@ -50,6 +48,18 @@ CREATE TABLE reservation_audit (
     ra_change_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(ra_reservation_id) REFERENCES reservations(r_id),
     FOREIGN KEY(ra_user_id) REFERENCES users(u_id)
+);
+
+CREATE TABLE credit_audit (
+    ca_id SERIAL PRIMARY KEY,
+    ca_user_id INT NOT NULL,
+    ca_author_id INT NOT NULL,
+    ca_value INT NOT NULL,
+    ca_balance INT NOT NULL,
+    ca_description TEXT NOT NULL,
+    ca_change_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(ca_user_id) REFERENCES users(u_id),
+    FOREIGN KEY(ca_author_id) REFERENCES users(u_id)
 );
 
 -- Create trigger to log reservation insert
