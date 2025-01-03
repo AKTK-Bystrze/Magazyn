@@ -134,7 +134,7 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter, r
 		if err != nil {
 			return err
 		}
-		auditMsg := reservation.Item.Name + "\tWydanie"
+		auditMsg := reservation.Item.Name + "\tWypozyczenie w innym terminie"
 		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			return err
@@ -173,7 +173,7 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter,
 		if err != nil {
 			return err
 		}
-		auditMsg := reservation.Item.Name + "\tZwrot"
+		auditMsg := reservation.Item.Name + "\tZwrot w innym terminie"
 		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			return err

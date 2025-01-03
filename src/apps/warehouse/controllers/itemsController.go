@@ -120,7 +120,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		}
 
 		credits_left := userCredits - rentalCost
-		auditMsg := reservation.Item.Name + "\tWypozyczenie"
+		auditMsg := reservation.Item.Name + "\tRezerwacja/wypozyczenie"
 		err = credits.UpdateUserCredits(reservation, -rentalCost, credits_left, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			msg := "DB error"
