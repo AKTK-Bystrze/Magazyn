@@ -5,6 +5,7 @@ import (
 	"bystrze/apps/common/timeSet"
 	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
+
 	"database/sql"
 	"net/http"
 
@@ -61,7 +62,7 @@ func UpdateUserCredits(reservation models.Reservation, creditsChange int, newCre
 	appState.App.Info("%v Updated user (id: %v) credits from %v to %v", u.Name, u.ID, oldCredits, newCredits)
 	audit := models.CreditsAudit{
 		U_ID:        int(reservation.User.ID),
-		Author_ID:   &changeAuthorID,
+		Author_ID:   changeAuthorID,
 		Value:       creditsChange,
 		Balance:     newCredits,
 		Description: changeDescription,
@@ -162,6 +163,6 @@ func InsertCreditsAudit(audit models.CreditsAudit) error {
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 	_, err := appState.App.Db.Exec(query, audit.U_ID, audit.Author_ID, audit.Value, audit.Balance, audit.Description, audit.ChangeDate)
-	appState.App.Debug("Add credits audit author %v user %v balance %v description %v ", audit.Author_ID, audit.U_ID, audit.Balance, audit.Description)
+	appState.App.Debug("Credits audit author %v user %v balance %v description %v ", audit.Author_ID, audit.U_ID, audit.Balance, audit.Description)
 	return err
 }

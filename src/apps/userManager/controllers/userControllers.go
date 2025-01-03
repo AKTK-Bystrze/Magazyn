@@ -4,12 +4,15 @@ import (
 	"bystrze/apps"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/auth/access"
+	"bystrze/apps/userManager/credits"
 	"bystrze/apps/userManager/users"
 	"bystrze/apps/warehouse/rental"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +57,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmpCredits := r.FormValue("credits")
+	var audit models.CreditsAudit
 	var newCredits int
 	if tmpCredits != "" {
 		newCredits, err = strconv.Atoi(tmpCredits)
@@ -61,6 +65,14 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 			appState.App.Err("%v Form parsing error %v", session.GetSessionUserName(r), err)
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
+		}
+		audit = models.CreditsAudit{
+			U_ID:        int(user.ID),
+			Author_ID:   int(session.GetSessionUserId(r)),
+			Value:       newCredits - user.Credits,
+			Balance:     newCredits,
+			Description: "Edycja",
+			ChangeDate:  time.Now().In(timeSet.LOCATION),
 		}
 		user.Credits = newCredits
 	}
@@ -89,6 +101,10 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
+	} else {
+		if audit != (models.CreditsAudit{}) {
+			credits.InsertCreditsAudit(audit)
+		}
 	}
 	if user.ID == session.GetSessionUserId(r) {
 		appState.App.Debug("%v user requested changes for his own role, relogin is needed", session.GetSessionUserName(r))
