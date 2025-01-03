@@ -205,7 +205,7 @@ func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter, r
 		return err
 	}
 	updatedCredits := reservation.User.Credits + rentalCost
-	auditMsg := reservation.Item.Name + "\tOdrzucenie"
+	auditMsg := reservation.Item.Name + "\tAnulowane"
 	err = credits.UpdateUserCredits(reservation, rentalCost, updatedCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 	return err
 }
