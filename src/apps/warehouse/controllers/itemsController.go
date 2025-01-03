@@ -120,7 +120,8 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		}
 
 		credits_left := userCredits - rentalCost
-		err = credits.UpdateUserCredits(reservation, rentalCost, credits_left, "RentedStatus Desc", int(session.GetSessionUserId(r)), w)
+		auditMsg := reservation.Item.Name + "\tWypozyczenie"
+		err = credits.UpdateUserCredits(reservation, -rentalCost, credits_left, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			msg := "DB error"
 			http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusInternalServerError)

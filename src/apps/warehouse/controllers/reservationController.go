@@ -134,7 +134,8 @@ func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter, r
 		if err != nil {
 			return err
 		}
-		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, "RentedStatus Desc", int(session.GetSessionUserId(r)), w)
+		auditMsg := reservation.Item.Name + "\tWydanie"
+		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			return err
 		}
@@ -172,7 +173,8 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter,
 		if err != nil {
 			return err
 		}
-		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, "ReturnedStatus Desc", int(session.GetSessionUserId(r)), w)
+		auditMsg := reservation.Item.Name + "\tZwrot"
+		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			return err
 		}
@@ -189,7 +191,8 @@ func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseW
 		return err
 	}
 	updatedCredits := reservation.User.Credits - rentalCost
-	err = credits.UpdateUserCredits(reservation, rentalCost, updatedCredits, "handlePreviousStatusDenied Desc", int(session.GetSessionUserId(r)), w)
+	auditMsg := reservation.Item.Name + "\tWypożyczenie"
+	err = credits.UpdateUserCredits(reservation, -rentalCost, updatedCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 	return err
 }
 
@@ -202,6 +205,7 @@ func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter, r
 		return err
 	}
 	updatedCredits := reservation.User.Credits + rentalCost
-	err = credits.UpdateUserCredits(reservation, rentalCost, updatedCredits, "handleDeniedStatus Desc", int(session.GetSessionUserId(r)), w)
+	auditMsg := reservation.Item.Name + "\tOdrzucenie"
+	err = credits.UpdateUserCredits(reservation, rentalCost, updatedCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 	return err
 }
