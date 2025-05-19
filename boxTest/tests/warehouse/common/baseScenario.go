@@ -46,6 +46,7 @@ func TestTearDown() {
 func BaseScenario(tc TestCase) {
 	tc.toString("")
 	userBefore := db.GetUserById(int(User.User.ID))
+	log.Printf("User details: %v", userBefore)
 	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID)
 	CheckCredits(userBefore, tc.CreditsWhenCreated)
 	reservation := db.GetReservation(

@@ -172,12 +172,13 @@ Przykład Test_isAdult_ageLessThan18_false
 ### Run
 Box testy. Uruchamiane za pomocą docker-compose. Obraz do testów jest z flagą `"--target test"` i ` DEBUG=true`
 ```cmd
-docker build --target test DEBUG=true
+docker build --target test --build-arg DEBUG=true -t app -f app-dockerfile .
 ```
-Stworzenie nowego środowiska testowego
+Stworzenie nowego środowiska testowego. Uruchamiane z lokalizacji /boxTest
 ```cmd
 go run main.go --env
 ```
+serwer aplikacji jest dostępny na "http://localhost:8080"
 Uruchomienie wszystkich testów z listy. 
 ```cmd
 go run main.go --tests 
