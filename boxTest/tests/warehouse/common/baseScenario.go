@@ -34,6 +34,7 @@ func TestSetUp(testName string) {
 	db.RemoveAudits()
 	env.RevertContainerTime(env.TEST_APP_NAME)
 	log.Print("\n\tSETTED")
+	env.MarkNewTestInLogs("SettedUp")
 }
 
 func TestTearDown(testName string) {
