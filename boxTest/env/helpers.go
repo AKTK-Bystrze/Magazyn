@@ -127,5 +127,5 @@ func saveLogsToFile(path string, content string) {
 
 func MarkNewTestInLogs(testName string) {
 	client := http.Client{}
-	client.Get(Localhost + "/warehouse/user/search?" + testName)
+	client.Get(Localhost + "/warehouse/user/search?______" + testName)
 }

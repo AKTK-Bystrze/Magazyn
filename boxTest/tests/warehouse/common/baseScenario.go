@@ -6,6 +6,7 @@ import (
 	"boxTest/handlers/db"
 	"boxTest/tests"
 	"log"
+	"strings"
 	"testing"
 	"time"
 )
@@ -15,7 +16,8 @@ var (
 	Admin = app.UserClient{}
 )
 
-func TestSetUp() {
+func TestSetUp(testName string) {
+	env.MarkNewTestInLogs("SetUp_before_" + strings.ReplaceAll(testName, " ", "-"))
 	log.Print("\n\tSET UP...")
 	env.ConnectToDB()
 	User = app.UserClient{
@@ -30,10 +32,12 @@ func TestSetUp() {
 	Admin.Login()
 	db.RemoveReservations()
 	db.RemoveAudits()
+	env.RevertContainerTime(env.TEST_APP_NAME)
 	log.Print("\n\tSETTED")
 }
 
-func TestTearDown() {
+func TestTearDown(testName string) {
+	env.MarkNewTestInLogs("TearDown_After_" + strings.ReplaceAll(testName, " ", "-"))
 	log.Print("\n\tCLEAN UP...")
 	User.LogOut()
 	Admin.LogOut()
@@ -44,7 +48,6 @@ func TestTearDown() {
 }
 
 func BaseScenario(tc TestCase) {
-	env.MarkNewTestInLogs(tc.Name)
 	tc.toString("")
 	userBefore := db.GetUserById(int(User.User.ID))
 	log.Printf("User details: %v", userBefore)

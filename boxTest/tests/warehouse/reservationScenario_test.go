@@ -9,50 +9,39 @@ import (
 )
 
 func Test_reservationMadeAndStartedSameTime(t *testing.T) {
-	common.TestSetUp()
+	common.TestSetUp("Suite_Test_reservationMadeAndStartedSameTime")
 	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
+	now := time.Now()
 	testCases := []common.TestCase{
 		{
-			Name:                "Reservation take today return next week",
-			StartTime:           time.Now(),
-			EndTime:             time.Now().AddDate(0, 0, 7),
-			Transition:          common.NewChangeHistoryBuilder().Build(),
-			Item:                reservedItem,
-			CreditsWhenCreated:  0,
-			CreditsWhenReturned: 0,
+			Name:      "Reservation take today return next week",
+			StartTime: now,
+			EndTime:   now.AddDate(0, 0, 7),
+			Item:      reservedItem,
 		},
 		{
-			Name:                "Reservation take today return tomorrow",
-			StartTime:           time.Now(),
-			EndTime:             tests.CreateNextDayAt(23),
-			Transition:          common.NewChangeHistoryBuilder().Build(),
-			Item:                reservedItem,
-			CreditsWhenCreated:  0,
-			CreditsWhenReturned: 0,
+			Name:      "Reservation take today return tomorrow",
+			StartTime: now,
+			EndTime:   tests.CreateNextDayAt(23),
+			Item:      reservedItem,
 		},
 		{
-			Name:                "Reservation take today return today",
-			StartTime:           time.Now(),
-			EndTime:             time.Now().Add(time.Hour),
-			Transition:          common.NewChangeHistoryBuilder().Build(),
-			Item:                reservedItem,
-			CreditsWhenCreated:  0,
-			CreditsWhenReturned: 0,
+			Name:      "Reservation take today return today",
+			StartTime: now,
+			EndTime:   now.Add(time.Hour),
+			Item:      reservedItem,
 		},
 		{
-			Name:                "Reservation take today return day after tomorrow",
-			StartTime:           time.Now(),
-			EndTime:             time.Now().AddDate(0, 0, 2),
-			Transition:          common.NewChangeHistoryBuilder().Build(),
-			Item:                reservedItem,
-			CreditsWhenCreated:  0,
-			CreditsWhenReturned: 0,
+			Name:      "Reservation take today return day after tomorrow",
+			StartTime: now,
+			EndTime:   now.AddDate(0, 0, 2),
+			Item:      reservedItem,
 		},
 	}
 
 	for _, tc := range testCases {
-		common.TestSetUp()
+		common.TestSetUp(tc.Name)
 		changesHistory := common.NewChangeHistoryBuilder().
 			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: tc.StartTime}).
 			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: tc.StartTime}).
@@ -64,12 +53,11 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 		tc.CreditsWhenCreated = expectedCost
 		tc.CreditsWhenReturned = expectedCost
 		common.BaseScenario(tc)
-		common.TestTearDown()
 	}
 }
 
 func Test_reservationMadeInFuture(t *testing.T) {
-	common.TestSetUp()
+	common.TestSetUp("Suite_Test_reservationMadeInFuture")
 	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	testCases := []common.TestCase{
@@ -102,7 +90,7 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		common.TestSetUp()
+		common.TestSetUp(tc.Name)
 		changesHistory := common.NewChangeHistoryBuilder().
 			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
 			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).
@@ -115,12 +103,11 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		tc.CreditsWhenReturned = expectedCost
 		tc.Item = reservedItem
 		common.BaseScenario(tc)
-		common.TestTearDown()
 	}
 }
 
 func Test_reservationNotAsPlanned(t *testing.T) {
-	common.TestSetUp()
+	common.TestSetUp("Suite_Test_reservationNotAsPlanned")
 	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	now := time.Now()
@@ -185,11 +172,10 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		common.TestSetUp()
+		common.TestSetUp(tc.Name)
 		tc.CreditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.StartTime, tc.EndTime)
 		tc.CreditsWhenReturned = tests.CalculateCost(reservedItem.Type, tc.Transition.GetChangeByKey(app.RENTED).Timestamp,
 			tc.Transition.GetChangeByKey(app.RETURNED).Timestamp)
 		common.BaseScenario(tc)
-		common.TestTearDown()
 	}
 }
