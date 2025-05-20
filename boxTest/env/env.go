@@ -13,15 +13,16 @@ import (
 )
 
 const (
-	TEST_APP_NAME        = "boxtest-web-1"
-	TEST_DB_NAME         = "boxtest-db-1"
-	DB_PATH_IN_CONTAINER = "/app/magazyn.db"
+	TEST_APP_NAME     = "boxtest-web-1"
+	TEST_DB_NAME      = "boxtest-db-1"
+	TESTS_OUTPUT_PATH = "failedTests/"
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
 
-	TIME_FORMAT    = "2006-01-02T15:04"
-	DB_TIME_FORMAT = "2006-01-02 15:04:05"
+	CONTAINER_TIME_FORMAT = "2006-01-02T15:04"
+	FILENAME_TIME_FORMAT  = "2006-01-02T15-04-05"
+	TIME_FORMAT_SECONDS   = "2006-01-02 15:04:05"
 )
 
 var (
@@ -125,7 +126,7 @@ func RunTests() {
 		timeout := time.Duration(tc.timeout) * time.Second
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-
+		markNewTestInLogs(tc.name)
 		cmd := exec.CommandContext(ctx, "go.exe", "test", "-run", tc.name, tc.location)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -138,10 +139,14 @@ func RunTests() {
 				exitCode := exitError.ExitCode()
 				log.Printf("Unknown exit code %v Err %v", exitCode, err)
 			}
-			log.Printf("\tLOGS\n")
-			log.Print(string(output))
-			log.Printf("\tFAILED: %v", tc.name)
+			fileName := tc.name + "_" + time.Now().Format(FILENAME_TIME_FORMAT)
+			saveLogsToFile(TESTS_OUTPUT_PATH+fileName+"_TEST.log", string(output))
+			saveLogsToFile(TESTS_OUTPUT_PATH+fileName+"_LOGS.log", GetContainerLogsAfterString(TEST_APP_NAME, tc.name))
 		} else {
+			if strings.Contains(string(output), "cached") {
+				log.Printf("%v was cached. Skipping... . You can clear cache with 'go clean -testcache'", tc.name)
+				continue
+			}
 			passedTests = append(passedTests, tc.name)
 			log.Printf("\tPASSED: %v", tc.name)
 		}
