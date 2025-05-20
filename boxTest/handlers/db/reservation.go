@@ -4,6 +4,7 @@ import (
 	"boxTest/env"
 	"boxTest/handlers/app"
 	"database/sql"
+	"log"
 	"time"
 
 	"fmt"
@@ -148,6 +149,7 @@ func GetReservationByID(reservationID int) (app.Reservation, error) {
 
 // AddReservation adds a new reservation to the database.
 func AddReservation(reservation app.Reservation) error {
+	log.Printf("Adding reservation: %+v", reservation)
 	db := env.DB
 	query := `INSERT INTO reservations (r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
@@ -168,6 +170,7 @@ func AddReservation(reservation app.Reservation) error {
 
 // RemoveReservations removes all reservations from the database.
 func RemoveReservations() error {
+	log.Printf("Removing all reservations")
 	db := env.DB
 	query := "DELETE FROM reservations"
 	_, err := db.Exec(query)
