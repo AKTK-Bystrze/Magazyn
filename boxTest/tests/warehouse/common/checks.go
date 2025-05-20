@@ -84,7 +84,7 @@ func CheckCredits(userBefore app.User, expectedCost int) {
 	userAfter := db.GetUserById(int(userBefore.ID))
 	expectedUserCreditsAfter := userBefore.Credits - expectedCost
 	if userAfter.Credits != expectedUserCreditsAfter {
-		calculatedCost := userAfter.Credits - userBefore.Credits
+		calculatedCost := userBefore.Credits - userAfter.Credits
 		log.Fatalf("User credits is %v, should be %v\n expected cost %v calculated cost %v",
 			userAfter.Credits, expectedUserCreditsAfter, expectedCost, calculatedCost)
 	}

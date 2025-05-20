@@ -107,7 +107,6 @@ func applySQLFromFile(db *sqlx.DB, filepath string) {
 }
 
 func saveLogsToFile(path string, content string) {
-	log.Printf("Saving logs to file %s\n", path)
 	dir := filepath.Dir(path)
 	if _, err := ioutil.ReadDir(dir); err != nil {
 		if err := os.MkdirAll(dir, 0755); err != nil {
