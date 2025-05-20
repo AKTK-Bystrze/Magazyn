@@ -44,6 +44,7 @@ func TestTearDown() {
 }
 
 func BaseScenario(tc TestCase) {
+	env.MarkNewTestInLogs(tc.Name)
 	tc.toString("")
 	userBefore := db.GetUserById(int(User.User.ID))
 	log.Printf("User details: %v", userBefore)
