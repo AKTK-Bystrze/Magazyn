@@ -30,8 +30,8 @@ func TestSetUp(testName string) {
 		Client: app.CreateHttpClient(),
 	}
 	Admin.Login()
-	db.RemoveReservations()
 	db.RemoveAudits()
+	db.RemoveReservations()
 	env.RevertContainerTime(env.TEST_APP_NAME)
 	log.Print("\n\tSETTED")
 	env.MarkNewTestInLogs("SettedUp")
@@ -43,8 +43,8 @@ func TestTearDown(testName string) {
 	User.LogOut()
 	Admin.LogOut()
 	env.RevertContainerTime(env.TEST_APP_NAME)
-	db.RemoveReservations()
 	db.RemoveAudits()
+	db.RemoveReservations()
 	log.Print("\n\tCLEANED")
 }
 
