@@ -14,7 +14,7 @@ var (
 )
 
 func reservationAdminSkippedActions(transitions *common.ChangeHistory, testName string) {
-	common.TestSetUp()
+	common.TestSetUp("Suite_Test_reservationAdminSkippedActions_" + testName)
 	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	testCases := []common.TestCase{
@@ -28,13 +28,12 @@ func reservationAdminSkippedActions(transitions *common.ChangeHistory, testName 
 			CreditsWhenReturned: 0,
 		}}
 	for _, tc := range testCases {
-		common.TestSetUp()
+		common.TestSetUp(tc.Name)
 		tc.Transition = transitions
 		tc.CreditsWhenCreated = tests.CalculateCost(reservedItem.Type, tc.StartTime, tc.EndTime)
 		tc.CreditsWhenReturned = common.ExpectedCostAtTheEndBasedOnActions(transitions, tc.StartTime, tc.EndTime, reservedItem.Type)
 		tc.Item = reservedItem
 		common.BaseScenario(tc)
-		common.TestTearDown()
 	}
 }
 func Test_reservationAdminDoesNothing(t *testing.T) {
@@ -55,7 +54,7 @@ func Test_reservationAdminDoesntApprove(t *testing.T) {
 	reservationAdminSkippedActions(changesHistory, "Admin doesn't change status to APPROVED")
 }
 
-func Test_AdminDoesntRent(t *testing.T) { //todo
+func Test_AdminDoesntRent(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
 		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
 		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).

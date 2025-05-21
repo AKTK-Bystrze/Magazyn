@@ -22,10 +22,10 @@ type TestCase struct {
 func (tc TestCase) toString(result string) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Test Case: %s\n", tc.Name))
-	sb.WriteString(fmt.Sprintf("Start Time: %s\n", tc.StartTime.Format(env.TIME_FORMAT)))
-	sb.WriteString(fmt.Sprintf("End Time: %s\n", tc.EndTime.Format(env.TIME_FORMAT)))
-	sb.WriteString(fmt.Sprintf("Credits When Created: %d\n", tc.CreditsWhenCreated))
-	sb.WriteString(fmt.Sprintf("Credits When Returned: %d\n", tc.CreditsWhenReturned))
+	sb.WriteString(fmt.Sprintf("Start Time: %s\n", tc.StartTime.Format(env.CONTAINER_TIME_FORMAT)))
+	sb.WriteString(fmt.Sprintf("End Time: %s\n", tc.EndTime.Format(env.CONTAINER_TIME_FORMAT)))
+	sb.WriteString(fmt.Sprintf("Credits charge when reservation created: %d\n", tc.CreditsWhenCreated))
+	sb.WriteString(fmt.Sprintf("Credits charge (update to) when equipment returned : %d\n", tc.CreditsWhenReturned))
 
 	sb.WriteString("Transition History:\n")
 	sb.WriteString(tc.Transition.toString())
