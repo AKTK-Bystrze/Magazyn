@@ -87,7 +87,7 @@ func (a *App) LoadTemplates() {
 	for _, dir := range patterns {
 		ff, err := filepath.Glob(dir)
 		if err != nil {
-			a.Logger.Fatal("Error loading templates: %v", err)
+			a.Logger.Fatalf("Error loading templates: %v", err)
 		}
 		files = append(files, ff...)
 	}
@@ -95,7 +95,7 @@ func (a *App) LoadTemplates() {
 	var err error
 	a.Templates, err = template.New("").Funcs(funcMap).ParseFiles(files...)
 	if err != nil {
-		a.Logger.Fatal("Error parsing templates: %v", err)
+		a.Logger.Fatalf("Error parsing templates: %v", err)
 	}
 }
 

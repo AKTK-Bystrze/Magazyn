@@ -34,5 +34,5 @@ func (app App) ErrSession(r *http.Request, e error) {
 
 func (App) Fatal(v ...any) {
 	log.Output(2, "FATAL ERROR")
-	log.Fatal(v)
+	log.Fatal(v...)
 }
