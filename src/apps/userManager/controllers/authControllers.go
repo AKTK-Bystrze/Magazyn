@@ -5,7 +5,6 @@ import (
 	sessionPkg "bystrze/apps/common/session"
 	app "bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -53,7 +52,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Strategies map[string]passwordless.Strategy
 			Msg        string
 		}{
-			Strategies: app.Pw.ListStrategies(context.TODO()),
+			Strategies: app.Pw.ListStrategies(r.Context()),
 			Msg:        "",
 		})
 		return
@@ -95,7 +94,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a context (required by CookieStore token store)
-	ctx := passwordless.SetContext(context.TODO(), w, r)
+	ctx := passwordless.SetContext(r.Context(), w, r)
 
 	strategy := r.FormValue("strategy")
 	recipient := r.FormValue("recipient")
