@@ -88,11 +88,7 @@ func GetUserName(id int) (string, error) {
 	return uname, nil
 }
 
-func GetUserCredits(userID int) (int, error) {
-	return retriveUserCredits(userID)
-}
-
-func retriveUserCredits(userId int) (int, error) {
+func GetUserCredits(userId int) (int, error) {
 	query := `SELECT u_credits FROM users WHERE u_id = $1`
 	row := appState.App.Db.QueryRow(query, userId)
 	var credits int
