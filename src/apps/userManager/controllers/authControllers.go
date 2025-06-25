@@ -23,7 +23,9 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	for key := range session.Values {
 		delete(session.Values, key)
 	}
-	session.Save(r, w)
+	if err := session.Save(r, w); err != nil {
+		app.App.Err("%v encountered during session saving (Logout)", err)
+	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -88,7 +90,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			target = "/warehouse/admin/reservations"
 		}
 		session.AddFlash("already_signed_in")
-		session.Save(r, w)
+		if err := session.Save(r, w); err != nil {
+			app.App.Err("%v encountered during session saving", err)
+		}
 		http.Redirect(w, r, target, http.StatusSeeOther)
 		return
 	}
@@ -142,7 +146,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		// No strategy specified in request, so send the user back to
 		// the signin page as we can't do anything without it.
 		session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
-		session.Save(r, w)
+		if err := session.Save(r, w); err != nil {
+			app.App.Err("%v encountered during session saving", err)
+		}
 		RedirectToLogin(w, r)
 		return
 	} else if token == "" {
@@ -171,7 +177,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			session.Values["UserInfo"] = uidInt
 			session.Values["recipient"] = recipient
 			session.AddFlash("signed_in")
-			session.Save(r, w)
+			if err := session.Save(r, w); err != nil {
+				app.App.Err("%v encountered during session saving", err)
+			}
 			http.Redirect(w, r, target, http.StatusSeeOther)
 			return
 		}
@@ -180,7 +188,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			// Token not found, maybe it was a previous one or expired. Either
 			// way, the user will need to attempt sign-in again.
 			session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
-			session.Save(r, w)
+			if err := session.Save(r, w); err != nil {
+				app.App.Err("%v encountered during session saving", err)
+			}
 			RedirectToLogin(w, r)
 			return
 		} else if err != nil {
