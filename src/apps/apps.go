@@ -58,11 +58,11 @@ func (a *App) LoadTemplates() {
 		"AddHours": func(t time.Time, d int) time.Time {
 			return t.Add(time.Duration(d) * time.Hour)
 		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+		"dict": func(values ...any) (map[string]any, error) {
 			if len(values)%2 != 0 {
 				return nil, errors.New("invalid dict call")
 			}
-			dict := make(map[string]interface{}, len(values)/2)
+			dict := make(map[string]any, len(values)/2)
 			for i := 0; i < len(values); i += 2 {
 				key, ok := values[i].(string)
 				if !ok {
@@ -129,11 +129,11 @@ type Database interface {
 	Exec(query string, args ...any) (sql.Result, error)
 	QueryRow(query string, args ...any) *sql.Row
 	Query(query string, args ...any) (*sql.Rows, error)
-	Get(dest interface{}, query string, args ...interface{}) error
+	Get(dest any, query string, args ...any) error
 	Prepare(query string) (*sql.Stmt, error)
 	Unsafe() *sqlx.DB
-	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
-	QueryRowx(query string, args ...interface{}) *sqlx.Row
+	Queryx(query string, args ...any) (*sqlx.Rows, error)
+	QueryRowx(query string, args ...any) *sqlx.Row
 }
 
 type Templates interface {
