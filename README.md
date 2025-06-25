@@ -26,9 +26,9 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
     - [Uwagi](#uwagi)
 
 # Jak uruchomić
-1. Za pomocą docker-compose
+1. Za pomocą docker compose
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 2. Uruchomić bazę danych postgres i aplikację lokalnie
    1. Kontener postgres
