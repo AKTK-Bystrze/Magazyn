@@ -8,30 +8,30 @@ import (
 )
 
 func (app *App) SetLogger() {
-	app.Logger = log.New(os.Stdout, app.AppName+"\t", log.Ldate|log.Ltime|log.Lshortfile)
+	app.Logger = log.New(os.Stdout, app.AppName+":\t", log.Ldate|log.Ltime|log.Lshortfile|log.Lmsgprefix)
 }
 
-func (app App) Debug(format string, a ...interface{}) {
-	log.Printf(app.AppName+"\tDEBUG:\t "+format, a...)
+func (app App) Debug(format string, a ...any) {
+	app.Logger.Printf("DEBUG: "+format, a...)
 }
 
-func (app App) Info(format string, a ...interface{}) {
-	log.Printf(app.AppName+"\tINFO:\t "+format, a...)
+func (app App) Info(format string, a ...any) {
+	app.Logger.Printf("INFO: "+format, a...)
 }
 
-func (app App) Warn(format string, a ...interface{}) {
-	log.Printf(app.AppName+"\tWARN:\t "+format, a...)
+func (app App) Warn(format string, a ...any) {
+	app.Logger.Printf("WARN: "+format, a...)
 }
 
-func (app App) Err(format string, a ...interface{}) {
-	log.Printf(app.AppName+"\tERR:\t"+format, a...)
+func (app App) Err(format string, a ...any) {
+	app.Logger.Printf("ERR: "+format, a...)
 }
 
 func (app App) ErrSession(r *http.Request, e error) {
-	log.Printf(app.AppName+"\tERR:\t %v %v", session.GetSessionUserName(r), e.Error())
+	app.Logger.Printf("ERR: %v %v", session.GetSessionUserName(r), e.Error())
 }
 
-func (App) Fatal(v ...any) {
-	log.Print("FATAL ERROR")
-	log.Fatal(v...)
+func (app App) Fatal(v ...any) {
+	app.Logger.Print("FATAL ERROR")
+	app.Logger.Fatal(v...)
 }
