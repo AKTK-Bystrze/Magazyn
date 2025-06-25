@@ -2,7 +2,6 @@ package apps
 
 import (
 	"bystrze/apps/common/session"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,26 +12,26 @@ func (app *App) SetLogger() {
 }
 
 func (app App) Debug(format string, a ...interface{}) {
-	log.Output(2, fmt.Sprintf(app.AppName+"\tDEBUG:\t "+format, a...))
+	log.Printf(app.AppName+"\tDEBUG:\t "+format, a...)
 }
 
 func (app App) Info(format string, a ...interface{}) {
-	log.Output(2, fmt.Sprintf(app.AppName+"\tINFO:\t "+format, a...))
+	log.Printf(app.AppName+"\tINFO:\t "+format, a...)
 }
 
 func (app App) Warn(format string, a ...interface{}) {
-	log.Output(2, fmt.Sprintf(app.AppName+"\tWARN:\t "+format, a...))
+	log.Printf(app.AppName+"\tWARN:\t "+format, a...)
 }
 
 func (app App) Err(format string, a ...interface{}) {
-	log.Output(2, fmt.Sprintf(app.AppName+"\tERR:\t"+format, a...))
+	log.Printf(app.AppName+"\tERR:\t"+format, a...)
 }
 
 func (app App) ErrSession(r *http.Request, e error) {
-	log.Output(2, fmt.Sprintf(app.AppName+"\tERR:\t %v %v", session.GetSessionUserName(r), e.Error()))
+	log.Printf(app.AppName+"\tERR:\t %v %v", session.GetSessionUserName(r), e.Error())
 }
 
 func (App) Fatal(v ...any) {
-	log.Output(2, "FATAL ERROR")
+	log.Print("FATAL ERROR")
 	log.Fatal(v...)
 }
