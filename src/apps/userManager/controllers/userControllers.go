@@ -103,7 +103,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		if audit != (models.CreditsAudit{}) {
-			credits.InsertCreditsAudit(audit)
+			// No point in failing the request now, since we already modified db state.
+			// TODO: this should be a part of the same db transaction as credit update or be added by a db trigger.
+			if err := credits.InsertCreditsAudit(audit); err != nil {
+				appState.App.Err("Error %v encountered when inserting credit audit info into db - db might be in an inconsistent state.", err)
+			}
 		}
 	}
 	if user.ID == session.GetSessionUserId(r) {
