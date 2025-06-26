@@ -127,7 +127,7 @@ func RunTests() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		MarkNewTestInLogs(tc.name)
-		cmd := exec.CommandContext(ctx, "go.exe", "test", "-run", tc.name, tc.location)
+		cmd := exec.CommandContext(ctx, "go", "test", "-run", tc.name, tc.location)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			failedTests = append(failedTests, tc.name)
