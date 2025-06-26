@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build:
@@ -9,6 +7,11 @@ services:
       - "8080:8080"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/magazyn?sslmode=disable
+      - DEBUG=${DEBUG:-True}
+      - MAGAZYN_BYSTRZE_EMAIL_ADDR=${MAGAZYN_BYSTRZE_EMAIL_ADDR:-}
+      - MAGAZYN_BYSTRZE_EMAIL_PASS=${MAGAZYN_BYSTRZE_EMAIL_PASS:-}
+      - COOKIE_KEY=${COOKIE_KEY:-}
+      - SERVER=${SERVER:-http://localhost:8080}
     depends_on:
       - db
     networks:

@@ -6,3 +6,4 @@ bystrze_sprzet
 __*
 *.exe
 *.log
+.env

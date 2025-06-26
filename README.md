@@ -90,7 +90,7 @@ set cgo_enabled=1
 Autentykacja jest realizowana za pomocą pakietu https://github.com/johnsto/go-passwordless. Token autentykacyjny jest przesyłany
 za pomocą emaila zdefiniowanego w **MAGAZYN_BYSTRZE_EMAIL_ADDR**.
 
- Parametr **DEBU** (SEND_COOKIE_TO_STDOUT) po ustawieniu na:
+ Parametr **DEBUG** (SEND_COOKIE_TO_STDOUT) po ustawieniu na:
 - **true** 
 
 pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawany w terminalu. Na stronie należy podać "u_username" występujący w bazie
