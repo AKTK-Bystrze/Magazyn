@@ -132,7 +132,9 @@ func GetUserCreditsAudits(userID int) ([]CreditsAuditTmp, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 
 	var audits []CreditsAuditTmp
 	for rows.Next() {

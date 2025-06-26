@@ -3,6 +3,7 @@ package users
 import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/userManager/appState"
+	"errors"
 	"fmt"
 )
 
@@ -46,7 +47,9 @@ func GetUsers() ([]models.User, error) {
 		appState.App.Debug("Can't get users %v", err.Error())
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 	var users []models.User
 
 	for rows.Next() {
