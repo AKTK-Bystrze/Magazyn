@@ -67,7 +67,7 @@ func cleanup() {
 		log.Printf("Error getting current directory: %v\n", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command("docker-compose", "down")
+	cmd := exec.Command("docker", "compose", "down")
 	cmd.Dir = projectRoot
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
