@@ -136,8 +136,7 @@ func RunTests() {
 				exitCode := exitError.ExitCode()
 				log.Printf("Exit code %v Err %v", exitCode, err)
 			} else {
-				exitCode := exitError.ExitCode()
-				log.Printf("Unknown exit code %v Err %v", exitCode, err)
+				log.Printf("Unknown error %v", err)
 			}
 			fileName := tc.name + "_" + time.Now().Format(FILENAME_TIME_FORMAT)
 			saveLogsToFile(TESTS_OUTPUT_PATH+fileName+"_TEST.log", string(output))
