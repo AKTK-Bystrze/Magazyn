@@ -86,11 +86,12 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		user.Role = userRole
 	}
 	userEnabled := r.FormValue("enabled")
-	if userEnabled == "on" {
+	switch userEnabled {
+	case "on":
 		user.Enabled = true
-	} else if userEnabled == "" {
+	case "":
 		user.Enabled = false
-	} else {
+	default:
 		appState.App.Err("%v invalid enbaled value", session.GetSessionUserName(r))
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
