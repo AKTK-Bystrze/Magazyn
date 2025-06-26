@@ -35,7 +35,7 @@ func composeContainers() {
 		log.Printf("Error getting current directory: %v\n", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command("docker-compose", "up", "--build", "-d")
+	cmd := exec.Command("docker", "compose", "up", "--build", "-d")
 	cmd.Dir = projectRoot
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
