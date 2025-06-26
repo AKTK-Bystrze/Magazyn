@@ -212,7 +212,10 @@ func UpdateReservationStatus(reservation models.Reservation, status string, w ht
 		return
 	}
 	response := fmt.Sprintf("id: %d", reservation.ID)
-	w.Write([]byte(response))
+	if _, err := w.Write([]byte(response)); err != nil {
+		appState.App.Err("Error %v during writing the response (updating reservation status).")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
 }
 
 func UpdateReservationsDate(reservation models.Reservation, field string, newTime time.Time, w http.ResponseWriter) error {

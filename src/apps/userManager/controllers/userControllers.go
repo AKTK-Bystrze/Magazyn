@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common/contextHelpers"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/common/timeSet"
@@ -16,10 +17,12 @@ import (
 )
 
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
+	// TODO: Handle case in which userInfo is not available
+	userInfo, _ := contextHelpers.GetUserInfo(r.Context())
 	// search for reserved items in the db
 	reservations, err := rental.GetReservations(rental.QueryConfigReservation{
 		OneUser:     true,
-		SelectionId: int(r.Context().Value("UserInfo").(models.User).ID),
+		SelectionId: int(userInfo.ID),
 		OrderDesc:   true,
 	})
 	if err != nil {

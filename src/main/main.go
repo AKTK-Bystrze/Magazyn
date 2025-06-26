@@ -32,7 +32,11 @@ func main() {
 
 	DSN := os.Getenv("DATABASE_URL")
 	db := setDb(DSN)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Enocountered error %v during attempted closing of db connection", err)
+		}
+	}()
 
 	debug := setDebugMode()
 	store := sessions.NewCookieStore(COOKIE_KEY)

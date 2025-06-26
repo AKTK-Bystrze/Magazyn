@@ -1,11 +1,11 @@
 package access
 
 import (
+	"bystrze/apps/common/contextHelpers"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
-	"context"
 	"net/http"
 	"strings"
 )
@@ -42,7 +42,7 @@ func ValidUserMiddlware(next http.Handler) http.Handler {
 			return
 		}
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "UserInfo", uinfo)
+		ctx = contextHelpers.WithUserInfo(ctx, uinfo)
 		appState.App.Info("%v %v %v %v", uinfo.Name, strings.Split(r.RemoteAddr, ":")[0], r.Method, r.RequestURI)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -103,7 +103,7 @@ func SuperAdminHandler(h http.Handler) http.Handler {
 }
 
 func hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
-	uinfo, ok := r.Context().Value("UserInfo").(models.User)
+	uinfo, ok := contextHelpers.GetUserInfo(r.Context())
 	if !ok || !strings.Contains(uinfo.Role, "ninja") {
 		appState.App.Err("Non-ninja user (%s) attempts to access ninja API", session.If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -113,7 +113,7 @@ func hasNinjaPrivilege(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
-	uinfo, ok := r.Context().Value("UserInfo").(models.User)
+	uinfo, ok := contextHelpers.GetUserInfo(r.Context())
 	if !ok || !strings.Contains(uinfo.Role, ROLE_SUPERADMIN) {
 		appState.App.Err("Non-SuperAdmin user (%s) attempts to access superAdmin API", session.If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -123,7 +123,7 @@ func hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func hasAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
-	uinfo, ok := r.Context().Value("UserInfo").(models.User)
+	uinfo, ok := contextHelpers.GetUserInfo(r.Context())
 	if !ok || !strings.Contains(uinfo.Role, "admin") {
 		appState.App.Err("Non-admin user (%s) attempts to access admin API", session.If(ok, uinfo.Name, "unknown"))
 		http.Redirect(w, r, "/", http.StatusFound)

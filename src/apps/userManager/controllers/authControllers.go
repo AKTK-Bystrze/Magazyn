@@ -3,6 +3,7 @@ package controllers
 import (
 	"bystrze/apps/common/models"
 	sessionPkg "bystrze/apps/common/session"
+	"bystrze/apps/email/appState"
 	app "bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
 	"fmt"
@@ -50,13 +51,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, target, http.StatusSeeOther)
 		return
 	} else {
-		app.App.Templates.ExecuteTemplate(w, "login.html", struct {
+		err := app.App.Templates.ExecuteTemplate(w, "login.html", struct {
 			Strategies map[string]passwordless.Strategy
 			Msg        string
 		}{
 			Strategies: app.Pw.ListStrategies(r.Context()),
 			Msg:        "",
 		})
+		if err != nil {
+			appState.App.Err("%v when executing login.html template.")
+		}
 		return
 	}
 }

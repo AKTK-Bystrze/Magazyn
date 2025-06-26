@@ -1,7 +1,7 @@
 package session
 
 import (
-	"bystrze/apps/common/models"
+	"bystrze/apps/common/contextHelpers"
 	"net/http"
 
 	"github.com/gorilla/sessions"
@@ -14,12 +14,12 @@ type SessionStore interface {
 }
 
 func GetSessionUserName(r *http.Request) string {
-	uinfo, ok := r.Context().Value("UserInfo").(models.User)
+	uinfo, ok := contextHelpers.GetUserInfo(r.Context())
 	return If(ok, uinfo.Name, "unknown")
 }
 
 func GetSessionUserId(r *http.Request) int64 {
-	uinfo, ok := r.Context().Value("UserInfo").(models.User)
+	uinfo, ok := contextHelpers.GetUserInfo(r.Context())
 	return If(ok, uinfo.ID, -1)
 }
 

@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"bystrze/apps/common/contextHelpers"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"database/sql"
@@ -19,17 +20,17 @@ import (
 )
 
 type App struct {
-	Db        Database       //setted by main
-	Store     sessions.Store //setted by main
-	Server    string         //setted by main. *Do app need it?
-	AppName   string         //setted by main
-	Router    *mux.Router    //setted by main, updated by app
-	Logger    *log.Logger    //setted by app
-	Templates Templates      //setted by app
+	Db        Database       // set by main
+	Store     sessions.Store // set by main
+	Server    string         // set by main. *Does app need it?
+	AppName   string         // set by main
+	Router    *mux.Router    // set by main, updated by app
+	Logger    *log.Logger    // set by app
+	Templates Templates      // set by app
 }
 
 func (app App) RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data TemplateDataIfce) {
-	if uinfo, ok := r.Context().Value("UserInfo").(models.User); ok {
+	if uinfo, ok := contextHelpers.GetUserInfo(r.Context()); ok {
 		data.SetUser(&uinfo)
 		data.SetURL(r.URL.String())
 		err := app.Templates.ExecuteTemplate(w, tmpl, data)
