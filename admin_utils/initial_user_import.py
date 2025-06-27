@@ -8,8 +8,8 @@ def is_valid_email(email):
 
 # Importuj dane z arkuszy z dysku google. arkusz_godzinek (Wykaz godzinek) i arkusz_wypozyczen (Arkusz wypożyczeń Bystrze v1.1/Rozliczenie 2024/2025)
 # z arkusza wypozyczen usun tabelke kosztu przed importem, bo nie jest potrzebna
-arkusz_godzinek = r"C:\Users\uzytkownik\Downloads\wykazGodzinek.csv"
-arkusz_wypozyczen = r"C:\Users\uzytkownik\Downloads\wykazWypozyczen.csv"
+arkusz_godzinek = r"PATH"
+arkusz_wypozyczen = r"PATH"
 resultFile = "users_list_with_emails_and_credits.csv"
 
 czlonkowie = {}
@@ -53,14 +53,15 @@ print(f"Zaktualizowano dane o emailach dla {len(czlonkowie)} członków.")
 
 # Zapisz wynik do pliku CSV
 with open(resultFile, 'w', newline='', encoding='utf-8') as f_out:
-    fieldnames = ['Imię i nazwisko', 'Adres email', 'Stan godzinek (suma)', 'Status członkostwa']
+    fieldnames = ['u_username', 'u_email', 'u_credits', 'u_enabled']
+    
     writer = csv.DictWriter(f_out, fieldnames=fieldnames)
     writer.writeheader()
     for imie_nazwisko, dane in czlonkowie.items():
         writer.writerow({
-            'Imię i nazwisko': imie_nazwisko,
-            'Adres email': dane.get('Adres email', ''),
-            'Stan godzinek (suma)': dane.get('Stan godzinek (suma)', ''),
-            'Status członkostwa': dane.get('Status członkostwa', '')
+            'u_username': imie_nazwisko,
+            'u_email': dane.get('Adres email', ''),
+            'u_credits': dane.get('Stan godzinek (suma)', ''),
+            'u_enabled': dane.get('Status członkostwa', '')
         })
 print(f"Dane zostały zapisane do pliku: {resultFile}")
