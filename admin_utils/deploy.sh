@@ -21,6 +21,7 @@ echo "🏷️ New tag: $NEW_TAG"
 # 2. Create Git tag
 git tag "$NEW_TAG"
 git push origin "$NEW_TAG"
+export IMAGE_TAG=$NEW_TAG
 echo "✅ Created and pushed tag $NEW_TAG"
 
 # 3. Build Docker images with the version tag
@@ -57,9 +58,6 @@ fi
 
 # 5. Deployment — replace images without stopping service
 echo "🚀 Deploying containers..."
-
-# Assuming docker-compose.yml uses environment variables for the tag
-export IMAGE_TAG=$NEW_TAG
 
 # Use --detach and --pull=never (if local) to minimize downtime
 docker compose -f compose.yml up -d --build
