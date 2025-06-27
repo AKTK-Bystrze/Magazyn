@@ -1,4 +1,11 @@
 services:
+  migrate:
+    image: migrate/migrate
+    command: -path=/migrations -database postgres://postgres:postgres@db:5432/magazyn?sslmode=disable up
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      - db
   web:
     image: bystrze-magazyn-app:${IMAGE_TAG-latest}
     build:

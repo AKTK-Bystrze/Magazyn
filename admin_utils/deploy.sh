@@ -40,13 +40,20 @@ BACKUP_FILE="/var/backups/magazyn/_$TIMESTAMP.sql"
 PG_USER="postgres"
 PG_PASSWORD="postgres"
 PG_HOST="localhost"
-PG_PORT="5432"
+PG_PORT="54320"
 PG_DB="magazyn"
 
 export PGPASSWORD=$PG_PASSWORD
 pg_dump -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -F c -b -v -f "$BACKUP_FILE" "$PG_DB"
 
 echo "✅ Backup saved as $BACKUP_FILE"
+
+# migrate database schema
+echo "🔄 Migrating database schema..."
+if ! docker compose run --rm migrate; then
+  echo "❌ Migration failed!"
+  exit 1
+fi
 
 # 5. Deployment — replace images without stopping service
 echo "🚀 Deploying containers..."
