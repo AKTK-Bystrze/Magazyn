@@ -1,6 +1,7 @@
 import os
 import csv
 import psycopg2
+import argparse
 
 # Konfiguracja połączenia z PostgreSQL
 DB_CONFIG = {
@@ -11,15 +12,11 @@ DB_CONFIG = {
     'port': '54320',
 }
 
-# Ścieżki do plików CSV
-USERS_CSV = r'PATH'
-ITEMS_CSV = r'PATH'
-
 def import_users(cursor, csv_path):
     with open(csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            username = row.get('u_username') or row.get('Imię i nazwisko')  # fallback na Twoje pole z CSV
+            username = row.get('u_username') or row.get('Imię i nazwisko')
             email = row.get('u_email') or row.get('Adres email')
             if not username or not email:
                 print(f"⚠️ Pominięto użytkownika z brakującymi danymi: {row}")
@@ -82,16 +79,21 @@ def import_items(cursor, csv_path):
                 print(f"❌ Błąd importowania przedmiotu {name}: {e}")
 
 def main():
+    parser = argparse.ArgumentParser(description="Import CSV data to PostgreSQL.")
+    parser.add_argument('--users-csv', required=True, help='Path to users CSV file')
+    parser.add_argument('--items-csv', required=True, help='Path to items CSV file')
+    args = parser.parse_args()
+
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         conn.autocommit = True
         cursor = conn.cursor()
 
         print("➡ Importowanie użytkowników...")
-        import_users(cursor, USERS_CSV)
+        import_users(cursor, args.users_csv)
 
         print("➡ Importowanie ekwipunku...")
-        import_items(cursor, ITEMS_CSV)
+        import_items(cursor, args.items_csv)
 
         print("✅ Import zakończony sukcesem.")
         cursor.close()
