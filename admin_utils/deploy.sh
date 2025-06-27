@@ -62,6 +62,6 @@ echo "🚀 Deploying containers..."
 export IMAGE_TAG=$NEW_TAG
 
 # Use --detach and --pull=never (if local) to minimize downtime
-docker compose -f docker-compose.yml up -d --build
+docker compose -f compose.yml up -d --build
 
 echo "✅ Deployment finished with version $NEW_TAG"

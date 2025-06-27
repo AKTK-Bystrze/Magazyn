@@ -146,7 +146,7 @@ w `authorization.go` jest logika uprawnień. Istniejące uprawnienia są zdefini
 Wersja produkcyjna jest oznaczona poprzez git tag w historii commitów:
 ```cmd
 git tag -a <tag-name> -m "<message>"
-git tag -a v.1.0.0 -m "First release"
+git tag -a v1.0.0 -m "First release"
 ```
 Sprawdź poprzednie tagi
 ```cmd
