@@ -1,5 +1,6 @@
 services:
   web:
+    image: bystrze-magazyn-app:${IMAGE_TAG-latest}
     build:
       context: . 
       dockerfile: app-dockerfile  
@@ -16,8 +17,10 @@ services:
       - db
     networks:
       - app-network
+    restart: unless-stopped
 
   db:
+    image: bystrze-magazyn-db:${IMAGE_TAG:-latest}
     build:
       context: . 
       dockerfile: db-dockerfile
@@ -31,6 +34,7 @@ services:
       - "54320:5432"
     volumes:
       - magazyn_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
 volumes:
   magazyn_pgdata:
 
