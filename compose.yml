@@ -29,6 +29,10 @@ services:
       - app-network
     ports:
       - "54320:5432"
+    volumes:
+      - magazyn_pgdata:/var/lib/postgresql/data
+volumes:
+  magazyn_pgdata:
 
 networks:
   app-network:
