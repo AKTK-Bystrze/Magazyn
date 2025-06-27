@@ -3,6 +3,7 @@ bystrze_sprzet
 *.db
 /.vscode
 /scratch
+/prod
 __*
 *.exe
 *.log
