@@ -28,4 +28,4 @@ jobs:
         if: failure()
         with:
           name: failedTests
-          path: failedTests/*
+          path: ./boxTest/failedTests/
