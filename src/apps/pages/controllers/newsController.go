@@ -32,11 +32,12 @@ func DeleteNewsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetNewsTableName(newsType string) string {
-	if newsType == "SmallNews" {
+	switch newsType {
+	case "SmallNews":
 		return "small_news"
-	} else if newsType == "BigNews" {
+	case "BigNews":
 		return "big_news"
-	} else {
+	default:
 		return ""
 	}
 }

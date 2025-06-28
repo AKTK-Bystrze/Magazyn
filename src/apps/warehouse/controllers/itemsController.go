@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common/contextHelpers"
 	"bystrze/apps/common/httpResponse"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
@@ -45,8 +46,10 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 	//  admins can make reservation in the past
 	//  TODO: currently only for themselves
+	//  TODO: we should check and fail at the beginning if user info is not available
+	userInfo, ok := contextHelpers.GetUserInfo(r.Context())
 	if startTime.Before(time.Now()) &&
-		r.Context().Value("UserInfo").(models.User).Role != "admin" {
+		ok && userInfo.Role != "admin" {
 		msg := "Data wypozyczenia musi byc w przyszlosci"
 		appState.App.Debug("%v reservation date %v must be in the future %v", session.GetSessionUserName(r), startTime, time.Now())
 		httpResponse.ResponseErrorMsg(w, r, msg)
@@ -71,7 +74,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get user ID
-	userID := int(r.Context().Value("UserInfo").(models.User).ID)
+	userID := int(userInfo.ID)
 	item, err := items.GetItem(itemID)
 	if err != nil {
 		appState.App.Err("%v Can't get item %v", session.GetSessionUserName(r), err.Error())

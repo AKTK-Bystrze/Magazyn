@@ -21,7 +21,6 @@ func CreateEmailApp(db apps.Database, store sessions.Store,
 	}
 	appState.App.SetLogger()
 	appState.App.LoadTemplates()
-	appState.App.Router = updateRouter(appState.App.Router)
 
 	appState.MAGAZYN_BYSTRZE_EMAIL_ADDR = MAGAZYN_BYSTRZE_EMAIL_ADDR
 	appState.MAGAZYN_BYSTRZE_EMAIL_LOGIN = service.GetEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
@@ -29,8 +28,4 @@ func CreateEmailApp(db apps.Database, store sessions.Store,
 	appState.SMTP_PORT = SMTP_PORT
 
 	return appState.App
-}
-
-func updateRouter(router *mux.Router) *mux.Router {
-	return router
 }

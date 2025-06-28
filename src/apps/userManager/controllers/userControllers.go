@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bystrze/apps"
+	"bystrze/apps/common/contextHelpers"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/common/timeSet"
@@ -16,10 +17,12 @@ import (
 )
 
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
+	// TODO: Handle case in which userInfo is not available
+	userInfo, _ := contextHelpers.GetUserInfo(r.Context())
 	// search for reserved items in the db
 	reservations, err := rental.GetReservations(rental.QueryConfigReservation{
 		OneUser:     true,
-		SelectionId: int(r.Context().Value("UserInfo").(models.User).ID),
+		SelectionId: int(userInfo.ID),
 		OrderDesc:   true,
 	})
 	if err != nil {
@@ -86,11 +89,12 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		user.Role = userRole
 	}
 	userEnabled := r.FormValue("enabled")
-	if userEnabled == "on" {
+	switch userEnabled {
+	case "on":
 		user.Enabled = true
-	} else if userEnabled == "" {
+	case "":
 		user.Enabled = false
-	} else {
+	default:
 		appState.App.Err("%v invalid enbaled value", session.GetSessionUserName(r))
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -103,7 +107,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		if audit != (models.CreditsAudit{}) {
-			credits.InsertCreditsAudit(audit)
+			// No point in failing the request now, since we already modified db state.
+			// TODO: this should be a part of the same db transaction as credit update or be added by a db trigger.
+			if err := credits.InsertCreditsAudit(audit); err != nil {
+				appState.App.Err("Error %v encountered when inserting credit audit info into db - db might be in an inconsistent state.", err)
+			}
 		}
 	}
 	if user.ID == session.GetSessionUserId(r) {

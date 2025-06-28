@@ -3,6 +3,7 @@ package users
 import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/userManager/appState"
+	"errors"
 	"fmt"
 )
 
@@ -46,7 +47,9 @@ func GetUsers() ([]models.User, error) {
 		appState.App.Debug("Can't get users %v", err.Error())
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 	var users []models.User
 
 	for rows.Next() {
@@ -88,11 +91,7 @@ func GetUserName(id int) (string, error) {
 	return uname, nil
 }
 
-func GetUserCredits(userID int) (int, error) {
-	return retriveUserCredits(userID)
-}
-
-func retriveUserCredits(userId int) (int, error) {
+func GetUserCredits(userId int) (int, error) {
 	query := `SELECT u_credits FROM users WHERE u_id = $1`
 	row := appState.App.Db.QueryRow(query, userId)
 	var credits int
