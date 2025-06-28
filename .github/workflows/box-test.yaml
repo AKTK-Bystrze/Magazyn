@@ -23,7 +23,9 @@ jobs:
       - name: Run tests
         working-directory: ./boxTest
         run: go run main.go --tests
-      - uses: actions/upload-artifact@v4
+      - name: Save failed tests data
+        uses: actions/upload-artifact@v4
+        if: failure()
         with:
           name: failedTests
           path: failedTests/*
