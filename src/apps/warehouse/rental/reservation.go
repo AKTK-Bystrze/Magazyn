@@ -5,6 +5,7 @@ import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/timeSet"
 	"bystrze/apps/warehouse/appState"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -112,7 +113,9 @@ func GetReservations(conf QueryConfigReservation) ([]models.Reservation, error) 
 		appState.App.Err("GetReservations %v", err.Error())
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 
 	var reservations []models.Reservation
 	for rows.Next() {
@@ -174,7 +177,10 @@ func AddReservation(reservation models.Reservation) error {
 		appState.App.Err("%v %v", "Cant create reservation", err.Error())
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err = errors.Join(err, stmt.Close())
+	}()
+
 	_, err = stmt.Exec(reservation.Item.ID,
 		reservation.User.ID,
 		reservation.User.ID,
@@ -206,7 +212,10 @@ func UpdateReservationStatus(reservation models.Reservation, status string, w ht
 		return
 	}
 	response := fmt.Sprintf("id: %d", reservation.ID)
-	w.Write([]byte(response))
+	if _, err := w.Write([]byte(response)); err != nil {
+		appState.App.Err("Error %v during writing the response (updating reservation status).")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
 }
 
 func UpdateReservationsDate(reservation models.Reservation, field string, newTime time.Time, w http.ResponseWriter) error {

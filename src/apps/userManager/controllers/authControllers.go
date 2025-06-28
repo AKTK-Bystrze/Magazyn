@@ -3,6 +3,7 @@ package controllers
 import (
 	"bystrze/apps/common/models"
 	sessionPkg "bystrze/apps/common/session"
+	"bystrze/apps/email/appState"
 	app "bystrze/apps/userManager/appState"
 	"bystrze/apps/userManager/users"
 	"fmt"
@@ -23,7 +24,9 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	for key := range session.Values {
 		delete(session.Values, key)
 	}
-	session.Save(r, w)
+	if err := session.Save(r, w); err != nil {
+		app.App.Err("%v encountered during session saving (Logout)", err)
+	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -48,13 +51,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, target, http.StatusSeeOther)
 		return
 	} else {
-		app.App.Templates.ExecuteTemplate(w, "login.html", struct {
+		err := app.App.Templates.ExecuteTemplate(w, "login.html", struct {
 			Strategies map[string]passwordless.Strategy
 			Msg        string
 		}{
-			Strategies: app.Pw.ListStrategies(nil),
+			Strategies: app.Pw.ListStrategies(r.Context()),
 			Msg:        "",
 		})
+		if err != nil {
+			appState.App.Err("%v when executing login.html template.")
+		}
 		return
 	}
 }
@@ -88,13 +94,15 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			target = "/warehouse/admin/reservations"
 		}
 		session.AddFlash("already_signed_in")
-		session.Save(r, w)
+		if err := session.Save(r, w); err != nil {
+			app.App.Err("%v encountered during session saving", err)
+		}
 		http.Redirect(w, r, target, http.StatusSeeOther)
 		return
 	}
 
 	// Create a context (required by CookieStore token store)
-	ctx := passwordless.SetContext(nil, w, r)
+	ctx := passwordless.SetContext(r.Context(), w, r)
 
 	strategy := r.FormValue("strategy")
 	recipient := r.FormValue("recipient")
@@ -142,7 +150,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		// No strategy specified in request, so send the user back to
 		// the signin page as we can't do anything without it.
 		session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
-		session.Save(r, w)
+		if err := session.Save(r, w); err != nil {
+			app.App.Err("%v encountered during session saving", err)
+		}
 		RedirectToLogin(w, r)
 		return
 	} else if token == "" {
@@ -171,7 +181,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			session.Values["UserInfo"] = uidInt
 			session.Values["recipient"] = recipient
 			session.AddFlash("signed_in")
-			session.Save(r, w)
+			if err := session.Save(r, w); err != nil {
+				app.App.Err("%v encountered during session saving", err)
+			}
 			http.Redirect(w, r, target, http.StatusSeeOther)
 			return
 		}
@@ -180,7 +192,9 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			// Token not found, maybe it was a previous one or expired. Either
 			// way, the user will need to attempt sign-in again.
 			session.AddFlash(ERROR_MSG_TOKEN_NOT_FOUND)
-			session.Save(r, w)
+			if err := session.Save(r, w); err != nil {
+				app.App.Err("%v encountered during session saving", err)
+			}
 			RedirectToLogin(w, r)
 			return
 		} else if err != nil {

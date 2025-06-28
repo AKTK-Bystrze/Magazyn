@@ -3,6 +3,7 @@ package news
 import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/pages/appState"
+	"errors"
 	"fmt"
 	"sort"
 )
@@ -32,7 +33,9 @@ func RetriveAllNewsByType(newsType string) ([]models.News, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 	var newsList []models.News
 
 	for rows.Next() {

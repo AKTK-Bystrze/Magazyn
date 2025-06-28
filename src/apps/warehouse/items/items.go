@@ -5,6 +5,7 @@ import (
 	"bystrze/apps/common/timeSet"
 	"bystrze/apps/warehouse/appState"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -64,7 +65,9 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 		appState.App.Debug("GetItems %v %v %v", query, conf, err.Error())
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 
 	// Store items in a slice
 	items := make([]models.TmpItemWithReservation, 0)

@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"bystrze/apps/common/contextHelpers"
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"database/sql"
@@ -19,17 +20,17 @@ import (
 )
 
 type App struct {
-	Db        Database       //setted by main
-	Store     sessions.Store //setted by main
-	Server    string         //setted by main. *Do app need it?
-	AppName   string         //setted by main
-	Router    *mux.Router    //setted by main, updated by app
-	Logger    *log.Logger    //setted by app
-	Templates Templates      //setted by app
+	Db        Database       // set by main
+	Store     sessions.Store // set by main
+	Server    string         // set by main. *Does app need it?
+	AppName   string         // set by main
+	Router    *mux.Router    // set by main, updated by app
+	Logger    *log.Logger    // set by app
+	Templates Templates      // set by app
 }
 
 func (app App) RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data TemplateDataIfce) {
-	if uinfo, ok := r.Context().Value("UserInfo").(models.User); ok {
+	if uinfo, ok := contextHelpers.GetUserInfo(r.Context()); ok {
 		data.SetUser(&uinfo)
 		data.SetURL(r.URL.String())
 		err := app.Templates.ExecuteTemplate(w, tmpl, data)
@@ -58,11 +59,11 @@ func (a *App) LoadTemplates() {
 		"AddHours": func(t time.Time, d int) time.Time {
 			return t.Add(time.Duration(d) * time.Hour)
 		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+		"dict": func(values ...any) (map[string]any, error) {
 			if len(values)%2 != 0 {
 				return nil, errors.New("invalid dict call")
 			}
-			dict := make(map[string]interface{}, len(values)/2)
+			dict := make(map[string]any, len(values)/2)
 			for i := 0; i < len(values); i += 2 {
 				key, ok := values[i].(string)
 				if !ok {
@@ -129,11 +130,11 @@ type Database interface {
 	Exec(query string, args ...any) (sql.Result, error)
 	QueryRow(query string, args ...any) *sql.Row
 	Query(query string, args ...any) (*sql.Rows, error)
-	Get(dest interface{}, query string, args ...interface{}) error
+	Get(dest any, query string, args ...any) error
 	Prepare(query string) (*sql.Stmt, error)
 	Unsafe() *sqlx.DB
-	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
-	QueryRowx(query string, args ...interface{}) *sqlx.Row
+	Queryx(query string, args ...any) (*sqlx.Rows, error)
+	QueryRowx(query string, args ...any) *sqlx.Row
 }
 
 type Templates interface {
