@@ -33,6 +33,7 @@ echo "✅ Images built: bystrze-magazyn-db:$NEW_TAG and bystrze-magazyn-app:$NEW
 
 # 4. Backup PostgreSQL database
 echo "💾 Backing up PostgreSQL database..."
+export PATH=/usr/pgsql-17/bin:$PATH
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 BACKUP_FILE="/var/backups/magazyn/_$TIMESTAMP.sql"
 
