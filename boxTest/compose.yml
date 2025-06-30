@@ -20,7 +20,8 @@ services:
     cap_add:
       - SYS_TIME                      
     depends_on:
-      - db
+      - db:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -28,7 +29,6 @@ services:
     build:
       context: ..
       dockerfile: db-dockerfile
-    options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     ports:
       - "5433:5432"
     environment:
@@ -37,6 +37,11 @@ services:
       POSTGRES_PASSWORD: postgres
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:
