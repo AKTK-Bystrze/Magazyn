@@ -20,7 +20,7 @@ services:
     cap_add:
       - SYS_TIME                      
     depends_on:
-      - db:
+      db:
         condition: service_healthy
     networks:
       - app-network
