@@ -1,4 +1,3 @@
-import os
 import csv
 import psycopg2
 import argparse

@@ -1,6 +1,6 @@
 import csv
-import os
 import re
+import sys
 
 def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
@@ -8,8 +8,12 @@ def is_valid_email(email):
 
 # Import data from Google Drive sheets: credits_sheet ("Wykaz godzinek") and rentals_sheet ("Arkusz wypożyczeń Bystrze v1.1/Rozliczenie 2024/2025")
 # Remove the cost table from the rentals sheet before import, as it is not needed
-credits_sheet = r"PATH"
-rentals_sheet = r"PATH"
+if len(sys.argv) != 3:
+    print("Usage: python initial_user_import.py <credits_sheet_path> <rentals_sheet_path>")
+    sys.exit(1)
+
+credits_sheet = sys.argv[1]
+rentals_sheet = sys.argv[2]
 result_file = "users_list_with_emails_and_credits.csv"
 
 members = {}
