@@ -36,6 +36,9 @@ services:
       POSTGRES_PASSWORD: postgres
     networks:
       - app-network
+    restart_policy:
+      condition: on-failure
+      max_attempts: 3
 
 networks:
   app-network:
