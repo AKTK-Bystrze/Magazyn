@@ -12,7 +12,7 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 	common.TestSetUp("Suite_Test_reservationMadeAndStartedSameTime")
 	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	now := time.Now()
+	now := time.Now().Add(15 * time.Minute)
 	testCases := []common.TestCase{
 		{
 			Name:      "Reservation take today return next week",
