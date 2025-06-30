@@ -1,8 +1,13 @@
 import os
 import csv
+import sys
 
 # Path to the directory with CSV files
-directory = r'PATH'
+if len(sys.argv) < 2:
+    print("Usage: python import_equipment.py <directory>")
+    sys.exit(1)
+
+directory = sys.argv[1]
 output_dir = os.path.join(directory, "output")
 merged_file = os.path.join(output_dir, "items.csv")
 
@@ -60,4 +65,4 @@ with open(merged_file, 'w', newline='', encoding='utf-8') as f_merged:
     writer.writerow(['i_type', 'i_name', 'i_description'])
     writer.writerows(all_rows)
 
-print(f"\n✅ Merged file saved as: {os.path.basename(merged_file)}")
+print(f"\n✅ Merged file saved as: {merged_file}")
