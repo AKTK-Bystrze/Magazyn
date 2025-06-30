@@ -24,8 +24,8 @@ jobs:
         working-directory: ./boxTest
         run: go run main.go --tests
       - name: Store db logs if tests falied
-      - if: failure()
-      - run: docker container logs boxtest-db-1 2&> ./boxTest/failedTests/db-logs 
+        if: failure()
+        run: docker container logs boxtest-db-1 2&> ./boxTest/failedTests/db-logs 
       - name: Save failed tests data
         uses: actions/upload-artifact@v4
         if: failure()
