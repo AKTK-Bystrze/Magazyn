@@ -9,22 +9,17 @@ echo "🔍 Latest tag: ${LAST_TAG:-none}"
 
 # Version parsing
 if [[ -z "$LAST_TAG" ]]; then
-    NEW_TAG="v1.0.0"
+  NEW_TAG="v1.0.0"
 else
-    IFS='.' read -r major minor patch <<< "${LAST_TAG#v}"
-    patch=$((patch + 1))
-    NEW_TAG="v$major.$minor.$patch"
+  IFS='.' read -r major minor patch <<< "${LAST_TAG#v}"
+  patch=$((patch + 1))
+  NEW_TAG="v$major.$minor.$patch"
 fi
 
 echo "🏷️ New tag: $NEW_TAG"
-
-# 2. Create Git tag
-git tag "$NEW_TAG"
-git push origin "$NEW_TAG"
 export IMAGE_TAG=$NEW_TAG
-echo "✅ Created and pushed tag $NEW_TAG"
 
-# 3. Build Docker images with the version tag
+# 2. Build Docker images with the version tag
 echo "🔧 Building images with tag $NEW_TAG..."
 
 docker build -f db-dockerfile -t bystrze-magazyn-db:$NEW_TAG .
@@ -32,7 +27,7 @@ docker build -f app-dockerfile -t bystrze-magazyn-app:$NEW_TAG .
 
 echo "✅ Images built: bystrze-magazyn-db:$NEW_TAG and bystrze-magazyn-app:$NEW_TAG"
 
-# 4. Backup PostgreSQL database
+# 3. Backup PostgreSQL database
 echo "💾 Backing up PostgreSQL database..."
 export PATH=/usr/pgsql-17/bin:$PATH
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
@@ -50,7 +45,7 @@ pg_dump -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -F c -b -v -f "$BACKUP_FILE" "
 
 echo "✅ Backup saved as $BACKUP_FILE"
 
-# migrate database schema
+# 4. Migrate database schema
 echo "🔄 Migrating database schema..."
 if ! docker compose run --rm migrate; then
   echo "❌ Migration failed!"
@@ -60,7 +55,11 @@ fi
 # 5. Deployment — replace images without stopping service
 echo "🚀 Deploying containers..."
 
-# Use --detach and --pull=never (if local) to minimize downtime
 docker compose -f compose.yml up -d --build
 
 echo "✅ Deployment finished with version $NEW_TAG"
+
+# 6. Create Git tag only if everything succeeded
+git tag "$NEW_TAG"
+git push origin "$NEW_TAG"
+echo "✅ Created and pushed tag $NEW_TAG"
