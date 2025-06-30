@@ -6,62 +6,62 @@ def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     return re.match(pattern, email) is not None
 
-# Importuj dane z arkuszy z dysku google. arkusz_godzinek (Wykaz godzinek) i arkusz_wypozyczen (Arkusz wypożyczeń Bystrze v1.1/Rozliczenie 2024/2025)
-# z arkusza wypozyczen usun tabelke kosztu przed importem, bo nie jest potrzebna
-arkusz_godzinek = r"PATH"
-arkusz_wypozyczen = r"PATH"
-resultFile = "users_list_with_emails_and_credits.csv"
+# Import data from Google Drive sheets: credits_sheet ("Wykaz godzinek") and rentals_sheet ("Arkusz wypożyczeń Bystrze v1.1/Rozliczenie 2024/2025")
+# Remove the cost table from the rentals sheet before import, as it is not needed
+credits_sheet = r"PATH"
+rentals_sheet = r"PATH"
+result_file = "users_list_with_emails_and_credits.csv"
 
-czlonkowie = {}
-with open(arkusz_godzinek, encoding='utf-8') as f1:
+members = {}
+with open(credits_sheet, encoding='utf-8') as f1:
     reader = csv.reader(f1)
-    for _ in range(4):  # Pomijamy nagłówki i puste wiersze
+    for _ in range(4):  # Skip headers and empty rows
         next(reader)
     for row in reader:
         if len(row) < 5:
             continue
-        imie_nazwisko = row[0].strip()
-        stan_godzinek = row[1].strip()
+        name = row[0].strip()
+        credits_balance = row[1].strip()
         status = row[4].strip()
         if status == 'AKTYWNY':
             status = True
         else:
             status = False
-        czlonkowie[imie_nazwisko] = {
-            'Stan godzinek (suma)': stan_godzinek,
-            'Status członkostwa': status
+        members[name] = {
+            'Credits balance (sum)': credits_balance,
+            'Membership status': status
         }
-print(f"Znaleziono {len(czlonkowie)} członków w arkuszu godzinek.")
+print(f"Found {len(members)} members in the credits sheet.")
 
-# Wczytaj dane z arkusza 2 i dołącz email
-with open(arkusz_wypozyczen, encoding='utf-8') as f2:
+# Read data from the second sheet and add email
+with open(rentals_sheet, encoding='utf-8') as f2:
     reader = csv.DictReader(f2)
     for row in reader:
-        imie_nazwisko = row['Wypożyczający'].strip()
+        name = row['Wypożyczający'].strip()
         email = row['Adres email'].strip()
         if not is_valid_email(email):
             email = ''
-        if imie_nazwisko in czlonkowie:
-            czlonkowie[imie_nazwisko]['Adres email'] = email
+        if name in members:
+            members[name]['Email address'] = email
         else:
-            czlonkowie[imie_nazwisko] = {
-                'Stan godzinek (suma)': '',
-                'Status członkostwa': '',
-                'Adres email': email
+            members[name] = {
+                'Credits balance (sum)': '',
+                'Membership status': '',
+                'Email address': email
             }
-print(f"Zaktualizowano dane o emailach dla {len(czlonkowie)} członków.")
+print(f"Updated email data for {len(members)} members.")
 
-# Zapisz wynik do pliku CSV
-with open(resultFile, 'w', newline='', encoding='utf-8') as f_out:
+# Save the result to a CSV file
+with open(result_file, 'w', newline='', encoding='utf-8') as f_out:
     fieldnames = ['u_username', 'u_email', 'u_credits', 'u_enabled']
     
     writer = csv.DictWriter(f_out, fieldnames=fieldnames)
     writer.writeheader()
-    for imie_nazwisko, dane in czlonkowie.items():
+    for name, data in members.items():
         writer.writerow({
-            'u_username': imie_nazwisko,
-            'u_email': dane.get('Adres email', ''),
-            'u_credits': dane.get('Stan godzinek (suma)', ''),
-            'u_enabled': dane.get('Status członkostwa', '')
+            'u_username': name,
+            'u_email': data.get('Email address', ''),
+            'u_credits': data.get('Credits balance (sum)', ''),
+            'u_enabled': data.get('Membership status', '')
         })
-print(f"Dane zostały zapisane do pliku: {resultFile}")
+print(f"Data has been saved to file: {result_file}")

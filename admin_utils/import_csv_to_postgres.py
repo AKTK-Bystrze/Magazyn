@@ -3,7 +3,7 @@ import csv
 import psycopg2
 import argparse
 
-# Konfiguracja połączenia z PostgreSQL
+# PostgreSQL connection configuration
 DB_CONFIG = {
     'dbname': 'magazyn',
     'user': 'postgres',
@@ -19,7 +19,7 @@ def import_users(cursor, csv_path):
             username = row.get('u_username') or row.get('Imię i nazwisko')
             email = row.get('u_email') or row.get('Adres email')
             if not username or not email:
-                print(f"⚠️ Pominięto użytkownika z brakującymi danymi: {row}")
+                print(f"⚠️ Skipped user with missing data: {row}")
                 continue
             try:
                 cursor.execute("""
@@ -35,7 +35,7 @@ def import_users(cursor, csv_path):
                     str(row.get('u_enabled', 'false')).lower() in ['true', '1', 't']
                 ))
             except Exception as e:
-                print(f"❌ Błąd importowania użytkownika {username}: {e}")
+                print(f"❌ Error importing user {username}: {e}")
 
 TYPE_MAP = {
     'Kajak': 'kayak',
@@ -56,13 +56,13 @@ def import_items(cursor, csv_path):
         for row in reader:
             name = row.get('i_name')
             if not name:
-                print(f"⚠️ Pominięto przedmiot z brakującą nazwą: {row}")
+                print(f"⚠️ Skipped item with missing name: {row}")
                 continue
 
             raw_type = row.get('i_type', '').strip()
             mapped_type = TYPE_MAP.get(raw_type)
             if not mapped_type:
-                print(f"⚠️ Pominięto przedmiot '{name}' o nieznanym typie: '{raw_type}'")
+                print(f"⚠️ Skipped item '{name}' with unknown type: '{raw_type}'")
                 continue
 
             try:
@@ -76,7 +76,7 @@ def import_items(cursor, csv_path):
                     mapped_type
                 ))
             except Exception as e:
-                print(f"❌ Błąd importowania przedmiotu {name}: {e}")
+                print(f"❌ Error importing item {name}: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description="Import CSV data to PostgreSQL.")
@@ -89,18 +89,18 @@ def main():
         conn.autocommit = True
         cursor = conn.cursor()
 
-        print("➡ Importowanie użytkowników...")
+        print("➡ Importing users...")
         import_users(cursor, args.users_csv)
 
-        print("➡ Importowanie ekwipunku...")
+        print("➡ Importing equipment...")
         import_items(cursor, args.items_csv)
 
-        print("✅ Import zakończony sukcesem.")
+        print("✅ Import completed successfully.")
         cursor.close()
         conn.close()
 
     except Exception as e:
-        print(f"❌ Nie udało się połączyć z bazą danych: {e}")
+        print(f"❌ Failed to connect to the database: {e}")
 
 if __name__ == '__main__':
     main()
