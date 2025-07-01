@@ -1,6 +1,9 @@
 import csv
 import psycopg2
 import argparse
+import os
+import subprocess
+import datetime
 
 # PostgreSQL connection configuration
 DB_CONFIG = {
