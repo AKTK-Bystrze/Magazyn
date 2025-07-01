@@ -92,23 +92,30 @@ def import_items(cursor, csv_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Import CSV data to PostgreSQL.")
-    parser.add_argument('--users-csv', required=True, help='Path to users CSV file')
-    parser.add_argument('--items-csv', required=True, help='Path to items CSV file')
+    parser.add_argument('--users-csv', required=False, help='Path to users CSV file')
+    parser.add_argument('--items-csv', required=False, help='Path to items CSV file')
     args = parser.parse_args()
 
-    # Backup before import
-    backup_database(args.users_csv)
+    if not args.users_csv and not args.items_csv:
+        print("Nothing to import. Please provide at least --users-csv or --items-csv.")
+        exit(1)
+
+    # Backup before import (use the first provided file for the suffix)
+    import_file = args.users_csv or args.items_csv
+    backup_database(import_file)
 
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         conn.autocommit = True
         cursor = conn.cursor()
 
-        print("➡ Importing users...")
-        import_users(cursor, args.users_csv)
+        if args.users_csv:
+            print("➡ Importing users...")
+            import_users(cursor, args.users_csv)
 
-        print("➡ Importing equipment...")
-        import_items(cursor, args.items_csv)
+        if args.items_csv:
+            print("➡ Importing equipment...")
+            import_items(cursor, args.items_csv)
 
         print("✅ Import completed successfully.")
         cursor.close()
