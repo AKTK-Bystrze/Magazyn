@@ -11,6 +11,19 @@ DB_CONFIG = {
     'port': '54320',
 }
 
+def backup_database(import_file):
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    import_base = os.path.splitext(os.path.basename(import_file))[0]
+    suffix = f"before_csv_import_{import_base}_{timestamp}"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    backup_script = os.path.join(script_dir, "dbBackup.sh")
+    print(f"💾 Backing up database before import (suffix: {suffix})...")
+    try:
+        subprocess.run([backup_script, suffix], check=True)
+    except Exception as e:
+        print(f"❌ Failed to backup database: {e}")
+        exit(2)
+
 def import_users(cursor, csv_path):
     with open(csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -82,6 +95,9 @@ def main():
     parser.add_argument('--users-csv', required=True, help='Path to users CSV file')
     parser.add_argument('--items-csv', required=True, help='Path to items CSV file')
     args = parser.parse_args()
+
+    # Backup before import
+    backup_database(args.users_csv)
 
     try:
         conn = psycopg2.connect(**DB_CONFIG)
