@@ -3,6 +3,7 @@
 
 set -e
 PORT=54320
+HOST="localhost"
 DB_NAME="magazyn"
 DB_USER="postgres"
 
@@ -14,17 +15,14 @@ usage() {
 }
 
 if [ "$#" -eq 2 ] && [ "$2" == "--restore" ]; then
-    # Restore mode: $1 = backup file, $2 = --restore
     TEMP_DB=""
     BACKUP_FILE="$1"
     RESTORE_FLAG="--restore"
 elif [ "$#" -eq 2 ]; then
-    # Temp db mode: $1 = temp db, $2 = backup file
     TEMP_DB="$1"
     BACKUP_FILE="$2"
     RESTORE_FLAG=""
 elif [ "$#" -eq 3 ] && [ "$3" == "--restore" ]; then
-    # Both temp db and restore (not recommended, but supported)
     TEMP_DB="$1"
     BACKUP_FILE="$2"
     RESTORE_FLAG="--restore"
@@ -45,28 +43,27 @@ if [ "$RESTORE_FLAG" == "--restore" ]; then
         exit 3
     fi
 
-    # Backup current database before dropping
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     echo "Backing up current '$DB_NAME' database before restore..."
     bash "$SCRIPT_DIR/dbBackup.sh" replaced
 
     echo "Dropping existing '$DB_NAME' database..."
-    dropdb -p "$PORT" -U "$DB_USER" --if-exists "$DB_NAME"
+    dropdb -h "$HOST" -p "$PORT" -U "$DB_USER" --if-exists "$DB_NAME"
 
     echo "Creating new '$DB_NAME' database..."
-    createdb -p "$PORT" -U "$DB_USER" "$DB_NAME"
+    createdb -h "$HOST" -p "$PORT" -U "$DB_USER" "$DB_NAME"
 
     echo "Restoring backup into '$DB_NAME'..."
-    pg_restore -U "$DB_USER" -p "$PORT" -d "$DB_NAME" "$BACKUP_FILE"
+    pg_restore -h "$HOST" -U "$DB_USER" -p "$PORT" -d "$DB_NAME" "$BACKUP_FILE"
 
     echo "✅ '$DB_NAME' database has been restored from backup."
 elif [ -n "$TEMP_DB" ]; then
     echo "Creating temporary database '$TEMP_DB'..."
-    dropdb --if-exists -p "$PORT" -U "$DB_USER" "$TEMP_DB"
-    createdb -p "$PORT" -U "$DB_USER" "$TEMP_DB"
+    dropdb --if-exists -h "$HOST" -p "$PORT" -U "$DB_USER" "$TEMP_DB"
+    createdb -h "$HOST" -p "$PORT" -U "$DB_USER" "$TEMP_DB"
 
     echo "Restoring backup into '$TEMP_DB'..."
-    pg_restore -U "$DB_USER" -p "$PORT" -d "$TEMP_DB" "$BACKUP_FILE"
+    pg_restore -h "$HOST" -U "$DB_USER" -p "$PORT" -d "$TEMP_DB" "$BACKUP_FILE"
 
     echo "✅ Temporary database '$TEMP_DB' loaded from backup. No changes made to '$DB_NAME'."
 else
