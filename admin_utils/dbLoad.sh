@@ -1,5 +1,4 @@
 #!/bin/bash
-# filepath: c:\Users\uzytkownik\Desktop\Bystrze_magazyn\Magazyn\admin_utils\dbLoad.sh
 
 set -e
 PORT=54320

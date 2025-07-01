@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Set your connection details
 PG_USER="postgres"
 PG_PASSWORD="postgres"
