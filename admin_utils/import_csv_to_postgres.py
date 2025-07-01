@@ -15,9 +15,8 @@ DB_CONFIG = {
 }
 
 def backup_database(import_file):
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     import_base = os.path.splitext(os.path.basename(import_file))[0]
-    suffix = f"before_csv_import_{import_base}_{timestamp}"
+    suffix = f"before_csv_import_{import_base}"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     backup_script = os.path.join(script_dir, "dbBackup.sh")
     print(f"💾 Backing up database before import (suffix: {suffix})...")
