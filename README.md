@@ -26,9 +26,9 @@ Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
     - [Uwagi](#uwagi)
 
 # Jak uruchomić
-1. Za pomocą docker-compose
+1. Za pomocą docker compose
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 2. Uruchomić bazę danych postgres i aplikację lokalnie
    1. Kontener postgres
@@ -90,7 +90,7 @@ set cgo_enabled=1
 Autentykacja jest realizowana za pomocą pakietu https://github.com/johnsto/go-passwordless. Token autentykacyjny jest przesyłany
 za pomocą emaila zdefiniowanego w **MAGAZYN_BYSTRZE_EMAIL_ADDR**.
 
- Parametr **DEBU** (SEND_COOKIE_TO_STDOUT) po ustawieniu na:
+ Parametr **DEBUG** (SEND_COOKIE_TO_STDOUT) po ustawieniu na:
 - **true** 
 
 pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawany w terminalu. Na stronie należy podać "u_username" występujący w bazie
@@ -146,7 +146,7 @@ w `authorization.go` jest logika uprawnień. Istniejące uprawnienia są zdefini
 Wersja produkcyjna jest oznaczona poprzez git tag w historii commitów:
 ```cmd
 git tag -a <tag-name> -m "<message>"
-git tag -a v.1.0.0 -m "First release"
+git tag -a v1.0.0 -m "First release"
 ```
 Sprawdź poprzednie tagi
 ```cmd

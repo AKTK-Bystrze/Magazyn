@@ -39,6 +39,9 @@ func main() {
 	}()
 
 	debug := setDebugMode()
+	if !debug {
+		checkEmailEnv(MAGAZYN_BYSTRZE_EMAIL_ADDR, os.Getenv("MAGAZYN_BYSTRZE_EMAIL_PASS"))
+	}
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	router := mux.NewRouter()
 
@@ -87,6 +90,17 @@ func setDb(dsn string) *sqlx.DB {
 func checkEnv(ip string, port string) {
 	if ip == "" || port == "" {
 		log.Fatal("No IP or PORT os env \n")
+		os.Exit(1)
+	}
+}
+
+func checkEmailEnv(email_addr string, email_password string) {
+	if email_addr == "" {
+		log.Fatal("No MAGAZYN_BYSTRZE_EMAIL_ADDR os env \n")
+		os.Exit(1)
+	}
+	if email_password == "" {
+		log.Fatal("No MAGAZYN_BYSTRZE_EMAIL_PASS os env \n")
 		os.Exit(1)
 	}
 }
