@@ -14,7 +14,7 @@ services:
       context: . 
       dockerfile: app-dockerfile  
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/magazyn?sslmode=disable
       - DEBUG=${DEBUG:-True}
@@ -40,7 +40,7 @@ services:
     networks:
       - magazyn-network
     ports:
-      - "54320:5432"
+      - "127.0.0.1:54320:5432"
     volumes:
       - magazyn_pgdata:/var/lib/postgresql/data
     restart: unless-stopped
