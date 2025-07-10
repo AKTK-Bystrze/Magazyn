@@ -1,4 +1,18 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: magazyn-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /usr/share/nginx/html:/usr/share/nginx/html:ro
+    networks:
+      - magazyn-network
+    depends_on:
+      - web
   migrate:
     image: migrate/migrate
     command: -path=/migrations -database postgres://postgres:postgres@db:5432/magazyn?sslmode=disable up
@@ -13,8 +27,6 @@ services:
     build:
       context: . 
       dockerfile: app-dockerfile  
-    ports:
-      - "127.0.0.1:8080:8080"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/magazyn?sslmode=disable
       - DEBUG=${DEBUG:-True}
