@@ -20,6 +20,8 @@ jobs:
       - name: Setup containers
         working-directory: ./boxTest
         run: go run main.go --env
+      - name: Sleep
+        run: sleep 60
       - name: Run tests
         working-directory: ./boxTest
         run: go run main.go --tests
