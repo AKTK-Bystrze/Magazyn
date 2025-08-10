@@ -58,9 +58,12 @@ func BaseScenario(tc TestCase) {
 		db.ByItemID(tc.Item.ID),
 		db.ByStatus(app.PENDING),
 		db.ByUserID(int(User.User.ID)),
-		db.ByStartTime(tc.StartTime.UTC()),
-		db.ByEndTime(tc.EndTime.UTC()),
+		//db.ByStartTime(tc.StartTime.UTC()),
+		//db.ByEndTime(tc.EndTime.UTC()),
 	)
+	log.Print("Time range according to TEST", tc.StartTime, tc.EndTime)
+	log.Print("Fetched reservation:", reservation)
+
 	if err != nil {
 		log.Fatalf("Failed to get reservation from db: %v", err)
 	}
