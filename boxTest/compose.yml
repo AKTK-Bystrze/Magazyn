@@ -37,6 +37,12 @@ services:
       POSTGRES_PASSWORD: postgres
     networks:
       - app-network
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_duration=on
+      -c log_min_error_statement=debug5
+      -c log_error_verbosity=verbose
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d magazyn"]
       interval: 5s
