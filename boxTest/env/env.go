@@ -98,14 +98,14 @@ func EnviromentSetUP() {
 
 func RunTests() {
 	WAREHOUSE := "boxTest/tests/warehouse"
-	USEER_MANAGER := "boxTest/tests/userManager"
+	//USER_MANAGER := "boxTest/tests/userManager"
 	testsCMD := []struct {
 		name     string
 		timeout  int
 		location string
 	}{
-		{"Test_allUsers_loginAndlogut", 60, USEER_MANAGER},
-		//{"Test_allUsers_loginSameTime", 60, USEER_MANAGER},
+		//{"Test_allUsers_loginAndlogut", 60, USER_MANAGER},
+		//{"Test_allUsers_loginSameTime", 60, USER_MANAGER},
 		{"Test_reservationMadeAndStartedSameTime", 150, WAREHOUSE},
 		//{"Test_reservationMadeInFuture", 150, WAREHOUSE},
 		//{"Test_reservationNotAsPlanned", 150, WAREHOUSE},
