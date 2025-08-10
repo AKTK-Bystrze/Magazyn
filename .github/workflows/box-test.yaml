@@ -21,6 +21,7 @@ jobs:
         working-directory: ./boxTest
         run: go run main.go --env
       - name: Try
+        working-directory: ./boxTest
         run: go test -run Test_reservationMadeAndStartedSameTime boxTest/tests/warehouse
       - name: Run tests
         working-directory: ./boxTest
