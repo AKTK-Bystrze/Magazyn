@@ -109,6 +109,6 @@ func setLocation() {
 	var err error
 	timeSet.LOCATION, err = time.LoadLocation("Europe/Warsaw")
 	if err != nil {
-		log.Fatalf("Can't get locat time zone")
+		log.Fatalf("Can't get local time zone")
 	}
 }
