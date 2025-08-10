@@ -80,13 +80,27 @@ func RunCommandError(printOutput bool, command string, args ...string) (string, 
 
 // Works for a while till system synchronize it. Oppening browser does synchronise time
 func SetContainerTime(timeToSet time.Time, containerName string) {
-	timeFormated := strings.ReplaceAll(timeToSet.Format(CONTAINER_TIME_FORMAT), "T", " ")
-	RunCommand(false, "docker", "exec", containerName, "date", "-s", timeFormated)
-	res := RunCommand(false, "docker", "exec", containerName, "date")
-	if res == "" {
-		log.Fatalf("can't change time on %v", containerName)
-	} else {
-		log.Printf("Set time to %v for container %v", res, containerName)
+	const maxAttempts = 5
+	timeFormatted := strings.ReplaceAll(timeToSet.Format(CONTAINER_TIME_FORMAT), "T", " ")
+	var lastRes string
+	var success bool
+
+	for i := 0; i < maxAttempts; i++ {
+		RunCommand(false, "docker", "exec", containerName, "date", "-s", timeFormatted)
+		res := RunCommand(false, "docker", "exec", containerName, "date")
+		lastRes = res
+
+		containerTime, err := time.Parse(DATE_FORMAT, strings.TrimSpace(res))
+		if err == nil && containerTime.Format(CONTAINER_TIME_FORMAT) == timeToSet.Format(CONTAINER_TIME_FORMAT) {
+			success = true
+			log.Printf("Set time to %v for container %v", res, containerName)
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	if !success {
+		log.Fatalf("can't change time on %v after %d attempts, last result: %v", containerName, maxAttempts, lastRes)
 	}
 }
 

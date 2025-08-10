@@ -1,7 +1,15 @@
-version: '3.8'
-
 services:
+  migrate:
+    image: migrate/migrate
+    command: -path=/migrations -database postgres://postgres:postgres@db:5432/magazyn?sslmode=disable up
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+        - db
+    networks:
+      - magazyn-network
   web:
+    image: bystrze-magazyn-app:${IMAGE_TAG-latest}
     build:
       context: . 
       dockerfile: app-dockerfile  
@@ -9,12 +17,19 @@ services:
       - "8080:8080"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/magazyn?sslmode=disable
+      - DEBUG=${DEBUG:-True}
+      - MAGAZYN_BYSTRZE_EMAIL_ADDR=${MAGAZYN_BYSTRZE_EMAIL_ADDR:-}
+      - MAGAZYN_BYSTRZE_EMAIL_PASS=${MAGAZYN_BYSTRZE_EMAIL_PASS:-}
+      - COOKIE_KEY=${COOKIE_KEY:-}
+      - SERVER=${SERVER:-http://localhost:8080}
     depends_on:
       - db
     networks:
-      - app-network
+      - magazyn-network
+    restart: unless-stopped
 
   db:
+    image: bystrze-magazyn-db:${IMAGE_TAG:-latest}
     build:
       context: . 
       dockerfile: db-dockerfile
@@ -23,8 +38,15 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     networks:
-      - app-network
+      - magazyn-network
+    ports:
+      - "54320:5432"
+    volumes:
+      - magazyn_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  magazyn_pgdata:
 
 networks:
-  app-network:
+  magazyn-network:
     driver: bridge

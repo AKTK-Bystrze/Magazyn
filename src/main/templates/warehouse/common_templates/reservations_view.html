@@ -40,7 +40,7 @@
         {{ else if eq .Status "rented" }}{{ $class = "badge badge-primary" }}{{ $txt = "Wypozyczony" }}
         {{ else if eq .Status "returned" }}{{ $class = "badge badge-success" }}{{ $txt = "Zwrocony" }}
         {{ end }}
-        {{ if and $.ChangeStatus (.StartTime.After (AddHours Now -6)) }}
+        {{ if and $.ChangeStatus}}
         <form method="POST" id="reservation_{{ .ID }}" action="javascript:void(0);">
           <input type="hidden" name="reservation_id" value="{{ .ID }}">
           <input type="hidden" name="url" value="{{ $.URL }}">
