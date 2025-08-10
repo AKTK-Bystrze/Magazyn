@@ -111,7 +111,10 @@ func ChangeReservationStatusWithTimestamp(change Change, reservation app.Reserva
 
 func ChangeReservationStatus(status string, reservation app.Reservation) {
 	Admin.ChangeReservationStatus(reservation, status)
-	reservationLoaded := db.GetReservation(db.ByID(reservation.ID))
+	reservationLoaded, err := db.GetReservation(db.ByID(reservation.ID))
+	if err != nil {
+		log.Fatalf("Couldn't get reservation from the db: %v", err)
+	}
 	if reservationLoaded.Status != status {
 		log.Fatalf("status didn't change. Want %v have %v", status, reservation.Status)
 	}
