@@ -60,6 +60,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	appState.App.Info("Form:", r.Form)
 	reservationId := r.FormValue("reservation_id")
 	newStatus := r.FormValue("status")
 	id, err := strconv.Atoi(reservationId)
