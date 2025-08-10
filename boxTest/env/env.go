@@ -130,6 +130,9 @@ func RunTests() {
 		MarkNewTestInLogs(tc.name)
 		cmd := exec.CommandContext(ctx, "go", "test", "-run", tc.name, tc.location)
 		output, err := cmd.CombinedOutput()
+
+		log.Print(string(output))
+
 		if err != nil {
 			failedTests = append(failedTests, tc.name)
 			log.Printf("\tFAILED: %v", tc.name)
@@ -149,10 +152,6 @@ func RunTests() {
 			}
 			passedTests = append(passedTests, tc.name)
 			log.Printf("\tPASSED: %v", tc.name)
-
-			fileName := tc.name + "_" + time.Now().Format(FILENAME_TIME_FORMAT)
-			saveLogsToFile(TESTS_OUTPUT_PATH+fileName+"_TEST.log", string(output))
-			saveLogsToFile(TESTS_OUTPUT_PATH+fileName+"_LOGS.log", GetContainerLogsAfterString(TEST_APP_NAME, tc.name))
 		}
 
 	}
