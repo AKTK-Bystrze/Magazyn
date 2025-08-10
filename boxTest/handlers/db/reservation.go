@@ -68,20 +68,19 @@ func GetReservations(conditions ...ConditionFunc) ([]app.Reservation, error) {
 
 // GetReservation retrieves a single reservation from the database based on conditions
 // It returns an error if more than one or no reservation matches the conditions
-func GetReservation(conditions ...ConditionFunc) app.Reservation {
+func GetReservation(conditions ...ConditionFunc) (app.Reservation, error) {
 	reservations, err := getReservationsFromDB(conditions...)
 	if err != nil {
-		return app.Reservation{}
+		return app.Reservation{}, err
 	}
 
 	// If exactly one reservation is found, return it
 	if len(reservations) == 1 {
-		return reservations[0]
+		return reservations[0], nil
 	}
 
 	// If no reservations or more than one reservation is found, return an error
-	fmt.Errorf("expected one reservation, but found %d", len(reservations))
-	return app.Reservation{}
+	return app.Reservation{}, fmt.Errorf("expected one reservation, but found %d", len(reservations))
 }
 
 // Example condition function to filter by ID
