@@ -60,9 +60,12 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	reservationID := r.FormValue("reservation_id")
+	reservationId := r.FormValue("reservation_id")
 	newStatus := r.FormValue("status")
-	id, _ := strconv.Atoi(reservationID)
+	id, err := strconv.Atoi(reservationId)
+	if err != nil {
+		appState.App.Err("Failed to convert reservation id %s to int: %v", reservationId, err)
+	}
 	reservation, err := rental.GetReservation(id)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
