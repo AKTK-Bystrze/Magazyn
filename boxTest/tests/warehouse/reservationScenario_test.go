@@ -8,11 +8,15 @@ import (
 	"time"
 )
 
+func timeNow() time.Time {
+	return time.Now().In(tests.LOCATION).Truncate(time.Second)
+}
+
 func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 	common.TestSetUp("Suite_Test_reservationMadeAndStartedSameTime")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	items := common.User.GetAvailableItems(timeNow(), timeNow().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	now := time.Now().In(tests.LOCATION).Add(15 * time.Minute).Truncate(time.Second)
+	now := timeNow().Add(15 * time.Minute)
 	testCases := []common.TestCase{
 		{
 			Name:      "Reservation take today return next week",
@@ -23,7 +27,7 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 		{
 			Name:      "Reservation take today return tomorrow",
 			StartTime: now,
-			EndTime:   tests.CreateNextDayAt(23),
+			EndTime:   tests.CreateNextDayAt(now, 23),
 			Item:      reservedItem,
 		},
 		{
