@@ -4,6 +4,7 @@ import (
 	"boxTest/env"
 	"boxTest/handlers/app"
 	"database/sql"
+	"errors"
 	"log"
 	"time"
 
@@ -24,7 +25,10 @@ func getReservationsFromDB(conditions ...ConditionFunc) ([]app.Reservation, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %v", err)
 	}
-	defer rows.Close()
+
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 
 	// Initialize a slice to store filtered reservations
 	var reservations []app.Reservation
@@ -147,7 +151,7 @@ func GetReservationByID(reservationID int) (app.Reservation, error) {
 }
 
 // AddReservation adds a new reservation to the database.
-func AddReservation(reservation app.Reservation) error {
+func AddReservation(reservation app.Reservation) {
 	log.Printf("Adding reservation: %+v", reservation)
 	db := env.DB
 	query := `INSERT INTO reservations (r_start_time, r_end_time, r_item_id, r_user_id, r_changeby_uid, r_status, r_created_at) 
@@ -162,19 +166,17 @@ func AddReservation(reservation app.Reservation) error {
 		reservation.CreatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to insert reservation: %v", err)
+		log.Fatalf("failed to insert reservation: %v", err)
 	}
-	return nil
 }
 
 // RemoveReservations removes all reservations from the database.
-func RemoveReservations() error {
+func RemoveReservations() {
 	log.Printf("Removing all reservations")
 	db := env.DB
 	query := "DELETE FROM reservations"
 	_, err := db.Exec(query)
 	if err != nil {
-		return fmt.Errorf("failed to remove reservations: %v", err)
+		log.Fatalf("failed to remove reservations: %v", err)
 	}
-	return nil
 }

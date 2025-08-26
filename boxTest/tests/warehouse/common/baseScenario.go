@@ -6,6 +6,7 @@ import (
 	"boxTest/handlers/db"
 	"boxTest/tests"
 	"log"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -24,12 +25,20 @@ func TestSetUp(testName string) {
 		User:   db.USERS_MAP[app.UserName1],
 		Client: app.CreateHttpClient(),
 	}
-	User.Login()
+
+	if err := User.Login(); err != nil {
+		log.Fatalf("Unable to login as user: %v", err)
+	}
+
 	Admin = app.UserClient{
 		User:   db.USERS_MAP[app.AdminName1],
 		Client: app.CreateHttpClient(),
 	}
-	Admin.Login()
+
+	if err := Admin.Login(); err != nil {
+		log.Fatalf("Unable to login as admin: %v", err)
+	}
+
 	db.RemoveAudits()
 	db.RemoveReservations()
 	env.RevertContainerTime(env.TEST_APP_NAME)
@@ -40,8 +49,15 @@ func TestSetUp(testName string) {
 func TestTearDown(testName string) {
 	env.MarkNewTestInLogs("TearDown_After_" + strings.ReplaceAll(testName, " ", "-"))
 	log.Print("\n\tCLEAN UP...")
-	User.LogOut()
-	Admin.LogOut()
+
+	if err := User.LogOut(); err != nil {
+		log.Fatalf("Unable to log out from user account: %v", err)
+	}
+
+	if err := Admin.LogOut(); err != nil {
+		log.Fatalf("Unable to log out from admin account: %v", err)
+	}
+
 	env.RevertContainerTime(env.TEST_APP_NAME)
 	db.RemoveAudits()
 	db.RemoveReservations()
@@ -124,12 +140,7 @@ func ChangeReservationStatus(status string, reservation app.Reservation) {
 }
 
 func contains(list []string, key string) bool {
-	for _, item := range list {
-		if item == key {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, key)
 }
 
 func ShowTestRaport(t *testing.T, passedTests []string, failedTests []string) {

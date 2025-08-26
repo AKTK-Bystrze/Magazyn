@@ -1,6 +1,7 @@
 package env
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -116,7 +117,11 @@ func saveLogsToFile(path string, content string) {
 	if err != nil {
 		log.Fatalf("failed to open file %s: %v", path, err)
 	}
-	defer f.Close()
+
+	defer func() {
+		err = errors.Join(err, f.Close())
+	}()
+
 	if _, err := f.WriteString(content); err != nil {
 		log.Fatalf("failed to write to file %s: %v", path, err)
 	}
@@ -125,5 +130,8 @@ func saveLogsToFile(path string, content string) {
 
 func MarkNewTestInLogs(testName string) {
 	client := http.Client{}
-	client.Get(Localhost + "/warehouse/user/search?______" + testName)
+	_, err := client.Get(Localhost + "/warehouse/user/search?______" + testName)
+	if err != nil {
+		log.Fatalf("Marking new test in logs failed: %v", err)
+	}
 }

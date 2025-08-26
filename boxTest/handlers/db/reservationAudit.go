@@ -3,6 +3,7 @@ package db
 import (
 	"boxTest/env"
 	"boxTest/handlers/app"
+	"errors"
 	"log"
 )
 
@@ -23,7 +24,10 @@ SELECT ra_id, ra_reservation_id, ra_user_id, ra_status, ra_change_date
 	if err != nil {
 		log.Fatalf("unable to execute query: %v", err)
 	}
-	defer rows.Close()
+
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 
 	// Loop through the results and scan each row into a ReservationAudit struct
 	for rows.Next() {

@@ -2,7 +2,8 @@ package app
 
 import (
 	"boxTest/env"
-	"io/ioutil"
+	"errors"
+	"io"
 	"log"
 	"net/url"
 	"strconv"
@@ -51,13 +52,21 @@ func (uc UserClient) ChangeReservationStatus(reservation Reservation, status str
 }
 
 func (uc UserClient) GetAvailableItems(timeStart time.Time, timeStop time.Time) []Item {
+	var err error
 	resp := uc.PostFormRequest(env.Localhost+URL_search,
 		url.Values{
 			"start_time": {timeStart.Format(env.CONTAINER_TIME_FORMAT)},
 			"end_time":   {timeStop.Format(env.CONTAINER_TIME_FORMAT)},
 		})
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
+
+	defer func() {
+		err = errors.Join(err, resp.Body.Close())
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Failed to read response body: %v", err)
+	}
 
 	// Load the HTML document from the response body
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
