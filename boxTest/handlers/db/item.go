@@ -3,6 +3,7 @@ package db
 import (
 	"boxTest/env"
 	"boxTest/handlers/app"
+	"errors"
 	"fmt"
 )
 
@@ -25,7 +26,10 @@ func GetAvailableItems(startTime, endTime string) ([]app.Item, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error executing query: %v", err)
 	}
-	defer rows.Close()
+
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
 
 	// Parse the results into a slice of Item structs
 	var items []app.Item

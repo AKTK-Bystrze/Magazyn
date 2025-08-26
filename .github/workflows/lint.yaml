@@ -17,8 +17,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-      - name: golangci-lint
+      - name: Lint src
         uses: golangci/golangci-lint-action@v8
         with:
           working-directory: ./src
+          version: v2.1
+      - name: Lint box test
+        uses: golangci/golangci-lint-action@v8
+        with:
+          working-directory: ./boxTest
           version: v2.1

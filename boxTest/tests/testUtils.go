@@ -13,7 +13,6 @@ var (
 )
 
 func PickRandomItem(items []app.Item) app.Item {
-	rand.Seed(time.Now().UnixNano())
 	randomIndex := rand.Intn(len(items))
 	return items[randomIndex]
 }
