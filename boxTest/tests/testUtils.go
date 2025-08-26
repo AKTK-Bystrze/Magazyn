@@ -27,8 +27,8 @@ func IsItemAvailable(searchedItem app.Item, items []app.Item) bool {
 	return false
 }
 
-func CreateNextDayAt(hour int) time.Time {
-	now := time.Now().Add(24 * time.Hour)
+func CreateNextDayAt(now time.Time, hour int) time.Time {
+	now = now.Add(24 * time.Hour)
 	year, month, day := now.Date()
 	location := now.Location()
 

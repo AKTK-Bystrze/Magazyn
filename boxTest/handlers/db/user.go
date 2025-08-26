@@ -4,7 +4,7 @@ import (
 	"boxTest/env"
 	"boxTest/handlers/app"
 	"database/sql"
-	"fmt"
+	"log"
 )
 
 // GetUserById retrieves a user by their ID from the database.
@@ -17,9 +17,9 @@ func GetUserById(id int) app.User {
 	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.Credits)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			fmt.Errorf("no user found with ID %d", id)
+			log.Fatalf("no user found with ID %d", id)
 		}
-		fmt.Errorf("error scanning row: %v", err)
+		log.Fatalf("error scanning row: %v", err)
 	}
 
 	return u

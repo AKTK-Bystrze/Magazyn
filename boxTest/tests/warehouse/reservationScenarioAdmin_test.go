@@ -5,7 +5,6 @@ import (
 	"boxTest/tests"
 	"boxTest/tests/warehouse/common"
 	"testing"
-	"time"
 )
 
 var (
@@ -15,13 +14,13 @@ var (
 
 func reservationAdminSkippedActions(transitions *common.ChangeHistory, testName string) {
 	common.TestSetUp("Suite_Test_reservationAdminSkippedActions_" + testName)
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	items := common.User.GetAvailableItems(timeNow(), timeNow().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	testCases := []common.TestCase{
 		{
 			Name:                testName,
-			StartTime:           time.Now().AddDate(0, 0, startDay),
-			EndTime:             time.Now().AddDate(0, 0, endDay),
+			StartTime:           timeNow().AddDate(0, 0, startDay),
+			EndTime:             timeNow().AddDate(0, 0, endDay),
 			Transition:          nil,
 			Item:                app.Item{},
 			CreditsWhenCreated:  0,
@@ -38,7 +37,7 @@ func reservationAdminSkippedActions(transitions *common.ChangeHistory, testName 
 }
 func Test_reservationAdminDoesNothing(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
-		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
+		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
 		Build()
 
 	reservationAdminSkippedActions(changesHistory, "Admin does no status change")
@@ -46,9 +45,9 @@ func Test_reservationAdminDoesNothing(t *testing.T) {
 
 func Test_reservationAdminDoesntApprove(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
-		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
-		AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: time.Now().AddDate(0, 0, startDay+1)}).
-		AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: time.Now().AddDate(0, 0, endDay+1)}).
+		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
+		AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: timeNow().AddDate(0, 0, startDay+1)}).
+		AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: timeNow().AddDate(0, 0, endDay+1)}).
 		Build()
 
 	reservationAdminSkippedActions(changesHistory, "Admin doesn't change status to APPROVED")
@@ -56,9 +55,9 @@ func Test_reservationAdminDoesntApprove(t *testing.T) {
 
 func Test_AdminDoesntRent(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
-		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
-		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).
-		AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: time.Now().AddDate(0, 0, endDay+1)}).
+		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
+		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: timeNow()}).
+		AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: timeNow().AddDate(0, 0, endDay+1)}).
 		Build()
 
 	reservationAdminSkippedActions(changesHistory, "Admin doesn't change status to RENTED")
@@ -66,9 +65,9 @@ func Test_AdminDoesntRent(t *testing.T) {
 
 func Test_AdminDoesntReturn(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
-		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
-		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).
-		AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: time.Now().AddDate(0, 0, startDay+1)}).
+		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
+		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: timeNow()}).
+		AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: timeNow().AddDate(0, 0, startDay+1)}).
 		Build()
 
 	reservationAdminSkippedActions(changesHistory, "Admin doesn't change status to RETURNED")
@@ -76,8 +75,8 @@ func Test_AdminDoesntReturn(t *testing.T) {
 
 func Test_AdminDeniesReservation(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
-		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
-		AddChange(app.DENIED, common.Change{Status: app.DENIED, Timestamp: time.Now()}).
+		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
+		AddChange(app.DENIED, common.Change{Status: app.DENIED, Timestamp: timeNow()}).
 		Build()
 
 	reservationAdminSkippedActions(changesHistory, "Admin denies reservation immediately")
@@ -85,9 +84,9 @@ func Test_AdminDeniesReservation(t *testing.T) {
 
 func Test_AdminDeniesReservationAfterApproving(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
-		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
-		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).
-		AddChange(app.DENIED, common.Change{Status: app.DENIED, Timestamp: time.Now()}).
+		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
+		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: timeNow()}).
+		AddChange(app.DENIED, common.Change{Status: app.DENIED, Timestamp: timeNow()}).
 		Build()
 
 	reservationAdminSkippedActions(changesHistory, "Admin denies reservation after approving")

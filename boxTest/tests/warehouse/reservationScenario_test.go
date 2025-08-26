@@ -8,11 +8,15 @@ import (
 	"time"
 )
 
+func timeNow() time.Time {
+	return time.Now().In(tests.LOCATION).Truncate(time.Second)
+}
+
 func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 	common.TestSetUp("Suite_Test_reservationMadeAndStartedSameTime")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	items := common.User.GetAvailableItems(timeNow(), timeNow().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	now := time.Now().Add(15 * time.Minute)
+	now := timeNow().Add(15 * time.Minute)
 	testCases := []common.TestCase{
 		{
 			Name:      "Reservation take today return next week",
@@ -23,7 +27,7 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 		{
 			Name:      "Reservation take today return tomorrow",
 			StartTime: now,
-			EndTime:   tests.CreateNextDayAt(23),
+			EndTime:   tests.CreateNextDayAt(now, 23),
 			Item:      reservedItem,
 		},
 		{
@@ -58,13 +62,17 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 
 func Test_reservationMadeInFuture(t *testing.T) {
 	common.TestSetUp("Suite_Test_reservationMadeInFuture")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	now := timeNow()
+	nextDay := now.AddDate(0, 0, 1)
+	nextWeek := now.AddDate(0, 0, 7)
+	twoWeeks := now.AddDate(0, 0, 14)
+	items := common.User.GetAvailableItems(now, now.AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	testCases := []common.TestCase{
 		{
 			Name:                "Reservation take tomorrow return next week",
-			StartTime:           time.Now().AddDate(0, 0, 1),
-			EndTime:             time.Now().AddDate(0, 0, 7),
+			StartTime:           nextDay,
+			EndTime:             nextWeek,
 			Transition:          common.NewChangeHistoryBuilder().Build(),
 			Item:                app.Item{},
 			CreditsWhenCreated:  0,
@@ -72,8 +80,8 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		},
 		{
 			Name:                "Reservation take next week return after week",
-			StartTime:           time.Now().AddDate(0, 0, 7),
-			EndTime:             time.Now().AddDate(0, 0, 14),
+			StartTime:           nextWeek,
+			EndTime:             twoWeeks,
 			Transition:          common.NewChangeHistoryBuilder().Build(),
 			Item:                app.Item{},
 			CreditsWhenCreated:  0,
@@ -81,8 +89,8 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		},
 		{
 			Name:                "Reservation take next week return the same day",
-			StartTime:           time.Now().AddDate(0, 0, 7),
-			EndTime:             time.Now().AddDate(0, 0, 7).Add(time.Hour),
+			StartTime:           nextWeek,
+			EndTime:             nextWeek.Add(time.Hour),
 			Transition:          common.NewChangeHistoryBuilder().Build(),
 			Item:                app.Item{},
 			CreditsWhenCreated:  0,
@@ -92,8 +100,8 @@ func Test_reservationMadeInFuture(t *testing.T) {
 	for _, tc := range testCases {
 		common.TestSetUp(tc.Name)
 		changesHistory := common.NewChangeHistoryBuilder().
-			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: time.Now()}).
-			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: time.Now()}).
+			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
+			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: now}).
 			AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: tc.StartTime}).
 			AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: tc.EndTime}).
 			Build()
@@ -108,11 +116,11 @@ func Test_reservationMadeInFuture(t *testing.T) {
 
 func Test_reservationNotAsPlanned(t *testing.T) {
 	common.TestSetUp("Suite_Test_reservationNotAsPlanned")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
+	items := common.User.GetAvailableItems(timeNow(), timeNow().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
-	now := time.Now()
-	nextWeek := time.Now().AddDate(0, 0, 7)
-	twoWeeks := time.Now().AddDate(0, 0, 14)
+	now := timeNow()
+	nextWeek := now.AddDate(0, 0, 7)
+	twoWeeks := now.AddDate(0, 0, 14)
 	testCases := []common.TestCase{
 		{
 			Name:      "Reservation started earlier than planned, returned on time",

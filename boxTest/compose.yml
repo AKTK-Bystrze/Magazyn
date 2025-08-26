@@ -20,7 +20,8 @@ services:
     cap_add:
       - SYS_TIME                      
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -29,13 +30,24 @@ services:
       context: ..
       dockerfile: db-dockerfile
     ports:
-      - "5433:5432" 
+      - "5433:5432"
     environment:
       POSTGRES_DB: magazyn
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     networks:
       - app-network
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_duration=on
+      -c log_min_error_statement=debug5
+      -c log_error_verbosity=verbose
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d magazyn"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:

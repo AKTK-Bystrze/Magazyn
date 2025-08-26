@@ -36,7 +36,7 @@ func composeContainers() {
 		log.Printf("Error getting current directory: %v\n", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command("docker-compose", "up", "--build", "-d")
+	cmd := exec.Command("docker", "compose", "up", "--build", "-d")
 	cmd.Dir = projectRoot
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -68,7 +68,7 @@ func cleanup() {
 		log.Printf("Error getting current directory: %v\n", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command("docker-compose", "down")
+	cmd := exec.Command("docker", "compose", "down")
 	cmd.Dir = projectRoot
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -99,14 +99,14 @@ func EnviromentSetUP() {
 
 func RunTests() {
 	WAREHOUSE := "boxTest/tests/warehouse"
-	USEER_MANAGER := "boxTest/tests/userManager"
+	USER_MANAGER := "boxTest/tests/userManager"
 	testsCMD := []struct {
 		name     string
 		timeout  int
 		location string
 	}{
-		{"Test_allUsers_loginAndlogut", 60, USEER_MANAGER},
-		{"Test_allUsers_loginSameTime", 60, USEER_MANAGER},
+		{"Test_allUsers_loginAndlogut", 60, USER_MANAGER},
+		{"Test_allUsers_loginSameTime", 60, USER_MANAGER},
 		{"Test_reservationMadeAndStartedSameTime", 150, WAREHOUSE},
 		{"Test_reservationMadeInFuture", 150, WAREHOUSE},
 		{"Test_reservationNotAsPlanned", 150, WAREHOUSE},
@@ -128,8 +128,11 @@ func RunTests() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		MarkNewTestInLogs(tc.name)
-		cmd := exec.CommandContext(ctx, "go.exe", "test", "-run", tc.name, tc.location)
+		cmd := exec.CommandContext(ctx, "go", "test", "-run", tc.name, tc.location)
 		output, err := cmd.CombinedOutput()
+
+		log.Print(string(output))
+
 		if err != nil {
 			failedTests = append(failedTests, tc.name)
 			log.Printf("\tFAILED: %v", tc.name)
@@ -137,8 +140,7 @@ func RunTests() {
 				exitCode := exitError.ExitCode()
 				log.Printf("Exit code %v Err %v", exitCode, err)
 			} else {
-				exitCode := exitError.ExitCode()
-				log.Printf("Unknown exit code %v Err %v", exitCode, err)
+				log.Printf("Unknown error %v", err)
 			}
 			fileName := tc.name + "_" + time.Now().Format(FILENAME_TIME_FORMAT)
 			saveLogsToFile(TESTS_OUTPUT_PATH+fileName+"_TEST.log", string(output))

@@ -54,13 +54,19 @@ func BaseScenario(tc TestCase) {
 	log.Printf("User details: %v", userBefore)
 	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID)
 	CheckCredits(userBefore, tc.CreditsWhenCreated)
-	reservation := db.GetReservation(
+	reservation, err := db.GetReservation(
 		db.ByItemID(tc.Item.ID),
 		db.ByStatus(app.PENDING),
 		db.ByUserID(int(User.User.ID)),
-		db.ByStartTime(tc.StartTime),
-		db.ByEndTime(tc.EndTime),
+		db.ByStartTime(tc.StartTime.UTC()),
+		db.ByEndTime(tc.EndTime.UTC()),
 	)
+	log.Print("Time range according to TEST", tc.StartTime, tc.EndTime)
+	log.Print("Fetched reservation:", reservation)
+
+	if err != nil {
+		log.Fatalf("Failed to get reservation from db: %v", err)
+	}
 	CheckItemAvailabilityWhileReserved(tc.StartTime, tc.EndTime, tc.Item, User)
 	AdminChangeReservationStatus(tc.Transition, reservation)
 	CheckCredits(userBefore, tc.CreditsWhenReturned)
@@ -108,7 +114,10 @@ func ChangeReservationStatusWithTimestamp(change Change, reservation app.Reserva
 
 func ChangeReservationStatus(status string, reservation app.Reservation) {
 	Admin.ChangeReservationStatus(reservation, status)
-	reservationLoaded := db.GetReservation(db.ByID(reservation.ID))
+	reservationLoaded, err := db.GetReservation(db.ByID(reservation.ID))
+	if err != nil {
+		log.Fatalf("Couldn't get reservation from the db: %v", err)
+	}
 	if reservationLoaded.Status != status {
 		log.Fatalf("status didn't change. Want %v have %v", status, reservation.Status)
 	}
