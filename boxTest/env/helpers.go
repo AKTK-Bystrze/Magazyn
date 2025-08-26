@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -10,12 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/jmoiron/sqlx"
 )
 
 func GetContainerLogs(containerName string, since time.Time) string {
-	// TODO: fix it. It always take all logs
+	// TODO: fix it. It always takes all logs
 	if containerName == "" {
 		log.Print("containerName is empty")
 		return ""
@@ -85,7 +82,7 @@ func SetContainerTime(timeToSet time.Time, containerName string) {
 	var lastRes string
 	var success bool
 
-	for i := 0; i < maxAttempts; i++ {
+	for range maxAttempts {
 		RunCommand(false, "docker", "exec", containerName, "date", "-s", timeFormatted)
 		res := RunCommand(false, "docker", "exec", containerName, "date")
 		lastRes = res
@@ -108,21 +105,9 @@ func RevertContainerTime(containerName string) {
 	SetContainerTime(time.Now(), containerName)
 }
 
-func applySQLFromFile(db *sqlx.DB, filepath string) {
-	content, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		log.Fatalf("failed to read file %s: %w", filepath, err)
-	}
-
-	_, err = db.Exec(string(content))
-	if err != nil {
-		log.Fatalf("failed to execute SQL from file %s: %w", filepath, err)
-	}
-}
-
 func saveLogsToFile(path string, content string) {
 	dir := filepath.Dir(path)
-	if _, err := ioutil.ReadDir(dir); err != nil {
+	if _, err := os.ReadDir(dir); err != nil {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatalf("failed to create directory %s: %v", dir, err)
 		}
