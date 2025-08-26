@@ -62,13 +62,17 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 
 func Test_reservationMadeInFuture(t *testing.T) {
 	common.TestSetUp("Suite_Test_reservationMadeInFuture")
-	items := common.User.GetAvailableItems(timeNow(), timeNow().AddDate(0, 1, 0))
+	now := timeNow()
+	nextDay := now.AddDate(0, 0, 1)
+	nextWeek := now.AddDate(0, 0, 7)
+	twoWeeks := now.AddDate(0, 0, 14)
+	items := common.User.GetAvailableItems(now, now.AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	testCases := []common.TestCase{
 		{
 			Name:                "Reservation take tomorrow return next week",
-			StartTime:           timeNow().AddDate(0, 0, 1),
-			EndTime:             timeNow().AddDate(0, 0, 7),
+			StartTime:           nextDay,
+			EndTime:             nextWeek,
 			Transition:          common.NewChangeHistoryBuilder().Build(),
 			Item:                app.Item{},
 			CreditsWhenCreated:  0,
@@ -76,8 +80,8 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		},
 		{
 			Name:                "Reservation take next week return after week",
-			StartTime:           timeNow().AddDate(0, 0, 7),
-			EndTime:             timeNow().AddDate(0, 0, 14),
+			StartTime:           nextWeek,
+			EndTime:             twoWeeks,
 			Transition:          common.NewChangeHistoryBuilder().Build(),
 			Item:                app.Item{},
 			CreditsWhenCreated:  0,
@@ -85,8 +89,8 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		},
 		{
 			Name:                "Reservation take next week return the same day",
-			StartTime:           timeNow().AddDate(0, 0, 7),
-			EndTime:             timeNow().AddDate(0, 0, 7).Add(time.Hour),
+			StartTime:           nextWeek,
+			EndTime:             nextWeek.Add(time.Hour),
 			Transition:          common.NewChangeHistoryBuilder().Build(),
 			Item:                app.Item{},
 			CreditsWhenCreated:  0,
@@ -96,8 +100,8 @@ func Test_reservationMadeInFuture(t *testing.T) {
 	for _, tc := range testCases {
 		common.TestSetUp(tc.Name)
 		changesHistory := common.NewChangeHistoryBuilder().
-			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
-			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: timeNow()}).
+			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
+			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: now}).
 			AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: tc.StartTime}).
 			AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: tc.EndTime}).
 			Build()
@@ -115,8 +119,8 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 	items := common.User.GetAvailableItems(timeNow(), timeNow().AddDate(0, 1, 0))
 	reservedItem := tests.PickRandomItem(items)
 	now := timeNow()
-	nextWeek := timeNow().AddDate(0, 0, 7)
-	twoWeeks := timeNow().AddDate(0, 0, 14)
+	nextWeek := now.AddDate(0, 0, 7)
+	twoWeeks := now.AddDate(0, 0, 14)
 	testCases := []common.TestCase{
 		{
 			Name:      "Reservation started earlier than planned, returned on time",
