@@ -6,7 +6,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx:/etc/nginx/conf.d
+      - ./nginx/magazynbystrze.conf:/etc/nginx/conf.d/magazynbystrze.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /usr/share/nginx/html:/usr/share/nginx/html:ro
     networks:
