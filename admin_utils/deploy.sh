@@ -2,6 +2,17 @@
 
 set -e
 
+# Check if current branch is master
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$CURRENT_BRANCH" != "master" ]]; then
+  echo "⚠️  You are on branch '$CURRENT_BRANCH', not 'master'."
+  read -p "Do you want to deploy from this branch? (y/N): " confirm
+  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "❌ Deployment aborted."
+    exit 1
+  fi
+fi
+
 # 1. Determine new tag
 echo "📌 Searching for the latest tag..."
 LAST_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n 1)
