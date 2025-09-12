@@ -4,6 +4,7 @@ bystrze_sprzet
 /.vscode
 /scratch
 /prod
+/nginx
 __*
 *.exe
 *.log
