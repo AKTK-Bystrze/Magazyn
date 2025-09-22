@@ -56,7 +56,6 @@ func Test_reservationAdminDoesntApprove(t *testing.T) {
 func Test_AdminDoesntRent(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
 		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
-		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: timeNow()}).
 		AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: timeNow().AddDate(0, 0, endDay+1)}).
 		Build()
 
@@ -66,7 +65,6 @@ func Test_AdminDoesntRent(t *testing.T) {
 func Test_AdminDoesntReturn(t *testing.T) {
 	changesHistory := common.NewChangeHistoryBuilder().
 		AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: timeNow()}).
-		AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: timeNow()}).
 		AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: timeNow().AddDate(0, 0, startDay+1)}).
 		Build()
 

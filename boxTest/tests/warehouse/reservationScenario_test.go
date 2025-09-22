@@ -48,7 +48,6 @@ func Test_reservationMadeAndStartedSameTime(t *testing.T) {
 		common.TestSetUp(tc.Name)
 		changesHistory := common.NewChangeHistoryBuilder().
 			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: tc.StartTime}).
-			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: tc.StartTime}).
 			AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: tc.StartTime}).
 			AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: tc.EndTime}).
 			Build()
@@ -101,7 +100,6 @@ func Test_reservationMadeInFuture(t *testing.T) {
 		common.TestSetUp(tc.Name)
 		changesHistory := common.NewChangeHistoryBuilder().
 			AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
-			AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: now}).
 			AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: tc.StartTime}).
 			AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: tc.EndTime}).
 			Build()
@@ -128,7 +126,6 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 			EndTime:   twoWeeks,
 			Transition: common.NewChangeHistoryBuilder().
 				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
-				AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: now}).
 				AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: now.AddDate(0, 0, 3)}).
 				AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: twoWeeks}).
 				Build(),
@@ -142,7 +139,6 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 			EndTime:   twoWeeks,
 			Transition: common.NewChangeHistoryBuilder().
 				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
-				AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: now}).
 				AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: nextWeek.AddDate(0, 0, 2)}).
 				AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: twoWeeks}).
 				Build(),
@@ -156,7 +152,6 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 			EndTime:   twoWeeks,
 			Transition: common.NewChangeHistoryBuilder().
 				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
-				AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: now}).
 				AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: nextWeek}).
 				AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: twoWeeks.AddDate(0, 0, -2)}).
 				Build(),
@@ -170,7 +165,6 @@ func Test_reservationNotAsPlanned(t *testing.T) {
 			EndTime:   twoWeeks,
 			Transition: common.NewChangeHistoryBuilder().
 				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
-				AddChange(app.APPROVED, common.Change{Status: app.APPROVED, Timestamp: now}).
 				AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: nextWeek}).
 				AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: twoWeeks.AddDate(0, 0, 2)}).
 				Build(),
