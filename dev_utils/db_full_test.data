@@ -73,4 +73,4 @@ INSERT INTO reservations (r_id, r_start_time, r_end_time, r_item_id, r_user_id, 
 (11, datetime('2023-01-19 12:00:00', 'utc'), datetime('2023-01-23 18:00:00', 'utc'), 2, 1, 1, 'pending', datetime('2023-01-10 20:13', 'utc')),
 (12, datetime('2023-02-23 16:00:00', 'utc'), datetime('2023-02-25 18:00:00', 'utc'), 3, 0, 0, 'pending', datetime('2023-02-07 21:37', 'utc'));
 
-UPDATE reservations SET r_status = 'approved',r_changeby_uid=2 WHERE r_id IN (0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12);
+UPDATE reservations SET r_status = 'rented',r_changeby_uid=2 WHERE r_id IN (0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12);

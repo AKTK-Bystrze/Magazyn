@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     r_user_id INTEGER NOT NULL,
     r_start_time TIMESTAMPTZ NOT NULL,
     r_end_time TIMESTAMPTZ CHECK (r_end_time >= r_start_time) NOT NULL,
-    r_status TEXT CHECK (r_status IN ('pending', 'approved', 'rented', 'returned', 'denied')) NOT NULL DEFAULT 'pending',
+    r_status TEXT CHECK (r_status IN ('pending', 'rented', 'returned', 'denied')) NOT NULL DEFAULT 'pending',
     r_created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     r_changeby_uid INTEGER NOT NULL,
     FOREIGN KEY (r_item_id) REFERENCES items (i_id),
@@ -44,7 +44,7 @@ CREATE TABLE reservation_audit (
     ra_id SERIAL PRIMARY KEY,
     ra_reservation_id INTEGER NOT NULL,
     ra_user_id INTEGER NOT NULL,
-    ra_status TEXT CHECK (ra_status IN ('pending', 'approved', 'rented', 'returned', 'denied')) NOT NULL,
+    ra_status TEXT CHECK (ra_status IN ('pending', 'rented', 'returned', 'denied')) NOT NULL,
     ra_change_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(ra_reservation_id) REFERENCES reservations(r_id),
     FOREIGN KEY(ra_user_id) REFERENCES users(u_id)

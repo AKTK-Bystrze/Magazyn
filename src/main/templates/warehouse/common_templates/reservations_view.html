@@ -34,8 +34,7 @@
       <td>
         {{ $class := "" }}
         {{ $txt := "" }}
-        {{ if eq .Status "approved" }}{{ $class = "badge badge-success" }}{{ $txt = "Potwierdzony" }}
-        {{ else if eq .Status "pending" }}{{ $class = "badge badge-danger" }}{{ $txt = "Oczekujacy" }}
+        {{ if eq .Status "pending" }}{{ $class = "badge badge-danger" }}{{ $txt = "Oczekujacy" }}
         {{ else if eq .Status "denied" }}{{ $class = "badge badge-secondary" }}{{ $txt = "Anulowany" }}
         {{ else if eq .Status "rented" }}{{ $class = "badge badge-primary" }}{{ $txt = "Wypozyczony" }}
         {{ else if eq .Status "returned" }}{{ $class = "badge badge-success" }}{{ $txt = "Zwrocony" }}
@@ -47,7 +46,6 @@
           <div class="form-group">
             <select class="form-control {{ $class }}" id="reservation_{{ .ID }}" name="status" onchange="javascript:setReservationStatus({{ .ID }}, 'reservation', this.value)" autocomplete=off>
               <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
-              <option value="approved" {{ if eq .Status "approved" }}selected{{ end }}>Potwierdzony</option>
               <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
               <option value="rented" {{ if eq .Status "rented" }}selected{{ end }}>Wypozyczony</option>
               <option value="returned" {{ if eq .Status "returned" }}selected{{ end }}>Zwrocony</option>

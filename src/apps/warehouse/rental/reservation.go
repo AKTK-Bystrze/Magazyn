@@ -18,7 +18,6 @@ import (
 const (
 	DENIED   = "denied"
 	RETURNED = "returned"
-	APPROVED = "approved"
 	PENDING  = "pending"
 	RENTED   = "rented"
 )
@@ -161,7 +160,7 @@ func GetPastFutureReservations(reservations []models.Reservation) ([]models.Rese
 			res.StartTime.After(now12hearlier) ||
 			(res.StartTime.Before(now) && res.EndTime.After(now) ||
 				res.Status == RENTED) {
-			// Reservation is upcoming
+			// Reservation is current
 			currentReservations = append(currentReservations, res)
 		} else {
 			// Reservation is historical

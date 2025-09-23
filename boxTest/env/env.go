@@ -111,11 +111,9 @@ func RunTests() {
 		{"Test_reservationMadeInFuture", 150, WAREHOUSE},
 		{"Test_reservationNotAsPlanned", 150, WAREHOUSE},
 		{"Test_reservationAdminDoesNothing", 60, WAREHOUSE},
-		{"Test_reservationAdminDoesntApprove", 60, WAREHOUSE},
 		{"Test_AdminDoesntRent", 60, WAREHOUSE},
 		{"Test_AdminDoesntReturn", 60, WAREHOUSE},
 		{"Test_AdminDeniesReservation", 60, WAREHOUSE},
-		{"Test_AdminDeniesReservationAfterApproving", 60, WAREHOUSE},
 		//add test here
 	}
 	var failedTests []string

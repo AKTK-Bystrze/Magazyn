@@ -43,5 +43,5 @@ INSERT INTO reservations ( r_start_time, r_end_time, r_item_id, r_user_id, r_cha
 
 -- Update reservations status
 UPDATE reservations
-SET r_status = 'approved', r_changeby_uid = 2
+SET r_status = 'rented', r_changeby_uid = 2
 WHERE r_id IN (0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12);

@@ -8,7 +8,6 @@ const (
 	KayakB1  = "B1"
 	DENIED   = "denied"
 	RETURNED = "returned"
-	APPROVED = "approved"
 	PENDING  = "pending"
 	RENTED   = "rented"
 )
@@ -43,6 +42,6 @@ type ReservationAudit struct {
 
 var ITMEMS = []string{KayakB1}
 
-var RESERVATION_STATUSES = []string{PENDING, APPROVED, RENTED, RETURNED, DENIED}
+var RESERVATION_STATUSES = []string{PENDING, RENTED, RETURNED, DENIED}
 
-var ADMIN_ACTIONS = []string{APPROVED, RENTED, RETURNED, DENIED}
+var ADMIN_ACTIONS = []string{RENTED, RETURNED, DENIED}
