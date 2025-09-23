@@ -9,7 +9,7 @@
       {{ if not .HideItem }}<th>Nazwa</th>{{ end }}
       <th>Wypozyczenie</th>
       <th>Zwrot</th>
-      {{ if .ShowUser }}<th>Uzytkownik</th>{{ end }}
+      <th>Uzytkownik</th>
       <th>Status</th>
       {{ if .ChangeRentalStatus }}<th>Nastepny Krok</th>{{ end }}
     </tr>
@@ -30,7 +30,13 @@
       {{ end }}
       <td>{{ .StartTime.Format $DATE_FORMAT_OUT }}</td>
       <td>{{ .EndTime.Format $DATE_FORMAT_OUT }}</td>
-      {{ if $.ShowUser }}<td><a href="/users/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a></td>{{ end }}
+      <td>
+        {{ if $.UserNameHyperLink }}
+          <a href="/users/admin/user/show?id={{ .User.ID }}">{{ .User.Name }}</a>
+        {{ else }}
+          {{ .User.Name }}
+        {{ end }}
+      </td>
       <td>
         {{ $class := "" }}
         {{ $txt := "" }}
@@ -44,7 +50,7 @@
           <input type="hidden" name="reservation_id" value="{{ .ID }}">
           <input type="hidden" name="url" value="{{ $.URL }}">
           <div class="form-group">
-            <select class="form-control {{ $class }}" id="reservation_{{ .ID }}" name="status" onchange="javascript:setReservationStatus({{ .ID }}, 'reservation', this.value)" autocomplete=off>
+            <select class="form-control {{ $class }}" id="reservation_{{ .ID }}" name="status" onchange="javascript:setReservationStatus('{{ .ID }}', 'reservation', this.value)" autocomplete="off">
               <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
               <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
               <option value="rented" {{ if eq .Status "rented" }}selected{{ end }}>Wypozyczony</option>

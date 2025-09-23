@@ -270,3 +270,12 @@ func GetReservationHistory(reservationID int) ([]models.ReservationAudit, error)
 	}
 	return history, nil
 }
+
+func GetAllReservations() ([]models.Reservation, error) {
+    conf := QueryConfigReservation{
+        Users: true,
+        OrderByStart: true,
+        OrderDesc: false,
+    }
+    return GetReservations(conf)
+}
