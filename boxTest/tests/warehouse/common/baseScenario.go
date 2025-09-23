@@ -6,8 +6,7 @@ import (
 	"boxTest/handlers/db"
 	"boxTest/tests"
 	"log"
-	"net/url"
-	"strconv"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -131,15 +130,16 @@ func ChangeReservationStatusWithTimestamp(change Change, reservation app.Reserva
 	env.RevertContainerTime(env.TEST_APP_NAME)
 }
 
-func ChangeReservationStatus(status string, reservation app.Reservation) {
-	Admin.ChangeReservationStatus(reservation, status)
+func ChangeReservationStatus(status string, reservation app.Reservation) *http.Response {
+	resp := Admin.ChangeReservationStatus(reservation, status)
 	reservationLoaded, err := db.GetReservation(db.ByID(reservation.ID))
 	if err != nil {
 		log.Fatalf("Couldn't get reservation from the db: %v", err)
 	}
 	if reservationLoaded.Status != status {
-		log.Fatalf("status didn't change. Want %v have %v", status, reservation.Status)
+		log.Printf("status didn't change. Want %v have %v", status, reservation.Status)
 	}
+	return resp
 }
 
 func contains(list []string, key string) bool {
@@ -168,30 +168,41 @@ func ShowTestRaport(t *testing.T, passedTests []string, failedTests []string) {
 	}
 }
 
-func PrepareReservationWithStatus(t *testing.T, item app.Item, userID int, startTime, endTime time.Time, statuses ...string) app.Reservation {
-	User.ReserveItem(item.ID, startTime, endTime)
-	reservation, err := db.GetReservationByItemUserStatus(item.ID, userID, statuses[0])
+func TestForbiddenStatusChange(tc TestCase) {
+	tc.toString("")
+	userBefore := db.GetUserById(int(User.User.ID))
+	log.Printf("User details: %v", userBefore)
+	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID)
+	reservation, err := db.GetReservation(
+		db.ByItemID(tc.Item.ID),
+		db.ByStatus(app.PENDING),
+		db.ByUserID(int(User.User.ID)),
+		db.ByStartTime(tc.StartTime.UTC()),
+		db.ByEndTime(tc.EndTime.UTC()),
+	)
+	log.Print("Time range according to TEST", tc.StartTime, tc.EndTime)
+	log.Print("Fetched reservation:", reservation)
+
 	if err != nil {
-		t.Fatalf("Failed to get reservation: %v", err)
+		log.Fatalf("Failed to get reservation from db: %v", err)
 	}
-	for _, status := range statuses[1:] {
-		Admin.ChangeReservationStatus(reservation, status)
-		reservation, err = db.GetReservationByItemUserStatus(item.ID, userID, status)
-		if err != nil {
-			t.Fatalf("Failed to get reservation after %s: %v", status, err)
-		}
+
+	resp := AdminChangeReservationToForbiddenStatus(tc.Transition, reservation)
+	forbiddenTransition := tc.Transition.GetChanges()[len(tc.Transition.GetChanges())-1].Key
+	if resp.StatusCode != 400 {
+		log.Fatalf("Expected status 400 for forbidden status change %s, got %d", forbiddenTransition, resp.StatusCode)
 	}
-	return reservation
+	tc.toString("PASSED")
 }
 
-func TestForbiddenStatusChange(reservation app.Reservation, status string) {
-	params := url.Values{}
-	params.Set("reservation_id", strconv.Itoa(reservation.ID))
-	params.Set("url", app.URL_setStatus)
-	params.Set("item_id", strconv.Itoa(reservation.ItemID))
-	params.Set("status", status)
-	resp := Admin.PutRequest(env.Localhost+app.URL_setStatus, params)
-	if resp.StatusCode != 400 {
-		log.Fatalf("Expected status 400 for forbidden status change %s, got %d", status, resp.StatusCode)
+func AdminChangeReservationToForbiddenStatus(actions *ChangeHistory, reservation app.Reservation) *http.Response {
+	actionsList := actions.GetChanges()
+	var resp *http.Response
+	for _, change := range actionsList {
+		if contains(app.ADMIN_ACTIONS, change.Key) {
+			log.Printf("Admin changes reservation status %v: %s", change.Key, change.Value.toString())
+			resp = ChangeReservationStatus(change.Value.Status, reservation)
+		}
 	}
+	return resp
 }

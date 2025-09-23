@@ -114,10 +114,8 @@ func RunTests() {
 		{"Test_AdminDoesntRent", 60, WAREHOUSE},
 		{"Test_AdminDoesntReturn", 60, WAREHOUSE},
 		{"Test_AdminDeniesReservation", 60, WAREHOUSE},
-		{"Test_cantChangeStatusToDeniedAfterRented", 60, WAREHOUSE},
-		{"Test_cantChangeStatusToReturnedFromPending", 60, WAREHOUSE},
-		{"Test_cantChangeStatusToRentedFromReturned", 60, WAREHOUSE},
-		{"Test_cantChangeStatusFromDenied", 60, WAREHOUSE},
+		{"Test_ForbidenStatusChanges", 60, WAREHOUSE},
+		//add tests here
 	}
 	var failedTests []string
 	var passedTests []string

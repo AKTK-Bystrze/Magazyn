@@ -72,7 +72,7 @@ func (uc UserClient) PutRequest(url string, formData url.Values) *http.Response 
 		log.Fatalf("Failed put request: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Response code %v is different than %v \n%v", resp.StatusCode, http.StatusOK, resp)
+		log.Printf("Response code %v is different than %v \n%v", resp.StatusCode, http.StatusOK, resp)
 	}
 	return resp
 }

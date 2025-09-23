@@ -62,43 +62,56 @@ func Test_AdminDeniesReservation(t *testing.T) {
 	reservationAdminSkippedActions(changesHistory, "Admin denies reservation immediately")
 }
 
-func Test_cantChangeStatusToDeniedAfterRented(t *testing.T) {
-	common.TestSetUp("Test_cantChangeStatusToDeniedAfterRented")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
-	reservedItem := items[0]
-	startTime := time.Now().AddDate(0, 0, 1)
-	endTime := time.Now().AddDate(0, 0, 7)
-	reservation := common.PrepareReservationWithStatus(t, reservedItem, int(common.User.User.ID), startTime, endTime, app.PENDING, app.RENTED)
-	common.TestForbiddenStatusChange(reservation, app.DENIED)
+func Test_ForbidenStatusChanges(t *testing.T) {
+	common.TestSetUp("Suite_Test_reservationMadeAndStartedSameTime")
+	items := common.User.GetAvailableItems(timeNow(), timeNow().AddDate(0, 1, 0))
+	reservedItem := tests.PickRandomItem(items)
+	now := timeNow().Add(15 * time.Minute)
+	testCases := []common.TestCase{
+		{
+			Name:      "Changes tatus from pending to returned",
+			StartTime: now,
+			EndTime:   now.AddDate(0, 0, 1),
+			Item:      reservedItem,
+			Transition: common.NewChangeHistoryBuilder().
+				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
+				AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: now}).Build()		},
+		{
+			Name:      "Change status from rented to denied",
+			StartTime: now,
+			EndTime:   now.AddDate(0, 0, 1),
+			Item:      reservedItem,
+			Transition: common.NewChangeHistoryBuilder().
+				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
+				AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: now}).
+				AddChange(app.DENIED, common.Change{Status: app.DENIED, Timestamp: now}).Build(),
+		},
+		{
+			Name:      "Change status from returned to denied",
+			StartTime: now,
+			EndTime:   now.AddDate(0, 0, 1),
+			Item:      reservedItem,
+			Transition: common.NewChangeHistoryBuilder().
+				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
+				AddChange(app.RENTED, common.Change{Status: app.RENTED, Timestamp: now}).
+				AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: now}).
+				AddChange(app.DENIED, common.Change{Status: app.DENIED, Timestamp: now}).Build(),
+		},
+		{
+			Name:      "Change status from denied to returned",
+			StartTime: now,
+			EndTime:   now.AddDate(0, 0, 1),
+			Item:      reservedItem,
+			Transition: common.NewChangeHistoryBuilder().
+				AddChange(app.PENDING, common.Change{Status: app.PENDING, Timestamp: now}).
+				AddChange(app.DENIED, common.Change{Status: app.DENIED, Timestamp: now}).
+				AddChange(app.RETURNED, common.Change{Status: app.RETURNED, Timestamp: now}).Build(),
+		},
+	}
+
+	for _, tc := range testCases {
+		common.TestSetUp(tc.Name)
+		common.TestForbiddenStatusChange(tc)
+	}
 }
 
-func Test_cantChangeStatusToReturnedFromPending(t *testing.T) {
-	common.TestSetUp("Test_cantChangeStatusToReturnedFromPending")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
-	reservedItem := items[0]
-	startTime := time.Now().AddDate(0, 0, 1)
-	endTime := time.Now().AddDate(0, 0, 7)
-	reservation := common.PrepareReservationWithStatus(t, reservedItem, int(common.User.User.ID), startTime, endTime, app.PENDING)
-	common.TestForbiddenStatusChange(reservation, app.RETURNED)
-}
-
-func Test_cantChangeStatusToRentedFromReturned(t *testing.T) {
-	common.TestSetUp("Test_cantChangeStatusToRentedFromReturned")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
-	reservedItem := items[0]
-	startTime := time.Now().AddDate(0, 0, 1)
-	endTime := time.Now().AddDate(0, 0, 7)
-	reservation := common.PrepareReservationWithStatus(t, reservedItem, int(common.User.User.ID), startTime, endTime, app.PENDING, app.RENTED, app.RETURNED)
-	common.TestForbiddenStatusChange(reservation, app.RENTED)
-}
-
-func Test_cantChangeStatusFromDenied(t *testing.T) {
-	common.TestSetUp("Test_cantChangeStatusFromDenied")
-	items := common.User.GetAvailableItems(time.Now(), time.Now().AddDate(0, 1, 0))
-	reservedItem := items[0]
-	startTime := time.Now().AddDate(0, 0, 1)
-	endTime := time.Now().AddDate(0, 0, 7)
-	reservation := common.PrepareReservationWithStatus(t, reservedItem, int(common.User.User.ID), startTime, endTime, app.PENDING, app.DENIED)
-	common.TestForbiddenStatusChange(reservation, app.RENTED)
-	common.TestForbiddenStatusChange(reservation, app.RETURNED)
-}

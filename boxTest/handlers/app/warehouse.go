@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -42,13 +43,14 @@ func (uc UserClient) GoToReservations() {
 	uc.GetRequest(env.Localhost + URL_reservations)
 }
 
-func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string) {
-	uc.PutRequest(env.Localhost+URL_setStatus, url.Values{
+func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string) *http.Response {
+	resp := uc.PutRequest(env.Localhost+URL_setStatus, url.Values{
 		"reservation_id": {strconv.Itoa(reservation.ID)},
 		"url":            {URL_setStatus},
 		"item_id":        {strconv.Itoa(reservation.ItemID)},
 		"status":         {status},
 	})
+	return resp
 }
 
 func (uc UserClient) GetAvailableItems(timeStart time.Time, timeStop time.Time) []Item {
