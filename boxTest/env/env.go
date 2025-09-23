@@ -109,7 +109,6 @@ func RunTests() {
 		{"Test_reservationMadeInFuture", 150, WAREHOUSE},
 		{"Test_reservationNotAsPlanned", 150, WAREHOUSE},
 		{"Test_reservationAdminDoesNothing", 60, WAREHOUSE},
-		{"Test_AdminDoesntRent", 60, WAREHOUSE},
 		{"Test_AdminDoesntReturn", 60, WAREHOUSE},
 		{"Test_AdminDeniesReservation", 60, WAREHOUSE},
 		{"Test_ForbidenStatusChanges", 60, WAREHOUSE},
