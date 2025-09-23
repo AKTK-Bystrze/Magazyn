@@ -44,6 +44,12 @@
         <li class="nav-item">
           <a class="nav-link" href="/users/user/logout">Wyloguj</a>
         </li>
+        <!-- if it is not admin or superAdmin then show it -->
+        {{ if not (or (contains "admin" .Role) (contains "superAdmin" .Role)) }}
+        <li class="nav-item">
+          <a class="nav-link" href="/warehouse/user/reservations">Rezerwacje</a>
+        </li>
+        {{ end }}
       </ul>
     </div>
   </div>

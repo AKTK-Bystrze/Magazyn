@@ -211,3 +211,40 @@ func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter, r
 	err = credits.UpdateUserCredits(reservation, rentalCost, updatedCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 	return err
 }
+
+func AllReservationsHandler(w http.ResponseWriter, r *http.Request) {
+	reservations, err := rental.GetAllReservations()
+	if err != nil {
+		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	// Execute the template
+	data := struct {
+		Reservations []models.Reservation
+		apps.TemplateData
+	}{
+		Reservations: reservations,
+	}
+
+	appState.App.RenderTemplate(w, r, "admin_all_reservations.html", &data)
+}
+
+func UserReservationsHandler(w http.ResponseWriter, r *http.Request) {
+	reservations, err := rental.GetAllReservations()
+	if err != nil {
+		appState.App.Err("Failed to fetch reservations: %v", err)
+		http.Error(w, "Failed to fetch reservations", http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		Reservations []models.Reservation
+		apps.TemplateData
+	}{
+		Reservations: reservations,
+	}
+
+	appState.App.RenderTemplate(w, r, "all_reservations.html", &data)
+}
