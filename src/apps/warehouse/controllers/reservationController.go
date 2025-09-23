@@ -75,29 +75,41 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	appState.App.Debug("%v setStatusHandler reservation_id %v status %v", session.GetSessionUserName(r), id, newStatus)
 	var oldStatus = reservation.Status
-	if oldStatus == rental.DENIED {
-		err = handlePreviousStatusDenied(*reservation, w, r)
-		if err != nil {
+
+	switch oldStatus {
+	case rental.DENIED:
+		http.Error(w, "Rezerwacja anulowana nie może być zmieniana. Możliwe zmiany: brak.", http.StatusBadRequest)
+		return
+	case rental.PENDING:
+		switch newStatus {
+		case rental.RENTED:
+			err = handleRentedStatus(*reservation, w, r)
+			if err != nil {
+				return
+			}
+		case rental.DENIED:
+			err = handleDeniedStatus(*reservation, w, r)
+			if err != nil {
+				return
+			}
+		default:
+			http.Error(w, "Nieprawidłowa zmiana statusu rezerwacji. Możliwe zmiany: 'wypozyczony', 'anulowany'.", http.StatusBadRequest)
 			return
 		}
-	}
-	if newStatus == rental.DENIED {
-		err = handleDeniedStatus(*reservation, w, r)
-		if err != nil {
+	case rental.RENTED:
+		switch newStatus {
+		case rental.RETURNED:
+			err = handleReturnedStatus(*reservation, w, r)
+			if err != nil {
+				return
+			}
+		default:
+			http.Error(w, "Nieprawidłowa zmiana statusu rezerwacji. Możliwa zmiana: 'zwrocony'.", http.StatusBadRequest)
 			return
 		}
-	}
-	if newStatus == rental.RETURNED {
-		err = handleReturnedStatus(*reservation, w, r)
-		if err != nil {
-			return
-		}
-	}
-	if newStatus == rental.RENTED {
-		err = handleRentedStatus(*reservation, w, r)
-		if err != nil {
-			return
-		}
+	case rental.RETURNED:
+		http.Error(w, "Nieprawidłowa zmiana statusu rezerwacji. Możliwe zmiany: brak.", http.StatusBadRequest)
+		return
 	}
 	if reservation.EndTime.Before(reservation.StartTime) {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
@@ -184,20 +196,6 @@ func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter,
 		}
 	}
 	return nil
-}
-
-func handlePreviousStatusDenied(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
-	appState.App.Debug("Old reservation status is %v, charge user for rental cost", rental.DENIED)
-	rentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
-	if err != nil {
-		appState.App.Err("handlePreviousStatusDenied %v", err.Error())
-		http.Error(w, "Can't calculate rental cost", http.StatusBadRequest)
-		return err
-	}
-	updatedCredits := reservation.User.Credits - rentalCost
-	auditMsg := reservation.Item.Name + "\tWypożyczenie"
-	err = credits.UpdateUserCredits(reservation, -rentalCost, updatedCredits, auditMsg, int(session.GetSessionUserId(r)), w)
-	return err
 }
 
 func handleDeniedStatus(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
