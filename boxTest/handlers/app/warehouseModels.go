@@ -8,7 +8,6 @@ const (
 	KayakB1  = "B1"
 	DENIED   = "denied"
 	RETURNED = "returned"
-	APPROVED = "approved"
 	PENDING  = "pending"
 	RENTED   = "rented"
 )
