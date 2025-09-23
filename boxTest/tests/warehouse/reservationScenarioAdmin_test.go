@@ -69,7 +69,7 @@ func Test_ForbidenStatusChanges(t *testing.T) {
 	now := timeNow().Add(15 * time.Minute)
 	testCases := []common.TestCase{
 		{
-			Name:      "Changes tatus from pending to returned",
+			Name:      "Changes status from pending to returned",
 			StartTime: now,
 			EndTime:   now.AddDate(0, 0, 1),
 			Item:      reservedItem,

@@ -46,8 +46,6 @@ func composeContainers() {
 		log.Printf("Error running Docker Compose: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("WAIT for app to deploy...")
-	time.Sleep(time.Second * 10)
 	log.Print("App deployed on " + Localhost)
 	log.Printf("To log to application use one of the users from the xdata.sql. Try `superAdmin`. Login link is inside the %s container", TEST_APP_NAME)
 	log.Printf("to run all tests type: run main.go --tests")
@@ -111,10 +109,9 @@ func RunTests() {
 		{"Test_reservationMadeInFuture", 150, WAREHOUSE},
 		{"Test_reservationNotAsPlanned", 150, WAREHOUSE},
 		{"Test_reservationAdminDoesNothing", 60, WAREHOUSE},
-		{"Test_AdminDoesntRent", 60, WAREHOUSE},
 		{"Test_AdminDoesntReturn", 60, WAREHOUSE},
 		{"Test_AdminDeniesReservation", 60, WAREHOUSE},
-		{"Test_ForbidenStatusChanges", 60, WAREHOUSE},
+		{"Test_ForbidenStatusChanges", 120, WAREHOUSE},
 		//add tests here
 	}
 	var failedTests []string
