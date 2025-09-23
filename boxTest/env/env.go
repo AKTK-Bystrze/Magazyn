@@ -114,7 +114,8 @@ func RunTests() {
 		{"Test_AdminDoesntRent", 60, WAREHOUSE},
 		{"Test_AdminDoesntReturn", 60, WAREHOUSE},
 		{"Test_AdminDeniesReservation", 60, WAREHOUSE},
-		//add test here
+		{"Test_ForbidenStatusChanges", 60, WAREHOUSE},
+		//add tests here
 	}
 	var failedTests []string
 	var passedTests []string

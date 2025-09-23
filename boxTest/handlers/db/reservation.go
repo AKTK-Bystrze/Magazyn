@@ -180,3 +180,15 @@ func RemoveReservations() {
 		log.Fatalf("failed to remove reservations: %v", err)
 	}
 }
+
+// GetReservationByItemUserStatus retrieves a reservation by itemID, userID and status
+func GetReservationByItemUserStatus(itemID int, userID int, status string) (app.Reservation, error) {
+	reservations, err := GetReservations(ByItemID(itemID), ByUserID(userID), ByStatus(status))
+	if err != nil {
+		return app.Reservation{}, err
+	}
+	if len(reservations) == 0 {
+		return app.Reservation{}, errors.New("reservation not found")
+	}
+	return reservations[0], nil
+}
