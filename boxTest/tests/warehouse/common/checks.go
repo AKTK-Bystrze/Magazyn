@@ -9,18 +9,26 @@ import (
 )
 
 func CheckReservationAudits(reservationId int, expectedChangesHistory *ChangeHistory) {
+	failure := false
 	log.Print("check reservation history")
 	history := db.GetReservationAudit(reservationId)
 	if len(history) != len(expectedChangesHistory.changes) {
-		log.Fatal("Changes history has different length than expected")
+		log.Print("Changes history has different length than expected")
+		log.Printf("Expected: %v", expectedChangesHistory.changes)
+		log.Printf("Got: %v", history)
+		failure = true
 	}
 	for _, audit := range history {
 		expectedChange := expectedChangesHistory.GetChangeByKey(audit.Status)
 		if audit.Auditor != Admin.User.Name &&
 			tests.IsSameDay(audit.ChangeDate, expectedChange.Timestamp) &&
 			audit.Status != expectedChange.Status {
-			log.Fatalf("Reservation change should be %v but is %v", expectedChange, audit)
+			log.Printf("Reservation change should be %v but is %v", expectedChange, audit)
+			failure = true
 		}
+	}
+	if failure {
+		log.Fatal("Reservation history check failed")
 	}
 }
 
