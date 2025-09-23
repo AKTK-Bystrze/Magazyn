@@ -100,18 +100,33 @@ func GetItems(conf models.QueryConfigItems) ([]models.TmpItemWithReservation, er
 }
 
 func CheckAvailability(start time.Time, end time.Time, itemID int) (bool, error) {
-       query := `SELECT count(*) FROM reservations WHERE r_item_id=$1 AND r_end_time > $2 AND r_start_time < $3 AND (r_status = 'pending' OR r_status = 'rented')`
-       row := appState.App.Db.QueryRow(query, itemID, start.Format(timeSet.OUT_TIME_FMT), end.Format(timeSet.OUT_TIME_FMT))
-       var count int
-       err := row.Scan(&count)
-       if err != nil {
-	       appState.App.Debug("CheckAvailability %v %v %v %v", start, end, itemID, err.Error())
-	       return false, err
-       }
-       if count > 0 {
-	       return false, nil
-       }
-       return true, nil
+	query := `
+		SELECT count(*) 
+		FROM reservations 
+		WHERE r_item_id = $1 
+		  AND r_end_time > $2 
+		  AND r_start_time < $3 
+		  AND (r_status = 'pending' OR r_status = 'rented')
+	`
+
+	row := appState.App.Db.QueryRow(
+		query, 
+		itemID, 
+		start.Format(timeSet.OUT_TIME_FMT), 
+		end.Format(timeSet.OUT_TIME_FMT),
+	)
+
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		appState.App.Debug(
+			"CheckAvailability %v %v %v %v", 
+			start, end, itemID, err.Error(),
+		)
+		return false, err
+	}
+
+	return count == 0, nil
 }
 
 func UpdateItemStatus(itemID int, status string) error {
