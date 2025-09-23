@@ -67,15 +67,16 @@ func CheckItemAvailabilityWhileReserved(reservationStart time.Time, reservationE
 
 func CheckItemAvailabilityAfterReservation(tc TestCase) {
 	log.Print("Check item avaiablity after the reservation")
-	keys := tc.Transition.GetAllKeys()
-	if contains(keys, app.DENIED) {
+	lastStatus := tc.Transition.GetChanges()[len(tc.Transition.GetChanges())-1].Key
+
+	if lastStatus == app.DENIED {
 		items := User.GetAvailableItems(tc.StartTime, tc.EndTime)
 		if !tests.IsItemAvailable(tc.Item, items) {
-			log.Fatal("Reserved item should be available after reservation is done within reservation time due to denial")
+			log.Fatal("Reserved item should be available within reservation time due to denial")
 		}
 	}
 	var endTime time.Time
-	if contains(keys, app.RETURNED) {
+	if lastStatus == app.RETURNED {
 		endTime = tc.Transition.GetChangeByKey(app.RETURNED).Timestamp
 	} else {
 		endTime = tc.EndTime
