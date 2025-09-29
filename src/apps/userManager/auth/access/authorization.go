@@ -80,7 +80,7 @@ func AreRolesValid(priviliges string) bool {
 
 func AdminHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if hasAdminPrivilege(w, r) {
+		if HasAdminPrivilege(w, r) {
 			h.ServeHTTP(w, r)
 		}
 	})
@@ -122,7 +122,7 @@ func hasSuperAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func hasAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
+func HasAdminPrivilege(w http.ResponseWriter, r *http.Request) bool {
 	uinfo, ok := contextHelpers.GetUserInfo(r.Context())
 	if !ok || !strings.Contains(uinfo.Role, "admin") {
 		appState.App.Err("Non-admin user (%s) attempts to access admin API", session.If(ok, uinfo.Name, "unknown"))

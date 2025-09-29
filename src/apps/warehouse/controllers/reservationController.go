@@ -8,6 +8,7 @@ import (
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/warehouse/rental"
+	"bystrze/apps/userManager/auth/access"
 	"net/http"
 	"strconv"
 	"time"
@@ -73,6 +74,22 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "DB error", http.StatusBadRequest)
 		return
 	}
+	// if this user is not admin
+	// then user can change reservation status only if he is owner of this reservation and status is pending
+	if !access.HasAdminPrivilege(w, r) {
+		if int(reservation.User.ID) != int(session.GetSessionUserId(r)) {
+			appState.App.Err("%v tried to change reservation %v status but is not owner", session.GetSessionUserName(r), id)	
+			http.Error(w, "You are not allowed to change status of this reservation", http.StatusForbidden)
+			return
+		}
+		if reservation.Status != rental.PENDING {
+			appState.App.Err("%v tried to change reservation %v status but status is not pending", session.GetSessionUserName(r), id)	
+			http.Error(w, "You are not allowed to change status of this reservation", http.StatusForbidden)
+			return
+		}
+		appState.App.Debug("%v is owner of reservation %v and status is pending, can change status", session.GetSessionUserName(r), id) 
+	}
+
 	appState.App.Debug("%v setStatusHandler reservation_id %v status %v", session.GetSessionUserName(r), id, newStatus)
 	var oldStatus = reservation.Status
 

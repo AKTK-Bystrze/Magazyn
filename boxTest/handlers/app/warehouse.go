@@ -19,7 +19,7 @@ var (
 	URL_reserve      = "/warehouse/user/reserve"
 	URL_dashboard    = "/users/user/dashboard"
 	URL_reservations = "/warehouse/admin/reservations"
-	URL_setStatus    = "/warehouse/admin/setStatus"
+	URL_setStatus    = "/warehouse/user/setStatus"
 
 	COST_KAYAK       = 4
 	KAYAK            = "kayak"

@@ -33,11 +33,11 @@ func updateRouter(router *mux.Router) *mux.Router {
 	userRouter.HandleFunc("/search", controllers.SearchHandler).Methods("GET", "POST")
 	userRouter.HandleFunc("/reserve", controllers.ReserveItem).Methods("POST")
 	userRouter.HandleFunc("/reservations", controllers.UserReservationsHandler).Methods("GET")
+	userRouter.HandleFunc("/setStatus", controllers.SetStatusHandler).Methods("PUT")
 	// admin
 	adminRouter := warehouseRouter.PathPrefix("/admin").Subrouter()
 	adminRouter.Use(access.AdminHandler)
 	adminRouter.HandleFunc("/reservations", controllers.AdminDashboardHandler).Methods("GET")
-	adminRouter.HandleFunc("/setStatus", controllers.SetStatusHandler).Methods("PUT")
 	adminRouter.HandleFunc("/reservation/show", controllers.ReservationHandler).Methods("GET")
 	adminRouter.HandleFunc("/inventory", controllers.Inventory).Methods("GET")
 	adminRouter.HandleFunc("/items", controllers.AdminItemsHandler).Methods("GET")
