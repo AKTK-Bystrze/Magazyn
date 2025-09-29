@@ -14,6 +14,10 @@ import (
 
 // needed only for testing
 func SendEmail(receiver models.User, subject string, message string) error {
+	if appState.DEBUG {
+		appState.App.Debug("Email to %s: Subject: %s, Message: %s", receiver.Email, subject, message)
+		return nil
+	}
 
 	senderEmail := appState.MAGAZYN_BYSTRZE_EMAIL_ADDR
 	senderPassword := os.Getenv("MAGAZYN_BYSTRZE_EMAIL_PASS")

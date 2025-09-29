@@ -45,7 +45,7 @@ func main() {
 	store := sessions.NewCookieStore(COOKIE_KEY)
 	router := mux.NewRouter()
 
-	email.CreateEmailApp(db, store, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, SMTP_HOST, SMTP_PORT)
+	email.CreateEmailApp(db, store, debug, SERVER, "EMAIL", router, MAGAZYN_BYSTRZE_EMAIL_ADDR, SMTP_HOST, SMTP_PORT)
 	userManager.CreateUserManagerApp(db, store, debug, SERVER, "ACCOUNTS", router, COOKIE_KEY)
 	warehouse.CreateWarehouseApp(db, store, SERVER, "WAREHOUSE", router)
 	// pages.CreatePagesApp(db, timeSet.DATABASE_PATH, timeSet.DATABASE_NAME, store, server, "PAGES", router)
