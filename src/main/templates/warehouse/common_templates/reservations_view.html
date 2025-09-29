@@ -82,7 +82,7 @@
         {{ end }}
         {{ end }}
         {{ if and $.CancelOption (eq .Status "pending") }}
-        <form method="POST" id="cancel_form_{{ .ID }}"
+        <form method="PUT" id="cancel_form_{{ .ID }}"
           action="javascript:setReservationStatus({{ .ID }}, 'cancel_form', 'denied')">
           <input type="hidden" name="reservation_id" value="{{ .ID }}">
           <input type="hidden" name="status" value="denied">
@@ -112,7 +112,7 @@
       params.set('status', status);
       formData = params.toString();
     }
-    fetch('/warehouse/admin/setStatus', {
+    fetch('/warehouse/user/setStatus', {
       method: 'PUT',
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
