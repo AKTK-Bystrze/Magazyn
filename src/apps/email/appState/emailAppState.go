@@ -12,4 +12,5 @@ var (
 	MAGAZYN_BYSTRZE_EMAIL_LOGIN string
 	SMTP_HOST                   string
 	SMTP_PORT                   string
+	DEBUG                   bool
 )

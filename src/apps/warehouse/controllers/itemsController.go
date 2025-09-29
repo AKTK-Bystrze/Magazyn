@@ -7,11 +7,13 @@ import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/common/timeSet"
+	"bystrze/apps/email/service"
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/userManager/users"
 	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/warehouse/items"
 	"bystrze/apps/warehouse/rental"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -133,6 +135,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		appState.App.Debug("%v reserved item %v since %v till %v", session.GetSessionUserName(r),
 			itemID, startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 		msg := "Zarezerwowano"
+		NotifyAdminsOnReservation(reservation)
 		http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusFound)
 	} else {
 		msg := "Nie możesz wypożyczyć sprzętu"
@@ -207,4 +210,24 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 		EndTime:        timeTo,
 		Msg:            msg,
 	})
+}
+
+func NotifyAdminsOnReservation(reservation models.Reservation) {
+	admins, err := users.GetAdminUsers()
+	if err != nil {
+		appState.App.Err("Failed to fetch admin users: %v", err)
+		return
+	}
+
+	for _, admin := range admins {
+		if admin.Email != "" {
+			subject := "New Reservation Created"
+			body := fmt.Sprintf("A new reservation has been created by %s for the item %s. Start - %s end - %s",
+			 reservation.User.Name, reservation.Item.Name, reservation.StartTime,reservation.EndTime)
+			err := service.SendEmail(admin, subject, body)
+			if err != nil {
+				appState.App.Err("Failed to send email to %s: %v", admin.Email, err)
+			}
+		}
+	}
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-func CreateEmailApp(db apps.Database, store sessions.Store,
+func CreateEmailApp(db apps.Database, store sessions.Store, debug bool,
 	server string, appName string, router *mux.Router,
 	MAGAZYN_BYSTRZE_EMAIL_ADDR, SMTP_HOST string, SMTP_PORT string) apps.App {
 	appState.App = apps.App{
@@ -19,6 +19,7 @@ func CreateEmailApp(db apps.Database, store sessions.Store,
 		AppName: appName,
 		Router:  router,
 	}
+	appState.DEBUG = debug
 	appState.App.SetLogger()
 	appState.App.LoadTemplates()
 
