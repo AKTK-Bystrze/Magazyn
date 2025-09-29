@@ -13,7 +13,11 @@ func GetAdminUsers() ([]models.User, error) {
 		appState.App.Err("Failed to fetch admin users: %v", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+    if err := rows.Close(); err != nil {
+        appState.App.Err("Failed to close rows: %v", err)
+    }
+}()
 
 	var admins []models.User
 	for rows.Next() {
