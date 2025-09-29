@@ -11,7 +11,7 @@
       <th>Zwrot</th>
       <th>Uzytkownik</th>
       <th>Status</th>
-      {{ if .ChangeRentalStatus }}<th>Nastepny Krok</th>{{ end }}
+      {{ if or $.ChangeRentalStatus $.CancelOption }}<th>Akcje</th>{{ end }}
     </tr>
   </thead>
   <tbody>
@@ -62,11 +62,12 @@
         <span class="{{ $class }}">{{ $txt }}</span>
         {{ end }}
       </td>
-      {{ if $.ChangeRentalStatus }}
-      {{ if or (and (eq .Status "approved") (.StartTime.After (AddHours Now -6) ) (.StartTime.Before (AddHours Now 12)))
-      (eq .Status "rented")
-      }}
+      {{ if or $.ChangeRentalStatus $.CancelOption }}
       <td>
+        {{ if $.ChangeRentalStatus }}
+        {{ if or (and (eq .Status "approved") (.StartTime.After (AddHours Now -6) ) (.StartTime.Before (AddHours Now 12)))
+        (eq .Status "rented")
+        }}
         <form method="POST" id="rent_form_{{ .ID }}" action="javascript:setReservationStatus({{ .ID }}, 'rent_form')">
           <input type="hidden" name="reservation_id" value="{{ .ID }}">
           <input type="hidden" name="user_id" value="{{ .User.ID }}">
@@ -78,8 +79,17 @@
           <button type="submit" class="btn btn-primary">Przyjmij zwrot</button>
           {{ end }}
         </form>
+        {{ end }}
+        {{ end }}
+        {{ if and $.CancelOption (eq .Status "pending") }}
+        <form method="POST" id="cancel_form_{{ .ID }}"
+          action="javascript:setReservationStatus({{ .ID }}, 'cancel_form', 'denied')">
+          <input type="hidden" name="reservation_id" value="{{ .ID }}">
+          <input type="hidden" name="status" value="denied">
+          <button type="submit" class="btn btn-danger">Anuluj</button>
+        </form>
+        {{ end }}
       </td>
-      {{ else }}<td></td>{{ end }}
       {{ end }}
     </tr>
     {{ end }}
