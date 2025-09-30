@@ -94,7 +94,7 @@ func SetContainerTime(timeToSet time.Time, containerName string) {
 			log.Printf("Set time to %v for container %v", res, containerName)
 			break
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 	}
 
 	if !success {
