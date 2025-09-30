@@ -43,12 +43,14 @@ func (uc UserClient) GoToReservations() {
 	uc.GetRequest(env.Localhost + URL_reservations)
 }
 
-func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string) *http.Response {
+func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string, startTime time.Time, endTime  time.Time) *http.Response {
 	resp := uc.PutRequest(env.Localhost+URL_setStatus, url.Values{
 		"reservation_id": {strconv.Itoa(reservation.ID)},
 		"url":            {URL_setStatus},
 		"item_id":        {strconv.Itoa(reservation.ItemID)},
 		"status":         {status},
+		"startTime":     {startTime.Format(env.CONTAINER_TIME_FORMAT)},
+		"endTime":       {endTime.Format(env.CONTAINER_TIME_FORMAT)},
 	})
 	return resp
 }

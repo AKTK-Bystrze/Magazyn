@@ -5,10 +5,10 @@ import (
 	"bystrze/apps/common/models"
 	"bystrze/apps/common/session"
 	"bystrze/apps/common/timeSet"
+	"bystrze/apps/userManager/auth/access"
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/warehouse/rental"
-	"bystrze/apps/userManager/auth/access"
 	"net/http"
 	"strconv"
 	"time"
@@ -64,10 +64,33 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	appState.App.Info("Form:", r.Form)
 	reservationId := r.FormValue("reservation_id")
 	newStatus := r.FormValue("status")
+	newStartTimeStr := r.FormValue("startTime")
+	newEndTimeStr := r.FormValue("endTime")
+
 	id, err := strconv.Atoi(reservationId)
 	if err != nil {
 		appState.App.Err("Failed to convert reservation id %s to int: %v", reservationId, err)
 	}
+
+	// Parse start and end dates
+	var newStartTime, newEndTime time.Time
+	if newStartTimeStr != "" {
+		newStartTime, err = time.Parse(timeSet.IN_TIME_FMT, newStartTimeStr)
+		if err != nil {
+			appState.App.Err("Failed to parse start date %s: %v", newStartTimeStr, err)
+			http.Error(w, "Invalid start date format", http.StatusBadRequest)
+			return
+		}
+	}
+	if newEndTimeStr != "" {
+		newEndTime, err = time.Parse(timeSet.IN_TIME_FMT, newEndTimeStr)
+		if err != nil {
+			appState.App.Err("Failed to parse end date %s: %v", newEndTimeStr, err)
+			http.Error(w, "Invalid end date format", http.StatusBadRequest)
+			return
+		}
+	}
+
 	reservation, err := rental.GetReservation(id)
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
@@ -78,16 +101,16 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// then user can change reservation status only if he is owner of this reservation and status is pending
 	if !access.HasAdminPrivilege(w, r) {
 		if int(reservation.User.ID) != int(session.GetSessionUserId(r)) {
-			appState.App.Err("%v tried to change reservation %v status but is not owner", session.GetSessionUserName(r), id)	
+			appState.App.Err("%v tried to change reservation %v status but is not owner", session.GetSessionUserName(r), id)
 			http.Error(w, "You are not allowed to change status of this reservation", http.StatusForbidden)
 			return
 		}
 		if reservation.Status != rental.PENDING {
-			appState.App.Err("%v tried to change reservation %v status but status is not pending", session.GetSessionUserName(r), id)	
+			appState.App.Err("%v tried to change reservation %v status but status is not pending", session.GetSessionUserName(r), id)
 			http.Error(w, "You are not allowed to change status of this reservation", http.StatusForbidden)
 			return
 		}
-		appState.App.Debug("%v is owner of reservation %v and status is pending, can change status", session.GetSessionUserName(r), id) 
+		appState.App.Debug("%v is owner of reservation %v and status is pending, can change status", session.GetSessionUserName(r), id)
 	}
 
 	appState.App.Debug("%v setStatusHandler reservation_id %v status %v", session.GetSessionUserName(r), id, newStatus)
@@ -100,7 +123,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	case rental.PENDING:
 		switch newStatus {
 		case rental.RENTED:
-			err = handleRentedStatus(*reservation, w, r)
+			err = handleNewStatus(*reservation, newStartTime, newEndTime, newStatus, w, r)
 			if err != nil {
 				return
 			}
@@ -116,7 +139,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	case rental.RENTED:
 		switch newStatus {
 		case rental.RETURNED:
-			err = handleReturnedStatus(*reservation, w, r)
+			err = handleNewStatus(*reservation, newStartTime, newEndTime, newStatus, w, r)
 			if err != nil {
 				return
 			}
@@ -137,76 +160,52 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	appState.App.Debug("%v changed status from %v to %v for reservation %v", session.GetSessionUserName(r), oldStatus, newStatus, id)
 }
 
-func handleRentedStatus(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
-	appState.App.Debug("Handling status rented")
-	now := time.Now()
-	year, month, day := now.Date()
-	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+func handleNewStatus(reservation models.Reservation, newStartTime time.Time, newEndTime time.Time, newStatus string, w http.ResponseWriter, r *http.Request) error {
+	appState.App.Debug("Handling status change from %v to %v", reservation.Status, newStatus)
+	if timeSet.IsTheSameDay(reservation.StartTime, newStartTime) && timeSet.IsTheSameDay(reservation.EndTime, newEndTime) {
+		appState.App.Info("Status changed to %v but dates are unchanged, changed just reservation status", newStatus)
+		return nil
+	}
+	appState.App.Info("Reservation dates have changed. Update reservation")
+	appState.App.Info("Old reservation dates: start %v end %v", reservation.StartTime.Format(timeSet.OUT_TIME_FMT), reservation.EndTime.Format(timeSet.OUT_TIME_FMT))
+	appState.App.Info("New reservation dates: start %v end %v", newStartTime.Format(timeSet.OUT_TIME_FMT), newEndTime.Format(timeSet.OUT_TIME_FMT))
 
-	year, month, day = reservation.StartTime.Date()
-	reservationStartTime := time.Date(year, month, day, 0, 0, 0, 0, reservation.StartTime.Location())
-	if !today.Equal(reservationStartTime) {
-		appState.App.Debug("Reservation start time %v is different than today %v. Update reservation",
-			reservationStartTime.Format(timeSet.OUT_TIME_FMT), today.Format(timeSet.OUT_TIME_FMT))
-		userCredits := reservation.User.Credits
-		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
-		if err != nil {
-			appState.App.Err("handleRentedStatus %v", err.Error())
-			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
-			return err
-		}
-		newRentalCost, err := credits.CalculateRentalCost(reservation.Item, now, reservation.EndTime)
-		if err != nil {
-			appState.App.Err("handleRentedStatus %v", err.Error())
-			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
-			return err
-		}
-		creditsChange := +oldRentalCost - newRentalCost
-		userCredits = userCredits + creditsChange
-		err = rental.UpdateReservationsDate(reservation, "r_start_time", now, w)
-		if err != nil {
-			return err
-		}
-		auditMsg := reservation.Item.Name + "\tWypozyczenie w innym terminie"
-		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
+	userCredits := reservation.User.Credits
+	oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
+	if err != nil {
+		appState.App.Err("handleReturnedStatus %v", err.Error())
+		http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
+		return err
+	}
+	newRentalCost, err := credits.CalculateRentalCost(reservation.Item, newStartTime, newEndTime)
+	if err != nil {
+		appState.App.Err("handleReturnedStatus %v", err.Error())
+		http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
+		return err
+	}
+	creditsChange := oldRentalCost - newRentalCost
+	userCredits = userCredits + creditsChange
+	if !timeSet.IsTheSameDay(reservation.EndTime, newEndTime) {
+		err = rental.UpdateReservationsDate(reservation, "r_end_time", newEndTime, w)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
-}
-
-func handleReturnedStatus(reservation models.Reservation, w http.ResponseWriter, r *http.Request) error {
-	appState.App.Debug("Handling status returned")
-	now := time.Now()
-	year, month, day := now.Date()
-	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
-
-	year, month, day = reservation.EndTime.Date()
-	reservationEndTime := time.Date(year, month, day, 0, 0, 0, 0, reservation.EndTime.Location())
-	if !today.Equal(reservationEndTime) {
-		appState.App.Debug("Reservation end time %v is different than today %v. Update reservation",
-			reservationEndTime.Format(timeSet.OUT_TIME_FMT), today.Format(timeSet.OUT_TIME_FMT))
-		userCredits := reservation.User.Credits
-		oldRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, reservation.EndTime)
-		if err != nil {
-			appState.App.Err("handleReturnedStatus %v", err.Error())
-			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
-			return err
-		}
-		newRentalCost, err := credits.CalculateRentalCost(reservation.Item, reservation.StartTime, now)
-		if err != nil {
-			appState.App.Err("handleReturnedStatus %v", err.Error())
-			http.Error(w, "Can't calculate rental cost", http.StatusInternalServerError)
-			return err
-		}
-		creditsChange := oldRentalCost - newRentalCost
-		userCredits = userCredits + creditsChange
-		err = rental.UpdateReservationsDate(reservation, "r_end_time", now, w)
+	if !timeSet.IsTheSameDay(reservation.StartTime, newStartTime) {
+		err = rental.UpdateReservationsDate(reservation, "r_start_time", newStartTime, w)
 		if err != nil {
 			return err
 		}
-		auditMsg := reservation.Item.Name + "\tZwrot w innym terminie"
+	}
+	switch newStatus {
+	case rental.RETURNED:
+		auditMsg := reservation.Item.Name + "\tZwrot ze zmianą terminu"
+		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
+		if err != nil {
+			return err
+		}
+	case rental.RENTED:
+		auditMsg := reservation.Item.Name + "\tWypozyczenie ze zmianą terminu"
 		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
 		if err != nil {
 			return err
