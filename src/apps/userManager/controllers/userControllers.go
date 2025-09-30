@@ -53,6 +53,31 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
     actionType := r.PostFormValue("actionType")
 
     switch actionType {
+	case "singleEnabled":
+        userID, _ := strconv.Atoi(r.PostFormValue("userID"))
+        newEnabled, err := strconv.ParseBool(r.PostFormValue("newEnabledState"))
+		if err != nil {
+			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+			http.Error(w, "Invalid enabled state", http.StatusBadRequest)
+			return
+		}
+        
+        user, err := users.GetUserById(userID) // Fetch user
+        if err != nil { 
+			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+			http.Error(w, "DB Error", http.StatusInternalServerError)
+			return
+		 }
+
+        user.Enabled = newEnabled
+		err = updateUser(w, r, user)
+		if err != nil {
+			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+			http.Error(w, "DB Error", http.StatusInternalServerError)
+			return
+		}
+		appState.App.Info("%v updated user %v enabled to %v", session.GetSessionUserName(r), user.Name, user.Enabled)
+
     case "singleCredit":
 		userID, _ := strconv.Atoi(r.PostFormValue("userID"))
         amount, _ := strconv.Atoi(r.PostFormValue("amount"))
@@ -90,10 +115,24 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
         newRole := r.PostFormValue("newRole")
         
         user, err := users.GetUserById(userID) // Fetch user
-        if err != nil { /* handle error */ }
+        if err != nil { 
+			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+			http.Error(w, "DB Error", http.StatusInternalServerError)
+			return
+		 }
 
         user.Role = newRole
-		updateUserRole(w, r, user)
+		err = updateUser(w, r, user)
+		if err != nil {
+			appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+			http.Error(w, "DB Error", http.StatusInternalServerError)
+			return
+		}
+		appState.App.Info("%v updated user %v role to %v", session.GetSessionUserName(r), user.Name, user.Role)
+		if user.ID == session.GetSessionUserId(r) {
+		appState.App.Debug("%v user requested changes for his own role, relogin is needed", session.GetSessionUserName(r))
+		Logout(w, r)
+	}
 
     case "bulkCredit":
         // Logic for bulk credit add/subtract
@@ -136,19 +175,13 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusOK)
 }
 
-func updateUserRole(w http.ResponseWriter, r *http.Request, user models.User) {
+func updateUser(w http.ResponseWriter, r *http.Request, user models.User) error {
 	appState.App.Debug("%v Requested update of user: %v", session.GetSessionUserName(r), user.Name)
 	err := users.UpdateUser(user)
 	if err != nil {
-		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
-		http.Error(w, "DB error", http.StatusBadRequest)
-		return
+		return err
 	}
-	appState.App.Info("%v updated user %v role to %v", session.GetSessionUserName(r), user.Name, user.Role)
-	if user.ID == session.GetSessionUserId(r) {
-		appState.App.Debug("%v user requested changes for his own role, relogin is needed", session.GetSessionUserName(r))
-		Logout(w, r)
-	}
+	return nil
 }
 
 func updateUserCredits(w http.ResponseWriter, r *http.Request, user models.User, audit models.CreditsAudit) {
