@@ -1,217 +1,217 @@
 #!/bin/bash
 
-# Używamy set -e na początku, ale kluczowe kroki otoczymy blokami warunkowymi,
-# by móc kontrolować wycofywanie zmian.
+# We use set -e at the beginning, but critical steps will be wrapped in conditional blocks
+# to control the rollback process.
 set -e
 
-# --- Zmienne Globalne dla Rollbacku ---
-# Upewnij się, że te zmienne są zdefiniowane i używane w compose.yml
-# np. image: bystrze-magazyn-db:${IMAGE_TAG}
+# --- Global Variables for Rollback ---
+# Ensure these variables are defined and used in compose.yml
+# e.g., image: bystrze-magazyn-db:${IMAGE_TAG}
 LAST_TAG=""
 NEW_TAG=""
 BACKUP_FILE=""
 
-# Ustawienia Połączenia DB (Używane przez pg_dump na HOŚCIE)
+# DB Connection Settings (Used by pg_dump on the HOST machine)
 PG_USER="postgres"
 PG_PASSWORD="postgres"
-PG_HOST="localhost" # Używa portu 54320 mapowanego na 127.0.0.1 na hoście
+PG_HOST="localhost" # Uses port 54320 mapped to 127.0.0.1 on the host
 PG_PORT="54320" 
 PG_DB="magazyn"
 
-# --- Funkcje Obsługi Błędów i Rollbacku ---
+# --- Error Handling and Rollback Functions ---
 
-# 1. Funkcja przywracająca schemat DB z backupu
+# 1. Function to restore the DB schema from backup
 rollback_db_schema() {
-    echo "🚨 Schemat bazy danych nieudany! Rozpoczynam przywracanie z backupu..."
+    echo "🚨 Database schema failed! Starting rollback from backup..."
     if [[ -z "$BACKUP_FILE" ]]; then
-        echo "❌ Błąd: Nie zdefiniowano pliku backupu. Nie można przywrócić."
+        echo "❌ Error: Backup file not defined. Cannot restore."
         return 1
     fi
     
-    # 1. Zatrzymujemy i usuwamy nieudany kontener DB (serwis 'db')
+    # 1. Stop and remove the failed DB container ('db' service)
     docker compose stop db
     docker compose rm -f db
     
-    # 2. Uruchamiamy stabilny kontener DB z LAST_TAG (ten, który działał)
-    echo "🔄 Ponowne uruchamianie kontenera DB (serwis 'db') z LAST_TAG: $LAST_TAG"
+    # 2. Start the stable DB container with LAST_TAG (the one that was working)
+    echo "🔄 Restarting DB container ('db' service) with LAST_TAG: $LAST_TAG"
     IMAGE_TAG=$LAST_TAG docker compose up -d --no-build db
     
-    # Oczekiwanie na uruchomienie DB
+    # Wait for the DB to start
     sleep 10 
     
-    # Ustawienie zmiennej PGPASSWORD dla połączeń z hosta
+    # Set PGPASSWORD variable for host connections
     export PGPASSWORD=$PG_PASSWORD
 
-    # 3. Krok krytyczny: Wyczyść schemat publiczny przed przywróceniem
-    # Wymaga lokalnie zainstalowanego klienta 'psql'
-    echo "⏳ Czyszczenie istniejącego schematu 'public' w bazie $PG_DB..."
+    # 3. Critical step: Clear the public schema before restoring
+    # Requires 'psql' client installed locally
+    echo "⏳ Cleaning existing 'public' schema in database $PG_DB..."
     if ! psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$PG_DB" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"; then
-        echo "❌ KRYTYCZNY BŁĄD: Czyszczenie schematu publicznego nie powiodło się!"
+        echo "❌ CRITICAL ERROR: Cleaning the public schema failed!"
         exit 1
     fi
-    echo "✅ Schemat publiczny wyczyszczony."
+    echo "✅ Public schema cleaned successfully."
     
-    # 4. Przywracanie danych z użyciem pg_restore na hoście
-    echo "⏳ Przywracanie danych z pliku $BACKUP_FILE (bez tworzenia/usuwania bazy)..."
-    # UWAGA: Usunięto flagę -c (clean), ponieważ schemat 'public' został już usunięty
-    # i utworzony na nowo przez poprzednie polecenie psql. 
+    # 4. Restore data using pg_restore on the host
+    echo "⏳ Restoring data from $BACKUP_FILE (without creating/dropping the database)..."
+    # NOTE: The -c (clean) flag was removed because the 'public' schema was already dropped
+    # and recreated by the preceding psql command. 
     if pg_restore -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$PG_DB" "$BACKUP_FILE"; then
-        echo "✅ Przywracanie danych zakończone sukcesem!"
-        # Po udanym rollbacku DB, skrypt kończy działanie, informując o niepowodzeniu wdrożenia
+        echo "✅ Data restoration completed successfully!"
+        # After successful DB rollback, the script exits, signaling deployment failure
         exit 1 
     else
-        echo "❌ KRYTYCZNY BŁĄD: Przywracanie danych z backupu ($BACKUP_FILE) nie powiodło się!"
-        exit 1 # Krytyczny błąd, który powinien zostać natychmiast zgłoszony
+        echo "❌ CRITICAL ERROR: Restoring data from backup ($BACKUP_FILE) failed!"
+        exit 1 # Critical error, should be reported immediately
     fi
 }
 
-# 2. Funkcja przywracająca kontenery do stanu LAST_TAG
+# 2. Function to rollback containers to LAST_TAG state
 rollback_containers() {
-    echo "🚨 Wdrożenie kontenerów nieudane! Cofanie do poprzedniej wersji: $LAST_TAG..."
+    echo "🚨 Container deployment failed! Rolling back to previous version: $LAST_TAG..."
     
     if [[ -z "$LAST_TAG" ]]; then
-        echo "❌ Błąd: Brak zdefiniowanego LAST_TAG. Nie można cofnąć."
+        echo "❌ Error: LAST_TAG is not defined. Cannot roll back."
         return 1
     fi
 
-    echo "🔄 Uruchamianie kontenerów z LAST_TAG: $LAST_TAG..."
-    # Używamy poprzedniego taga i wymuszamy ponowne utworzenie kontenerów
-    # Pamiętaj, że w compose.yml serwisy to 'db' i 'web'
+    echo "🔄 Starting containers with LAST_TAG: $LAST_TAG..."
+    # Use the previous tag and force recreation of containers
+    # Remember that services in compose.yml are 'db' and 'web'
     IMAGE_TAG=$LAST_TAG docker compose -f compose.yml up -d --force-recreate
     
     if [ $? -eq 0 ]; then
-        echo "✅ Cofnięcie do wersji $LAST_TAG zakończone sukcesem."
+        echo "✅ Rollback to version $LAST_TAG successful."
     else
-        echo "❌ KRYTYCZNY BŁĄD: Automatyczne cofnięcie nie powiodło się. Wymagana ręczna interwencja."
+        echo "❌ CRITICAL ERROR: Automatic rollback failed. Manual intervention required."
     fi
     
-    exit 1 # Koniec działania skryptu po nieudanym wdrożeniu
+    exit 1 # End script execution after failed deployment
 }
 
-# 3. Główna funkcja obsługi błędów
+# 3. Main error cleanup function
 cleanup_on_failure() {
-    # Ta funkcja jest wywoływana, gdy którekolwiek z poleceń zakończy się błędem,
-    # jeśli nie został on obsłużony lokalnie (np. w bloku if/else).
+    # This function is called when any command fails,
+    # if it wasn't handled locally (e.g., in an if/else block).
     
-    # Ponieważ kluczowe błędy (migracja, deployment) obsługujemy lokalnie
-    # (z wywołaniem exit 1 w ich ciele), ta funkcja jest głównie dla nieprzewidzianych
-    # błędów (np. błąd budowania obrazu).
+    # Since critical errors (migration, deployment) are handled locally
+    # (with an exit 1 call in their body), this function is mainly for unexpected
+    # errors (e.g., build image error).
     
-    # Sprawdzamy kod wyjścia ostatniego polecenia
+    # Check the exit code of the last command
     EXIT_CODE=$?
     if [ $EXIT_CODE -ne 0 ]; then
-        echo "💥 Wystąpił nieoczekiwany błąd. Szczegóły błędu: $EXIT_CODE."
+        echo "💥 An unexpected error occurred. Error details: $EXIT_CODE."
     fi
 }
 
-# Ustawienie pułapki (trap), aby wywołać funkcję w przypadku błędu
+# Set a trap to call the function in case of error
 trap cleanup_on_failure ERR
 
 # ---------------------------------------------------------------------
-# 1. Sprawdzenie gałęzi i ustalenie tagów
+# 1. Check branch and determine tags
 # ---------------------------------------------------------------------
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [[ "$CURRENT_BRANCH" != "main" ]]; then
-  echo "⚠️  Jesteś na gałęzi '$CURRENT_BRANCH', a nie 'main'."
-  read -p "Czy chcesz wdrożyć z tej gałęzi? (y/N): " confirm
+  echo "⚠️ You are on branch '$CURRENT_BRANCH', not 'main'."
+  read -p "Do you want to deploy from this branch? (y/N): " confirm
   if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "❌ Wdrożenie anulowane."
+    echo "❌ Deployment cancelled."
     exit 1
   fi
 fi
 
-echo "📌 Wyszukiwanie ostatniego taga..."
+echo "📌 Searching for the last tag..."
 LAST_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n 1)
-echo "🔍 Ostatni działający tag: ${LAST_TAG:-none}"
+echo "🔍 Last working tag: ${LAST_TAG:-none}"
 
 if [[ -z "$LAST_TAG" ]]; then
   NEW_TAG="v1.0.0"
 else
-  # Używamy prostszej logiki inkrementacji taga
-  # Zakładamy, że LAST_TAG ma format vX.Y.Z
+  # Use simple tag increment logic
+  # Assume LAST_TAG has the format vX.Y.Z
   IFS='.' read -r major minor patch <<< "${LAST_TAG#v}"
   patch=$((patch + 1))
   NEW_TAG="v$major.$minor.$patch"
 fi
 
-echo "🏷️ Nowy tag: $NEW_TAG"
-# Ustawiamy zmienną środowiskową dla nowych obrazów
+echo "🏷️ New tag: $NEW_TAG"
+# Set the environment variable for new images
 export IMAGE_TAG=$NEW_TAG
 
 # ---------------------------------------------------------------------
-# 2. Budowanie Obrazów
+# 2. Build Images
 # ---------------------------------------------------------------------
-echo "🔧 Budowanie obrazów z tagiem $NEW_TAG..."
+echo "🔧 Building images with tag $NEW_TAG..."
 
 docker build -f db-dockerfile -t bystrze-magazyn-db:$NEW_TAG .
 docker build -f app-dockerfile -t bystrze-magazyn-app:$NEW_TAG .
 
-echo "✅ Obrazy zbudowane: bystrze-magazyn-db:$NEW_TAG i bystrze-magazyn-app:$NEW_TAG"
+echo "✅ Images built: bystrze-magazyn-db:$NEW_TAG and bystrze-magazyn-app:$NEW_TAG"
 
 # ---------------------------------------------------------------------
-# 3. Backup PostgreSQL database (Kluczowy krok przed migracją)
+# 3. Backup PostgreSQL database (Critical step before migration)
 # ---------------------------------------------------------------------
-echo "💾 Tworzenie kopii zapasowej bazy danych PostgreSQL..."
-# Upewnij się, że PATH zawiera pg_dump lub pg_dump jest dostępny.
-# Ustawienia połączenia (PG_USER, PG_PASSWORD, PG_HOST, PG_PORT, PG_DB są zdefiniowane na górze skryptu)
+echo "💾 Creating PostgreSQL database backup..."
+# Ensure that PATH contains pg_dump or pg_dump is available.
+# Connection settings (PG_USER, PG_PASSWORD, PG_HOST, PG_PORT, PG_DB are defined at the top of the script)
 
-# Ustawienie ścieżki do backupu
+# Set backup path
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-# Zmienna globalna dla rollbacku
-BACKUP_FILE="/tmp/magazyn_backup_$TIMESTAMP.sql" # Używamy ścieżki dostępnej na hoście
+# Global variable for rollback
+BACKUP_FILE="/tmp/magazyn_backup_$TIMESTAMP.sql" # Use a path accessible on the host
 
 export PGPASSWORD=$PG_PASSWORD
 
-# Upewnij się, że masz pg_dump zainstalowane na hoście
+# Ensure pg_dump is installed on the host
 if ! command -v pg_dump &> /dev/null; then
-    echo "❌ Błąd: pg_dump nie znaleziono w PATH. Przerwanie skryptu."
+    echo "❌ Error: pg_dump not found in PATH. Script aborted."
     exit 1
 fi
 
-# Polecenie pg_dump
+# pg_dump command
 pg_dump -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -F c -b -v -f "$BACKUP_FILE" "$PG_DB"
 
-echo "✅ Backup zapisany jako $BACKUP_FILE"
+echo "✅ Backup saved as $BACKUP_FILE"
 
 # ---------------------------------------------------------------------
-# 4. Migracja schematu bazy danych (Punkt Rollbacku DB)
+# 4. Database Schema Migration (DB Rollback Point)
 # ---------------------------------------------------------------------
-echo "🔄 Migracja schematu bazy danych..."
-# Upewnij się, że serwis 'migrate' jest skonfigurowany, by używać serwisu 'db' (jest!)
+echo "🔄 Migrating database schema..."
+# Ensure the 'migrate' service is configured to use the 'db' service (it is!)
 if ! docker compose run --rm migrate; then
-  # Jeśli migracja się nie powiodła, wywołaj funkcję rollbacku schematu
+  # If migration fails, call the schema rollback function
   rollback_db_schema
 fi
 
-echo "✅ Migracja schematu zakończona sukcesem!"
+echo "✅ Schema migration completed successfully!"
 
 # ---------------------------------------------------------------------
-# 5. Deployment (Punkt Rollbacku Kontenerów)
+# 5. Deployment (Container Rollback Point)
 # ---------------------------------------------------------------------
-echo "🚀 Wdrażanie nowych kontenerów (serwisy: db i web) z tagiem $NEW_TAG..."
+echo "🚀 Deploying new containers (services: db and web) with tag $NEW_TAG..."
 
-# Wdrażamy, używając IMAGE_TAG ($NEW_TAG) ustawionego jako zmienna środowiskowa
-# Wymuszamy ponowne utworzenie, aby użyć nowego obrazu
+# Deploy, using IMAGE_TAG ($NEW_TAG) set as an environment variable
+# Force recreation to use the new image
 if ! docker compose -f compose.yml up -d --force-recreate; then
-    # Jeśli wdrożenie się nie powiedzie (np. nowy kontener DB nie startuje - Twój błąd)
+    # If deployment fails (e.g., new DB container does not start)
     rollback_containers
 fi
 
-# Krótka weryfikacja (opcjonalnie, ale zalecana)
-echo "⏳ Sprawdzanie stanu kontenerów..."
-# Wyszukujemy serwisy 'db' i 'web'
-# Poprawiono błąd składniowy poprzez grupowanie potoku w podpowłoce i dodanie -q
+# Quick verification (optional but recommended)
+echo "⏳ Checking container status..."
+# Search for 'db' and 'web' services
+# Fixed syntax error by grouping the pipe in a subshell and adding -q
 if ! (docker compose ps | grep -E 'db|web' | grep -q 'running'); then
-    echo "❌ BŁĄD: Nowe kontenery (db lub web) nie są w stanie 'running' po wdrożeniu."
+    echo "❌ ERROR: New containers (db or web) are not in 'running' state after deployment."
     rollback_containers
 fi
 
-echo "✅ Wdrożenie zakończone z wersją $NEW_TAG"
+echo "✅ Deployment completed with version $NEW_TAG"
 
 # ---------------------------------------------------------------------
-# 6. Finalizacja — Tworzenie Taga Git (TYLKO jeśli wszystko się powiodło)
+# 6. Finalization - Create Git Tag (ONLY if everything succeeded)
 # ---------------------------------------------------------------------
-echo "🏷️ Finalizacja i tworzenie taga Git..."
+echo "🏷️ Finalizing and creating Git tag..."
 git tag "$NEW_TAG"
 git push origin "$NEW_TAG"
-echo "✅ Utworzono i wypchnięto tag $NEW_TAG"
+echo "✅ Tag $NEW_TAG created and pushed"
