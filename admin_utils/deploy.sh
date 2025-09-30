@@ -53,9 +53,9 @@ rollback_db_schema() {
     
     # 4. Przywracanie danych z użyciem pg_restore na hoście
     echo "⏳ Przywracanie danych z pliku $BACKUP_FILE (bez tworzenia/usuwania bazy)..."
-    # Używamy flagi -c (clean - usunięcie obiektów w schemacie), ale NIE -C (create - próba utworzenia bazy)
-    # Zostało to obsłużone przez DROP SCHEMA/CREATE SCHEMA powyżej
-    if pg_restore -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -c -d "$PG_DB" "$BACKUP_FILE"; then
+    # UWAGA: Usunięto flagę -c (clean), ponieważ schemat 'public' został już usunięty
+    # i utworzony na nowo przez poprzednie polecenie psql. 
+    if pg_restore -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$PG_DB" "$BACKUP_FILE"; then
         echo "✅ Przywracanie danych zakończone sukcesem!"
         # Po udanym rollbacku DB, skrypt kończy działanie, informując o niepowodzeniu wdrożenia
         exit 1 
