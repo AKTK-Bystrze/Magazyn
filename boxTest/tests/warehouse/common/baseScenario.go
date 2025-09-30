@@ -70,7 +70,7 @@ func BaseScenario(tc TestCase) {
 	tc.toString("")
 	userBefore := db.GetUserById(int(User.User.ID))
 	log.Printf("User details: %v", userBefore)
-	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID)
+	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID, int(User.User.ID))
 	CheckCredits(userBefore, tc.CreditsWhenCreated)
 	reservation, err := db.GetReservation(
 		db.ByItemID(tc.Item.ID),
@@ -118,9 +118,9 @@ func ExpectedCostAtTheEndBasedOnActions(actions *ChangeHistory, startTime time.T
 	return tests.CalculateCost(reservedItem, reservationSince, reservationTill)
 }
 
-func ReserveWithTimestamp(change Change, reservationStart time.Time, reservationEnd time.Time, itemId int) {
+func ReserveWithTimestamp(change Change, reservationStart time.Time, reservationEnd time.Time, itemId int, reservationOwner int) {
 	env.SetContainerTime(change.Timestamp.Add(-2*time.Minute), env.TEST_APP_NAME)
-	User.ReserveItem(itemId, reservationStart, reservationEnd)
+	User.ReserveItem(itemId, reservationStart, reservationEnd, reservationOwner)
 	env.RevertContainerTime(env.TEST_APP_NAME)
 }
 
@@ -172,7 +172,7 @@ func TestForbiddenStatusChange(tc TestCase) {
 	tc.toString("")
 	userBefore := db.GetUserById(int(User.User.ID))
 	log.Printf("User details: %v", userBefore)
-	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID)
+	ReserveWithTimestamp(tc.Transition.GetChangeByKey(app.PENDING), tc.StartTime, tc.EndTime, tc.Item.ID, int(User.User.ID))
 	reservation, err := db.GetReservation(
 		db.ByItemID(tc.Item.ID),
 		db.ByStatus(app.PENDING),

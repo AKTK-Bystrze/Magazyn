@@ -105,12 +105,13 @@ func extractValue(text string) string {
 	return strings.TrimSpace(strings.Split(text, ":")[1])
 }
 
-func (uc UserClient) ReserveItem(itemID int, timeStart time.Time, timeStop time.Time) {
+func (uc UserClient) ReserveItem(itemID int, timeStart time.Time, timeStop time.Time, userID int) {
 	uc.PostFormRequest(env.Localhost+URL_reserve,
 		url.Values{
 			"start_time": {timeStart.Format(env.CONTAINER_TIME_FORMAT)},
 			"end_time":   {timeStop.Format(env.CONTAINER_TIME_FORMAT)},
 			"item_id":    {strconv.Itoa(itemID)},
+			"user":       {strconv.Itoa(userID)},
 		})
 }
 
