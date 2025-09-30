@@ -49,8 +49,10 @@
         <form method="POST" id="reservation_{{ .ID }}" action="javascript:void(0);">
           <input type="hidden" name="reservation_id" value="{{ .ID }}">
           <input type="hidden" name="url" value="{{ $.URL }}">
+          <input type="hidden" name="startTime" value="{{ $.StartTime }}">
+          <input type="hidden" name="endTime" value="{{ $.EndTime }}">
           <div class="form-group">
-            <select class="form-control {{ $class }}" id="reservation_{{ .ID }}" name="status" onchange="javascript:setReservationStatus('{{ .ID }}', 'reservation', this.value)" autocomplete="off">
+            <select class="form-control {{ $class }}" id="reservation_{{ .ID }}" name="status" onchange="javascript:setReservationStatus('{{ .ID }}', 'reservation', this.value, '{{ .StartTime.Format `2006-01-02T15:04` }}', '{{ .EndTime.Format `2006-01-02T15:04` }}')" autocomplete="off">
               <option value="pending" {{ if eq .Status "pending" }}selected{{ end }}>Oczekujacy</option>
               <option value="denied" {{ if eq .Status "denied" }}selected{{ end }}>Anulowany</option>
               <option value="rented" {{ if eq .Status "rented" }}selected{{ end }}>Wypozyczony</option>
@@ -105,13 +107,16 @@
       responsive: true,
     });
   });
-  function setReservationStatus(reservationId, formPrefix, status=null) {
-    var formData = $("#" + formPrefix + "_" + reservationId).serialize();
-    if(status !== null){
+
+  function setReservationStatus(reservationId, formPrefix, status = null, startTime = null, endTime = null) {
+    var formData = $('#' + formPrefix + '_' + reservationId).serialize();
+    if (status !== null) {
       let params = new URLSearchParams(formData);
       params.set('status', status);
       formData = params.toString();
     }
+    if (status === 'denied') {
+      if (confirm('Czy na pewno chcesz anulować tę rezerwację?')) {
     fetch('/warehouse/user/setStatus', {
       method: 'PUT',
       headers: {
@@ -132,7 +137,81 @@
         console.error('Network error:', error);
         alert("Błąd sieci: " + error);
       });
+      }
+    }else{
+      $('#changeDatesModal').modal('show');
+                document.getElementById('startTime').value = startTime;
+                document.getElementById('endTime').value = endTime;
+                document.getElementById('approveChanges').onclick = function () {
+                fetch('/warehouse/user/setStatus', {
+                method: 'PUT',
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData,
+              })
+                .then(response => {
+                  if (response.ok) {
+                    alert("Zmieniono status rezerwacji");
+                    $('#changeDatesModal').modal('hide');
+                  } else {
+                    error = response.statusText
+                    console.error('Error:', error);
+                  }
+                  response.text()
+                })
+                .catch(error => {
+                  console.error('Network error:', error);
+                  alert("Błąd sieci: " + error);
+                });
+                };
+      return;
+    }
   }
+</script>
+<div class="modal fade" id="changeDatesModal" tabindex="-1" aria-labelledby="changeDatesModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="changeDatesModalLabel">Zmień daty rozpoczęcia i zakończenia</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="changeDatesForm">
+          <div class="mb-3">
+            <label for="startTime" class="form-label">Data rozpoczęcia</label>
+            <input type="datetime-local" class="form-control" id="startTime" name="startTime" required>
+          </div>
+          <div class="mb-3">
+            <label for="endTime" class="form-label">Data zakończenia</label>
+            <input type="datetime-local" class="form-control" id="endTime" name="endTime" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+        <button type="button" class="btn btn-primary" id="approveChanges">Zatwierdź</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const approveButton = document.getElementById('approveChanges');
+    const cancelButton = document.querySelector('.modal-footer .btn-secondary');
+    const closeButton = document.querySelector('.modal-header .btn-close');
+
+    cancelButton.addEventListener('click', function () {
+      $('#changeDatesModal').modal('hide');
+    });
+
+    closeButton.addEventListener('click', function () {
+      $('#changeDatesModal').modal('hide');
+    });
+  });
 </script>
 {{ else }}
 <p>Brak rezerwacji.</p>
