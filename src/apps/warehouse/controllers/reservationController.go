@@ -162,7 +162,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 func handleNewStatus(reservation models.Reservation, newStartTime time.Time, newEndTime time.Time, newStatus string, w http.ResponseWriter, r *http.Request) error {
 	appState.App.Debug("Handling status change from %v to %v", reservation.Status, newStatus)
-	if newEndTime.Equal(reservation.EndTime) || newStartTime.Equal(reservation.StartTime) {
+	if timeSet.IsTheSameDay(reservation.StartTime, newStartTime) && timeSet.IsTheSameDay(reservation.EndTime, newEndTime) {
 		appState.App.Info("Status changed to %v but dates are unchanged, changed just reservation status", newStatus)
 		return nil
 	}
@@ -185,31 +185,31 @@ func handleNewStatus(reservation models.Reservation, newStartTime time.Time, new
 	}
 	creditsChange := oldRentalCost - newRentalCost
 	userCredits = userCredits + creditsChange
-	if !newEndTime.Equal(reservation.EndTime) {
+	if !timeSet.IsTheSameDay(reservation.EndTime, newEndTime) {
 		err = rental.UpdateReservationsDate(reservation, "r_end_time", newEndTime, w)
 		if err != nil {
 			return err
 		}
 	}
-	if newStartTime.Equal(reservation.StartTime) {
+	if !timeSet.IsTheSameDay(reservation.StartTime, newStartTime) {
 		err = rental.UpdateReservationsDate(reservation, "r_start_time", newStartTime, w)
 		if err != nil {
 			return err
 		}
 	}
 	switch newStatus {
-		case rental.RETURNED:
-			auditMsg := reservation.Item.Name + "\tZwrot w innym terminie"
-			err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
-			if err != nil {
-				return err
-			}
-		case rental.RENTED:
-			auditMsg := reservation.Item.Name + "\tWypozyczenie w innym terminie"
-			err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
-			if err != nil {
-				return err
-			}
+	case rental.RETURNED:
+		auditMsg := reservation.Item.Name + "\tZwrot ze zmianą terminu"
+		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
+		if err != nil {
+			return err
+		}
+	case rental.RENTED:
+		auditMsg := reservation.Item.Name + "\tWypozyczenie ze zmianą terminu"
+		err = credits.UpdateUserCredits(reservation, creditsChange, userCredits, auditMsg, int(session.GetSessionUserId(r)), w)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
