@@ -99,6 +99,11 @@ func AdminChangeReservationStatus(actions *ChangeHistory, reservation app.Reserv
 		if contains(app.ADMIN_ACTIONS, change.Key) {
 			log.Printf("Admin changes reservation status %v: %s", change.Key, change.Value.toString())
 			ChangeReservationStatusWithTimestamp(change.Value, reservation)
+			var err error
+			reservation, err = db.GetReservation(db.ByID(reservation.ID))
+			if err != nil {
+				log.Fatalf("Couldn't get reservation from the db: %v", err)
+			}
 		}
 	}
 }
