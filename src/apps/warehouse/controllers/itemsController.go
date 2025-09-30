@@ -14,6 +14,7 @@ import (
 	"bystrze/apps/warehouse/appState"
 	"bystrze/apps/warehouse/items"
 	"bystrze/apps/warehouse/rental"
+	emailAppState "bystrze/apps/email/appState"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -270,7 +271,20 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	})
 }
 
+func canSendEmail() bool {
+	interval := emailAppState.RESERVATION_NOTIFICATION_INTERVAL
+	if time.Since(emailAppState.Last_reservation_notification) > interval {
+		emailAppState.Last_reservation_notification = time.Now()
+		return true
+	}
+	return false
+}
+
 func NotifyAdminsOnReservation(reservation models.Reservation) {
+	if !canSendEmail() {
+		appState.App.Info("Not notifying admins about new reservation - too many emails sent recently")
+		return
+	}
 	admins, err := users.GetAdminUsers()
 	if err != nil {
 		appState.App.Err("Failed to fetch admin users: %v", err)
@@ -279,8 +293,8 @@ func NotifyAdminsOnReservation(reservation models.Reservation) {
 
 	for _, admin := range admins {
 		if admin.Email != "" {
-			subject := "New Reservation Created"
-			body := fmt.Sprintf("A new reservation has been created by %s for the item %s. Start - %s end - %s",
+			subject := "Dodano nowe rezerwacje"
+			body := fmt.Sprintf("Nowe rezerwacje zostały dodane. Najnowsza rezerwacja: użytkownik %s sprzęt %s. Start - %s koniec - %s",
 			 reservation.User.Name, reservation.Item.Name, reservation.StartTime,reservation.EndTime)
 			err := service.SendEmail(admin, subject, body)
 			if err != nil {

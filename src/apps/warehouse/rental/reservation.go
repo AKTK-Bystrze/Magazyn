@@ -223,6 +223,11 @@ func UpdateReservationsDate(reservation models.Reservation, field string, newTim
 		http.Error(w, "DB Error", http.StatusInternalServerError)
 		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
 	}
+	if newTime.IsZero() {
+		appState.App.Err("Invalid time provided for %v", field)
+		http.Error(w, "Invalid time provided", http.StatusBadRequest)
+		return fmt.Errorf("invalid time provided")
+	}
 	newTimeFormated := newTime.Format(timeSet.OUT_TIME_FMT)
 	query := fmt.Sprintf(`UPDATE reservations SET %v = $1,r_changeby_uid = $2 WHERE r_id = $3`, field)
 	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)

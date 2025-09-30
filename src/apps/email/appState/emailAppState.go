@@ -1,6 +1,7 @@
 package appState
 
 import "bystrze/apps"
+import "time"
 
 const (
 	APP_NAME = "E-magazyn Bystrze"
@@ -13,4 +14,6 @@ var (
 	SMTP_HOST                   string
 	SMTP_PORT                   string
 	DEBUG                   bool
+	RESERVATION_NOTIFICATION_INTERVAL time.Duration
+	Last_reservation_notification       time.Time
 )

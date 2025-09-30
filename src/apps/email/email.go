@@ -4,6 +4,7 @@ import (
 	"bystrze/apps"
 	"bystrze/apps/email/appState"
 	"bystrze/apps/email/service"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -27,6 +28,8 @@ func CreateEmailApp(db apps.Database, store sessions.Store, debug bool,
 	appState.MAGAZYN_BYSTRZE_EMAIL_LOGIN = service.GetEmailUsername(MAGAZYN_BYSTRZE_EMAIL_ADDR)
 	appState.SMTP_HOST = SMTP_HOST
 	appState.SMTP_PORT = SMTP_PORT
+	appState.RESERVATION_NOTIFICATION_INTERVAL = time.Duration(30) * time.Minute
+	appState.Last_reservation_notification = time.Now().Add(-2 * appState.RESERVATION_NOTIFICATION_INTERVAL)
 
 	return appState.App
 }
