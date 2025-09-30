@@ -28,24 +28,37 @@ rollback_db_schema() {
         return 1
     fi
     
-    # Najpierw zatrzymujemy i usuwamy nieudany kontener DB (serwis 'db')
+    # 1. Zatrzymujemy i usuwamy nieudany kontener DB (serwis 'db')
     docker compose stop db
     docker compose rm -f db
     
-    # Uruchamiamy tymczasowy kontener, który użyje starego obrazu i istniejącego woluminu
+    # 2. Uruchamiamy stabilny kontener DB z LAST_TAG (ten, który działał)
     echo "🔄 Ponowne uruchamianie kontenera DB (serwis 'db') z LAST_TAG: $LAST_TAG"
-    # Używamy LAST_TAG do zapewnienia stabilnej bazy
     IMAGE_TAG=$LAST_TAG docker compose up -d --no-build db
     
     # Oczekiwanie na uruchomienie DB
     sleep 10 
     
-    # Przywracanie danych
-    echo "⏳ Przywracanie danych z pliku $BACKUP_FILE..."
-    # Używamy PG_HOST/PG_PORT skonfigurowanych dla połączenia z hosta
-    if pg_restore -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -c -C -d "$PG_DB" "$BACKUP_FILE"; then
+    # Ustawienie zmiennej PGPASSWORD dla połączeń z hosta
+    export PGPASSWORD=$PG_PASSWORD
+
+    # 3. Krok krytyczny: Wyczyść schemat publiczny przed przywróceniem
+    # Wymaga lokalnie zainstalowanego klienta 'psql'
+    echo "⏳ Czyszczenie istniejącego schematu 'public' w bazie $PG_DB..."
+    if ! psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$PG_DB" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"; then
+        echo "❌ KRYTYCZNY BŁĄD: Czyszczenie schematu publicznego nie powiodło się!"
+        exit 1
+    fi
+    echo "✅ Schemat publiczny wyczyszczony."
+    
+    # 4. Przywracanie danych z użyciem pg_restore na hoście
+    echo "⏳ Przywracanie danych z pliku $BACKUP_FILE (bez tworzenia/usuwania bazy)..."
+    # Używamy flagi -c (clean - usunięcie obiektów w schemacie), ale NIE -C (create - próba utworzenia bazy)
+    # Zostało to obsłużone przez DROP SCHEMA/CREATE SCHEMA powyżej
+    if pg_restore -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -c -d "$PG_DB" "$BACKUP_FILE"; then
         echo "✅ Przywracanie danych zakończone sukcesem!"
-        exit 1 # Koniec działania skryptu, ponieważ migracja się nie powiodła
+        # Po udanym rollbacku DB, skrypt kończy działanie, informując o niepowodzeniu wdrożenia
+        exit 1 
     else
         echo "❌ KRYTYCZNY BŁĄD: Przywracanie danych z backupu ($BACKUP_FILE) nie powiodło się!"
         exit 1 # Krytyczny błąd, który powinien zostać natychmiast zgłoszony
@@ -155,6 +168,7 @@ if ! command -v pg_dump &> /dev/null; then
     exit 1
 fi
 
+# Polecenie pg_dump
 pg_dump -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -F c -b -v -f "$BACKUP_FILE" "$PG_DB"
 
 echo "✅ Backup zapisany jako $BACKUP_FILE"
@@ -186,7 +200,8 @@ fi
 # Krótka weryfikacja (opcjonalnie, ale zalecana)
 echo "⏳ Sprawdzanie stanu kontenerów..."
 # Wyszukujemy serwisy 'db' i 'web'
-if ! docker compose ps | grep -E 'db|web' | grep 'running'; then
+# Poprawiono błąd składniowy poprzez grupowanie potoku w podpowłoce i dodanie -q
+if ! (docker compose ps | grep -E 'db|web' | grep -q 'running'); then
     echo "❌ BŁĄD: Nowe kontenery (db lub web) nie są w stanie 'running' po wdrożeniu."
     rollback_containers
 fi
