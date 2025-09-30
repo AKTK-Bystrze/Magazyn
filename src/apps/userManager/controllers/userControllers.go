@@ -64,23 +64,25 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "DB Error", http.StatusInternalServerError)
 			return
 		 }
-
+		value := 0
         switch action {
 			case "add":
 				user.Credits += amount
+				value = amount
 			case "subtract":
 				user.Credits -= amount
+				value = -amount
         }
-
 			audit := models.CreditsAudit{
 				U_ID:        int(user.ID),
 				Author_ID:   int(session.GetSessionUserId(r)),
-				Value:       amount,
+				Value:       value,
 				Balance:     user.Credits,
 				Description: "Edycja",
 				ChangeDate:  time.Now().In(timeSet.LOCATION),
 		}
-			updateUser(w, r, user, audit) // Save user to DB using existing function
+		
+			updateUserCredits(w, r, user, audit) // Save user to DB using existing function
         
     case "singleRole":
         // Logic for single user role change
@@ -91,16 +93,8 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
         if err != nil { /* handle error */ }
 
         user.Role = newRole
-		audit := models.CreditsAudit{
-			U_ID:        int(user.ID),
-			Author_ID:   int(session.GetSessionUserId(r)),
-			Value:       0,
-			Balance:     user.Credits,
-			Description: "Edycja",
-			ChangeDate:  time.Now().In(timeSet.LOCATION),
-		}
-        updateUser(w, r, user, audit) // Save user to DB using existing function
-        
+		updateUserRole(w, r, user)
+
     case "bulkCredit":
         // Logic for bulk credit add/subtract
         selectedIDs := r.PostForm["selectedUserIDs"] // Slice of user IDs
@@ -114,21 +108,24 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 				appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
 				continue // Skip this user and continue with others
 			}
+			value := 0
 			switch action {
 				case "add":
 					user.Credits += amount
+					value = amount
 				case "subtract":
 					user.Credits -= amount
+					value = -amount
 			}
 			audit := models.CreditsAudit{
 			U_ID:        int(user.ID),
 			Author_ID:   int(session.GetSessionUserId(r)),
-			Value:       amount,
+			Value:       value,
 			Balance:     user.Credits,
 			Description: "Edycja",
 			ChangeDate:  time.Now().In(timeSet.LOCATION),
 		}
-			updateUser(w, r, user, audit) // Save user to DB using existing function
+			updateUserCredits(w, r, user, audit) // Save user to DB using existing function
 		}
 
     default:
@@ -139,7 +136,22 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusOK)
 }
 
-func updateUser(w http.ResponseWriter, r *http.Request, user models.User, audit models.CreditsAudit) {
+func updateUserRole(w http.ResponseWriter, r *http.Request, user models.User) {
+	appState.App.Debug("%v Requested update of user: %v", session.GetSessionUserName(r), user.Name)
+	err := users.UpdateUser(user)
+	if err != nil {
+		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+		http.Error(w, "DB error", http.StatusBadRequest)
+		return
+	}
+	appState.App.Info("%v updated user %v role to %v", session.GetSessionUserName(r), user.Name, user.Role)
+	if user.ID == session.GetSessionUserId(r) {
+		appState.App.Debug("%v user requested changes for his own role, relogin is needed", session.GetSessionUserName(r))
+		Logout(w, r)
+	}
+}
+
+func updateUserCredits(w http.ResponseWriter, r *http.Request, user models.User, audit models.CreditsAudit) {
 	appState.App.Debug("%v Requested update of user: %v", session.GetSessionUserName(r), user.Name)
 	err := users.UpdateUser(user)
 	if err != nil {
@@ -153,11 +165,7 @@ func updateUser(w http.ResponseWriter, r *http.Request, user models.User, audit 
 			}
 		}
 	}
-	if user.ID == session.GetSessionUserId(r) {
-		appState.App.Debug("%v user requested changes for his own role, relogin is needed", session.GetSessionUserName(r))
-		Logout(w, r)
-	}
-	appState.App.Debug("%v updated user %v credits to %v roles to %v enabled to %v", session.GetSessionUserName(r), user.Name, user.Credits, user.Role, user.Enabled)
+	appState.App.Debug("%v updated user %v credits to %v", session.GetSessionUserName(r), user.Name, user.Credits)
 }
 
 func GetUsersController(w http.ResponseWriter, r *http.Request) {
