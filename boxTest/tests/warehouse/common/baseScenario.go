@@ -126,18 +126,32 @@ func ReserveWithTimestamp(change Change, reservationStart time.Time, reservation
 
 func ChangeReservationStatusWithTimestamp(change Change, reservation app.Reservation) {
 	env.SetContainerTime(change.Timestamp.Add(-1*time.Minute), env.TEST_APP_NAME)
-	ChangeReservationStatus(change.Status, reservation)
+	ChangeReservationStatus(change, reservation)
 	env.RevertContainerTime(env.TEST_APP_NAME)
 }
 
-func ChangeReservationStatus(status string, reservation app.Reservation) *http.Response {
-	resp := Admin.ChangeReservationStatus(reservation, status)
+func ChangeReservationStatus(change Change, reservation app.Reservation) *http.Response {
+	startTime := reservation.StartTime
+	endTime := reservation.EndTime
+	switch change.Status {
+		case app.PENDING:
+			log.Print("ChangeReservationStatus: status PENDING - no action taken")
+		case app.RENTED:
+			startTime = change.Timestamp
+		case app.RETURNED:
+			endTime = change.Timestamp
+		case app.DENIED:
+			log.Print("ChangeReservationStatus: status DENIED - no time change")
+		default:
+			log.Fatalf("ChangeReservationStatus: unknown status %v", change.Status)
+	}
+	resp := Admin.ChangeReservationStatus(reservation, change.Status, startTime, endTime )
 	reservationLoaded, err := db.GetReservation(db.ByID(reservation.ID))
 	if err != nil {
 		log.Fatalf("Couldn't get reservation from the db: %v", err)
 	}
-	if reservationLoaded.Status != status {
-		log.Printf("status didn't change. Want %v have %v", status, reservation.Status)
+	if reservationLoaded.Status != change.Status {
+		log.Printf("status didn't change. Want %v have %v", change.Status, reservation.Status)
 	}
 	return resp
 }
@@ -201,7 +215,7 @@ func AdminChangeReservationToForbiddenStatus(actions *ChangeHistory, reservation
 	for _, change := range actionsList {
 		if contains(app.ADMIN_ACTIONS, change.Key) {
 			log.Printf("Admin changes reservation status %v: %s", change.Key, change.Value.toString())
-			resp = ChangeReservationStatus(change.Value.Status, reservation)
+			resp = ChangeReservationStatus(change.Value, reservation)
 		}
 	}
 	return resp
