@@ -8,3 +8,8 @@ type User struct {
 	Credits int    `db:"u_credits"`
 	Enabled bool   `db:"u_enabled"`
 }
+
+type UserNameAndId struct {
+	ID   int64  `db:"u_id"`
+	Name string `db:"u_username"`
+}

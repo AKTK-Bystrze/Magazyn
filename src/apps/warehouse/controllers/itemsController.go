@@ -8,6 +8,7 @@ import (
 	"bystrze/apps/common/session"
 	"bystrze/apps/common/timeSet"
 	"bystrze/apps/email/service"
+	"bystrze/apps/userManager/auth/access"
 	"bystrze/apps/userManager/credits"
 	"bystrze/apps/userManager/users"
 	"bystrze/apps/warehouse/appState"
@@ -44,14 +45,38 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+
 	appState.App.Debug("%v search for %v since %v till %v", session.GetSessionUserName(r), itemID,
 		startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
-	//  admins can make reservation in the past
-	//  TODO: currently only for themselves
-	//  TODO: we should check and fail at the beginning if user info is not available
 	userInfo, ok := contextHelpers.GetUserInfo(r.Context())
-	if startTime.Before(time.Now()) &&
-		ok && userInfo.Role != "admin" {
+	if !ok {
+		appState.App.Err("User info not found in context for reservation attempt")
+		http.Error(w, "User authentication required", http.StatusUnauthorized)
+		return
+	}
+
+	// 2. Determine the target user for the reservation
+	var targetUserID int
+	targetUsername := r.URL.Query().Get("user")
+	isCurrentUserAdmin := userInfo.Role == access.ROLE_ADMIN
+
+	if targetUsername != "" && isCurrentUserAdmin {
+		// Admin is reserving for a specific user. Fetch the target user's details.
+		targetUser, err := users.GetByUserName(targetUsername) // Assuming a GetUserByName function exists
+		if err != nil {
+			appState.App.Err("%v Admin (%s) failed to find target user %s: %v", session.GetSessionUserName(r), userInfo.Role, targetUsername, err.Error())
+			http.Error(w, "Target user not found", http.StatusBadRequest)
+			return
+		}
+		targetUserID = int(targetUser.ID)
+		appState.App.Debug("%v (Admin) reserving for user ID %d (%s)", session.GetSessionUserName(r), targetUserID, targetUsername)
+	} else {
+		// Standard user reserving for themselves, or non-admin using the 'user' parameter (which is ignored).
+		targetUserID = int(userInfo.ID)
+	}
+
+	// 3. Check for reservation date in the past (only admins can reserve in the past)
+	if startTime.Before(time.Now()) && !isCurrentUserAdmin {
 		msg := "Data wypozyczenia musi byc w przyszlosci"
 		appState.App.Debug("%v reservation date %v must be in the future %v", session.GetSessionUserName(r), startTime, time.Now())
 		httpResponse.ResponseErrorMsg(w, r, msg)
@@ -74,34 +99,37 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 		httpResponse.ResponseErrorMsg(w, r, msg)
 		return
 	}
-
-	// get user ID
-	userID := int(userInfo.ID)
 	item, err := items.GetItem(itemID)
 	if err != nil {
 		appState.App.Err("%v Can't get item %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
 	rentalCost, err := credits.CalculateRentalCost(*item, startTime, endTime)
 	if err != nil {
 		appState.App.Err("%v Can't caluculate renatl cost %v", session.GetSessionUserName(r), err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	canRentResult, userCredits, err := credits.CanRent(userID, rentalCost)
+
+	// Check if the target user can afford the rental cost
+	canRentResult, userCredits, err := credits.CanRent(targetUserID, rentalCost)
 	if err != nil {
-		appState.App.Err("%v Can't evaluate if can rent %v", session.GetSessionUserName(r), err.Error())
+		appState.App.Err("%v Can't evaluate if can rent for user %d: %v", session.GetSessionUserName(r), targetUserID, err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
 	if canRentResult {
-		user, err := users.GetUserById(userID)
+		// Fetch the full user object for the reservation struct
+		user, err := users.GetUserById(targetUserID)
 		if err != nil {
-			appState.App.Err("%v Can't get user %v", session.GetSessionUserName(r), err.Error())
+			appState.App.Err("%v Can't get user %d: %v", session.GetSessionUserName(r), targetUserID, err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
 		status := rental.PENDING
 
 		item, err := items.GetItem(itemID)
@@ -110,6 +138,7 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "DB error", http.StatusBadRequest)
 			return
 		}
+
 		reservation := models.Reservation{
 			StartTime: startTime,
 			EndTime:   endTime,
@@ -132,19 +161,22 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusInternalServerError)
 			return
 		}
-		appState.App.Debug("%v reserved item %v since %v till %v", session.GetSessionUserName(r),
-			itemID, startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
+
+		appState.App.Debug("%v reserved item %v for user %s ID %d since %v till %v", session.GetSessionUserName(r),
+			itemID,targetUsername, targetUserID, startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
+
 		msg := "Zarezerwowano"
 		NotifyAdminsOnReservation(reservation)
 		http.Redirect(w, r, "/warehouse/user/search?msg="+msg, http.StatusFound)
 	} else {
 		msg := "Nie możesz wypożyczyć sprzętu"
-		appState.App.Debug("%v can't reserve item %v since %v till %v", session.GetSessionUserName(r), itemID,
+		appState.App.Debug("%v can't reserve item %v for user ID %d since %v till %v (Insufficient credits or other reason)", session.GetSessionUserName(r), itemID, targetUserID,
 			startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 		httpResponse.ResponseErrorMsg(w, r, msg)
 		return
 	}
 }
+
 
 func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	var availableItems []models.TmpItemWithReservation
@@ -197,18 +229,32 @@ func SearchItems(w http.ResponseWriter, r *http.Request, msg string) {
 	appState.App.Debug("%v search from %v to %v", session.GetSessionUserName(r),
 		timeFrom.UTC(), timeTo.UTC())
 
-	// render the search results template with the available items list
+	usersList, err := users.GetUsers()
+	if err != nil {
+		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
+		http.Error(w, "DB Error", http.StatusInternalServerError)
+		return
+	}
+	var usersIdName []models.UserNameAndId
+	for _, u := range usersList {
+		usersIdName = append(usersIdName, models.UserNameAndId{
+			ID:   u.ID,
+			Name: u.Name,
+		})
+	}
 	appState.App.RenderTemplate(w, r, "search.html", &struct {
 		AvailableItems []models.TmpItemWithReservation
 		StartTime      time.Time
 		EndTime        time.Time
 		Msg            string
+		Users 	[]models.UserNameAndId
 		apps.TemplateData
 	}{
 		AvailableItems: availableItems,
 		StartTime:      timeFrom,
 		EndTime:        timeTo,
 		Msg:            msg,
+		Users: usersIdName,
 	})
 }
 

@@ -20,6 +20,19 @@
         {{ end }}
 
         {{ template "searchForm" . }}
+        {{ if contains "admin" .UserInfo.Role }}
+        <div class="mb-3" id="admin-user-selection">
+            <label for="admin-user-select" class="form-label fw-bold">Rezerwuj dla Użytkownika:</label>
+            <select class="form-select" id="admin-user-select" aria-label="Wybór użytkownika do rezerwacji">
+                {{ range .Users }}
+                <option value="{{ .Name }}" {{ if eq .Name $.UserInfo.Name }}selected{{ end }}>
+                    {{ .Name }}
+                </option>
+                {{ end }}
+            </select>
+            <small class="form-text text-muted">Domyślnie wybrano zalogowanego użytkownika.</small>
+        </div>
+        {{ end }}
 
         <div hidden id="reservedItem-div">
             <h2 class="mt-5">Zarezerwowany Sprzet:</h2>
@@ -94,10 +107,17 @@
             });
         });
 
-        // Function to handle item reservation
         function reserveItem(reservationId, formPrefix, status = null) {
             var formData = $("#" + formPrefix + "_" + reservationId).serialize();
-            fetch('/warehouse/user/reserve', {
+            var apiUrl = '/warehouse/user/reserve';
+
+            const userSelect = document.getElementById('admin-user-select');
+            if (userSelect) {
+                const selectedUser = userSelect.value;
+                apiUrl += '?user=' + encodeURIComponent(selectedUser);
+            }
+
+            fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
@@ -110,15 +130,17 @@
                         hideReservedItem(reservationId);
                         alert("zarezerwowano");
                     } else {
-                        const errorData = await response.json();
+                        const errorData = await response.json().catch(() => ({ error: "Nieznany błąd serwera." }));
                         if (errorData.error) {
                             alert("Błąd: " + errorData.error);
+                        } else {
+                            alert("Błąd rezerwacji.");
                         }
                     }
                 })
                 .catch(error => {
                     console.error('Network error:', error);
-                    alert("Błąd sieci: " + error);
+                    alert("Błąd sieci: " + error.message);
                 });
         }
 
