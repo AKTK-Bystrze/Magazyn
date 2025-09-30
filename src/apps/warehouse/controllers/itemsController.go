@@ -25,6 +25,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReserveItem(w http.ResponseWriter, r *http.Request) {
+	// 1. Parse item ID, start time, and end time
 	itemID, err := strconv.Atoi(r.FormValue("item_id"))
 	if err != nil {
 		appState.App.Err("%v %v", session.GetSessionUserName(r), err.Error())
@@ -48,6 +49,8 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	appState.App.Debug("%v search for %v since %v till %v", session.GetSessionUserName(r), itemID,
 		startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
+
+	// Get logged-in user information
 	userInfo, ok := contextHelpers.GetUserInfo(r.Context())
 	if !ok {
 		appState.App.Err("User info not found in context for reservation attempt")
@@ -57,22 +60,31 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Determine the target user for the reservation
 	var targetUserID int
-	targetUsername := r.URL.Query().Get("user")
+	targetUserParam := r.URL.Query().Get("user")
 	isCurrentUserAdmin := userInfo.Role == access.ROLE_ADMIN
 
-	if targetUsername != "" && isCurrentUserAdmin {
-		// Admin is reserving for a specific user. Fetch the target user's details.
-		targetUser, err := users.GetByUserName(targetUsername) // Assuming a GetUserByName function exists
-		if err != nil {
-			appState.App.Err("%v Admin (%s) failed to find target user %s: %v", session.GetSessionUserName(r), userInfo.Role, targetUsername, err.Error())
-			http.Error(w, "Target user not found", http.StatusBadRequest)
-			return
+	// Default to current logged-in user
+	targetUserID = int(userInfo.ID)
+	targetUsername := session.GetSessionUserName(r) // Default username for logging
+
+	if targetUserParam != "" && isCurrentUserAdmin {
+		// Attempt to parse the parameter as an ID first (preferred method)
+		if id, err := strconv.Atoi(targetUserParam); err == nil {
+			// Success: Parameter is a valid ID
+			targetUser, err := users.GetUserById(id)
+			if err == nil {
+				targetUserID = id
+				targetUsername = targetUser.Name
+				appState.App.Debug("%v reserving for user ID %d (%s) ", session.GetSessionUserName(r), targetUserID, targetUsername)
+			} else {
+				appState.App.Err("%v Admin (%s) failed to find target user with ID %d: %v", session.GetSessionUserName(r), userInfo.Role, id, err.Error())
+				http.Error(w, "Target user not found (by ID)", http.StatusBadRequest)
+				return
+			}
 		}
-		targetUserID = int(targetUser.ID)
-		appState.App.Debug("%v (Admin) reserving for user ID %d (%s)", session.GetSessionUserName(r), targetUserID, targetUsername)
 	} else {
-		// Standard user reserving for themselves, or non-admin using the 'user' parameter (which is ignored).
-		targetUserID = int(userInfo.ID)
+		// Standard user reserving for themselves, or non-admin using the 'user' parameter (ignored).
+		appState.App.Debug("%v reserving for self (user ID %d)", session.GetSessionUserName(r), targetUserID)
 	}
 
 	// 3. Check for reservation date in the past (only admins can reserve in the past)
@@ -162,8 +174,8 @@ func ReserveItem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		appState.App.Debug("%v reserved item %v for user %s ID %d since %v till %v", session.GetSessionUserName(r),
-			itemID,targetUsername, targetUserID, startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
+		appState.App.Debug("%v reserved item %v for user %s (ID %d) since %v till %v", session.GetSessionUserName(r),
+			itemID, targetUsername, targetUserID, startTime.Format(timeSet.OUT_TIME_FMT), endTime.Format(timeSet.OUT_TIME_FMT))
 
 		msg := "Zarezerwowano"
 		NotifyAdminsOnReservation(reservation)

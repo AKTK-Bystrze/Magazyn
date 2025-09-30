@@ -2,181 +2,195 @@
 <html lang="pl">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Wyszukaj Sprzet</title>
-    {{ template "stylesInclude" }}
-    {{ template "scriptsInclude" }}
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Wyszukaj Sprzet</title>
+	{{ template "stylesInclude" }}
+	{{ template "scriptsInclude" }}
 </head>
 
 <body>
-    {{ template "navbar" .UserInfo }}
+	{{ template "navbar" .UserInfo }}
 
-    <div class="container">
-        <h2 class="my-3">Wyszukaj Sprzet</h2>
+	<div class="container">
+		<h2 class="my-3">Wyszukaj Sprzet</h2>
 
-        {{ if .Msg }}
-        <div class="alert alert-danger">{{ .Msg }}</div>
-        {{ end }}
+		{{ if .Msg }}
+		<div class="alert alert-danger">{{ .Msg }}</div>
+		{{ end }}
 
-        {{ template "searchForm" . }}
-        {{ if contains "admin" .UserInfo.Role }}
-        <div class="mb-3" id="admin-user-selection">
-            <label for="admin-user-select" class="form-label fw-bold">Rezerwuj dla Użytkownika:</label>
-            <select class="form-select" id="admin-user-select" aria-label="Wybór użytkownika do rezerwacji">
-                {{ range .Users }}
-                <option value="{{ .Name }}" {{ if eq .Name $.UserInfo.Name }}selected{{ end }}>
-                    {{ .Name }}
-                </option>
-                {{ end }}
-            </select>
-            <small class="form-text text-muted">Domyślnie wybrano zalogowanego użytkownika.</small>
-        </div>
-        {{ end }}
+		{{ template "searchForm" . }}
+		{{ if contains "admin" .UserInfo.Role }}
+		<div class="mb-3" id="admin-user-selection">
+			<label for="admin-user-select" class="form-label fw-bold">Rezerwuj dla Użytkownika:</label>
+			<select class="form-select" id="admin-user-select" aria-label="Wybór użytkownika do rezerwacji">
+				{{ range .Users }}
+				<option value="{{ .ID }}" {{ if eq .Name $.UserInfo.Name }}selected{{ end }}>
+					{{ .Name }}
+				</option>
+				{{ end }}
+			</select>
+			<small class="form-text text-muted">Domyślnie wybrano zalogowanego użytkownika ({{ .UserInfo.Name }}).</small>
+		</div>
+		{{ end }}
 
-        <div hidden id="reservedItem-div">
-            <h2 class="mt-5">Zarezerwowany Sprzet:</h2>
-            <div class="list-group" id="reservedItem-list"></div>
-        </div>
+		<div hidden id="reservedItem-div">
+			<h2 class="mt-5">Zarezerwowany Sprzet:</h2>
+			<div class="list-group" id="reservedItem-list"></div>
+		</div>
 
-        {{ if .AvailableItems }}
-        <h2 class="mt-5">Dostepny Sprzet:</h2>
+		{{ if .AvailableItems }}
+		<h2 class="mt-5">Dostepny Sprzet:</h2>
 
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Filtruj" id="item-search-input">
-            <div class="input-group-append">
-                <button class="btn btn-primary" type="button" id="item-search-button">Filtruj</button>
-                <button class="btn btn-secondary" type="button" id="item-reset-button">Resetuj</button>
-            </div>
-        </div>
+		<div class="input-group mb-3">
+			<input type="text" class="form-control" placeholder="Filtruj" id="item-search-input">
+			<div class="input-group-append">
+				<button class="btn btn-primary" type="button" id="item-search-button">Filtruj</button>
+				<button class="btn btn-secondary" type="button" id="item-reset-button">Resetuj</button>
+			</div>
+		</div>
 
-        <div class="list-group" id="item-list">
-            {{ range .AvailableItems }}
-            <a href="#" class="list-group-item list-group-item-action item" id="rent_item_{{ .ID }}">
-                <h4 class="mb-1" name="name">{{ .Name }}</h4>
-                <p class="mb-1" name="description">{{ .Description }}</p>
-                <p class="mb-1"><strong>ID:</strong> {{ .ID }}</p>
-                <p class="mb-1"><strong>Type:</strong> {{ .Type }}</p>
+		<div class="list-group" id="item-list">
+			{{ range .AvailableItems }}
+			<a href="#" class="list-group-item list-group-item-action item" id="rent_item_{{ .ID }}">
+				<h4 class="mb-1" name="name">{{ .Name }}</h4>
+				<p class="mb-1" name="description">{{ .Description }}</p>
+				<p class="mb-1"><strong>ID:</strong> {{ .ID }}</p>
+				<p class="mb-1"><strong>Type:</strong> {{ .Type }}</p>
 
-                <div class="text">
-                    <form method="POST" id="rent_form_{{ .ID }}" action="javascript:reserveItem({{ .ID }}, 'rent_form')">
-                        <input type="hidden" name="start_time" value="{{ $.StartTime.Format "2006-01-02T15:04" }}">
-                        <input type="hidden" name="end_time" value="{{ $.EndTime.Format "2006-01-02T15:04" }}">
-                        <input type="hidden" name="item_id" value="{{ .ID }}">
-                        <button type="submit" class="btn btn-primary">Rezerwuj</button>
-                    </form>
-                </div>
-            </a>
-            {{ end }}
-        </div>
-        {{ end }}
-    </div>
+				<div class="text">
+					<form method="POST" id="rent_form_{{ .ID }}" action="javascript:reserveItem({{ .ID }}, 'rent_form')">
+						<input type="hidden" name="start_time" value="{{ $.StartTime.Format "2006-01-02T15:04" }}">
+						<input type="hidden" name="end_time" value="{{ $.EndTime.Format "2006-01-02T15:04" }}">
+						<input type="hidden" name="item_id" value="{{ .ID }}">
+						<button type="submit" class="btn btn-primary">Rezerwuj</button>
+					</form>
+				</div>
+			</a>
+			{{ end }}
+		</div>
+		{{ end }}
+	</div>
 
-    <script type="text/javascript">
-        $(document).ready(function () {
-            // Filter the list on button click
-            $("#item-search-button").on("click", function () {
-                let filterValue = $("#item-search-input").val().toLowerCase();
-                $(".list-group .list-group-item").each(function () {
-                    let text = $(this).text().toLowerCase();
-                    $(this).toggle(text.indexOf(filterValue) > -1);
-                });
-            });
+	<script type="text/javascript">
+		$(document).ready(function () {
+			// Filter the list on button click
+			$("#item-search-button").on("click", function () {
+				let filterValue = $("#item-search-input").val().toLowerCase();
+				$(".list-group .list-group-item").each(function () {
+					let text = $(this).text().toLowerCase();
+					$(this).toggle(text.indexOf(filterValue) > -1);
+				});
+			});
 
-            // Filter the list on enter key press
-            $("#item-search-input").on("keypress", function (event) {
-                if (event.which === 13) {
-                    event.preventDefault();
-                    $("#item-search-button").click();
-                }
-            });
+			// Filter the list on enter key press
+			$("#item-search-input").on("keypress", function (event) {
+				if (event.which === 13) {
+					event.preventDefault();
+					$("#item-search-button").click();
+				}
+			});
 
-            // Reset the filter
-            $("#item-reset-button").on("click", function () {
-                $("#item-search-input").val("");
-                $(".list-group .list-group-item").show();
-            });
+			// Reset the filter
+			$("#item-reset-button").on("click", function () {
+				$("#item-search-input").val("");
+				$(".list-group .list-group-item").show();
+			});
 
-            // Ensure the end time is after the start time
-            $("#start_time, #end_time").on("change", function () {
-                if (!moment($("#end_time").val()).isAfter($("#start_time").val(), 'second')) {
-                    const startTime = moment($("#start_time").val());
-                    const endTime = moment(startTime).add(1, "day");
-                    $("#end_time").val(endTime.format("YYYY-MM-DDTHH:mm"));
-                }
-            });
-        });
+			// Ensure the end time is after the start time
+			$("#start_time, #end_time").on("change", function () {
+				if (!moment($("#end_time").val()).isAfter($("#start_time").val(), 'second')) {
+					const startTime = moment($("#start_time").val());
+					const endTime = moment(startTime).add(1, "day");
+					$("#end_time").val(endTime.format("YYYY-MM-DDTHH:mm"));
+				}
+			});
+		});
 
-        function reserveItem(reservationId, formPrefix, status = null) {
-            var formData = $("#" + formPrefix + "_" + reservationId).serialize();
-            var apiUrl = '/warehouse/user/reserve';
+		function reserveItem(reservationId, formPrefix, status = null) {
+			var formData = $("#" + formPrefix + "_" + reservationId).serialize();
+			var apiUrl = '/warehouse/user/reserve';
 
-            const userSelect = document.getElementById('admin-user-select');
-            if (userSelect) {
-                const selectedUser = userSelect.value;
-                apiUrl += '?user=' + encodeURIComponent(selectedUser);
-            }
+			const userSelect = document.getElementById('admin-user-select');
+			if (userSelect) {
+				const selectedUser = userSelect.value;
+				apiUrl += '?user=' + encodeURIComponent(selectedUser);
+			}
 
-            fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: formData,
-            })
-                .then(async response => {
-                    if (response.ok) {
-                        addItemToReservedList("rent_item", reservationId);
-                        hideReservedItem(reservationId);
-                        alert("zarezerwowano");
-                    } else {
-                        const errorData = await response.json().catch(() => ({ error: "Nieznany błąd serwera." }));
-                        if (errorData.error) {
-                            alert("Błąd: " + errorData.error);
-                        } else {
-                            alert("Błąd rezerwacji.");
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Network error:', error);
-                    alert("Błąd sieci: " + error.message);
-                });
-        }
+			fetch(apiUrl, {
+				method: 'POST',
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded"
+				},
+				body: formData,
+			})
+				.then(async response => {
+					if (response.ok) {
+						// Note: response.ok check doesn't follow redirects, so we need to rely on the server side redirect logic to show the message,
+						// but since the original logic was to use alert/client-side list manipulation, we keep that for now.
+						addItemToReservedList("rent_item", reservationId);
+						hideReservedItem(reservationId);
+						// The server-side should handle the redirect and message display, but for immediate feedback:
+						alert("Zarezerwowano");
+						window.location.reload(); // Force reload to see server-side message/status update
+					} else {
+						// Attempt to get a readable error message from the body if redirect didn't happen
+						const responseText = await response.text();
+						let errorMsg = "Błąd rezerwacji. Sprawdź, czy cel ma wystarczającą ilość kredytów.";
+						
+						// Simple check for text error response if not a redirect
+						if (responseText.length < 500) { // Assume short response might be a direct error text
+						    errorMsg = responseText.trim() || errorMsg;
+						}
+						
+						// If the server returns a simple status text error (like 400 Bad Request), display that
+						if (response.statusText) {
+							errorMsg = response.statusText + " (" + response.status + ") - " + errorMsg;
+						}
+						
+						// Show the error. Since we removed ResponseErrorMsg in Go, this might be a simple status text now.
+						alert("Błąd: " + errorMsg);
+					}
+				})
+				.catch(error => {
+					console.error('Network error:', error);
+					alert("Błąd sieci: " + error.message);
+				});
+		}
 
-        // Function to add item to reserved list
-        function addItemToReservedList(formPrefix, reservationId) {
-            document.getElementById('reservedItem-div').removeAttribute('hidden');
-            const listContainer = document.getElementById('reservedItem-list');
-            const newItem = document.createElement('div');
-            newItem.className = 'list-group-item';
+		// Function to add item to reserved list
+		function addItemToReservedList(formPrefix, reservationId) {
+			document.getElementById('reservedItem-div').removeAttribute('hidden');
+			const listContainer = document.getElementById('reservedItem-list');
+			const newItem = document.createElement('div');
+			newItem.className = 'list-group-item';
 
-            const title = document.createElement('h4');
-            const description = document.createElement('p');
+			const title = document.createElement('h4');
+			const description = document.createElement('p');
 
-            var id = formPrefix + '_' + reservationId;
-            var itemLink = $('#' + id);
-            var titleValue = $('#' + id + ' h4[name="name"]').text();
-            var descriptionValue = $('#' + id + ' p[name="description"]').text();
+			var id = formPrefix + '_' + reservationId;
+			var itemLink = $('#' + id);
+			var titleValue = $('#' + id + ' h4[name="name"]').text();
+			var descriptionValue = $('#' + id + ' p[name="description"]').text();
 
-            title.textContent = titleValue;
-            description.textContent = descriptionValue;
+			title.textContent = titleValue;
+			description.textContent = descriptionValue;
 
-            newItem.appendChild(title);
-            newItem.appendChild(description);
-            listContainer.appendChild(newItem);
-        }
+			newItem.appendChild(title);
+			newItem.appendChild(description);
+			listContainer.appendChild(newItem);
+		}
 
-        // Function to hide the reserved item from the available list
-        function hideReservedItem(itemId) {
-            const itemElement = document.getElementById(`rent_item_${itemId}`);
-            if (itemElement) {
-                itemElement.remove();
-            } else {
-                console.log(`Item with ID ${itemId} not found.`);
-            }
-        }
-    </script>
+		// Function to hide the reserved item from the available list
+		function hideReservedItem(itemId) {
+			const itemElement = document.getElementById(`rent_item_${itemId}`);
+			if (itemElement) {
+				itemElement.remove();
+			} else {
+				console.log(`Item with ID ${itemId} not found.`);
+			}
+		}
+	</script>
 </body>
 
 </html>
