@@ -99,12 +99,12 @@ trap cleanup_on_failure ERR
 # ---------------------------------------------------------------------
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [[ "$CURRENT_BRANCH" != "main" ]]; then
-  echo "⚠️  Jesteś na gałęzi '$CURRENT_BRANCH', a nie 'main'."
-  read -p "Czy chcesz wdrożyć z tej gałęzi? (y/N): " confirm
-  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "❌ Wdrożenie anulowane."
-    exit 1
-  fi
+  echo "⚠️  Jesteś na gałęzi '$CURRENT_BRANCH', a nie 'main'."
+  read -p "Czy chcesz wdrożyć z tej gałęzi? (y/N): " confirm
+  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "❌ Wdrożenie anulowane."
+    exit 1
+  fi
 fi
 
 echo "📌 Wyszukiwanie ostatniego taga..."
@@ -112,13 +112,13 @@ LAST_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n 1)
 echo "🔍 Ostatni działający tag: ${LAST_TAG:-none}"
 
 if [[ -z "$LAST_TAG" ]]; then
-  NEW_TAG="v1.0.0"
+  NEW_TAG="v1.0.0"
 else
   # Używamy prostszej logiki inkrementacji taga
   # Zakładamy, że LAST_TAG ma format vX.Y.Z
   IFS='.' read -r major minor patch <<< "${LAST_TAG#v}"
-  patch=$((patch + 1))
-  NEW_TAG="v$major.$minor.$patch"
+  patch=$((patch + 1))
+  NEW_TAG="v$major.$minor.$patch"
 fi
 
 echo "🏷️ Nowy tag: $NEW_TAG"
@@ -165,8 +165,8 @@ echo "✅ Backup zapisany jako $BACKUP_FILE"
 echo "🔄 Migracja schematu bazy danych..."
 # Upewnij się, że serwis 'migrate' jest skonfigurowany, by używać serwisu 'db' (jest!)
 if ! docker compose run --rm migrate; then
-  # Jeśli migracja się nie powiodła, wywołaj funkcję rollbacku schematu
-  rollback_db_schema
+  # Jeśli migracja się nie powiodła, wywołaj funkcję rollbacku schematu
+  rollback_db_schema
 fi
 
 echo "✅ Migracja schematu zakończona sukcesem!"
