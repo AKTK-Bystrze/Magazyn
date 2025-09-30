@@ -1,12 +1,19 @@
 <!doctype html>
 <html>
   <head>
-    <title>Uzytkownicy</title>
+    <title>Uzytkownicy - Panel Administracyjny</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {{ template "stylesInclude" dict "DataTables" true}}
     <style>
-      .row {
-        margin-bottom: 10px;
+      .row { margin-bottom: 10px; }
+      .list-group-item.user-select { cursor: pointer; }
+      /* Custom styles for the message box */
+      #message-container {
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 1050; /* Ensure it's visible above all content */
+          max-width: 350px;
       }
     </style>
     {{ template "scriptsInclude" dict "DataTables" true }}
@@ -14,18 +21,310 @@
   <body>
     {{ template "navbar" .UserInfo }}
     <div class="container">
-      <h2 class="my-3">Użytkownicy</h2>
-      <div class="tab-content" id="myTabContent">
-        <div
-          class="tab-pane fade show active"
-          id="next24"
-          role="tabpanel"
-          aria-labelledby="next24-tab"
-        >
-          {{ template "users_row_view" dict "Users"
-          .Users "TableId" "DataTable-users" }}
+      <h2 class="my-3">Panel Administracyjny Użytkowników</h2>
+      
+      <div id="message-container">
+        <!-- Messages will appear here -->
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-4">
+            <div class="card-header">Zarządzanie Pojedynczym Użytkownikiem</div>
+            <div class="card-body">
+              <label for="user-select" class="form-label fw-bold">Wybór Użytkownika:</label>
+              <select class="form-select" id="user-select" aria-label="Wybór użytkownika do zarządzania">
+                <option value="" selected disabled>-- Wybierz użytkownika --</option>
+                {{ range .Users }}
+                <!-- Storing user data in data attributes to avoid using 'marshal' -->
+                <option 
+                    value="{{ .ID }}" 
+                    data-name="{{ .Name }}" 
+                    data-credits="{{ .Credits }}" 
+                    data-role="{{ .Role }}">
+                    {{ .Name }} (ID: {{ .ID }})
+                </option>
+                {{ end }}
+              </select>
+            </div>
+          </div>
+      
+          <div id="single-user-actions" style="display: none;">
+            <div class="card mb-4">
+              <div class="card-header">Akcje dla: <span id="selected-user-name" class="fw-bold"></span></div>
+              <div class="card-body">
+                <p>Aktualne Kredyty: <strong id="current-credits"></strong></p>
+                <p>Aktualna Rola: <strong id="current-role"></strong></p>
+      
+                <h5 class="mt-4">Zmień Kredyty</h5>
+                <form id="credit-change-form" method="POST" action="/users/superAdmin/users" class="mb-3">
+                  <input type="hidden" name="actionType" value="singleCredit">
+                  <input type="hidden" name="userID" id="credit-user-id">
+                  <div class="input-group">
+                    <input type="number" step="1" name="amount" id="credit-amount" class="form-control"
+                      placeholder="Wartość kredytów" required min="1">
+                    <button class="btn btn-success" type="submit" name="action" value="add">Dodaj</button>
+                    <button class="btn btn-danger" type="submit" name="action" value="subtract">Odejmij</button>
+                  </div>
+                </form>
+      
+                <h5 class="mt-4">Zmień Rolę</h5>
+                <form id="role-change-form" method="POST" action="/users/superAdmin/users">
+                  <input type="hidden" name="actionType" value="singleRole">
+                  <input type="hidden" name="userID" id="role-user-id">
+                  <div class="input-group">
+                    <select name="newRole" id="new-role-select" class="form-select" required>
+                      <option value="" selected disabled>Wybierz nową rolę</option>
+                      {{ range .Roles }}
+                      <option value="{{ . }}">{{ . }}</option>
+                      {{ end }}
+                    </select>
+                    <button class="btn btn-primary" type="submit">Zmień Rolę</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">Masowa Zmiana Kredytów</div>
+            <div class="card-body">
+              <form id="bulk-credit-form" method="POST" action="/users/superAdmin/users">
+                <input type="hidden" name="actionType" value="bulkCredit">
+      
+                <h5 class="mb-3">Wybierz Użytkowników:</h5>
+
+                <!-- START: Search Tool Added Here -->
+                <div class="mb-3">
+                    <input type="text" id="user-search-input" class="form-control" placeholder="Wyszukaj po nazwie lub ID..." aria-label="Wyszukaj użytkownika">
+                </div>
+                <!-- END: Search Tool Added Here -->
+
+                <div class="list-group list-group-flush mb-4" id="user-list-group" style="max-height: 300px; overflow-y: scroll;">
+                  {{ range .Users }}
+                  <!-- Note: Adding a data attribute for easier searching (combining name and ID) -->
+                  <label class="list-group-item user-select" data-search-term="{{ .Name }} (ID: {{ .ID }})">
+                    <input class="form-check-input me-1" type="checkbox" name="selectedUserIDs" value="{{ .ID }}">
+                    {{ .Name }} (Kredyty: {{ .Credits }})
+                  </label>
+                  {{ end }}
+                </div>
+      
+                <h5 class="mb-3">Zmień Kredyty:</h5>
+                <div class="input-group">
+                  <input type="number" step="1" name="amount" id="bulk-credit-amount" class="form-control"
+                    placeholder="Wartość kredytów" required min="1">
+                  <button class="btn btn-success" type="submit" name="action" value="add">Dodaj Masowo</button>
+                  <button class="btn btn-danger" type="submit" name="action" value="subtract">Odejmij Masowo</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+<script type="text/javascript">
+      // FIX START: Global variable to track the last clicked submit button
+      let lastClickedButton = null;
+
+      // FIX START: Use capturing phase to ensure we capture the clicked button before the form's submit event fires.
+      // This is crucial for capturing the name/value of the button that initiated the credit change.
+      document.addEventListener('click', function(event) {
+          // Check if the clicked element is a button and is inside a form
+          if (event.target.tagName === 'BUTTON' && event.target.closest('form')) {
+              lastClickedButton = event.target;
+          } else {
+              lastClickedButton = null;
+          }
+      }, true); 
+
+      // Function to show custom message feedback (non-blocking)
+      function showMessage(message, type = 'success') {
+          const container = document.getElementById('message-container');
+          const alertDiv = document.createElement('div');
+          const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+          
+          container.innerHTML = ''; 
+      
+          alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+          alertDiv.setAttribute('role', 'alert');
+          alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          `;
+          container.appendChild(alertDiv);
+
+          // Auto-hide the message after 5 seconds
+          setTimeout(() => {
+              // Ensure the Bootstrap Alert instance is correctly closed
+              const bsAlert = bootstrap.Alert.getInstance(alertDiv) || new bootstrap.Alert(alertDiv);
+              bsAlert.close();
+          }, 5000);
+      }
+
+      // Variable setup
+      const userSelect = document.getElementById('user-select');
+      const singleUserActionsDiv = document.getElementById('single-user-actions');
+      const selectedUserName = document.getElementById('selected-user-name');
+      const currentCredits = document.getElementById('current-credits');
+      const currentRole = document.getElementById('current-role');
+      const creditUserId = document.getElementById('credit-user-id');
+      const roleUserId = document.getElementById('role-user-id');
+      const newRoleSelect = document.getElementById('new-role-select');
+      
+      // Search variables
+      const userSearchInput = document.getElementById('user-search-input');
+      const userListGroup = document.getElementById('user-list-group');
+      const userListItems = userListGroup.getElementsByClassName('list-group-item');
+
+
+      // FUNCTION: Filters the list of users based on the search input value
+      const filterUserList = () => {
+          const filter = userSearchInput.value.toLowerCase();
+          
+          Array.from(userListItems).forEach(item => {
+              // Get the pre-combined search term from the data attribute (Name and ID)
+              const searchTerm = item.getAttribute('data-search-term').toLowerCase();
+              
+              if (searchTerm.includes(filter)) {
+                  item.style.display = ""; // Show
+              } else {
+                  item.style.display = "none"; // Hide
+                  // Ensure checkbox is unchecked if hidden to prevent accidental bulk actions
+                  item.querySelector('input[type="checkbox"]').checked = false;
+              }
+          });
+      };
+      
+      // EVENT: Attach the filter function to the search input's input event
+      userSearchInput.addEventListener('input', filterUserList);
+
+
+      // EVENT: Handle user selection from the dropdown (using data attributes)
+      userSelect.addEventListener('change', (event) => {
+          const selectedOption = event.target.options[event.target.selectedIndex];
+          if (selectedOption.value) {
+              // Read data directly from the selected <option> data attributes
+              const userID = selectedOption.value;
+              const userName = selectedOption.getAttribute('data-name');
+              const userCredits = selectedOption.getAttribute('data-credits');
+              const userRole = selectedOption.getAttribute('data-role');
+
+              // 1. Display selected user's info
+              selectedUserName.textContent = userName;
+              currentCredits.textContent = userCredits;
+              currentRole.textContent = userRole;
+              
+              // 2. Populate hidden fields for form submissions
+              creditUserId.value = userID;
+              roleUserId.value = userID;
+
+              // 3. Set the current role as selected in the role change dropdown
+              Array.from(newRoleSelect.options).forEach(option => {
+                  option.selected = (option.value === userRole);
+              });
+
+              // 4. Show the action panel
+              singleUserActionsDiv.style.display = 'block';
+          } else {
+              singleUserActionsDiv.style.display = 'none';
+          }
+      });
+
+      // EVENT: Handle all form submissions (Single/Bulk Credit, Role Change)
+      const handleFormSubmission = (event) => {
+          event.preventDefault();
+          const form = event.target;
+          
+          const formData = new FormData(form);
+          
+          // FIX: Manually inject the 'action' (add/subtract) parameter for credit forms
+          if (form.id === 'credit-change-form' || form.id === 'bulk-credit-form') {
+              // Verify that the button clicked belongs to this form and has the name 'action'
+              if (lastClickedButton && lastClickedButton.form === form && lastClickedButton.name === 'action') {
+                  formData.append(lastClickedButton.name, lastClickedButton.value);
+              } else {
+                  // This catches submissions that aren't initiated by clicking the add/subtract buttons
+                  showMessage("Błąd: Proszę kliknąć przycisk 'Dodaj' lub 'Odejmij', aby określić akcję.", 'danger');
+                  return;
+              }
+          }
+          
+          // --- Custom Validation (Updated to use formData) ---
+          if (form.id === 'credit-change-form') {
+              const amount = formData.get('amount');
+              if (!amount || parseInt(amount) < 1) {
+                  showMessage("Wprowadź poprawną wartość kredytów (minimum 1).", 'danger');
+                  return;
+              }
+              if (!formData.get('userID')) {
+                  showMessage("Wybierz użytkownika, aby zmienić kredyty.", 'danger');
+                  return;
+              }
+          }
+
+          if (form.id === 'bulk-credit-form') {
+              // Check selected users: FormData.getAll('selectedUserIDs') returns an array
+              const selectedUsers = formData.getAll('selectedUserIDs').length;
+              if (selectedUsers === 0) {
+                  showMessage("Wybierz co najmniej jednego użytkownika do masowej aktualizacji.", 'danger');
+                  return;
+              }
+              const amount = formData.get('amount');
+              if (!amount || parseInt(amount) < 1) {
+                  showMessage("Wprowadź poprawną wartość kredytów do dodania lub odjęcia masowo (minimum 1).", 'danger');
+                  return;
+              }
+          }
+          
+          if (form.id === 'role-change-form') {
+              if (!formData.get('newRole')) {
+                  showMessage("Wybierz nową rolę.", 'danger');
+                  return;
+              }
+              if (!formData.get('userID')) {
+                  showMessage("Wybierz użytkownika, aby zmienić rolę.", 'danger');
+                  return;
+              }
+          }
+          // --- End Validation ---
+          
+          // Convert FormData to URL-encoded string for the Go backend
+          const urlEncodedData = new URLSearchParams(formData).toString();
+
+
+          fetch('/users/superAdmin/users', {
+              // The form action is now set to '/users/superAdmin/users' in the HTML
+              method: 'POST', 
+              headers: {
+                  "Content-Type": "application/x-www-form-urlencoded"
+              },
+              body: urlEncodedData,
+          })
+              .then(async response => {
+                  if (response.ok) {
+                      showMessage("Pomyślnie zaktualizowano użytkownika/użytkowników.", 'success');
+                      // Reload page to reflect data changes from server (credits, role)
+                      setTimeout(() => location.reload(), 1500);
+                  } else {
+                      // Read error message from response body for detailed feedback
+                      const errorText = await response.text().catch(() => response.statusText);
+                      console.error('Error:', errorText);
+                      showMessage(`Błąd aktualizacji: ${errorText || response.statusText}`, 'danger');
+                  }
+              })
+              .catch(error => {
+                  console.error('Network error:', error);
+                  showMessage("Błąd sieci. Sprawdź połączenie lub spróbuj ponownie.", 'danger');
+              });
+      };
+
+      // Attach event listeners to all forms
+      document.getElementById('credit-change-form').addEventListener('submit', handleFormSubmission);
+      document.getElementById('role-change-form').addEventListener('submit', handleFormSubmission);
+      document.getElementById('bulk-credit-form').addEventListener('submit', handleFormSubmission);
+</script>
   </body>
 </html>

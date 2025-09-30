@@ -60,7 +60,7 @@ func updateRouter(router *mux.Router) *mux.Router {
 	superAdminRouter := allRouter.PathPrefix("/superAdmin").Subrouter()
 	superAdminRouter.Use(access.ValidUserMiddlware) //tood needed ???
 	superAdminRouter.Use(access.SuperAdminHandler)
-	superAdminRouter.HandleFunc("/users", controllers.UpdateUser).Methods("PUT")
+	superAdminRouter.HandleFunc("/users", controllers.UpdateUser).Methods("POST")
 	superAdminRouter.HandleFunc("/users", controllers.GetUsersController).Methods("GET")
 
 	return router
