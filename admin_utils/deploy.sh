@@ -5,17 +5,11 @@
 set -e
 
 # --- Global Variables for Rollback ---
-# Ensure these variables are defined and used in compose.yml
-# e.g., image: bystrze-magazyn-db:${IMAGE_TAG}
 LAST_TAG=""
 NEW_TAG=""
 BACKUP_FILE=""
-
-# DB Connection Settings (Used by pg_dump on the HOST machine)
 PG_USER="postgres"
 PG_PASSWORD="postgres"
-PG_HOST="localhost" # Uses port 54320 mapped to 127.0.0.1 on the host
-PG_PORT="54320" 
 PG_DB="magazyn"
 
 # --- Error Handling and Rollback Functions ---
@@ -29,6 +23,7 @@ rollback_db_schema() {
     fi
     
     # 1. Stop and remove the failed DB container ('db' service)
+    echo "⬇️ Stopping and removing failed 'db' container..."
     docker compose stop db
     docker compose rm -f db
     
@@ -37,27 +32,29 @@ rollback_db_schema() {
     IMAGE_TAG=$LAST_TAG docker compose up -d --no-build db
     
     # Wait for the DB to start
-    sleep 10 
+    echo "⏳ Waiting 15 seconds for the database to become available..."
+    sleep 15
     
-    # Set PGPASSWORD variable for host connections
-    export PGPASSWORD=$PG_PASSWORD
-
-    # 3. Critical step: Clear the public schema before restoring
-    # Requires 'psql' client installed locally
-    echo "⏳ Cleaning existing 'public' schema in database $PG_DB..."
-    if ! psql -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$PG_DB" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"; then
-        echo "❌ CRITICAL ERROR: Cleaning the public schema failed!"
+    # Check if the backup file exists
+    if [ ! -f "$BACKUP_FILE" ]; then
+        echo "❌ CRITICAL ERROR: Backup file $BACKUP_FILE not found on host. Cannot proceed with restore."
         exit 1
     fi
-    echo "✅ Public schema cleaned successfully."
+
+    # 3. Restore data using pg_restore *inside* the running 'db' container by piping the file in
+    echo "⏳ Restoring data from $BACKUP_FILE (via containerized pg_restore)..."
     
-    # 4. Restore data using pg_restore on the host
-    echo "⏳ Restoring data from $BACKUP_FILE (without creating/dropping the database)..."
-    # NOTE: The -c (clean) flag was removed because the 'public' schema was already dropped
-    # and recreated by the preceding psql command. 
-    if pg_restore -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -d "$PG_DB" "$BACKUP_FILE"; then
+    # We use 'cat' on the host to pipe the backup file content to the 'pg_restore' process 
+    # running inside the container via 'docker compose exec'.
+    # -e PGPASSWORD: passes the password environment variable to the container process.
+    # -T: disables pseudo-TTY allocation (required for piping).
+    # -c: instructs pg_restore to 'clean' (drop) objects before restoring them (schema cleanup + restore in one step).
+    # -: means pg_restore reads from standard input (the pipe).
+    if cat "$BACKUP_FILE" | docker compose exec -e PGPASSWORD="$PG_PASSWORD" -T db \
+        pg_restore -U "$PG_USER" -h localhost -p 5432 -d "$PG_DB" -c -F c -v -; then 
+
         echo "✅ Data restoration completed successfully!"
-        # After successful DB rollback, the script exits, signaling deployment failure
+        # Exit with failure status to signal the deployment process failed overall
         exit 1 
     else
         echo "❌ CRITICAL ERROR: Restoring data from backup ($BACKUP_FILE) failed!"
@@ -76,7 +73,6 @@ rollback_containers() {
 
     echo "🔄 Starting containers with LAST_TAG: $LAST_TAG..."
     # Use the previous tag and force recreation of containers
-    # Remember that services in compose.yml are 'db' and 'web'
     IMAGE_TAG=$LAST_TAG docker compose -f compose.yml up -d --force-recreate
     
     if [ $? -eq 0 ]; then
@@ -90,21 +86,16 @@ rollback_containers() {
 
 # 3. Main error cleanup function
 cleanup_on_failure() {
-    # This function is called when any command fails,
-    # if it wasn't handled locally (e.g., in an if/else block).
-    
-    # Since critical errors (migration, deployment) are handled locally
-    # (with an exit 1 call in their body), this function is mainly for unexpected
-    # errors (e.g., build image error).
-    
-    # Check the exit code of the last command
+    # This function is called when any command fails, if it wasn't handled locally.
     EXIT_CODE=$?
     if [ $EXIT_CODE -ne 0 ]; then
-        echo "💥 An unexpected error occurred. Error details: $EXIT_CODE."
+        echo "💥 An unexpected error occurred during an initial step. Error code: $EXIT_CODE."
     fi
 }
 
 # Set a trap to call the function in case of error
+# NOTE: The critical steps (rollback_db_schema and rollback_containers) call exit 1, 
+# preventing cleanup_on_failure from running for those handled errors.
 trap cleanup_on_failure ERR
 
 # ---------------------------------------------------------------------
@@ -112,12 +103,12 @@ trap cleanup_on_failure ERR
 # ---------------------------------------------------------------------
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [[ "$CURRENT_BRANCH" != "main" ]]; then
-  echo "⚠️ You are on branch '$CURRENT_BRANCH', not 'main'."
-  read -p "Do you want to deploy from this branch? (y/N): " confirm
-  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "❌ Deployment cancelled."
-    exit 1
-  fi
+    echo "⚠️ You are on branch '$CURRENT_BRANCH', not 'main'."
+    read -p "Do you want to deploy from this branch? (y/N): " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "❌ Deployment cancelled."
+        exit 1
+    fi
 fi
 
 echo "📌 Searching for the last tag..."
@@ -125,18 +116,22 @@ LAST_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n 1)
 echo "🔍 Last working tag: ${LAST_TAG:-none}"
 
 if [[ -z "$LAST_TAG" ]]; then
-  NEW_TAG="v1.0.0"
+    NEW_TAG="v1.0.0"
 else
-  # Use simple tag increment logic
-  # Assume LAST_TAG has the format vX.Y.Z
-  IFS='.' read -r major minor patch <<< "${LAST_TAG#v}"
-  patch=$((patch + 1))
-  NEW_TAG="v$major.$minor.$patch"
+    # Use simple tag increment logic
+    IFS='.' read -r major minor patch <<< "${LAST_TAG#v}"
+    patch=$((patch + 1))
+    NEW_TAG="v$major.$minor.$patch"
 fi
 
 echo "🏷️ New tag: $NEW_TAG"
 # Set the environment variable for new images
 export IMAGE_TAG=$NEW_TAG
+# IMPORTANT: Update LAST_TAG globally for functions that might use it
+if [[ -z "$LAST_TAG" ]]; then
+    LAST_TAG=$NEW_TAG # If no previous tag, use the new one for a theoretical rollback reference
+fi
+
 
 # ---------------------------------------------------------------------
 # 2. Build Images
@@ -150,28 +145,35 @@ echo "✅ Images built: bystrze-magazyn-db:$NEW_TAG and bystrze-magazyn-app:$NEW
 
 # ---------------------------------------------------------------------
 # 3. Backup PostgreSQL database (Critical step before migration)
+#    *** NOW USES CONTAINERIZED PG_DUMP ***
 # ---------------------------------------------------------------------
 echo "💾 Creating PostgreSQL database backup..."
-# Ensure that PATH contains pg_dump or pg_dump is available.
-# Connection settings (PG_USER, PG_PASSWORD, PG_HOST, PG_PORT, PG_DB are defined at the top of the script)
 
 # Set backup path
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 # Global variable for rollback
 BACKUP_FILE="/tmp/magazyn_backup_$TIMESTAMP.sql" # Use a path accessible on the host
 
-export PGPASSWORD=$PG_PASSWORD
-
-# Ensure pg_dump is installed on the host
-if ! command -v pg_dump &> /dev/null; then
-    echo "❌ Error: pg_dump not found in PATH. Script aborted."
+# Check if 'db' container is running (it should be the previously deployed stable version)
+if ! docker compose ps -q db | grep -q .; then
+    echo "❌ Error: The 'db' service is not currently running. Cannot create a backup of the existing data."
     exit 1
 fi
 
-# pg_dump command
-pg_dump -U "$PG_USER" -h "$PG_HOST" -p "$PG_PORT" -F c -b -v -f "$BACKUP_FILE" "$PG_DB"
+# NOTE: We run pg_dump *inside* the running 'db' container and pipe the output to a file on the host.
+echo "⏳ Running pg_dump inside the running 'db' container..."
 
-echo "✅ Backup saved as $BACKUP_FILE"
+# We use PGPASSWORD environment variable passed via the -e flag for non-interactive connection.
+# The container connects internally using localhost and port 5432.
+if docker compose exec -e PGPASSWORD="$PG_PASSWORD" db \
+    pg_dump -U "$PG_USER" -h localhost -p 5432 -F c -b -v "$PG_DB" > "$BACKUP_FILE"; then
+
+    echo "✅ Backup saved as $BACKUP_FILE"
+else
+    echo "❌ CRITICAL ERROR: Database backup failed using docker compose exec. Script aborted."
+    # We do not call rollback here, as the migration hasn't started yet.
+    exit 1
+fi
 
 # ---------------------------------------------------------------------
 # 4. Database Schema Migration (DB Rollback Point)
@@ -179,8 +181,8 @@ echo "✅ Backup saved as $BACKUP_FILE"
 echo "🔄 Migrating database schema..."
 # Ensure the 'migrate' service is configured to use the 'db' service (it is!)
 if ! docker compose run --rm migrate; then
-  # If migration fails, call the schema rollback function
-  rollback_db_schema
+    # If migration fails, call the schema rollback function
+    rollback_db_schema # This function will exit 1
 fi
 
 echo "✅ Schema migration completed successfully!"
@@ -191,19 +193,17 @@ echo "✅ Schema migration completed successfully!"
 echo "🚀 Deploying new containers (services: db and web) with tag $NEW_TAG..."
 
 # Deploy, using IMAGE_TAG ($NEW_TAG) set as an environment variable
-# Force recreation to use the new image
 if ! docker compose -f compose.yml up -d --force-recreate; then
     # If deployment fails (e.g., new DB container does not start)
-    rollback_containers
+    rollback_containers # This function will exit 1
 fi
 
 # Quick verification (optional but recommended)
 echo "⏳ Checking container status..."
-# Search for 'db' and 'web' services
-# Fixed syntax error by grouping the pipe in a subshell and adding -q
-if ! (docker compose ps | grep -E 'db|web' | grep -q 'running'); then
+# Check for 'running' state for 'db' and 'web' services
+if ! docker compose ps | grep -E 'db|web' | grep -q 'running'; then
     echo "❌ ERROR: New containers (db or web) are not in 'running' state after deployment."
-    rollback_containers
+    rollback_containers # This function will exit 1
 fi
 
 echo "✅ Deployment completed with version $NEW_TAG"
