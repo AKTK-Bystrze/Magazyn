@@ -2,10 +2,10 @@
 
 set -e
 
-# Check if current branch is master
+# Check if current branch is main
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [[ "$CURRENT_BRANCH" != "master" ]]; then
-  echo "⚠️  You are on branch '$CURRENT_BRANCH', not 'master'."
+if [[ "$CURRENT_BRANCH" != "main" ]]; then
+  echo "⚠️  You are on branch '$CURRENT_BRANCH', not 'main'."
   read -p "Do you want to deploy from this branch? (y/N): " confirm
   if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "❌ Deployment aborted."
