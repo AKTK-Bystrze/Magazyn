@@ -275,6 +275,7 @@ func  NotifyAdminsOnReservation(reservation models.Reservation) {
         appState.App.Info("Not notifying admins about new reservation - too many emails sent recently")
         return
     }
+	appState.App.Info("Notifying admins about new reservation")
 
     admins, err := users.GetAdminUsers() 
     if err != nil {
@@ -295,13 +296,13 @@ func  NotifyAdminsOnReservation(reservation models.Reservation) {
     }
 
     subject := "Dodano nowe rezerwacje"
-    timeFormat := timeSet.LOCATION.String()
+
     body := fmt.Sprintf("Nowe rezerwacje zostały dodane.\n\nSzczegóły najnowszej rezerwacji:\n"+
         "Użytkownik: %s\nSprzęt: %s\nStart: %s\nKoniec: %s",
         reservation.User.Name, 
         reservation.Item.Name, 
-        reservation.StartTime.Format(timeFormat),
-        reservation.EndTime.Format(timeFormat))
+        reservation.StartTime.Format(timeSet.OUT_TIME_FMT),
+        reservation.EndTime.Format(timeSet.OUT_TIME_FMT))
 
     recipients := service.EmailRecipientList{
         To:  []string{},
