@@ -2,6 +2,7 @@ package appState
 
 import "bystrze/apps"
 import "time"
+import "sync"
 
 const (
 	APP_NAME = "E-magazyn Bystrze"
@@ -16,4 +17,5 @@ var (
 	DEBUG                   bool
 	RESERVATION_NOTIFICATION_INTERVAL time.Duration
 	Last_reservation_notification       time.Time
+	Mu sync.Mutex
 )

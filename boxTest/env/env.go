@@ -13,17 +13,17 @@ import (
 )
 
 const (
-	TEST_APP_NAME     = "boxtest-web-1"
-	TEST_DB_NAME      = "boxtest-db-1"
+	TEST_APP_NAME  = "boxtest-web-1"
+	TEST_DB_NAME = "boxtest-db-1"
 	TESTS_OUTPUT_PATH = "failedTests/"
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
 
 	CONTAINER_TIME_FORMAT = "2006-01-02T15:04"
-	FILENAME_TIME_FORMAT  = "2006-01-02T15-04-05"
-	TIME_FORMAT_SECONDS   = "2006-01-02 15:04:05"
-	DATE_FORMAT           = "Mon Jan 2 15:04:05 MST 2006"
+	FILENAME_TIME_FORMAT = "2006-01-02T15-04-05"
+	TIME_FORMAT_SECONDS = "2006-01-02 15:04:05"
+	DATE_FORMAT = "Mon Jan 2 15:04:05 MST 2006"
 )
 
 var (
@@ -99,8 +99,8 @@ func RunTests() {
 	WAREHOUSE := "boxTest/tests/warehouse"
 	USER_MANAGER := "boxTest/tests/userManager"
 	testsCMD := []struct {
-		name     string
-		timeout  int
+		name string
+		timeout int
 		location string
 	}{
 		{"Test_allUsers_loginAndlogut", 60, USER_MANAGER},

@@ -5,7 +5,6 @@ import (
 	"bystrze/apps/userManager/appState"
 )
 
-// Add a function to fetch admin users
 func GetAdminUsers() ([]models.User, error) {
 	query := `SELECT u_id, u_username, u_email FROM users WHERE u_role LIKE '%admin%'`
 	rows, err := appState.App.Db.Queryx(query)
@@ -26,7 +25,6 @@ func GetAdminUsers() ([]models.User, error) {
 			appState.App.Err("Failed to scan admin user: %v", err)
 			continue
 		}
-		//if admin has role of superAdmin but not has role of admin then skip
 		if user.Role == "superAdmin" {
 			continue
 		}
