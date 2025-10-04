@@ -1,43 +1,80 @@
 package service
 
 import (
-	"bystrze/apps/common/models"
+	"bystrze/apps/common/timeSet"
 	"bystrze/apps/email/appState"
+	"bytes"
 	"context"
 	"io"
 	"net/smtp"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/johnsto/go-passwordless/v2"
 )
+type EmailRecipientList struct {
+    To  []string
+    Cc  []string
+    Bcc []string
+}
 
-func SendEmail(receiver models.User, subject string, message string) error {
+func SendEmailAsync(recipients EmailRecipientList, subject string, message string) {
+    go func() {
+        if err := sendMailInternal(recipients, subject, message); err != nil {
+            appState.App.Err("Failed to send email: %v", err)
+        }
+    }()
+}
+
+func sendMailInternal(recipients EmailRecipientList, subject string, message string) error {
     if appState.DEBUG {
-        appState.App.Debug("Email to %s: Subject: %s, Message: %s", receiver.Email, subject, message)
+        allRecipients := append(recipients.To, recipients.Cc...)
+        allRecipients = append(allRecipients, recipients.Bcc...)
+        appState.App.Debug("Email to %v (Cc: %v, Bcc: %v): Subject: %s, Message: %s", 
+            recipients.To, recipients.Cc, recipients.Bcc, subject, message)
         return nil
     }
 
     senderEmail := appState.MAGAZYN_BYSTRZE_EMAIL_ADDR
     senderPassword := os.Getenv("MAGAZYN_BYSTRZE_EMAIL_PASS")
 
-    receiverEmail := []string{receiver.Email}
+    toRecipients := append(recipients.To, recipients.Cc...)
+    finalRecipients := append(toRecipients, recipients.Bcc...)
+
+    msg := formatEmailMsg(senderEmail, recipients.To, recipients.Cc, subject, message)
+
     auth := smtp.PlainAuth("", senderEmail, senderPassword, appState.SMTP_HOST)
+    err := smtp.SendMail(appState.SMTP_HOST+":"+appState.SMTP_PORT, auth, senderEmail, finalRecipients, msg)
     
-    msg := formatEmailMsg(senderEmail, receiver.Email, subject, message)
-    
-    err := smtp.SendMail(appState.SMTP_HOST+":"+appState.SMTP_PORT, auth, senderEmail, receiverEmail, msg)
     return err
 }
 
-func formatEmailMsg(senderEmail string, receiverEmail string, subject string, message string) []byte {
-    header := "From: " + senderEmail + "\r\n" +
-              "To: " + receiverEmail + "\r\n" +
-              "Subject: " + subject + "\r\n" +
-              "\r\n" 
-    msg := header + message
+func formatEmailMsg(senderEmail string, toList []string, ccList []string, subject string, message string) []byte {
+    toHeader := strings.Join(toList, ", ")
+    ccHeader := strings.Join(ccList, ", ")
 
-    return []byte(msg)
+    var headers bytes.Buffer
+
+    headers.WriteString("From: " + senderEmail + "\r\n")
+    headers.WriteString("Subject: " + subject + "\r\n")
+
+    if len(toList) > 0 {
+        headers.WriteString("To: " + toHeader + "\r\n")
+    }
+    if len(ccList) > 0 {
+        headers.WriteString("Cc: " + ccHeader + "\r\n")
+    }
+    
+    headers.WriteString("MIME-Version: 1.0\r\n")
+    headers.WriteString("Content-Type: text/plain; charset=\"utf-8\"\r\n")
+    
+    // **Crucial: The blank line separating headers from the body**
+    headers.WriteString("\r\n") 
+    
+    headers.WriteString(message)
+
+    return headers.Bytes()
 }
 
 func GetEmailUsername(email string) string {
@@ -77,4 +114,35 @@ func EmailWriter(ctx context.Context, token, uid, recipient string, w io.Writer)
 	_, err := e.Write(w)
 
 	return err
+}
+
+
+// isAllowedTime checks if the current local time falls outside the restricted 22:00 to 08:00 window.
+func IsAllowedTime() bool {
+    loc, err := time.LoadLocation(timeSet.LOCATION.String())
+    if err != nil {
+        appState.App.Err("Failed to load time zone %s: %v. Sending email without time check.", timeSet.LOCATION.String(), err)
+        return true
+    }
+
+    now := time.Now().In(loc)
+    hour := now.Hour()
+    isRestricted := hour >= 22 || hour < 8 
+
+    if isRestricted {
+        appState.App.Debug("Email sending is restricted between 22:00 and 08:00. Current local time is %s.", now.Format("15:04:05"))
+        return false
+    }
+    return true
+}
+
+
+func CanSendAdminNotification() bool {
+    appState.Mu.Lock() 
+    defer appState.Mu.Unlock() // Release lock when function exits
+    if time.Since(appState.Last_reservation_notification) > appState.RESERVATION_NOTIFICATION_INTERVAL.Abs() {
+        appState.Last_reservation_notification = time.Now() 
+        return true
+    }
+    return false
 }
