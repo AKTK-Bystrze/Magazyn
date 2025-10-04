@@ -13,17 +13,17 @@ import (
 )
 
 const (
-	TEST_APP_NAME     = "boxtest-web-1"
-	TEST_DB_NAME      = "boxtest-db-1"
+	TEST_APP_NAME  = "boxtest-web-1"
+	TEST_DB_NAME = "boxtest-db-1"
 	TESTS_OUTPUT_PATH = "failedTests/"
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
 
 	CONTAINER_TIME_FORMAT = "2006-01-02T15:04"
-	FILENAME_TIME_FORMAT  = "2006-01-02T15-04-05"
-	TIME_FORMAT_SECONDS   = "2006-01-02 15:04:05"
-	DATE_FORMAT           = "Mon Jan 2 15:04:05 MST 2006"
+	FILENAME_TIME_FORMAT = "2006-01-02T15-04-05"
+	TIME_FORMAT_SECONDS = "2006-01-02 15:04:05"
+	DATE_FORMAT = "Mon Jan 2 15:04:05 MST 2006"
 )
 
 var (
@@ -49,6 +49,32 @@ func composeContainers() {
 	log.Print("App deployed on " + Localhost)
 	log.Printf("To log to application use one of the users from the xdata.sql. Try `superAdmin`. Login link is inside the %s container", TEST_APP_NAME)
 	log.Printf("to run all tests type: run main.go --tests")
+}
+
+func copyFilesToContainer() {
+	filesToCopy := []struct {
+		sourcePath string
+		destContainer string
+		destPath string
+	}{
+
+		{"../schema.sql", TEST_DB_NAME, "/docker-entrypoint-initdb.d/schema.sql"},
+		{"../xdata.sql", TEST_DB_NAME, "/docker-entrypoint-initdb.d/xdata.sql"},
+	}
+
+	for _, item := range filesToCopy {
+		log.Printf("Copying %s to %s:%s", item.sourcePath, item.destContainer, item.destPath)
+
+		cmd := exec.Command("docker", "cp", item.sourcePath, item.destContainer+":"+item.destPath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err := cmd.Run()
+		if err != nil {
+			log.Fatalf("Error copying file %s to container %s: %v", item.sourcePath, item.destContainer, err)
+		}
+		log.Printf("Successfully copied %s", item.sourcePath)
+	}
 }
 
 func ConnectToDB() {
@@ -93,14 +119,17 @@ func ContainerExists(containerName string) bool {
 func EnviromentSetUP() {
 	cleanup()
 	composeContainers()
+	log.Println("Waiting 5 seconds for containers to stabilize...")
+	time.Sleep(5 * time.Second)
+	copyFilesToContainer()
 }
 
 func RunTests() {
 	WAREHOUSE := "boxTest/tests/warehouse"
 	USER_MANAGER := "boxTest/tests/userManager"
 	testsCMD := []struct {
-		name     string
-		timeout  int
+		name string
+		timeout int
 		location string
 	}{
 		{"Test_allUsers_loginAndlogut", 60, USER_MANAGER},
