@@ -12,24 +12,32 @@ import (
 	"github.com/johnsto/go-passwordless/v2"
 )
 
-// needed only for testing
 func SendEmail(receiver models.User, subject string, message string) error {
-	if appState.DEBUG {
-		appState.App.Debug("Email to %s: Subject: %s, Message: %s", receiver.Email, subject, message)
-		return nil
-	}
+    if appState.DEBUG {
+        appState.App.Debug("Email to %s: Subject: %s, Message: %s", receiver.Email, subject, message)
+        return nil
+    }
 
-	senderEmail := appState.MAGAZYN_BYSTRZE_EMAIL_ADDR
-	senderPassword := os.Getenv("MAGAZYN_BYSTRZE_EMAIL_PASS")
+    senderEmail := appState.MAGAZYN_BYSTRZE_EMAIL_ADDR
+    senderPassword := os.Getenv("MAGAZYN_BYSTRZE_EMAIL_PASS")
 
-	receiverEmail := []string{receiver.Email}
-	auth := smtp.PlainAuth("", senderEmail, senderPassword, appState.SMTP_HOST)
-	err := smtp.SendMail(appState.SMTP_HOST+":"+appState.SMTP_PORT, auth, senderEmail, receiverEmail, formatEmailMsg(subject, message))
-	return err
+    receiverEmail := []string{receiver.Email}
+    auth := smtp.PlainAuth("", senderEmail, senderPassword, appState.SMTP_HOST)
+    
+    msg := formatEmailMsg(senderEmail, receiver.Email, subject, message)
+    
+    err := smtp.SendMail(appState.SMTP_HOST+":"+appState.SMTP_PORT, auth, senderEmail, receiverEmail, msg)
+    return err
 }
 
-func formatEmailMsg(subject string, message string) []byte {
-	return []byte("Subject:" + subject + "\r\n" + message)
+func formatEmailMsg(senderEmail string, receiverEmail string, subject string, message string) []byte {
+    header := "From: " + senderEmail + "\r\n" +
+              "To: " + receiverEmail + "\r\n" +
+              "Subject: " + subject + "\r\n" +
+              "\r\n" 
+    msg := header + message
+
+    return []byte(msg)
 }
 
 func GetEmailUsername(email string) string {
