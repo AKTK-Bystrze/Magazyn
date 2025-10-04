@@ -29,8 +29,6 @@ func SendEmailAsync(recipients EmailRecipientList, subject string, message strin
 
 func sendMailInternal(recipients EmailRecipientList, subject string, message string) error {
     if appState.DEBUG {
-        allRecipients := append(recipients.To, recipients.Cc...)
-        allRecipients = append(allRecipients, recipients.Bcc...)
         appState.App.Debug("Email to %v (Cc: %v, Bcc: %v): Subject: %s, Message: %s", 
             recipients.To, recipients.Cc, recipients.Bcc, subject, message)
         return nil
