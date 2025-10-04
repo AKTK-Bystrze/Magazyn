@@ -47,7 +47,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+        appState.App.Err("%v failed to parse form: %v", session.GetSessionUserName(r), err.Error())
+        http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+        return
+    }
 
     // 'actionType' identifies which form was submitted: 'singleCredit', 'singleRole', or 'bulkCredit'
     actionType := r.PostFormValue("actionType")
