@@ -51,32 +51,6 @@ func composeContainers() {
 	log.Printf("to run all tests type: run main.go --tests")
 }
 
-func copyFilesToContainer() {
-	filesToCopy := []struct {
-		sourcePath string
-		destContainer string
-		destPath string
-	}{
-
-		{"../schema.sql", TEST_DB_NAME, "/docker-entrypoint-initdb.d/schema.sql"},
-		{"../xdata.sql", TEST_DB_NAME, "/docker-entrypoint-initdb.d/xdata.sql"},
-	}
-
-	for _, item := range filesToCopy {
-		log.Printf("Copying %s to %s:%s", item.sourcePath, item.destContainer, item.destPath)
-
-		cmd := exec.Command("docker", "cp", item.sourcePath, item.destContainer+":"+item.destPath)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		err := cmd.Run()
-		if err != nil {
-			log.Fatalf("Error copying file %s to container %s: %v", item.sourcePath, item.destContainer, err)
-		}
-		log.Printf("Successfully copied %s", item.sourcePath)
-	}
-}
-
 func ConnectToDB() {
 	var err error
 	DB, err = sql.Open("postgres", "postgres://postgres:postgres@localhost:5433/magazyn?sslmode=disable")
@@ -119,9 +93,6 @@ func ContainerExists(containerName string) bool {
 func EnviromentSetUP() {
 	cleanup()
 	composeContainers()
-	log.Println("Waiting 5 seconds for containers to stabilize...")
-	time.Sleep(5 * time.Second)
-	copyFilesToContainer()
 }
 
 func RunTests() {
