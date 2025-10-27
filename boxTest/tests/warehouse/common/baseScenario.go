@@ -6,10 +6,13 @@ import (
 	"boxTest/handlers/db"
 	"boxTest/tests"
 	"log"
-	"slices"
+	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -162,5 +165,33 @@ func ShowTestRaport(t *testing.T, passedTests []string, failedTests []string) {
 		for _, name := range passedTests {
 			log.Printf(" - %s\n", name)
 		}
+	}
+}
+
+func PrepareReservationWithStatus(t *testing.T, item app.Item, userID int, startTime, endTime time.Time, statuses ...string) app.Reservation {
+	User.ReserveItem(item.ID, startTime, endTime)
+	reservation, err := db.GetReservationByItemUserStatus(item.ID, userID, statuses[0])
+	if err != nil {
+		t.Fatalf("Failed to get reservation: %v", err)
+	}
+	for _, status := range statuses[1:] {
+		Admin.ChangeReservationStatus(reservation, status)
+		reservation, err = db.GetReservationByItemUserStatus(item.ID, userID, status)
+		if err != nil {
+			t.Fatalf("Failed to get reservation after %s: %v", status, err)
+		}
+	}
+	return reservation
+}
+
+func TestForbiddenStatusChange(reservation app.Reservation, status string) {
+	params := url.Values{}
+	params.Set("reservation_id", strconv.Itoa(reservation.ID))
+	params.Set("url", app.URL_setStatus)
+	params.Set("item_id", strconv.Itoa(reservation.ItemID))
+	params.Set("status", status)
+	resp := Admin.PutRequest(env.Localhost+app.URL_setStatus, params)
+	if resp.StatusCode != 400 {
+		log.Fatalf("Expected status 400 for forbidden status change %s, got %d", status, resp.StatusCode)
 	}
 }
