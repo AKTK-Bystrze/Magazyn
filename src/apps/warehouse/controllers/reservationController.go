@@ -185,18 +185,6 @@ func handleNewStatus(reservation models.Reservation, newStartTime time.Time, new
 	}
 	creditsChange := oldRentalCost - newRentalCost
 	userCredits = userCredits + creditsChange
-	if !timeSet.IsTheSameDay(reservation.EndTime, newEndTime) {
-		err = rental.UpdateReservationsDate(reservation, "r_end_time", newEndTime, w)
-		if err != nil {
-			return err
-		}
-	}
-	if !timeSet.IsTheSameDay(reservation.StartTime, newStartTime) {
-		err = rental.UpdateReservationsDate(reservation, "r_start_time", newStartTime, w)
-		if err != nil {
-			return err
-		}
-	}
 	switch newStatus {
 	case rental.RETURNED:
 		auditMsg := reservation.Item.Name + "\tZwrot ze zmianą terminu"
@@ -211,6 +199,12 @@ func handleNewStatus(reservation models.Reservation, newStartTime time.Time, new
 			return err
 		}
 	}
+
+	err = rental.UpdateReservationsDuration(reservation, newStartTime, newEndTime, w)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
