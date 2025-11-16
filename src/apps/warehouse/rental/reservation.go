@@ -217,36 +217,44 @@ func UpdateReservationStatus(reservation models.Reservation, status string, w ht
 	}
 }
 
-func UpdateReservationsDate(reservation models.Reservation, field string, newTime time.Time, w http.ResponseWriter) error {
-	if field != "r_end_time" && field != "r_start_time" {
-		appState.App.Err("Wrong parameter used in method updateReservationsDate %v", field)
-		http.Error(w, "DB Error", http.StatusInternalServerError)
-		return fmt.Errorf("wrong parameter used in method updateReservationsDate")
-	}
-	if newTime.IsZero() {
-		appState.App.Err("Invalid time provided for %v", field)
+func UpdateReservationsDuration(reservation models.Reservation, newStartTime time.Time, newEndTime time.Time, w http.ResponseWriter) error {
+	if newStartTime.IsZero() || newEndTime.IsZero() {
+		appState.App.Err("Invalid time provided")
 		http.Error(w, "Invalid time provided", http.StatusBadRequest)
 		return fmt.Errorf("invalid time provided")
 	}
-	newTimeFormated := newTime.Format(timeSet.OUT_TIME_FMT)
-	query := fmt.Sprintf(`UPDATE reservations SET %v = $1,r_changeby_uid = $2 WHERE r_id = $3`, field)
-	result, err := appState.App.Db.Exec(query, newTimeFormated, reservation.User.ID, reservation.ID)
+
+	if newStartTime.After(newEndTime) {
+		http.Error(w, "Invalid time range", http.StatusBadRequest)
+		return fmt.Errorf("Invalid time range")
+	}
+
+	startTimeFormatted := newStartTime.Format(timeSet.OUT_TIME_FMT)
+	endTimeFormatted := newEndTime.Format(timeSet.OUT_TIME_FMT)
+	query := fmt.Sprintf(
+		`UPDATE
+			reservations
+		SET
+			r_start_time = $1,
+			r_end_time = $2,
+			r_changeby_uid = $3
+		WHERE
+			r_id = $4`,
+	)
+
+	// We update based on primary key equality and so are guaranteed to update at most one row
+	_, err := appState.App.Db.Exec(query, startTimeFormatted, endTimeFormatted, reservation.User.ID, reservation.ID)
 	if err != nil {
-		appState.App.Err("updateReservationEndDate %v", err.Error())
+		appState.App.Err("Failed to update reservation's duration: %v", err.Error())
 		http.Error(w, "Can't update reservation ", http.StatusInternalServerError)
 		return err
 	}
-	numRows, err := result.RowsAffected()
-	if err != nil || numRows != 1 {
-		if err != nil {
-			appState.App.Err("updateReservationEndDate %v", err.Error())
-		} else {
-			appState.App.Err("Failed to update reservation end time %v", err)
-		}
-		http.Error(w, "DB Error", http.StatusInternalServerError)
-		return err
-	}
-	appState.App.Debug("Successfuly updated reservation %v to %v", field, newTime.Format(timeSet.OUT_TIME_FMT))
+
+	appState.App.Debug(
+		"Successfuly updated reservations duration %v - %v",
+		newStartTime.Format(timeSet.OUT_TIME_FMT),
+		newEndTime.Format(timeSet.OUT_TIME_FMT),
+	)
 	return nil
 }
 
@@ -277,10 +285,10 @@ func GetReservationHistory(reservationID int) ([]models.ReservationAudit, error)
 }
 
 func GetAllReservations() ([]models.Reservation, error) {
-    conf := QueryConfigReservation{
-        Users: true,
-        OrderByStart: true,
-        OrderDesc: false,
-    }
-    return GetReservations(conf)
+	conf := QueryConfigReservation{
+		Users:        true,
+		OrderByStart: true,
+		OrderDesc:    false,
+	}
+	return GetReservations(conf)
 }
