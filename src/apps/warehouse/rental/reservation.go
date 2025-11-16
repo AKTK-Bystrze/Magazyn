@@ -226,12 +226,12 @@ func UpdateReservationsDuration(reservation models.Reservation, newStartTime tim
 
 	if newStartTime.After(newEndTime) {
 		http.Error(w, "Invalid time range", http.StatusBadRequest)
-		return fmt.Errorf("Invalid time range")
+		return fmt.Errorf("invalid time range")
 	}
 
 	startTimeFormatted := newStartTime.Format(timeSet.OUT_TIME_FMT)
 	endTimeFormatted := newEndTime.Format(timeSet.OUT_TIME_FMT)
-	query := fmt.Sprintf(
+	query :=
 		`UPDATE
 			reservations
 		SET
@@ -239,8 +239,7 @@ func UpdateReservationsDuration(reservation models.Reservation, newStartTime tim
 			r_end_time = $2,
 			r_changeby_uid = $3
 		WHERE
-			r_id = $4`,
-	)
+			r_id = $4`
 
 	// We update based on primary key equality and so are guaranteed to update at most one row
 	_, err := appState.App.Db.Exec(query, startTimeFormatted, endTimeFormatted, reservation.User.ID, reservation.ID)
