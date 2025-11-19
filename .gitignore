@@ -9,3 +9,4 @@ __*
 *.exe
 *.log
 .env
+node_modules

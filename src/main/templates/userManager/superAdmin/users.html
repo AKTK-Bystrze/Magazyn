@@ -5,22 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {{ template "stylesInclude" dict "DataTables" true}}
     <style>
-      .row { margin-bottom: 10px; }
-      .list-group-item.user-select { cursor: pointer; }
+      .row {
+        margin-bottom: 10px;
+      }
+      .list-group-item.user-select {
+        cursor: pointer;
+      }
       /* Custom styles for the message box */
       #message-container {
-          position: fixed;
-          top: 10px;
-          right: 10px;
-          z-index: 1050; /* Ensure it's visible above all content */
-          max-width: 350px;
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 1050; /* Ensure it's visible above all content */
+        max-width: 350px;
       }
       /* Custom styling for multi-role list to prevent excessive height */
       #role-checkbox-list {
-          max-height: 200px;
-          overflow-y: auto;
-          border: 1px solid #dee2e6;
-          border-radius: .25rem;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
       }
     </style>
     {{ template "scriptsInclude" dict "DataTables" true }}
@@ -29,7 +33,7 @@
     {{ template "navbar" .UserInfo }}
     <div class="container">
       <h2 class="my-3">Panel Administracyjny Użytkowników</h2>
-      
+
       <div id="message-container">
         <!-- Messages will appear here -->
       </div>
@@ -40,67 +44,120 @@
             <div class="card-header">Zarządzanie Pojedynczym Użytkownikiem</div>
             <div class="card-body">
               <label for="user-select" class="form-label fw-bold">Wybór Użytkownika:</label>
-              <select class="form-select" id="user-select" aria-label="Wybór użytkownika do zarządzania">
+              <select
+                class="form-select"
+                id="user-select"
+                aria-label="Wybór użytkownika do zarządzania"
+              >
                 <option value="" selected disabled>-- Wybierz użytkownika --</option>
                 {{ range .Users }}
                 <!-- Storing user data in data attributes, now including Enabled status -->
-                <option 
-                    value="{{ .ID }}" 
-                    data-name="{{ .Name }}" 
-                    data-credits="{{ .Credits }}" 
-                    data-role="{{ .Role }}"
-                    data-enabled="{{ .Enabled }}">
-                    {{ .Name }} (ID: {{ .ID }})
+                <option
+                  value="{{ .ID }}"
+                  data-name="{{ .Name }}"
+                  data-credits="{{ .Credits }}"
+                  data-role="{{ .Role }}"
+                  data-enabled="{{ .Enabled }}"
+                >
+                  {{ .Name }} (ID: {{ .ID }})
                 </option>
                 {{ end }}
               </select>
             </div>
           </div>
-      
-          <div id="single-user-actions" style="display: none;">
+
+          <div id="single-user-actions" style="display: none">
             <div class="card mb-4">
-              <div class="card-header">Akcje dla: <span id="selected-user-name" class="fw-bold"></span></div>
+              <div class="card-header">
+                Akcje dla:
+                <span id="selected-user-name" class="fw-bold"></span>
+              </div>
               <div class="card-body">
-                <p>Aktualne Kredyty: <strong id="current-credits"></strong></p>
-                <p>Aktualna Rola/Role: <strong id="current-role"></strong></p>
-                
+                <p>
+                  Aktualne Kredyty:
+                  <strong id="current-credits"></strong>
+                </p>
+                <p>
+                  Aktualna Rola/Role:
+                  <strong id="current-role"></strong>
+                </p>
+
                 <h5 class="mt-4">Status Konta</h5>
-                <p>Aktualny status: <strong id="current-enabled-status"></strong></p>
-                <form id="enabled-change-form" method="POST" action="/users/superAdmin/users" class="mb-4">
-                  <input type="hidden" name="actionType" value="singleEnabled">
-                  <input type="hidden" name="userID" id="enabled-user-id">
-                  
-                                    <input type="hidden" name="currentCredits" id="enabled-current-credits">
-                  <input type="hidden" name="currentRole" id="enabled-current-role">
-                                    
-                                    <input type="hidden" name="newEnabledState" id="new-enabled-state"> 
-                                    <button class="btn" type="submit" id="toggle-enabled-button">
-                    <span id="toggle-enabled-text">Zmień Status</span>
-                  </button>
-                </form>
+                               
+                <p>
+                  Aktualny status:
+                  <strong id="current-enabled-status"></strong>
+                </p>
+                               
+                <form
+                  id="enabled-change-form"
+                  method="POST"
+                  action="/users/superAdmin/users"
+                  class="mb-4"
+                >
+                                   
+                  <input type="hidden" name="actionType" value="singleEnabled" />
+                                   
+                  <input type="hidden" name="userID" id="enabled-user-id" />
+                                                                       
+                  <input type="hidden" name="currentCredits" id="enabled-current-credits" />
+                                   
+                  <input type="hidden" name="currentRole" id="enabled-current-role" />
+                                                                                         
+                  <input type="hidden" name="newEnabledState" id="new-enabled-state" />
+                                                     
+                  <button class="btn" type="submit" id="toggle-enabled-button">
+                                       
+                    <span id="toggle-enabled-text">Zmień Status</span>
+                                     
+                  </button>
+                                 
+                </form>
 
                 <h5 class="mt-4">Zmień Kredyty</h5>
-                <form id="credit-change-form" method="POST" action="/users/superAdmin/users" class="mb-3">
-                  <input type="hidden" name="actionType" value="singleCredit">
-                  <input type="hidden" name="userID" id="credit-user-id">
+                <form
+                  id="credit-change-form"
+                  method="POST"
+                  action="/users/superAdmin/users"
+                  class="mb-3"
+                >
+                  <input type="hidden" name="actionType" value="singleCredit" />
+                  <input type="hidden" name="userID" id="credit-user-id" />
                   <div class="input-group">
-                    <input type="number" step="1" name="amount" id="credit-amount" class="form-control"
-                      placeholder="Wartość kredytów" required min="1">
-                    <button class="btn btn-success" type="submit" name="action" value="add">Dodaj</button>
-                    <button class="btn btn-danger" type="submit" name="action" value="subtract">Odejmij</button>
+                    <input
+                      type="number"
+                      step="1"
+                      name="amount"
+                      id="credit-amount"
+                      class="form-control"
+                      placeholder="Wartość kredytów"
+                      required
+                      min="1"
+                    />
+                    <button class="btn btn-success" type="submit" name="action" value="add">
+                      Dodaj
+                    </button>
+                    <button class="btn btn-danger" type="submit" name="action" value="subtract">
+                      Odejmij
+                    </button>
                   </div>
                 </form>
-      
+
                 <h5 class="mt-4">Zmień Rolę (Wiele Ról Możliwe)</h5>
                 <form id="role-change-form" method="POST" action="/users/superAdmin/users">
-                  <input type="hidden" name="actionType" value="singleRole">
-                  <input type="hidden" name="userID" id="role-user-id">
+                  <input type="hidden" name="actionType" value="singleRole" />
+                  <input type="hidden" name="userID" id="role-user-id" />
                   <div class="list-group mb-3" id="role-checkbox-list">
                     {{ range .Roles }}
                     <label class="list-group-item">
-                        <!-- Zmieniono na checkbox, nazwa 'newRole' jest używana wielokrotnie -->
-                        <input class="form-check-input me-1 role-checkbox" type="checkbox" name="newRole" value="{{ . }}">
-                        {{ . }}
+                      <!-- Zmieniono na checkbox, nazwa 'newRole' jest używana wielokrotnie -->
+                      <input
+                        class="form-check-input me-1 role-checkbox"
+                        type="checkbox"
+                        name="newRole"
+                        value="{{ . }}"
+                      />
+                      {{ . }}
                     </label>
                     {{ end }}
                   </div>
@@ -110,38 +167,68 @@
             </div>
           </div>
         </div>
-      
+
         <div class="col-md-6">
           <div class="card">
             <div class="card-header">Masowa Zmiana Kredytów</div>
             <div class="card-body">
               <form id="bulk-credit-form" method="POST" action="/users/superAdmin/users">
-                <input type="hidden" name="actionType" value="bulkCredit">
-      
+                <input type="hidden" name="actionType" value="bulkCredit" />
+
                 <h5 class="mb-3">Wybierz Użytkowników:</h5>
 
                 <!-- START: Search Tool Added Here -->
                 <div class="mb-3">
-                  <input type="text" id="user-search-input" class="form-control" placeholder="Wyszukaj po nazwie lub ID..." aria-label="Wyszukaj użytkownika">
+                  <input
+                    type="text"
+                    id="user-search-input"
+                    class="form-control"
+                    placeholder="Wyszukaj po nazwie lub ID..."
+                    aria-label="Wyszukaj użytkownika"
+                  />
                 </div>
                 <!-- END: Search Tool Added Here -->
 
-                <div class="list-group list-group-flush mb-4" id="user-list-group" style="max-height: 300px; overflow-y: scroll;">
+                <div
+                  class="list-group list-group-flush mb-4"
+                  id="user-list-group"
+                  style="max-height: 300px; overflow-y: scroll"
+                >
                   {{ range .Users }}
                   <!-- Note: Adding a data attribute for easier searching (combining name and ID) -->
-                  <label class="list-group-item user-select" data-search-term="{{ .Name }} (ID: {{ .ID }})">
-                    <input class="form-check-input me-1" type="checkbox" name="selectedUserIDs" value="{{ .ID }}">
+                  <label
+                    class="list-group-item user-select"
+                    data-search-term="{{ .Name }} (ID: {{ .ID }})"
+                  >
+                    <input
+                      class="form-check-input me-1"
+                      type="checkbox"
+                      name="selectedUserIDs"
+                      value="{{ .ID }}"
+                    />
                     {{ .Name }} (Kredyty: {{ .Credits }})
                   </label>
                   {{ end }}
                 </div>
-      
+
                 <h5 class="mb-3">Zmień Kredyty:</h5>
                 <div class="input-group">
-                  <input type="number" step="1" name="amount" id="bulk-credit-amount" class="form-control"
-                    placeholder="Wartość kredytów" required min="1">
-                  <button class="btn btn-success" type="submit" name="action" value="add">Dodaj Masowo</button>
-                  <button class="btn btn-danger" type="submit" name="action" value="subtract">Odejmij Masowo</button>
+                  <input
+                    type="number"
+                    step="1"
+                    name="amount"
+                    id="bulk-credit-amount"
+                    class="form-control"
+                    placeholder="Wartość kredytów"
+                    required
+                    min="1"
+                  />
+                  <button class="btn btn-success" type="submit" name="action" value="add">
+                    Dodaj Masowo
+                  </button>
+                  <button class="btn btn-danger" type="submit" name="action" value="subtract">
+                    Odejmij Masowo
+                  </button>
                 </div>
               </form>
             </div>
@@ -149,41 +236,45 @@
         </div>
       </div>
     </div>
-<script type="text/javascript">
+    <script type="text/javascript">
       // FIX START: Global variable to track the last clicked submit button
       let lastClickedButton = null;
 
       // FIX START: Use capturing phase to ensure we capture the clicked button before the form's submit event fires.
-      document.addEventListener('click', function(event) {
+      document.addEventListener(
+        'click',
+        (event) => {
           if (event.target.tagName === 'BUTTON' && event.target.closest('form')) {
-              lastClickedButton = event.target;
+            lastClickedButton = event.target;
           } else {
-              lastClickedButton = null;
+            lastClickedButton = null;
           }
-      }, true); 
+        },
+        true
+      );
 
       // Function to show custom message feedback (non-blocking)
       function showMessage(message, type = 'success') {
-          const container = document.getElementById('message-container');
-          const alertDiv = document.createElement('div');
-          const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-          
-          // Clear previous messages
-          container.innerHTML = ''; 
-      
-          alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
-          alertDiv.setAttribute('role', 'alert');
-          alertDiv.innerHTML = `
+        const container = document.getElementById('message-container');
+        const alertDiv = document.createElement('div');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+
+        // Clear previous messages
+        container.innerHTML = '';
+
+        alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           `;
-          container.appendChild(alertDiv);
+        container.appendChild(alertDiv);
 
-          // Auto-hide the message after 5 seconds
-          setTimeout(() => {
-              // POPRAWKA BŁĘDU: Upraszczamy zamykanie alertu, aby uniknąć błędu bootstrap.Alert.getInstance
-              alertDiv.remove();
-          }, 5000);
+        // Auto-hide the message after 5 seconds
+        setTimeout(() => {
+          // POPRAWKA BŁĘDU: Upraszczamy zamykanie alertu, aby uniknąć błędu bootstrap.Alert.getInstance
+          alertDiv.remove();
+        }, 5000);
       }
 
       // Variable setup
@@ -194,10 +285,10 @@
       const currentRole = document.getElementById('current-role');
       const creditUserId = document.getElementById('credit-user-id');
       const roleUserId = document.getElementById('role-user-id');
-      
+
       // Multi-Role Checkbox variables
       const roleCheckboxes = document.querySelectorAll('.role-checkbox');
-      
+
       // Enabled Status variables
       const currentEnabledStatus = document.getElementById('current-enabled-status');
       const enabledUserId = document.getElementById('enabled-user-id');
@@ -215,187 +306,207 @@
       const userListGroup = document.getElementById('user-list-group');
       const userListItems = userListGroup.getElementsByClassName('list-group-item');
 
-
       // FUNCTION: Filters the list of users based on the search input value
       const filterUserList = () => {
-          const filter = userSearchInput.value.toLowerCase();
-          
-          Array.from(userListItems).forEach(item => {
-              const searchTerm = item.getAttribute('data-search-term').toLowerCase();
-              
-              if (searchTerm.includes(filter)) {
-                  item.style.display = ""; // Show
-              } else {
-                  item.style.display = "none"; // Hide
-                  // Ensure checkbox is unchecked if hidden to prevent accidental bulk actions
-                  item.querySelector('input[type="checkbox"]').checked = false;
-              }
-          });
+        const filter = userSearchInput.value.toLowerCase();
+
+        Array.from(userListItems).forEach(item => {
+          const searchTerm = item.getAttribute('data-search-term').toLowerCase();
+
+          if (searchTerm.includes(filter)) {
+            item.style.display = ''; // Show
+          } else {
+            item.style.display = 'none'; // Hide
+            // Ensure checkbox is unchecked if hidden to prevent accidental bulk actions
+            item.querySelector('input[type="checkbox"]').checked = false;
+          }
+        });
       };
-      
+
       // EVENT: Attach the filter function to the search input's input event
       userSearchInput.addEventListener('input', filterUserList);
 
-
       // EVENT: Handle user selection from the dropdown (using data attributes)
-      userSelect.addEventListener('change', (event) => {
-          const selectedOption = event.target.options[event.target.selectedIndex];
+      userSelect.addEventListener('change', event => {
+        const selectedOption = event.target.options[event.target.selectedIndex];
 
-          if (selectedOption.value) {
-              // Read data directly from the selected <option> data attributes
-              const userID = selectedOption.value;
-              const userName = selectedOption.getAttribute('data-name');
-              const userCredits = selectedOption.getAttribute('data-credits');
-              const userRoleString = selectedOption.getAttribute('data-role') || '';
-              const userEnabled = selectedOption.getAttribute('data-enabled') === 'true';
+        if (selectedOption.value) {
+          // Read data directly from the selected <option> data attributes
+          const userID = selectedOption.value;
+          const userName = selectedOption.getAttribute('data-name');
+          const userCredits = selectedOption.getAttribute('data-credits');
+          const userRoleString = selectedOption.getAttribute('data-role') || '';
+          const userEnabled = selectedOption.getAttribute('data-enabled') === 'true';
 
-              // 1. Display selected user's info
-              selectedUserName.textContent = userName;
-              currentCredits.textContent = userCredits;
-              // Wyświetlanie ról
-              currentRole.textContent = userRoleString || 'brak';
-              
-              // 2. Obsługa Multi-Role Checkboxów
-              // Zmieniono separator z ',' na ' ' (spacja)
-              const userRoles = userRoleString.split(' ').map(r => r.trim()).filter(r => r); 
-              roleCheckboxes.forEach(checkbox => {
-                  checkbox.checked = userRoles.includes(checkbox.value);
-              });
-              
-              // 3. Aktualizacja Statusu Konta (Enabled)
-              currentEnabledStatus.textContent = userEnabled ? 'Włączone (Enabled)' : 'Wyłączone (Disabled)';
-              
-              // Ustawia tekst i kolor przycisku na przeciwną akcję
-              toggleEnabledText.textContent = userEnabled ? 'Wyłącz Konto' : 'Włącz Konto';
-              toggleEnabledButton.classList.remove('btn-danger', 'btn-success');
-              toggleEnabledButton.classList.add(userEnabled ? 'btn-danger' : 'btn-success');
-              
-              // 4. Populate hidden fields for form submissions
-              creditUserId.value = userID;
-              roleUserId.value = userID;
-              enabledUserId.value = userID;
-              // Ustawiamy docelowy stan (odwrotność aktualnego)
-              newEnabledStateInput.value = !userEnabled; 
-              
-              // START: Populate new hidden fields for enabled-change-form
-              enabledCurrentCredits.value = userCredits;
-              enabledCurrentRole.value = userRoleString; // Przekazujemy pełny ciąg ról
-              // END: Populate new hidden fields
-              
-              // 5. Show the action panel
-              singleUserActionsDiv.style.display = 'block';
-          } else {
-              singleUserActionsDiv.style.display = 'none';
-          }
+          // 1. Display selected user's info
+          selectedUserName.textContent = userName;
+          currentCredits.textContent = userCredits;
+          // Wyświetlanie ról
+          currentRole.textContent = userRoleString || 'brak';
+
+          // 2. Obsługa Multi-Role Checkboxów
+          // Zmieniono separator z ',' na ' ' (spacja)
+          const userRoles = userRoleString
+            .split(' ')
+            .map(r => r.trim())
+            .filter(r => r);
+          roleCheckboxes.forEach(checkbox => {
+            checkbox.checked = userRoles.includes(checkbox.value);
+          });
+
+          // 3. Aktualizacja Statusu Konta (Enabled)
+          currentEnabledStatus.textContent = userEnabled
+            ? 'Włączone (Enabled)'
+            : 'Wyłączone (Disabled)';
+
+          // Ustawia tekst i kolor przycisku na przeciwną akcję
+          toggleEnabledText.textContent = userEnabled ? 'Wyłącz Konto' : 'Włącz Konto';
+          toggleEnabledButton.classList.remove('btn-danger', 'btn-success');
+          toggleEnabledButton.classList.add(userEnabled ? 'btn-danger' : 'btn-success');
+
+          // 4. Populate hidden fields for form submissions
+          creditUserId.value = userID;
+          roleUserId.value = userID;
+          enabledUserId.value = userID; // Ustawiamy docelowy stan (odwrotność aktualnego)
+          newEnabledStateInput.value = !userEnabled; // START: Populate new hidden fields for enabled-change-form
+          enabledCurrentCredits.value = userCredits;
+          enabledCurrentRole.value = userRoleString; // Przekazujemy pełny ciąg ról
+          // END: Populate new hidden fields
+          // 5. Show the action panel
+          singleUserActionsDiv.style.display = 'block';
+        } else {
+          singleUserActionsDiv.style.display = 'none';
+        }
       });
-      
+
       // EVENT: Handle all form submissions (Single/Bulk Credit, Role Change, Enabled Change)
-      const handleFormSubmission = async (event) => {
-          event.preventDefault();
-          const form = event.target;
-          const formData = new FormData(form);
-          
-          // FIX: Manually inject the 'action' (add/subtract) parameter for credit forms
-          if (form.id === 'credit-change-form' || form.id === 'bulk-credit-form') {
-              // Verify that the button clicked belongs to this form and has the name 'action'
-              if (lastClickedButton && lastClickedButton.form === form && lastClickedButton.name === 'action') {
-                  formData.append(lastClickedButton.name, lastClickedButton.value);
-              } else {
-                  // This catches submissions that aren't initiated by clicking the add/subtract buttons
-                  showMessage("Błąd: Proszę kliknąć przycisk 'Dodaj' lub 'Odejmij', aby określić akcję.", 'danger');
-                  return;
-              }
+      const handleFormSubmission = async event => {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // FIX: Manually inject the 'action' (add/subtract) parameter for credit forms
+        if (form.id === 'credit-change-form' || form.id === 'bulk-credit-form') {
+          // Verify that the button clicked belongs to this form and has the name 'action'
+          if (
+            lastClickedButton &&
+            lastClickedButton.form === form &&
+            lastClickedButton.name === 'action'
+          ) {
+            formData.append(lastClickedButton.name, lastClickedButton.value);
+          } else {
+            // This catches submissions that aren't initiated by clicking the add/subtract buttons
+            showMessage(
+              "Błąd: Proszę kliknąć przycisk 'Dodaj' lub 'Odejmij', aby określić akcję.",
+              'danger'
+            );
+            return;
           }
-          
-          // --- Custom Validation ---
-          if (form.id === 'credit-change-form' || form.id === 'bulk-credit-form') {
-              const amount = formData.get('amount');
-              if (!amount || parseInt(amount) < 1) {
-                  showMessage("Wprowadź poprawną wartość kredytów (minimum 1).", 'danger');
-                  return;
-              }
+        }
+
+        // --- Custom Validation ---
+        if (form.id === 'credit-change-form' || form.id === 'bulk-credit-form') {
+          const amount = formData.get('amount');
+          if (!amount || parseInt(amount) < 1) {
+            showMessage('Wprowadź poprawną wartość kredytów (minimum 1).', 'danger');
+            return;
+          }
+        }
+
+        if (!formData.get('userID')) {
+          // Poprawiona walidacja, która dotyczy wszystkich formularzy akcji pojedynczego użytkownika
+          // (credit-change-form, role-change-form, enabled-change-form)
+          if (
+            form.id === 'credit-change-form' ||
+            form.id === 'role-change-form' ||
+            form.id === 'enabled-change-form'
+          ) {
+            showMessage('Wybierz użytkownika, aby wykonać akcję.', 'danger');
+            return;
+          }
+        }
+
+        if (form.id === 'bulk-credit-form') {
+          const selectedUsers = formData.getAll('selectedUserIDs').length;
+          if (selectedUsers === 0) {
+            showMessage(
+              'Wybierz co najmniej jednego użytkownika do masowej aktualizacji.',
+              'danger'
+            );
+            return;
+          }
+        }
+
+        if (form.id === 'role-change-form') {
+          const selectedRoles = formData.getAll('newRole');
+
+          if (selectedRoles.length === 0) {
+            showMessage('Wybierz co najmniej jedną rolę dla użytkownika.', 'danger');
+            return;
           }
 
-          if (!formData.get('userID')) {
-              // Poprawiona walidacja, która dotyczy wszystkich formularzy akcji pojedynczego użytkownika
-              // (credit-change-form, role-change-form, enabled-change-form)
-              if (form.id === 'credit-change-form' || form.id === 'role-change-form' || form.id === 'enabled-change-form') {
-                  showMessage("Wybierz użytkownika, aby wykonać akcję.", 'danger');
-                  return;
-              }
-          }
+          // NOWA LOGIKA: Konwersja tablicy ról na jeden ciąg znaków rozdzielony spacją
+          // 1. Usuń wszystkie pojedyncze wpisy 'newRole'
+          formData.delete('newRole');
 
-          if (form.id === 'bulk-credit-form') {
-              const selectedUsers = formData.getAll('selectedUserIDs').length;
-              if (selectedUsers === 0) {
-                  showMessage("Wybierz co najmniej jednego użytkownika do masowej aktualizacji.", 'danger');
-                  return;
-              }
-          }
-          
-          if (form.id === 'role-change-form') {
-              const selectedRoles = formData.getAll('newRole');
-              
-              if (selectedRoles.length === 0) {
-                  showMessage("Wybierz co najmniej jedną rolę dla użytkownika.", 'danger');
-                  return;
-              }
+          // 2. Połącz wybrane role w jeden ciąg znaków (separator: spacja)
+          const newRoleString = selectedRoles.join(' ');
 
-              // NOWA LOGIKA: Konwersja tablicy ról na jeden ciąg znaków rozdzielony spacją
-              // 1. Usuń wszystkie pojedyncze wpisy 'newRole'
-              formData.delete('newRole');
-              
-              // 2. Połącz wybrane role w jeden ciąg znaków (separator: spacja)
-              const newRoleString = selectedRoles.join(' ');
-              
-              // 3. Dodaj z powrotem jako pojedynczy parametr
-              formData.append('newRole', newRoleString);
-          }
-          
-          // FIX BŁĘDU 400: Upewniamy się, że actionType jest zawsze obecny na końcu, 
-          // ponieważ actionType jest kluczowy dla backendu Go.
-          const actionType = formData.get('actionType');
-          if (!actionType) {
-              console.error('ActionType is missing for form:', form.id);
-              showMessage("Błąd: Typ akcji (actionType) jest wymagany. Upewnij się, że formularz jest poprawny.", 'danger');
-              return;
-          }
-          // --- End Validation ---
-          
-          // Convert FormData to URL-encoded string for the Go backend
-          const urlEncodedData = new URLSearchParams(formData).toString();
+          // 3. Dodaj z powrotem jako pojedynczy parametr
+          formData.append('newRole', newRoleString);
+        }
 
-          fetch('/users/superAdmin/users', {
-              method: 'POST', 
-              headers: {
-                  "Content-Type": "application/x-www-form-urlencoded"
-              },
-              body: urlEncodedData,
+        // FIX BŁĘDU 400: Upewniamy się, że actionType jest zawsze obecny na końcu,
+        // ponieważ actionType jest kluczowy dla backendu Go.
+        const actionType = formData.get('actionType');
+        if (!actionType) {
+          console.error('ActionType is missing for form:', form.id);
+          showMessage(
+            'Błąd: Typ akcji (actionType) jest wymagany. Upewnij się, że formularz jest poprawny.',
+            'danger'
+          );
+          return;
+        }
+        // --- End Validation ---
+
+        // Convert FormData to URL-encoded string for the Go backend
+        const urlEncodedData = new URLSearchParams(formData).toString();
+
+        fetch('/users/superAdmin/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: urlEncodedData
+        })
+          .then(async response => {
+            if (response.ok) {
+              showMessage('Pomyślnie zaktualizowano użytkownika/użytkowników.', 'success');
+              // Reload page to reflect data changes from server (credits, role, enabled)
+              setTimeout(() => location.reload(), 1500);
+            } else {
+              // Read error message from response body for detailed feedback
+              const errorText = await response.text().catch(() => response.statusText);
+              console.error('Error:', errorText);
+              // Drukujemy błąd serwera. Jeśli jest to 'Invalid action type', problemem jest Go.
+              showMessage(`Błąd aktualizacji: ${errorText || response.statusText}`, 'danger');
+            }
           })
-              .then(async response => {
-                  if (response.ok) {
-                      showMessage("Pomyślnie zaktualizowano użytkownika/użytkowników.", 'success');
-                      // Reload page to reflect data changes from server (credits, role, enabled)
-                      setTimeout(() => location.reload(), 1500);
-                  } else {
-                      // Read error message from response body for detailed feedback
-                      const errorText = await response.text().catch(() => response.statusText);
-                      console.error('Error:', errorText);
-                      // Drukujemy błąd serwera. Jeśli jest to 'Invalid action type', problemem jest Go.
-                      showMessage(`Błąd aktualizacji: ${errorText || response.statusText}`, 'danger');
-                  }
-              })
-              .catch(error => {
-                  console.error('Network error:', error);
-                  showMessage("Błąd sieci. Sprawdź połączenie lub spróbuj ponownie.", 'danger');
-              });
+          .catch(error => {
+            console.error('Network error:', error);
+            showMessage('Błąd sieci. Sprawdź połączenie lub spróbuj ponownie.', 'danger');
+          });
       };
 
       // Attach event listeners to all forms
-      document.getElementById('credit-change-form').addEventListener('submit', handleFormSubmission);
+      document
+        .getElementById('credit-change-form')
+        .addEventListener('submit', handleFormSubmission);
       document.getElementById('role-change-form').addEventListener('submit', handleFormSubmission);
       document.getElementById('bulk-credit-form').addEventListener('submit', handleFormSubmission);
-      document.getElementById('enabled-change-form').addEventListener('submit', handleFormSubmission);
-</script>
+      document
+        .getElementById('enabled-change-form')
+        .addEventListener('submit', handleFormSubmission);
+    </script>
   </body>
 </html>

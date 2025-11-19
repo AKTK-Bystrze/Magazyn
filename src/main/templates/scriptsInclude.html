@@ -19,14 +19,11 @@
 {{ if .DataTables }}
 <script src="https://cdn.datatables.net/v/bs4/dt-1.13.4/date-1.4.0/r-2.4.1/datatables.min.js"></script>
 <script type="text/javascript">
-  DataTable.datetime("DD/MM/YY HH:mm");
-  $(document).ready(function () {
-    $('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
-      console.log("OK");
-      $($.fn.dataTable.tables(true))
-        .DataTable()
-        .columns.adjust()
-        .responsive.recalc();
+  DataTable.datetime('DD/MM/YY HH:mm');
+  $(document).ready(() => {
+    $('a[data-toggle="tab"]').on('shown.bs.tab', (e) => {
+      console.log('OK');
+      $($.fn.dataTable.tables(true)).DataTable().columns.adjust().responsive.recalc();
     });
   });
 </script>

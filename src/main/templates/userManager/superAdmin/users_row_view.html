@@ -35,7 +35,7 @@
   </tbody>
 </table>
 <script type="text/javascript">
-  $(document).ready(function () {
+  $(document).ready(() => {
     new DataTable('#{{ .TableId }}', {
       order: [[2, 'asc']],
       language: {
@@ -45,11 +45,11 @@
     });
   });
   function userAction( userId) {
-    var formData = new FormData()
-    var role = document.getElementById('role-' + userId);
-    var credits = document.getElementById('credits-' + userId);
-    var enabled = document.getElementById('enabled-' + userId);
-    let params = new URLSearchParams(formData);
+    let formData = new FormData()
+    const role = document.getElementById('role-' + userId);
+    const credits = document.getElementById('credits-' + userId);
+    const enabled = document.getElementById('enabled-' + userId);
+    const params = new URLSearchParams(formData);
     if(role.value != ""){
       params.set('role', role.value);
     }
