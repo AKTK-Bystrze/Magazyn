@@ -9,4 +9,5 @@ __*
 *.exe
 *.log
 .env
+/.ai
 node_modules
