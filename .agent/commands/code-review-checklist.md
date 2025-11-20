@@ -5,6 +5,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Tech Stack Compliance
 
 ### Core Technologies
+
 - [ ] **Astro 5** - Used for static content and layouts, not React
 - [ ] **TypeScript 5** - All code is properly typed, no `any` types without justification
 - [ ] **React 19** - Used only for interactive components, not static content
@@ -14,6 +15,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **React Hook Form** - Forms use React Hook Form for state management
 
 ### Version Compatibility
+
 - [ ] No deprecated APIs or patterns are used
 - [ ] All dependencies are compatible with the tech stack versions
 - [ ] Node.js version matches `.nvmrc` (22.14.0)
@@ -21,6 +23,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Project Structure
 
 ### Directory Structure
+
 - [ ] Files are placed in correct directories according to project structure:
   - `src/layouts/` - Astro layouts
   - `src/pages/` - Astro pages
@@ -34,6 +37,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
   - `src/middleware/` - Astro middleware
 
 ### File Naming Conventions
+
 - [ ] Components: PascalCase (e.g., `MealPlanEditor.tsx`)
 - [ ] Utilities: camelCase (e.g., `meal-plan-parser.ts`)
 - [ ] Services: camelCase (e.g., `meal-plan.service.ts`)
@@ -44,6 +48,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Coding Practices
 
 ### Clean Code Principles
+
 - [ ] **Early returns** - Error conditions handled at the beginning of functions
 - [ ] **Guard clauses** - Preconditions and invalid states handled early
 - [ ] **No unnecessary else** - Uses if-return pattern instead
@@ -53,6 +58,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **User-friendly messages** - Error messages are user-friendly and actionable
 
 ### Code Quality
+
 - [ ] **Linter compliance** - Code passes ESLint checks
 - [ ] **Type safety** - No TypeScript errors, proper type annotations
 - [ ] **No console.log** - Debugging statements removed (use proper logging)
@@ -62,6 +68,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Frontend Guidelines
 
 ### Astro Components
+
 - [ ] Used for static content and layouts only
 - [ ] Server-side rendering where appropriate
 - [ ] Props defined in frontmatter (`---`)
@@ -72,6 +79,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] Environment variables accessed via `import.meta.env`
 
 ### React Components
+
 - [ ] **Functional components** - No class components
 - [ ] **No Next.js directives** - Never uses `"use client"` (Next.js specific)
 - [ ] **Custom hooks** - Complex logic extracted to hooks in `src/components/hooks/`
@@ -84,6 +92,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Props interfaces** - Defined above component
 
 ### Styling (Tailwind)
+
 - [ ] **@layer directive** - Custom styles organized into layers
 - [ ] **Arbitrary values** - Used with square brackets (e.g., `w-[123px]`)
 - [ ] **Dark mode** - Uses `dark:` variant for dark mode styles
@@ -93,6 +102,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **CSS variables** - Shadcn/ui components use CSS variables for theming
 
 ### Accessibility (ARIA)
+
 - [ ] **ARIA landmarks** - Used to identify page regions (main, navigation, search)
 - [ ] **ARIA roles** - Applied to custom elements without semantic HTML
 - [ ] **ARIA states** - `aria-expanded`, `aria-controls` for expandable content
@@ -105,6 +115,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Focus management** - Proper focus handling in modals and dialogs
 
 ### Forms
+
 - [ ] **React Hook Form** - Used for form state management
 - [ ] **Zod validation** - Schemas defined in `src/lib/validation/*.schemas.ts`
 - [ ] **Validation timing** - `onBlur` for immediate feedback
@@ -114,12 +125,14 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Backend Guidelines
 
 ### Supabase Integration
+
 - [ ] **Context locals** - Uses `context.locals.supabase` in Astro routes
 - [ ] **Client types** - Uses `SupabaseClient` from `src/db/supabase.client.ts`, not `@supabase/supabase-js`
 - [ ] **Server client** - Uses `supabase.server.ts` for server-side operations
 - [ ] **Admin client** - Uses `supabase.admin.ts` only for admin operations (account deletion)
 
 ### API Routes (Astro Server Endpoints)
+
 - [ ] **Uppercase methods** - Uses `POST`, `GET` (uppercase) for endpoint handlers
 - [ ] **Prerender disabled** - `export const prerender = false` for API routes
 - [ ] **Zod validation** - All inputs validated with Zod schemas
@@ -129,12 +142,14 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Service layer** - Business logic extracted to services in `src/lib/`
 
 ### API Client Pattern
+
 - [ ] **Auth headers** - Uses `getAuthHeaders()` from `src/lib/api/base.client.ts`
 - [ ] **Error handling** - Handles 401 (redirects to login), 400, 500 errors
 - [ ] **Response parsing** - Uses `handleApiResponse<T>()` for type-safe responses
 - [ ] **Type safety** - Response types match DTOs from `src/types.ts`
 
 ### Service Layer
+
 - [ ] **Service functions** - Business logic in services, not in API routes
 - [ ] **Error types** - Uses custom error classes (`DatabaseError`, `UnauthorizedError`, `ValidationError`)
 - [ ] **Database operations** - Uses Supabase client with proper error handling
@@ -143,6 +158,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Database Guidelines
 
 ### Migrations
+
 - [ ] **Naming convention** - `YYYYMMDDHHmmss_short_description.sql` format
 - [ ] **Header comments** - Includes metadata (purpose, affected tables, considerations)
 - [ ] **SQL style** - All SQL written in lowercase
@@ -150,6 +166,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Destructive operations** - Copious comments for DROP, TRUNCATE, ALTER operations
 
 ### Row Level Security (RLS)
+
 - [ ] **RLS enabled** - All tables have RLS enabled (even for public access)
 - [ ] **Granular policies** - One policy per operation (SELECT, INSERT, UPDATE, DELETE)
 - [ ] **Role-based policies** - Separate policies for `anon` and `authenticated` roles
@@ -157,6 +174,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **User isolation** - Users can only access their own data (where applicable)
 
 ### Database Operations
+
 - [ ] **Indexes** - Appropriate indexes created for search and filtering
 - [ ] **Triggers** - Triggers properly defined for `updated_at` timestamps
 - [ ] **Functions** - Database functions are secure and well-documented
@@ -166,6 +184,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Type Safety
 
 ### TypeScript
+
 - [ ] **Strict mode** - Code complies with strict TypeScript settings
 - [ ] **No any types** - No `any` types without justification
 - [ ] **Type exports** - Types exported from `src/types.ts` (shared types)
@@ -173,6 +192,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Zod inference** - Uses Zod schema inference for runtime validation with TypeScript types
 
 ### Type Definitions
+
 - [ ] **DTOs** - Data Transfer Objects defined in `src/types.ts`
 - [ ] **Entities** - Entity types match database schema
 - [ ] **Interfaces** - Proper interfaces for component props and function parameters
@@ -181,6 +201,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Error Handling
 
 ### Error Types
+
 - [ ] **Custom errors** - Uses custom error classes from `src/lib/errors.ts`:
   - `DatabaseError` - Database operation failures
   - `UnauthorizedError` - Authentication/authorization failures
@@ -188,6 +209,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Error context** - Errors include proper context and original error information
 
 ### Error Responses
+
 - [ ] **401 Unauthorized** - Redirects to `/auth/login` (client-side) or returns 401 (API)
 - [ ] **400 Bad Request** - Returns validation errors with details
 - [ ] **500 Internal Server Error** - Returns generic error message (doesn't leak implementation details)
@@ -197,6 +219,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Security
 
 ### Authentication & Authorization
+
 - [ ] **Middleware protection** - Protected routes use middleware (`src/middleware/index.ts`)
 - [ ] **API authentication** - API routes verify user authentication
 - [ ] **User isolation** - Users can only access their own data (RLS policies)
@@ -204,6 +227,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Password requirements** - Password validation (minimum 8 characters, letters and numbers)
 
 ### Data Security
+
 - [ ] **Service role key** - Service role key only used server-side, never exposed to client
 - [ ] **Environment variables** - Sensitive data in environment variables, not hardcoded
 - [ ] **Input validation** - All user inputs validated (client and server-side)
@@ -211,6 +235,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **XSS prevention** - User-generated content properly sanitized
 
 ### API Security
+
 - [ ] **CORS** - CORS properly configured (if needed)
 - [ ] **Rate limiting** - Consider rate limiting for API endpoints (future enhancement)
 - [ ] **Request validation** - All API requests validated with Zod schemas
@@ -218,6 +243,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Testing
 
 ### Unit Tests
+
 - [ ] **Test coverage** - New code has unit tests (Vitest)
 - [ ] **Test location** - Tests in `src/test/unit/` directory
 - [ ] **Test naming** - Test files follow `*.test.tsx` or `*.test.ts` pattern
@@ -225,11 +251,13 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **MSW mocking** - API calls mocked with MSW (Mock Service Worker)
 
 ### Integration Tests
+
 - [ ] **API tests** - API endpoints have integration tests (Supertest)
 - [ ] **Test location** - Tests in `src/test/integration/` directory
 - [ ] **Database mocking** - Database operations properly mocked
 
 ### E2E Tests
+
 - [ ] **Playwright tests** - Critical user flows have E2E tests
 - [ ] **Test location** - Tests in `src/test/e2e/` directory
 - [ ] **Page objects** - Uses page object model pattern
@@ -238,13 +266,15 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Internationalization (i18n)
 
 ### Translation System
+
 - [ ] **Translation provider** - Uses `TranslationProvider` for language management
 - [ ] **Translation hook** - Uses `useTranslation()` hook for translations
 - [ ] **Translation files** - Translations in `src/lib/i18n/translations/en.json` and `pl.json`
-- [ ] **Translation keys** - Keys organized by feature (auth.*, common.*, nav.*, etc.)
+- [ ] **Translation keys** - Keys organized by feature (auth._, common._, nav.\*, etc.)
 - [ ] **Language storage** - Language preference stored in database (authenticated) or localStorage (unauthenticated)
 
 ### Language Support
+
 - [ ] **Language selector** - Language can be switched (EN/PL)
 - [ ] **Default language** - Default language is English (en)
 - [ ] **Language persistence** - Language preference persists across sessions
@@ -253,6 +283,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Theme Management
 
 ### Theme System
+
 - [ ] **Theme provider** - Uses `ThemeProvider` for theme management
 - [ ] **Theme hook** - Uses `useTheme()` hook for theme access
 - [ ] **Theme storage** - Theme preference stored in database (authenticated) or localStorage (unauthenticated)
@@ -263,6 +294,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Performance
 
 ### Optimization
+
 - [ ] **Code splitting** - React components loaded with `client:load` directive
 - [ ] **Lazy loading** - `React.lazy()` used for code splitting where appropriate
 - [ ] **Memoization** - `useMemo`, `useCallback` used for expensive operations
@@ -270,6 +302,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] **Image optimization** - Images optimized (Astro Image integration when used)
 
 ### Bundle Size
+
 - [ ] **No unnecessary imports** - Only necessary imports included
 - [ ] **Tree shaking** - Code is tree-shakeable
 - [ ] **Bundle analysis** - Consider bundle size impact for large dependencies
@@ -277,36 +310,41 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Documentation
 
 ### Code Documentation
+
 - [ ] **Function comments** - Complex functions have JSDoc comments
 - [ ] **Type comments** - Complex types have comments explaining purpose
 - [ ] **README updates** - README updated if project structure changes
 - [ ] **Migration comments** - Database migrations have thorough comments
 
 ### Implementation Plans
+
 - [ ] **Documentation files** - New features have implementation plans in `.ai/` directory (if applicable)
 - [ ] **PRD updates** - Product Requirements Document updated if scope changes
 
 ## Specific Feature Compliance
 
 ### Meal Plans
+
 - [ ] **Data structure** - Meal plan data matches `MealPlanContent` interface
 - [ ] **API endpoints** - Uses correct API endpoints (`/api/meal-plans`)
 - [ ] **Export functionality** - Export generates .doc file correctly
 - [ ] **Editor functionality** - Editor supports create and edit modes
 
 ### AI Chat
+
 - [ ] **Session management** - AI chat sessions properly created and managed
 - [ ] **Message history** - Message history stored in database
-- [ ] **OpenRouter integration** - OpenRouter API calls properly handled
 - [ ] **Error handling** - AI API errors properly handled and displayed
 
 ### Authentication
+
 - [ ] **Supabase Auth** - Uses Supabase Auth SDK for authentication
 - [ ] **Session management** - Session properly managed (cookies, JWT tokens)
 - [ ] **Password reset** - Password reset flow works correctly
 - [ ] **Account deletion** - Account deletion properly cleans up data
 
 ### User Preferences
+
 - [ ] **Language preference** - Language preference stored and retrieved correctly
 - [ ] **Theme preference** - Theme preference stored and retrieved correctly
 - [ ] **Terms acceptance** - Terms acceptance stored with timestamp
@@ -314,6 +352,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Checklist Summary
 
 ### Critical (Must Fix)
+
 - [ ] Security vulnerabilities
 - [ ] TypeScript errors
 - [ ] Authentication/authorization issues
@@ -321,6 +360,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] Breaking changes to API contracts
 
 ### Important (Should Fix)
+
 - [ ] Error handling gaps
 - [ ] Missing type annotations
 - [ ] Accessibility issues
@@ -328,6 +368,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 - [ ] Missing tests for critical paths
 
 ### Nice to Have (Consider Fixing)
+
 - [ ] Code style improvements
 - [ ] Additional test coverage
 - [ ] Documentation improvements
@@ -339,6 +380,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
 ## Usage
 
 This checklist can be used:
+
 1. **Before submitting PR** - Self-review your changes
 2. **During code review** - Reviewers can use this to ensure completeness
 3. **As a command** - Reference this file in Cursor with `@code-review-checklist.md` when reviewing code
@@ -355,4 +397,3 @@ This checklist can be used:
 **Last Updated**: 2025-01-25
 **Version**: 1.0
 **Project**: Diet Planner MVP
-

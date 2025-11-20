@@ -1,4 +1,4 @@
- Product Requirements Document (PRD) - Equipment Rental System
+Product Requirements Document (PRD) - Equipment Rental System
 
 ## 1. Product Overview
 
@@ -9,6 +9,7 @@ The application serves club members who rent equipment using a credit system cal
 The system is built as a frontend application that interfaces with an existing Go backend service and PostgreSQL database. The MVP focuses on core rental functionality, user management, credit system, and administrative controls while maintaining the existing backend logic and database structure.
 
 Key stakeholders include:
+
 - Club members (users): rent equipment, manage reservations, request credits
 - Administrators (admin): manage equipment, process reservations, view analytics
 - Super administrators (superAdmin): manage users, approve credit requests, configure system settings
@@ -24,6 +25,7 @@ Currently, club members rent equipment through a Google Form, which creates seve
 5. Lack of transparency: Members cannot view their rental history, credit history, or understand why certain equipment is unavailable
 
 The new system addresses these issues by providing:
+
 - Mobile-optimized interface accessible from any device
 - Real-time equipment availability and calendar views
 - Automated credit deduction and refund processes
@@ -38,35 +40,39 @@ The new system addresses these issues by providing:
 3.1.1 User accounts are created by administrators only. No self-registration functionality exists in MVP.
 
 3.1.2 The system supports three user roles:
+
 - User: Can rent equipment, view own reservations and credits
 - Admin: Can manage equipment, process reservations, view all reservations, access analytics
 - SuperAdmin: Can manage users, approve credit requests, modify credit balances, configure equipment types
 
-3.1.3 Authentication uses passwordless email-based login. Users receive a login link via email.
+  3.1.3 Authentication uses passwordless email-based login. Users receive a login link via email.
 
-3.1.4 Sessions timeout after 2 hours of inactivity.
+  3.1.4 Sessions timeout after 2 hours of inactivity.
 
-3.1.5 All API endpoints require proper authentication and authorization checks.
+  3.1.5 All API endpoints require proper authentication and authorization checks.
 
 ### 3.2 User Management
 
 3.2.1 Administrators can create new user accounts with:
+
 - Username
 - Email address
 - Initial credit balance (optional, with default value)
 - User role assignment
 
-3.2.2 Administrators can view all users with their current credit balance and role.
+  3.2.2 Administrators can view all users with their current credit balance and role.
 
-3.2.3 Administrators can edit user profiles including:
+  3.2.3 Administrators can edit user profiles including:
+
 - Email address
 - Credit balance
 - User role
 - Account status (active/inactive)
 
-3.2.4 Users cannot edit their own profiles. All profile management is admin-only.
+  3.2.4 Users cannot edit their own profiles. All profile management is admin-only.
 
-3.2.5 User profiles display:
+  3.2.5 User profiles display:
+
 - Username
 - Email address
 - Current credit balance
@@ -76,52 +82,59 @@ The new system addresses these issues by providing:
 ### 3.3 Credit System
 
 3.3.1 Credit calculation uses per-day rates:
+
 - Kayak: 4 credits per day
 - Paddle: 2 credits per day
 - Other equipment types: 1 credit per day
 
-3.3.2 Credits are deducted immediately when a PENDING reservation is created.
+  3.3.2 Credits are deducted immediately when a PENDING reservation is created.
 
-3.3.3 Credits are refunded when a reservation status changes to DENIED.
+  3.3.3 Credits are refunded when a reservation status changes to DENIED.
 
-3.3.4 When reservation dates are modified, credits are automatically recalculated and adjusted.
+  3.3.4 When reservation dates are modified, credits are automatically recalculated and adjusted.
 
-3.3.5 Users can request credits for club work by submitting:
+  3.3.5 Users can request credits for club work by submitting:
+
 - Short text description of work performed
 - Requested credit amount
 
-3.3.6 Credit requests require superAdmin approval. SuperAdmin can:
+  3.3.6 Credit requests require superAdmin approval. SuperAdmin can:
+
 - Approve the requested amount
 - Modify the requested amount
 - Add an optional note explaining the modification
 - Deny the request
 
-3.3.7 All credit changes are audited and stored in credit history with:
+  3.3.7 All credit changes are audited and stored in credit history with:
+
 - Timestamp
 - Amount changed
 - Reason (reservation, request, admin adjustment)
 - Admin who made the change (if applicable)
 
-3.3.8 Credit balance is displayed in the navbar/header on all pages.
+  3.3.8 Credit balance is displayed in the navbar/header on all pages.
 
-3.3.9 Credit history is viewable with pagination (10, 25, 50, 100 items per page).
+  3.3.9 Credit history is viewable with pagination (10, 25, 50, 100 items per page).
 
 ### 3.4 Equipment Management
 
 3.4.1 Equipment search supports multiple simultaneous filters:
+
 - Equipment type
 - Name (text search)
 - Description (text search)
 - Availability status
 
-3.4.2 Search results display:
+  3.4.2 Search results display:
+
 - Favorite items first (top 3 per type based on user's rental history)
 - All other items alphabetically sorted by name
 - Equipment image or placeholder
 - Equipment status (available/unavailable)
 - Credit cost per day
 
-3.4.3 Equipment details include:
+  3.4.3 Equipment details include:
+
 - Name
 - Type
 - Description
@@ -130,11 +143,13 @@ The new system addresses these issues by providing:
 - Image (if available)
 - Maintenance history
 
-3.4.4 Equipment status values:
+  3.4.4 Equipment status values:
+
 - "ok": Available for rental
 - "broken": Unavailable, shown with warning indicator
 
-3.4.5 Administrators can add new equipment with:
+  3.4.5 Administrators can add new equipment with:
+
 - Name
 - Type (from existing types or create new)
 - Description
@@ -142,7 +157,8 @@ The new system addresses these issues by providing:
 - Image upload (2MB limit, JPEG/PNG only)
 - Credit cost per day
 
-3.4.6 Administrators can edit all equipment fields:
+  3.4.6 Administrators can edit all equipment fields:
+
 - Name
 - Description
 - Status
@@ -150,15 +166,17 @@ The new system addresses these issues by providing:
 - Image (replace or remove)
 - Credit cost per day
 
-3.4.7 Equipment images:
+  3.4.7 Equipment images:
+
 - Maximum file size: 2MB
 - Accepted formats: JPEG, PNG
 - Automatic thumbnail generation
 - Placeholder image displayed when no image is available
 
-3.4.8 Administrators can add new equipment types with configurable credit costs per day.
+  3.4.8 Administrators can add new equipment types with configurable credit costs per day.
 
-3.4.9 Maintenance logs support:
+  3.4.9 Maintenance logs support:
+
 - Optional notes
 - Timestamps
 - Status changes
@@ -169,11 +187,13 @@ The new system addresses these issues by providing:
 3.5.1 Users select start and end dates for reservations (not fixed duration).
 
 3.5.2 Multi-item selection:
+
 - UI allows selecting multiple items as a single transaction
 - Backend creates separate reservations for each item
 - Confirmation screen shows total cost for all items
 
-3.5.3 Reservation creation workflow:
+  3.5.3 Reservation creation workflow:
+
 - User selects equipment items
 - User selects start and end dates
 - System checks availability and credit balance
@@ -185,7 +205,8 @@ The new system addresses these issues by providing:
 - System creates reservations and deducts credits
 - Email notification sent
 
-3.5.4 Availability checking:
+  3.5.4 Availability checking:
+
 - System prevents conflicting reservations at creation
 - Users see clear error messages explaining why an item is unavailable:
   - Item already reserved for selected dates
@@ -193,86 +214,110 @@ The new system addresses these issues by providing:
   - Insufficient credits
   - Invalid date range
 
-3.5.5 Back-to-back reservations are allowed (end time equals next reservation start time).
+  3.5.5 Back-to-back reservations are allowed (end time equals next reservation start time).
 
-3.5.6 Users can modify dates of their own PENDING reservations:
+  3.5.6 Users can modify dates of their own PENDING reservations:
+
 - Dates must be in the future
 - End date must be after start date
 - System warns on significant extension (>50% increase or >3 days)
 - Credits automatically recalculated and adjusted
 
-3.5.7 Users can cancel their own PENDING reservations anytime before admin confirms:
+  3.5.7 Users can cancel their own PENDING reservations anytime before admin confirms:
+
 - Cancelled items immediately become available
 - Credits refunded immediately
 - Reservation status changes to DENIED
 
-3.5.8 Reservation status workflow:
+  3.5.8 Reservation status workflow:
+
 - PENDING: Initial status, credits deducted
 - RENTED: Admin confirms rental has started
 - RETURNED: Admin confirms equipment returned
 - DENIED: Reservation cancelled or rejected, credits refunded
 
-3.5.9 Users can only change their own PENDING reservations to DENIED (cancellation).
+  3.5.9 Users can only change their own PENDING reservations to DENIED (cancellation).
 
-3.5.10 Administrators can change any reservation status (except final states RETURNED and DENIED).
+  3.5.10 Administrators can change any reservation status (except final states RETURNED and DENIED).
 
-3.5.11 Reservation list displays:
+  3.5.11 Reservation list displays:
+
 - All user's reservations (for regular users)
 - All reservations (for admins, with user information)
 - Filtering by status (PENDING, RENTED, RETURNED, DENIED)
 - Sorting by date
 - Pagination support
 
+  3.5.12 Reservation audit trail:
+
+- System automatically logs all reservation changes (creation and updates)
+- Audit records are immutable (cannot be modified or deleted)
+- Each audit record captures:
+  - Complete snapshot of reservation state (user, equipment, dates, status)
+  - Who made the change (user or admin)
+  - When the change occurred (timestamp)
+- Users can view timeline of changes for their own reservations
+- Admins can view audit trail for all reservations
+- Timeline displayed chronologically on reservation details page
+
 ### 3.6 Calendar Views
 
 3.6.1 Calendar displays 30 days by default (current date + 29 days ahead).
 
 3.6.2 Two calendar view modes:
+
 - All reservations: Shows all equipment reservations
 - Item-specific: Shows availability for a selected equipment item
 
-3.6.3 Visual indicators:
+  3.6.3 Visual indicators:
+
 - Green: Date is available
 - Red: Date is reserved
 - Gray: Past dates
 
-3.6.4 Calendar dates are clickable to pre-fill search form with selected date.
+  3.6.4 Calendar dates are clickable to pre-fill search form with selected date.
 
-3.6.5 Calendar shows real-time availability based on current reservations.
+  3.6.5 Calendar shows real-time availability based on current reservations.
 
 ### 3.7 Admin Dashboard
 
 3.7.1 Default view shows summary with:
+
 - Count of PENDING reservations
 - Count of overdue items
 - Count of today's rentals
 - Quick links to filtered views
 
-3.7.2 Quick filters available:
+  3.7.2 Quick filters available:
+
 - PENDING: Shows all pending reservations
 - Today: Shows reservations starting today
 - Overdue: Shows overdue items (end date passed, status not RETURNED)
 - All: Shows all reservations
 
-3.7.3 Overdue items panel:
+  3.7.3 Overdue items panel:
+
 - Lists all overdue reservations
 - Links to reservation detail pages
 - Shows user information and contact details
 
-3.7.4 Bulk operations:
+  3.7.4 Bulk operations:
+
 - Select multiple reservations
 - Preview affected reservations
 - Confirm bulk status changes
 - Apply status change to all selected
 
-3.7.5 Admin can view all reservations with:
+  3.7.5 Admin can view all reservations with:
+
 - User information
 - Equipment details
 - Dates
 - Status
 - Credit cost
 
-3.7.6 Admin can create reservations on behalf of other users:
+  3.7.6 Admin can create reservations on behalf of other users:
+
 - Select user from list
 - Select equipment and dates
 - System processes as if user created it
@@ -280,21 +325,25 @@ The new system addresses these issues by providing:
 ### 3.8 Analytics and Reporting
 
 3.8.1 Analytics view available to admins with:
+
 - Year filter
 - Month filter
 - Individual item level statistics
 
-3.8.2 Individual item analytics show:
+  3.8.2 Individual item analytics show:
+
 - Rental days summary
 - Number of reservations
 - Most active renters
 
-3.8.3 System tracks:
+  3.8.3 System tracks:
+
 - Most rented items
 - User activity statistics (top renters, credits spent)
 - Equipment utilization rates
 
-3.8.4 User favorites algorithm:
+  3.8.4 User favorites algorithm:
+
 - Top 3 items per equipment type
 - Based on user's last rentals
 - Shown first in search results
@@ -304,6 +353,7 @@ The new system addresses these issues by providing:
 3.9.1 Email notifications sent only when reservation is created (not on status changes).
 
 3.9.2 Single email per session listing:
+
 - All reserved items in the session
 - Total credits deducted
 - Remaining balance
@@ -315,33 +365,39 @@ The new system addresses these issues by providing:
   - Credits cost
 - Link to view reservation
 
-3.9.3 Admins receive notifications of new reservations (rate-limited to prevent spam).
+  3.9.3 Admins receive notifications of new reservations (rate-limited to prevent spam).
 
 ### 3.10 User Experience
 
 3.10.1 Search results ordering:
+
 - Favorite items first (top 3 per type)
 - All other items alphabetically sorted
 
-3.10.2 Pagination:
+  3.10.2 Pagination:
+
 - Configurable items per page: 10, 25, 50, 100
 - Available on all list views (equipment, reservations, history)
 
-3.10.3 Credit balance always visible in navbar/header.
+  3.10.3 Credit balance always visible in navbar/header.
 
-3.10.4 Error messages:
+  3.10.4 Error messages:
+
 - Simple, clear display
 - No contextual help required
 
-3.10.5 Mobile experience:
+  3.10.5 Mobile experience:
+
 - Responsive design
 - Core flows optimized for mobile devices
 - Touch-friendly interface
 
-3.10.6 Browser support:
+  3.10.6 Browser support:
+
 - Chrome only
 
-3.10.7 History views:
+  3.10.7 History views:
+
 - All reservation history kept indefinitely
 - All credit history kept indefinitely
 - Pagination support
@@ -359,6 +415,7 @@ The new system addresses these issues by providing:
 3.11.5 Data backups: Rely on Supabase automatic backups.
 
 3.11.6 Image uploads validated for:
+
 - File size (max 2MB)
 - File type (JPEG, PNG only)
 
@@ -409,9 +466,11 @@ The new system addresses these issues by providing:
 ## 5. User Stories
 
 ### US-001: User Login
+
 Description: As a user, I want to log in using my email address so I can access the system securely.
 
 Acceptance Criteria:
+
 - User can enter their email address on the login page
 - System sends a login link to the provided email address
 - User can click the link to authenticate
@@ -421,27 +480,33 @@ Acceptance Criteria:
 - User is redirected to login page when session expires
 
 ### US-002: User Logout
+
 Description: As a user, I want to log out of the system so I can securely end my session.
 
 Acceptance Criteria:
+
 - User can access logout functionality from any page
 - Clicking logout ends the current session
 - User is redirected to login page after logout
 - User cannot access protected pages after logout without re-authenticating
 
 ### US-003: View Credit Balance
+
 Description: As a user, I want to see my current credit balance on every page so I always know how much I have available.
 
 Acceptance Criteria:
+
 - Credit balance is displayed in the navbar/header on all pages
 - Credit balance updates immediately after any credit transaction
 - Credit balance is accurate and reflects all recent changes
 - Credit balance is visible on mobile and desktop views
 
 ### US-004: View Credit History
+
 Description: As a user, I want to view my credit change history so I can track all credit transactions.
 
 Acceptance Criteria:
+
 - User can access credit history page from their dashboard
 - Credit history displays all credit changes with:
   - Timestamp
@@ -453,9 +518,11 @@ Acceptance Criteria:
 - All history is kept indefinitely
 
 ### US-005: Request Credits
+
 Description: As a user, I want to request credits for club work so I can earn credits for my contributions.
 
 Acceptance Criteria:
+
 - User can access credit request form from their dashboard
 - User can enter:
   - Short text description of work performed
@@ -467,9 +534,11 @@ Acceptance Criteria:
 - User receives notification when request is approved or denied
 
 ### US-006: Search Equipment
+
 Description: As a user, I want to search for available equipment by type, name, or description so I can find what I need quickly.
 
 Acceptance Criteria:
+
 - User can access search page from navigation
 - User can filter by equipment type (dropdown)
 - User can search by name (text input)
@@ -484,9 +553,11 @@ Acceptance Criteria:
 - All other items are sorted alphabetically by name
 
 ### US-007: View Equipment Details
+
 Description: As a user, I want to view detailed information about equipment so I can make informed rental decisions.
 
 Acceptance Criteria:
+
 - User can click on equipment item from search results
 - Equipment details page displays:
   - Name
@@ -500,9 +571,11 @@ Acceptance Criteria:
 - User can navigate back to search results
 
 ### US-008: View Favorite Equipment
+
 Description: As a user, I want to see my favorite items (top 3 per type) first in search results so I can quickly reserve my preferred equipment.
 
 Acceptance Criteria:
+
 - System calculates favorites based on user's rental history
 - Top 3 items per equipment type are identified as favorites
 - Favorites appear first in search results, before other items
@@ -511,9 +584,11 @@ Acceptance Criteria:
 - Favorites update based on recent rental activity
 
 ### US-009: Select Multiple Items for Reservation
+
 Description: As a user, I want to select multiple items and reserve them in one transaction so I don't have to repeat the process.
 
 Acceptance Criteria:
+
 - User can select multiple equipment items from search results
 - Selected items are added to a reservation cart or selection list
 - User can view all selected items before proceeding
@@ -522,9 +597,11 @@ Acceptance Criteria:
 - User can proceed to date selection with all selected items
 
 ### US-010: Create Reservation - Date Selection
+
 Description: As a user, I want to select start and end dates for my reservation so I can specify the rental period.
 
 Acceptance Criteria:
+
 - User can select start date (date picker)
 - User can select end date (date picker)
 - System validates that start date is in the future
@@ -535,9 +612,11 @@ Acceptance Criteria:
 - User can click calendar dates to pre-fill date fields
 
 ### US-011: Create Reservation - Availability Check
+
 Description: As a user, I want the system to check availability before I create a reservation so I know if equipment is available.
 
 Acceptance Criteria:
+
 - System checks availability for all selected items and dates
 - System prevents reservation if any item is unavailable
 - System displays clear error messages explaining why item is unavailable:
@@ -549,9 +628,11 @@ Acceptance Criteria:
 - System shows required credits vs available credits if insufficient
 
 ### US-012: Create Reservation - Confirmation Screen
+
 Description: As a user, I want to see a confirmation screen before finalizing my reservation so I can review the total cost and my remaining balance.
 
 Acceptance Criteria:
+
 - Confirmation screen displays all selected items with details:
   - Item name
   - Type
@@ -568,9 +649,11 @@ Acceptance Criteria:
 - Confirmation is required before reservation is created
 
 ### US-013: Create Reservation - Finalization
+
 Description: As a user, I want to create a reservation so I can rent equipment for my selected dates.
 
 Acceptance Criteria:
+
 - After confirmation, system creates separate reservations for each selected item
 - Credits are deducted immediately for all reservations
 - System displays success message
@@ -580,9 +663,11 @@ Acceptance Criteria:
 - All reservations show correct dates and credit costs
 
 ### US-014: View Reservation List
+
 Description: As a user, I want to view all my reservations so I can see my rental history and current reservations.
 
 Acceptance Criteria:
+
 - User can access reservation list from dashboard
 - Reservation list displays:
   - Equipment name and type
@@ -595,9 +680,11 @@ Acceptance Criteria:
 - User can click on reservation to view details
 
 ### US-015: View Reservation Details
+
 Description: As a user, I want to view detailed information about a specific reservation so I can see all relevant details.
 
 Acceptance Criteria:
+
 - User can click on reservation from list to view details
 - Reservation details page shows:
   - Equipment name, type, description
@@ -606,13 +693,19 @@ Acceptance Criteria:
   - Credit cost
   - Date created
   - Status change history (if available)
+  - **Audit trail timeline** showing chronological list of all changes:
+    - What changed (dates, status, etc.)
+    - Who made the change (user or admin name)
+    - When the change occurred (timestamp)
 - User can see if reservation is modifiable (PENDING status)
 - User can navigate back to reservation list
 
 ### US-016: Modify Reservation Dates
+
 Description: As a user, I want to modify the dates of my PENDING reservations so I can adjust my plans without cancelling.
 
 Acceptance Criteria:
+
 - User can modify dates only for their own PENDING reservations
 - User can access date modification from reservation details page
 - User can change start date (must be in future)
@@ -626,9 +719,11 @@ Acceptance Criteria:
 - System checks availability for new dates before allowing modification
 
 ### US-017: Cancel Reservation
+
 Description: As a user, I want to cancel my PENDING reservations anytime before admin confirms so I have flexibility.
 
 Acceptance Criteria:
+
 - User can cancel only their own PENDING reservations
 - User can access cancel option from reservation details page
 - System displays confirmation dialog before cancellation
@@ -639,9 +734,11 @@ Acceptance Criteria:
 - Cancelled reservation appears in history with DENIED status
 
 ### US-018: View Calendar - All Reservations
+
 Description: As a user, I want to see a calendar view showing all reservations so I can understand overall equipment availability.
 
 Acceptance Criteria:
+
 - User can access calendar view from navigation
 - Calendar displays 30 days (current date + 29 days ahead)
 - Calendar shows all equipment reservations
@@ -653,9 +750,11 @@ Acceptance Criteria:
 - Calendar updates in real-time based on current reservations
 
 ### US-019: View Calendar - Item Specific
+
 Description: As a user, I want to see a calendar view for a specific equipment item so I can see when it's available.
 
 Acceptance Criteria:
+
 - User can access item-specific calendar from equipment details page
 - Calendar displays 30 days (current date + 29 days ahead)
 - Calendar shows availability for selected equipment item only
@@ -667,9 +766,11 @@ Acceptance Criteria:
 - User can click on available dates to pre-fill reservation form
 
 ### US-020: View Rental History
+
 Description: As a user, I want to see my rental change history so I can track all my past reservations.
 
 Acceptance Criteria:
+
 - User can access rental history from dashboard
 - History displays all past and current reservations
 - History shows:
@@ -683,10 +784,31 @@ Acceptance Criteria:
 - All history is kept indefinitely
 - User can filter by status or date range
 
+### US-020A: View Reservation Change History (Audit Trail)
+
+Description: As a user, I want to see a timeline of all changes made to my reservations so I can track what was modified and by whom.
+
+Acceptance Criteria:
+
+- User can view audit trail from reservation details page
+- Audit trail displays chronological list of all changes
+- Each audit record shows:
+  - What changed (initial creation, status change, date modification)
+  - Complete snapshot of reservation state at that moment (equipment, dates, status)
+  - Who made the change (username or admin name)
+  - When the change occurred (timestamp)
+- Audit records are displayed in chronological order (oldest to newest)
+- Users can only view audit trail for their own reservations
+- Admins can view audit trail for all reservations
+- Audit trail is read-only (cannot be modified or deleted)
+- Timeline clearly shows the progression of reservation from creation to current state
+
 ### US-021: Admin - View Dashboard Summary
+
 Description: As an admin, I want to see a summary dashboard with pending and overdue items so I can quickly assess what needs attention.
 
 Acceptance Criteria:
+
 - Admin dashboard displays summary counts:
   - Number of PENDING reservations
   - Number of overdue items
@@ -696,9 +818,11 @@ Acceptance Criteria:
 - Dashboard is the default view when admin logs in
 
 ### US-022: Admin - Filter Reservations
+
 Description: As an admin, I want to filter reservations by status so I can focus on urgent tasks.
 
 Acceptance Criteria:
+
 - Admin can access quick filters: PENDING, Today, Overdue, All
 - Filtering by PENDING shows all pending reservations
 - Filtering by Today shows reservations starting today
@@ -708,9 +832,11 @@ Acceptance Criteria:
 - Admin can combine filters or use single filter
 
 ### US-023: Admin - View All Reservations
+
 Description: As an admin, I want to view all reservations with user information so I can manage the entire rental system.
 
 Acceptance Criteria:
+
 - Admin can access all reservations list
 - List displays:
   - User name and email
@@ -724,9 +850,11 @@ Acceptance Criteria:
 - Admin can click on reservation to view or edit details
 
 ### US-024: Admin - View User Reservations
+
 Description: As an admin, I want to see a selected user's reservation history so I can help with user inquiries.
 
 Acceptance Criteria:
+
 - Admin can search for user by name or email
 - Admin can select user from list
 - Admin can view all reservations for selected user
@@ -735,22 +863,27 @@ Acceptance Criteria:
 - Admin can access user profile from reservation view
 
 ### US-025: Admin - Change Reservation Status
+
 Description: As an admin, I want to change reservation status so I can manage the rental workflow.
 
 Acceptance Criteria:
+
 - Admin can change status of any reservation (except final states RETURNED and DENIED)
 - Admin can change PENDING to RENTED
 - Admin can change RENTED to RETURNED
 - Admin can change PENDING to DENIED
 - Status changes are saved immediately
+- **Status changes are automatically logged in audit trail**
 - Status change history is recorded
 - User is notified of status changes (if applicable)
 - Credits are adjusted if status change affects credit balance
 
 ### US-026: Admin - Create Reservation for User
+
 Description: As an admin, I want to create a reservation as a selected different user so I can help users who need assistance.
 
 Acceptance Criteria:
+
 - Admin can access "Create Reservation for User" function
 - Admin can select user from list
 - Admin follows same reservation creation flow as user
@@ -760,9 +893,11 @@ Acceptance Criteria:
 - Email notification sent to selected user (not admin)
 
 ### US-027: Admin - View Overdue Items
+
 Description: As an admin, I want to see overdue items in a panel so I can quickly identify items that need attention.
 
 Acceptance Criteria:
+
 - Admin dashboard includes overdue items panel
 - Panel lists all overdue reservations (end date passed, status not RETURNED)
 - Panel shows:
@@ -774,9 +909,11 @@ Acceptance Criteria:
 - Panel updates in real-time
 
 ### US-028: Admin - Bulk Status Changes
+
 Description: As an admin, I want to perform bulk status changes so I can efficiently manage multiple reservations.
 
 Acceptance Criteria:
+
 - Admin can select multiple reservations from list
 - Admin can choose new status to apply
 - System shows preview of affected reservations
@@ -790,9 +927,11 @@ Acceptance Criteria:
 - Credits are adjusted for all affected reservations if applicable
 
 ### US-029: Admin - Add Equipment
+
 Description: As an admin, I want to add new equipment so I can expand the inventory.
 
 Acceptance Criteria:
+
 - Admin can access "Add Equipment" form
 - Admin can enter:
   - Name (required)
@@ -808,9 +947,11 @@ Acceptance Criteria:
 - Admin can set credit cost when creating new equipment type
 
 ### US-030: Admin - Edit Equipment
+
 Description: As an admin, I want to edit equipment parameters so I can keep inventory information up to date.
 
 Acceptance Criteria:
+
 - Admin can access edit form from equipment details page
 - Admin can edit all fields:
   - Name
@@ -825,9 +966,11 @@ Acceptance Criteria:
 - If status changes to broken, maintenance log reminder appears
 
 ### US-031: Admin - Add Equipment Type
+
 Description: As an admin, I want to add new equipment types with configurable credit costs so I can support different equipment categories.
 
 Acceptance Criteria:
+
 - Admin can access "Add Equipment Type" form
 - Admin can enter:
   - Type name (required)
@@ -838,9 +981,11 @@ Acceptance Criteria:
 - Admin can set default credit cost for the type
 
 ### US-032: Admin - Add Maintenance Log Entry
+
 Description: As an admin, I want to add maintenance log entries so I can track equipment maintenance history.
 
 Acceptance Criteria:
+
 - Admin can access maintenance log from equipment details page
 - Admin can add log entry with:
   - Optional notes
@@ -851,9 +996,11 @@ Acceptance Criteria:
 - Maintenance history is visible to users on equipment details page
 
 ### US-033: Admin - View Analytics Dashboard
+
 Description: As an admin, I want to see analytics on equipment usage so I can make informed inventory decisions.
 
 Acceptance Criteria:
+
 - Admin can access analytics dashboard
 - Dashboard supports year and month filters
 - Dashboard displays:
@@ -864,9 +1011,11 @@ Acceptance Criteria:
 - Admin can view analytics for specific equipment items
 
 ### US-034: Admin - View Item Analytics
+
 Description: As an admin, I want to see individual item level analytics so I can understand usage patterns for specific equipment.
 
 Acceptance Criteria:
+
 - Admin can access item analytics from equipment details page
 - Item analytics show:
   - Rental days summary
@@ -877,9 +1026,11 @@ Acceptance Criteria:
 - Analytics display in clear, readable format
 
 ### US-035: SuperAdmin - Create User Account
+
 Description: As a superAdmin, I want to create user accounts so new members can access the system.
 
 Acceptance Criteria:
+
 - SuperAdmin can access "Create User" form
 - SuperAdmin can enter:
   - Username (required, unique)
@@ -894,9 +1045,11 @@ Acceptance Criteria:
 - User appears in user list
 
 ### US-036: SuperAdmin - View All Users
+
 Description: As a superAdmin, I want to view all users so I can manage the user base.
 
 Acceptance Criteria:
+
 - SuperAdmin can access user list
 - User list displays:
   - Username
@@ -910,9 +1063,11 @@ Acceptance Criteria:
 - SuperAdmin can filter by role
 
 ### US-037: SuperAdmin - Edit User Profile
+
 Description: As a superAdmin, I want to edit user profiles so I can update user information and manage accounts.
 
 Acceptance Criteria:
+
 - SuperAdmin can access edit form from user list or profile page
 - SuperAdmin can edit:
   - Email address
@@ -924,9 +1079,11 @@ Acceptance Criteria:
 - Updated information appears in user list
 
 ### US-038: SuperAdmin - Approve Credit Request
+
 Description: As a superAdmin, I want to approve credit requests with modified amounts so I can adjust based on work value.
 
 Acceptance Criteria:
+
 - SuperAdmin can access pending credit requests list
 - Request list shows:
   - User name
@@ -944,9 +1101,11 @@ Acceptance Criteria:
 - Request status is updated
 
 ### US-039: SuperAdmin - Modify User Credits
+
 Description: As a superAdmin, I want to directly modify user credits so I can manage the credit system.
 
 Acceptance Criteria:
+
 - SuperAdmin can modify credits from user profile page
 - SuperAdmin can add or subtract credits
 - SuperAdmin can enter amount and optional note
@@ -955,9 +1114,11 @@ Acceptance Criteria:
 - Change appears in user's credit history with superAdmin name
 
 ### US-040: Handle Insufficient Credits
+
 Description: As a user, I want to see a clear error message when I don't have enough credits so I know why my reservation failed.
 
 Acceptance Criteria:
+
 - System checks credit balance before allowing reservation
 - If insufficient credits, system displays error message
 - Error message shows:
@@ -968,9 +1129,11 @@ Acceptance Criteria:
 - User is directed to credit request or balance information
 
 ### US-041: Handle Equipment Unavailable
+
 Description: As a user, I want to see why equipment is unavailable so I can understand when it might be available.
 
 Acceptance Criteria:
+
 - System checks availability before allowing reservation
 - If item is unavailable, system displays clear reason:
   - "Item is broken and unavailable"
@@ -980,9 +1143,11 @@ Acceptance Criteria:
 - User cannot select unavailable items for reservation
 
 ### US-042: Handle Invalid Date Range
+
 Description: As a user, I want to see validation errors for invalid date selections so I can correct my input.
 
 Acceptance Criteria:
+
 - System validates start date is in the future
 - System validates end date is after start date
 - System displays clear error messages for invalid dates:
@@ -992,9 +1157,11 @@ Acceptance Criteria:
 - User cannot proceed with invalid date range
 
 ### US-043: Handle Session Timeout
+
 Description: As a user, I want to be notified when my session expires so I can log in again.
 
 Acceptance Criteria:
+
 - System tracks user activity
 - System expires session after 2 hours of inactivity
 - When session expires, user is redirected to login page
@@ -1003,9 +1170,11 @@ Acceptance Criteria:
 - User's work is not lost (if possible, data is preserved)
 
 ### US-044: Handle Image Upload Errors
+
 Description: As an admin, I want to see clear error messages when image upload fails so I can correct the issue.
 
 Acceptance Criteria:
+
 - System validates image file size (max 2MB)
 - System validates image file type (JPEG, PNG only)
 - System displays clear error messages:
@@ -1015,9 +1184,11 @@ Acceptance Criteria:
 - Validation occurs before upload attempt
 
 ### US-045: View Reservation Email Notification
+
 Description: As a user, I want to receive an email when I create a reservation so I have a record of my rental.
 
 Acceptance Criteria:
+
 - Email is sent immediately when reservation is created
 - Email contains:
   - All reserved items in the session
@@ -1030,9 +1201,11 @@ Acceptance Criteria:
 - Email format is clear and readable
 
 ### US-046: Handle Reservation Conflict
+
 Description: As a user, I want to be prevented from creating conflicting reservations so equipment availability is maintained.
 
 Acceptance Criteria:
+
 - System checks for date conflicts before creating reservation
 - System prevents reservation if dates overlap with existing reservation
 - System displays error message showing conflicting dates
@@ -1041,9 +1214,11 @@ Acceptance Criteria:
 - Conflict check includes back-to-back reservations (end time equals next start time is allowed)
 
 ### US-047: Handle Date Modification Warning
+
 Description: As a user, I want to be warned when I significantly extend my reservation dates so I understand the credit impact.
 
 Acceptance Criteria:
+
 - System calculates if date extension is significant (>50% increase or >3 days)
 - System displays warning message:
   - "You are extending your reservation significantly. Additional credits will be charged."
@@ -1053,9 +1228,11 @@ Acceptance Criteria:
 - Warning appears before credit adjustment is applied
 
 ### US-048: Handle Bulk Operation Errors
+
 Description: As an admin, I want to see which reservations failed in bulk operations so I can address issues.
 
 Acceptance Criteria:
+
 - System attempts to apply bulk status change to all selected reservations
 - System tracks successes and failures
 - System displays results:
@@ -1066,9 +1243,11 @@ Acceptance Criteria:
 - Admin can retry failed operations individually
 
 ### US-049: View Equipment Without Image
+
 Description: As a user, I want to see a placeholder when equipment has no image so the interface remains consistent.
 
 Acceptance Criteria:
+
 - Equipment without image displays placeholder image
 - Placeholder is visually consistent with other equipment cards
 - Placeholder clearly indicates no image available
@@ -1076,9 +1255,11 @@ Acceptance Criteria:
 - Placeholder does not affect equipment functionality
 
 ### US-050: Handle Concurrent Reservation Attempts
+
 Description: As a user, I want the system to handle concurrent reservation attempts so I don't lose availability due to race conditions.
 
 Acceptance Criteria:
+
 - System checks availability at the moment of reservation creation
 - If item becomes unavailable between selection and confirmation, system prevents reservation
 - System displays error message explaining item is no longer available
@@ -1086,9 +1267,11 @@ Acceptance Criteria:
 - System maintains data consistency
 
 ### US-051: View Paginated Results
+
 Description: As a user, I want to navigate through paginated results so I can view large lists efficiently.
 
 Acceptance Criteria:
+
 - Pagination controls are available on all list views
 - User can select items per page: 10, 25, 50, 100
 - User can navigate to next/previous page
@@ -1097,9 +1280,11 @@ Acceptance Criteria:
 - Pagination state is maintained when filtering or sorting
 
 ### US-052: Handle Network Errors
+
 Description: As a user, I want to see clear error messages when network requests fail so I understand what went wrong.
 
 Acceptance Criteria:
+
 - System detects network errors and timeouts
 - System displays user-friendly error messages
 - Error messages suggest retrying the operation
@@ -1108,9 +1293,11 @@ Acceptance Criteria:
 - System does not lose user input on recoverable errors
 
 ### US-053: View Mobile-Optimized Interface
+
 Description: As a user, I want to use the system on my mobile device so I can rent equipment on the go.
 
 Acceptance Criteria:
+
 - Interface is responsive and works on mobile devices
 - Core flows (search, reserve, view) are optimized for mobile
 - Touch targets are appropriately sized
@@ -1119,9 +1306,11 @@ Acceptance Criteria:
 - Calendar view works on mobile devices
 
 ### US-054: Handle Search with No Results
+
 Description: As a user, I want to see a message when my search returns no results so I know to adjust my filters.
 
 Acceptance Criteria:
+
 - System displays "No results found" message when search returns empty
 - Message suggests adjusting filters
 - User can clear filters easily
@@ -1129,9 +1318,11 @@ Acceptance Criteria:
 - User can modify search criteria and try again
 
 ### US-055: View Maintenance History
+
 Description: As a user, I want to view equipment maintenance history so I can understand equipment condition.
 
 Acceptance Criteria:
+
 - Maintenance history is visible on equipment details page
 - History shows:
   - Timestamp

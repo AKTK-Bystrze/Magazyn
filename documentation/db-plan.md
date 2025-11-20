@@ -145,6 +145,22 @@ Audit trail for equipment status changes.
 | `admin_id`        | `uuid`             | `FK -> profiles.id`               | Who logged it (optional via trigger) |
 | `created_at`      | `timestamptz`      | `NOT NULL`, `DEFAULT now()`       |                                      |
 
+### `reservation_history`
+
+Audit trail for all reservation changes (insert-only, immutable).
+
+| Column               | Data Type            | Constraints                         | Description                     |
+| -------------------- | -------------------- | ----------------------------------- | ------------------------------- |
+| `id`                 | `uuid`               | `PK`, `DEFAULT gen_random_uuid()`   |                                 |
+| `reservation_id`     | `uuid`               | `FK -> reservations.id`, `NOT NULL` | Link to reservation             |
+| `user_id`            | `uuid`               | `FK -> profiles.id`, `NOT NULL`     | Snapshot of reservation owner   |
+| `equipment_id`       | `uuid`               | `FK -> equipment.id`, `NOT NULL`    | Snapshot of equipment           |
+| `start_date`         | `date`               | `NOT NULL`                          | Snapshot of start date          |
+| `end_date`           | `date`               | `NOT NULL`                          | Snapshot of end date            |
+| `status`             | `reservation_status` | `NOT NULL`                          | Snapshot of status              |
+| `changed_by_user_id` | `uuid`               | `FK -> profiles.id`                 | User/admin who made this change |
+| `created_at`         | `timestamptz`        | `NOT NULL`, `DEFAULT now()`         | When this change occurred       |
+
 ## 3. Views
 
 Database views to simplify analytics and reporting.
@@ -173,6 +189,7 @@ Aggregates user activity.
   - `credit_history` -> `reservations` (optional source).
   - `credit_requests` -> `profiles` (requester).
 - **Maintenance**: `maintenance_logs` -> `equipment`.
+- **Reservation Audit**: `reservation_history` -> `reservations` (audit trail).
 
 ## 5. Indexes
 
@@ -194,6 +211,9 @@ To optimize performance for common query patterns:
 
 4.  **Analytics / Favorites**:
     - `reservations(user_id, equipment_id)` (To quickly calculate user's favorite items)
+
+5.  **Reservation History**:
+    - `(reservation_id, created_at)` (For timeline queries ordered by timestamp)
 
 ## 6. Row Level Security (RLS) Policies
 
@@ -226,11 +246,18 @@ To optimize performance for common query patterns:
 - **Insert**: Users can create requests.
 - **Update**: SuperAdmins only (approve/deny).
 
+### `reservation_history`
+
+- **Select**: Users can see audit records for their own reservations. Admins/SuperAdmins can see all.
+- **Insert**: System via trigger or Admins for manual adjustments.
+- **Update/Delete**: Not allowed (insert-only, immutable audit trail).
+
 ## 7. Database Triggers & Functions
 
 1.  **`handle_new_user`**: Trigger on `auth.users` insert to automatically create a row in `public.profiles`.
 2.  **`log_maintenance_change`**: Trigger on `equipment` update. If `status` changes, insert row into `maintenance_logs`.
-3.  **`update_updated_at`**: Standard trigger to update `updated_at` timestamp on modification.
+3.  **`log_reservation_change`**: Trigger on `reservations` insert or update. Logs complete snapshot of reservation state to `reservation_history` with change author.
+4.  **`update_updated_at`**: Standard trigger to update `updated_at` timestamp on modification.
 
 ## 8. Notes
 

@@ -146,6 +146,22 @@ create table maintenance_logs (
 
 alter table maintenance_logs enable row level security;
 
+-- Table: reservation_history
+-- Description: Audit trail for all reservation changes (insert-only).
+create table reservation_history (
+  id uuid primary key default gen_random_uuid(),
+  reservation_id uuid not null references reservations(id),
+  user_id uuid not null references profiles(id),
+  equipment_id uuid not null references equipment(id),
+  start_date date not null,
+  end_date date not null,
+  status reservation_status not null,
+  changed_by_user_id uuid references profiles(id),
+  created_at timestamptz not null default now()
+);
+
+alter table reservation_history enable row level security;
+
 -- 4. Indexes
 
 -- Reservations indexes
@@ -162,6 +178,9 @@ create index profiles_email_idx on profiles (email);
 
 -- Analytics / Favorites index
 create index reservations_user_equipment_idx on reservations (user_id, equipment_id);
+
+-- Reservation History indexes
+create index reservation_history_reservation_id_created_at_idx on reservation_history (reservation_id, created_at);
 
 
 -- 5. Row Level Security (RLS) Policies
@@ -379,6 +398,36 @@ create policy "Admins can insert maintenance logs"
     )
   );
 
+-- Reservation History Policies
+-- Select: Users can see their own reservation history. Admins/SuperAdmins can see all.
+create policy "Users can view own reservation history"
+  on reservation_history for select
+  using (
+    exists (
+      select 1 from reservations
+      where id = reservation_history.reservation_id and user_id = auth.uid()
+    )
+  );
+
+create policy "Admins can view all reservation history"
+  on reservation_history for select
+  using (
+    exists (
+      select 1 from profiles
+      where id = auth.uid() and role in ('admin', 'super_admin')
+    )
+  );
+
+-- Insert: System via trigger or Admins for manual adjustments
+create policy "Admins can insert reservation history"
+  on reservation_history for insert
+  with check (
+    exists (
+      select 1 from profiles
+      where id = auth.uid() and role in ('admin', 'super_admin')
+    )
+  );
+
 -- 6. Functions and Triggers
 
 -- Function: update_updated_at
@@ -448,6 +497,37 @@ $$ language plpgsql security definer;
 create trigger log_equipment_status_change
 after update on equipment
 for each row execute procedure log_maintenance_change();
+
+-- Function: log_reservation_change
+-- Description: Logs all reservation changes (inserts and updates) to audit table.
+create or replace function log_reservation_change()
+returns trigger as $$
+begin
+  insert into reservation_history (
+    reservation_id,
+    user_id,
+    equipment_id,
+    start_date,
+    end_date,
+    status,
+    changed_by_user_id
+  ) values (
+    new.id,
+    new.user_id,
+    new.equipment_id,
+    new.start_date,
+    new.end_date,
+    new.status,
+    auth.uid()
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- Trigger: log_reservation_changes
+create trigger log_reservation_changes
+after insert or update on reservations
+for each row execute procedure log_reservation_change();
 
 -- 7. Views
 
