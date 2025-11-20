@@ -10,4 +10,5 @@ __*
 *.log
 .env
 /.ai
+/.husky
 node_modules
