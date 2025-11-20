@@ -12,3 +12,8 @@ __*
 /.ai
 /.husky
 node_modules
+
+# Supabase
+supabase/.branches
+supabase/.temp
+supabase/functions/**/.env
