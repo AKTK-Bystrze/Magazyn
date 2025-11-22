@@ -3,6 +3,8 @@ package timeSet
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsTheSameDay(t *testing.T) {
@@ -47,9 +49,7 @@ func TestIsTheSameDay(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := IsTheSameDay(tc.t1, tc.t2)
-			if result != tc.expected {
-				t.Errorf("Expected %v, but got %v", tc.expected, result)
-			}
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }

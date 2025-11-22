@@ -7,8 +7,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type mockLogger struct {
@@ -20,35 +21,26 @@ func (l *mockLogger) Write(p []byte) (n int, err error) {
 }
 
 func TestResponseErrorMsg(t *testing.T) {
-	// Keep track of the original app state
+	// The function being tested relies on a global App state for logging.
+	// We must mock this global state to prevent the test from panicking
+	// and to ensure test isolation.
 	originalApp := appState.App
+	t.Cleanup(func() { appState.App = originalApp }) // Restore original app state
 
-	// Create a mock logger
 	mockLogger := &mockLogger{}
-	
-	// Create a mock app with the mock logger
 	mockApp := apps.App{
 		Logger: log.New(mockLogger, "test: ", log.Lshortfile),
 	}
-
-	// Set the global app state to our mock app
 	appState.App = mockApp
-
-	// Restore the original app state at the end of the test
-	defer func() { appState.App = originalApp }()
 
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/", nil)
 
 	ResponseErrorMsg(recorder, req, "test error")
 
-	if recorder.Code != http.StatusBadRequest {
-		t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, recorder.Code)
-	}
+	assert.Equal(t, http.StatusBadRequest, recorder.Code, "Expected status code to be 400 Bad Request")
 
 	expectedBody := `{"error":"test error"}`
-	if strings.TrimSpace(recorder.Body.String()) != expectedBody {
-		t.Errorf("Expected body %s, but got %s", expectedBody, recorder.Body.String())
-	}
+	assert.JSONEq(t, expectedBody, recorder.Body.String(), "Expected JSON body to match")
 }
 

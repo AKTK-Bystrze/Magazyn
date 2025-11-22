@@ -4,6 +4,9 @@ import (
 	"bystrze/apps/common/models"
 	"context"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithAndGetUserInfo(t *testing.T) {
@@ -17,27 +20,15 @@ func TestWithAndGetUserInfo(t *testing.T) {
 	ctxWithUser := WithUserInfo(ctx, testUser)
 
 	retrievedUser, ok := GetUserInfo(ctxWithUser)
-	if !ok {
-		t.Fatal("GetUserInfo should return true, but it returned false")
-	}
+	require.True(t, ok, "GetUserInfo should return true")
 
-	if retrievedUser.ID != testUser.ID {
-		t.Errorf("Expected user ID to be %d, but got %d", testUser.ID, retrievedUser.ID)
-	}
-
-	if retrievedUser.Name != testUser.Name {
-		t.Errorf("Expected user name to be %s, but got %s", testUser.Name, retrievedUser.Name)
-	}
-
-	if retrievedUser.Role != testUser.Role {
-		t.Errorf("Expected user role to be %s, but got %s", testUser.Role, retrievedUser.Role)
-	}
+	assert.Equal(t, testUser.ID, retrievedUser.ID, "Expected user ID to match")
+	assert.Equal(t, testUser.Name, retrievedUser.Name, "Expected user name to match")
+	assert.Equal(t, testUser.Role, retrievedUser.Role, "Expected user role to match")
 }
 
 func TestGetUserInfo_NoUserInContext(t *testing.T) {
 	ctx := context.Background()
 	_, ok := GetUserInfo(ctx)
-	if ok {
-		t.Fatal("GetUserInfo should return false, but it returned true")
-	}
+	assert.False(t, ok, "GetUserInfo should return false for a context without a user")
 }
