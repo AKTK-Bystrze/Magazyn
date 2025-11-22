@@ -75,7 +75,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse start and end dates
 	var newStartTime, newEndTime time.Time
 	if newStartTimeStr != "" {
-		newStartTime, err = time.Parse(timeSet.IN_TIME_FMT, newStartTimeStr)
+		newStartTime, err = time.ParseInLocation(timeSet.IN_TIME_FMT, newStartTimeStr, timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("Failed to parse start date %s: %v", newStartTimeStr, err)
 			http.Error(w, "Invalid start date format", http.StatusBadRequest)
@@ -83,7 +83,7 @@ func SetStatusHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if newEndTimeStr != "" {
-		newEndTime, err = time.Parse(timeSet.IN_TIME_FMT, newEndTimeStr)
+		newEndTime, err = time.ParseInLocation(timeSet.IN_TIME_FMT, newEndTimeStr, timeSet.LOCATION)
 		if err != nil {
 			appState.App.Err("Failed to parse end date %s: %v", newEndTimeStr, err)
 			http.Error(w, "Invalid end date format", http.StatusBadRequest)
