@@ -83,7 +83,7 @@ func CalculateRentalCost(item models.Item, start_time time.Time, end_time time.T
 	endDate := time.Date(end_time.Year(), end_time.Month(), end_time.Day(), 0, 0, 0, 0, end_time.Location())
 
 	duration := endDate.Sub(startDate)
-	days := int(duration.Hours()/24) + 1 //todo can't calculate 1 day correctly
+	days := int(duration/(24*time.Hour)) + 1
 	appState.App.Debug("Item: %v, start %v end %v days %v cost %v", item.Type,
 		start_time.Format(timeSet.OUT_TIME_FMT), end_time.Format(timeSet.OUT_TIME_FMT), days, rentalCost*days)
 	return rentalCost * days, err
