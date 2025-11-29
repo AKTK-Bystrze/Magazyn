@@ -75,34 +75,47 @@ Instead of self-hosting complex services, we connect to the managed Supabase Clo
 
 The following diagram illustrates the "Hybrid Light" approach. The heavy stateful services live in the cloud, while your VPS runs the lightweight compute containers.
 
-        Gmail[Gmail SMTP]
+```mermaid
+flowchart TD
+    subgraph VPS ["VPS / DigitalOcean"]
+        Caddy("Caddy Reverse Proxy")
+        GoApp("Go Backend API")
+        AstroApp("Astro Frontend")
     end
 
-    %% Traffic Flow - The Light Path
+    subgraph Supabase_Cloud ["Supabase Cloud Managed Services"]
+        DB["Database (PostgreSQL)"]
+        Auth["Authentication"]
+        Storage["Storage"]
+    end
+
+    Browser(("User Browser"))
+    Gmail["Gmail SMTP"]
+
     Browser -->|HTTPS / 443| Caddy
     Caddy -->|/api/*| GoApp
     Caddy -->|/*| AstroApp
 
-    %% Backend Logic
     GoApp -->|SQL Queries| DB
     GoApp -->|Verify JWT| Auth
     GoApp -->|Send Email| Gmail
 
-    %% Frontend Direct Access (For Auth/Uploads)
-    Browser -->|Login / Admin Uploads| Supabase_Cloud
+    Browser -->|Login / Admin Uploads| Auth
+    Browser -->|Login / Admin Uploads| Storage
 
-    %% Styling
-    style Supabase_Cloud fill:#3ECF8E,stroke:#333,stroke-width:2px,color:white
-    style GoApp fill:#00ADD8,stroke:#333,stroke-width:2px,color:white
-    style Caddy fill:#22b357,stroke:#333,stroke-width:2px,color:white
+    classDef cloud fill:#3ECF8E,stroke:#333,stroke-width:2px,color:white;
+    classDef vps fill:#22b357,stroke:#333,stroke-width:2px,color:white;
+    classDef backend fill:#00ADD8,stroke:#333,stroke-width:2px,color:white;
 
+    class DB,Auth,Storage cloud
+    class Caddy,GoApp,AstroApp backend
 ```
 
 ## Implementation Roadmap
+
 - **Auth Migration:** Remove passwordless package from Go. Implement Supabase Auth UI in React.
 - **Caddyfile Setup:** Configure Caddy to proxy `localhost:3000` (Astro) and `localhost:8080` (Go).
 - **Database Connection:** Update Go ENV variables to point to the remote Supabase Postgres connection string.
 - **RLS Policies:** Set up Supabase Storage policies:
   - `bucket_id = 'rentals'`, `operation = SELECT`, `auth.role() = 'anon'` (Public Read).
   - `bucket_id = 'rentals'`, `operation = INSERT/UPDATE/DELETE`, `auth.jwt().role = 'service_role'` OR custom admin flag (Admin Write).
-```
