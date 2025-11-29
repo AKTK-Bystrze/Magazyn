@@ -13,17 +13,17 @@ import (
 )
 
 const (
-	TEST_APP_NAME  = "boxtest-web-1"
-	TEST_DB_NAME = "boxtest-db-1"
+	TEST_APP_NAME     = "boxtest-web-1"
+	TEST_DB_NAME      = "boxtest-db-1"
 	TESTS_OUTPUT_PATH = "failedTests/"
 
 	Localhost = "http://localhost:8080"
 	CookeName = "bystrzeMagazyn"
 
 	CONTAINER_TIME_FORMAT = "2006-01-02T15:04"
-	FILENAME_TIME_FORMAT = "2006-01-02T15-04-05"
-	TIME_FORMAT_SECONDS = "2006-01-02 15:04:05"
-	DATE_FORMAT = "Mon Jan 2 15:04:05 MST 2006"
+	FILENAME_TIME_FORMAT  = "2006-01-02T15-04-05"
+	TIME_FORMAT_SECONDS   = "2006-01-02 15:04:05"
+	DATE_FORMAT           = "Mon Jan 2 15:04:05 MST 2006"
 )
 
 var (
@@ -31,17 +31,11 @@ var (
 )
 
 func composeContainers() {
-	projectRoot, err := os.Getwd()
-	if err != nil {
-		log.Printf("Error getting current directory: %v\n", err)
-		os.Exit(1)
-	}
 	cmd := exec.Command("docker", "compose", "up", "--build", "-d")
-	cmd.Dir = projectRoot
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	log.Println("Starting Docker Compose...")
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		log.Printf("Error running Docker Compose: %v\n", err)
 		os.Exit(1)
@@ -61,18 +55,12 @@ func ConnectToDB() {
 
 func cleanup() {
 	log.Printf("Cleaning previous test leftovers")
-	projectRoot, err := os.Getwd()
-	if err != nil {
-		log.Printf("Error getting current directory: %v\n", err)
-		os.Exit(1)
-	}
 	cmd := exec.Command("docker", "compose", "down")
-	cmd.Dir = projectRoot
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	log.Println("Starting Docker Compose down...")
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		log.Printf("Error running Docker Compose down: %v\n", err)
 		os.Exit(1)
@@ -99,8 +87,8 @@ func RunTests() {
 	WAREHOUSE := "boxTest/tests/warehouse"
 	USER_MANAGER := "boxTest/tests/userManager"
 	testsCMD := []struct {
-		name string
-		timeout int
+		name     string
+		timeout  int
 		location string
 	}{
 		{"Test_allUsers_loginAndlogut", 60, USER_MANAGER},
