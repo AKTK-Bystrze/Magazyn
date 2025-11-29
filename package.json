@@ -11,20 +11,25 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.6",
     "@astrojs/node": "^9.5.1",
     "@astrojs/react": "^4.0.0",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
+    "@tailwindcss/vite": "^4.1.17",
     "@tanstack/react-query": "^5.56.0",
     "astro": "^5.16.0",
+    "clsx": "^2.1.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
     "husky": "^9.0.0",
     "lint-staged": "^15.0.0",
     "prettier": "^3.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.9.3"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,md}": [
