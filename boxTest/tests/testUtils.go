@@ -4,6 +4,7 @@ import (
 	"boxTest/handlers/app"
 	"log"
 	"math/rand"
+	"slices"
 	"time"
 )
 
@@ -17,21 +18,13 @@ func PickRandomItem(items []app.Item) app.Item {
 }
 
 func IsItemAvailable(searchedItem app.Item, items []app.Item) bool {
-	for _, item := range items {
-		if item.ID == searchedItem.ID {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(items, func(item app.Item) bool {
+		return item.ID == searchedItem.ID
+	})
 }
 
-func CreateNextDayAt(now time.Time, hour int) time.Time {
-	now = now.Add(24 * time.Hour)
-	return DateToHour(now)
-}
-
-func DateToHour(date time.Time) time.Time {
-	return time.Date(date.Year(), date.Month(), date.Day(), date.Hour(), 0, 0, 0, date.Location())
+func CreateNextDayAt(now time.Time, hour time.Duration) time.Time {
+	return DateToFullDay(now.Add(24 * time.Hour)).Add(hour * time.Hour)
 }
 
 func DateToFullDay(date time.Time) time.Time {
@@ -39,9 +32,7 @@ func DateToFullDay(date time.Time) time.Time {
 }
 
 func IsSameDay(date1, date2 time.Time) bool {
-	return date1.Year() == date2.Year() &&
-		date1.Month() == date2.Month() &&
-		date1.Day() == date2.Day()
+	return DateToFullDay(date1).Equal(DateToFullDay(date2))
 }
 
 func CalculateCost(item string, start time.Time, end time.Time) int {
