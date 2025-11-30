@@ -4,7 +4,6 @@ import (
 	"boxTest/handlers/app"
 	"log"
 	"math/rand"
-	"slices"
 	"time"
 )
 
