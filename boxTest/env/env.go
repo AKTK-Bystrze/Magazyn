@@ -82,7 +82,7 @@ func RunTests() {
 	composeContainers()
 	defer cleanup()
 
-	time.Sleep(10)
+	time.Sleep(5 * time.Second)
 
 	WAREHOUSE := "boxTest/tests/warehouse"
 	USER_MANAGER := "boxTest/tests/userManager"
