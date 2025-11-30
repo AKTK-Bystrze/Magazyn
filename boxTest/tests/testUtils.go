@@ -18,9 +18,12 @@ func PickRandomItem(items []app.Item) app.Item {
 }
 
 func IsItemAvailable(searchedItem app.Item, items []app.Item) bool {
-	return slices.ContainsFunc(items, func(item app.Item) bool {
-		return item.ID == searchedItem.ID
-	})
+	for _, item := range items {
+		if item.ID == searchedItem.ID {
+			return true
+		}
+	}
+	return false
 }
 
 func CreateNextDayAt(now time.Time, hour int) time.Time {
