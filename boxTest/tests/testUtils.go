@@ -37,7 +37,7 @@ func DateToFullDay(date time.Time) time.Time {
 }
 
 func IsSameDay(date1, date2 time.Time) bool {
-	return DateToFullDay(date1) == DateToFullDay(date2)
+	return time.Time.Equal(DateToFullDay(date1), DateToFullDay(date2))
 }
 
 func CalculateCost(item string, start time.Time, end time.Time) int {
