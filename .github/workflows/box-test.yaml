@@ -17,9 +17,12 @@ jobs:
       - uses: docker/setup-compose-action@v1 
       - name: Build docker images
         run: docker build --target test --build-arg DEBUG=true -t app -f app-dockerfile .
+      - name: Setup containers
+        working-directory: ./boxTest
+        run: go run main.go --env
       - name: Run tests
         working-directory: ./boxTest
-        run: go run main.go
+        run: go run main.go --tests
       - name: Show db logs if tests falied
         if: failure()
         run: docker container logs boxtest-db-1 
