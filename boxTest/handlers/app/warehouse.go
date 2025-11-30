@@ -21,36 +21,30 @@ var (
 	URL_reservations = "/warehouse/admin/reservations"
 	URL_setStatus    = "/warehouse/user/setStatus"
 
-	COST_KAYAK       = 4
-	KAYAK            = "kayak"
-	COST_PADDLE      = 2
-	PADDLE           = "paddle"
-	COST_LIFE_JACKET = 1
-	LIFE_JACKET      = "life_jacket"
-	COST_HELMET      = 1
-	HELMET           = "helmet"
-	COST_JACKET      = 1
-	JACKET           = "jacket"
-	COST_SPRAY_SKIRT = 1
-	SPRAY_SKIRT      = "spray_skirt"
-	COST_ROPE        = 1
-	ROPE             = "rope"
-	COST_WETSUIT     = 1
-	WETSUIT          = "wetsuit"
+	ItemCostMap = map[string]int{
+		"kayak":       4,
+		"paddle":      2,
+		"life_jacket": 1,
+		"helmet":      1,
+		"jacket":      1,
+		"spray_skirt": 1,
+		"rope":        1,
+		"wetsuit":     1,
+	}
 )
 
 func (uc UserClient) GoToReservations() {
 	uc.GetRequest(env.Localhost + URL_reservations)
 }
 
-func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string, startTime time.Time, endTime  time.Time) *http.Response {
+func (uc UserClient) ChangeReservationStatus(reservation Reservation, status string, startTime time.Time, endTime time.Time) *http.Response {
 	resp := uc.PutRequest(env.Localhost+URL_setStatus, url.Values{
 		"reservation_id": {strconv.Itoa(reservation.ID)},
 		"url":            {URL_setStatus},
 		"item_id":        {strconv.Itoa(reservation.ItemID)},
 		"status":         {status},
-		"startTime":     {startTime.Format(env.CONTAINER_TIME_FORMAT)},
-		"endTime":       {endTime.Format(env.CONTAINER_TIME_FORMAT)},
+		"startTime":      {startTime.Format(env.CONTAINER_TIME_FORMAT)},
+		"endTime":        {endTime.Format(env.CONTAINER_TIME_FORMAT)},
 	})
 	return resp
 }

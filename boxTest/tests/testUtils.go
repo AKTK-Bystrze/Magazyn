@@ -3,8 +3,8 @@ package tests
 import (
 	"boxTest/handlers/app"
 	"log"
-	"math"
 	"math/rand"
+	"slices"
 	"time"
 )
 
@@ -18,52 +18,34 @@ func PickRandomItem(items []app.Item) app.Item {
 }
 
 func IsItemAvailable(searchedItem app.Item, items []app.Item) bool {
-	for _, item := range items {
-		if item.ID == searchedItem.ID {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(items, func(item app.Item) bool {
+		return item.ID == searchedItem.ID
+	})
 }
 
-func CreateNextDayAt(now time.Time, hour int) time.Time {
-	now = now.Add(24 * time.Hour)
-	year, month, day := now.Date()
-	location := now.Location()
+func CreateNextDayAt(now time.Time, hour time.Duration) time.Time {
+	return DateToFullDay(now.Add(24 * time.Hour)).Add(hour * time.Hour)
+}
 
-	return time.Date(year, month, day, hour, 0, 0, 0, location)
+func DateToFullDay(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 }
 
 func IsSameDay(date1, date2 time.Time) bool {
-	return date1.Year() == date2.Year() &&
-		date1.Month() == date2.Month() &&
-		date1.Day() == date2.Day()
+	return DateToFullDay(date1).Equal(DateToFullDay(date2))
 }
 
 func CalculateCost(item string, start time.Time, end time.Time) int {
-	startDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	endDate := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
+	start = DateToFullDay(start)
+	end = DateToFullDay(end)
 
-	duration := endDate.Sub(startDate)
-	days := int(math.Abs(duration.Hours()/24) + 1)
-	switch item {
-	case app.KAYAK:
-		return int(days) * app.COST_KAYAK
-	case app.PADDLE:
-		return int(days) * app.COST_PADDLE
-	case app.LIFE_JACKET:
-		return int(days) * app.COST_LIFE_JACKET
-	case app.HELMET:
-		return int(days) * app.COST_HELMET
-	case app.JACKET:
-		return int(days) * app.COST_JACKET
-	case app.SPRAY_SKIRT:
-		return int(days) * app.COST_SPRAY_SKIRT
-	case app.ROPE:
-		return int(days) * app.COST_ROPE
-	case app.WETSUIT:
-		return int(days) * app.COST_WETSUIT
-	default:
+	duration := end.Sub(start)
+	days := int(duration.Hours()/24 + 1)
+	itemCost, ok := app.ItemCostMap[item]
+
+	if ok {
+		return itemCost * days
+	} else {
 		log.Fatalf("unknown item type %v", item)
 		return 0
 	}

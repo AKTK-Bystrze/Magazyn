@@ -17,23 +17,15 @@ var (
 )
 
 func getLoginLinkFromLogs(since time.Time, uid int64) string {
-	logs := env.GetContainerLogs(env.TEST_APP_NAME, since.Add(-1*time.Second))
+	logs := env.GetContainerLogs(env.TEST_APP_NAME)
 
 	loginLink := searchLoginLinkInLogs(logs, uid)
 	if loginLink != "" {
 		return loginLink
+	} else {
+		log.Fatalf("Failed to extract login link for UID %d from logs", uid)
+		return ""
 	}
-
-	for i := 1; i <= 3; i++ {
-		logs = env.GetContainerLogs(env.TEST_APP_NAME, since.Add(-1*time.Duration(i)*time.Minute))
-		loginLink = searchLoginLinkInLogs(logs, uid)
-		if loginLink != "" {
-			return loginLink
-		}
-	}
-
-	log.Fatalf("Failed to extract login link for UID %d from logs", uid)
-	return ""
 }
 
 func searchLoginLinkInLogs(logs string, uid int64) string {
