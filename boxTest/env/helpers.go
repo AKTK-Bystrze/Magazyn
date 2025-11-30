@@ -12,14 +12,12 @@ import (
 	"time"
 )
 
-func GetContainerLogs(containerName string, since time.Time) string {
-	// TODO: fix it. It always takes all logs
+func GetContainerLogs(containerName string) string {
 	if containerName == "" {
 		log.Print("containerName is empty")
 		return ""
 	}
-	sinceStr := since.Format(time.RFC3339)
-	logs, err := RunCommandError(false, "docker", "logs", "--since", sinceStr, containerName)
+	logs, err := RunCommandError(false, "docker", "logs", containerName)
 	if err != nil {
 		log.Printf("failed to get logs for container %s: %v", containerName, err)
 		return ""
@@ -28,7 +26,7 @@ func GetContainerLogs(containerName string, since time.Time) string {
 }
 
 func GetContainerLogsAfterString(containerName string, stringMark string) string {
-	allLogs := GetContainerLogs(containerName, time.Now())
+	allLogs := GetContainerLogs(containerName)
 	logs := allLogs
 	if logs == "" {
 		log.Printf("Can't trim logs by mark. No logs for %v", containerName)
