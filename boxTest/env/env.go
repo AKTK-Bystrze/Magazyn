@@ -78,12 +78,10 @@ func ContainerExists(containerName string) bool {
 	return false
 }
 
-func EnviromentSetUP() {
-	cleanup()
-	composeContainers()
-}
-
 func RunTests() {
+	composeContainers()
+	defer cleanup()
+
 	WAREHOUSE := "boxTest/tests/warehouse"
 	USER_MANAGER := "boxTest/tests/userManager"
 	testsCMD := []struct {
