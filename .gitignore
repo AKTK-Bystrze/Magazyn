@@ -50,4 +50,4 @@ supabase/functions/**/.env
 /nginx
 __*
 /.ai
-/.husky
+frontend/.husky
