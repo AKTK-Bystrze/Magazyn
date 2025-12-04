@@ -49,5 +49,4 @@ supabase/functions/**/.env
 /prod
 /nginx
 __*
-/.ai
 frontend/.husky
