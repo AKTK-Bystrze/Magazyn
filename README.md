@@ -124,13 +124,15 @@ This project follows a **Hybrid "Light" Architecture**, maximizing performance b
    GMAIL_SMTP_PASSWORD=your_app_password
    ```
 
-4. **Set up Supabase**
-   - Create a new Supabase project
-   - Run database migrations from `supabase/migrations/`
-   - Configure RLS policies for PostgreSQL
-   - Set up Storage bucket named `rentals` with policies:
-     - Public read access
-     - Admin-only write access
+4. **Start local Supabase**
+
+   Start the local Supabase services (database, auth, storage) using Docker:
+
+   ```bash
+   npx supabase start
+   ```
+
+   Copy the API URL and Anon Key from the output to your `.env` file.
 
 5. **Start development server**
 
