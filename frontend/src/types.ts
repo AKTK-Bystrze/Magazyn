@@ -13,6 +13,16 @@ import type {
   Enums,
 } from "./db/database.types";
 
+export type EquipmentStatus = Enums<"equipment_status">;
+
+export interface EquipmentSearchParams {
+  q?: string;
+  type_id?: string;
+  status?: EquipmentStatus;
+  page: number;
+  limit: number;
+}
+
 // =============================================================================
 // AUTHENTICATION DTOs
 // =============================================================================

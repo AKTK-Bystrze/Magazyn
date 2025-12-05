@@ -33,6 +33,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		user, err := config.SupabaseClient.Auth.WithToken(token).GetUser()
 		if err != nil {
 			logger.Warnf(r.Context(), "Token verification failed: %v", err)
+			logger.Warnf(r.Context(), "Token received (len=%d): %s...", len(token), token[:10])
 			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}

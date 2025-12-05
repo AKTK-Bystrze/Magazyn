@@ -688,10 +688,15 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 		return nil
 	}
 
-	// Generate public URL from Supabase Storage
-	// Construct URL manually: baseURL/storage/v1/object/public/bucket/path
-	url := fmt.Sprintf("%s/storage/v1/object/public/equipment/%s",
-		strings.TrimSuffix(s.baseURL, "/rest/v1"),
-		*imagePath)
+	// Generate public URL
+	// We expect s.baseURL to be the project root URL. 
+	// If it contains /rest/v1 (PostgREST specific), we trim it to get the root.
+	projectURL := s.baseURL
+	if strings.HasSuffix(projectURL, "/rest/v1") {
+		projectURL = strings.TrimSuffix(projectURL, "/rest/v1")
+	}
+	projectURL = strings.TrimSuffix(projectURL, "/")
+
+	url := fmt.Sprintf("%s/storage/v1/object/public/equipment/%s", projectURL, *imagePath)
 	return &url
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/config"
 	"magazyn/backend/internal/handler"
 	"magazyn/backend/internal/logger"
@@ -42,13 +43,14 @@ func main() {
 	mux.Handle("GET /auth/session", middleware.AuthMiddleware(http.HandlerFunc(authHandler.HandleGetSession)))
 
 	// Protected Routes (Equipment)
-	// Note: Role checks (Authorization) should ideally be inside the handler or a separate middleware.
-	// For now, minimal RBAC inside Create/Update/Delete handlers or implied admin access checks in service will be used.
+	// Role checks for modification endpoints
 	mux.Handle("GET /equipment", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
-	mux.Handle("POST /equipment", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleCreate)))
+	
+	// Admin/SuperAdmin only routes
+	mux.Handle("POST /equipment", middleware.AuthMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
 	mux.Handle("GET /equipment/{id}", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleGetByID)))
-	mux.Handle("PATCH /equipment/{id}", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleUpdate)))
-	mux.Handle("DELETE /equipment/{id}", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleArchive)))
+	mux.Handle("PATCH /equipment/{id}", middleware.AuthMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
+	mux.Handle("DELETE /equipment/{id}", middleware.AuthMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
 	mux.Handle("GET /equipment/{id}/availability", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
 
 	// 5. Start Server

@@ -13,6 +13,6 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss(), tsconfigPaths()],
     envDir: '..',
-    envPrefix: ['VITE_', 'SUPABASE_'],
+    envPrefix: ['VITE_', 'SUPABASE_', 'PUBLIC_'],
   },
 });
