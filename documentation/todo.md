@@ -1,5 +1,20 @@
-next 11.20 [2x4] Projektowanie API z AI - wygenerowanie types.ts i types.go. ts udalo sie dla go trzeba sie polaczyc bezposrednio ale latwiej bedzie postawic baze lokalnie i z niej wygenreowac. Potem majac types mozna isc dalej tzn Prompt: "Generowanie typów DTO i Command Models" 2.
+sesja planistyczna UI
 
-Prompt: Plan implementacji endpointa REST API - ### 2.4 Equipment
+[2x5] Projektowanie UI z AI
+Krok 1: Wybór biblioteki komponentów
+
+plany frontendu auth
+implementacja frontendu auth
+testy auth
+implementacja backendu reszty
+stworzenie planow implementacji frontendu reszty
+implementacja frontendu reszty
+unit testy
+e2e testy
+implementacja pozostalych endpointow
+refactor
+testy
+dokumentacja
+deploy - konteneryzacja 
 
 
