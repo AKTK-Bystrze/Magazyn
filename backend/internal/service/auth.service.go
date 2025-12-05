@@ -21,9 +21,12 @@ func (s *AuthService) Login(email string) error {
 	logger.Info(nil, fmt.Sprintf("Login attempt for email: %s", email))
 	
 	// Send magic link via OTP
+	// CreateUser: true allows new users to be created via login page
+	// New users are created as disabled by default (see handle_new_user trigger)
+	// SuperAdmin must enable users before they can access the application
 	err := config.SupabaseClient.Auth.OTP(types.OTPRequest{
 		Email:      email,
-		CreateUser: false, // Don't auto-create users on login
+		CreateUser: true,
 	})
 	if err != nil {
 		logger.Error(nil, fmt.Sprintf("Failed to send magic link to %s: %v", email, err))
@@ -90,6 +93,7 @@ func (s *AuthService) GetSession(ctx context.Context, userId string) (*SessionRe
 		Username:      profile.Username,
 		Role:          profile.Role,
 		CreditBalance: profile.CreditBalance,
+		IsEnabled:     profile.IsEnabled,
 		// ExpiresAt: ... // We'd need the session object for this.
 	}
 

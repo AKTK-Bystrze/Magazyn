@@ -17,6 +17,7 @@ type SessionResponse struct {
 	Username      string `json:"username"`
 	Role          string `json:"role"`
 	CreditBalance int32  `json:"credit_balance"`
+	IsEnabled     bool   `json:"is_enabled"`
 	ExpiresAt     string `json:"expires_at"`
 }
 

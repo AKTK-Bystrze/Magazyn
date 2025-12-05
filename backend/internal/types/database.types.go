@@ -5,6 +5,7 @@ type PublicProfilesSelect struct {
 	CreditBalance int32   `json:"credit_balance"`
 	Email         string  `json:"email"`
 	Id            string  `json:"id"`
+	IsEnabled     bool    `json:"is_enabled"`
 	Role          string  `json:"role"`
 	UpdatedAt     *string `json:"updated_at"`
 	Username      string  `json:"username"`
@@ -15,6 +16,7 @@ type PublicProfilesInsert struct {
 	CreditBalance *int32  `json:"credit_balance"`
 	Email         string  `json:"email"`
 	Id            string  `json:"id"`
+	IsEnabled     *bool   `json:"is_enabled"`
 	Role          *string `json:"role"`
 	UpdatedAt     *string `json:"updated_at"`
 	Username      string  `json:"username"`
@@ -25,6 +27,7 @@ type PublicProfilesUpdate struct {
 	CreditBalance *int32  `json:"credit_balance"`
 	Email         *string `json:"email"`
 	Id            *string `json:"id"`
+	IsEnabled     *bool   `json:"is_enabled"`
 	Role          *string `json:"role"`
 	UpdatedAt     *string `json:"updated_at"`
 	Username      *string `json:"username"`

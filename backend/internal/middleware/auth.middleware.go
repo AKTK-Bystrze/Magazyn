@@ -38,7 +38,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Fetch user profile from database to get username
+		// Fetch user profile from database to get username and check if enabled
 		var profiles []model.PublicProfilesSelect
 		_, err = config.SupabaseClient.From("profiles").Select("*", "exact", false).Eq("id", user.ID.String()).ExecuteTo(&profiles)
 		
@@ -46,7 +46,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		
 		// Add profile to context if found (for logger to access username)
 		if err == nil && len(profiles) > 0 {
-			ctx = context.WithValue(ctx, appcontext.UserProfileContextKey, &profiles[0])
+			profile := &profiles[0]
+			
+			// Check if user is enabled
+			if !profile.IsEnabled {
+				logger.Warnf(r.Context(), "Access denied for disabled user: %s (%s)", profile.Username, profile.Email)
+				http.Error(w, "Account is disabled. Please contact an administrator.", http.StatusForbidden)
+				return
+			}
+			
+			ctx = context.WithValue(ctx, appcontext.UserProfileContextKey, profile)
 		}
 		
 		next.ServeHTTP(w, r.WithContext(ctx))

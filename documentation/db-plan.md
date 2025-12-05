@@ -43,6 +43,7 @@ _Note: Referred to as "users" in requirements, but named `profiles` to avoid col
 | `username`       | `text`        | `UNIQUE`, `NOT NULL`         | Display name                         |
 | `role`           | `user_role`   | `NOT NULL`, `DEFAULT 'user'` | Authorization level                  |
 | `credit_balance` | `integer`     | `NOT NULL`, `DEFAULT 0`      | Current credits                      |
+| `is_enabled`     | `boolean`     | `NOT NULL`, `DEFAULT false`  | Controls user access to application  |
 | `created_at`     | `timestamptz` | `NOT NULL`, `DEFAULT now()`  |                                      |
 | `updated_at`     | `timestamptz` |                              |                                      |
 
