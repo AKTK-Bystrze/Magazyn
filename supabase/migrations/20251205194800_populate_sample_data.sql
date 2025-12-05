@@ -1,8 +1,7 @@
 -- Migration: Populate Sample Data
--- Description: Populates the database with sample equipment and creates super admin user
+-- Description: Populates the database with sample equipment
 -- Created: 2025-12-05
-
--- Note: This migration assumes the user role migration has been applied
+-- Note: Super admin user must be created via magic link authentication
 
 -- 1. Insert Equipment Types
 -- Map old types to new equipment_types table
@@ -40,69 +39,23 @@ INSERT INTO equipment (internal_id, type_id, name, description, status) VALUES
   ('NW119', (SELECT id FROM paddle_type), 'Rapa nizinna', 'zielona', 'ok')
 ON CONFLICT (type_id, internal_id) DO NOTHING;
 
--- 3. Create Super Admin User in auth.users
--- Note: This creates a user entry that can be used with magic link authentication
--- The user will need to request a magic link to set up their session
+-- 3. Update Super Admin User (if exists)
+-- Note: User must first sign up via magic link at the login page
+-- After signing up, run this to upgrade them to super_admin:
 
 DO $$
 DECLARE
   super_admin_id uuid;
 BEGIN
-  -- Check if user already exists
+  -- Check if user exists
   SELECT id INTO super_admin_id
   FROM auth.users
   WHERE email = 'appbystrze@gmail.com';
 
-  -- If user doesn't exist, create them
-  IF super_admin_id IS NULL THEN
-    -- Insert into auth.users
-    INSERT INTO auth.users (
-      instance_id,
-      id,
-      aud,
-      role,
-      email,
-      encrypted_password,
-      email_confirmed_at,
-      raw_app_meta_data,
-      raw_user_meta_data,
-      created_at,
-      updated_at,
-      confirmation_token,
-      email_change,
-      email_change_token_new,
-      recovery_token
-    ) VALUES (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(),
-      'authenticated',
-      'authenticated',
-      'appbystrze@gmail.com',
-      crypt('', gen_salt('bf')), -- No password, will use magic link
-      now(),
-      '{"provider": "email", "providers": ["email"]}'::jsonb,
-      '{"role": "super_admin"}'::jsonb,
-      now(),
-      now(),
-      '',
-      '',
-      '',
-      ''
-    )
-    RETURNING id INTO super_admin_id;
-
-    -- The profile will be created automatically by the handle_new_user trigger
-    -- But we need to update the role to super_admin
-    UPDATE profiles
-    SET role = 'super_admin',
-        credit_balance = 1000
-    WHERE id = super_admin_id;
-
-    RAISE NOTICE 'Super admin user created: appbystrze@gmail.com';
-  ELSE
-    -- User exists, just update their role and metadata
+  IF super_admin_id IS NOT NULL THEN
+    -- User exists, update their role and metadata
     UPDATE auth.users
-    SET raw_user_meta_data = raw_user_meta_data || '{"role": "super_admin"}'::jsonb
+    SET raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb) || '{"role": "super_admin"}'::jsonb
     WHERE id = super_admin_id;
 
     UPDATE profiles
@@ -110,10 +63,22 @@ BEGIN
         credit_balance = 1000
     WHERE id = super_admin_id;
 
-    RAISE NOTICE 'Super admin user already exists, updated role: appbystrze@gmail.com';
+    RAISE NOTICE 'Super admin role assigned to: appbystrze@gmail.com';
+  ELSE
+    RAISE NOTICE 'User appbystrze@gmail.com not found. Please sign up via magic link first, then re-run this migration.';
   END IF;
 END $$;
 
 -- 4. Add some comments for documentation
 COMMENT ON TABLE equipment_types IS 'Equipment categories with standardized daily rental costs in credits';
 COMMENT ON TABLE equipment IS 'Individual physical items available for rent, identified by internal_id';
+
+-- 5. Instructions for creating super admin
+-- To create the super admin user:
+-- 1. Go to your login page: http://localhost:4321/login
+-- 2. Enter email: appbystrze@gmail.com
+-- 3. Click the magic link in your email
+-- 4. Re-run this migration to assign super_admin role
+-- OR manually run:
+--   UPDATE auth.users SET raw_user_meta_data = raw_user_meta_data || '{"role": "super_admin"}'::jsonb WHERE email = 'appbystrze@gmail.com';
+--   UPDATE profiles SET role = 'super_admin', credit_balance = 1000 WHERE email = 'appbystrze@gmail.com';
