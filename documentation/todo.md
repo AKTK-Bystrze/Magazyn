@@ -1,6 +1,4 @@
 
-
-plany frontendu auth
 implementacja frontendu auth
 testy auth
 implementacja backendu reszty
@@ -13,5 +11,3 @@ refactor
 testy
 dokumentacja
 deploy - konteneryzacja 
-
-
