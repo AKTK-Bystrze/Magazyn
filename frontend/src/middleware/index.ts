@@ -1,6 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import { supabaseClient } from "../db/supabase.client";
 import { ApiErrors, handleApiError } from "../lib/errors/api-error";
+import { getDefaultRouteForUser } from "../lib/auth/role-utils";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.supabase = supabaseClient;
@@ -44,12 +45,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
 
-    // 4. Redirect authenticated users away from login page
+    // 4. Role-based redirect for root path
+    // Redirect authenticated users from root to their role-appropriate landing page
+    if (url.pathname === "/" && context.locals.user) {
+      const defaultRoute = getDefaultRouteForUser(context.locals.user);
+      return Response.redirect(new URL(defaultRoute, url.origin).toString(), 302);
+    }
+
+    // 5. Redirect authenticated users away from login page
     if (url.pathname === "/login" && context.locals.user) {
       // Check if there's a redirect parameter
       const redirect = url.searchParams.get("redirect");
-      const redirectTo = redirect && redirect !== "/login" ? redirect : "/";
-      return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
+
+      if (redirect && redirect !== "/login" && redirect !== "/") {
+        // If there's a specific redirect, use it
+        return Response.redirect(new URL(redirect, url.origin).toString(), 302);
+      } else {
+        // Otherwise, redirect to role-based default page
+        const defaultRoute = getDefaultRouteForUser(context.locals.user);
+        return Response.redirect(new URL(defaultRoute, url.origin).toString(), 302);
+      }
     }
 
     return next();

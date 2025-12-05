@@ -1,0 +1,33 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Check if user is authenticated - middleware handles this
+const user = Astro.locals.user;
+
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+// Only regular users should access dashboard
+// Admins should be redirected to /admin
+if (user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'super_admin') {
+  return Astro.redirect('/admin');
+}
+---
+
+<Layout title="Dashboard | Equipment Rental">
+  <main class="flex min-h-screen flex-col items-center justify-center p-24">
+    <h1 class="text-4xl font-bold">User Dashboard</h1>
+    <p class="mt-4 text-xl">Welcome, {user.email}!</p>
+    <p class="mt-2 text-muted-foreground">This is your personal dashboard.</p>
+    
+    <div class="mt-8 flex gap-4">
+      <a href="/equipment" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+        Browse Equipment
+      </a>
+      <a href="/reservations" class="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
+        My Reservations
+      </a>
+    </div>
+  </main>
+</Layout>
