@@ -130,8 +130,9 @@ This project follows a **Hybrid "Light" Architecture**, maximizing performance b
 
    ```bash
    npx supabase start
-   ```
 
+   npx supabase status -o env
+```
    Copy the API URL and Anon Key from the output to your `.env` file.
 
 5. **Start development server**
