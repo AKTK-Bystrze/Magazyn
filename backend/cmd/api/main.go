@@ -38,7 +38,11 @@ func main() {
 	// 5. Start Server
 	port := ":8080"
 	logger.Infof(ctx, "Server listening on port %s", port)
-	if err := http.ListenAndServe(port, mux); err != nil {
+
+	// Wrap mux with CORS middleware
+	handler := middleware.CORSMiddleware(mux)
+
+	if err := http.ListenAndServe(port, handler); err != nil {
 		logger.Errorf(ctx, "Server failed to start: %v", err)
 		os.Exit(1)
 	}
