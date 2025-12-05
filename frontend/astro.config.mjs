@@ -11,5 +11,7 @@ export default defineConfig({
   }),
   vite: {
     plugins: [tailwindcss()],
+    envDir: '..',
+    envPrefix: ['VITE_', 'SUPABASE_'],
   },
 });

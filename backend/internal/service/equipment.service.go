@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
 	"math"
 	"strings"
@@ -80,6 +81,7 @@ type equipmentWithType struct {
 
 // List retrieves equipment list with favorites
 func (s *equipmentService) List(ctx context.Context, userID string, query types.EquipmentListQuery) (*types.EquipmentListResponse, error) {
+	logger.Infof(ctx, "Listing equipment - Page: %d, PerPage: %d, TypeID: %v, Status: %v", query.Page, query.PerPage, query.TypeID, query.Status)
 	// Build base query with joins and filters
 	qb := s.client.From("equipment").
 		Select("*, equipment_types!inner(name, credit_cost_per_day)", "exact", false)
@@ -106,6 +108,7 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 	// Get total count for pagination (execute query without pagination first)
 	countData, _, countErr := qb.Execute()
 	if countErr != nil {
+		logger.Errorf(ctx, "Failed to count equipment: %v", countErr)
 		return nil, types.NewInternalError("Failed to count equipment", countErr)
 	}
 
@@ -161,6 +164,8 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 
 	// Calculate pagination
 	totalPages := int(math.Ceil(float64(totalItems) / float64(query.PerPage)))
+
+	logger.Infof(ctx, "Equipment list retrieved successfully - Total: %d, Page: %d/%d", totalItems, query.Page, totalPages)
 
 	return &types.EquipmentListResponse{
 		Equipment: equipment,
@@ -227,6 +232,7 @@ func (s *equipmentService) getUserFavorites(ctx context.Context, userID string) 
 
 // GetByID retrieves equipment details with maintenance logs
 func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error) {
+	logger.Infof(ctx, "Fetching equipment details for ID: %s", id)
 	// Query equipment with type join
 	data, _, err := s.client.From("equipment").
 		Select("*, equipment_types!inner(name, credit_cost_per_day)", "exact", false).
@@ -236,8 +242,10 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 
 	if err != nil {
 		if strings.Contains(err.Error(), "PGRST116") {
+			logger.Warnf(ctx, "Equipment not found: %s", id)
 			return nil, types.NewNotFoundError("Equipment", id)
 		}
+		logger.Errorf(ctx, "Failed to fetch equipment %s: %v", id, err)
 		return nil, types.NewInternalError("Failed to fetch equipment", err)
 	}
 
@@ -281,6 +289,8 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 		logs = make([]types.MaintenanceLogDTO, 0)
 	}
 
+	logger.Debugf(ctx, "Equipment details retrieved: %s (Type: %s, Status: %s)", eq.InternalId, eq.TypeName, eq.Status)
+
 	return &types.EquipmentDetailDTO{
 		ID:               eq.Id,
 		InternalID:       eq.InternalId,
@@ -304,6 +314,7 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 
 // Create creates new equipment
 func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
+	logger.Infof(ctx, "Creating new equipment - InternalID: %s, TypeID: %s", cmd.InternalID, cmd.TypeID)
 	// Validate type_id exists
 	typeData, _, err := s.client.From("equipment_types").
 		Select("id, name, credit_cost_per_day", "exact", false).
@@ -313,8 +324,10 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 
 	if err != nil {
 		if strings.Contains(err.Error(), "PGRST116") {
+			logger.Warnf(ctx, "Equipment type not found: %s", cmd.TypeID)
 			return nil, types.NewNotFoundError("Equipment type", cmd.TypeID)
 		}
+		logger.Errorf(ctx, "Failed to validate equipment type %s: %v", cmd.TypeID, err)
 		return nil, types.NewInternalError("Failed to validate equipment type", err)
 	}
 
@@ -333,6 +346,7 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 
 	var existing struct{ ID string }
 	if existingData != nil && json.Unmarshal(existingData, &existing) == nil {
+		logger.Warnf(ctx, "Duplicate internal ID: %s for type %s", cmd.InternalID, cmd.TypeID)
 		return nil, types.NewConflictError(
 			"Internal ID already exists for this equipment type",
 			map[string]string{
@@ -364,6 +378,7 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 		Execute()
 
 	if err != nil {
+		logger.Errorf(ctx, "Failed to create equipment: %v", err)
 		return nil, types.NewInternalError("Failed to create equipment", err)
 	}
 
@@ -373,6 +388,8 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 	}
 
 	// Return DTO with type information
+	logger.Infof(ctx, "Equipment created successfully - ID: %s, InternalID: %s", created.Id, created.InternalId)
+
 	return &types.EquipmentDTO{
 		ID:               created.Id,
 		InternalID:       created.InternalId,
@@ -395,6 +412,7 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 
 // Update updates equipment fields
 func (s *equipmentService) Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
+	logger.Infof(ctx, "Updating equipment: %s", id)
 	// Verify at least one field is provided
 	if cmd.Name == nil && cmd.Description == nil && cmd.Status == nil && cmd.ImagePath == nil {
 		return nil, types.NewValidationError(
@@ -412,8 +430,10 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 
 	if err != nil {
 		if strings.Contains(err.Error(), "PGRST116") {
+			logger.Warnf(ctx, "Equipment not found for update: %s", id)
 			return nil, types.NewNotFoundError("Equipment", id)
 		}
+		logger.Errorf(ctx, "Failed to fetch equipment %s for update: %v", id, err)
 		return nil, types.NewInternalError("Failed to fetch equipment", err)
 	}
 
@@ -450,6 +470,7 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 		Execute()
 
 	if err != nil {
+		logger.Errorf(ctx, "Failed to update equipment %s: %v", id, err)
 		return nil, types.NewInternalError("Failed to update equipment", err)
 	}
 
@@ -470,6 +491,8 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 	}
 
 	// Return DTO with type information
+	logger.Infof(ctx, "Equipment updated successfully: %s", id)
+
 	return &types.EquipmentDTO{
 		ID:               updated.Id,
 		InternalID:       updated.InternalId,
@@ -492,6 +515,7 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 
 // Archive soft-deletes equipment by setting is_archived = true
 func (s *equipmentService) Archive(ctx context.Context, id string) error {
+	logger.Infof(ctx, "Archiving equipment: %s", id)
 	// Verify equipment exists
 	existsData, _, err := s.client.From("equipment").
 		Select("id, is_archived", "exact", false).
@@ -501,8 +525,10 @@ func (s *equipmentService) Archive(ctx context.Context, id string) error {
 
 	if err != nil {
 		if strings.Contains(err.Error(), "PGRST116") {
+			logger.Warnf(ctx, "Equipment not found for archiving: %s", id)
 			return types.NewNotFoundError("Equipment", id)
 		}
+		logger.Errorf(ctx, "Failed to fetch equipment %s for archiving: %v", id, err)
 		return types.NewInternalError("Failed to fetch equipment", err)
 	}
 
@@ -516,6 +542,7 @@ func (s *equipmentService) Archive(ctx context.Context, id string) error {
 
 	// Check if already archived
 	if equipment.IsArchived {
+		logger.Warnf(ctx, "Equipment already archived: %s", id)
 		return types.NewValidationError("Equipment is already archived", map[string]string{"id": id})
 	}
 
@@ -541,6 +568,7 @@ func (s *equipmentService) Archive(ctx context.Context, id string) error {
 			reservationIDs[i] = r.ID
 		}
 
+		logger.Warnf(ctx, "Cannot archive equipment %s - has %d active reservations", id, len(activeReservations))
 		return types.NewConflictError(
 			"Cannot archive equipment with active reservations",
 			map[string]interface{}{
@@ -562,9 +590,11 @@ func (s *equipmentService) Archive(ctx context.Context, id string) error {
 		Execute()
 
 	if err != nil {
+		logger.Errorf(ctx, "Failed to archive equipment %s: %v", id, err)
 		return types.NewInternalError("Failed to archive equipment", err)
 	}
 
+	logger.Infof(ctx, "Equipment archived successfully: %s", id)
 	return nil
 }
 
@@ -574,6 +604,7 @@ func (s *equipmentService) Archive(ctx context.Context, id string) error {
 
 // CheckAvailability checks equipment availability for date range
 func (s *equipmentService) CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error) {
+	logger.Infof(ctx, "Checking availability for equipment %s from %s to %s", id, query.StartDate, query.EndDate)
 	// Verify equipment exists
 	_, _, err := s.client.From("equipment").
 		Select("id", "exact", false).
@@ -583,8 +614,10 @@ func (s *equipmentService) CheckAvailability(ctx context.Context, id string, que
 
 	if err != nil {
 		if strings.Contains(err.Error(), "PGRST116") {
+			logger.Warnf(ctx, "Equipment not found for availability check: %s", id)
 			return nil, types.NewNotFoundError("Equipment", id)
 		}
+		logger.Errorf(ctx, "Failed to fetch equipment %s for availability check: %v", id, err)
 		return nil, types.NewInternalError("Failed to fetch equipment", err)
 	}
 
@@ -631,9 +664,16 @@ func (s *equipmentService) CheckAvailability(ctx context.Context, id string, que
 		}
 	}
 
+	isAvailable := len(conflicts) == 0
+	if isAvailable {
+		logger.Infof(ctx, "Equipment %s is available for requested period", id)
+	} else {
+		logger.Warnf(ctx, "Equipment %s has %d conflicting reservations", id, len(conflicts))
+	}
+
 	return &types.AvailabilityResponse{
 		EquipmentID:             id,
-		IsAvailable:             len(conflicts) == 0,
+		IsAvailable:             isAvailable,
 		ConflictingReservations: conflicts,
 	}, nil
 }
