@@ -1,0 +1,71 @@
+# UI Architecture & UX Guidelines
+
+Based on the Product Requirements and Planning sessions, this document outlines the architectural decisions for the frontend implementation.
+
+## 1. Core Layout & Navigation
+- **Navigation Style**: Top Navigation Bar (Responsive).
+  - *Desktop*: Full menu with "Dashboard", "My Reservations", "Equipment", etc.
+  - *Mobile*: Hamburger menu + Simplified Header.
+  - *Reasoning*: Better scaling for mobile users and maximizes horizontal space for data tables.
+- **Redirects**:
+  - `Root (/)` -> Redirects based on role:
+    - Guests -> `/login`
+    - Users -> `/my-reservations`
+    - Admins -> `/admin/dashboard`
+
+## 2. Global State & Data Fetching
+- **Server State**: `TanStack Query` (React Query)
+  - Used for all API data (Equipment, Reservations, Users).
+  - Caching strategies: `staleTime: 5 mins` for public equipment, `0` for user-specific reservations.
+- **Client State**: `Nano Stores` (or React Context)
+  - **User Profile & Credits**: Kept in a lightweight global store to update the Navbar "Credit Balance" instantly without prop drilling.
+  - **Reservation Cart**: Persisted in `sessionStorage` to survive refreshes.
+
+## 3. Localization & Terminology
+- **Locale**: Polish (`pl-PL`).
+- **Date Format**: `dd.MM.yyyy` (Display), `YYYY-MM-DD` (API).
+- **Currency**: "Godzinki" (Credits).
+- **Translations**: Hardcoded Polish for MVP (no i18n library yet), but isolated in component text.
+
+## 4. Component System & Theming
+- **Library**: `Shadcn/UI` + `Tailwind CSS`.
+- **Theme Support**: Dark/Light/System (User configurable).
+- **Feedback**:
+  - **Success/Error**: Toast notifications (`sonner`).
+  - **Loading**: Skeleton loaders (gray bars) mimicking content layout.
+- **Modals vs Pages**:
+  - **Modals**: For "Management" actions (Create User, Add Equipment, Edit Reservation).
+  - **Pages**: For "Exploration" views (Search Results, Reservation History, Dashboard).
+
+## 5. Mobile & Responsiveness
+- **Calendar**:
+  - *Desktop*: Full Month Grid.
+  - *Mobile*: Compact Month view with "Dot" indicators + List of selected day's events below.
+- **Tables**:
+  - *Desktop*: Full columns.
+  - *Mobile*: Card view or horizontally scrollable specific columns.
+
+## 6. Security & Auth Integration
+- **Auth Flow**: Supabase Magic Links.
+- **Session**: Handled by `@supabase/supabase-js` (Auto-refresh).
+- **Route Protection**:
+  - `ProtectedRoute`: Wraps pages requiring login.
+  - `RoleGuard`: Wraps UI elements (e.g., "Edit" buttons) visible only to Admins.
+  - **Error Boundaries**: Component-level crash protection (e.g., if Calendar widget crashes, the Page remains usable).
+
+## 7. Image Handling
+- **Upload**: Direct-to-Supabase Storage.
+  1. Frontend selects file -> Uploads to `rentals` bucket.
+  2. Receives public URL/Path.
+  3. Submits Path to Go Backend in `POST /equipment` body.
+
+## 8. Technical Implementation Strategy
+- **Directory Structure**: Feature-based (`src/features/{featureName}/...`). Shared components in `src/components`.
+- **Form Management**: `React Hook Form` + `Zod` validation.
+- **Date Library**: `date-fns` for all date manipulation.
+- **Icons**: `Lucide React` (standard for Shadcn).
+- **Routing**: Astro Pages for main routes. Complex flows (Wizard) handled via client-side state in single page.
+- **API Client**: Strongly-typed `ky` or `fetch` wrapper mapping to shared TypeScript interfaces.
+- **Styling**: Tailwind CSS utility classes + `class-variance-authority (cva)`.
+- **Testing**: `Vitest` + `React Testing Library`.
+- **Quality Control**: `Husky` + `lint-staged`.

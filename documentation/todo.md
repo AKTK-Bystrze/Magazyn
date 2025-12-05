@@ -1,7 +1,4 @@
-sesja planistyczna UI
 
-[2x5] Projektowanie UI z AI
-Krok 1: Wybór biblioteki komponentów
 
 plany frontendu auth
 implementacja frontendu auth
