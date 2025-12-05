@@ -20,12 +20,36 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     const url = new URL(context.request.url);
 
+    // Define public routes that don't require authentication
+    const publicRoutes = ["/login"];
+    const isPublicRoute = publicRoutes.some((route) => url.pathname === route);
+    const isAuthApiRoute = url.pathname.startsWith("/api/auth");
+
     // 2. Protect API Routes
     // Require authentication for all /api endpoints except auth initialization
-    if (url.pathname.startsWith("/api/") && !url.pathname.startsWith("/api/auth")) {
+    if (url.pathname.startsWith("/api/") && !isAuthApiRoute) {
       if (!context.locals.user) {
         throw ApiErrors.unauthorized("Authentication required");
       }
+    }
+
+    // 3. Protect Page Routes
+    // Redirect unauthenticated users to login page for all protected routes
+    if (!isPublicRoute && !url.pathname.startsWith("/api/")) {
+      if (!context.locals.user) {
+        // Redirect to login page, preserving the original URL as a redirect parameter
+        const redirectUrl = new URL("/login", url.origin);
+        redirectUrl.searchParams.set("redirect", url.pathname);
+        return Response.redirect(redirectUrl.toString(), 302);
+      }
+    }
+
+    // 4. Redirect authenticated users away from login page
+    if (url.pathname === "/login" && context.locals.user) {
+      // Check if there's a redirect parameter
+      const redirect = url.searchParams.get("redirect");
+      const redirectTo = redirect && redirect !== "/login" ? redirect : "/";
+      return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
     }
 
     return next();
