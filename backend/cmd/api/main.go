@@ -1,17 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"magazyn/backend/internal/config"
 	"magazyn/backend/internal/handler"
+	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/middleware"
 	"magazyn/backend/internal/service"
 	"net/http"
+	"os"
 )
 
 func main() {
-	fmt.Println("Starting Magazyn Backend API...")
+	ctx := context.Background()
+	logger.Info(ctx, "Starting Magazyn Backend API...")
 
 	// 1. Load Configuration
 	config.LoadConfig()
@@ -35,8 +37,9 @@ func main() {
 
 	// 5. Start Server
 	port := ":8080"
-	fmt.Printf("Server listening on port %s\n", port)
+	logger.Infof(ctx, "Server listening on port %s", port)
 	if err := http.ListenAndServe(port, mux); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
+		logger.Errorf(ctx, "Server failed to start: %v", err)
+		os.Exit(1)
 	}
 }

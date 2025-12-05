@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"magazyn/backend/internal/middleware"
+	"magazyn/backend/internal/appcontext"
 	model "magazyn/backend/internal/types"
 	"os"
 	"time"
@@ -45,7 +45,7 @@ func getUsernameFromContext(ctx context.Context) string {
 	}
 
 	// Try to get user profile from context (set by middleware)
-	profile := ctx.Value(middleware.UserProfileContextKey)
+	profile := ctx.Value(appcontext.UserProfileContextKey)
 	if profile != nil {
 		// Type assert to PublicProfilesSelect
 		userProfile, ok := profile.(*model.PublicProfilesSelect)
@@ -55,7 +55,7 @@ func getUsernameFromContext(ctx context.Context) string {
 	}
 
 	// Fallback: check if there's a user in context at all
-	user := ctx.Value(middleware.UserContextKey)
+	user := ctx.Value(appcontext.UserContextKey)
 	if user == nil {
 		return "[UNAUTHENTICATED]"
 	}
