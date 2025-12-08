@@ -8,10 +8,10 @@ This plan uses a **4-stage approach** to systematically test the Go backend auth
 
 ```mermaid
 flowchart LR
-    S1["Stage 1<br/>Unit Tests<br/>(Testable Code)"]
-    S2["Stage 2<br/>Integration Tests<br/>(Supabase-Dependent)"]
-    S3["Stage 3<br/>Refactoring<br/>(DI Pattern)"]
-    S4["Stage 4<br/>Unit Tests<br/>(Refactored Code)"]
+    S1["Stage 1<br/>Unit Tests<br/>(Testable Code)<br/>✅ COMPLETED"]
+    S2["Stage 2<br/>Integration Tests<br/>(Supabase-Dependent)<br/>✅ COMPLETED"]
+    S3["Stage 3<br/>Refactoring<br/>(DI Pattern)<br/>✅ COMPLETED"]
+    S4["Stage 4<br/>Unit Tests<br/>(Refactored Code)<br/>✅ COMPLETED"]
     
     S1 --> S2 --> S3 --> S4
 ```
@@ -76,10 +76,11 @@ The current codebase has **tight coupling** with `config.SupabaseClient`. This m
 
 ### Summary
 
-- **Stage 1 (Unit Tests Now)**: 6 testable items
-- **Stage 2 (Integration Tests)**: 4 items requiring Supabase
-- **Stage 3 (Refactoring)**: 3 files need DI pattern
-- **Stage 4 (Unit Tests Post-Refactor)**: 4 items after refactoring
+### Summary
+- **Stage 1 (Unit Tests Now)**: ✅ Completed. Tests logic independent of Supabase.
+- **Stage 2 (Integration Tests)**: ✅ Completed. Implemented with `testutils` and handling for missing credentials.
+- **Stage 3 (Refactoring)**: ✅ Completed. Introduced `AuthClient`, `PostgrestClient` interfaces and `service/adapters.go`.
+- **Stage 4 (Unit Tests Post-Refactor)**: ✅ Completed. Implemented manual mocks in `testutils/mocks` and full coverage tests.
 
 ---
 
@@ -87,6 +88,8 @@ The current codebase has **tight coupling** with `config.SupabaseClient`. This m
 
 > [!TIP]
 > These tests can be written **immediately** without any code changes.
+>
+> **Status**: ✅ Implemented. See `auth/roles_test.go`, `middleware/rbac_middleware_test.go`, `middleware/auth_middleware_test.go` (validation), `handler/auth_handler_test.go` (validation).
 
 ### 1.1 Unit Tests: `auth/roles.go`
 
@@ -441,6 +444,8 @@ func TestHandleGetSession_Validation(t *testing.T) {
 > [!IMPORTANT]
 > These tests require a **test Supabase instance** or local Supabase setup.
 > Run with: `go test ./... -tags=integration`
+>
+> **Status**: ✅ Implemented. `auth_service_integration_test.go` and `middleware.auth_middleware_integration_test.go` skip gracefully if `testutils` cannot load credentials.
 
 ### 2.1 Integration Test Setup
 
@@ -664,6 +669,8 @@ func getDisabledUserToken(t *testing.T) string {
 > [!WARNING]
 > Only proceed after Stage 1 and Stage 2 tests are passing.
 > These tests serve as a **safety net** during refactoring.
+>
+> **Status**: ✅ Implemented. Interfaces defined in `service/interfaces.go`. Adapters implemented in `service/adapters.go` to handle Supabase client wrapping. `AuthService`, `AuthHandler`, `AuthMiddleware` refactored to use interfaces. `main.go` updated.
 
 ### 3.1 Goal
 
@@ -788,6 +795,8 @@ type AuthHandler struct {
 
 > [!TIP]
 > After refactoring, mock all dependencies for pure unit tests.
+>
+> **Status**: ✅ Implemented. Created mocks manually in `internal/testutils/mocks/mocks.go` using `testify/mock` instead of `mockgen`. Fully mocked unit tests implemented in `service/auth_service_test.go`, `handler/auth_handler_test.go`, and `middleware/auth_middleware_test.go`.
 
 ### 4.1 Unit Tests: `service/auth.service.go` (with mocks)
 

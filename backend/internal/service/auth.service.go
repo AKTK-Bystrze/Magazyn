@@ -4,17 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"magazyn/backend/internal/config"
 	"magazyn/backend/internal/logger"
 	model "magazyn/backend/internal/types"
 
 	"github.com/supabase-community/gotrue-go/types"
 )
 
-type AuthService struct{}
+type AuthService struct {
+	auth AuthClient
+	db   PostgrestClient
+}
 
-func NewAuthService() *AuthService {
-	return &AuthService{}
+func NewAuthService(auth AuthClient, db PostgrestClient) *AuthService {
+	return &AuthService{
+		auth: auth,
+		db:   db,
+	}
 }
 
 func (s *AuthService) Login(email string) error {
@@ -24,7 +29,7 @@ func (s *AuthService) Login(email string) error {
 	// CreateUser: true allows new users to be created via login page
 	// New users are created as disabled by default (see handle_new_user trigger)
 	// SuperAdmin must enable users before they can access the application
-	err := config.SupabaseClient.Auth.OTP(types.OTPRequest{
+	err := s.auth.OTP(types.OTPRequest{
 		Email:      email,
 		CreateUser: true,
 	})
@@ -41,7 +46,7 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 	logger.Info(ctx, "Logout request received")
 	
 	// Invalidate session - need to set the token on the client first
-	err := config.SupabaseClient.Auth.WithToken(token).Logout()
+	err := s.auth.WithToken(token).Logout()
 	if err != nil {
 		logger.Error(ctx, fmt.Sprintf("Logout failed: %v", err))
 		return fmt.Errorf("failed to logout: %w", err)
@@ -54,16 +59,10 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 func (s *AuthService) GetSession(ctx context.Context, userId string) (*SessionResponse, error) {
 	logger.Info(ctx, "Fetching session information")
 	
-	// 1. Fetch user metadata from Supabase Auth (optional, if we need email/metadata not in profile)
-	// For now, we rely on the profile in our database which should be synced.
-	// However, the plan says "Fetches basic user info from Supabase".
-	// Let's get the user from Supabase to get the email if it's not in the profile or to be sure.
-	// Actually, the middleware already fetched the user. We could pass it down, but the ID is enough to query the profile.
-
 	// 2. Query profiles table
 	// We use Postgrest to get the profile
 	var profiles []model.PublicProfilesSelect
-	_, err := config.SupabaseClient.From("profiles").Select("*", "exact", false).Eq("id", userId).ExecuteTo(&profiles)
+	_, err := s.db.From("profiles").Select("*", "exact", false).Eq("id", userId).ExecuteTo(&profiles)
 
 	if err != nil {
 		logger.Error(ctx, fmt.Sprintf("Failed to fetch profile for user %s: %v", userId, err))
@@ -79,14 +78,6 @@ func (s *AuthService) GetSession(ctx context.Context, userId string) (*SessionRe
 	logger.Debug(ctx, fmt.Sprintf("Session fetched for user: %s", profile.Username))
 
 	// 3. Construct response
-	// Note: ExpiresAt is usually part of the session/token, not the user profile.
-	// Since we are just returning profile data here, we might leave ExpiresAt empty or get it from the token claims if passed.
-	// The plan says: "ExpiresAt: string".
-	// The middleware validates the token. If we want to return when it expires, we need the token claims.
-	// For now, let's leave it empty or set it if we have access to the session.
-	// The current Supabase Go client might not easily expose the session expiry from the user object directly without the session object.
-	// Let's focus on the profile data.
-
 	response := &SessionResponse{
 		UserId:        profile.Id,
 		Email:         profile.Email,
@@ -94,7 +85,6 @@ func (s *AuthService) GetSession(ctx context.Context, userId string) (*SessionRe
 		Role:          profile.Role,
 		CreditBalance: profile.CreditBalance,
 		IsEnabled:     profile.IsEnabled,
-		// ExpiresAt: ... // We'd need the session object for this.
 	}
 
 	return response, nil

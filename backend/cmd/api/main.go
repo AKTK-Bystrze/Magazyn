@@ -20,7 +20,10 @@ func main() {
 	config.LoadConfig()
 
 	// 2. Initialize Services
-	authService := service.NewAuthService()
+	// AuthService now requires Supabase Auth Client and DB Client (Postgrest) wrapped in adapters
+	authAdapter := service.NewSupabaseAuthAdapter(config.SupabaseClient)
+	dbAdapter := service.NewSupabaseDBAdapter(config.SupabaseClient)
+	authService := service.NewAuthService(authAdapter, dbAdapter)
 	equipmentService, err := service.NewEquipmentService(config.AppConfig.SupabaseURL, config.AppConfig.SupabaseKey)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to initialize equipment service: %v", err)
@@ -31,6 +34,9 @@ func main() {
 	authHandler := handler.NewAuthHandler(authService)
 	equipmentHandler := handler.NewEquipmentHandler(equipmentService)
 
+	// Initialize Middleware with dependencies
+	authMiddleware := middleware.NewAuthMiddleware(authAdapter, dbAdapter)
+
 	// 4. Register Routes
 	mux := http.NewServeMux()
 
@@ -39,19 +45,19 @@ func main() {
 
 	// Protected Routes (Authentication)
 	// We wrap the handler function with the middleware
-	mux.Handle("POST /auth/logout", middleware.AuthMiddleware(http.HandlerFunc(authHandler.HandleLogout)))
-	mux.Handle("GET /auth/session", middleware.AuthMiddleware(http.HandlerFunc(authHandler.HandleGetSession)))
+	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(authHandler.HandleLogout)))
+	mux.Handle("GET /auth/session", authMiddleware(http.HandlerFunc(authHandler.HandleGetSession)))
 
 	// Protected Routes (Equipment)
 	// Role checks for modification endpoints
-	mux.Handle("GET /equipment", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
+	mux.Handle("GET /equipment", authMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
 	
 	// Admin/SuperAdmin only routes
-	mux.Handle("POST /equipment", middleware.AuthMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
-	mux.Handle("GET /equipment/{id}", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleGetByID)))
-	mux.Handle("PATCH /equipment/{id}", middleware.AuthMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
-	mux.Handle("DELETE /equipment/{id}", middleware.AuthMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
-	mux.Handle("GET /equipment/{id}/availability", middleware.AuthMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
+	mux.Handle("POST /equipment", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
+	mux.Handle("GET /equipment/{id}", authMiddleware(http.HandlerFunc(equipmentHandler.HandleGetByID)))
+	mux.Handle("PATCH /equipment/{id}", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
+	mux.Handle("DELETE /equipment/{id}", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
+	mux.Handle("GET /equipment/{id}/availability", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
 
 	// 5. Start Server
 	port := ":8080"
