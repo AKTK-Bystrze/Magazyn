@@ -6,6 +6,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'server', // CRITICAL: Required for SSR middleware to run on page requests
   integrations: [react()],
   adapter: node({
     mode: 'standalone',
@@ -16,3 +17,4 @@ export default defineConfig({
     envPrefix: ['VITE_', 'SUPABASE_', 'PUBLIC_'],
   },
 });
+

@@ -1,16 +1,24 @@
 import type { User } from "@supabase/supabase-js";
+import type { SessionInfo } from "../../types";
 
 /**
- * Determines the default landing page for a user based on their role
+ * Determines the default landing page for a user based on their role and account status
  * @param user - Supabase user object
+ * @param sessionInfo - Optional session info with isEnabled status
  * @returns The path to redirect to
  */
-export function getDefaultRouteForUser(user: User | null): string {
+export function getDefaultRouteForUser(user: User | null, sessionInfo?: SessionInfo | null): string {
   if (!user) {
     return "/login";
   }
 
-  const role = user.user_metadata?.role;
+  // Check if user account is disabled
+  if (sessionInfo && !sessionInfo.isEnabled) {
+    return "/account-disabled";
+  }
+
+  // Use role from session info if available (authoritative), otherwise fallback to user metadata
+  const role = sessionInfo?.role || user.user_metadata?.role;
 
   switch (role) {
     case "super_admin":

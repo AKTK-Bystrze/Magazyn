@@ -68,29 +68,44 @@ func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
+	logger.Infof(r.Context(), "🎯 HandleGetSession called for %s %s", r.Method, r.URL.Path)
+	
 	if r.Method != http.MethodGet {
+		logger.Warnf(r.Context(), "❌ Method not allowed: %s", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	user, ok := r.Context().Value(appcontext.UserContextKey).(*types.User)
-	if !ok || user == nil {
+	logger.Info(r.Context(), "🔍 Retrieving user from context...")
+	val := r.Context().Value(appcontext.UserContextKey)
+	user, ok := val.(*types.User)
+	if !ok {
+		logger.Errorf(r.Context(), "❌ User context key type assertion failed. Actual type: %T, Value: %+v", val, val)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if user == nil {
+		logger.Error(r.Context(), "❌ User is nil in context")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	logger.Infof(r.Context(), "✅ User found in context - ID: %s, Email: %s", user.ID.String(), user.Email)
+	logger.Infof(r.Context(), "🔍 Fetching session from service for user %s", user.ID.String())
+
 	session, err := h.service.GetSession(r.Context(), user.ID.String())
 	if err != nil {
 		if err.Error() == "profile not found" {
-			logger.Warnf(r.Context(), "Profile not found for user %s", user.ID)
+			logger.Warnf(r.Context(), "⚠️  Profile not found for user %s", user.ID)
 			http.Error(w, "Profile not found", http.StatusNotFound)
 		} else {
-			logger.Errorf(r.Context(), "Failed to get session for user %s: %v", user.ID, err)
+			logger.Errorf(r.Context(), "❌ Failed to get session for user %s: %v", user.ID, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
 
+	logger.Infof(r.Context(), "✅ Session retrieved successfully for user %s", user.ID.String())
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(session)
 }

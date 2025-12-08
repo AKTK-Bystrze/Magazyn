@@ -37,6 +37,7 @@ export type SessionInfo = {
   username: string;
   role: Enums<"user_role">;
   creditBalance: number;
+  isEnabled: boolean;
   expiresAt: string; // ISO 8601
 };
 

@@ -12,13 +12,13 @@ type LoginResponse struct {
 
 // SessionResponse combines Auth user data with Profile data
 type SessionResponse struct {
-	UserId        string `json:"user_id"`
+	UserId        string `json:"userId"`
 	Email         string `json:"email"`
 	Username      string `json:"username"`
 	Role          string `json:"role"`
-	CreditBalance int32  `json:"credit_balance"`
-	IsEnabled     bool   `json:"is_enabled"`
-	ExpiresAt     string `json:"expires_at"`
+	CreditBalance int32  `json:"creditBalance"`
+	IsEnabled     bool   `json:"isEnabled"`
+	ExpiresAt     string `json:"expiresAt"`
 }
 
 // LogoutResponse represents the success message after logout

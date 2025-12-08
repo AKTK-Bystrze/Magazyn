@@ -1,0 +1,193 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabaseClient } from '../db/supabase.client';
+
+export const prerender = false;
+
+// Check if user is authenticated
+const user = Astro.locals.user;
+
+// If not authenticated, we rely on client-side redirect to prevent loops
+// if (!user) {
+//   return Astro.redirect('/login');
+// }
+
+// Get session to check if user is actually disabled
+// We must read from cookies because static supabaseClient doesn't have request context
+const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
+// user is already declared at line 8
+if (!user && !accessToken) {
+  // Double check if we should be here
+}
+---
+
+<Layout title="Account Disabled | Equipment Rental">
+  <main class="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+    <div class="max-w-md w-full space-y-8 text-center">
+      <!-- Icon -->
+      <div class="flex justify-center">
+        <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/20 p-6">
+          <svg 
+            class="w-16 h-16 text-yellow-600 dark:text-yellow-500" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="space-y-2">
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">
+          Account Pending Activation
+        </h1>
+        <p class="text-muted-foreground">
+          Your account has been created successfully
+        </p>
+      </div>
+
+      <!-- Message -->
+      <div class="bg-card border border-border rounded-lg p-6 space-y-4 text-left">
+        <div class="space-y-2">
+          <h2 class="font-semibold text-lg text-foreground">What's happening?</h2>
+          <p class="text-sm text-muted-foreground">
+            Your account is currently disabled and waiting for approval from a SuperAdmin. 
+            You won't be able to access the application until your account has been enabled.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="font-semibold text-lg text-foreground">What should you do?</h2>
+          <ul class="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Wait for a SuperAdmin to review and enable your account</li>
+            <li>Contact your administrator if you need immediate access</li>
+            <li>Check back later or click the refresh button below</li>
+          </ul>
+        </div>
+
+        <div class="pt-2 border-t border-border">
+            <strong>Account:</strong> {user?.email || 'Unknown'}
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col gap-3">
+        <button
+          id="refresh-status-btn"
+          class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+        >
+          Check Account Status
+        </button>
+
+        <button
+          id="logout-btn"
+          class="w-full px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors font-medium"
+        >
+          Logout
+        </button>
+      </div>
+
+      <!-- Status message -->
+      <div id="status-message" class="hidden">
+        <p class="text-sm text-muted-foreground"></p>
+      </div>
+    </div>
+  </main>
+
+  <script define:vars={{ accessToken, BACKEND_URL: import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:8080" }}>
+    // const BACKEND_URL = ... (passed via define:vars now)
+
+    // Refresh status button
+    document.getElementById('refresh-status-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('refresh-status-btn');
+      const statusMsg = document.getElementById('status-message');
+      
+      if (!btn || !statusMsg) return;
+
+      // Show loading state
+      btn.textContent = 'Checking...';
+      btn.setAttribute('disabled', 'true');
+      statusMsg.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/auth/session`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.isEnabled) {
+            // Account is now enabled! Redirect to appropriate page
+            statusMsg.querySelector('p').textContent = 'Account enabled! Redirecting...';
+            statusMsg.querySelector('p').className = 'text-sm text-green-600 dark:text-green-500';
+            statusMsg.classList.remove('hidden');
+            
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1500);
+          } else {
+            // Still disabled
+            statusMsg.querySelector('p').textContent = 'Account is still pending approval.';
+            statusMsg.querySelector('p').className = 'text-sm text-yellow-600 dark:text-yellow-500';
+            statusMsg.classList.remove('hidden');
+            
+            btn.textContent = 'Check Account Status';
+            btn.removeAttribute('disabled');
+          }
+        } else {
+          throw new Error('Failed to check status');
+        }
+      } catch (error) {
+        console.error('Error checking account status:', error);
+        statusMsg.querySelector('p').textContent = 'Failed to check status. Please try again.';
+        statusMsg.querySelector('p').className = 'text-sm text-red-600 dark:text-red-500';
+        statusMsg.classList.remove('hidden');
+        
+        btn.textContent = 'Check Account Status';
+        btn.removeAttribute('disabled');
+      }
+    });
+
+    // Logout button
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('logout-btn');
+      if (!btn) return;
+
+      btn.textContent = 'Logging out...';
+      btn.setAttribute('disabled', 'true');
+
+      try {
+        // Clear the auth cookie manually
+        document.cookie = 'magazyn-auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        
+        // Clear Supabase local storage (identified custom key from src/lib/supabase.ts)
+        localStorage.removeItem('magazyn-auth-token');
+        
+        // Fallback for default key
+        localStorage.removeItem('sb-gwamxxqarkcpvgzvpanc-auth-token');
+        
+        // Optional: Dispatch a storage event or similar if we need to notify other tabs/components immediately
+        // But the redirect to /login should handle it as AuthListener checks cookies/storage on mount
+        
+        window.location.href = '/login';
+      } catch (error) {
+        console.error('Error logging out:', error);
+        btn.textContent = 'Logout';
+        btn.removeAttribute('disabled');
+      }
+    });
+  </script>
+</Layout>

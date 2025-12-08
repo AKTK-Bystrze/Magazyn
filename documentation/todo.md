@@ -1,5 +1,6 @@
 
-
+fix login redirect issue
+cleanup
 
 testy auth
 implementacja backendu reszty
@@ -12,3 +13,8 @@ refactor
 testy
 dokumentacja
 deploy - konteneryzacja 
+
+
+refactor 
+1. nowy uzytkonwik nie moze sie tworzyc automatycznie. Wylaczycz tworzenie, tylko admin moze dodawac
+2. 

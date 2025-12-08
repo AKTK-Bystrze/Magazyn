@@ -3,14 +3,21 @@ import Layout from '../layouts/Layout.astro';
 
 // Check if user is authenticated - middleware handles this
 const user = Astro.locals.user;
+const sessionInfo = Astro.locals.sessionInfo;
+
+console.log(`[ADMIN_PAGE] Accessing page. User: ${user?.email}`);
 
 if (!user) {
+  console.log(`[ADMIN_PAGE] No user found. Redirecting to /login`);
   return Astro.redirect('/login');
 }
 
-// Only admins and super_admins should access this page
-const userRole = user.user_metadata?.role;
+// Get role from sessionInfo (authoritative) or fallback to user_metadata
+const userRole = sessionInfo?.role || user.user_metadata?.role;
+console.log(`[ADMIN_PAGE] User Role: ${userRole} (from sessionInfo: ${sessionInfo?.role}, from metadata: ${user.user_metadata?.role})`);
+
 if (userRole !== 'admin' && userRole !== 'super_admin') {
+  console.log(`[ADMIN_PAGE] Invalid role. Redirecting to /dashboard`);
   return Astro.redirect('/dashboard');
 }
 ---

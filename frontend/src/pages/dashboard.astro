@@ -4,13 +4,19 @@ import Layout from '../layouts/Layout.astro';
 // Check if user is authenticated - middleware handles this
 const user = Astro.locals.user;
 
+console.log(`[DASHBOARD_PAGE] Accessing page. User: ${user?.email}`);
+
 if (!user) {
+  console.log(`[DASHBOARD_PAGE] No user found. Redirecting to /login`);
   return Astro.redirect('/login');
 }
+
+console.log(`[DASHBOARD_PAGE] User Role from metadata: ${user.user_metadata?.role}`);
 
 // Only regular users should access dashboard
 // Admins should be redirected to /admin
 if (user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'super_admin') {
+  console.log(`[DASHBOARD_PAGE] User is admin. Redirecting to /admin`);
   return Astro.redirect('/admin');
 }
 ---
