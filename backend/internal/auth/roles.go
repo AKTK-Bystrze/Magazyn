@@ -18,13 +18,7 @@ func HasRole(profile *types.PublicProfilesSelect, allowedRoles ...string) bool {
 		return false
 	}
 	
-	// Assuming profile.Role is a string or compatible type.
-	// Based on database types, it's an enum, but mapped as string in JSON/Go usually.
-	// We need to ensure types match. 
-	// types.PublicProfilesSelect struct likely has Role field. 
-	// Let's verify types coverage. Assuming it's simple string comparison for now.
-	
-	currentRole := string(profile.Role) // Cast if it's a custom type alias
+	currentRole := string(profile.Role)
 	
 	for _, role := range allowedRoles {
 		if strings.EqualFold(currentRole, role) {

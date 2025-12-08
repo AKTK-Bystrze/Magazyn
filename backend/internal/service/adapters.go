@@ -21,7 +21,6 @@ func (a *SupabaseAuthAdapter) OTP(req types.OTPRequest) error {
 }
 
 func (a *SupabaseAuthAdapter) WithToken(token string) AuthClientWithToken {
-	// WithToken returns *gotrue.Client which we wrap
 	return &SupabaseAuthWithTokenAdapter{
 		client: a.client.Auth.WithToken(token),
 	}
@@ -79,10 +78,8 @@ func (f *SupabaseFilterBuilderAdapter) Eq(column string, value string) Postgrest
 }
 
 func (f *SupabaseFilterBuilderAdapter) ExecuteTo(dest interface{}) (string, error) {
-	_, err := f.builder.ExecuteTo(dest)
-	if err != nil {
+	if _, err := f.builder.ExecuteTo(dest); err != nil {
 		return "", err
 	}
-	// Return empty string if count not available/relevant
 	return "", nil
 }

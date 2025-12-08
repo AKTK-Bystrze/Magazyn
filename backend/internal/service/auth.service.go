@@ -23,12 +23,6 @@ func NewAuthService(auth AuthClient, db PostgrestClient) *AuthService {
 }
 
 func (s *AuthService) Login(email string) error {
-	logger.Info(nil, fmt.Sprintf("Login attempt for email: %s", email))
-	
-	// Send magic link via OTP
-	// CreateUser: true allows new users to be created via login page
-	// New users are created as disabled by default (see handle_new_user trigger)
-	// SuperAdmin must enable users before they can access the application
 	err := s.auth.OTP(types.OTPRequest{
 		Email:      email,
 		CreateUser: true,
@@ -38,29 +32,20 @@ func (s *AuthService) Login(email string) error {
 		return fmt.Errorf("failed to send magic link: %w", err)
 	}
 	
-	logger.Info(nil, fmt.Sprintf("Magic link sent successfully to: %s", email))
 	return nil
 }
 
 func (s *AuthService) Logout(ctx context.Context, token string) error {
-	logger.Info(ctx, "Logout request received")
-	
-	// Invalidate session - need to set the token on the client first
 	err := s.auth.WithToken(token).Logout()
 	if err != nil {
 		logger.Error(ctx, fmt.Sprintf("Logout failed: %v", err))
 		return fmt.Errorf("failed to logout: %w", err)
 	}
 	
-	logger.Info(ctx, "User logged out successfully")
 	return nil
 }
 
 func (s *AuthService) GetSession(ctx context.Context, userId string) (*SessionResponse, error) {
-	logger.Info(ctx, "Fetching session information")
-	
-	// 2. Query profiles table
-	// We use Postgrest to get the profile
 	var profiles []model.PublicProfilesSelect
 	_, err := s.db.From("profiles").Select("*", "exact", false).Eq("id", userId).ExecuteTo(&profiles)
 
@@ -75,9 +60,7 @@ func (s *AuthService) GetSession(ctx context.Context, userId string) (*SessionRe
 	}
 
 	profile := profiles[0]
-	logger.Debug(ctx, fmt.Sprintf("Session fetched for user: %s", profile.Username))
 
-	// 3. Construct response
 	response := &SessionResponse{
 		UserId:        profile.Id,
 		Email:         profile.Email,
