@@ -95,8 +95,8 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) Login(email string) error {
-	args := m.Called(email)
+func (m *MockAuthService) Login(ctx context.Context, email string) error {
+	args := m.Called(ctx, email)
 	return args.Error(0)
 }
 

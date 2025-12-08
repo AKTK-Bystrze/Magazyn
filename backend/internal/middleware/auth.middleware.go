@@ -8,8 +8,6 @@ import (
 	model "magazyn/backend/internal/types"
 	"net/http"
 	"strings"
-
-	"github.com/supabase-community/gotrue-go/types"
 )
 
 // AuthMiddlewareFactory creates the middleware with dependencies
@@ -47,16 +45,7 @@ func NewAuthMiddleware(auth service.AuthClient, db service.PostgrestClient) func
 				logger.Errorf(r.Context(), "Failed to fetch profile: %v", err)
 			}
 			
-			var userCtx *types.User
-			if u, ok := interface{}(user).(*types.User); ok {
-				userCtx = u
-			} else if resp, ok := interface{}(user).(*types.UserResponse); ok {
-				userCtx = &resp.User
-			} else {
-				logger.Errorf(r.Context(), "User type mismatch! Got: %T, Expected: *types.User or *types.UserResponse", user)
-			}
-
-			ctx := context.WithValue(r.Context(), appcontext.UserContextKey, userCtx)
+			ctx := context.WithValue(r.Context(), appcontext.UserContextKey, user)
 			
 			if err == nil && len(profiles) > 0 {
 				profile := &profiles[0]

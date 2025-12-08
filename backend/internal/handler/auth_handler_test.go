@@ -31,7 +31,7 @@ func TestHandleLogin_Success(t *testing.T) {
 	h, mockService := createTestHandler()
 	email := "test@example.com"
 	
-	mockService.On("Login", email).Return(nil)
+	mockService.On("Login", mock.Anything, email).Return(nil)
 	
 	req := httptest.NewRequest(http.MethodPost, "/auth/login",
 		bytes.NewBufferString(`{"email": "test@example.com"}`))
@@ -52,7 +52,7 @@ func TestHandleLogin_ServiceError(t *testing.T) {
 	h, mockService := createTestHandler()
 	email := "fail@example.com"
 	
-	mockService.On("Login", email).Return(errors.New("login failed"))
+	mockService.On("Login", mock.Anything, email).Return(errors.New("login failed"))
 	
 	req := httptest.NewRequest(http.MethodPost, "/auth/login",
 		bytes.NewBufferString(`{"email": "fail@example.com"}`))

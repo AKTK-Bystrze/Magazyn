@@ -28,7 +28,7 @@ func TestAuthService_Login(t *testing.T) {
 			CreateUser: true,
 		}).Return(nil)
 		
-		err := s.Login(email)
+		err := s.Login(context.Background(), email)
 		
 		assert.NoError(t, err)
 		mockAuth.AssertExpectations(t)
@@ -44,7 +44,7 @@ func TestAuthService_Login(t *testing.T) {
 		expectedErr := errors.New("otp failed")
 		mockAuth.On("OTP", mock.Anything).Return(expectedErr)
 		
-		err := s.Login(email)
+		err := s.Login(context.Background(), email)
 		
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to send magic link")
@@ -162,7 +162,7 @@ func TestAuthService_GetSession(t *testing.T) {
 		
 		assert.Error(t, err)
 		assert.Nil(t, session)
-		assert.Equal(t, "profile not found", err.Error())
+		assert.ErrorIs(t, err, types.ErrProfileNotFound)
 	})
 	
 	t.Run("database error", func(t *testing.T) {

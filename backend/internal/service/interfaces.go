@@ -36,7 +36,7 @@ type PostgrestFilterBuilder interface {
 
 // AuthServiceInterface defines the interface for the AuthService
 type AuthServiceInterface interface {
-	Login(email string) error
+	Login(ctx context.Context, email string) error
 	Logout(ctx context.Context, token string) error
 	GetSession(ctx context.Context, userId string) (*SessionResponse, error)
 }

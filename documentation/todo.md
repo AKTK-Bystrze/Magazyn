@@ -1,7 +1,5 @@
 cleanup auth (przygotowane plany w .ai/loop z -testing.md)
-    testy
-    cleanup
-    refactor 
+    refactor - review changes
     cleanup
 
 removae usage of the special key

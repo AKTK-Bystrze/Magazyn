@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // ============================================================================
 // Custom Error Types
@@ -100,3 +103,10 @@ func NewInternalError(message string, err error) *InternalError {
 		},
 	}
 }
+
+// ============================================================================
+// Sentinel Errors
+// ============================================================================
+
+// ErrProfileNotFound indicates that a user profile was not found in the database
+var ErrProfileNotFound = errors.New("profile not found")
