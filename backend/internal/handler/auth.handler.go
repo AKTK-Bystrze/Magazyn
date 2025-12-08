@@ -31,6 +31,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.Email = strings.TrimSpace(req.Email)
 	if req.Email == "" {
 		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
