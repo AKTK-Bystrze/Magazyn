@@ -1,17 +1,22 @@
+cleanup auth (przygotowane plany w .ai/loop z -testing.md)
+    testy
+    cleanup
+    refactor 
+    cleanup
 
-fix login redirect issue
-cleanup
-
-testy auth
 implementacja backendu reszty
+    equipment
+    users
+    credits
 stworzenie planow implementacji frontendu reszty
+    equipment
+    users
+    credits
 implementacja frontendu reszty
-unit testy
 e2e testy
 implementacja pozostalych endpointow
-refactor
-testy
 dokumentacja
+
 deploy - konteneryzacja 
 
 
