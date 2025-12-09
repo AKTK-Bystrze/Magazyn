@@ -4,6 +4,9 @@ cleanup auth (przygotowane plany w .ai/loop z -testing.md)
     duplicated truth sources
     hardcoced
 
+    
+translate to polish
+
 implementacja backendu reszty
     equipment
     users

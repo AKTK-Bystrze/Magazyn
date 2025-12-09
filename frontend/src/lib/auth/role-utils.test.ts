@@ -100,33 +100,37 @@ describe('getDefaultRouteForUser', () => {
     });
   });
 
-  describe('when sessionInfo is null (fallback to user_metadata)', () => {
-    it('should use user_metadata.role for admin', () => {
+  describe('when sessionInfo is null (security fail-safe)', () => {
+    it('should return /login regardless of user_metadata.role (admin)', () => {
       const user = createMockUser({
         user_metadata: { role: 'admin' },
       });
-      expect(getDefaultRouteForUser(user, null)).toBe('/admin');
+      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
+      expect(getDefaultRouteForUser(user, null)).toBe('/login');
     });
 
-    it('should use user_metadata.role for super_admin', () => {
+    it('should return /login regardless of user_metadata.role (super_admin)', () => {
       const user = createMockUser({
         user_metadata: { role: 'super_admin' },
       });
-      expect(getDefaultRouteForUser(user, null)).toBe('/admin');
+      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
+      expect(getDefaultRouteForUser(user, null)).toBe('/login');
     });
 
-    it('should use user_metadata.role for user', () => {
+    it('should return /login regardless of user_metadata.role (user)', () => {
       const user = createMockUser({
         user_metadata: { role: 'user' },
       });
-      expect(getDefaultRouteForUser(user, null)).toBe('/dashboard');
+      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
+      expect(getDefaultRouteForUser(user, null)).toBe('/login');
     });
 
-    it('should return /dashboard when no role in user_metadata', () => {
+    it('should return /login when no role in user_metadata', () => {
       const user = createMockUser({
         user_metadata: {},
       });
-      expect(getDefaultRouteForUser(user, null)).toBe('/dashboard');
+      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
+      expect(getDefaultRouteForUser(user, null)).toBe('/login');
     });
   });
 
@@ -158,36 +162,36 @@ describe('getDefaultRouteForUser', () => {
 // =============================================================================
 
 describe('isAdmin', () => {
-  it('should return false for null user', () => {
+  it('should return false for null sessionInfo', () => {
     expect(isAdmin(null)).toBe(false);
   });
 
   it('should return true for admin role', () => {
-    const user = createMockUser({
-      user_metadata: { role: 'admin' },
+    const sessionInfo = createMockSessionInfo({
+      role: 'admin',
     });
-    expect(isAdmin(user)).toBe(true);
+    expect(isAdmin(sessionInfo)).toBe(true);
   });
 
   it('should return true for super_admin role', () => {
-    const user = createMockUser({
-      user_metadata: { role: 'super_admin' },
+    const sessionInfo = createMockSessionInfo({
+      role: 'super_admin',
     });
-    expect(isAdmin(user)).toBe(true);
+    expect(isAdmin(sessionInfo)).toBe(true);
   });
 
   it('should return false for user role', () => {
-    const user = createMockUser({
-      user_metadata: { role: 'user' },
+    const sessionInfo = createMockSessionInfo({
+      role: 'user',
     });
-    expect(isAdmin(user)).toBe(false);
+    expect(isAdmin(sessionInfo)).toBe(false);
   });
 
-  it('should return false when no role in metadata', () => {
-    const user = createMockUser({
-      user_metadata: {},
+  it('should return false when sessionInfo has no role', () => {
+    const sessionInfo = createMockSessionInfo({
+      role: '' as any,
     });
-    expect(isAdmin(user)).toBe(false);
+    expect(isAdmin(sessionInfo)).toBe(false);
   });
 });
 
@@ -196,28 +200,28 @@ describe('isAdmin', () => {
 // =============================================================================
 
 describe('isSuperAdmin', () => {
-  it('should return false for null user', () => {
+  it('should return false for null sessionInfo', () => {
     expect(isSuperAdmin(null)).toBe(false);
   });
 
   it('should return true for super_admin role', () => {
-    const user = createMockUser({
-      user_metadata: { role: 'super_admin' },
+    const sessionInfo = createMockSessionInfo({
+      role: 'super_admin',
     });
-    expect(isSuperAdmin(user)).toBe(true);
+    expect(isSuperAdmin(sessionInfo)).toBe(true);
   });
 
   it('should return false for admin role', () => {
-    const user = createMockUser({
-      user_metadata: { role: 'admin' },
+    const sessionInfo = createMockSessionInfo({
+      role: 'admin',
     });
-    expect(isSuperAdmin(user)).toBe(false);
+    expect(isSuperAdmin(sessionInfo)).toBe(false);
   });
 
   it('should return false for user role', () => {
-    const user = createMockUser({
-      user_metadata: { role: 'user' },
+    const sessionInfo = createMockSessionInfo({
+      role: 'user',
     });
-    expect(isSuperAdmin(user)).toBe(false);
+    expect(isSuperAdmin(sessionInfo)).toBe(false);
   });
 });

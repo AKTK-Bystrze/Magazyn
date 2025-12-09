@@ -16,6 +16,16 @@ vi.mock('@/lib/auth/role-utils', () => ({
   getDefaultRouteForUser: vi.fn(),
 }));
 
+// Mock RedirectManager
+vi.mock('@/lib/auth/redirect-manager', () => ({
+  RedirectManager: {
+    getRedirectForAuthState: vi.fn(),
+    canRedirect: vi.fn(() => true),
+    recordRedirect: vi.fn(),
+    reset: vi.fn(),
+  },
+}));
+
 // Mock Supabase client
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -31,6 +41,7 @@ vi.mock('@/lib/supabase', () => ({
 import { AuthListener } from './AuthListener';
 import { getUserSession } from '@/lib/auth/session-utils';
 import { getDefaultRouteForUser } from '@/lib/auth/role-utils';
+import { RedirectManager } from '@/lib/auth/redirect-manager';
 import { supabase } from '@/lib/supabase';
 
 // =============================================================================
@@ -85,14 +96,15 @@ describe('AuthListener', () => {
     mockLocation.pathname = '/login';
     mockLocation.search = '';
     mockLocation.hash = '';
+    mockLocation.replace = mockReplace; // Connect mockReplace to location object
 
     // Reset cookie mock
     mockCookie = '';
 
-    Object.defineProperty(window, 'location', {
-      value: mockLocation,
-      writable: true,
-      configurable: true,
+    // Use vi.stubGlobal to properly mock window.location in jsdom
+    vi.stubGlobal('location', {
+      ...mockLocation,
+      replace: mockReplace,
     });
 
     Object.defineProperty(document, 'cookie', {
@@ -131,10 +143,15 @@ describe('AuthListener', () => {
     });
     vi.mocked(getUserSession).mockResolvedValue(null);
     vi.mocked(getDefaultRouteForUser).mockReturnValue('/dashboard');
+
+    // Default RedirectManager mock returns
+    vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue(null);
+    vi.mocked(RedirectManager.canRedirect).mockReturnValue(true);
   });
 
   afterEach(() => {
     authStateCallback = null;
+    vi.unstubAllGlobals(); // Clean up global stubs
   });
 
   // ===========================================================================
@@ -205,8 +222,10 @@ describe('AuthListener', () => {
 
   describe('Magic Link Hash Processing', () => {
     it('should detect and process access_token in URL hash', async () => {
-      mockLocation.hash =
-        '#access_token=hash-access-token&refresh_token=hash-refresh-token&expires_in=3600';
+      // Update location with hash BEFORE rendering
+      mockLocation.hash = '#access_token=hash-access-token&refresh_token=hash-refresh-token&expires_in=3600';
+      mockLocation.pathname = '/login';
+      vi.stubGlobal('location', { ...mockLocation, replace: vi.fn() });
 
       const session = createMockSession({ access_token: 'hash-access-token' });
       vi.mocked(supabase.auth.setSession).mockResolvedValue({
@@ -217,19 +236,27 @@ describe('AuthListener', () => {
         isEnabled: true,
         role: 'admin',
       } as any);
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/admin');
 
-      render(<AuthListener />);
+      await act(async () => {
+        render(<AuthListener />);
+        // Give useEffect time to execute
+        await new Promise(resolve => setTimeout(resolve, 200));
+      });
 
       await waitFor(() => {
         expect(supabase.auth.setSession).toHaveBeenCalledWith({
           access_token: 'hash-access-token',
           refresh_token: 'hash-refresh-token',
         });
-      });
+      }, { timeout: 2000 });
     });
 
     it('should clean URL hash after processing', async () => {
+      // Update location with hash BEFORE rendering
       mockLocation.hash = '#access_token=token&refresh_token=refresh';
+      mockLocation.pathname = '/login';
+      vi.stubGlobal('location', { ...mockLocation, replace: vi.fn() });
 
       const session = createMockSession();
       vi.mocked(supabase.auth.setSession).mockResolvedValue({
@@ -240,12 +267,17 @@ describe('AuthListener', () => {
         isEnabled: true,
         role: 'user',
       } as any);
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/dashboard');
 
-      render(<AuthListener />);
+      await act(async () => {
+        render(<AuthListener />);
+        // Give useEffect time to execute
+        await new Promise(resolve => setTimeout(resolve, 200));
+      });
 
       await waitFor(() => {
         expect(window.history.replaceState).toHaveBeenCalled();
-      });
+      }, { timeout: 2000 });
     });
 
     it('should not process hash without access_token', async () => {
@@ -262,12 +294,11 @@ describe('AuthListener', () => {
 
   // ===========================================================================
   // Redirect Logic Tests - Enabled Users
-  // Note: These tests are skipped due to jsdom limitations with window.location.replace
-  // The redirect logic is tested functionally through manual testing and browser tests
   // ===========================================================================
 
-  describe.skip('Redirect Logic - Enabled Users', () => {
+  describe('Redirect Logic - Enabled Users', () => {
     it('should redirect super_admin to /admin', async () => {
+      mockLocation.pathname = '/login';
       render(<AuthListener />);
 
       const session = createMockSession();
@@ -275,7 +306,7 @@ describe('AuthListener', () => {
         isEnabled: true,
         role: 'super_admin',
       } as any);
-      vi.mocked(getDefaultRouteForUser).mockReturnValue('/admin');
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/admin');
 
       await act(async () => {
         await authStateCallback?.('SIGNED_IN', session);
@@ -287,6 +318,7 @@ describe('AuthListener', () => {
     });
 
     it('should redirect admin to /admin', async () => {
+      mockLocation.pathname = '/login';
       render(<AuthListener />);
 
       const session = createMockSession();
@@ -294,7 +326,7 @@ describe('AuthListener', () => {
         isEnabled: true,
         role: 'admin',
       } as any);
-      vi.mocked(getDefaultRouteForUser).mockReturnValue('/admin');
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/admin');
 
       await act(async () => {
         await authStateCallback?.('SIGNED_IN', session);
@@ -305,6 +337,7 @@ describe('AuthListener', () => {
     });
 
     it('should redirect user to /dashboard', async () => {
+      mockLocation.pathname = '/login';
       render(<AuthListener />);
 
       const session = createMockSession();
@@ -312,7 +345,7 @@ describe('AuthListener', () => {
         isEnabled: true,
         role: 'user',
       } as any);
-      vi.mocked(getDefaultRouteForUser).mockReturnValue('/dashboard');
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/dashboard');
 
       await act(async () => {
         await authStateCallback?.('SIGNED_IN', session);
@@ -325,11 +358,11 @@ describe('AuthListener', () => {
 
   // ===========================================================================
   // Redirect Logic Tests - Disabled Users
-  // Note: These tests are skipped due to jsdom limitations with window.location.replace
   // ===========================================================================
 
-  describe.skip('Redirect Logic - Disabled Users', () => {
+  describe('Redirect Logic - Disabled Users', () => {
     it('should redirect disabled user to /account-disabled', async () => {
+      mockLocation.pathname = '/login';
       render(<AuthListener />);
 
       const session = createMockSession();
@@ -337,7 +370,7 @@ describe('AuthListener', () => {
         isEnabled: false,
         role: 'super_admin',
       } as any);
-      vi.mocked(getDefaultRouteForUser).mockReturnValue('/account-disabled');
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/account-disabled');
 
       await act(async () => {
         await authStateCallback?.('SIGNED_IN', session);
@@ -348,6 +381,7 @@ describe('AuthListener', () => {
     });
 
     it('should override redirect param when user is disabled', async () => {
+      mockLocation.pathname = '/login';
       mockLocation.search = '?redirect=/dashboard';
 
       render(<AuthListener />);
@@ -357,7 +391,7 @@ describe('AuthListener', () => {
         isEnabled: false,
         role: 'user',
       } as any);
-      vi.mocked(getDefaultRouteForUser).mockReturnValue('/account-disabled');
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/account-disabled');
 
       await act(async () => {
         await authStateCallback?.('SIGNED_IN', session);
@@ -370,10 +404,9 @@ describe('AuthListener', () => {
 
   // ===========================================================================
   // Redirect Prevention Tests
-  // Note: Skipped due to jsdom limitations
   // ===========================================================================
 
-  describe.skip('Redirect Prevention', () => {
+  describe('Redirect Prevention', () => {
     it('should not redirect if already on target page', async () => {
       mockLocation.pathname = '/admin';
 
@@ -384,7 +417,7 @@ describe('AuthListener', () => {
         isEnabled: true,
         role: 'super_admin',
       } as any);
-      vi.mocked(getDefaultRouteForUser).mockReturnValue('/admin');
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue(null);
 
       await act(async () => {
         await authStateCallback?.('SIGNED_IN', session);
