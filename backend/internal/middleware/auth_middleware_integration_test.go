@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 	// Create a unique user for this test
 	email := fmt.Sprintf("test_mid_%d@example.com", time.Now().Unix())
 	password := "testMid123!"
-	
+
 	user, err := testutils.CreateTestUser(email, password)
 	if err != nil {
 		t.Logf("Failed to create test user: %v", err)
@@ -54,7 +55,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 	t.Run("valid token populates context", func(t *testing.T) {
 		var capturedUser *gotrueTypes.User
 		var capturedProfile *types.PublicProfilesSelect
-		
+
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			capturedUser, _ = r.Context().Value(appcontext.UserContextKey).(*gotrueTypes.User)
 			capturedProfile, _ = r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
@@ -62,7 +63,16 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		})
 
 		authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
-		dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient)
+		// Get config from environment
+		url := os.Getenv("SUPABASE_URL")
+		if url == "" {
+			url = os.Getenv("VITE_SUPABASE_URL")
+		}
+		key := os.Getenv("SUPABASE_KEY")
+		if key == "" {
+			key = os.Getenv("VITE_SUPABASE_ANON_KEY")
+		}
+		dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		middleware := NewAuthMiddleware(authAdapter, dbAdapter)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+validToken)
@@ -75,7 +85,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		if capturedUser != nil {
 			assert.Equal(t, user.ID.String(), capturedUser.ID.String())
 		}
-		
+
 		assert.NotNil(t, capturedProfile, "Profile should be in context")
 		if capturedProfile != nil {
 			assert.Equal(t, user.ID.String(), capturedProfile.Id)
@@ -89,7 +99,16 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		})
 
 		authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
-		dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient)
+		// Get config from environment
+		url := os.Getenv("SUPABASE_URL")
+		if url == "" {
+			url = os.Getenv("VITE_SUPABASE_URL")
+		}
+		key := os.Getenv("SUPABASE_KEY")
+		if key == "" {
+			key = os.Getenv("VITE_SUPABASE_ANON_KEY")
+		}
+		dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		middleware := NewAuthMiddleware(authAdapter, dbAdapter)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer invalid-token.signature")

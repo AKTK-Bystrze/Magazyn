@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -24,7 +25,16 @@ func TestMain(m *testing.M) {
 
 func TestLogin_Integration(t *testing.T) {
 	authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
-	dbAdapter := NewSupabaseDBAdapter(testutils.TestClient)
+	// Get config from environment
+	url := os.Getenv("SUPABASE_URL")
+	if url == "" {
+		url = os.Getenv("VITE_SUPABASE_URL")
+	}
+	key := os.Getenv("SUPABASE_KEY")
+	if key == "" {
+		key = os.Getenv("VITE_SUPABASE_ANON_KEY")
+	}
+	dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
 	service := NewAuthService(authAdapter, dbAdapter)
 
 	t.Run("sends magic link to valid email", func(t *testing.T) {
@@ -46,13 +56,22 @@ func TestLogin_Integration(t *testing.T) {
 
 func TestGetSession_Integration(t *testing.T) {
 	authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
-	dbAdapter := NewSupabaseDBAdapter(testutils.TestClient)
+	// Get config from environment
+	url := os.Getenv("SUPABASE_URL")
+	if url == "" {
+		url = os.Getenv("VITE_SUPABASE_URL")
+	}
+	key := os.Getenv("SUPABASE_KEY")
+	if key == "" {
+		key = os.Getenv("VITE_SUPABASE_ANON_KEY")
+	}
+	dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
 	service := NewAuthService(authAdapter, dbAdapter)
-	
+
 	// Create a unique user for this test
 	email := fmt.Sprintf("test_session_%d@example.com", time.Now().Unix())
 	password := "testRequest123!"
-	
+
 	user, err := testutils.CreateTestUser(email, password)
 	if err != nil {
 		t.Logf("Failed to create test user (requires service role key): %v", err)
@@ -70,7 +89,7 @@ func TestGetSession_Integration(t *testing.T) {
 		time.Sleep(1 * time.Second)
 
 		session, err := service.GetSession(context.Background(), user.ID.String())
-		
+
 		require.NoError(t, err)
 		assert.NotNil(t, session)
 		assert.Equal(t, user.ID.String(), session.UserId)
@@ -81,7 +100,7 @@ func TestGetSession_Integration(t *testing.T) {
 
 	t.Run("returns error for non-existent user", func(t *testing.T) {
 		session, err := service.GetSession(context.Background(), "00000000-0000-0000-0000-000000000000")
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, session)
 		assert.Equal(t, "profile not found", err.Error())

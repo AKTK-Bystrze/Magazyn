@@ -98,7 +98,11 @@ func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.service.GetSession(r.Context(), user.ID.String())
+	// Extract token from Authorization header for RLS enforcement
+	authHeader := r.Header.Get("Authorization")
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	session, err := h.service.GetSession(r.Context(), user.ID.String(), token)
 	if err != nil {
 		if errors.Is(err, model.ErrProfileNotFound) {
 			http.Error(w, "Profile not found", http.StatusNotFound)

@@ -689,7 +689,7 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 	}
 
 	// Generate public URL
-	// We expect s.baseURL to be the project root URL. 
+	// We expect s.baseURL to be the project root URL.
 	// If it contains /rest/v1 (PostgREST specific), we trim it to get the root.
 	projectURL := s.baseURL
 	if strings.HasSuffix(projectURL, "/rest/v1") {

@@ -21,6 +21,7 @@ type AuthClientWithToken interface {
 // PostgrestClient defines the interface for Supabase DB operations
 type PostgrestClient interface {
 	From(table string) PostgrestQueryBuilder
+	WithUserToken(token string) PostgrestClient // Create client with user's JWT for RLS
 }
 
 // PostgrestQueryBuilder defines the interface for building queries
@@ -38,5 +39,5 @@ type PostgrestFilterBuilder interface {
 type AuthServiceInterface interface {
 	Login(ctx context.Context, email string) error
 	Logout(ctx context.Context, token string) error
-	GetSession(ctx context.Context, userId string) (*SessionResponse, error)
+	GetSession(ctx context.Context, userId string, userToken string) (*SessionResponse, error)
 }

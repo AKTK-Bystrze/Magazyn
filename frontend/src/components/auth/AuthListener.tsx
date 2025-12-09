@@ -50,7 +50,6 @@ export const AuthListener: React.FC = () => {
       if (hash && hash.includes('access_token')) {
         // CRITICAL: Set redirect flag IMMEDIATELY to prevent auth event handler from racing
         isRedirectInProgress = true;
-        logToServer('INFO', '🔗 Processing magic link token...');
 
         const hashParams = new URLSearchParams(hash.substring(1));
         const access_token = hashParams.get('access_token');

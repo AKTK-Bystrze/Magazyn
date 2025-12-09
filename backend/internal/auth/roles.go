@@ -17,9 +17,9 @@ func HasRole(profile *types.PublicProfilesSelect, allowedRoles ...string) bool {
 	if profile == nil {
 		return false
 	}
-	
+
 	currentRole := string(profile.Role)
-	
+
 	for _, role := range allowedRoles {
 		if strings.EqualFold(currentRole, role) {
 			return true

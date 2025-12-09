@@ -49,15 +49,46 @@ func (a *SupabaseAuthWithTokenAdapter) GetUser() (*types.User, error) {
 // --- Adapters for Supabase DB ---
 
 type SupabaseDBAdapter struct {
-	client *supabase.Client
+	client      *supabase.Client
+	supabaseURL string
+	supabaseKey string
 }
 
-func NewSupabaseDBAdapter(client *supabase.Client) PostgrestClient {
-	return &SupabaseDBAdapter{client: client}
+func NewSupabaseDBAdapter(client *supabase.Client, url string, key string) PostgrestClient {
+	return &SupabaseDBAdapter{
+		client:      client,
+		supabaseURL: url,
+		supabaseKey: key,
+	}
 }
 
 func (a *SupabaseDBAdapter) From(table string) PostgrestQueryBuilder {
 	return &SupabaseQueryBuilderAdapter{builder: a.client.From(table)}
+}
+
+// WithUserToken creates a new DB adapter with the user's JWT token for RLS enforcement
+func (a *SupabaseDBAdapter) WithUserToken(token string) PostgrestClient {
+	// Create a new client with the user's authorization header
+	// This ensures RLS policies see auth.uid() from the JWT token
+	clientWithAuth, err := supabase.NewClient(
+		a.supabaseURL,
+		a.supabaseKey,
+		&supabase.ClientOptions{
+			Headers: map[string]string{
+				"Authorization": "Bearer " + token,
+			},
+		},
+	)
+	if err != nil {
+		// If client creation fails, return the original adapter
+		// This is a fallback to avoid breaking the request
+		return a
+	}
+	return &SupabaseDBAdapter{
+		client:      clientWithAuth,
+		supabaseURL: a.supabaseURL,
+		supabaseKey: a.supabaseKey,
+	}
 }
 
 type SupabaseQueryBuilderAdapter struct {

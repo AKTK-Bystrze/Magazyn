@@ -27,9 +27,9 @@ func SetupIntegrationTest() error {
 	// e:\bystrze\Magazyn\backend\internal\testutils\config.go
 	// e:\bystrze\Magazyn\.env
 	// relative path: ../../../.env
-	
+
 	envPath := filepath.Join(dir, "../../../.env")
-	
+
 	if err := godotenv.Load(envPath); err != nil {
 		log.Printf("Warning: Error loading .env file from %s: %v. Relying on process environment.", envPath, err)
 	} else {
@@ -40,7 +40,7 @@ func SetupIntegrationTest() error {
 	if url == "" {
 		url = os.Getenv("VITE_SUPABASE_URL")
 	}
-	
+
 	// Prefer Service Role Key for tests to create/delete users
 	key := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if key == "" {
@@ -60,14 +60,14 @@ func SetupIntegrationTest() error {
 		SupabaseURL: url,
 		SupabaseKey: key,
 	}
-	
+
 	var err error
 	config.SupabaseClient, err = supabase.NewClient(url, key, nil)
 	if err != nil {
 		return fmt.Errorf("failed to initialize supabase client: %w", err)
 	}
 	TestClient = config.SupabaseClient
-	
+
 	return nil
 }
 
@@ -76,23 +76,23 @@ func CreateTestUser(email, password string) (*types.User, error) {
 	if TestClient == nil {
 		return nil, fmt.Errorf("TestClient not initialized")
 	}
-	
+
 	// Note: Without Service Role Key, this might fail or require email confirmation
 	// AdminCreateUser is ideal but depends on permissions.
 	// If fallback to SignUp, email confirmation prevents immediate login.
-	
+
 	// ctx := context.Background()
 	params := types.AdminCreateUserRequest{
-		Email:    email,
-		Password: &password,
+		Email:        email,
+		Password:     &password,
 		EmailConfirm: true,
 	}
-	
+
 	user, err := TestClient.Auth.AdminCreateUser(params)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &user.User, nil
 }
 

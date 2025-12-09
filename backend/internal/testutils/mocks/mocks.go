@@ -51,6 +51,11 @@ func (m *MockPostgrestClient) From(table string) service.PostgrestQueryBuilder {
 	return args.Get(0).(service.PostgrestQueryBuilder)
 }
 
+func (m *MockPostgrestClient) WithUserToken(token string) service.PostgrestClient {
+	args := m.Called(token)
+	return args.Get(0).(service.PostgrestClient)
+}
+
 // MockPostgrestQueryBuilder mocks service.PostgrestQueryBuilder
 type MockPostgrestQueryBuilder struct {
 	mock.Mock
@@ -89,7 +94,6 @@ func (m *MockPostgrestFilterBuilder) ReturnData(data interface{}) *mock.Call {
 	return m.On("ExecuteTo", mock.Anything)
 }
 
-
 // MockAuthService mocks service.AuthServiceInterface
 type MockAuthService struct {
 	mock.Mock
@@ -105,8 +109,8 @@ func (m *MockAuthService) Logout(ctx context.Context, token string) error {
 	return args.Error(0)
 }
 
-func (m *MockAuthService) GetSession(ctx context.Context, userId string) (*service.SessionResponse, error) {
-	args := m.Called(ctx, userId)
+func (m *MockAuthService) GetSession(ctx context.Context, userId string, userToken string) (*service.SessionResponse, error) {
+	args := m.Called(ctx, userId, userToken)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

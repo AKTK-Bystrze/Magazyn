@@ -35,14 +35,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     if (!context.locals.user) {
       const authCookie = context.cookies.get("magazyn-auth-token");
-      console.log('🍪 Middleware: Checking for auth cookie...');
-
-      // DEBUG: Log all cookies to understand what's available
-      const allCookies = context.request.headers.get('cookie');
-      console.log('🍪 Middleware: Raw Cookie Header:', allCookies);
 
       if (authCookie?.value) {
-        console.log('🍪 Middleware: Found auth cookie, validating...');
         const { data: { user }, error } = await supabaseClient.auth.getUser(authCookie.value);
 
         if (error) {
@@ -74,9 +68,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // 2. Fetch user session info if authenticated (to check isEnabled status)
     let sessionInfo: SessionInfo | null = null;
     if (context.locals.user && token) {
-      console.log('🔍 Middleware: Fetching session info for user:', context.locals.user.email);
       sessionInfo = await getUserSession(token);
-      console.log('📋 Middleware: Session info received:', sessionInfo ? `Enabled=${sessionInfo.isEnabled}, Role=${sessionInfo.role}` : 'NULL');
       // Store sessionInfo in locals for pages to access
       context.locals.sessionInfo = sessionInfo;
     }
@@ -109,7 +101,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
       if (!context.locals.user) {
         // Debug: Log cookies to see why auth failed
         console.log('🔒 Middleware: Access denied to API route:', url.pathname);
-        console.log('🍪 Middleware: Raw Cookie Header:', context.request.headers.get("cookie"));
         throw ApiErrors.unauthorized("Authentication required");
       }
 

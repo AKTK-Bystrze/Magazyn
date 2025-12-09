@@ -17,7 +17,6 @@ func CORSMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-
 		// Handle preflight OPTIONS request
 		if r.Method == "OPTIONS" {
 			logger.Debug(r.Context(), "Handling CORS preflight request")

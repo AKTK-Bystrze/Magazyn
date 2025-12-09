@@ -22,7 +22,7 @@ func main() {
 	// 2. Initialize Services
 	// AuthService now requires Supabase Auth Client and DB Client (Postgrest) wrapped in adapters
 	authAdapter := service.NewSupabaseAuthAdapter(config.SupabaseClient)
-	dbAdapter := service.NewSupabaseDBAdapter(config.SupabaseClient)
+	dbAdapter := service.NewSupabaseDBAdapter(config.SupabaseClient, config.AppConfig.SupabaseURL, config.AppConfig.SupabaseKey)
 	authService := service.NewAuthService(authAdapter, dbAdapter)
 	equipmentService, err := service.NewEquipmentService(config.AppConfig.SupabaseURL, config.AppConfig.SupabaseKey)
 	if err != nil {
@@ -51,7 +51,7 @@ func main() {
 	// Protected Routes (Equipment)
 	// Role checks for modification endpoints
 	mux.Handle("GET /equipment", authMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
-	
+
 	// Admin/SuperAdmin only routes
 	mux.Handle("POST /equipment", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
 	mux.Handle("GET /equipment/{id}", authMiddleware(http.HandlerFunc(equipmentHandler.HandleGetByID)))

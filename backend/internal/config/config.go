@@ -39,13 +39,8 @@ func LoadConfig() {
 		log.Fatal("SUPABASE_URL and SUPABASE_KEY (or VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY) must be set in environment variables")
 	}
 
-	// Prioritize Service Role Key if available to bypass RLS
-	if serviceRoleKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY"); serviceRoleKey != "" {
-		log.Println("🔑 Found SUPABASE_SERVICE_ROLE_KEY - using for privileged database access")
-		AppConfig.SupabaseKey = serviceRoleKey
-	} else {
-		log.Println("⚠️  SUPABASE_SERVICE_ROLE_KEY not found - running with Anon Key. RLS policies may block access.")
-	}
+	// Using anon key - RLS policies will enforce access control based on auth.uid() and user roles
+	log.Println("🔑 Using Anon Key - RLS policies will enforce access control")
 
 	var err error
 	SupabaseClient, err = supabase.NewClient(AppConfig.SupabaseURL, AppConfig.SupabaseKey, nil)

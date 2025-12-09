@@ -36,10 +36,10 @@ func getUserID(r *http.Request) string {
 	// Middleware line 44: context.WithValue(..., user)
 	// So it is *types.UserResponse (which embeds User? No, it has User field?)
 	// Let's check gotrue-go types or assume it behaves like *types.UserResponse.
-	// Actually, UserResponse usually has a User field or is the User. 
+	// Actually, UserResponse usually has a User field or is the User.
 	// Let's look at auth.middleware safely using user.ID.String().
 	// It assumes user has .ID field.
-	
+
 	// Assuming user is *gotrue.UserResponse for now.
 	if u, ok := user.(*gotrue.UserResponse); ok {
 		return u.ID.String()
@@ -57,7 +57,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := types.EquipmentListQuery{}
-	
+
 	// Parse query params
 	if page := r.URL.Query().Get("page"); page != "" {
 		if p, err := strconv.Atoi(page); err == nil {

@@ -31,7 +31,7 @@ func (s *AuthService) Login(ctx context.Context, email string) error {
 		logger.Errorf(ctx, "Failed to send magic link to %s: %v", email, err)
 		return fmt.Errorf("failed to send magic link: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -41,30 +41,31 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 		logger.Errorf(ctx, "Logout failed: %v", err)
 		return fmt.Errorf("failed to logout: %w", err)
 	}
-	
+
 	return nil
 }
 
-// getProfileByUserId fetches a user profile from the database by user ID
-func (s *AuthService) getProfileByUserId(ctx context.Context, userId string) (*model.PublicProfilesSelect, error) {
+// getProfileByUserId fetches a user profile from the database by user ID using user's JWT
+func (s *AuthService) getProfileByUserId(ctx context.Context, userId string, userToken string) (*model.PublicProfilesSelect, error) {
 	var profiles []model.PublicProfilesSelect
-	_, err := s.db.From("profiles").Select("*", "exact", false).Eq("id", userId).ExecuteTo(&profiles)
-	
+	// Use user's token for RLS enforcement
+	_, err := s.db.WithUserToken(userToken).From("profiles").Select("*", "exact", false).Eq("id", userId).ExecuteTo(&profiles)
+
 	if err != nil {
 		logger.Errorf(ctx, "Failed to fetch profile for user %s: %v", userId, err)
 		return nil, fmt.Errorf("failed to fetch profile: %w", err)
 	}
-	
+
 	if len(profiles) == 0 {
 		logger.Warnf(ctx, "Profile not found for user %s", userId)
 		return nil, model.ErrProfileNotFound
 	}
-	
+
 	return &profiles[0], nil
 }
 
-func (s *AuthService) GetSession(ctx context.Context, userId string) (*SessionResponse, error) {
-	profile, err := s.getProfileByUserId(ctx, userId)
+func (s *AuthService) GetSession(ctx context.Context, userId string, userToken string) (*SessionResponse, error) {
+	profile, err := s.getProfileByUserId(ctx, userId, userToken)
 	if err != nil {
 		return nil, err
 	}
