@@ -1,11 +1,10 @@
-package middleware
+package auth
 
 import (
 	"context"
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/logger"
-	"magazyn/backend/internal/service"
-	model "magazyn/backend/internal/types"
+	"magazyn/backend/internal/repository"
 	"net/http"
 	"strings"
 )
@@ -14,7 +13,7 @@ import (
 // It verifies the Bearer token from the Authorization header, fetches the user's profile with RLS enforcement,
 // and populates the request context with user and profile information for downstream handlers.
 // Disabled users are blocked from accessing all endpoints except /auth/session.
-func NewAuthMiddleware(auth service.AuthClient, db service.PostgrestClient) func(http.Handler) http.Handler {
+func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -34,25 +33,21 @@ func NewAuthMiddleware(auth service.AuthClient, db service.PostgrestClient) func
 
 			token := parts[1]
 
-			user, err := auth.WithToken(token).GetUser()
+			user, err := repo.GetUser(r.Context(), token)
 			if err != nil {
 				logger.Errorf(r.Context(), "Token verification failed: %v", err)
 				http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 				return
 			}
 
-			var profiles []model.PublicProfilesSelect
-			_, err = db.WithUserToken(token).From("profiles").Select("*", "exact", false).Eq("id", user.ID.String()).ExecuteTo(&profiles)
-
+			profile, err := repo.GetProfile(r.Context(), user.ID, token)
 			if err != nil {
 				logger.Errorf(r.Context(), "Failed to fetch profile: %v", err)
 			}
 
 			ctx := context.WithValue(r.Context(), appcontext.UserContextKey, user)
 
-			if err == nil && len(profiles) > 0 {
-				profile := &profiles[0]
-
+			if profile != nil {
 				if !profile.IsEnabled && r.URL.Path != "/auth/session" {
 					logger.Warnf(r.Context(), "Access denied for disabled user: %s (%s) accessing %s", profile.Username, profile.Email, r.URL.Path)
 					http.Error(w, "Account is disabled. Please contact an administrator.", http.StatusForbidden)

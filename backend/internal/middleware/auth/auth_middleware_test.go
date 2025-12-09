@@ -1,4 +1,4 @@
-package middleware
+package auth
 
 import (
 	"errors"
@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	gotrueTypes "github.com/supabase-community/gotrue-go/types"
 )
 
 // TestAuthMiddleware_HeaderValidation tests the header validation logic in AuthMiddleware
@@ -24,7 +23,7 @@ func TestAuthMiddleware_HeaderValidation(t *testing.T) {
 			t.Error("Next handler should not be called")
 		})
 
-		middleware := NewAuthMiddleware(nil, nil)(next)
+		middleware := NewAuthMiddleware(nil)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		w := httptest.NewRecorder()
 
@@ -39,7 +38,7 @@ func TestAuthMiddleware_HeaderValidation(t *testing.T) {
 			t.Error("Next handler should not be called")
 		})
 
-		middleware := NewAuthMiddleware(nil, nil)(next)
+		middleware := NewAuthMiddleware(nil)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Basic sometoken")
 		w := httptest.NewRecorder()
@@ -56,51 +55,38 @@ func TestAuthMiddleware_HeaderValidation(t *testing.T) {
 
 func TestAuthMiddleware_Logic(t *testing.T) {
 	// Helper to setup mocks
-	setupMocks := func() (*serviceMocks.MockAuthClient, *serviceMocks.MockAuthClientWithToken, *serviceMocks.MockPostgrestClient, *serviceMocks.MockPostgrestQueryBuilder, *serviceMocks.MockPostgrestFilterBuilder) {
-		return new(serviceMocks.MockAuthClient), new(serviceMocks.MockAuthClientWithToken), new(serviceMocks.MockPostgrestClient), new(serviceMocks.MockPostgrestQueryBuilder), new(serviceMocks.MockPostgrestFilterBuilder)
+	setupMocks := func() *serviceMocks.MockAuthRepository {
+		return new(serviceMocks.MockAuthRepository)
 	}
 
 	t.Run("valid token and enabled user proceeds", func(t *testing.T) {
-		mockAuth, mockAuthToken, mockDB, mockQuery, mockFilter := setupMocks()
+		mockRepo := setupMocks()
 
 		token := "valid.token"
 		userId := uuid.New()
-		user := &gotrueTypes.User{ID: userId, Email: "test@example.com"}
+		user := &types.User{ID: userId.String(), Email: "test@example.com"}
+		profile := &types.PublicProfilesSelect{
+			Id:        userId.String(),
+			Email:     "test@example.com",
+			Username:  "tester",
+			Role:      "user",
+			IsEnabled: true,
+		}
 
-		// Auth expectations
-		mockAuth.On("WithToken", token).Return(mockAuthToken)
-		mockAuthToken.On("GetUser").Return(user, nil)
-
-		// DB expectations (Profile fetch)
-		mockDB.On("WithUserToken", token).Return(mockDB)
-		mockDB.On("From", "profiles").Return(mockQuery)
-		mockQuery.On("Select", "*", "exact", false).Return(mockFilter)
-		mockFilter.On("Eq", "id", userId.String()).Return(mockFilter)
-
-		mockFilter.On("ExecuteTo", mock.Anything).Run(func(args mock.Arguments) {
-			dest := args.Get(0)
-			if profiles, ok := dest.(*[]types.PublicProfilesSelect); ok {
-				*profiles = []types.PublicProfilesSelect{
-					{
-						Id:        userId.String(),
-						Email:     "test@example.com",
-						Username:  "tester",
-						IsEnabled: true,
-					},
-				}
-			}
-		}).Return("", nil)
+		// Expectations
+		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
+		mockRepo.On("GetProfile", mock.Anything, userId.String(), token).Return(profile, nil)
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			// Verify context populated
-			ctxUser := r.Context().Value(appcontext.UserContextKey).(*gotrueTypes.User)
-			assert.Equal(t, userId, ctxUser.ID)
+			ctxUser := r.Context().Value(appcontext.UserContextKey).(*types.User)
+			assert.Equal(t, userId.String(), ctxUser.ID)
 			ctxProfile := r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
 			assert.Equal(t, "tester", ctxProfile.Username)
 		})
 
-		middleware := NewAuthMiddleware(mockAuth, mockDB)(next)
+		middleware := NewAuthMiddleware(mockRepo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
@@ -108,24 +94,22 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		middleware.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		mockAuth.AssertExpectations(t)
-		mockDB.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("invalid token returns 401", func(t *testing.T) {
-		mockAuth, mockAuthToken, mockDB, _, _ := setupMocks()
+		mockRepo := setupMocks()
 
 		token := "invalid.token"
 		expectedErr := errors.New("invalid token")
 
-		mockAuth.On("WithToken", token).Return(mockAuthToken)
-		mockAuthToken.On("GetUser").Return((*gotrueTypes.User)(nil), expectedErr)
+		mockRepo.On("GetUser", mock.Anything, token).Return((*types.User)(nil), expectedErr)
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t.Error("Next should not be called")
 		})
 
-		middleware := NewAuthMiddleware(mockAuth, mockDB)(next)
+		middleware := NewAuthMiddleware(mockRepo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
@@ -133,38 +117,31 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		middleware.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		mockAuth.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("disabled user denied (403)", func(t *testing.T) {
-		mockAuth, mockAuthToken, mockDB, mockQuery, mockFilter := setupMocks()
+		mockRepo := setupMocks()
 
 		token := "valid.token"
 		userId := uuid.New()
-		user := &gotrueTypes.User{ID: userId, Email: "disabled@example.com"}
+		user := &types.User{ID: userId.String(), Email: "disabled@example.com"}
+		profile := &types.PublicProfilesSelect{
+			Id:        userId.String(),
+			Email:     "disabled@example.com",
+			Username:  "disabled_user",
+			Role:      "user",
+			IsEnabled: false,
+		}
 
-		mockAuth.On("WithToken", token).Return(mockAuthToken)
-		mockAuthToken.On("GetUser").Return(user, nil)
-
-		mockDB.On("WithUserToken", token).Return(mockDB)
-		mockDB.On("From", "profiles").Return(mockQuery)
-		mockQuery.On("Select", "*", "exact", false).Return(mockFilter)
-		mockFilter.On("Eq", "id", userId.String()).Return(mockFilter)
-
-		mockFilter.On("ExecuteTo", mock.Anything).Run(func(args mock.Arguments) {
-			dest := args.Get(0)
-			if profiles, ok := dest.(*[]types.PublicProfilesSelect); ok {
-				*profiles = []types.PublicProfilesSelect{
-					{Id: userId.String(), IsEnabled: false, Username: "disabled_user"},
-				}
-			}
-		}).Return("", nil)
+		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
+		mockRepo.On("GetProfile", mock.Anything, userId.String(), token).Return(profile, nil)
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t.Error("Next should not be called")
 		})
 
-		middleware := NewAuthMiddleware(mockAuth, mockDB)(next)
+		middleware := NewAuthMiddleware(mockRepo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil) // Not /auth/session
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
@@ -173,37 +150,31 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 		assert.Contains(t, w.Body.String(), "Account is disabled")
+		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("disabled user allowed on /auth/session", func(t *testing.T) {
-		mockAuth, mockAuthToken, mockDB, mockQuery, mockFilter := setupMocks()
+		mockRepo := setupMocks()
 
 		token := "valid.token"
 		userId := uuid.New()
-		user := &gotrueTypes.User{ID: userId, Email: "disabled@example.com"}
+		user := &types.User{ID: userId.String(), Email: "disabled@example.com"}
+		profile := &types.PublicProfilesSelect{
+			Id:        userId.String(),
+			Email:     "disabled@example.com",
+			Username:  "disabled_user",
+			Role:      "user",
+			IsEnabled: false,
+		}
 
-		mockAuth.On("WithToken", token).Return(mockAuthToken)
-		mockAuthToken.On("GetUser").Return(user, nil)
-
-		mockDB.On("WithUserToken", token).Return(mockDB)
-		mockDB.On("From", "profiles").Return(mockQuery)
-		mockQuery.On("Select", "*", "exact", false).Return(mockFilter)
-		mockFilter.On("Eq", "id", userId.String()).Return(mockFilter)
-
-		mockFilter.On("ExecuteTo", mock.Anything).Run(func(args mock.Arguments) {
-			dest := args.Get(0)
-			if profiles, ok := dest.(*[]types.PublicProfilesSelect); ok {
-				*profiles = []types.PublicProfilesSelect{
-					{Id: userId.String(), IsEnabled: false, Username: "disabled_user"},
-				}
-			}
-		}).Return("", nil)
+		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
+		mockRepo.On("GetProfile", mock.Anything, userId.String(), token).Return(profile, nil)
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK) // Success
 		})
 
-		middleware := NewAuthMiddleware(mockAuth, mockDB)(next)
+		middleware := NewAuthMiddleware(mockRepo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/auth/session", nil) // Target /auth/session
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
@@ -211,6 +182,7 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		middleware.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
 	})
 }
 

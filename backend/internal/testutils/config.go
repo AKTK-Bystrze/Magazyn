@@ -16,6 +16,7 @@ import (
 )
 
 var TestAppState *config.AppState
+var TestClient *supabase.Client
 
 // SetupIntegrationTest loads environment variables and initializes Supabase client
 func SetupIntegrationTest() (*config.AppState, error) {
@@ -68,6 +69,7 @@ func SetupIntegrationTest() (*config.AppState, error) {
 		},
 		SupabaseClient: client,
 	}
+	TestClient = client
 
 	return TestAppState, nil
 }

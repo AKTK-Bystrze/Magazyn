@@ -1,5 +1,5 @@
 // Package handler provides HTTP request handlers and utility functions for the API.
-package handler
+package common
 
 import (
 	"context"

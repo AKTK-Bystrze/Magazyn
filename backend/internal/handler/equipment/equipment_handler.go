@@ -1,23 +1,22 @@
-package handler
+package equipment
 
 import (
 	"encoding/json"
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
-	"magazyn/backend/internal/service"
+	equipmentservice "magazyn/backend/internal/service/equipment"
 	"magazyn/backend/internal/types"
 	"net/http"
 	"strconv"
-
-	gotrue "github.com/supabase-community/gotrue-go/types"
 )
 
 type EquipmentHandler struct {
-	service service.EquipmentService
+	service equipmentservice.EquipmentService
 }
 
-func NewEquipmentHandler(s service.EquipmentService) *EquipmentHandler {
+func NewEquipmentHandler(s equipmentservice.EquipmentService) *EquipmentHandler {
 	return &EquipmentHandler{service: s}
 }
 
@@ -28,8 +27,8 @@ func getUserID(r *http.Request) string {
 		return ""
 	}
 
-	if u, ok := user.(*gotrue.User); ok {
-		return u.ID.String()
+	if u, ok := user.(*types.User); ok {
+		return u.ID
 	}
 	return ""
 }
@@ -39,7 +38,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := getUserID(r)
 	if userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -78,12 +77,11 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	response, err := h.service.List(ctx, userID, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleList error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
 // GetByID handles get equipment details
@@ -91,7 +89,7 @@ func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request)
 	ctx := r.Context()
 	id := r.PathValue("id") // Go 1.22+
 	if id == "" {
-		http.Error(w, "ID is required", http.StatusBadRequest)
+		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
 	}
 
@@ -99,16 +97,15 @@ func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		// Handle specific errors
 		if _, ok := err.(*types.NotFoundError); ok {
-			http.Error(w, "Equipment not found", http.StatusNotFound)
+			common.RespondError(ctx, w, http.StatusNotFound, "Equipment not found")
 			return
 		}
 		logger.Errorf(ctx, "HandleGetByID error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
 // Create handles creating new equipment
@@ -116,13 +113,13 @@ func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	userID := getUserID(r)
 	if userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var cmd types.CreateEquipmentCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -131,13 +128,11 @@ func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) 
 		// Handle errors (conflict, not found, etc)
 		// For brevity, generic 500 or 400
 		logger.Errorf(ctx, "HandleCreate error: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError) // Should be cleaner
+		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error()) // Should be cleaner
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	common.RespondJSON(ctx, w, http.StatusCreated, response)
 }
 
 // Update handles updating equipment
@@ -146,25 +141,24 @@ func (h *EquipmentHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) 
 	userID := getUserID(r)
 	id := r.PathValue("id")
 	if id == "" {
-		http.Error(w, "ID is required", http.StatusBadRequest)
+		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
 	}
 
 	var cmd types.UpdateEquipmentCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	response, err := h.service.Update(ctx, id, cmd, userID)
 	if err != nil {
 		logger.Errorf(ctx, "HandleUpdate error: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
 // Archive handles archiving equipment
@@ -172,19 +166,18 @@ func (h *EquipmentHandler) HandleArchive(w http.ResponseWriter, r *http.Request)
 	ctx := r.Context()
 	id := r.PathValue("id")
 	if id == "" {
-		http.Error(w, "ID is required", http.StatusBadRequest)
+		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
 	}
 
 	err := h.service.Archive(ctx, id)
 	if err != nil {
 		logger.Errorf(ctx, "HandleArchive error: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Equipment archived successfully"})
+	common.RespondJSON(ctx, w, http.StatusOK, map[string]string{"message": "Equipment archived successfully"})
 }
 
 // CheckAvailability handles availability check
@@ -192,7 +185,7 @@ func (h *EquipmentHandler) HandleCheckAvailability(w http.ResponseWriter, r *htt
 	ctx := r.Context()
 	id := r.PathValue("id")
 	if id == "" {
-		http.Error(w, "ID is required", http.StatusBadRequest)
+		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
 	}
 
@@ -202,17 +195,16 @@ func (h *EquipmentHandler) HandleCheckAvailability(w http.ResponseWriter, r *htt
 	}
 
 	if query.StartDate == "" || query.EndDate == "" {
-		http.Error(w, "start_date and end_date required", http.StatusBadRequest)
+		common.RespondError(ctx, w, http.StatusBadRequest, "start_date and end_date required")
 		return
 	}
 
 	response, err := h.service.CheckAvailability(ctx, id, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleCheckAvailability error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	common.RespondJSON(ctx, w, http.StatusOK, response)
 }

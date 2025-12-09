@@ -1,6 +1,6 @@
 //go:build integration
 
-package service
+package auth_test
 
 import (
 	"context"
@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"magazyn/backend/internal/repository/supabase"
+	"magazyn/backend/internal/service/auth"
 	"magazyn/backend/internal/testutils"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +18,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	if err := testutils.SetupIntegrationTest(); err != nil {
+	if _, err := testutils.SetupIntegrationTest(); err != nil {
 		fmt.Printf("Skipping integration tests: %v\n", err)
 		return
 	}
@@ -24,7 +26,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestLogin_Integration(t *testing.T) {
-	authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
+	// authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
 	// Get config from environment
 	url := os.Getenv("SUPABASE_URL")
 	if url == "" {
@@ -34,13 +36,14 @@ func TestLogin_Integration(t *testing.T) {
 	if key == "" {
 		key = os.Getenv("VITE_SUPABASE_ANON_KEY")
 	}
-	dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
-	service := NewAuthService(authAdapter, dbAdapter)
+	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
+	repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+	service := auth.NewAuthService(repo)
 
 	t.Run("sends magic link to valid email", func(t *testing.T) {
 		// We can't verify email delivery without an email service mock or checking logs/mailserver
 		// But we can verify the API call succeeds
-		err := service.Login("test_integration@example.com")
+		_, err := service.Login(context.Background(), "test_integration@example.com")
 		if err != nil {
 			if assert.Error(t, err) { // It returns error, let's check it
 				// If it's a 400 from Supabase, it might be "Signups not allowed" or "User already registered" without magic link enabled
@@ -55,7 +58,7 @@ func TestLogin_Integration(t *testing.T) {
 }
 
 func TestGetSession_Integration(t *testing.T) {
-	authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
+	// authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
 	// Get config from environment
 	url := os.Getenv("SUPABASE_URL")
 	if url == "" {
@@ -65,8 +68,9 @@ func TestGetSession_Integration(t *testing.T) {
 	if key == "" {
 		key = os.Getenv("VITE_SUPABASE_ANON_KEY")
 	}
-	dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
-	service := NewAuthService(authAdapter, dbAdapter)
+	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
+	repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+	service := auth.NewAuthService(repo)
 
 	// Create a unique user for this test
 	email := fmt.Sprintf("test_session_%d@example.com", time.Now().Unix())
@@ -88,7 +92,7 @@ func TestGetSession_Integration(t *testing.T) {
 		// We might need to wait a moment for the trigger to fire
 		time.Sleep(1 * time.Second)
 
-		session, err := service.GetSession(context.Background(), user.ID.String())
+		session, err := service.GetSession(context.Background(), user.ID.String(), "test-token")
 
 		require.NoError(t, err)
 		assert.NotNil(t, session)
@@ -99,7 +103,7 @@ func TestGetSession_Integration(t *testing.T) {
 	})
 
 	t.Run("returns error for non-existent user", func(t *testing.T) {
-		session, err := service.GetSession(context.Background(), "00000000-0000-0000-0000-000000000000")
+		session, err := service.GetSession(context.Background(), "00000000-0000-0000-0000-000000000000", "test-token")
 
 		assert.Error(t, err)
 		assert.Nil(t, session)

@@ -3,9 +3,11 @@ package mocks
 import (
 	"context"
 	"magazyn/backend/internal/service"
+	"magazyn/backend/internal/types"
+
+	gotruetypes "github.com/supabase-community/gotrue-go/types"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/supabase-community/gotrue-go/types"
 )
 
 // MockAuthClient mocks service.AuthClient
@@ -13,7 +15,7 @@ type MockAuthClient struct {
 	mock.Mock
 }
 
-func (m *MockAuthClient) OTP(req types.OTPRequest) error {
+func (m *MockAuthClient) OTP(req gotruetypes.OTPRequest) error {
 	args := m.Called(req)
 	return args.Error(0)
 }
@@ -33,12 +35,12 @@ func (m *MockAuthClientWithToken) Logout() error {
 	return args.Error(0)
 }
 
-func (m *MockAuthClientWithToken) GetUser() (*types.User, error) {
+func (m *MockAuthClientWithToken) GetUser() (*gotruetypes.User, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*types.User), args.Error(1)
+	return args.Get(0).(*gotruetypes.User), args.Error(1)
 }
 
 // MockPostgrestClient mocks service.PostgrestClient
@@ -99,9 +101,12 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) Login(ctx context.Context, email string) error {
+func (m *MockAuthService) Login(ctx context.Context, email string) (*types.LoginResponse, error) {
 	args := m.Called(ctx, email)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.LoginResponse), args.Error(1)
 }
 
 func (m *MockAuthService) Logout(ctx context.Context, token string) error {
@@ -109,10 +114,18 @@ func (m *MockAuthService) Logout(ctx context.Context, token string) error {
 	return args.Error(0)
 }
 
-func (m *MockAuthService) GetSession(ctx context.Context, userId string, userToken string) (*service.SessionResponse, error) {
+func (m *MockAuthService) GetSession(ctx context.Context, userId string, userToken string) (*types.SessionResponse, error) {
 	args := m.Called(ctx, userId, userToken)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*service.SessionResponse), args.Error(1)
+	return args.Get(0).(*types.SessionResponse), args.Error(1)
+}
+
+func (m *MockAuthService) VerifyOTP(ctx context.Context, email, token string, type_ string) (*types.SessionResponse, error) {
+	args := m.Called(ctx, email, token, type_)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.SessionResponse), args.Error(1)
 }

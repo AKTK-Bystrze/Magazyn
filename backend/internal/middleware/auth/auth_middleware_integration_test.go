@@ -1,6 +1,6 @@
 //go:build integration
 
-package middleware
+package auth
 
 import (
 	"fmt"
@@ -11,17 +11,16 @@ import (
 	"time"
 
 	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/service"
+	"magazyn/backend/internal/repository/supabase"
 	"magazyn/backend/internal/testutils"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	gotrueTypes "github.com/supabase-community/gotrue-go/types"
 )
 
 func TestMain(m *testing.M) {
-	if err := testutils.SetupIntegrationTest(); err != nil {
+	if _, err := testutils.SetupIntegrationTest(); err != nil {
 		fmt.Printf("Skipping integration tests: %v\n", err)
 		return
 	}
@@ -53,16 +52,16 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	t.Run("valid token populates context", func(t *testing.T) {
-		var capturedUser *gotrueTypes.User
+		var capturedUser *types.User
 		var capturedProfile *types.PublicProfilesSelect
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			capturedUser, _ = r.Context().Value(appcontext.UserContextKey).(*gotrueTypes.User)
+			capturedUser, _ = r.Context().Value(appcontext.UserContextKey).(*types.User)
 			capturedProfile, _ = r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
 			w.WriteHeader(http.StatusOK)
 		})
 
-		authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
+		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
 		// Get config from environment
 		url := os.Getenv("SUPABASE_URL")
 		if url == "" {
@@ -72,8 +71,9 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		if key == "" {
 			key = os.Getenv("VITE_SUPABASE_ANON_KEY")
 		}
-		dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
-		middleware := NewAuthMiddleware(authAdapter, dbAdapter)(next)
+		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
+		repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+validToken)
 		w := httptest.NewRecorder()
@@ -83,7 +83,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.NotNil(t, capturedUser, "User should be in context")
 		if capturedUser != nil {
-			assert.Equal(t, user.ID.String(), capturedUser.ID.String())
+			assert.Equal(t, user.ID.String(), capturedUser.ID)
 		}
 
 		assert.NotNil(t, capturedProfile, "Profile should be in context")
@@ -98,7 +98,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 			t.Error("Next handler should not be called")
 		})
 
-		authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
+		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
 		// Get config from environment
 		url := os.Getenv("SUPABASE_URL")
 		if url == "" {
@@ -108,8 +108,9 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		if key == "" {
 			key = os.Getenv("VITE_SUPABASE_ANON_KEY")
 		}
-		dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
-		middleware := NewAuthMiddleware(authAdapter, dbAdapter)(next)
+		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
+		repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer invalid-token.signature")
 		w := httptest.NewRecorder()

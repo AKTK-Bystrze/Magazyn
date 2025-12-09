@@ -5,13 +5,15 @@ package service
 import (
 	"context"
 
-	"github.com/supabase-community/gotrue-go/types"
+	"magazyn/backend/internal/types"
+
+	gotruetypes "github.com/supabase-community/gotrue-go/types"
 )
 
 // AuthClient defines the interface for Supabase Auth operations.
 // It provides methods for OTP authentication and token-based operations.
 type AuthClient interface {
-	OTP(req types.OTPRequest) error
+	OTP(req gotruetypes.OTPRequest) error
 	WithToken(token string) AuthClientWithToken
 }
 
@@ -19,7 +21,7 @@ type AuthClient interface {
 // This interface is returned by AuthClient.WithToken and provides authenticated operations.
 type AuthClientWithToken interface {
 	Logout() error
-	GetUser() (*types.User, error)
+	GetUser() (*gotruetypes.User, error)
 }
 
 // PostgrestClient defines the interface for Supabase database operations.
@@ -30,7 +32,7 @@ type PostgrestClient interface {
 }
 
 // PostgrestQueryBuilder defines the interface for building database queries.
-// It follows a fluent API pattern allowing method chaining.
+// It allows adding filters and executing queries with type-safe result binding.
 type PostgrestQueryBuilder interface {
 	Select(columns string, count string, head bool) PostgrestFilterBuilder
 }
@@ -45,7 +47,7 @@ type PostgrestFilterBuilder interface {
 // AuthServiceInterface defines the interface for authentication service operations.
 // It provides login, logout, and session management functionality.
 type AuthServiceInterface interface {
-	Login(ctx context.Context, email string) error
+	Login(ctx context.Context, email string) (*types.LoginResponse, error)
 	Logout(ctx context.Context, token string) error
-	GetSession(ctx context.Context, userId string, userToken string) (*SessionResponse, error)
+	GetSession(ctx context.Context, userId string, userToken string) (*types.SessionResponse, error)
 }

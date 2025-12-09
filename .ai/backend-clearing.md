@@ -8,7 +8,7 @@ Clean up the backend codebase by removing duplicated files, improving package is
 - [ ] Remove any incorrectly created empty directories in `repository` (if any).
 
 ## Phase 2: Package Refactoring
-Isolate components into dedicated sub-packages to enforce better separation of concerns.
+- [x] Isolate components into dedicated sub-packages to enforce better separation of concerns.
 
 ### Handlers (`internal/handler`)
 - **Action**: Create sub-directories `auth`, `equipment`, `common`.
@@ -27,12 +27,18 @@ Isolate components into dedicated sub-packages to enforce better separation of c
 ### Repositories (`internal/repository`)
 - **Status**: **UNCHANGED**. Interfaces remain in root, implementations in `supabase/`.
 
+### Middleware (`internal/middleware`)
+- **Action**: Create sub-directories `auth` and `cors` (or `common` if generic).
+- **Moves**:
+  - `auth.middleware.go`, `auth_middleware_test.go`, `auth_middleware_integration_test.go`, `rbac.middleware.go`, `rbac_middleware_test.go` -> `internal/middleware/auth/`
+  - `cors.middleware.go` -> `internal/middleware/common/`
+
 ## Phase 3: Code & Documentation Adjustments
-- [ ] **Package Declarations**: Update `package` clause in moved files (e.g., `package handler` -> `package auth`).
-- [ ] **Imports**: Fix imports throughout the application (handlers, main.go, etc.) to point to new paths.
-- [ ] **Documentation**: Update `backend/docs/index.md` to reflect the new nested structure.
+- [x] **Package Declarations**: Update `package` clause in moved files (e.g., `package handler` -> `package auth`).
+- [x] **Imports**: Fix imports throughout the application (handlers, main.go, etc.) to point to new paths.
+- [x] **Documentation**: Update `backend/docs/index.md` to reflect the new nested structure.
 
 ## Phase 4: Verification
-- [ ] Run `go mod tidy` to clean up dependencies.
-- [ ] Run `go build ./cmd/api` to verify compilation.
-- [ ] Run `go test ./...` to verify functionality.
+- [x] Run `go mod tidy` to clean up dependencies.
+- [x] Run `go build ./cmd/api` to verify compilation.
+- [x] Run `go test ./...` to verify functionality.

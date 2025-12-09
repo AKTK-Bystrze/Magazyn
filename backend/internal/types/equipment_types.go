@@ -130,3 +130,18 @@ type ErrorResponse struct {
 	Code    string      `json:"code,omitempty"`
 	Details interface{} `json:"details,omitempty"`
 }
+
+// ============================================================================
+// Equipment Type DTOs
+// ============================================================================
+
+// CreateEquipmentTypeRequest represents the payload for creating a new equipment type
+type CreateEquipmentTypeRequest struct {
+	Name             string `json:"name" validate:"required,max=100"`
+	CreditCostPerDay int32  `json:"credit_cost_per_day" validate:"required,min=0"`
+}
+
+// EquipmentTypeListResponse represents the response for listing equipment types
+type EquipmentTypeListResponse struct {
+	EquipmentTypes []PublicEquipmentTypesSelect `json:"equipment_types"`
+}

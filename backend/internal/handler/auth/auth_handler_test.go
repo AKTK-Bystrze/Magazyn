@@ -1,4 +1,4 @@
-package handler_test
+package auth_test
 
 import (
 	"bytes"
@@ -10,20 +10,19 @@ import (
 	"testing"
 
 	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/handler"
-	"magazyn/backend/internal/service"
+	"magazyn/backend/internal/handler/auth"
 	serviceMocks "magazyn/backend/internal/testutils/mocks"
+	"magazyn/backend/internal/types"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	gotrueTypes "github.com/supabase-community/gotrue-go/types"
 )
 
 // Helper to create handler with mock service
-func createTestHandler() (*handler.AuthHandler, *serviceMocks.MockAuthService) {
+func createTestHandler() (*auth.AuthHandler, *serviceMocks.MockAuthService) {
 	mockService := new(serviceMocks.MockAuthService)
-	h := handler.NewAuthHandler(mockService)
+	h := auth.NewAuthHandler(mockService)
 	return h, mockService
 }
 
@@ -31,7 +30,7 @@ func TestHandleLogin_Success(t *testing.T) {
 	h, mockService := createTestHandler()
 	email := "test@example.com"
 
-	mockService.On("Login", mock.Anything, email).Return(nil)
+	mockService.On("Login", mock.Anything, email).Return(&types.LoginResponse{}, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/login",
 		bytes.NewBufferString(`{"email": "test@example.com"}`))
@@ -40,7 +39,7 @@ func TestHandleLogin_Success(t *testing.T) {
 	h.HandleLogin(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var resp service.LoginResponse
+	var resp types.LoginResponse
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	assert.NoError(t, err)
 	assert.Equal(t, "Login link sent to your email", resp.Message)
@@ -52,7 +51,7 @@ func TestHandleLogin_ServiceError(t *testing.T) {
 	h, mockService := createTestHandler()
 	email := "fail@example.com"
 
-	mockService.On("Login", mock.Anything, email).Return(errors.New("login failed"))
+	mockService.On("Login", mock.Anything, email).Return(nil, errors.New("login failed"))
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/login",
 		bytes.NewBufferString(`{"email": "fail@example.com"}`))
@@ -86,9 +85,9 @@ func TestHandleGetSession_Success(t *testing.T) {
 	h, mockService := createTestHandler()
 
 	userId := uuid.New()
-	user := &gotrueTypes.User{ID: userId, Email: "user@example.com"}
+	user := &types.User{ID: userId.String(), Email: "user@example.com"}
 
-	expectedSession := &service.SessionResponse{
+	expectedSession := &types.SessionResponse{
 		UserId:   userId.String(),
 		Email:    "user@example.com",
 		Username: "testuser",
@@ -107,7 +106,7 @@ func TestHandleGetSession_Success(t *testing.T) {
 	h.HandleGetSession(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	var resp service.SessionResponse
+	var resp types.SessionResponse
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	assert.NoError(t, err)
 	assert.Equal(t, "testuser", resp.Username)

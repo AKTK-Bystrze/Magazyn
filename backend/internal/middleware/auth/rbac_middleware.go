@@ -1,8 +1,8 @@
-package middleware
+package auth
 
 import (
 	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/auth"
+	authutil "magazyn/backend/internal/auth"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
 	"net/http"
@@ -31,7 +31,7 @@ func RequireRoles(allowedRoles ...string) func(http.Handler) http.Handler {
 				return
 			}
 
-			if !auth.HasRole(profile, allowedRoles...) {
+			if !authutil.HasRole(profile, allowedRoles...) {
 				logger.Warnf(ctx, "Access denied: User %s (Role: %s) attempted to access protected resource. Required: %v", profile.Id, profile.Role, allowedRoles)
 				http.Error(w, "Forbidden: Insufficient permissions", http.StatusForbidden)
 				return

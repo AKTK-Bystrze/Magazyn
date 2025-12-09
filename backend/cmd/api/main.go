@@ -6,10 +6,14 @@ import (
 	"context"
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/config"
-	"magazyn/backend/internal/handler"
+	authhandler "magazyn/backend/internal/handler/auth"
+	equipmenthandler "magazyn/backend/internal/handler/equipment"
 	"magazyn/backend/internal/logger"
-	"magazyn/backend/internal/middleware"
-	"magazyn/backend/internal/service"
+	authmiddleware "magazyn/backend/internal/middleware/auth"
+	commonmiddleware "magazyn/backend/internal/middleware/common"
+	supabaserepo "magazyn/backend/internal/repository/supabase"
+	authservice "magazyn/backend/internal/service/auth"
+	equipmentservice "magazyn/backend/internal/service/equipment"
 	"net/http"
 	"os"
 )
@@ -27,19 +31,21 @@ func main() {
 	logger.SetMinLevel(appState.Config.LogLevel)
 	logger.Infof(ctx, "Log level set to: %s", appState.Config.LogLevel)
 
-	authAdapter := service.NewSupabaseAuthAdapter(appState.SupabaseClient)
-	dbAdapter := service.NewSupabaseDBAdapter(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
-	authService := service.NewAuthService(authAdapter, dbAdapter)
-	equipmentService, err := service.NewEquipmentService(appState.Config.SupabaseURL, appState.Config.SupabaseKey)
-	if err != nil {
-		logger.Errorf(ctx, "Failed to initialize equipment service: %v", err)
-		os.Exit(1)
-	}
+    // Initialize Repositories
+    authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
+	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient)
+	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 
-	authHandler := handler.NewAuthHandler(authService)
-	equipmentHandler := handler.NewEquipmentHandler(equipmentService)
+    // Initialize Services
+	authService := authservice.NewAuthService(authRepo)
+	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
 
-	authMiddleware := middleware.NewAuthMiddleware(authAdapter, dbAdapter)
+    // Initialize Handlers
+	authHandler := authhandler.NewAuthHandler(authService)
+	equipmentHandler := equipmenthandler.NewEquipmentHandler(equipmentService)
+
+    // Initialize Middleware
+	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
 
 	mux := http.NewServeMux()
 
@@ -50,17 +56,17 @@ func main() {
 
 	mux.Handle("GET /equipment", authMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
 
-	mux.Handle("POST /equipment", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
+	mux.Handle("POST /equipment", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
 	mux.Handle("GET /equipment/{id}", authMiddleware(http.HandlerFunc(equipmentHandler.HandleGetByID)))
-	mux.Handle("PATCH /equipment/{id}", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
-	mux.Handle("DELETE /equipment/{id}", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
+	mux.Handle("PATCH /equipment/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
+	mux.Handle("DELETE /equipment/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
 	mux.Handle("GET /equipment/{id}/availability", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
 
 	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)
 	logger.Infof(ctx, "CORS allowed origins: %v", appState.Config.CORSAllowedOrigins)
 
-	httpHandler := middleware.CORSMiddleware(appState.Config.CORSAllowedOrigins)(mux)
+	httpHandler := commonmiddleware.CORSMiddleware(appState.Config.CORSAllowedOrigins)(mux)
 
 	if err := http.ListenAndServe(port, httpHandler); err != nil {
 		logger.Errorf(ctx, "Server failed to start: %v", err)
