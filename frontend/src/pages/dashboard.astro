@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { ROUTES } from '../lib/config/routes';
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../lib/auth/roles';
 
 // Check if user is authenticated - middleware handles this
 const user = Astro.locals.user;
@@ -23,7 +24,7 @@ console.log(`[DASHBOARD_PAGE] User Role: ${sessionInfo.role} (from sessionInfo -
 
 // Only regular users should access dashboard
 // Admins should be redirected to /admin
-if (sessionInfo.role === 'admin' || sessionInfo.role === 'super_admin') {
+if (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) {
   console.log(`[DASHBOARD_PAGE] User is admin. Redirecting to ${ROUTES.PROTECTED.ADMIN}`);
   return Astro.redirect(ROUTES.PROTECTED.ADMIN);
 }

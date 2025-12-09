@@ -1,3 +1,5 @@
+// Package types defines custom error types and sentinel errors for the application.
+// It provides structured error handling with error codes, messages, and details for different HTTP status scenarios.
 package types
 
 import (

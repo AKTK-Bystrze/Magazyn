@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { getUserSession } from '@/lib/auth/session-utils';
 import { ROUTES } from '@/lib/config/routes';
 import { RedirectManager } from '@/lib/auth/redirect-manager';
+import { normalizePath } from '@/lib/auth/url-utils';
 import {
   setAuthCookie,
   removeAuthCookie,
@@ -65,19 +66,16 @@ export const AuthListener: React.FC = () => {
               );
 
               if (redirectTo) {
-                const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-                const targetPath = redirectTo.replace(/\/$/, '') || '/';
-
-                if (currentPath !== targetPath) {
+                if (normalizePath(window.location.pathname) !== normalizePath(redirectTo)) {
                   // Check for redirect loops
-                  if (!RedirectManager.canRedirect(currentPath, redirectTo)) {
-                    console.error('🚨 Redirect loop detected', { from: currentPath, to: redirectTo });
+                  if (!RedirectManager.canRedirect(window.location.pathname, redirectTo)) {
+                    console.error('🚨 Redirect loop detected', { from: window.location.pathname, to: redirectTo });
                     setIsRedirectInProgress(false);
                     return;
                   }
 
-                  RedirectManager.recordRedirect(currentPath, redirectTo);
-                  console.log(`🔗 Redirect: ${currentPath} → ${redirectTo}`);
+                  RedirectManager.recordRedirect(window.location.pathname, redirectTo);
+                  console.log(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
                   await waitForCookieAndRedirect(data.session.access_token, redirectTo);
                 }
               }

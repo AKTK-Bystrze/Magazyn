@@ -115,25 +115,12 @@ func TestHandleGetSession_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-// Retain existing validation tests structure but using the new createTestHandler
-// To minimalize diff noise, I will overwrite file but include validation tests too.
-// I'll assume validation logic hasn't changed, just setup.
-
+// Validation tests for request body parsing
 func TestHandleLogin_Validation(t *testing.T) {
 	h, _ := createTestHandler() // Mock not needed for validation early exits
 
-	t.Run("returns 405 for non-POST (GET)", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/auth/login", nil)
-		w := httptest.NewRecorder()
-		h.HandleLogin(w, req)
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
-	})
-
-	// ... (Other validation tests omitted for brevity but generally covered by existing ones)
-	// Note: previous file had detailed validation tests.
-	// I should probably append or merge.
-	// But `write_to_file` overwrites.
-	// I will include the critical validation tests here.
+	// Note: HTTP method validation (405 for GET) is now handled by the Go 1.22+ router
+	// with route patterns like "POST /auth/login", so we don't test it at handler level
 
 	t.Run("returns 400 for invalid JSON", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewBufferString("invalid"))

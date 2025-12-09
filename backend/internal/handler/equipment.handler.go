@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service"
 	"magazyn/backend/internal/types"
@@ -26,22 +27,8 @@ func getUserID(r *http.Request) string {
 	if user == nil {
 		return ""
 	}
-	// Verify exact type. In middleware: user, err := client.Auth...GetUser(). user is *types.UserResponse which has User struct inside?
-	// or *types.User?
-	// Checking middleware: config.SupabaseClient.Auth.WithToken(token).GetUser() returns *UserResponse, error
-	// So user is *types.UserResponse
-	// Actually, GetUser definition in gotrue-go: func (c *Client) GetUser() (*UserResponse, error)
-	// UserResponse struct contains User.
-	// Middleware line 33: user, err := ...GetUser()
-	// Middleware line 44: context.WithValue(..., user)
-	// So it is *types.UserResponse (which embeds User? No, it has User field?)
-	// Let's check gotrue-go types or assume it behaves like *types.UserResponse.
-	// Actually, UserResponse usually has a User field or is the User.
-	// Let's look at auth.middleware safely using user.ID.String().
-	// It assumes user has .ID field.
 
-	// Assuming user is *gotrue.UserResponse for now.
-	if u, ok := user.(*gotrue.UserResponse); ok {
+	if u, ok := user.(*gotrue.User); ok {
 		return u.ID.String()
 	}
 	return ""
@@ -64,7 +51,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 			query.Page = p
 		}
 	} else {
-		query.Page = 1
+		query.Page = constants.DefaultPage
 	}
 
 	if perPage := r.URL.Query().Get("per_page"); perPage != "" {
@@ -72,7 +59,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 			query.PerPage = pp
 		}
 	} else {
-		query.PerPage = 25
+		query.PerPage = constants.DefaultPerPage
 	}
 
 	if typeID := r.URL.Query().Get("type_id"); typeID != "" {

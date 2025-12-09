@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
 	"math"
@@ -184,7 +185,7 @@ func (s *equipmentService) getUserFavorites(ctx context.Context, userID string) 
 	data, _, err := s.client.From("reservations").
 		Select("equipment_id", "exact", false).
 		Eq("user_id", userID).
-		In("status", []string{"RENTED", "RETURNED"}).
+		In("status", []string{constants.ReservationStatusRented, constants.ReservationStatusReturned}).
 		Execute()
 
 	if err != nil {
@@ -241,7 +242,7 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 		Execute()
 
 	if err != nil {
-		if strings.Contains(err.Error(), "PGRST116") {
+		if IsNotFoundError(err) {
 			logger.Warnf(ctx, "Equipment not found: %s", id)
 			return nil, types.NewNotFoundError("Equipment", id)
 		}
@@ -323,7 +324,7 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 		Execute()
 
 	if err != nil {
-		if strings.Contains(err.Error(), "PGRST116") {
+		if IsNotFoundError(err) {
 			logger.Warnf(ctx, "Equipment type not found: %s", cmd.TypeID)
 			return nil, types.NewNotFoundError("Equipment type", cmd.TypeID)
 		}
@@ -357,7 +358,7 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 	}
 
 	// Prepare insert data with defaults
-	status := "ok"
+	status := constants.EquipmentStatusOK
 	if cmd.Status != nil {
 		status = *cmd.Status
 	}
@@ -429,7 +430,7 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 		Execute()
 
 	if err != nil {
-		if strings.Contains(err.Error(), "PGRST116") {
+		if IsNotFoundError(err) {
 			logger.Warnf(ctx, "Equipment not found for update: %s", id)
 			return nil, types.NewNotFoundError("Equipment", id)
 		}
@@ -524,7 +525,7 @@ func (s *equipmentService) Archive(ctx context.Context, id string) error {
 		Execute()
 
 	if err != nil {
-		if strings.Contains(err.Error(), "PGRST116") {
+		if IsNotFoundError(err) {
 			logger.Warnf(ctx, "Equipment not found for archiving: %s", id)
 			return types.NewNotFoundError("Equipment", id)
 		}
@@ -550,7 +551,7 @@ func (s *equipmentService) Archive(ctx context.Context, id string) error {
 	activeData, _, err := s.client.From("reservations").
 		Select("id, status", "exact", false).
 		Eq("equipment_id", id).
-		In("status", []string{"PENDING", "RENTED"}).
+		In("status", []string{constants.ReservationStatusPending, constants.ReservationStatusRented}).
 		Execute()
 
 	if err != nil {
@@ -613,7 +614,7 @@ func (s *equipmentService) CheckAvailability(ctx context.Context, id string, que
 		Execute()
 
 	if err != nil {
-		if strings.Contains(err.Error(), "PGRST116") {
+		if IsNotFoundError(err) {
 			logger.Warnf(ctx, "Equipment not found for availability check: %s", id)
 			return nil, types.NewNotFoundError("Equipment", id)
 		}
@@ -626,9 +627,9 @@ func (s *equipmentService) CheckAvailability(ctx context.Context, id string, que
 	conflictsData, _, err := s.client.From("reservations").
 		Select("id, start_date, end_date, status", "exact", false).
 		Eq("equipment_id", id).
-		Lte("start_date", query.EndDate).            // start_date <= query.end_date
-		Gte("end_date", query.StartDate).            // end_date >= query.start_date
-		In("status", []string{"PENDING", "RENTED"}). // Only active reservations
+		Lte("start_date", query.EndDate).                                                              // start_date <= query.end_date
+		Gte("end_date", query.StartDate).                                                              // end_date >= query.start_date
+		In("status", []string{constants.ReservationStatusPending, constants.ReservationStatusRented}). // Only active reservations
 		Execute()
 
 	if err != nil {
@@ -697,6 +698,6 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 	}
 	projectURL = strings.TrimSuffix(projectURL, "/")
 
-	url := fmt.Sprintf("%s/storage/v1/object/public/equipment/%s", projectURL, *imagePath)
+	url := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", projectURL, constants.StorageBucket, *imagePath)
 	return &url
 }

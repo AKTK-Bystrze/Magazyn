@@ -71,7 +71,6 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		mockAuth.On("WithToken", token).Return(mockAuthToken)
 		mockAuthToken.On("GetUser").Return(user, nil)
 
-
 		// DB expectations (Profile fetch)
 		mockDB.On("WithUserToken", token).Return(mockDB)
 		mockDB.On("From", "profiles").Return(mockQuery)

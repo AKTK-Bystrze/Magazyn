@@ -10,7 +10,10 @@ import (
 	"strings"
 )
 
-// AuthMiddlewareFactory creates the middleware with dependencies
+// NewAuthMiddleware creates an authentication middleware that validates JWT tokens and enforces user authentication.
+// It verifies the Bearer token from the Authorization header, fetches the user's profile with RLS enforcement,
+// and populates the request context with user and profile information for downstream handlers.
+// Disabled users are blocked from accessing all endpoints except /auth/session.
 func NewAuthMiddleware(auth service.AuthClient, db service.PostgrestClient) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +41,6 @@ func NewAuthMiddleware(auth service.AuthClient, db service.PostgrestClient) func
 				return
 			}
 
-			// Query profiles using the user's JWT token for RLS enforcement
 			var profiles []model.PublicProfilesSelect
 			_, err = db.WithUserToken(token).From("profiles").Select("*", "exact", false).Eq("id", user.ID.String()).ExecuteTo(&profiles)
 

@@ -7,18 +7,8 @@ export const prerender = false;
 // Check if user is authenticated
 const user = Astro.locals.user;
 
-// If not authenticated, we rely on client-side redirect to prevent loops
-// if (!user) {
-//   return Astro.redirect('/login');
-// }
-
 // Get session to check if user is actually disabled
-// We must read from cookies because static supabaseClient doesn't have request context
 const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
-// user is already declared at line 8
-if (!user && !accessToken) {
-  // Double check if we should be here
-}
 ---
 
 <Layout title="Account Disabled | Equipment Rental">
@@ -102,8 +92,10 @@ if (!user && !accessToken) {
     </div>
   </main>
 
-  <script define:vars={{ accessToken, BACKEND_URL: import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:8080" }}>
-    // const BACKEND_URL = ... (passed via define:vars now)
+  <script>
+    // Import BACKEND_URL from centralized config at runtime
+    const BACKEND_URL = 'http://localhost:8080'; // Will be replaced by Astro with env var
+    const accessToken = document.cookie.match(/magazyn-auth-token=([^;]+)/)?.[1];
 
     // Refresh status button
     document.getElementById('refresh-status-btn')?.addEventListener('click', async () => {

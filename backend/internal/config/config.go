@@ -1,50 +1,89 @@
+// Package config handles application configuration loading and initialization.
+// It loads environment variables, initializes the Supabase client, and provides application state management.
 package config
 
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/supabase-community/supabase-go"
 )
 
+// Config holds all application configuration settings loaded from environment variables.
 type Config struct {
-	SupabaseURL string
-	SupabaseKey string
+	SupabaseURL        string   // URL of the Supabase project
+	SupabaseKey        string   // Supabase anon/public key for client operations
+	Port               string   // HTTP server port
+	LogLevel           string   // Logging verbosity: DEBUG, INFO, WARN, or ERROR
+	CORSAllowedOrigins []string // List of allowed CORS origins for cross-origin requests
 }
 
-var AppConfig *Config
-var SupabaseClient *supabase.Client
+// AppState holds the initialized application state including configuration and clients.
+// This centralizes state management and eliminates race conditions from global variables.
+type AppState struct {
+	Config         *Config
+	SupabaseClient *supabase.Client
+}
 
-func LoadConfig() {
-	// Load .env file from project root (one level up from backend folder)
-	if err := godotenv.Load("../.env"); err != nil {
-		log.Println("No .env file found at ../.env, relying on existing environment variables")
+// LoadConfig initializes and returns application configuration and state.
+// It loads environment variables from a .env file, validates required settings,
+// and initializes the Supabase client with the anon key for RLS-enforced access.
+func LoadConfig() (*AppState, error) {
+	envPath := os.Getenv("ENV_FILE_PATH")
+	if envPath == "" {
+		envPath = "../.env"
 	}
 
-	AppConfig = &Config{
+	if err := godotenv.Load(envPath); err != nil {
+		log.Printf("No .env file found at %s, relying on existing environment variables", envPath)
+	}
+
+	cfg := &Config{
 		SupabaseURL: os.Getenv("SUPABASE_URL"),
 		SupabaseKey: os.Getenv("SUPABASE_KEY"),
+		Port:        os.Getenv("PORT"),
+		LogLevel:    os.Getenv("LOG_LEVEL"),
 	}
 
-	// Fallback to VITE_ prefixed variables if standard ones are missing
-	if AppConfig.SupabaseURL == "" {
-		AppConfig.SupabaseURL = os.Getenv("VITE_SUPABASE_URL")
-	}
-	if AppConfig.SupabaseKey == "" {
-		AppConfig.SupabaseKey = os.Getenv("VITE_SUPABASE_ANON_KEY")
+	corsOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if corsOrigins != "" {
+		cfg.CORSAllowedOrigins = strings.Split(corsOrigins, ",")
+		for i := range cfg.CORSAllowedOrigins {
+			cfg.CORSAllowedOrigins[i] = strings.TrimSpace(cfg.CORSAllowedOrigins[i])
+		}
+	} else {
+		cfg.CORSAllowedOrigins = []string{"http://localhost:4321", "http://localhost:3000"}
 	}
 
-	if AppConfig.SupabaseURL == "" || AppConfig.SupabaseKey == "" {
+	if cfg.SupabaseURL == "" {
+		cfg.SupabaseURL = os.Getenv("VITE_SUPABASE_URL")
+	}
+	if cfg.SupabaseKey == "" {
+		cfg.SupabaseKey = os.Getenv("VITE_SUPABASE_ANON_KEY")
+	}
+	if cfg.Port == "" {
+		cfg.Port = "8080"
+	}
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = "INFO"
+	}
+
+	if cfg.SupabaseURL == "" || cfg.SupabaseKey == "" {
 		log.Fatal("SUPABASE_URL and SUPABASE_KEY (or VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY) must be set in environment variables")
 	}
 
-	// Using anon key - RLS policies will enforce access control based on auth.uid() and user roles
 	log.Println("🔑 Using Anon Key - RLS policies will enforce access control")
 
-	var err error
-	SupabaseClient, err = supabase.NewClient(AppConfig.SupabaseURL, AppConfig.SupabaseKey, nil)
+	client, err := supabase.NewClient(cfg.SupabaseURL, cfg.SupabaseKey, nil)
 	if err != nil {
 		log.Fatalf("Failed to initialize Supabase client: %v", err)
+		return nil, err
 	}
+
+	return &AppState{
+		Config:         cfg,
+		SupabaseClient: client,
+	}, nil
 }

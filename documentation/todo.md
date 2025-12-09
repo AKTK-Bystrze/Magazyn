@@ -1,10 +1,6 @@
-cleanup auth (przygotowane plany w .ai/loop z -testing.md)
-    consts
-    duplicated truth sources
-    hardcoced
-
-    
+in code documentation
 translate to polish
+workspace cleanup
 
 implementacja backendu reszty
     equipment

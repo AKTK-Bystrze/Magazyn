@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-const BACKEND_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8080';
+import { BACKEND_URL } from '@/lib/config/api';
 
 export const GET: APIRoute = async ({ request, locals }) => {
   const url = new URL(request.url);

@@ -1,3 +1,5 @@
+// Package main is the entry point for the Magazyn Backend API server.
+// It initializes configuration, services, handlers, middleware, and routes for the equipment rental system.
 package main
 
 import (
@@ -16,57 +18,51 @@ func main() {
 	ctx := context.Background()
 	logger.Info(ctx, "Starting Magazyn Backend API...")
 
-	// 1. Load Configuration
-	config.LoadConfig()
+	appState, err := config.LoadConfig()
+	if err != nil {
+		logger.Errorf(ctx, "Failed to load configuration: %v", err)
+		os.Exit(1)
+	}
 
-	// 2. Initialize Services
-	// AuthService now requires Supabase Auth Client and DB Client (Postgrest) wrapped in adapters
-	authAdapter := service.NewSupabaseAuthAdapter(config.SupabaseClient)
-	dbAdapter := service.NewSupabaseDBAdapter(config.SupabaseClient, config.AppConfig.SupabaseURL, config.AppConfig.SupabaseKey)
+	logger.SetMinLevel(appState.Config.LogLevel)
+	logger.Infof(ctx, "Log level set to: %s", appState.Config.LogLevel)
+
+	authAdapter := service.NewSupabaseAuthAdapter(appState.SupabaseClient)
+	dbAdapter := service.NewSupabaseDBAdapter(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	authService := service.NewAuthService(authAdapter, dbAdapter)
-	equipmentService, err := service.NewEquipmentService(config.AppConfig.SupabaseURL, config.AppConfig.SupabaseKey)
+	equipmentService, err := service.NewEquipmentService(appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to initialize equipment service: %v", err)
 		os.Exit(1)
 	}
 
-	// 3. Initialize Handlers
 	authHandler := handler.NewAuthHandler(authService)
 	equipmentHandler := handler.NewEquipmentHandler(equipmentService)
 
-	// Initialize Middleware with dependencies
 	authMiddleware := middleware.NewAuthMiddleware(authAdapter, dbAdapter)
 
-	// 4. Register Routes
 	mux := http.NewServeMux()
 
-	// Public Routes
 	mux.HandleFunc("POST /auth/login", authHandler.HandleLogin)
 
-	// Protected Routes (Authentication)
-	// We wrap the handler function with the middleware
 	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(authHandler.HandleLogout)))
 	mux.Handle("GET /auth/session", authMiddleware(http.HandlerFunc(authHandler.HandleGetSession)))
 
-	// Protected Routes (Equipment)
-	// Role checks for modification endpoints
 	mux.Handle("GET /equipment", authMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
 
-	// Admin/SuperAdmin only routes
 	mux.Handle("POST /equipment", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
 	mux.Handle("GET /equipment/{id}", authMiddleware(http.HandlerFunc(equipmentHandler.HandleGetByID)))
 	mux.Handle("PATCH /equipment/{id}", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
 	mux.Handle("DELETE /equipment/{id}", authMiddleware(middleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
 	mux.Handle("GET /equipment/{id}/availability", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
 
-	// 5. Start Server
-	port := ":8080"
+	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)
+	logger.Infof(ctx, "CORS allowed origins: %v", appState.Config.CORSAllowedOrigins)
 
-	// Wrap mux with CORS middleware
-	handler := middleware.CORSMiddleware(mux)
+	httpHandler := middleware.CORSMiddleware(appState.Config.CORSAllowedOrigins)(mux)
 
-	if err := http.ListenAndServe(port, handler); err != nil {
+	if err := http.ListenAndServe(port, httpHandler); err != nil {
 		logger.Errorf(ctx, "Server failed to start: %v", err)
 		os.Exit(1)
 	}

@@ -2,6 +2,7 @@ import type { User } from '@supabase/supabase-js';
 import type { SessionInfo } from '../../types';
 import { ROUTES } from '../config/routes';
 import { validateRedirectUrl } from './url-utils';
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from './roles';
 
 /**
  * Manages redirects with loop prevention and centralized logic
@@ -164,17 +165,17 @@ export class RedirectManager {
  * SECURITY: Uses ONLY sessionInfo.role (from backend database with RLS)
  * Never falls back to user_metadata.role (can be stale)
  * 
- * @param user - Supabase user object
+ * @param user - Supabase user object (can be null)
  * @param sessionInfo - Session info from backend (authoritative source)
  * @returns Default route path for the user
  */
 export function getDefaultRouteForUser(
-  user: User,
+  user: User | null,
   sessionInfo: SessionInfo | null
 ): string {
-  // If no sessionInfo, redirect to login (fail-safe)
-  if (!sessionInfo) {
-    console.warn('⚠️ No sessionInfo available, redirecting to login');
+  // If no user or sessionInfo, redirect to login (fail-safe)
+  if (!user || !sessionInfo) {
+    console.warn('⚠️ No user or sessionInfo available, redirecting to login');
     return ROUTES.PUBLIC.LOGIN;
   }
 
@@ -189,10 +190,10 @@ export function getDefaultRouteForUser(
 
   // Route based on role
   switch (role) {
-    case 'super_admin':
-    case 'admin':
+    case SUPER_ADMIN_ROLE:
+    case ADMIN_ROLE:
       return ROUTES.PROTECTED.ADMIN;
-    case 'user':
+    case USER_ROLE:
       return ROUTES.PROTECTED.DASHBOARD;
     default:
       // Fallback for unknown roles

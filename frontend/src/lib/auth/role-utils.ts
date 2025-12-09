@@ -1,47 +1,21 @@
 import type { User } from "@supabase/supabase-js";
 import type { SessionInfo } from "../../types";
-import { ROUTES } from "../config/routes";
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from './roles';
+import {
+  getDefaultRouteForUser as getDefaultRouteForUserBase,
+  hasRole as hasRoleBase
+} from "./redirect-manager";
 
 /**
- * Determines the default landing page for a user based on their role and account status
+ * Re-exported from redirect-manager.ts for backward compatibility
  * 
- * SECURITY: Uses ONLY sessionInfo.role (from backend database with RLS)
- * Never falls back to user_metadata.role (can be stale)
+ * SINGLE SOURCE OF TRUTH: The actual implementation is in redirect-manager.ts
+ * This re-export maintains the existing API for components that import from role-utils
  * 
- * @param user - Supabase user object
- * @param sessionInfo - Session info with isEnabled status (REQUIRED)
- * @returns The path to redirect to
+ * @see redirect-manager.ts for implementation details
  */
 export function getDefaultRouteForUser(user: User | null, sessionInfo?: SessionInfo | null): string {
-  if (!user) {
-    return ROUTES.PUBLIC.LOGIN;
-  }
-
-  // If no sessionInfo, redirect to login (fail-safe)
-  if (!sessionInfo) {
-    console.warn('⚠️ No sessionInfo available in getDefaultRouteForUser, redirecting to login');
-    return ROUTES.PUBLIC.LOGIN;
-  }
-
-  // Check if user account is disabled
-  if (!sessionInfo.isEnabled) {
-    return ROUTES.PROTECTED.ACCOUNT_DISABLED;
-  }
-
-  // SECURITY: Use ONLY sessionInfo.role (authoritative source from database)  
-  const role = sessionInfo.role;
-
-  switch (role) {
-    case "super_admin":
-    case "admin":
-      return ROUTES.PROTECTED.ADMIN;
-    case "user":
-      return ROUTES.PROTECTED.DASHBOARD;
-    default:
-      // Fallback for users without a role set
-      console.warn(`⚠️ Unknown role: ${role}, defaulting to dashboard`);
-      return ROUTES.PROTECTED.DASHBOARD;
-  }
+  return getDefaultRouteForUserBase(user, sessionInfo || null);
 }
 
 /**
@@ -55,7 +29,7 @@ export function getDefaultRouteForUser(user: User | null, sessionInfo?: SessionI
 export function isAdmin(sessionInfo: SessionInfo | null): boolean {
   if (!sessionInfo) return false;
   const role = sessionInfo.role;
-  return role === "admin" || role === "super_admin";
+  return role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE;
 }
 
 /**
@@ -68,11 +42,12 @@ export function isAdmin(sessionInfo: SessionInfo | null): boolean {
  */
 export function isSuperAdmin(sessionInfo: SessionInfo | null): boolean {
   if (!sessionInfo) return false;
-  return sessionInfo.role === "super_admin";
+  return sessionInfo.role === SUPER_ADMIN_ROLE;
 }
 
 /**
  * Checks if a user has one of the specified roles
+ * Wrapper around redirect-manager's hasRole for sessionInfo-based API
  * 
  * @param sessionInfo - Session info from backend
  * @param allowedRoles - Array of allowed roles
@@ -82,6 +57,5 @@ export function hasRole(
   sessionInfo: SessionInfo | null,
   allowedRoles: string[]
 ): boolean {
-  if (!sessionInfo || !sessionInfo.role) return false;
-  return allowedRoles.includes(sessionInfo.role);
+  return hasRoleBase(sessionInfo?.role, allowedRoles);
 }

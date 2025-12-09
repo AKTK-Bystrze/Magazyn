@@ -1,3 +1,5 @@
+// Package service provides adapter implementations for Supabase Auth and Database clients.
+// These adapters implement the service interfaces and wrap Supabase SDK functionality.
 package service
 
 import (
@@ -8,10 +10,12 @@ import (
 
 // --- Adapters for Supabase Auth ---
 
+// SupabaseAuthAdapter adapts the Supabase Auth client to implement the AuthClient interface.
 type SupabaseAuthAdapter struct {
 	client *supabase.Client
 }
 
+// NewSupabaseAuthAdapter creates a new Supabase Auth adapter.
 func NewSupabaseAuthAdapter(client *supabase.Client) AuthClient {
 	return &SupabaseAuthAdapter{client: client}
 }
@@ -26,7 +30,7 @@ func (a *SupabaseAuthAdapter) WithToken(token string) AuthClientWithToken {
 	}
 }
 
-// SupabaseAuthWithTokenAdapter wraps the client returned by WithToken
+// SupabaseAuthWithTokenAdapter wraps the Supabase Auth client with a user token for authenticated operations.
 type SupabaseAuthWithTokenAdapter struct {
 	client interface {
 		Logout() error
@@ -48,12 +52,14 @@ func (a *SupabaseAuthWithTokenAdapter) GetUser() (*types.User, error) {
 
 // --- Adapters for Supabase DB ---
 
+// SupabaseDBAdapter adapts the Supabase database client to implement the PostgrestClient interface.
 type SupabaseDBAdapter struct {
 	client      *supabase.Client
 	supabaseURL string
 	supabaseKey string
 }
 
+// NewSupabaseDBAdapter creates a new Supabase database adapter.
 func NewSupabaseDBAdapter(client *supabase.Client, url string, key string) PostgrestClient {
 	return &SupabaseDBAdapter{
 		client:      client,
@@ -66,10 +72,10 @@ func (a *SupabaseDBAdapter) From(table string) PostgrestQueryBuilder {
 	return &SupabaseQueryBuilderAdapter{builder: a.client.From(table)}
 }
 
-// WithUserToken creates a new DB adapter with the user's JWT token for RLS enforcement
+// WithUserToken creates a new DB adapter with the user's JWT token for RLS enforcement.
+// This ensures Row Level Security policies see the correct auth.uid() from the JWT token.
+// If client creation fails, it returns the original adapter as a fallback.
 func (a *SupabaseDBAdapter) WithUserToken(token string) PostgrestClient {
-	// Create a new client with the user's authorization header
-	// This ensures RLS policies see auth.uid() from the JWT token
 	clientWithAuth, err := supabase.NewClient(
 		a.supabaseURL,
 		a.supabaseKey,
@@ -80,8 +86,6 @@ func (a *SupabaseDBAdapter) WithUserToken(token string) PostgrestClient {
 		},
 	)
 	if err != nil {
-		// If client creation fails, return the original adapter
-		// This is a fallback to avoid breaking the request
 		return a
 	}
 	return &SupabaseDBAdapter{
@@ -91,6 +95,7 @@ func (a *SupabaseDBAdapter) WithUserToken(token string) PostgrestClient {
 	}
 }
 
+// SupabaseQueryBuilderAdapter adapts the Supabase QueryBuilder to implement PostgrestQueryBuilder.
 type SupabaseQueryBuilderAdapter struct {
 	builder *postgrest.QueryBuilder
 }
@@ -99,6 +104,7 @@ func (b *SupabaseQueryBuilderAdapter) Select(columns string, count string, head 
 	return &SupabaseFilterBuilderAdapter{builder: b.builder.Select(columns, count, head)}
 }
 
+// SupabaseFilterBuilderAdapter adapts the Supabase FilterBuilder to implement PostgrestFilterBuilder.
 type SupabaseFilterBuilderAdapter struct {
 	builder *postgrest.FilterBuilder
 }

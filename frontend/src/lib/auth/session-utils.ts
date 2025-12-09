@@ -1,6 +1,5 @@
 import type { SessionInfo } from "../../types";
-
-const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:8080";
+import { BACKEND_URL } from "../config/api";
 
 /**
  * Fetches the current user's session information from the backend

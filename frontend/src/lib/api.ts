@@ -1,20 +1,26 @@
-const BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8080';
+import { BACKEND_URL, DEFAULT_HEADERS } from '@/lib/config/api';
 import { supabase } from '@/lib/supabase';
+
+/**
+ * Builds headers for API requests with optional authentication
+ * Eliminates duplicated header building logic
+ */
+async function buildHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: Record<string, string> = { ...DEFAULT_HEADERS };
+
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+
+  return headers;
+}
 
 export const api = {
   post: async <T>(url: string, data: any): Promise<{ data: T }> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    const headers = await buildHeaders();
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${BASE_URL}${url}`, {
+    const response = await fetch(`${BACKEND_URL}${url}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
@@ -30,16 +36,7 @@ export const api = {
   },
 
   get: async <T>(url: string, params?: Record<string, any>): Promise<{ data: T }> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    const headers = await buildHeaders();
 
     const queryParams = new URLSearchParams();
     if (params) {
@@ -51,7 +48,7 @@ export const api = {
     }
 
     const queryString = queryParams.toString();
-    const fullUrl = queryString ? `${BASE_URL}${url}?${queryString}` : `${BASE_URL}${url}`;
+    const fullUrl = queryString ? `${BACKEND_URL}${url}?${queryString}` : `${BACKEND_URL}${url}`;
 
     const response = await fetch(fullUrl, {
       method: 'GET',

@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { ROUTES } from '../lib/config/routes';
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../lib/auth/roles';
 
 // Check if user is authenticated - middleware handles this
 const user = Astro.locals.user;
@@ -23,7 +24,7 @@ if (!sessionInfo || !sessionInfo.role) {
 const userRole = sessionInfo.role;
 console.log(`[ADMIN_PAGE] User Role: ${userRole} (from sessionInfo - authoritative source)`);
 
-if (userRole !== 'admin' && userRole !== 'super_admin') {
+if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
   console.log(`[ADMIN_PAGE] Invalid role '${userRole}'. Redirecting to ${ROUTES.PROTECTED.DASHBOARD}`);
   return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
 }
@@ -42,7 +43,7 @@ if (userRole !== 'admin' && userRole !== 'super_admin') {
       <a href="/admin/equipment" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-center">
         Manage Equipment
       </a>
-      {userRole === 'super_admin' && (
+      {userRole === SUPER_ADMIN_ROLE && (
         <a href="/admin/users" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-center">
           Manage Users
         </a>

@@ -1,4 +1,25 @@
+/**
+ * URL utility functions for redirect validation and path normalization
+ * Prevents open redirect attacks (OWASP A1:2021)
+ */
 import { getAllRoutes } from '../config/routes';
+
+/**
+ * Normalizes a path by removing trailing slash
+ * Prevents path comparison issues in redirect logic
+ * 
+ * @param path - The path to normalize
+ * @returns Normalized path, always starting with '/', never ending with '/' (except for root)
+ * 
+ * @example
+ * normalizePath('/admin/') // '/admin'
+ * normalizePath('/') // '/'
+ * normalizePath('') // '/'
+ */
+export function normalizePath(path: string): string {
+  const trimmed = path.replace(/\/$/, '');
+  return trimmed || '/';
+}
 
 /**
  * Validates that a redirect URL is safe (internal to the application)

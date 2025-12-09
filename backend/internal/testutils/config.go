@@ -15,10 +15,10 @@ import (
 	"github.com/supabase-community/supabase-go"
 )
 
-var TestClient *supabase.Client
+var TestAppState *config.AppState
 
 // SetupIntegrationTest loads environment variables and initializes Supabase client
-func SetupIntegrationTest() error {
+func SetupIntegrationTest() (*config.AppState, error) {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(filename)
 	// Assuming this file is in backend/internal/testutils/
@@ -52,29 +52,30 @@ func SetupIntegrationTest() error {
 	}
 
 	if url == "" || key == "" {
-		return fmt.Errorf("missing SUPABASE_URL or SUPABASE_KEY/SUPABASE_SERVICE_ROLE_KEY")
+		return nil, fmt.Errorf("missing SUPABASE_URL or SUPABASE_KEY/SUPABASE_SERVICE_ROLE_KEY")
 	}
 
-	// Update main config so tested code uses correct credentials
-	config.AppConfig = &config.Config{
-		SupabaseURL: url,
-		SupabaseKey: key,
-	}
-
-	var err error
-	config.SupabaseClient, err = supabase.NewClient(url, key, nil)
+	client, err := supabase.NewClient(url, key, nil)
 	if err != nil {
-		return fmt.Errorf("failed to initialize supabase client: %w", err)
+		return nil, fmt.Errorf("failed to initialize supabase client: %w", err)
 	}
-	TestClient = config.SupabaseClient
 
-	return nil
+	TestAppState = &config.AppState{
+		Config: &config.Config{
+			SupabaseURL: url,
+			SupabaseKey: key,
+			Port:        "8080", // Default test port
+		},
+		SupabaseClient: client,
+	}
+
+	return TestAppState, nil
 }
 
 // CreateTestUser creates authentication user for testing
 func CreateTestUser(email, password string) (*types.User, error) {
-	if TestClient == nil {
-		return nil, fmt.Errorf("TestClient not initialized")
+	if TestAppState == nil || TestAppState.SupabaseClient == nil {
+		return nil, fmt.Errorf("TestAppState not initialized")
 	}
 
 	// Note: Without Service Role Key, this might fail or require email confirmation
@@ -88,7 +89,7 @@ func CreateTestUser(email, password string) (*types.User, error) {
 		EmailConfirm: true,
 	}
 
-	user, err := TestClient.Auth.AdminCreateUser(params)
+	user, err := TestAppState.SupabaseClient.Auth.AdminCreateUser(params)
 	if err != nil {
 		return nil, err
 	}
@@ -98,15 +99,15 @@ func CreateTestUser(email, password string) (*types.User, error) {
 
 // DeleteTestUser removes a user by ID (cleanup)
 func DeleteTestUser(userId string) error {
-	if TestClient == nil {
-		return fmt.Errorf("TestClient not initialized")
+	if TestAppState == nil || TestAppState.SupabaseClient == nil {
+		return fmt.Errorf("TestAppState not initialized")
 	}
 	uid, err := uuid.Parse(userId)
 	if err != nil {
 		return fmt.Errorf("invalid user id uuid: %w", err)
 	}
 
-	return TestClient.Auth.AdminDeleteUser(types.AdminDeleteUserRequest{
+	return TestAppState.SupabaseClient.Auth.AdminDeleteUser(types.AdminDeleteUserRequest{
 		UserID: uid,
 	})
 }
