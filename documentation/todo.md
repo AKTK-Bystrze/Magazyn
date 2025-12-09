@@ -1,21 +1,12 @@
 bledy po implmenentacji equipment api
 
-niedokonczona konwersacaj z implementacja UI dla equipment - czeka na equiipment types endpoint
+refactor UI structure, create a frontend project structure
+translate /admin view
+proceed with backend implementation of plans in .ai
 
+frontend plans
+frontend implementation
 
-niedokonczona konwersacaj z implemenacji API dla equipment types
-
-"implementing Equipment API"
-
-implementacja backendu reszty
-    equipment
-    users
-    credits
-stworzenie planow implementacji frontendu reszty
-    equipment
-    users
-    credits
-implementacja frontendu reszty
 e2e testy
 implementacja pozostalych endpointow
 dokumentacja
