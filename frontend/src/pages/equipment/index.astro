@@ -1,10 +1,10 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import { EquipmentSearchContainer } from '@/components/equipment/EquipmentSearchContainer';
+import Layout from '@/layouts/Layout.astro';
+import EquipmentSearchContainer from '@/components/equipment/EquipmentSearchContainer';
 ---
 
-<Layout title="Equipment Search | Magazyn">
-  <main class="min-h-screen bg-background">
+<Layout title="Equipment Search | Bystrze Magazyn">
+  <div class="container mx-auto">
     <EquipmentSearchContainer client:load />
-  </main>
+  </div>
 </Layout>

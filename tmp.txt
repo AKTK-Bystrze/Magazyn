@@ -1,71 +1,57 @@
-# UI Architecture & UX Guidelines
+Your task is to implement a REST API endpoint based on the provided implementation plan. Your goal is to create a solid and well-organized implementation that includes appropriate validation, error handling, and follows all logical steps described in the plan.
 
-Based on the Product Requirements and Planning sessions, this document outlines the architectural decisions for the frontend implementation.
+First, carefully review the provided implementation plan:
 
-## 1. Core Layout & Navigation
-- **Navigation Style**: Top Navigation Bar (Responsive).
-  - *Desktop*: Full menu with "Dashboard", "My Reservations", "Equipment", etc.
-  - *Mobile*: Hamburger menu + Simplified Header.
-  - *Reasoning*: Better scaling for mobile users and maximizes horizontal space for data tables.
-- **Redirects**:
-  - `Root (/)` -> Redirects based on role:
-    - Guests -> `/login`
-    - Users -> `/my-reservations`
-    - Admins -> `/admin/dashboard`
+<implementation_plan>
+@equipment-api-plan.md 
+</implementation_plan>
 
-## 2. Global State & Data Fetching
-- **Server State**: `TanStack Query` (React Query)
-  - Used for all API data (Equipment, Reservations, Users).
-  - Caching strategies: `staleTime: 5 mins` for public equipment, `0` for user-specific reservations.
-- **Client State**: `Nano Stores` (or React Context)
-  - **User Profile & Credits**: Kept in a lightweight global store to update the Navbar "Credit Balance" instantly without prop drilling.
-  - **Reservation Cart**: Persisted in `sessionStorage` to survive refreshes.
+<types>
+@database.types.go @database.types.ts 
+</types>
 
-## 3. Localization & Terminology
-- **Locale**: Polish (`pl-PL`).
-- **Date Format**: `dd.MM.yyyy` (Display), `YYYY-MM-DD` (API).
-- **Currency**: "Godzinki" (Credits).
-- **Translations**: Hardcoded Polish for MVP (no i18n library yet), but isolated in component text.
+<implementation_rules>
+ @shared.md, @backend.md, @astro.md, @go.md 
+</implementation_rules>
 
-## 4. Component System & Theming
-- **Library**: `Shadcn/UI` + `Tailwind CSS`.
-- **Theme Support**: Dark/Light/System (User configurable).
-- **Feedback**:
-  - **Success/Error**: Toast notifications (`sonner`).
-  - **Loading**: Skeleton loaders (gray bars) mimicking content layout.
-- **Modals vs Pages**:
-  - **Modals**: For "Management" actions (Create User, Add Equipment, Edit Reservation).
-  - **Pages**: For "Exploration" views (Search Results, Reservation History, Dashboard).
+<implementation_approach>
+Implement a maximum of 3 steps from the implementation plan, briefly summarize what you've done, and describe the plan for the next 3 actions - stop work at this point and wait for my feedback.
+</implementation_approach>
 
-## 5. Mobile & Responsiveness
-- **Calendar**:
-  - *Desktop*: Full Month Grid.
-  - *Mobile*: Compact Month view with "Dot" indicators + List of selected day's events below.
-- **Tables**:
-  - *Desktop*: Full columns.
-  - *Mobile*: Card view or horizontally scrollable specific columns.
+Now perform the following steps to implement the REST API endpoint:
 
-## 6. Security & Auth Integration
-- **Auth Flow**: Supabase Magic Links.
-- **Session**: Handled by `@supabase/supabase-js` (Auto-refresh).
-- **Route Protection**:
-  - `ProtectedRoute`: Wraps pages requiring login.
-  - `RoleGuard`: Wraps UI elements (e.g., "Edit" buttons) visible only to Admins.
-  - **Error Boundaries**: Component-level crash protection (e.g., if Calendar widget crashes, the Page remains usable).
+1. Analyze the implementation plan:
+   - Determine the HTTP method (GET, POST, PUT, DELETE, etc.) for the endpoint.
+   - Define the endpoint URL structure
+   - List all expected input parameters
+   - Understand the required business logic and data processing stages
+   - Note any special requirements for validation or error handling.
 
-## 7. Image Handling
-- **Upload**: Direct-to-Supabase Storage.
-  1. Frontend selects file -> Uploads to `rentals` bucket.
-  2. Receives public URL/Path.
-  3. Submits Path to Go Backend in `POST /equipment` body.
+2. Begin implementation:
+   - Start by defining the endpoint function with the correct HTTP method decorator.
+   - Configure function parameters based on expected inputs
+   - Implement input validation for all parameters
+   - Follow the logical steps described in the implementation plan
+   - Implement error handling for each stage of the process
+   - Ensure proper data processing and transformation according to requirements
+   - Prepare the response data structure
 
-## 8. Technical Implementation Strategy
-- **Directory Structure**: Feature-based (`src/features/{featureName}/...`). Shared components in `src/components`.
-- **Form Management**: `React Hook Form` + `Zod` validation.
-- **Date Library**: `date-fns` for all date manipulation.
-- **Icons**: `Lucide React` (standard for Shadcn).
-- **Routing**: Astro Pages for main routes. Complex flows (Wizard) handled via client-side state in single page.
-- **API Client**: Strongly-typed `ky` or `fetch` wrapper mapping to shared TypeScript interfaces.
-- **Styling**: Tailwind CSS utility classes + `class-variance-authority (cva)`.
-- **Testing**: `Vitest` + `React Testing Library`.
-- **Quality Control**: `Husky` + `lint-staged`.
+3. Validation and error handling:
+   - Implement thorough input validation for all parameters
+   - Use appropriate HTTP status codes for different scenarios (e.g., 400 for bad requests, 404 for not found, 500 for server errors).
+   - Provide clear and informative error messages in responses.
+   - Handle potential exceptions that may occur during processing.
+
+4. Testing considerations:
+   - Consider edge cases and potential issues that should be tested.
+   - Ensure the implementation covers all scenarios mentioned in the plan.
+
+5. Documentation:
+   - Add clear comments to explain complex logic or important decisions
+   - Include documentation for the main function and any helper functions.
+
+After completing the implementation, ensure it includes all necessary imports, function definitions, and any additional helper functions or classes required for the implementation.
+
+If you need to make any assumptions or have any questions about the implementation plan, present them before writing code.
+
+Remember to follow REST API design best practices, adhere to programming language style guidelines, and ensure the code is clean, readable, and well-organized.
