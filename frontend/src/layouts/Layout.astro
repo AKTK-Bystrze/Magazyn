@@ -18,60 +18,6 @@ const { title } = Astro.props;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
     <link rel="stylesheet" href="/src/styles/global.css" />
-    <script is:inline>
-      (function() {
-        const originalLog = console.log;
-        const originalWarn = console.warn;
-        const originalError = console.error;
-        const originalInfo = console.info;
-
-        function sendLogToBackend(level, message, ...args) {
-          try {
-            // Reconstruct the full message
-            const fullMessage = [message, ...args].map(arg => 
-              typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-            ).join(' ');
-
-            fetch('/api/logger', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                level: level,
-                message: fullMessage,
-                timestamp: new Date().toISOString()
-              }),
-              keepalive: true // Ensure request survives page navigation
-            }).catch(e => {
-              // Fail silently to avoid infinite loops if the logger itself fails
-            });
-          } catch (err) {
-            // Ignore errors in the logger itself
-          }
-        }
-
-        console.log = function(...args) {
-          originalLog.apply(console, args);
-          sendLogToBackend('INFO', ...args);
-        };
-
-        console.warn = function(...args) {
-          originalWarn.apply(console, args);
-          sendLogToBackend('WARN', ...args);
-        };
-
-        console.error = function(...args) {
-          originalError.apply(console, args);
-          sendLogToBackend('ERROR', ...args);
-        };
-
-        console.info = function(...args) {
-          originalInfo.apply(console, args);
-          sendLogToBackend('INFO', ...args);
-        };
-      })();
-    </script>
 	</head>
 	<body>
     <AuthListener client:load />

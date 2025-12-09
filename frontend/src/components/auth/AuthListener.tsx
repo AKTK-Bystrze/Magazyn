@@ -1,55 +1,25 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { getDefaultRouteForUser } from '@/lib/auth/role-utils';
 import { getUserSession } from '@/lib/auth/session-utils';
-
-const logToServer = (level: 'INFO' | 'WARN' | 'ERROR', message: string, data?: any) => {
-  if (level === 'ERROR') console.error(message, data);
-  else console.log(message, data);
-
-  try {
-    fetch('/api/logger', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level, message, data }),
-      keepalive: true,
-    }).catch(() => { });
-  } catch (e) { }
-};
-
-// Global flag to prevent multiple simultaneous redirects
-let isRedirectInProgress = false;
-
-const waitForCookieAndRedirect = async (accessToken: string, redirectTo: string): Promise<boolean> => {
-  if (isRedirectInProgress) {
-    logToServer('INFO', '⏸️ Redirect blocked - already in progress');
-    return false;
-  }
-
-  isRedirectInProgress = true;
-  const cookieName = 'magazyn-auth-token';
-  const maxAge = 60 * 60 * 24 * 365;
-  document.cookie = `${cookieName}=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
-
-  await new Promise(resolve => setTimeout(resolve, 100));
-
-  if (!document.cookie.includes(cookieName)) {
-    logToServer('WARN', '⚠️ Cookie not set, waiting longer...');
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
-
-  logToServer('INFO', `🔄 Redirecting to: ${redirectTo}`);
-  window.location.replace(redirectTo);
-  return true;
-};
+import { ROUTES } from '@/lib/config/routes';
+import { RedirectManager } from '@/lib/auth/redirect-manager';
+import {
+  setAuthCookie,
+  removeAuthCookie,
+  waitForCookieAndRedirect,
+  AUTH_COOKIE_NAME
+} from '@/lib/auth/cookie-utils';
 
 export const AuthListener: React.FC = () => {
+  // Use React state instead of global variable for redirect tracking
+  const [isRedirectInProgress, setIsRedirectInProgress] = useState(false);
+
   useEffect(() => {
     const checkHashForToken = async () => {
       const hash = window.location.hash;
       if (hash && hash.includes('access_token')) {
         // CRITICAL: Set redirect flag IMMEDIATELY to prevent auth event handler from racing
-        isRedirectInProgress = true;
+        setIsRedirectInProgress(true);
 
         const hashParams = new URLSearchParams(hash.substring(1));
         const access_token = hashParams.get('access_token');
@@ -66,9 +36,9 @@ export const AuthListener: React.FC = () => {
             });
 
             if (error) {
-              logToServer('ERROR', '❌ Session error:', error.message);
-              isRedirectInProgress = false;
-              window.location.href = '/login';
+              console.error('❌ Session error:', error.message);
+              setIsRedirectInProgress(false);
+              window.location.href = ROUTES.PUBLIC.LOGIN;
               return;
             }
 
@@ -76,38 +46,50 @@ export const AuthListener: React.FC = () => {
               const sessionInfo = await getUserSession(data.session.access_token);
 
               if (!sessionInfo) {
-                logToServer('ERROR', '❌ Failed to fetch session info');
-                isRedirectInProgress = false;
-                window.location.href = '/login';
+                console.error('❌ Failed to fetch session info');
+                setIsRedirectInProgress(false);
+                window.location.href = ROUTES.PUBLIC.LOGIN;
                 return;
               }
 
+              // Use RedirectManager for consistent redirect logic
               const urlParams = new URLSearchParams(window.location.search);
               const redirectParam = urlParams.get('redirect');
 
-              let redirectTo: string;
-              if (redirectParam && redirectParam !== '/login' && redirectParam !== '/') {
-                redirectTo = !sessionInfo.isEnabled ? '/account-disabled' : redirectParam;
-              } else {
-                redirectTo = getDefaultRouteForUser(data.session.user, sessionInfo);
-              }
+              const redirectTo = RedirectManager.getRedirectForAuthState(
+                data.session.user,
+                sessionInfo,
+                window.location.pathname,
+                redirectParam,
+                window.location.origin
+              );
 
-              const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-              const targetPath = redirectTo.replace(/\/$/, '') || '/';
+              if (redirectTo) {
+                const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+                const targetPath = redirectTo.replace(/\/$/, '') || '/';
 
-              if (currentPath !== targetPath) {
-                logToServer('INFO', `🔗 Redirect: ${currentPath} → ${redirectTo}`);
-                await waitForCookieAndRedirect(data.session.access_token, redirectTo);
+                if (currentPath !== targetPath) {
+                  // Check for redirect loops
+                  if (!RedirectManager.canRedirect(currentPath, redirectTo)) {
+                    console.error('🚨 Redirect loop detected', { from: currentPath, to: redirectTo });
+                    setIsRedirectInProgress(false);
+                    return;
+                  }
+
+                  RedirectManager.recordRedirect(currentPath, redirectTo);
+                  console.log(`🔗 Redirect: ${currentPath} → ${redirectTo}`);
+                  await waitForCookieAndRedirect(data.session.access_token, redirectTo);
+                }
               }
             }
           } catch (err) {
-            logToServer('ERROR', '❌ Exception:', err);
-            isRedirectInProgress = false;
-            window.location.href = '/login';
+            console.error('❌ Exception:', err);
+            setIsRedirectInProgress(false);
+            window.location.href = ROUTES.PUBLIC.LOGIN;
           }
         } else {
           // No valid tokens, reset flag
-          isRedirectInProgress = false;
+          setIsRedirectInProgress(false);
         }
       }
     };
@@ -115,23 +97,22 @@ export const AuthListener: React.FC = () => {
     checkHashForToken();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Sync cookie
+      // Sync cookie using centralized utility
       if (session?.access_token) {
-        const maxAge = 60 * 60 * 24 * 365;
-        document.cookie = `magazyn-auth-token=${session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        setAuthCookie(session.access_token);
       } else if (event === 'SIGNED_OUT') {
-        document.cookie = 'magazyn-auth-token=; path=/; max-age=0; SameSite=Lax';
+        removeAuthCookie();
       }
 
       if (event === 'SIGNED_IN' && session) {
         // Skip if hash present (hash handler processes) or redirect in progress
         if (window.location.hash.includes('access_token')) {
-          logToServer('INFO', '⏸️ Skipping - hash handler will process');
+          console.log('⏸️ Skipping - hash handler will process');
           return;
         }
 
         if (isRedirectInProgress) {
-          logToServer('INFO', '⏸️ Skipping - redirect in progress');
+          console.log('⏸️ Skipping - redirect in progress');
           return;
         }
 
@@ -139,19 +120,30 @@ export const AuthListener: React.FC = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const redirectParam = urlParams.get('redirect');
 
-        let redirectTo: string;
-        if (redirectParam && redirectParam !== '/login' && redirectParam !== '/') {
-          redirectTo = sessionInfo && !sessionInfo.isEnabled ? '/account-disabled' : redirectParam;
-        } else {
-          redirectTo = getDefaultRouteForUser(session.user, sessionInfo);
-        }
+        // Use RedirectManager for consistent redirect logic
+        const redirectTo = RedirectManager.getRedirectForAuthState(
+          session.user,
+          sessionInfo,
+          window.location.pathname,
+          redirectParam,
+          window.location.origin
+        );
 
-        const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-        const targetPath = redirectTo.replace(/\/$/, '') || '/';
+        if (redirectTo) {
+          const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+          const targetPath = redirectTo.replace(/\/$/, '') || '/';
 
-        if (currentPath !== targetPath) {
-          logToServer('INFO', `🔔 Redirect: ${currentPath} → ${redirectTo}`);
-          await waitForCookieAndRedirect(session.access_token, redirectTo);
+          if (currentPath !== targetPath) {
+            // Check for redirect loops
+            if (!RedirectManager.canRedirect(currentPath, redirectTo)) {
+              console.error('🚨 Redirect loop detected', { from: currentPath, to: redirectTo });
+              return;
+            }
+
+            RedirectManager.recordRedirect(currentPath, redirectTo);
+            console.log(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
+            await waitForCookieAndRedirect(session.access_token, redirectTo);
+          }
         }
       } else if (session && window.location.hash.includes('access_token')) {
         window.history.replaceState(null, '', window.location.pathname);
@@ -159,7 +151,7 @@ export const AuthListener: React.FC = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isRedirectInProgress]); // Add dependency
 
   return null;
 };

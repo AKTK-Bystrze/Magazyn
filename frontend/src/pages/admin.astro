@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { ROUTES } from '../lib/config/routes';
 
 // Check if user is authenticated - middleware handles this
 const user = Astro.locals.user;
@@ -8,17 +9,23 @@ const sessionInfo = Astro.locals.sessionInfo;
 console.log(`[ADMIN_PAGE] Accessing page. User: ${user?.email}`);
 
 if (!user) {
-  console.log(`[ADMIN_PAGE] No user found. Redirecting to /login`);
-  return Astro.redirect('/login');
+  console.log(`[ADMIN_PAGE] No user found. Redirecting to ${ROUTES.PUBLIC.LOGIN}`);
+  return Astro.redirect(ROUTES.PUBLIC.LOGIN);
 }
 
-// Get role from sessionInfo (authoritative) or fallback to user_metadata
-const userRole = sessionInfo?.role || user.user_metadata?.role;
-console.log(`[ADMIN_PAGE] User Role: ${userRole} (from sessionInfo: ${sessionInfo?.role}, from metadata: ${user.user_metadata?.role})`);
+// SECURITY: Use ONLY sessionInfo.role (authoritative source from database with RLS)
+// Never use user_metadata.role (can be stale)
+if (!sessionInfo || !sessionInfo.role) {
+  console.log(`[ADMIN_PAGE] No sessionInfo available. Redirecting to ${ROUTES.PUBLIC.LOGIN}`);
+  return Astro.redirect(ROUTES.PUBLIC.LOGIN);
+}
+
+const userRole = sessionInfo.role;
+console.log(`[ADMIN_PAGE] User Role: ${userRole} (from sessionInfo - authoritative source)`);
 
 if (userRole !== 'admin' && userRole !== 'super_admin') {
-  console.log(`[ADMIN_PAGE] Invalid role. Redirecting to /dashboard`);
-  return Astro.redirect('/dashboard');
+  console.log(`[ADMIN_PAGE] Invalid role '${userRole}'. Redirecting to ${ROUTES.PROTECTED.DASHBOARD}`);
+  return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
 }
 ---
 

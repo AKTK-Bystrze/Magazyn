@@ -1,7 +1,8 @@
 cleanup auth (przygotowane plany w .ai/loop z -testing.md)
     cleanup
-
-removae usage of the special key
+    consts
+    duplicated truth sources
+    hardcoced
 
 implementacja backendu reszty
     equipment
