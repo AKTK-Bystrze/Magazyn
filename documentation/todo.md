@@ -1,5 +1,3 @@
-workspace cleanup
-
 implementacja backendu reszty
     equipment
     users

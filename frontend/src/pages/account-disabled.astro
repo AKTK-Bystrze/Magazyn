@@ -11,7 +11,7 @@ const user = Astro.locals.user;
 const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
 ---
 
-<Layout title="Account Disabled | Equipment Rental">
+<Layout title="Zaloguj się | Wynajem Sprzętu">
   <main class="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
     <div class="max-w-md w-full space-y-8 text-center">
       <!-- Icon -->
@@ -36,29 +36,29 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
       <!-- Title -->
       <div class="space-y-2">
         <h1 class="text-3xl font-bold tracking-tight text-foreground">
-          Account Pending Activation
+          Witaj
         </h1>
-        <p class="text-muted-foreground">
-          Your account has been created successfully
+        <p class="text-sm text-muted-foreground">
+          Wpisz swój e‑mail, aby zalogować się do swojego konta
         </p>
       </div>
 
       <!-- Message -->
       <div class="bg-card border border-border rounded-lg p-6 space-y-4 text-left">
         <div class="space-y-2">
-          <h2 class="font-semibold text-lg text-foreground">What's happening?</h2>
+          <h2 class="font-semibold text-lg text-foreground">Co się dzieje?</h2>
           <p class="text-sm text-muted-foreground">
-            Your account is currently disabled and waiting for approval from a SuperAdmin. 
-            You won't be able to access the application until your account has been enabled.
+            Twoje konto jest obecnie wyłączone i czeka na zatwierdzenie przez Super‑Admina. 
+            Nie będziesz mógł uzyskać dostępu do aplikacji, dopóki konto nie zostanie włączone.
           </p>
         </div>
 
         <div class="space-y-2">
-          <h2 class="font-semibold text-lg text-foreground">What should you do?</h2>
+          <h2 class="font-semibold text-lg text-foreground">Co powinieneś zrobić?</h2>
           <ul class="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-            <li>Wait for a SuperAdmin to review and enable your account</li>
-            <li>Contact your administrator if you need immediate access</li>
-            <li>Check back later or click the refresh button below</li>
+            <li>Poczekaj, aż Super‑Admin zweryfikuje i włączy Twoje konto</li>
+            <li>Skontaktuj się z administratorem, jeśli potrzebujesz natychmiastowego dostępu</li>
+            <li>Sprawdź ponownie później lub kliknij przycisk odświeżania poniżej</li>
           </ul>
         </div>
 
@@ -74,15 +74,12 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
           id="refresh-status-btn"
           class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
         >
-          Check Account Status
+          Sprawdź status konta
         </button>
 
-        <button
-          id="logout-btn"
-          class="w-full px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors font-medium"
-        >
-          Logout
-        </button>
+        <Button variant="ghost" onClick={onReset} className="mt-4">
+        Powrót do logowania
+      </Button>
       </div>
 
       <!-- Status message -->
@@ -105,7 +102,7 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
       if (!btn || !statusMsg) return;
 
       // Show loading state
-      btn.textContent = 'Checking...';
+      btn.textContent = 'Sprawdzanie…';
       btn.setAttribute('disabled', 'true');
       statusMsg.classList.add('hidden');
 
@@ -123,7 +120,7 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
           
           if (data.isEnabled) {
             // Account is now enabled! Redirect to appropriate page
-            statusMsg.querySelector('p').textContent = 'Account enabled! Redirecting...';
+            statusMsg.querySelector('p').textContent = 'Konto włączone! Przekierowuję…';
             statusMsg.querySelector('p').className = 'text-sm text-green-600 dark:text-green-500';
             statusMsg.classList.remove('hidden');
             
@@ -132,7 +129,7 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
             }, 1500);
           } else {
             // Still disabled
-            statusMsg.querySelector('p').textContent = 'Account is still pending approval.';
+            statusMsg.querySelector('p').textContent = 'Konto nadal oczekuje na zatwierdzenie.';
             statusMsg.querySelector('p').className = 'text-sm text-yellow-600 dark:text-yellow-500';
             statusMsg.classList.remove('hidden');
             
@@ -144,7 +141,7 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
         }
       } catch (error) {
         console.error('Error checking account status:', error);
-        statusMsg.querySelector('p').textContent = 'Failed to check status. Please try again.';
+        statusMsg.querySelector('p').textContent = 'Nie udało się sprawdzić statusu. Spróbuj ponownie.';
         statusMsg.querySelector('p').className = 'text-sm text-red-600 dark:text-red-500';
         statusMsg.classList.remove('hidden');
         
@@ -158,7 +155,7 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
       const btn = document.getElementById('logout-btn');
       if (!btn) return;
 
-      btn.textContent = 'Logging out...';
+      btn.textContent = 'Wylogowywanie…';
       btn.setAttribute('disabled', 'true');
 
       try {
@@ -176,8 +173,8 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
         
         window.location.href = '/login';
       } catch (error) {
-        console.error('Error logging out:', error);
-        btn.textContent = 'Logout';
+        console.error('Błąd przy wylogowywaniu:', error);
+        btn.textContent = 'Wyloguj się';
         btn.removeAttribute('disabled');
       }
     });
