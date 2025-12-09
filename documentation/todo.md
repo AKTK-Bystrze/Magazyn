@@ -1,3 +1,8 @@
+bledy po implmenentacji equipment api
+wyczyscic backend strukture
+niedokonczona konwersacaj z implementacja UI dla equipment
+niedokonczona konwersacaj z implemenacji API dla equipment types
+
 implementacja backendu reszty
     equipment
     users

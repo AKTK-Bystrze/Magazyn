@@ -159,7 +159,27 @@ export type Equipment = {
 /**
  * Equipment in search results (GET /equipment)
  */
-export type EquipmentListItem = Equipment;
+/**
+ * Equipment in search results (GET /equipment)
+ * Matches the structure defined in .ai/equipment-view-implementation-plan.md
+ */
+export type EquipmentSearchItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  typeId: string;
+  type: {
+    id: string;
+    name: string;
+    creditCostPerDay: number;
+  };
+  status: Enums<"equipment_status">;
+  imagePath: string | null;
+  internalId: string;
+  isFavorite?: boolean;
+};
+
+export type EquipmentListItem = EquipmentSearchItem;
 
 /**
  * Equipment details with maintenance logs (GET /equipment/:id)

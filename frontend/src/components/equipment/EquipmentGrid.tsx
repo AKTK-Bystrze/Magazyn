@@ -1,18 +1,26 @@
-import type { Equipment } from '@/types';
-import { EquipmentCard } from './EquipmentCard';
+import * as React from "react";
+import { type EquipmentSearchItem } from "@/types";
+import { EquipmentCard } from "./EquipmentCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface EquipmentGridProps {
-  items: Equipment[];
-  isLoading: boolean;
-  error: Error | null;
+  items: EquipmentSearchItem[];
+  isLoading?: boolean;
+  error?: Error | null;
 }
 
 export function EquipmentGrid({ items, isLoading, error }: EquipmentGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-[300px] rounded-lg bg-muted animate-pulse" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex flex-col space-y-3">
+            <Skeleton className="h-[200px] w-full rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -20,23 +28,24 @@ export function EquipmentGrid({ items, isLoading, error }: EquipmentGridProps) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center p-6 border rounded-lg border-destructive/20 bg-destructive/5 text-destructive">
+      <div className="flex flex-col items-center justify-center p-12 text-center text-destructive bg-destructive/10 rounded-lg">
         <h3 className="text-lg font-semibold">Error loading equipment</h3>
-        <p className="text-sm opacity-80 mt-1">{error.message || 'Something went wrong occurred while fetching data.'}</p>
+        <p className="text-sm text-muted-foreground">{error.message}</p>
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center p-6 border rounded-lg bg-muted/20">
-        <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4 text-2xl">
-          🔍
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/20 rounded-lg">
+        <div className="rounded-full bg-muted p-4 mb-4">
+          {/* Icon placeholder */}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-muted-foreground">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
         </div>
         <h3 className="text-lg font-semibold">No equipment found</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Try adjusting your filters or search query.
-        </p>
+        <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters.</p>
       </div>
     );
   }

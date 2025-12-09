@@ -1,100 +1,146 @@
-import { useEquipmentSearch } from '@/hooks/use-equipment-search';
-import { FilterSidebar } from './FilterSidebar';
-import { EquipmentGrid } from './EquipmentGrid';
-import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import type { Equipment, PaginatedResponse, EquipmentType } from '@/types';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useEquipmentSearch } from "@/hooks/use-equipment-search";
+import { FilterSidebar } from "./FilterSidebar";
+import { EquipmentGrid } from "./EquipmentGrid";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
+import { Filter } from "lucide-react";
+import type {
+  EquipmentSearchItem,
+  EquipmentType,
+  PaginatedResponse
+} from "@/types";
 
-const queryClient = new QueryClient();
+export default function EquipmentSearchContainer() {
+  const { filters, activeFilters, updateFilter } = useEquipmentSearch();
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
 
-export function EquipmentSearchContainer() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <EquipmentSearchContent />
-    </QueryClientProvider>
-  );
-}
-
-function EquipmentSearchContent() {
-  const { filters, updateFilter } = useEquipmentSearch();
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-
-  // Fetch Equipment
-  const { data: equipmentData, isLoading: isLoadingEquipment, error: equipmentError } = useQuery({
-    queryKey: ['equipment', filters],
-    queryFn: () => api.get<PaginatedResponse<Equipment>>('/equipment', filters).then(res => res.data),
-  });
-
-  // Fetch Types for filters
+  // Fetch Equipment Types for filters
   const { data: typesData } = useQuery({
-    queryKey: ['equipment-types'],
-    queryFn: () => api.get<{ data: EquipmentType[] }>('/equipment-types').then(res => res.data),
+    queryKey: ["equipment-types"],
+    queryFn: () => api.get<EquipmentType[]>("/api/equipment-types"),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-
-  const equipment = equipmentData?.data || [];
-  const meta = equipmentData?.pagination || { page: 1, totalPages: 1 };
   const types = typesData?.data || [];
 
+  // Fetch Equipment Results
+  const {
+    data: equipmentData,
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ["equipment", activeFilters],
+    queryFn: () => api.get<PaginatedResponse<EquipmentSearchItem>>("/api/equipment", activeFilters),
+    // Keep previous data while fetching new to prevent flash
+    placeholderData: (previousData) => previousData, 
+  });
+
+  const equipment = equipmentData?.data?.data || [];
+  const meta = equipmentData?.data?.pagination || {
+    page: 1,
+    perPage: 25,
+    totalItems: 0,
+    totalPages: 0
+  };
+
+  const handleReset = () => {
+    updateFilter("q", "");
+    updateFilter("type_id", undefined);
+    updateFilter("status", undefined);
+    // Page automatically resets to 1 in hook
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row gap-8 w-full p-4 md:p-6 max-w-7xl mx-auto">
-      {/* Mobile Filter Toggle */}
-      <div className="lg:hidden mb-4">
-        <Button onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)} variant="outline">
-          {isMobileFilterOpen ? 'Hide Filters' : 'Show Filters'}
-        </Button>
+    <div className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]">
+      {/* Mobile Filter Trigger */}
+      <div className="lg:hidden flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Equipment</h1>
+        <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Filter className="h-4 w-4" />
+              Filters
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Filters</SheetTitle>
+            </SheetHeader>
+            <FilterSidebar
+              filters={filters}
+              types={types}
+              onFilterChange={updateFilter}
+              onReset={handleReset}
+            />
+          </SheetContent>
+        </Sheet>
       </div>
 
-      {/* Sidebar - Hidden on mobile unless toggled */}
-      <div className={`${isMobileFilterOpen ? 'block' : 'hidden'} lg:block`}>
-        <FilterSidebar 
-          filters={filters} 
-          onFilterChange={updateFilter} 
-          types={types}
-        />
-      </div>
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6">
+        <div className="sticky top-6">
+          <h2 className="text-xl font-bold mb-4">Filters</h2>
+          <FilterSidebar
+            filters={filters} 
+            types={types} 
+            onFilterChange={updateFilter}
+            onReset={handleReset}
+          />
+        </div>
+      </aside>
 
-      {/* Main Content */}
-      <div className="flex-grow space-y-6">
-        <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">Equipment</h1>
-            <div className="text-sm text-muted-foreground">
-               {meta.totalItems || 0} items found
-            </div>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col">
+        {/* Results Header (Desktop) */}
+        <div className="hidden lg:flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Equipment Inventory</h1>
+          <div className="text-sm text-muted-foreground">
+            Showing {equipment.length} of {meta.totalItems} items
+          </div>
         </div>
 
-        <EquipmentGrid 
-          items={equipment} 
-          isLoading={isLoadingEquipment}
-          error={equipmentError as Error | null} 
-        />
-        
-        {/* Simple Pagination */}
+        <div className="flex-1">
+          <EquipmentGrid
+            items={equipment} 
+            isLoading={isLoading}
+            error={error as Error | null}
+          />
+        </div>
+
+        {/* Pagination Controls */}
         {meta.totalPages > 1 && (
-           <div className="flex justify-center gap-2 mt-8">
-             <Button 
-               variant="outline" 
-               disabled={filters.page <= 1}
-               onClick={() => updateFilter('page', filters.page - 1)}
+          <div className="mt-8 flex justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={meta.page <= 1}
+              onClick={() => updateFilter("page", meta.page - 1)}
              >
                Previous
              </Button>
              <div className="flex items-center px-4 text-sm font-medium">
-                Page {meta.page} of {meta.totalPages}
+              Page {meta.page} of {meta.totalPages}
              </div>
-             <Button 
-               variant="outline" 
-               disabled={filters.page >= meta.totalPages}
-               onClick={() => updateFilter('page', filters.page + 1)}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={meta.page >= meta.totalPages}
+              onClick={() => updateFilter("page", meta.page + 1)}
              >
                Next
              </Button>
            </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
