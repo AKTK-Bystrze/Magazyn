@@ -1,5 +1,3 @@
-in code documentation
-translate to polish
 workspace cleanup
 
 implementacja backendu reszty
