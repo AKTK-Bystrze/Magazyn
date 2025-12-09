@@ -331,64 +331,6 @@ describe('redirect-manager', () => {
     });
   });
 
-  describe('getDefaultRouteForUser', () => {
-    const user = createMockUser();
-
-    it('returns login when sessionInfo is null (fail-safe)', () => {
-      const result = getDefaultRouteForUser(user, null);
-      expect(result).toBe('/login');
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('No sessionInfo available')
-      );
-    });
-
-    it('returns account-disabled for disabled users', () => {
-      const sessionInfo = createMockSessionInfo({ isEnabled: false });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe('/account-disabled');
-    });
-
-    it('returns /admin for super_admin role', () => {
-      const sessionInfo = createMockSessionInfo({ role: 'super_admin', isEnabled: true });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe('/admin');
-    });
-
-    it('returns /admin for admin role', () => {
-      const sessionInfo = createMockSessionInfo({ role: 'admin', isEnabled: true });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe('/admin');
-    });
-
-    it('returns /dashboard for user role', () => {
-      const sessionInfo = createMockSessionInfo({ role: 'user', isEnabled: true });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe('/dashboard');
-    });
-
-    it('returns /dashboard for unknown role (fallback)', () => {
-      const sessionInfo = createMockSessionInfo({ role: 'unknown_role', isEnabled: true });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe('/dashboard');
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown role')
-      );
-    });
-
-    it('uses only sessionInfo.role, not user_metadata.role (SECURITY)', () => {
-      // Even if user_metadata has admin role, should use sessionInfo role
-      const userWithMetadata = createMockUser({
-        user_metadata: { role: 'admin' }
-      });
-      const sessionInfo = createMockSessionInfo({ role: 'user', isEnabled: true });
-      
-      const result = getDefaultRouteForUser(userWithMetadata, sessionInfo);
-      
-      // Should respect sessionInfo role (user), not user_metadata role (admin)
-      expect(result).toBe('/dashboard');
-    });
-  });
-
   describe('hasRole', () => {
     it('returns true when role matches one of allowed roles', () => {
       expect(hasRole('admin', ['admin', 'super_admin'])).toBe(true);

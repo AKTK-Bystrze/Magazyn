@@ -1,5 +1,4 @@
 cleanup auth (przygotowane plany w .ai/loop z -testing.md)
-    cleanup
     consts
     duplicated truth sources
     hardcoced

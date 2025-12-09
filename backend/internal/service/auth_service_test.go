@@ -146,8 +146,6 @@ func TestAuthService_GetSession(t *testing.T) {
 
 		s := service.NewAuthService(mockAuth, mockDB)
 
-		userId := uuid.New().String()
-
 		userToken := "test-token"
 
 		// Setup chain with user token
