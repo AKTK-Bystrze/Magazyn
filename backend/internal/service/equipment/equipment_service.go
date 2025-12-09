@@ -34,6 +34,9 @@ type EquipmentService interface {
 
 	// CheckAvailability checks if equipment is available for a given date range
 	CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error)
+
+	// ListEquipmentTypes retrieves all equipment types
+	ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error)
 }
 
 // ============================================================================
@@ -311,6 +314,18 @@ func (s *equipmentService) CheckAvailability(ctx context.Context, id string, que
 		EquipmentID:             id,
 		IsAvailable:             len(conflicts) == 0,
 		ConflictingReservations: conflictDTOs,
+	}, nil
+}
+
+func (s *equipmentService) ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error) {
+	typesList, err := s.typeRepo.ListAll(ctx)
+	if err != nil {
+		logger.Errorf(ctx, "Failed to fetch equipment types: %v", err)
+		return nil, types.NewInternalError("Failed to fetch equipment types", err)
+	}
+
+	return &types.EquipmentTypeListResponse{
+		EquipmentTypes: typesList,
 	}, nil
 }
 

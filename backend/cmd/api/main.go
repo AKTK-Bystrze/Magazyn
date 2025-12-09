@@ -55,6 +55,7 @@ func main() {
 	mux.Handle("GET /auth/session", authMiddleware(http.HandlerFunc(authHandler.HandleGetSession)))
 
 	mux.Handle("GET /equipment", authMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
+	mux.Handle("GET /equipment-types", authMiddleware(http.HandlerFunc(equipmentHandler.HandleListEquipmentTypes)))
 
 	mux.Handle("POST /equipment", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleCreate))))
 	mux.Handle("GET /equipment/{id}", authMiddleware(http.HandlerFunc(equipmentHandler.HandleGetByID)))

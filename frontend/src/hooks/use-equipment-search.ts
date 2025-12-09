@@ -3,33 +3,33 @@ import type { EquipmentSearchParams, EquipmentStatus } from '@/types';
 
 // Default values
 const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 25;
+const DEFAULT_PER_PAGE = 25;
 
 export function useEquipmentSearch() {
   // Initialize state from URL on mount
   const [filters, setFilters] = useState<EquipmentSearchParams>(() => {
     if (typeof window === 'undefined') {
-      return { page: DEFAULT_PAGE, limit: DEFAULT_LIMIT };
+      return { page: DEFAULT_PAGE, perPage: DEFAULT_PER_PAGE };
     }
     const params = new URLSearchParams(window.location.search);
     return {
-      q: params.get('q') || undefined,
+      search: params.get('search') || undefined,
       type_id: params.get('type_id') || undefined,
       status: (params.get('status') as EquipmentStatus) || undefined,
       page: Number(params.get('page')) || DEFAULT_PAGE,
-      limit: Number(params.get('limit')) || DEFAULT_LIMIT,
+      perPage: Number(params.get('per_page')) || DEFAULT_PER_PAGE,
     };
   });
 
   // Function to sync state to URL
   const updateUrl = useCallback((newFilters: EquipmentSearchParams) => {
     const params = new URLSearchParams();
-    if (newFilters.q) params.set('q', newFilters.q);
+    if (newFilters.search) params.set('search', newFilters.search);
     if (newFilters.type_id) params.set('type_id', newFilters.type_id);
     if (newFilters.status) params.set('status', newFilters.status);
     if (newFilters.page > 1) params.set('page', String(newFilters.page));
-    // limit is usually constant, but can be added if we allow changing it
-    // if (newFilters.limit !== DEFAULT_LIMIT) params.set('limit', String(newFilters.limit));
+    // per_page is usually constant, but can be added if we allow changing it
+    // if (newFilters.perPage !== DEFAULT_PER_PAGE) params.set('per_page', String(newFilters.perPage));
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);

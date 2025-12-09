@@ -16,11 +16,11 @@ import type {
 export type EquipmentStatus = Enums<"equipment_status">;
 
 export interface EquipmentSearchParams {
-  q?: string;
+  search?: string;
   type_id?: string;
   status?: EquipmentStatus;
   page: number;
-  limit: number;
+  perPage: number;
 }
 
 // =============================================================================

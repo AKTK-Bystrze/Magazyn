@@ -208,3 +208,22 @@ func (h *EquipmentHandler) HandleCheckAvailability(w http.ResponseWriter, r *htt
 
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
+
+// HandleListEquipmentTypes handles listing equipment types
+func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID := getUserID(r)
+	if userID == "" {
+		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	response, err := h.service.ListEquipmentTypes(ctx)
+	if err != nil {
+		logger.Errorf(ctx, "HandleListEquipmentTypes error: %v", err)
+		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	common.RespondJSON(ctx, w, http.StatusOK, response)
+}

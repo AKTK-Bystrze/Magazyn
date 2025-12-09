@@ -40,23 +40,23 @@ describe('useEquipmentSearch', () => {
     
     expect(result.current.filters).toEqual({
       page: 1,
-      limit: 25,
-      q: undefined,
+      perPage: 25,
+      search: undefined,
       type_id: undefined,
       status: undefined,
     });
   });
 
   it('should initialize with filters from URL params', () => {
-    window.location.search = '?q=drill&type_id=123&status=ok&page=2';
+    window.location.search = '?search=drill&type_id=123&status=ok&page=2';
     const { result } = renderHook(() => useEquipmentSearch());
 
     expect(result.current.filters).toEqual({
-      q: 'drill',
+      search: 'drill',
       type_id: '123',
       status: 'ok',
       page: 2,
-      limit: 25,
+      perPage: 25,
     });
   });
 
@@ -64,17 +64,17 @@ describe('useEquipmentSearch', () => {
     const { result } = renderHook(() => useEquipmentSearch());
 
     act(() => {
-      result.current.updateFilter('q', 'hammer');
+      result.current.updateFilter('search', 'hammer');
     });
 
-    expect(result.current.filters.q).toBe('hammer');
+    expect(result.current.filters.search).toBe('hammer');
     expect(result.current.filters.page).toBe(1);
     
     // Check URL update
     expect(mockReplaceState).toHaveBeenCalledWith(
       {},
       '',
-      '/equipment?q=hammer'
+      '/equipment?search=hammer'
     );
   });
 
@@ -100,13 +100,13 @@ describe('useEquipmentSearch', () => {
     const { result } = renderHook(() => useEquipmentSearch());
 
     act(() => {
-      result.current.updateFilter('q', 'fast typing');
+      result.current.updateFilter('search', 'fast typing');
     });
 
     // Immediate state update
-    expect(result.current.filters.q).toBe('fast typing');
+    expect(result.current.filters.search).toBe('fast typing');
     // Active filters (for query) should not have updated yet due to debounce
-    expect(result.current.activeFilters.q).toBeUndefined();
+    expect(result.current.activeFilters.search).toBeUndefined();
 
     // Fast forward time
     act(() => {
@@ -114,7 +114,7 @@ describe('useEquipmentSearch', () => {
     });
 
     // Now active filters should be updated
-    expect(result.current.activeFilters.q).toBe('fast typing');
+    expect(result.current.activeFilters.search).toBe('fast typing');
     
     vi.useRealTimers();
   });
