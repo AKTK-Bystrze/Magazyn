@@ -5,6 +5,21 @@ package constants
 import "time"
 
 // ============================================================================
+// Database Table Constants
+// ============================================================================
+
+// Database table names to avoid hardcoded strings.
+const (
+	TableProfiles      = "profiles"
+	TableEquipment     = "equipment"
+	TableReservations  = "reservations"
+	TableEquipmentTypes = "equipment_types"
+	TableMaintenanceLogs = "maintenance_logs"
+)
+
+
+
+// ============================================================================
 // Reservation Status Constants
 // ============================================================================
 

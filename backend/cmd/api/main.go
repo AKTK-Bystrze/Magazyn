@@ -8,12 +8,14 @@ import (
 	"magazyn/backend/internal/config"
 	authhandler "magazyn/backend/internal/handler/auth"
 	equipmenthandler "magazyn/backend/internal/handler/equipment"
+	userhandler "magazyn/backend/internal/handler/user"
 	"magazyn/backend/internal/logger"
 	authmiddleware "magazyn/backend/internal/middleware/auth"
 	commonmiddleware "magazyn/backend/internal/middleware/common"
 	supabaserepo "magazyn/backend/internal/repository/supabase"
 	authservice "magazyn/backend/internal/service/auth"
 	equipmentservice "magazyn/backend/internal/service/equipment"
+	userservice "magazyn/backend/internal/service/user"
 	"net/http"
 	"os"
 )
@@ -35,14 +37,17 @@ func main() {
     authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
+	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 
     // Initialize Services
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
+	userService := userservice.NewUserService(userRepo)
 
     // Initialize Handlers
 	authHandler := authhandler.NewAuthHandler(authService)
 	equipmentHandler := equipmenthandler.NewEquipmentHandler(equipmentService)
+	userHandler := userhandler.NewUserHandler(userService)
 
     // Initialize Middleware
 	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
@@ -53,6 +58,13 @@ func main() {
 
 	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(authHandler.HandleLogout)))
 	mux.Handle("GET /auth/session", authMiddleware(http.HandlerFunc(authHandler.HandleGetSession)))
+
+	// User Routes
+	mux.Handle("GET /users/me", authMiddleware(http.HandlerFunc(userHandler.HandleGetProfile)))
+	mux.Handle("GET /users", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleListUsers))))
+	mux.Handle("POST /users", authMiddleware(authmiddleware.RequireRoles(auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleCreateUser))))
+	mux.Handle("GET /users/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleGetProfile))))
+	mux.Handle("PATCH /users/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleUpdateUser))))
 
 	mux.Handle("GET /equipment", authMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
 	mux.Handle("GET /equipment-types", authMiddleware(http.HandlerFunc(equipmentHandler.HandleListEquipmentTypes)))
