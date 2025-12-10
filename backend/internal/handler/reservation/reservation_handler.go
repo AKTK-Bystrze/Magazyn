@@ -6,6 +6,7 @@ package reservation
 import (
 	"encoding/json"
 	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
@@ -99,7 +100,7 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 	}
 	if qUserID := r.URL.Query().Get("user_id"); qUserID != "" {
 		// Only admin can filter by other user ID
-		if role == "admin" || role == "super_admin" {
+		if role == auth.RoleAdmin || role == auth.RoleSuperAdmin {
 			query.UserID = &qUserID
 		} else {
 			// Ignore or enforce own ID? 
@@ -117,7 +118,7 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Enforce non-admin can only see own
-	if role != "admin" && role != "super_admin" {
+	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 		query.UserID = &userID
 	}
 
@@ -254,7 +255,7 @@ func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	role := getUserRole(r)
 	
-	if role != "admin" && role != "super_admin" {
+	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 		common.RespondError(ctx, w, http.StatusForbidden, "Admin access only")
 		return
 	}

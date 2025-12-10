@@ -38,4 +38,7 @@ type ReservationRepository interface {
     // Optionally filters by equipmentID if provided.
     // rangeStart and rangeEnd should be in YYYY-MM-DD format.
     GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error)
+
+	// RefundCredits refunds credits to the user for a cancelled reservation
+	RefundCredits(ctx context.Context, reservationID string, amount int32) error
 }

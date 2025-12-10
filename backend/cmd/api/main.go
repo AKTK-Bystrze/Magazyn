@@ -15,6 +15,7 @@ import (
 	commonmiddleware "magazyn/backend/internal/middleware/common"
 	supabaserepo "magazyn/backend/internal/repository/supabase"
 	authservice "magazyn/backend/internal/service/auth"
+	"magazyn/backend/internal/service/email"
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
@@ -46,8 +47,9 @@ func main() {
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
 	userService := userservice.NewUserService(userRepo)
-	// Reminder: Email integration pending
-	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo)
+	
+	emailService := email.NewNoopEmailService()
+	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
 
     // Initialize Handlers
 	authHandler := authhandler.NewAuthHandler(authService)

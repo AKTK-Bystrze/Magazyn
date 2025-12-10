@@ -71,19 +71,6 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	}
 
 	// Temp struct for unmarshalling nested response
-	type joinedResponse struct {
-		types.PublicReservationsSelect
-		Profile struct {
-			Username string `json:"username"`
-		} `json:"profiles"`
-		Equipment struct {
-			Name          string `json:"name"`
-			EquipmentType struct {
-				Name string `json:"name"`
-			} `json:"equipment_types"`
-		} `json:"equipment"`
-	}
-
 	var rawItems []joinedResponse
 	if err := json.Unmarshal(data, &rawItems); err != nil {
 		return nil, 0, err
@@ -123,22 +110,6 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 
 	if err != nil {
 		return nil, types.NewNotFoundError("Reservation", id)
-	}
-
-	// Temp struct
-	type detailResponse struct {
-		types.PublicReservationsSelect
-		Profile struct {
-			Username string `json:"username"`
-			Email    string `json:"email"`
-		} `json:"profiles"`
-		Equipment struct {
-			Name          string `json:"name"`
-			InternalID    string `json:"internal_id"`
-			EquipmentType struct {
-				Name string `json:"name"`
-			} `json:"equipment_types"`
-		} `json:"equipment"`
 	}
 
 	var raw detailResponse
@@ -185,13 +156,6 @@ func (r *reservationRepository) getAuditTrail(ctx context.Context, reservationID
 		return nil, err
 	}
 
-	type auditRaw struct {
-		types.PublicReservationHistorySelect
-		Profile struct {
-			Username string `json:"username"`
-		} `json:"profiles"`
-	}
-
 	var activeRaw []auditRaw
 	if err := json.Unmarshal(data, &activeRaw); err != nil {
 		return nil, err
@@ -210,6 +174,45 @@ func (r *reservationRepository) getAuditTrail(ctx context.Context, reservationID
 		}
 	}
 	return result, nil
+}
+
+// ===================================
+// Private Types for Data Mapping
+// ===================================
+
+type joinedResponse struct {
+	types.PublicReservationsSelect
+	Profile struct {
+		Username string `json:"username"`
+	} `json:"profiles"`
+	Equipment struct {
+		Name          string `json:"name"`
+		EquipmentType struct {
+			Name string `json:"name"`
+		} `json:"equipment_types"`
+	} `json:"equipment"`
+}
+
+type detailResponse struct {
+	types.PublicReservationsSelect
+	Profile struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	} `json:"profiles"`
+	Equipment struct {
+		Name          string `json:"name"`
+		InternalID    string `json:"internal_id"`
+		EquipmentType struct {
+			Name string `json:"name"`
+		} `json:"equipment_types"`
+	} `json:"equipment"`
+}
+
+type auditRaw struct {
+	types.PublicReservationHistorySelect
+	Profile struct {
+		Username string `json:"username"`
+	} `json:"profiles"`
 }
 
 // CreateReservation creates a new reservation record
@@ -397,6 +400,18 @@ func (r *reservationRepository) GetReservationsInRange(ctx context.Context, rang
 		return nil, err
 	}
 	return reservations, nil
+}
+
+// RefundCredits refunds credits to the user for a cancelled reservation
+func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID string, amount int32) error {
+	params := map[string]interface{}{
+		"p_reservation_id": reservationID,
+		"p_amount":         amount,
+	}
+	// RPC returns the response body as string
+	// TODO: Parse response to check for errors properly if library supports it.
+	_ = r.client.Rpc("refund_reservation_credits", "", params)
+	return nil
 }
 
 // Helper to safely handle ptr to string

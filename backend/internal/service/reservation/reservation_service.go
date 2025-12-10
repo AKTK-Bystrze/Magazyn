@@ -7,9 +7,11 @@ package reservation
 import (
 	"context"
 	"fmt"
+	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
+	"magazyn/backend/internal/service/email"
 	"magazyn/backend/internal/types"
 	"time"
 )
@@ -47,6 +49,7 @@ type reservationService struct {
 	repo          repository.ReservationRepository
 	equipmentRepo repository.EquipmentRepository
 	userRepo      repository.UserRepository
+	emailService  email.EmailService
 }
 
 // NewReservationService creates a new instance of ReservationService
@@ -54,11 +57,13 @@ func NewReservationService(
 	repo repository.ReservationRepository,
 	equipmentRepo repository.EquipmentRepository,
 	userRepo repository.UserRepository,
+	emailService email.EmailService,
 ) ReservationService {
 	return &reservationService{
 		repo:          repo,
 		equipmentRepo: equipmentRepo,
 		userRepo:      userRepo,
+		emailService:  emailService,
 	}
 }
 
@@ -101,7 +106,7 @@ func (s *reservationService) GetByID(ctx context.Context, id string, userID stri
 
 	// Authorization check
 	// User can only view their own
-	if role != "admin" && role != "super_admin" && res.UserID != userID {
+	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin && res.UserID != userID {
 		return nil, types.NewForbiddenError("You are not allowed to view this reservation")
 	}
 
@@ -172,7 +177,29 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		}
 	}
 
-	// TODO: Send Email (Async)
+	// Send Email (Async)
+	go func() {
+		// Needs a detached context or careful context handling. 
+		// Using Background context to ensure it runs even if request context cancels.
+		// In production, use a task queue.
+		bgCtx := context.Background()
+		
+		// Fetch user email if not available. ideally passed in or we fetch profile.
+		// We have targetUserID.
+		profile, _ := s.userRepo.GetByID(bgCtx, targetUserID)
+		emailAddr := ""
+		if profile != nil {
+			emailAddr = profile.Email
+		}
+		
+		details := map[string]interface{}{
+			"user_id": targetUserID,
+			"count": len(succeeded),
+			"cost": totalCost,
+			"balance": newBalance,
+		}
+		_ = s.emailService.SendReservationConfirmation(bgCtx, emailAddr, details)
+	}()
 
 	return &types.CreateReservationsResponse{
 		Reservations:     succeeded,
@@ -196,7 +223,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	// Plan says: "User ... Can only cancel (status -> DENIED)".
 	// Wait, plan says "PATCH /reservations/:id ... status: DENIED".
 	
-	isAdmin := role == "admin" || role == "super_admin"
+	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
 	isOwner := current.UserID == userID
 
 	if !isAdmin && !isOwner {
@@ -228,10 +255,28 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		needsUpdate = true
 		
 		// If cancelling (DENIED), refund credits?
-		if *cmd.Status == constants.ReservationStatusDenied || *cmd.Status == "CANCELLED" {
-			// Refund logic needed.
-			// Calculate cost of this reservation
-			// Return credits to user.
+		if *cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled {
+			// Refund logic: Calculate cost and refund
+			eq, errEq := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
+			if errEq != nil {
+				logger.Errorf(ctx, "Refund failed: equipment %s not found", current.EquipmentID)
+			} else {
+				eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeId)
+				if errType != nil {
+					logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeId)
+				} else {
+					days := s.calculateDays(current.StartDate, current.EndDate)
+					refundAmount := days * eqType.CreditCostPerDay
+					
+					if refundAmount > 0 {
+						if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
+							logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
+						} else {
+							logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -289,8 +334,7 @@ func (s *reservationService) calculateDays(start, end string) int32 {
 	t2, _ := time.Parse(layout, end)
 	
 	days := int32(t2.Sub(t1).Hours() / 24)
-	if days < 1 { days = 1 } // Minimum 1 day usually? Or 0?
-	// If start == end, is it 1 day? usually yes.
+	if days < 1 { days = 1 } // Minimum 1 day
 	return days + 1
 }
 
