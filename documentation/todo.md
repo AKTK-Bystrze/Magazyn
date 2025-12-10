@@ -1,7 +1,3 @@
-bledy po implmenentacji equipment api
-
-refactor UI structure, create a frontend project structure
-translate /admin view
 proceed with backend implementation of plans in .ai
 
 frontend plans
@@ -16,4 +12,4 @@ deploy - konteneryzacja
 
 refactor 
 1. nowy uzytkonwik nie moze sie tworzyc automatycznie. Wylaczycz tworzenie, tylko admin moze dodawac
-2. 
+2. translate ui to english
