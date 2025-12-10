@@ -8,6 +8,7 @@ trigger: always_on
 
 **Rule**: Do not use inline comments for documentation. Use standard documentation comments for the respective technology.
 **Reasoning**: Inline comments can become outdated and clutter code. Standard documentation tools (Godoc, TSDoc) provide structured, accessible documentation that stays close to definitions.
+**todo**: Write down any todo or complex decisions to take and also inform user about them
 
 ### TypeScript / Frontend
 Use TSDoc format (`/** ... */`) for all exported functions, classes, interfaces, and types.
