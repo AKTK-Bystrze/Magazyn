@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"magazyn/backend/internal/config"
 	"magazyn/backend/internal/repository/supabase"
+	"magazyn/backend/internal/service/email"
 	"magazyn/backend/internal/service/reservation"
 	"magazyn/backend/internal/types"
 	"os"
@@ -63,7 +64,8 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	_ = supabase.NewEquipmentTypeRepository(client) // Fake usage to pass lint until confirmed
 
 	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey)
-	svc := reservation.NewReservationService(reservationRepo, equipmentRepo, userRepo)
+	emailService := email.NewNoopEmailService()
+	svc := reservation.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
 	
 	var conf config.Config
 	if appState != nil && appState.Config != nil {
@@ -84,60 +86,63 @@ func TestReservationIntegration_CreateAtomic(t *testing.T) {
 	ctx := context.Background()
 
 	// 1. Setup Test Data (User with credits, Equipment)
-	// We need a unique user and equipment to avoid conflicts with other tests
-	// Ideally we create them here. For now, assuming we use a test user if creation is complex.
-	// Let's rely on existing seed data or create if possible.
-	// Since we don't have easy "CreateUser" exposed in repo for tests, let's pick a known user or skip if not found.
+	// Create a unique equipment for this test to avoid conflicts
+	uniqueSuffix := time.Now().Format("20060102150405")
+	typeID := "d496e5ce-a19f-4318-aff5-408a54d37013" // Use a known existing type ID or fetch one
 	
-	// Better: Create a dummy equipment manually via direct client map
-	// Equipment ID: gen uuid
-	// User ID: gen uuid (fake? no, must exist in auth.users or profiles?)
-	// We need a real user. Let's assume we can fetch listing of users and pick one.
+	// Fetch a valid type ID
+	// Fetch a valid type ID
+	type EquipType struct {
+		ID string `json:"id"`
+	}
+	var eqTypes []EquipType
+	data, _, err := client.From("equipment_types").Select("id", "exact", false).Limit(1, "").Execute()
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(data, &eqTypes))
+	require.NotEmpty(t, eqTypes)
+	typeID = eqTypes[0].ID
+
+	newEqName := "Test Equip " + uniqueSuffix
+	newEq := map[string]interface{}{
+		"name": newEqName,
+		"type_id": typeID,
+		"status": "ok",
+		"internal_id": "TEST-" + uniqueSuffix,
+	}
 	
-	// For robustness in this plan, I'll attempt to fetch the first user from profiles
-	// and update their balance to sufficient amount.
-	
+	var createdEq []struct{ID string `json:"id"`}
+	// Insert returning representation to get ID
+	data, _, err = client.From("equipment").Insert(newEq, false, "", "representation", "").Execute()
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(data, &createdEq))
+	require.NotEmpty(t, createdEq)
+	testEquipID := createdEq[0].ID
+	t.Logf("Created test equipment: %s", testEquipID)
+
+	defer func() {
+		// Cleanup equipment
+		client.From("equipment").Delete("", "").Eq("id", testEquipID).Execute()
+	}()
+
+	// Ensure User Balance
+	// ... (Existing user logic) ...
+	// User query
 	type profile struct {
 		ID string `json:"id"`
 	}
 	var profiles []profile
-	// User query
-	data, _, err := client.From("profiles").Select("id", "exact", false).Limit(1, "").Execute()
+	data, _, err = client.From("profiles").Select("id", "exact", false).Limit(1, "").Execute()
 	require.NoError(t, err)
 	
 	if err := json.Unmarshal(data, &profiles); err != nil {
 		t.Fatalf("Failed to unmarshal profiles: %v", err)
 	}
-
-	require.NotEmpty(t, profiles, "Database must have at least one user profile")
+	require.NotEmpty(t, profiles)
 	testUserID := profiles[0].ID
-	
-	// Ensure balance
+
 	initialBalance := int32(1000)
 	_, _, err = client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", testUserID).Execute()
 	require.NoError(t, err)
-
-	// Get an equipment
-	type equip struct {
-		ID string `json:"id"`
-		Name string `json:"name"`
-		Status string `json:"status"`
-	}
-	var equips []equip
-	// Find one available
-	// Select returns *RequestBuilder. Eq... Limit needs 2 args (count, foreignTable). Use "" for current table.
-	// Execute() returns ([]byte, int64, error).
-	data, _, err = client.From("equipment").Select("id, name, status", "exact", false).Eq("status", "ok").Limit(1, "").Execute()
-	require.NoError(t, err)
-	
-	if err := json.Unmarshal(data, &equips); err != nil {
-		t.Fatalf("Failed to unmarshal equipment: %v", err)
-	}
-	
-	if len(equips) == 0 {
-		t.Skip("No available equipment found for test")
-	}
-	testEquipID := equips[0].ID
 	
 	// 2. Perform Reservation
 	tomorrow := time.Now().AddDate(0, 0, 1).Format("2006-01-02")

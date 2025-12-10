@@ -3,7 +3,9 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 	"time"
@@ -248,11 +250,13 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	// Let's try r.client.Rpc returns string, and we parses it.
 	// If error occurs, maybe the string is the error JSON?
 	
+	// Debug params
+	paramBytes, _ := json.Marshal(params)
+	logger.Infof(ctx, "RPC Params: %s", string(paramBytes))
+
 	// Temporarily:
 	jsonStr := r.client.Rpc("create_reservation_atomic", "", params)
-	
-	// If string starts with "{" and has "error" or similar...
-	// Ideally we want real error handling.
+	logger.Infof(ctx, "RPC Response: %s", jsonStr)
 	
 	var result struct {
 		ReservationIDs []string `json:"reservation_ids"`
@@ -263,9 +267,29 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 		return nil, 0, types.NewInternalError("RPC returned empty response", nil)
 	}
 
+	// Check for error in response
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
+		return nil, 0, types.NewInternalError("Failed to parse RPC response: " + jsonStr, err)
+	}
+
+	if msg, ok := rawResponse["message"]; ok {
+		// If message exists, it's likely an error (unless it's part of success, but our success is object with ids)
+		// Supabase errors usually have 'message' and 'code'.
+		// Our success object has 'reservation_ids' and 'new_balance'.
+		// Check against keys we expect.
+		if _, hasIDs := rawResponse["reservation_ids"]; !hasIDs {
+			// It is an error
+			return nil, 0, types.NewConflictError(fmt.Sprintf("%v", msg), nil)
+		}
+	}
+	// Also check "error" key just in case
+	if errVal, ok := rawResponse["error"]; ok {
+		return nil, 0, types.NewInternalError(fmt.Sprintf("RPC Error: %v", errVal), nil)
+	}
+
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
-		// Maybe jsonStr is an error description?
-		return nil, 0, types.NewInternalError("RPC failed: " + jsonStr, err)
+		return nil, 0, types.NewInternalError("RPC failed to map result: " + jsonStr, err)
 	}
 
 	return result.ReservationIDs, result.NewBalance, nil

@@ -1,5 +1,5 @@
--- Migration: Add atomic reservation transaction RPC
--- Description: Adds a function to handle credit deduction and reservation creation atomically.
+-- Migration: Fix RPC Enums
+-- Description: Updates create_reservation_atomic to use correct credit_transaction_reason enum 'reservation_charge'
 
 CREATE OR REPLACE FUNCTION create_reservation_atomic(
     p_user_id UUID,
@@ -43,7 +43,8 @@ BEGIN
         updated_at = NOW()
     WHERE id = p_user_id;
 
-    -- 3. Log Credit History (One entry for the bulk operation or per item? Let's do bulk for now)
+    -- 3. Log Credit History
+    -- Corrected enum: 'reservation_charge' instead of 'RESERVATION'
     INSERT INTO credit_history (user_id, amount, reason, description)
     VALUES (p_user_id, -p_total_cost, 'reservation_charge', 'Credit deduction for equipment reservation');
 
@@ -75,7 +76,7 @@ BEGIN
         v_created_ids := array_append(v_created_ids, v_reservation_id);
     END LOOP;
 
-    -- Return created IDs (and maybe updated balance?)
+    -- Return created IDs and new balance
     RETURN jsonb_build_object(
         'reservation_ids', v_created_ids,
         'new_balance', v_new_balance

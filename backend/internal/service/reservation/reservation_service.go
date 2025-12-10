@@ -139,12 +139,15 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		// Calculate Cost
 		eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeId)
 		if err != nil {
-			return nil, err
+			return nil, types.NewInternalError("failed to fetch equipment type", err)
 		}
 		
 		days := s.calculateDays(req.StartDate, req.EndDate)
 		cost := days * eqType.CreditCostPerDay
 		totalCost += cost
+
+		logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d", 
+			req.EquipmentID, eq.TypeId, days, eqType.CreditCostPerDay, cost)
 	}
 
 	// 2. Execute Atomic Transaction (RPC)
