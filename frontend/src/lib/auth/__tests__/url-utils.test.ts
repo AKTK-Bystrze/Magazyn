@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { isSafeRedirect, validateRedirectUrl } from './url-utils';
+import { isSafeRedirect, validateRedirectUrl } from '../url-utils';
 
 describe('url-utils', () => {
   const origin = 'http://localhost:4321';

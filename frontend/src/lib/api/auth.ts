@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api } from './client';
 import type { LoginRequestDTO, LoginResponseDTO } from '@/types/auth';
 
 export const login = async (data: LoginRequestDTO): Promise<LoginResponseDTO> => {

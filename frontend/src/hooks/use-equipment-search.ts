@@ -1,15 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { EquipmentSearchParams, EquipmentStatus } from '@/types';
-
-// Default values
-const DEFAULT_PAGE = 1;
-const DEFAULT_PER_PAGE = 25;
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from '@/lib/config/constants';
 
 export function useEquipmentSearch() {
   // Initialize state from URL on mount
   const [filters, setFilters] = useState<EquipmentSearchParams>(() => {
     if (typeof window === 'undefined') {
-      return { page: DEFAULT_PAGE, perPage: DEFAULT_PER_PAGE };
+      return { page: DEFAULT_PAGE, perPage: DEFAULT_PAGE_SIZE };
     }
     const params = new URLSearchParams(window.location.search);
     return {
@@ -17,7 +14,7 @@ export function useEquipmentSearch() {
       type_id: params.get('type_id') || undefined,
       status: (params.get('status') as EquipmentStatus) || undefined,
       page: Number(params.get('page')) || DEFAULT_PAGE,
-      perPage: Number(params.get('per_page')) || DEFAULT_PER_PAGE,
+      perPage: Number(params.get('per_page')) || DEFAULT_PAGE_SIZE,
     };
   });
 
@@ -29,7 +26,7 @@ export function useEquipmentSearch() {
     if (newFilters.status) params.set('status', newFilters.status);
     if (newFilters.page > 1) params.set('page', String(newFilters.page));
     // per_page is usually constant, but can be added if we allow changing it
-    // if (newFilters.perPage !== DEFAULT_PER_PAGE) params.set('per_page', String(newFilters.perPage));
+    // if (newFilters.perPage !== DEFAULT_PAGE_SIZE) params.set('per_page', String(newFilters.perPage));
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);
@@ -63,7 +60,7 @@ export function useEquipmentSearch() {
     const timer = setTimeout(() => {
       setDebouncedFilters(filters);
       updateUrl(filters); // Sync URL when debounce settles
-    }, 300);
+    }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
   }, [filters, updateUrl]);

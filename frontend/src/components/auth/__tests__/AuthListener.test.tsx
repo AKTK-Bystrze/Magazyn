@@ -38,7 +38,7 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 // Import mocked modules to get access to the mocks
-import { AuthListener } from './AuthListener';
+import { AuthListener } from '../AuthListener';
 import { getUserSession } from '@/lib/auth/session-utils';
 import { getDefaultRouteForUser } from '@/lib/auth/role-utils';
 import { RedirectManager } from '@/lib/auth/redirect-manager';
@@ -134,7 +134,7 @@ describe('AuthListener', () => {
 
     // Default mock returns
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
-      data: { session: null, user: null },
+      data: { session: null },
       error: null,
     });
     vi.mocked(supabase.auth.setSession).mockResolvedValue({

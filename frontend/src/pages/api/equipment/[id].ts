@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 
 import { BACKEND_URL } from '@/lib/config/api';
 
+export const prerender = false;
+
 export const GET: APIRoute = async ({ params, locals }) => {
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}`;
 

@@ -1,17 +1,10 @@
 // =============================================================================
-// DTO and Command Model Types for Equipment Rental System API
+// EQUIPMENT & EQUIPMENT TYPE TYPES
 // =============================================================================
-// All DTOs use camelCase field names to match JSON wire protocol (per dto-hierarchy.md)
-// Database entities use snake_case but are transformed by Go backend
 
 // Re-export database types for reference
-export type * from "./db/database.types";
-import type {
-  Tables,
-  TablesInsert,
-  TablesUpdate,
-  Enums,
-} from "./db/database.types";
+import type { Enums } from "../db/database.types";
+import type { PaginationResponseDTO } from "./api.types";
 
 export type EquipmentStatus = Enums<"equipment_status">;
 
@@ -26,9 +19,6 @@ export interface EquipmentSearchParams {
 // =============================================================================
 // BACKEND DTO TYPES (snake_case - Exact Go JSON Response Structure)
 // =============================================================================
-// These types mirror the exact JSON structure returned by the Go backend.
-// Field names use snake_case to match Go's JSON tags.
-// These are transformed into frontend domain types (below) via transformers.
 
 /**
  * Backend equipment DTO - mirrors Go EquipmentDTO struct
@@ -48,17 +38,6 @@ export interface EquipmentDTO {
   is_archived: boolean;
   created_at: string;
   updated_at?: string;
-}
-
-/**
- * Backend pagination response DTO
- * Source: backend/internal/types/equipment_types.go:58-63
- */
-export interface PaginationResponseDTO {
-  page: number;
-  per_page: number;
-  total_items: number;
-  total_pages: number;
 }
 
 /**
@@ -90,90 +69,6 @@ export interface EquipmentTypesResponseDTO {
 // =============================================================================
 // FRONTEND DOMAIN TYPES (camelCase - UI Consumption)
 // =============================================================================
-// These types use camelCase and nested structures optimized for frontend components.
-// They are created by transforming backend DTOs via transformer functions.
-
-// =============================================================================
-// AUTHENTICATION DTOs
-// =============================================================================
-
-/**
- * Session information for authenticated user
- * Returned by GET /auth/session
- */
-export type SessionInfo = {
-  userId: string;
-  email: string;
-  username: string;
-  role: Enums<"user_role">;
-  creditBalance: number;
-  isEnabled: boolean;
-  expiresAt: string; // ISO 8601
-};
-
-/**
- * Login request body
- * POST /auth/login
- */
-export type LoginRequest = {
-  email: string;
-};
-
-// =============================================================================
-// USER PROFILE DTOs
-// =============================================================================
-
-/**
- * User profile with credit balance
- * Derived from profiles table, field names in camelCase
- */
-export type UserProfile = {
-  id: string;
-  email: string;
-  username: string;
-  role: Enums<"user_role">;
-  creditBalance: number; // from profiles.credit_balance
-  createdAt: string; // from profiles.created_at (ISO 8601)
-  updatedAt: string | null;
-};
-
-/**
- * User in list view (GET /users)
- * Subset of UserProfile without updated_at
- */
-export type UserListItem = {
-  id: string;
-  email: string;
-  username: string;
-  role: Enums<"user_role">;
-  creditBalance: number;
-  createdAt: string;
-};
-
-/**
- * Command to create user (POST /users)
- * SuperAdmin only
- */
-export type CreateUserCommand = {
-  email: string;
-  username: string;
-  role: Enums<"user_role">;
-  creditBalance?: number; // optional, defaults to 0
-};
-
-/**
- * Command to update user (PATCH /users/:id)
- * SuperAdmin only, all fields optional
- */
-export type UpdateUserCommand = {
-  email?: string;
-  role?: Enums<"user_role">;
-  creditBalance?: number;
-};
-
-// =============================================================================
-// EQUIPMENT TYPE DTOs
-// =============================================================================
 
 /**
  * Equipment type with pricing
@@ -202,10 +97,6 @@ export type UpdateEquipmentTypeCommand = {
   creditCostPerDay?: number;
 };
 
-// =============================================================================
-// EQUIPMENT DTOs
-// =============================================================================
-
 /**
  * Equipment item with type information
  * Combines data from equipment and equipment_types tables
@@ -226,9 +117,6 @@ export type Equipment = {
   updatedAt: string | null;
 };
 
-/**
- * Equipment in search results (GET /equipment)
- */
 /**
  * Equipment in search results (GET /equipment)
  * Matches the structure defined in .ai/equipment-view-implementation-plan.md
@@ -295,7 +183,33 @@ export type UpdateEquipmentCommand = {
 };
 
 // =============================================================================
-// RESERVATION DTOs
+// MAINTENANCE LOG TYPES
+// =============================================================================
+
+/**
+ * Equipment maintenance record
+ * From maintenance_logs table
+ */
+export type MaintenanceLog = {
+  id: string;
+  equipmentId: string;
+  previousStatus: Enums<"equipment_status"> | null;
+  newStatus: Enums<"equipment_status">;
+  notes: string | null;
+  adminId: string | null;
+  adminUsername: string | null; // from admin_id → profiles.username
+  createdAt: string;
+};
+
+/**
+ * Command to create maintenance log (POST /equipment/:id/maintenance-logs)
+ */
+export type CreateMaintenanceLogCommand = {
+  notes?: string; // optional but recommended, max 1000 chars
+};
+
+// =============================================================================
+// RESERVATION TYPES (Equipment-related)
 // =============================================================================
 
 /**
@@ -456,7 +370,7 @@ export type ReservationDashboardSummary = {
 };
 
 // =============================================================================
-// CREDIT HISTORY DTOs
+// CREDIT HISTORY TYPES
 // =============================================================================
 
 /**
@@ -481,12 +395,12 @@ export type CreditHistoryItem = {
  */
 export type CreditHistoryResponse = {
   creditHistory: CreditHistoryItem[];
-  pagination: PaginationMeta;
+  pagination: import("./api.types").PaginationMeta;
   currentBalance: number;
 };
 
 // =============================================================================
-// CREDIT REQUEST DTOs
+// CREDIT REQUEST TYPES
 // =============================================================================
 
 /**
@@ -532,33 +446,7 @@ export type UpdateCreditRequestCommand = {
 };
 
 // =============================================================================
-// MAINTENANCE LOG DTOs
-// =============================================================================
-
-/**
- * Equipment maintenance record
- * From maintenance_logs table
- */
-export type MaintenanceLog = {
-  id: string;
-  equipmentId: string;
-  previousStatus: Enums<"equipment_status"> | null;
-  newStatus: Enums<"equipment_status">;
-  notes: string | null;
-  adminId: string | null;
-  adminUsername: string | null; // from admin_id → profiles.username
-  createdAt: string;
-};
-
-/**
- * Command to create maintenance log (POST /equipment/:id/maintenance-logs)
- */
-export type CreateMaintenanceLogCommand = {
-  notes?: string; // optional but recommended, max 1000 chars
-};
-
-// =============================================================================
-// CALENDAR & ANALYTICS DTOs
+// CALENDAR & ANALYTICS TYPES
 // =============================================================================
 
 /**
@@ -614,52 +502,4 @@ export type UserStats = {
 export type AnalyticsPeriod = {
   year: number;
   month: number | null; // 1-12, null for entire year
-};
-
-// =============================================================================
-// SHARED TYPES
-// =============================================================================
-
-/**
- * Pagination query parameters
- */
-export type PaginationParams = {
-  page?: number; // default: 1
-  perPage?: number; // default: 25, allowed: 10/25/50/100
-};
-
-/**
- * Pagination metadata in responses
- */
-export type PaginationMeta = {
-  page: number;
-  perPage: number;
-  totalItems: number;
-  totalPages: number;
-};
-
-/**
- * Generic paginated response wrapper
- */
-export type PaginatedResponse<T> = {
-  data: T[];
-  pagination: PaginationMeta;
-};
-
-/**
- * Standard API error response
- */
-export type ApiError = {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-};
-
-/**
- * Success message response
- */
-export type SuccessMessage = {
-  message: string;
 };

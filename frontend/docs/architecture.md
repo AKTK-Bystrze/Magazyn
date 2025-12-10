@@ -110,6 +110,7 @@ frontend/
 │   │   │   └── client.ts
 │   │   │
 │   │   ├── auth/                   # Auth utilities
+│   │   │   ├── __tests__/          # Auth tests
 │   │   │   ├── cookie-utils.ts
 │   │   │   ├── redirect-manager.ts
 │   │   │   ├── role-utils.ts
@@ -117,13 +118,16 @@ frontend/
 │   │   │
 │   │   ├── config/                 # Configuration
 │   │   │   ├── api.ts              # API endpoints config
-│   │   │   └── routes.ts           # Route constants
+│   │   │   ├── routes.ts           # Route constants
+│   │   │   ├── constants.ts        # App constants
+│   │   │   └── query.ts            # React Query config
 │   │   │
 │   │   ├── errors/                 # Error handling
 │   │   │   └── api-error.ts
 │   │   │
 │   │   ├── schemas/                # Validation schemas
-│   │   │   │   └── auth-schemas.ts
+│   │   │   ├── auth-schemas.ts
+│   │   │   └── api-schemas.ts      # API validation
 │   │   │
 │   │   ├── transformers/          # Data transformation layer
 │   │   │   └── equipment.transformer.ts
@@ -132,9 +136,11 @@ frontend/
 │   │   │   └── equipment.validator.ts
 │   │   │
 │   │   ├── api/                   # API client modules
-│   │   │   └── equipment-api.ts   # Equipment endpoints
+│   │   │   ├── index.ts            # Barrel export
+│   │   │   ├── client.ts           # Generic HTTP client
+│   │   │   ├── auth.ts             # Auth endpoints
+│   │   │   └── equipment-api.ts    # Equipment endpoints
 │   │   │
-│   │   ├── api.ts                  # Main API client
 │   │   ├── supabase.ts             # Supabase helpers
 │   │   └── utils.ts                # General utilities
 │   │
@@ -170,10 +176,14 @@ frontend/
 │   │   ├── mocks.ts                # Test mocks
 │   │   └── utils.ts                # Test helpers
 │   │
-│   ├── types/                      # Type definitions (if needed)
+│   ├── types/                      # Type definitions (domain-specific)
+│   │   ├── index.ts                # Barrel export
+│   │   ├── auth.types.ts           # Auth & user types
+│   │   ├── equipment.types.ts      # Equipment & reservations
+│   │   ├── api.types.ts            # API structures & pagination
+│   │   └── common.types.ts         # Shared utilities
 │   │
 │   ├── env.d.ts                    # TypeScript environment declarations
-│   └── types.ts                    # Shared application types (DTOs + Domain types)
 │
 ├── .env                            # Environment variables (gitignored)
 ├── .env.example                    # Environment template

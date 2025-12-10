@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getUserSession } from './session-utils';
-import type { SessionInfo } from '../../types';
+import { getUserSession } from '../session-utils';
+import type { SessionInfo } from '../../../types';
 
 // =============================================================================
 // Mock Setup using vi.mock() factory pattern

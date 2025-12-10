@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useEquipmentSearch } from './use-equipment-search';
+import { useEquipmentSearch } from '../use-equipment-search';
 
 describe('useEquipmentSearch', () => {
   const originalLocation = window.location;

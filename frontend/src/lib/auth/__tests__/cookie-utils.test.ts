@@ -8,7 +8,7 @@ import {
   hasAuthCookie,
   waitForCookie,
   waitForCookieAndRedirect,
-} from './cookie-utils';
+} from '../cookie-utils';
 
 describe('cookie-utils', () => {
   let mockCookie = '';

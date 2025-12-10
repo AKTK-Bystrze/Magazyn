@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { getDefaultRouteForUser, isAdmin, isSuperAdmin } from './role-utils';
+import { getDefaultRouteForUser, isAdmin, isSuperAdmin } from '../role-utils';
 import type { User } from '@supabase/supabase-js';
-import type { SessionInfo } from '../../types';
+import type { SessionInfo } from '../../../types';
 
 // =============================================================================
 // Test Data Factories
