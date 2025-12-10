@@ -1,8 +1,11 @@
 proceed with backend implementation of plans in .ai
-    finish reservation endpoint .ai/backend/reservations-finish.md
     implement calendar endpoint .ai/backend/calendar.md
 
 frontend plans
+    users
+    reservations
+    equipments -details etc
+    
 frontend implementation
 
 e2e testy
