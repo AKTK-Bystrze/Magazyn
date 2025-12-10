@@ -1,3 +1,8 @@
+update documentation
+    conversation:
+    read @backend 
+    update @reservation-workflow.md  about the logic flow in case of reservation, costs calculation and status changes, how failures are handled
+
 proceed with backend implementation of plans in .ai
     implement calendar endpoint .ai/backend/calendar.md
 
