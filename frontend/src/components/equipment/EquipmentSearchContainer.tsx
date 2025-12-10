@@ -13,13 +13,15 @@ import {
   SheetTitle
 } from "@/components/ui/sheet";
 import { Filter } from "lucide-react";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import type {
   EquipmentSearchItem,
   EquipmentType,
-  PaginatedResponse
+  PaginatedResponse,
+  PaginationMeta
 } from "@/types";
 
-export default function EquipmentSearchContainer() {
+function EquipmentSearchContainer() {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
 
@@ -30,7 +32,7 @@ export default function EquipmentSearchContainer() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const types = typesData?.data || [];
+  const types = Array.isArray(typesData?.data) ? typesData.data : [];
 
   // Fetch Equipment Results
   const {
@@ -39,12 +41,29 @@ export default function EquipmentSearchContainer() {
     error
   } = useQuery({
     queryKey: ["equipment", activeFilters],
-    queryFn: () => api.get<PaginatedResponse<EquipmentSearchItem>>("/api/equipment", activeFilters),
+    queryFn: () => api.get<{ equipment: EquipmentSearchItem[], pagination: PaginationMeta }>("/api/equipment", activeFilters),
     // Keep previous data while fetching new to prevent flash
     placeholderData: (previousData) => previousData, 
   });
 
-  const equipment = equipmentData?.data?.data || [];
+
+  // Transform backend response to match frontend types
+  const equipment = (equipmentData?.data?.equipment || []).map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    typeId: item.type_id,
+    type: {
+      id: item.type_id,
+      name: item.type_name,
+      creditCostPerDay: item.credit_cost_per_day,
+    },
+    status: item.status,
+    imagePath: item.image_url,
+    internalId: item.internal_id,
+    isFavorite: item.is_favorite,
+  }));
+
   const meta = equipmentData?.data?.pagination || {
     page: 1,
     perPage: 25,
@@ -53,7 +72,7 @@ export default function EquipmentSearchContainer() {
   };
 
   const handleReset = () => {
-    updateFilter("q", "");
+    updateFilter("search", "");
     updateFilter("type_id", undefined);
     updateFilter("status", undefined);
     // Page automatically resets to 1 in hook
@@ -142,5 +161,13 @@ export default function EquipmentSearchContainer() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function EquipmentSearchContainerWithProvider() {
+  return (
+    <QueryProvider>
+      <EquipmentSearchContainer />
+    </QueryProvider>
   );
 }

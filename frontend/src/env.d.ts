@@ -10,6 +10,7 @@ declare global {
       supabase: SupabaseClient<Database>;
       user: User | null;
       sessionInfo: SessionInfo | null;
+      accessToken?: string;
     }
   }
 }

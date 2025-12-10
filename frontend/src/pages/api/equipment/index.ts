@@ -11,15 +11,17 @@ export const GET: APIRoute = async ({ request, locals }) => {
     backendUrl.searchParams.append(key, value);
   });
 
-  // Get session token for forwarding
-  const { data: { session } } = await locals.supabase.auth.getSession();
+  // Get session token from middleware (already validated)
+  const token = locals.accessToken;
+
+  console.log('🔍 [API Proxy /api/equipment] Token from locals:', token ? 'EXISTS' : 'MISSING');
 
   const headers = new Headers({
     'Content-Type': 'application/json',
   });
 
-  if (session?.access_token) {
-    headers.set('Authorization', `Bearer ${session.access_token}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   const response = await fetch(backendUrl.toString(), {

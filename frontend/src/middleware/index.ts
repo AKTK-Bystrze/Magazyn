@@ -65,8 +65,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     let sessionInfo: SessionInfo | null = null;
     if (context.locals.user && token) {
       sessionInfo = await getUserSession(token);
-      // Store sessionInfo in locals for pages to access
+      // Store sessionInfo and token in locals for pages and API routes to access
       context.locals.sessionInfo = sessionInfo;
+      context.locals.accessToken = token;
     }
 
     // 3. Unified Redirect Logic - Single Source of Truth

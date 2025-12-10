@@ -1,4 +1,4 @@
-import { BACKEND_URL, DEFAULT_HEADERS } from '@/lib/config/api';
+import { DEFAULT_HEADERS } from '@/lib/config/api';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -20,7 +20,7 @@ export const api = {
   post: async <T>(url: string, data: any): Promise<{ data: T }> => {
     const headers = await buildHeaders();
 
-    const response = await fetch(`${BACKEND_URL}${url}`, {
+    const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
@@ -48,7 +48,7 @@ export const api = {
     }
 
     const queryString = queryParams.toString();
-    const fullUrl = queryString ? `${BACKEND_URL}${url}?${queryString}` : `${BACKEND_URL}${url}`;
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
 
     const response = await fetch(fullUrl, {
       method: 'GET',

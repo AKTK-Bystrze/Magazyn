@@ -24,8 +24,8 @@ export function FilterSidebar({ filters, types, onFilterChange, onReset }: Filte
         <Input
           id="search"
           placeholder="Search by name..."
-          value={filters.q || ""}
-          onChange={(e) => onFilterChange("q", e.target.value)}
+          value={filters.search || ""}
+          onChange={(e) => onFilterChange("search", e.target.value)}
         />
       </div>
 
