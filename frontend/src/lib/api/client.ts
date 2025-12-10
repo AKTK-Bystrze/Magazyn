@@ -16,7 +16,17 @@ async function buildHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
+/**
+ * Generic API client wrapper around fetch
+ * Automatically handles headers and error parsing
+ */
 export const api = {
+  /**
+   * Performs a POST request
+   * @param url - Endpoint URL
+   * @param data - Request body data
+   * @returns Response data wrapped in an object
+   */
   post: async <T>(url: string, data: any): Promise<{ data: T }> => {
     const headers = await buildHeaders();
 
@@ -35,6 +45,12 @@ export const api = {
     return { data: resData };
   },
 
+  /**
+   * Performs a GET request
+   * @param url - Endpoint URL
+   * @param params - Optional query parameters
+   * @returns Response data wrapped in an object
+   */
   get: async <T>(url: string, params?: Record<string, any>): Promise<{ data: T }> => {
     const headers = await buildHeaders();
 

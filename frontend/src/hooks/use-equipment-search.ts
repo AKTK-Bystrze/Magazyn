@@ -25,8 +25,6 @@ export function useEquipmentSearch() {
     if (newFilters.type_id) params.set('type_id', newFilters.type_id);
     if (newFilters.status) params.set('status', newFilters.status);
     if (newFilters.page > 1) params.set('page', String(newFilters.page));
-    // per_page is usually constant, but can be added if we allow changing it
-    // if (newFilters.perPage !== DEFAULT_PAGE_SIZE) params.set('per_page', String(newFilters.perPage));
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);

@@ -11,6 +11,11 @@ import {
   AUTH_COOKIE_NAME
 } from '@/lib/auth/cookie-utils';
 
+/**
+ * Component that listens for Supabase auth state changes
+ * Handles session management, redirects, and cookie synchronization
+ * Must be placed at the root of the application (in Layout)
+ */
 export const AuthListener: React.FC = () => {
   // Use React state instead of global variable for redirect tracking
   const [isRedirectInProgress, setIsRedirectInProgress] = useState(false);

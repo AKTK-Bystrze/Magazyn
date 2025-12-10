@@ -9,6 +9,10 @@ interface LoginFormProps {
   onSuccess: (email: string) => void;
 }
 
+/**
+ * Login form component handling email input and submission
+ * Uses shared UI components and handles validation/error states
+ */
 export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);

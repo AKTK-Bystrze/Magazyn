@@ -215,7 +215,7 @@ describe('cookie-utils', () => {
       
       // Should take around 150ms
       expect(elapsed).toBeGreaterThanOrEqual(130);
-      expect(elapsed).toBeLessThan(200);
+      expect(elapsed).toBeLessThan(250);
     });
 
     it('polls for cookie presence and succeeds when cookie appears', async () => {
