@@ -471,6 +471,222 @@ function processData(data: unknown) {
 }
 ```
 
+### 3. Documentation is Code
+
+Treat documentation with the same care as code - it should be accurate, up-to-date, and reviewed.
+
+---
+
+## Documentation Workflow
+
+### When to Update Documentation
+
+Documentation should be updated whenever you make changes that affect:
+
+**Architecture Changes**:
+- New directories or file structure changes →Update [architecture.md](./architecture.md)
+- New architectural patterns → Add to "Architectural Patterns" section
+- Changes to data flow → Update flow diagrams
+
+**Coding Standards**:
+- New naming conventions → Update [coding_standards.md](./coding_standards.md)
+- New patterns or anti-patterns discovered → Add examples
+- Error resolution patterns → Document in relevant section
+
+**Domain-Specific Documentation**:
+- Changes to redirect logic → Update [redirect-flow.md](./redirect-flow.md)
+- New auth flows → Document security implications
+- API integration changes → Update API sections
+
+**Rule Files** (`docs/rules/*.md`):
+- Framework-specific best practices → Update relevant rule file
+- New dependencies → Document usage patterns
+- Testing strategies → Update vitest-unit-testing.md
+
+### Approval Process
+
+> [!IMPORTANT]
+> All documentation changes require review and approval before merging.
+
+**For Minor Updates** (typo fixes, clarifications):
+1. Make the change
+2. Note the update in your commit message
+3. Submit for review
+
+**For Major Updates** (new sections, restructuring):
+1. **Create a plan** outlining the documentation changes
+2. **Request approval** before making changes
+3. **Update documentation** after approval
+4. **Request review** of the final documentation
+5. **Incorporate feedback** and finalize
+
+**For Architecture/Design Documentation**:
+1. **Draft the documentation** with diagrams and examples
+2. **Request approval** from the team
+3. **Validate** documentation against actual implementation
+4. **Update** based on feedback
+5. **Final review** before merging
+
+### What Requires Documentation
+
+#### Always Document
+
+✅ **New Features**:
+- Public API changes
+- New components or utilities
+- Authentication/authorization changes
+- Data transformation logic
+
+✅ **Architectural Decisions**:
+- Why a pattern was chosen
+- Trade-offs considered
+- Alternatives evaluated
+
+✅ **Breaking Changes**:
+- What changed
+- Migration guide
+- Impact on existing code
+
+✅ **Security Changes**:
+- New validation rules
+- Authentication flows
+- Authorization patterns
+- URL sanitization
+
+#### Usually Document
+
+🟡 **Bug Fixes that Reveal Patterns**:
+- If the fix demonstrates a common mistake
+- If it clarifies existing documentation
+- If it adds a new best practice
+
+🟡 **Refactoring**:
+- If file locations change
+- If import paths change
+- If patterns evolve
+
+#### Rarely Document
+
+⚪ **Internal Refactoring**:
+- Variable renaming (if follows conventions)
+- Code formatting
+- Minor optimizations
+
+### Documentation Review Checklist
+
+Before submitting documentation for review:
+
+**Accuracy**:
+- [ ] Code examples are tested and work
+- [ ] File paths are correct and verified
+- [ ] Links to other docs resolve correctly
+- [ ] Diagrams match current implementation
+- [ ] No references to removed/deprecated code
+
+**Completeness**:
+- [ ] All new concepts explained
+- [ ] Examples provided for complex topics
+- [ ] Edge cases documented
+- [ ] Error handling covered
+
+**Clarity**:
+- [  ] Uses consistent terminology
+- [ ] Follows existing documentation style
+- [ ] Diagrams are clear and labeled
+- [ ] Code blocks have language specified
+- [ ] Use of emojis/alerts is appropriate
+
+**Compliance**:
+- [ ] Follows naming conventions
+- [ ] References use relative paths (not absolute)
+- [ ] No broken links to `.ai` or non-existent directories
+- [ ] Language is English (except for UI strings)
+- [ ] Markdown is properly formatted
+
+**Integration**:
+- [ ] Added to Table of Contents if new page
+- [ ] Linked from related documentation
+- [ ] Cross-references updated
+- [ ] Rule files updated if applicable
+
+### Documentation Standards
+
+#### File Organization
+
+```
+docs/
+├── architecture.md          # System architecture
+├── coding_standards.md      # This file - coding guidelines
+├── redirect-flow.md         # Domain-specific flows
+└── rules/                   # Framework-specific rules
+    ├── astro.md
+    ├── react.md
+    ├── shared.md
+    └── ...
+```
+
+#### Markdown Formatting
+
+**Headers**: Use `#` for document title, `##` for main sections, `###` for subsections
+
+**Code Blocks**: Always specify language
+```tsx
+// ✅ GOOD
+export function Component() { }
+```
+
+**Links**: Use relative paths from the current file
+```markdown
+✅ [Architecture](./architecture.md)
+❌ [Architecture](/docs/architecture.md)
+❌ [Architecture](file:///e:/path/architecture.md)
+```
+
+**Alerts**: Use for important information
+
+> [!NOTE]
+> Background information
+
+> [!IMPORTANT]
+> Critical requirements
+
+> [!WARNING]
+> Breaking changes or gotchas
+
+#### Diagrams
+
+Use **Mermaid** for:
+- Flow diagrams (`graph TD`, `sequenceDiagram`)
+- State diagrams (`stateDiagram-v2`)
+- Architecture diagrams
+
+**Example**:
+```mermaid
+graph TD
+    A[User Request] --> B[Middleware]
+    B --> C[Protected Page]
+```
+
+### Keeping Documentation Current
+
+**Regular Review**:
+- Review documentation quarterly
+- Update when refactoring
+- Validate examples still work
+- Remove outdated patterns
+
+**When Implementation Changes**:
+- Update docs in the same PR as code
+- Mark outdated sections for update
+- Verify all references still valid
+
+**Red Flags** (Documentation Debt):
+- Comments saying "see old docs"
+- Multiple versions of truth
+- Broken links or references
+- Examples that don't work
+- Undocumented features
+
 ---
 
 ## Type Safety & Data Contracts
@@ -1081,10 +1297,192 @@ When adding a new feature:
 
 ---
 
+## Linting Requirements
+
+### Overview
+
+The frontend uses automated code quality tools to maintain consistency and catch errors early:
+
+- **Prettier**: Code formatting (enforced on commit)
+- **TypeScript**: Type checking and compile-time validation
+- **Vitest**: Test runner with coverage reporting
+- **Husky + lint-staged**: Pre-commit hooks
+
+### Running Linters
+
+#### Format Check (Prettier)
+
+```bash
+# Check if files are formatted correctly
+npx prettier --check "src/**/*.{ts,tsx,astro,json,md}"
+
+# Auto-fix formatting issues
+npx prettier --write "src/**/*.{ts,tsx,astro,json,md}"
+```
+
+#### Type Checking (TypeScript)
+
+```bash
+# Check for type errors
+npx astro check
+
+# Check TypeScript compilation
+npx tsc --noEmit
+```
+
+#### Run Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests with UI
+npm run test:ui
+```
+
+### Pre-Commit Hooks
+
+**Automatically enforced via Husky:**
+
+When you commit code, the following happens automatically:
+
+1. **lint-staged** runs Prettier on staged files
+2. Files are auto-formatted if needed
+3. Commit proceeds only if formatting succeeds
+
+**Configuration** (in `package.json`):
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,md}": [
+      "prettier --write"
+    ]
+  }
+}
+```
+
+### When to Run Linters
+
+#### During Development
+
+- **TypeScript errors**: Show in your IDE in real-time
+- **Save on format**: Configure your editor to run Prettier on save
+
+#### Before Committing
+
+- **Automatic**: Husky runs Prettier automatically
+- **Manual check**: Run `npm test` to ensure tests pass
+
+#### Before Pushing
+
+- Run full type check: `npx astro check`
+- Run full test suite: `npm run test:coverage`
+- Verify no console errors in browser
+
+### IDE Integration
+
+#### VS Code (Recommended)
+
+**Install extensions:**
+- Prettier - Code formatter
+- Astro
+- TypeScript and JavaScript Language Features (built-in)
+
+**Settings** (`.vscode/settings.json`):
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  }
+}
+```
+
+### TypeScript Strict Mode
+
+**Configuration** (`tsconfig.json`):
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true
+  }
+}
+```
+
+**What this enforces:**
+- No implicit `any` types
+- Strict null checks
+- No unused variables or parameters
+- All code paths must return a value
+
+### Common Lint Errors
+
+#### Prettier Formatting
+
+**Error**: `Delete ··⏎` (extra whitespace)
+```tsx
+// ❌ BAD
+function example(  ) {
+  return  "value"  ;
+}
+
+// ✅ GOOD
+function example() {
+  return "value";
+}
+```
+
+**Fix**: Run `prettier --write` or save file in IDE
+
+#### TypeScript Errors
+
+**Error**: `Type 'null' is not assignable to type 'string'`
+```tsx
+// ❌ BAD
+const name: string = user.name; // user.name could be null
+
+// ✅ GOOD
+const name: string = user.name ?? "Unknown";
+```
+
+**Error**: `Parameter 'item' implicitly has an 'any' type`
+```tsx
+// ❌ BAD
+items.map(item => item.id)
+
+// ✅ GOOD
+items.map((item: Equipment) => item.id)
+```
+
+### Linting Checklist
+
+Before committing:
+
+- [ ] No TypeScript errors in IDE
+- [ ] All tests passing (`npm test`)
+- [ ] Code formatted by Prettier (automatic on commit)
+- [ ] No `console.log` statements (unless intentional)
+- [ ] No `@ts-ignore` or `any` types (without justification)
+
+Before pushing:
+
+- [ ] Run `npx astro check` - no type errors
+- [ ] Run `npm run test:coverage` - tests pass, coverage acceptable
+- [ ] Check browser console for warnings/errors
+
+---
+
 ## Related Documentation
 
-- [React Guidelines](./.agent/rules/react.md)
-- [Astro Guidelines](./.agent/rules/astro.md)
-- [Shared Coding Standards](./.agent/rules/shared.md)
-- [Vitest Testing](./.agent/rules/vitest-unit-testing.md)
-- [Shadcn/ui Components](./.agent/rules/ui-shadcn-helper.md)
+- [React Guidelines](./rules/react.md)
+- [Astro Guidelines](./rules/astro.md)
+- [Shared Coding Standards](./rules/shared.md)
+- [Vitest Testing](./rules/vitest-unit-testing.md)
+- [Shadcn/ui Components](./rules/ui-shadcn-helper.md)

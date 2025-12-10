@@ -542,15 +542,4 @@ graph TD
 - OWASP-compliant security
 - Single source of truth for auth
 
----
-
-## References
-
-- **Implementation Plan**: `.ai/redirect-fix/implementation-plan.md`
-- **Original Review**: `.ai/redirect-fix/original-review.md`
-- **Security Practices**: `.ai/redirect-fix/security-practices.md`
-- **Developer Guide**: `.ai/redirect-fix/developer-guide.md`
-
----
-
-**Next**: See [Developer Guide](../../.ai/redirect-fix/developer-guide.md) for how to add new routes and protected pages.
+**Next**: See [Frontend Architecture](./architecture.md) and [Coding Standards](./coding_standards.md) for implementation details.
