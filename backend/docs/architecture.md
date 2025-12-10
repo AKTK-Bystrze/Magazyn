@@ -57,6 +57,13 @@ We follow a **Layered Architecture** with elements of **Hexagonal Architecture (
 *   **Description**: specific structs (e.g., `EquipmentDTO`, `CreateEquipmentCommand`) are used to transfer data between the API client and the backend.
 *   **Why**: Decouples the internal database schema (`database.types.go`) from the external API contract, allowing independent evolution of API and Database.
 
+### Atomic Operations & Stored Procedures (RPC)
+*   **Description**: For database operations requiring ACID guarantees across multiple tables (e.g., modifying `reservations` and `profiles` simultaneously), we utilize PostgreSQL Stored Procedures (Functions) called via Supabase RPC.
+*   **Why**: The standard Supabase/PostgREST HTTP API does not support client-managed transactions (BEGIN/COMMIT). Stored Procedures ensure data consistency and integrity for critical business flows.
+*   **Examples**:
+    *   `create_reservation_atomic`: Handles reservation creation, credit balance checking, deduction, and conflict detection in a single transaction.
+    *   `refund_reservation_credits`: Atomically refunds credits to a user and logs the transaction upon reservation cancellation.
+
 ## 3. Error Handling Design
 
 We use a layered error handling approach:
