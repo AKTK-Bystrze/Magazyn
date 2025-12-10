@@ -28,6 +28,8 @@ const (
 	ReservationStatusPending  = "PENDING"  // Reservation created but equipment not yet picked up
 	ReservationStatusRented   = "RENTED"   // Equipment currently rented out
 	ReservationStatusReturned = "RETURNED" // Equipment returned and reservation complete
+	ReservationStatusDenied   = "DENIED"   // Reservation denied by admin
+	ReservationStatusCancelled = "CANCELLED" // Reservation cancelled
 )
 
 // ============================================================================
@@ -39,6 +41,8 @@ const (
 	EquipmentStatusOK          = "ok"          // Equipment is in good condition and available
 	EquipmentStatusMaintenance = "maintenance" // Equipment undergoing maintenance, not available
 	EquipmentStatusDamaged     = "damaged"     // Equipment damaged, needs repair
+	EquipmentStatusBroken      = "broken"      // Equipment broken, not usable
+
 )
 
 // ============================================================================

@@ -1,0 +1,1 @@
+review current changes according to @rules and documentation @docuemtation. Write all found todo and complex comments

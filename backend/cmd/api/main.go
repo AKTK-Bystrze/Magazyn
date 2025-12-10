@@ -8,6 +8,7 @@ import (
 	"magazyn/backend/internal/config"
 	authhandler "magazyn/backend/internal/handler/auth"
 	equipmenthandler "magazyn/backend/internal/handler/equipment"
+	reservationhandler "magazyn/backend/internal/handler/reservation"
 	userhandler "magazyn/backend/internal/handler/user"
 	"magazyn/backend/internal/logger"
 	authmiddleware "magazyn/backend/internal/middleware/auth"
@@ -15,6 +16,7 @@ import (
 	supabaserepo "magazyn/backend/internal/repository/supabase"
 	authservice "magazyn/backend/internal/service/auth"
 	equipmentservice "magazyn/backend/internal/service/equipment"
+	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
 	"net/http"
 	"os"
@@ -38,16 +40,20 @@ func main() {
 	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
+	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient)
 
     // Initialize Services
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
 	userService := userservice.NewUserService(userRepo)
+	// Reminder: Email integration pending
+	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo)
 
     // Initialize Handlers
 	authHandler := authhandler.NewAuthHandler(authService)
 	equipmentHandler := equipmenthandler.NewEquipmentHandler(equipmentService)
 	userHandler := userhandler.NewUserHandler(userService)
+	reservationHandler := reservationhandler.NewReservationHandler(reservationService)
 
     // Initialize Middleware
 	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
@@ -74,6 +80,14 @@ func main() {
 	mux.Handle("PATCH /equipment/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
 	mux.Handle("DELETE /equipment/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
 	mux.Handle("GET /equipment/{id}/availability", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
+
+	// Reservation Routes
+	mux.Handle("GET /reservations", authMiddleware(http.HandlerFunc(reservationHandler.HandleList)))
+	mux.Handle("POST /reservations", authMiddleware(http.HandlerFunc(reservationHandler.HandleCreate)))
+	mux.Handle("GET /reservations/dashboard", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(reservationHandler.HandleDashboardStats))))
+	mux.Handle("PATCH /reservations/bulk", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(reservationHandler.HandleBulkUpdate))))
+	mux.Handle("GET /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleGetByID)))
+	mux.Handle("PATCH /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleUpdate)))
 
 	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)
