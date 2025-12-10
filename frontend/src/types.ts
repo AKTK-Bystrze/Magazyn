@@ -24,6 +24,76 @@ export interface EquipmentSearchParams {
 }
 
 // =============================================================================
+// BACKEND DTO TYPES (snake_case - Exact Go JSON Response Structure)
+// =============================================================================
+// These types mirror the exact JSON structure returned by the Go backend.
+// Field names use snake_case to match Go's JSON tags.
+// These are transformed into frontend domain types (below) via transformers.
+
+/**
+ * Backend equipment DTO - mirrors Go EquipmentDTO struct
+ * Source: backend/internal/types/equipment_types.go:8-22
+ */
+export interface EquipmentDTO {
+  id: string;
+  internal_id: string;
+  type_id: string;
+  type_name: string;
+  name: string | null;
+  description: string | null;
+  status: string;
+  credit_cost_per_day: number;
+  image_url: string | null;
+  is_favorite?: boolean;
+  is_archived: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+/**
+ * Backend pagination response DTO
+ * Source: backend/internal/types/equipment_types.go:58-63
+ */
+export interface PaginationResponseDTO {
+  page: number;
+  per_page: number;
+  total_items: number;
+  total_pages: number;
+}
+
+/**
+ * Backend equipment list response DTO
+ * Source: backend/internal/types/equipment_types.go:52-55
+ */
+export interface EquipmentListResponseDTO {
+  equipment: EquipmentDTO[];
+  pagination: PaginationResponseDTO;
+}
+
+/**
+ * Backend equipment type DTO
+ */
+export interface EquipmentTypeDTO {
+  id: string;
+  name: string;
+  credit_cost_per_day: number;
+  created_at: string;
+}
+
+/**
+ * Backend equipment types list response
+ */
+export interface EquipmentTypesResponseDTO {
+  equipment_types: EquipmentTypeDTO[];
+}
+
+// =============================================================================
+// FRONTEND DOMAIN TYPES (camelCase - UI Consumption)
+// =============================================================================
+// These types use camelCase and nested structures optimized for frontend components.
+// They are created by transforming backend DTOs via transformer functions.
+
+// =============================================================================
 // AUTHENTICATION DTOs
 // =============================================================================
 

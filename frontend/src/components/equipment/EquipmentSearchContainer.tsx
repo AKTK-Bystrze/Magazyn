@@ -1,7 +1,6 @@
 import * as React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { useEquipmentSearch } from "@/hooks/use-equipment-search";
+import { useEquipmentList, useEquipmentTypes } from "@/hooks/use-equipment-api";
 import { FilterSidebar } from "./FilterSidebar";
 import { EquipmentGrid } from "./EquipmentGrid";
 import { Button } from "@/components/ui/button";
@@ -14,57 +13,24 @@ import {
 } from "@/components/ui/sheet";
 import { Filter } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import type {
-  EquipmentSearchItem,
-  EquipmentType,
-  PaginatedResponse,
-  PaginationMeta
-} from "@/types";
 
 function EquipmentSearchContainer() {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
 
-  // Fetch Equipment Types for filters
-  const { data: typesData } = useQuery({
-    queryKey: ["equipment-types"],
-    queryFn: () => api.get<EquipmentType[]>("/api/equipment-types"),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  // Fetch equipment types - automatically transformed to camelCase
+  const { data: types = [] } = useEquipmentTypes();
 
-  const types = Array.isArray(typesData?.data) ? typesData.data : [];
-
-  // Fetch Equipment Results
+  // Fetch equipment list - automatically transformed to camelCase with nested type
   const {
     data: equipmentData,
     isLoading,
     error
-  } = useQuery({
-    queryKey: ["equipment", activeFilters],
-    queryFn: () => api.get<{ equipment: EquipmentSearchItem[], pagination: PaginationMeta }>("/api/equipment", activeFilters),
-    // Keep previous data while fetching new to prevent flash
-    placeholderData: (previousData) => previousData, 
-  });
+  } = useEquipmentList(activeFilters);
 
-
-  // Transform backend response to match frontend types
-  const equipment = (equipmentData?.data?.equipment || []).map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    typeId: item.type_id,
-    type: {
-      id: item.type_id,
-      name: item.type_name,
-      creditCostPerDay: item.credit_cost_per_day,
-    },
-    status: item.status,
-    imagePath: item.image_url,
-    internalId: item.internal_id,
-    isFavorite: item.is_favorite,
-  }));
-
-  const meta = equipmentData?.data?.pagination || {
+  // Data is already transformed by the hook, no manual mapping needed!
+  const equipment = equipmentData?.equipment ?? [];
+  const meta = equipmentData?.pagination ?? {
     page: 1,
     perPage: 25,
     totalItems: 0,

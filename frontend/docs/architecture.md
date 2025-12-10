@@ -123,7 +123,16 @@ frontend/
 │   │   │   └── api-error.ts
 │   │   │
 │   │   ├── schemas/                # Validation schemas
-│   │   │   └── auth-schemas.ts
+│   │   │   │   └── auth-schemas.ts
+│   │   │
+│   │   ├── transformers/          # Data transformation layer
+│   │   │   └── equipment.transformer.ts
+│   │   │
+│   │   ├── validators/            # Runtime validation (Zod)
+│   │   │   └── equipment.validator.ts
+│   │   │
+│   │   ├── api/                   # API client modules
+│   │   │   └── equipment-api.ts   # Equipment endpoints
 │   │   │
 │   │   ├── api.ts                  # Main API client
 │   │   ├── supabase.ts             # Supabase helpers
@@ -164,7 +173,7 @@ frontend/
 │   ├── types/                      # Type definitions (if needed)
 │   │
 │   ├── env.d.ts                    # TypeScript environment declarations
-│   └── types.ts                    # Shared application types
+│   └── types.ts                    # Shared application types (DTOs + Domain types)
 │
 ├── .env                            # Environment variables (gitignored)
 ├── .env.example                    # Environment template
@@ -402,23 +411,32 @@ export function useEquipmentSearch() {
    ↓
 4. React Query calls queryFn
    ↓
-5. API Client (src/lib/api.ts)
+5. Custom Hook (useEquipmentList)
    ↓
-6. Frontend API Proxy (pages/api/equipment/index.ts)
+6. Equipment API Module (equipment-api.ts)
+   ↓
+7. API Client (src/lib/api.ts)
+   ↓
+8. Frontend API Proxy (pages/api/equipment/index.ts)
    ├─ Gets auth token from locals
    ├─ Forwards to backend
    └─ Returns response
    ↓
-7. Backend (Go API)
+9. Backend (Go API)
    ├─ Validates JWT
    ├─ Executes business logic
    └─ Queries database
    ↓
-8. Response back through chain
+10. Response returns (snake_case JSON)
    ↓
-9. React Query caches result
+11. Transformer Layer
+   ├─ Zod validates response structure
+   ├─ Transforms snake_case → camelCase
+   └─ Restructures flat → nested
    ↓
-10. Component re-renders with data
+12. React Query caches transformed result
+   ↓
+13. Component re-renders with clean data
 ```
 
 ### Authentication Flow
@@ -588,7 +606,180 @@ export function useEquipmentSearch() {
 - ✅ Testable in isolation
 - ✅ Encapsulates complex logic
 
-### 6. Error Boundary Pattern
+### 6. Type-Safe Transformer Pattern
+
+**Problem**: Backend sends snake_case flat DTOs, frontend needs camelCase nested types
+
+**Solution**: 4-layer transformation architecture
+
+```
+Backend (Go)     →  Validators  →  Transformers  →  Frontend Types
+snake_case JSON      (Zod)         (Functions)      camelCase nested
+```
+
+#### Layer 1: Backend DTO Types
+
+Define exact backend structure in `types.ts`:
+
+```typescript
+// Backend DTO Types (snake_case - matches Go JSON)
+export interface EquipmentDTO {
+  id: string;
+  internal_id: string;
+  type_id: string;
+  type_name: string;
+  credit_cost_per_day: number;
+  // ... snake_case fields
+}
+
+export interface EquipmentListResponseDTO {
+  equipment: EquipmentDTO[];
+  pagination: PaginationResponseDTO;
+}
+```
+
+#### Layer 2: Runtime Validators
+
+Zod schemas in `lib/validators/equipment.validator.ts`:
+
+```typescript
+import { z } from 'zod';
+
+export const equipmentDTOSchema = z.object({
+  id: z.string().uuid(),
+  internal_id: z.string().min(1),
+  type_id: z.string().uuid(),
+  type_name: z.string().min(1),
+  credit_cost_per_day: z.number().int().min(0),
+  // ... validate all backend fields
+});
+
+export const equipmentListResponseDTOSchema = z.object({
+  equipment: z.array(equipmentDTOSchema),
+  pagination: paginationResponseDTOSchema,
+});
+```
+
+#### Layer 3: Transformer Functions
+
+Transform in `lib/transformers/equipment.transformer.ts`:
+
+```typescript
+import type { EquipmentDTO } from '@/types';
+import type { EquipmentSearchItem } from '@/types';
+import { equipmentDTOSchema } from '@/lib/validators/equipment.validator';
+
+export function transformEquipmentDTO(dto: unknown): EquipmentSearchItem {
+  // Runtime validation
+  const validated = equipmentDTOSchema.safeParse(dto);
+  
+  if (!validated.success) {
+    console.error('Validation failed', validated.error.format());
+    throw new EquipmentTransformError('Invalid data', dto);
+  }
+
+  // Transform: snake_case → camelCase, flat → nested
+  return {
+    id: validated.data.id,
+    name: validated.data.name ?? 'Unnamed',
+    typeId: validated.data.type_id,
+    type: {
+      id: validated.data.type_id,
+      name: validated.data.type_name,
+      creditCostPerDay: validated.data.credit_cost_per_day,
+    },
+    // ... transform all fields
+  };
+}
+```
+
+#### Layer 4: API Integration
+
+Auto-transform in `lib/api/equipment-api.ts`:
+
+```typescript
+import { transformEquipmentListResponse } from '@/lib/transformers/equipment.transformer';
+
+export const equipmentApi = {
+  async list(params) {
+    const response = await api.get('/api/equipment', params);
+    // Automatic transformation
+    return transformEquipmentListResponse(response.data);
+  }
+};
+```
+
+#### Optional Layer 5: Custom Hooks
+
+Encapsulate in `hooks/use-equipment-api.ts`:
+
+```typescript
+export function useEquipmentList(filters) {
+  return useQuery({
+    queryKey: ['equipment', filters],
+    queryFn: () => equipmentApi.list(filters), // Returns transformed data
+  });
+}
+```
+
+#### Component Usage (Final Result)
+
+Components use clean, transformed data:
+
+```tsx
+function EquipmentSearchContainer() {
+  // ✅ Data is already transformed!
+  const { data, isLoading } = useEquipmentList(filters);
+  
+  const equipment = data?.equipment ?? []; // camelCase, nested
+  
+  return <EquipmentGrid items={equipment} />;
+}
+```
+
+**Benefits**:
+- ✅ **Automated**: Transformers run automatically via API layer
+- ✅ **Type-Safe**: Full TypeScript safety throughout
+- ✅ **Maintainable**: Update one file when backend changes
+- ✅ **Resilient**: Runtime validation catches bad data
+- ✅ **Error Handling**: Custom errors with detailed logging
+- ✅ **Testable**: Each layer testable in isolation
+
+**File Organization**:
+```
+src/
+├── types.ts                                # Backend DTOs + Frontend types
+├── lib/
+│   ├── validators/equipment.validator.ts   # Zod schemas
+│   ├── transformers/equipment.transformer.ts # Transform functions
+│   └── api/equipment-api.ts                # API with auto-transform
+└── hooks/
+    └── use-equipment-api.ts                 # Query hooks
+```
+
+**Error Flow**:
+```
+Backend sends invalid data
+  ↓
+Zod validation catches it
+  ↓
+Console.error with details
+  ↓
+Throw EquipmentTransformError
+  ↓
+Component shows error state
+```
+
+**Example Error Output**:
+```javascript
+// Console shows:
+Equipment DTO validation failed {
+  errors: { credit_cost_per_day: ["Expected number, received string"] },
+  receivedData: { /* actual data */ }
+}
+```
+
+### 7. Error Boundary Pattern
 
 **Problem**: Component errors crash entire app
 

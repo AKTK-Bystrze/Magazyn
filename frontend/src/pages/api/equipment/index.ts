@@ -14,7 +14,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
   // Get session token from middleware (already validated)
   const token = locals.accessToken;
 
-  console.log('🔍 [API Proxy /api/equipment] Token from locals:', token ? 'EXISTS' : 'MISSING');
 
   const headers = new Headers({
     'Content-Type': 'application/json',
