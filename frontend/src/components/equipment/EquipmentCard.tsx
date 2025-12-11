@@ -5,6 +5,9 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ShoppingCart, Plus } from "lucide-react";
+import { saveCartToStorage, loadCartFromStorage } from "@/lib/utils/cart-storage";
+import type { CartItem } from "@/types/reservation-cart.types";
 
 interface EquipmentCardProps {
   item: EquipmentSearchItem;
@@ -14,6 +17,33 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
   const isAvailable = item.status === "ok";
   const statusColor = item.status === "ok" ? "bg-green-500" : item.status === "broken" ? "bg-destructive" : "bg-yellow-500";
   const statusLabel = item.status === "ok" ? "Available" : item.status === "broken" ? "Broken" : "Blocked";
+
+  const handleAddToCart = () => {
+    const cartItem: CartItem = {
+      equipmentId: item.id,
+      name: item.name,
+      typeName: item.type.name,
+      description: item.description,
+      creditCostPerDay: item.type.creditCostPerDay,
+      imageUrl: item.imagePath,
+    };
+
+    const currentCart = loadCartFromStorage() || { items: [], startDate: null, endDate: null };
+
+    // Check if already in cart
+    if (currentCart.items.some(i => i.equipmentId === cartItem.equipmentId)) {
+      alert("Item is already in your cart!");
+      return;
+    }
+
+    currentCart.items.push(cartItem);
+    saveCartToStorage(currentCart);
+
+    // Dispatch event for UI updates (for potential navbar badge)
+    window.dispatchEvent(new Event('cart-updated'));
+
+    alert("Item added to cart!");
+  };
 
   return (
     <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-md">
@@ -58,17 +88,24 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
         </p>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex justify-between items-center border-t bg-muted/20 mt-auto">
+      <CardFooter className="p-4 pt-0 flex justify-between items-center border-t bg-muted/20 mt-auto gap-2">
         <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
           <span className="text-primary">{item.type.creditCostPerDay}</span>
           <span className="text-xs text-muted-foreground">credits/day</span>
         </div>
-        <a
-          href={`/equipment/${item.id}`}
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
-        >
-          Details
-        </a>
+        <div className="flex gap-2">
+          {isAvailable && (
+            <Button size="sm" variant="outline" onClick={handleAddToCart} title="Add to Cart">
+              <ShoppingCart className="h-4 w-4" />
+            </Button>
+          )}
+          <a
+            href={`/equipment/${item.id}`}
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+          >
+            Details
+          </a>
+        </div>
       </CardFooter>
     </Card>
   );

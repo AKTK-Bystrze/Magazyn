@@ -44,6 +44,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       console.error(err);
       // Fallback for error message structure
       const errorMessage =
+        err.error ||
         err.response?.data?.error ||
         err.message ||
         'Something went wrong. Please try again.';

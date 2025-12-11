@@ -1,0 +1,53 @@
+---
+export const prerender = false;
+
+import Layout from "@/layouts/Layout.astro";
+import { ReservationCartView } from "@/components/reservations/ReservationCartView";
+import { BACKEND_URL } from "@/lib/config/api";
+
+const session = await locals.supabase.auth.getSession();
+if (!session.data.session) {
+  return Astro.redirect("/login?redirect=/reservations/create");
+}
+
+let initialCreditBalance = 0;
+let error = null;
+
+try {
+  const token = session.data.session.access_token;
+  const response = await fetch(`${BACKEND_URL}/users/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (response.ok) {
+    const userData = await response.json();
+    initialCreditBalance = userData.credit_balance;
+  } else {
+    console.error("Failed to fetch user data", response.status);
+    error = "Failed to load user profile. Please check your connection.";
+  }
+} catch (e) {
+  console.error("Error fetching user data", e);
+  error = "An error occurred while loading your profile.";
+}
+---
+
+<Layout title="Finish Reservation | Magazyn">
+  <div class="min-h-screen bg-background">
+    {error ? (
+      <div class="container mx-auto py-12 px-4 text-center">
+        <h1 class="text-2xl font-bold text-destructive mb-4">Error</h1>
+        <p class="text-muted-foreground mb-6">{error}</p>
+        <a href="/" class="text-primary hover:underline">Return Home</a>
+      </div>
+    ) : (
+      <ReservationCartView
+        client:load
+        initialCreditBalance={initialCreditBalance}
+      />
+    )}
+  </div>
+</Layout>
