@@ -62,10 +62,12 @@ The following tree illustrates the available REST endpoints exposed by the Go Ba
 │       └── /:id
 │           └── PATCH               # Approve/Deny request (SuperAdmin)
 │
-└── /analytics (Admin)
-    ├── GET /equipment-stats        # Equipment usage stats
-    ├── GET /user-stats             # User activity stats
-    └── GET /calendar/availability  # Full availability calendar
+├── /calendar
+│   └── GET /availability           # Equipment availability calendar (All users)
+│
+└── /analytics (Admin only)
+    ├── GET /equipment-stats        # Equipment usage statistics
+    └── GET /user-stats             # User activity statistics
 ```
 
 ## Frontend Integration

@@ -7,6 +7,7 @@ import (
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/config"
 	authhandler "magazyn/backend/internal/handler/auth"
+	calendarhandler "magazyn/backend/internal/handler/calendar"
 	equipmenthandler "magazyn/backend/internal/handler/equipment"
 	reservationhandler "magazyn/backend/internal/handler/reservation"
 	userhandler "magazyn/backend/internal/handler/user"
@@ -15,6 +16,7 @@ import (
 	commonmiddleware "magazyn/backend/internal/middleware/common"
 	supabaserepo "magazyn/backend/internal/repository/supabase"
 	authservice "magazyn/backend/internal/service/auth"
+	calendarservice "magazyn/backend/internal/service/calendar"
 	"magazyn/backend/internal/service/email"
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
@@ -42,11 +44,15 @@ func main() {
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient)
+	calendarRepo := supabaserepo.NewCalendarRepository(appState.SupabaseClient)
+	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
 
     // Initialize Services
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
 	userService := userservice.NewUserService(userRepo)
+	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
+	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)
 	
 	emailService := email.NewNoopEmailService()
 	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
@@ -56,6 +62,8 @@ func main() {
 	equipmentHandler := equipmenthandler.NewEquipmentHandler(equipmentService)
 	userHandler := userhandler.NewUserHandler(userService)
 	reservationHandler := reservationhandler.NewReservationHandler(reservationService)
+	calendarHandler := calendarhandler.NewCalendarHandler(calendarService)
+	analyticsHandler := calendarhandler.NewAnalyticsHandler(analyticsService)
 
     // Initialize Middleware
 	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
@@ -90,6 +98,13 @@ func main() {
 	mux.Handle("PATCH /reservations/bulk", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(reservationHandler.HandleBulkUpdate))))
 	mux.Handle("GET /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleGetByID)))
 	mux.Handle("PATCH /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleUpdate)))
+
+	// Calendar Routes
+	mux.Handle("GET /calendar/availability", authMiddleware(http.HandlerFunc(calendarHandler.HandleGetAvailability)))
+
+	// Analytics Routes (Admin only)
+	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))
+	mux.Handle("GET /analytics/user-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetUserStats))))
 
 	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)

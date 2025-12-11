@@ -1,10 +1,6 @@
-update documentation
-    conversation:
-    read @backend 
-    update @reservation-workflow.md  about the logic flow in case of reservation, costs calculation and status changes, how failures are handled
 
 proceed with backend implementation of plans in .ai
-    implement calendar endpoint .ai/backend/calendar.md
+    credit history plan and implemenation
 
 frontend plans
     users
@@ -19,6 +15,10 @@ dokumentacja
 
 deploy - konteneryzacja 
 
+backend left to do from api-plan:
+    credit request
+    mainteneace logs
+
 
 refactor 
 1. nowy uzytkonwik nie moze sie tworzyc automatycznie. Wylaczycz tworzenie, tylko admin moze dodawac
@@ -30,3 +30,4 @@ Update
 5. Implement a bulk refund mechanism (or iterative service calls) for 
 BulkUpdate
  to ensure admin cancellations process refunds correctly.
+6. reservation status update. user should be able to change status of his own reservation when renting and returning equipment
