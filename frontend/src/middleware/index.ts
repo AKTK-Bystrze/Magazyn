@@ -71,27 +71,29 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     // 3. Unified Redirect Logic - Single Source of Truth
-    // Use RedirectManager instead of duplicated redirect logic
-    const redirectParam = url.searchParams.get("redirect");
-    const redirectTo = RedirectManager.getRedirectForAuthState(
-      context.locals.user,
-      sessionInfo,
-      url.pathname,
-      redirectParam,
-      url.origin
-    );
+    // SKIP redirects for API routes - they should handle auth state via 401/403 or pass through
+    if (!url.pathname.startsWith("/api/")) {
+      const redirectParam = url.searchParams.get("redirect");
+      const redirectTo = RedirectManager.getRedirectForAuthState(
+        context.locals.user,
+        sessionInfo,
+        url.pathname,
+        redirectParam,
+        url.origin
+      );
 
-    if (redirectTo) {
-      // Check for redirect loops before redirecting
-      if (!RedirectManager.canRedirect(url.pathname, redirectTo)) {
-        console.error('🚨 Redirect loop prevented:', { from: url.pathname, to: redirectTo });
-        // Return error page instead of looping
-        return new Response('Redirect loop detected', { status: 500 });
+      if (redirectTo) {
+        // Check for redirect loops before redirecting
+        if (!RedirectManager.canRedirect(url.pathname, redirectTo)) {
+          console.error('🚨 Redirect loop prevented:', { from: url.pathname, to: redirectTo });
+          // Return error page instead of looping
+          return new Response('Redirect loop detected', { status: 500 });
+        }
+
+        RedirectManager.recordRedirect(url.pathname, redirectTo);
+        console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
+        return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
       }
-
-      RedirectManager.recordRedirect(url.pathname, redirectTo);
-      console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
-      return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
     }
 
     // 4. Protect API Routes

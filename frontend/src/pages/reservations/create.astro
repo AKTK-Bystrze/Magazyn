@@ -5,7 +5,7 @@ import Layout from "@/layouts/Layout.astro";
 import { ReservationCartView } from "@/components/reservations/ReservationCartView";
 import { BACKEND_URL } from "@/lib/config/api";
 
-const session = await locals.supabase.auth.getSession();
+const session = await Astro.locals.supabase.auth.getSession();
 if (!session.data.session) {
   return Astro.redirect("/login?redirect=/reservations/create");
 }
