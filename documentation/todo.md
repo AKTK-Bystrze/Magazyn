@@ -1,7 +1,4 @@
 
-proceed with backend implementation of plans in .ai
-    credit history plan and implemenation
-
 frontend plans
     users
     reservations

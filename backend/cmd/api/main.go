@@ -8,6 +8,7 @@ import (
 	"magazyn/backend/internal/config"
 	authhandler "magazyn/backend/internal/handler/auth"
 	calendarhandler "magazyn/backend/internal/handler/calendar"
+	credithandler "magazyn/backend/internal/handler/credit"
 	equipmenthandler "magazyn/backend/internal/handler/equipment"
 	reservationhandler "magazyn/backend/internal/handler/reservation"
 	userhandler "magazyn/backend/internal/handler/user"
@@ -17,6 +18,7 @@ import (
 	supabaserepo "magazyn/backend/internal/repository/supabase"
 	authservice "magazyn/backend/internal/service/auth"
 	calendarservice "magazyn/backend/internal/service/calendar"
+	creditservice "magazyn/backend/internal/service/credit"
 	"magazyn/backend/internal/service/email"
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
@@ -46,6 +48,7 @@ func main() {
 	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient)
 	calendarRepo := supabaserepo.NewCalendarRepository(appState.SupabaseClient)
 	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
+	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient)
 
     // Initialize Services
 	authService := authservice.NewAuthService(authRepo)
@@ -53,6 +56,7 @@ func main() {
 	userService := userservice.NewUserService(userRepo)
 	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
 	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)
+	creditService := creditservice.NewCreditHistoryService(creditRepo, userRepo)
 	
 	emailService := email.NewNoopEmailService()
 	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
@@ -64,6 +68,7 @@ func main() {
 	reservationHandler := reservationhandler.NewReservationHandler(reservationService)
 	calendarHandler := calendarhandler.NewCalendarHandler(calendarService)
 	analyticsHandler := calendarhandler.NewAnalyticsHandler(analyticsService)
+	creditHandler := credithandler.NewCreditHistoryHandler(creditService)
 
     // Initialize Middleware
 	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
@@ -101,6 +106,9 @@ func main() {
 
 	// Calendar Routes
 	mux.Handle("GET /calendar/availability", authMiddleware(http.HandlerFunc(calendarHandler.HandleGetAvailability)))
+
+	// Credit History Routes
+	mux.Handle("GET /credit-history", authMiddleware(http.HandlerFunc(creditHandler.HandleGetCreditHistory)))
 
 	// Analytics Routes (Admin only)
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))

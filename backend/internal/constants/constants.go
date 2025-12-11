@@ -15,6 +15,7 @@ const (
 	TableReservations  = "reservations"
 	TableEquipmentTypes = "equipment_types"
 	TableMaintenanceLogs = "maintenance_logs"
+	TableCreditHistory   = "credit_history"
 )
 
 
@@ -55,6 +56,9 @@ const (
 	DefaultPerPage = 25  // Default number of items per page
 	MaxPerPage     = 100 // Maximum items per page to prevent excessive data transfer
 )
+
+// AllowedPerPageValues defines the standard allowed page sizes for pagination.
+var AllowedPerPageValues = []int{10, 25, 50, 100}
 
 // ============================================================================
 // Authentication Constants

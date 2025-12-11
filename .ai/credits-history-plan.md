@@ -262,14 +262,14 @@ All internal errors should be logged with context using `logger.Errorf(ctx, ...)
 
 ## 9. Implementation Steps
 
-### Step 1: Create Type Definitions
+### Step 1: Create Type Definitions [DONE]
 **File**: `backend/internal/types/credit_types.go` (new file)
 
 1. Define `CreditHistoryItemDTO` with all required fields matching API spec
 2. Define `CreditHistoryResponse` with array, pagination, and current balance
 3. Define `GetCreditHistoryQuery` for internal query parameters
 
-### Step 2: Create Repository Interface & Implementation
+### Step 2: Create Repository Interface & Implementation [DONE]
 **File**: `backend/internal/repository/credit_history.go` (new file)
 
 1. Define `CreditHistoryRepository` interface:
@@ -290,7 +290,7 @@ All internal errors should be logged with context using `logger.Errorf(ctx, ...)
 
 3. Add unit tests in `backend/internal/repository/supabase/credit_history_repository_test.go`
 
-### Step 3: Create Service Layer
+### Step 3: Create Service Layer [DONE]
 **File**: `backend/internal/service/credit/credit_service.go` (new file or add to existing)
 
 1. Define `CreditHistoryService` interface:
@@ -320,7 +320,7 @@ All internal errors should be logged with context using `logger.Errorf(ctx, ...)
    - Test pagination calculations
    - Test error scenarios
 
-### Step 4: Create HTTP Handler
+### Step 4: Create HTTP Handler [DONE]
 **File**: `backend/internal/handler/credit/credit_handler.go` (new file)
 
 1. Define `CreditHistoryHandler` struct with service dependency
@@ -340,7 +340,7 @@ All internal errors should be logged with context using `logger.Errorf(ctx, ...)
    - `ForbiddenError` → 403
    - Default → 500 (with logging)
 
-### Step 5: Register Route and Wire Dependencies
+### Step 5: Register Route and Wire Dependencies [DONE]
 **File**: `backend/cmd/server/main.go`
 
 1. Import credit handler package
@@ -353,7 +353,7 @@ All internal errors should be logged with context using `logger.Errorf(ctx, ...)
        authMiddleware.RequireAuth(creditHandler.HandleGetCreditHistory))
    ```
 
-### Step 6: Add Constants
+### Step 6: Add Constants [DONE]
 **File**: `backend/internal/constants/pagination.go` (if not exists, or add to existing constants file)
 
 ```go
@@ -365,7 +365,7 @@ const (
 )
 ```
 
-### Step 7: Create Integration Tests
+### Step 7: Create Integration Tests [DONE]
 **File**: `backend/internal/handler/credit/credit_handler_test.go`
 
 1. Test scenarios:

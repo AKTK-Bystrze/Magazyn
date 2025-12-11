@@ -945,7 +945,11 @@ The API exposes the following main resources, mapped to database tables:
 
 ### 2.6 Credit History
 
-#### GET /credit-history
+#### GET /credit-history [IMPLEMENTED]
+Implementation: 
+- Handler: `backend/internal/handler/credit/credit_handler.go`
+- Service: `backend/internal/service/credit/credit_service.go`
+- Repository: `backend/internal/repository/supabase/credit_history_repository.go`
 
 **Description**: Get user's credit transaction history (user sees own, admin sees all)
 
