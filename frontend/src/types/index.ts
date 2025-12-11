@@ -18,3 +18,6 @@ export type * from "./api.types";
 
 // Common types
 export type * from "./common.types";
+
+// Reservation cart types
+export type * from "./reservation-cart.types";

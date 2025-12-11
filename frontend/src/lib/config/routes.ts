@@ -22,11 +22,13 @@
 export const ROUTES = {
   PUBLIC: {
     LOGIN: '/login',
+    EQUIPMENT: '/equipment',
   },
   PROTECTED: {
     ADMIN: '/admin',
     DASHBOARD: '/dashboard',
     ACCOUNT_DISABLED: '/account-disabled',
+    CREDIT_REQUESTS: '/credit-requests',
   },
 } as const;
 
