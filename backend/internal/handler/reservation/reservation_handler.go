@@ -12,7 +12,6 @@ import (
 	"magazyn/backend/internal/service/reservation"
 	"magazyn/backend/internal/types"
 	"net/http"
-	"strconv"
 )
 
 // ReservationHandler handles HTTP requests for reservation resources.
@@ -34,27 +33,13 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 	role := common.GetUserRoleFromContext(r)
 	
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 
 	query := types.ReservationListQuery{}
 
-	if page := r.URL.Query().Get("page"); page != "" {
-		if p, err := strconv.Atoi(page); err == nil {
-			query.Page = p
-		}
-	} else {
-		query.Page = constants.DefaultPage
-	}
-
-	if perPage := r.URL.Query().Get("per_page"); perPage != "" {
-		if pp, err := strconv.Atoi(perPage); err == nil {
-			query.PerPage = pp
-		}
-	} else {
-		query.PerPage = constants.DefaultPerPage
-	}
+	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 
 	if status := r.URL.Query().Get("status"); status != "" {
 		query.Status = &status
@@ -101,7 +86,7 @@ func (h *ReservationHandler) HandleGetByID(w http.ResponseWriter, r *http.Reques
 	id := r.PathValue("id")
 
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 	if id == "" {
@@ -133,7 +118,7 @@ func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request
 	userID := common.GetUserIDFromContext(r)
 	
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 
@@ -175,11 +160,11 @@ func (h *ReservationHandler) HandleUpdate(w http.ResponseWriter, r *http.Request
 	id := r.PathValue("id")
 
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 	if id == "" {
-		common.RespondError(ctx, w, http.StatusBadRequest, "ID request")
+		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
 	}
 
@@ -242,7 +227,7 @@ func (h *ReservationHandler) HandleDashboardStats(w http.ResponseWriter, r *http
 	ctx := r.Context()
 	role := common.GetUserRoleFromContext(r)
 	
-	if role != "admin" && role != "super_admin" {
+	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 		common.RespondError(ctx, w, http.StatusForbidden, "Admin access only")
 		return
 	}

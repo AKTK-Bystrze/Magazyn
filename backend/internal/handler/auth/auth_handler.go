@@ -3,7 +3,6 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	authservice "magazyn/backend/internal/service/auth"
@@ -77,16 +76,10 @@ func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 // The user context must be populated by the auth middleware before this handler is called.
 // Response: 200 OK with session data including user ID, email, username, role, credit balance, and expiry time.
 func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
-	val := r.Context().Value(appcontext.UserContextKey)
-	user, ok := val.(*types.User)
-	if !ok {
-		logger.Errorf(r.Context(), "User context key type assertion failed. Actual type: %T, Value: %+v", val, val)
-		common.RespondError(r.Context(), w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
+	user := common.GetUserFromContext(r)
 	if user == nil {
-		logger.Error(r.Context(), "User is nil in context")
-		common.RespondError(r.Context(), w, http.StatusUnauthorized, "Unauthorized")
+		logger.Error(r.Context(), "User is nil or invalid in context")
+		common.RespondUnauthorized(r.Context(), w)
 		return
 	}
 

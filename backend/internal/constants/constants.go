@@ -90,3 +90,15 @@ const (
 	AnalyticsMaxYear      = 2100 // Maximum year for analytics filters
 	DateFormatISO         = "2006-01-02" // ISO date format for Go time parsing
 )
+
+// ============================================================================
+// Validation Constants
+// ============================================================================
+
+// Validation constraints for input parameters.
+const (
+	UUIDLength    = 36 // Length of a standard UUID string
+	DateLengthISO = 10 // Length of an ISO 8601 date string (YYYY-MM-DD)
+	MinMonth      = 1  // Minimum month value
+	MaxMonth      = 12 // Maximum month value
+)

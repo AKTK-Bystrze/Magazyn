@@ -1,6 +1,7 @@
 package calendar
 
 import (
+	"fmt"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
@@ -27,45 +28,14 @@ func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *htt
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 
-	// Parse query parameters
-	query := types.AnalyticsPeriodQuery{}
-
-	if yearStr := r.URL.Query().Get("year"); yearStr != "" {
-		if year, err := strconv.Atoi(yearStr); err == nil {
-			if year < constants.AnalyticsMinYear || year > constants.AnalyticsMaxYear {
-				common.RespondError(ctx, w, http.StatusBadRequest, "year must be between 2000 and 2100")
-				return
-			}
-			query.Year = &year
-		} else {
-			common.RespondError(ctx, w, http.StatusBadRequest, "year must be a valid integer")
-			return
-		}
-	}
-
-	if monthStr := r.URL.Query().Get("month"); monthStr != "" {
-		if month, err := strconv.Atoi(monthStr); err == nil {
-			if month < 1 || month > 12 {
-				common.RespondError(ctx, w, http.StatusBadRequest, "month must be between 1 and 12")
-				return
-			}
-			query.Month = &month
-		} else {
-			common.RespondError(ctx, w, http.StatusBadRequest, "month must be a valid integer")
-			return
-		}
-	}
-
-	if equipmentID := r.URL.Query().Get("equipment_id"); equipmentID != "" {
-		if len(equipmentID) != 36 {
-			common.RespondError(ctx, w, http.StatusBadRequest, "equipment_id must be a valid UUID")
-			return
-		}
-		query.EquipmentID = &equipmentID
+	query, err := h.parsePeriodQuery(r)
+	if err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	response, err := h.service.GetEquipmentStats(ctx, query)
@@ -78,42 +48,20 @@ func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *htt
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
-// HandleGetUserStats handles GET /analytics/user-stats
+// HandleGetUserStats handles GET /analytics/user-stats.
+// It retrieves user activity statistics, optionally filtered by year and month.
 func (h *AnalyticsHandler) HandleGetUserStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 
-	// Parse query parameters
-	query := types.AnalyticsPeriodQuery{}
-
-	if yearStr := r.URL.Query().Get("year"); yearStr != "" {
-		if year, err := strconv.Atoi(yearStr); err == nil {
-			if year < constants.AnalyticsMinYear || year > constants.AnalyticsMaxYear {
-				common.RespondError(ctx, w, http.StatusBadRequest, "year must be between 2000 and 2100")
-				return
-			}
-			query.Year = &year
-		} else {
-			common.RespondError(ctx, w, http.StatusBadRequest, "year must be a valid integer")
-			return
-		}
-	}
-
-	if monthStr := r.URL.Query().Get("month"); monthStr != "" {
-		if month, err := strconv.Atoi(monthStr); err == nil {
-			if month < 1 || month > 12 {
-				common.RespondError(ctx, w, http.StatusBadRequest, "month must be between 1 and 12")
-				return
-			}
-			query.Month = &month
-		} else {
-			common.RespondError(ctx, w, http.StatusBadRequest, "month must be a valid integer")
-			return
-		}
+	query, err := h.parsePeriodQuery(r)
+	if err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	response, err := h.service.GetUserStats(ctx, query)
@@ -124,4 +72,41 @@ func (h *AnalyticsHandler) HandleGetUserStats(w http.ResponseWriter, r *http.Req
 	}
 
 	common.RespondJSON(ctx, w, http.StatusOK, response)
+}
+
+// parsePeriodQuery extracts and validates year, month, and equipment_id from the request query parameters.
+func (h *AnalyticsHandler) parsePeriodQuery(r *http.Request) (types.AnalyticsPeriodQuery, error) {
+	query := types.AnalyticsPeriodQuery{}
+	q := r.URL.Query()
+
+	if yearStr := q.Get("year"); yearStr != "" {
+		year, err := strconv.Atoi(yearStr)
+		if err != nil {
+			return query, fmt.Errorf("year must be a valid integer")
+		}
+		if year < constants.AnalyticsMinYear || year > constants.AnalyticsMaxYear {
+			return query, fmt.Errorf("year must be between %d and %d", constants.AnalyticsMinYear, constants.AnalyticsMaxYear)
+		}
+		query.Year = &year
+	}
+
+	if monthStr := q.Get("month"); monthStr != "" {
+		month, err := strconv.Atoi(monthStr)
+		if err != nil {
+			return query, fmt.Errorf("month must be a valid integer")
+		}
+		if month < constants.MinMonth || month > constants.MaxMonth {
+			return query, fmt.Errorf("month must be between %d and %d", constants.MinMonth, constants.MaxMonth)
+		}
+		query.Month = &month
+	}
+
+	if equipmentID := q.Get("equipment_id"); equipmentID != "" {
+		if len(equipmentID) != constants.UUIDLength {
+			return query, fmt.Errorf("equipment_id must be a valid UUID")
+		}
+		query.EquipmentID = &equipmentID
+	}
+
+	return query, nil
 }

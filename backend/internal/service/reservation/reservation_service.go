@@ -332,7 +332,7 @@ func (s *reservationService) GetDashboardStats(ctx context.Context) (*types.Rese
 
 // Helper: Calculate days between two dates strings YYYY-MM-DD
 func (s *reservationService) calculateDays(start, end string) int32 {
-	layout := "2006-01-02"
+	layout := constants.DateFormatISO
 	t1, _ := time.Parse(layout, start)
 	t2, _ := time.Parse(layout, end)
 	

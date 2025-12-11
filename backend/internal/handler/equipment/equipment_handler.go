@@ -8,7 +8,6 @@ import (
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	"magazyn/backend/internal/types"
 	"net/http"
-	"strconv"
 )
 
 type EquipmentHandler struct {
@@ -26,28 +25,14 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 
 	query := types.EquipmentListQuery{}
 
 	// Parse query params
-	if page := r.URL.Query().Get("page"); page != "" {
-		if p, err := strconv.Atoi(page); err == nil {
-			query.Page = p
-		}
-	} else {
-		query.Page = constants.DefaultPage
-	}
-
-	if perPage := r.URL.Query().Get("per_page"); perPage != "" {
-		if pp, err := strconv.Atoi(perPage); err == nil {
-			query.PerPage = pp
-		}
-	} else {
-		query.PerPage = constants.DefaultPerPage
-	}
+	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 
 	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
 		query.TypeID = &typeID
@@ -101,7 +86,7 @@ func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 
@@ -127,6 +112,10 @@ func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) 
 func (h *EquipmentHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
+	if userID == "" {
+		common.RespondUnauthorized(ctx, w)
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
@@ -152,6 +141,11 @@ func (h *EquipmentHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) 
 // Archive handles archiving equipment
 func (h *EquipmentHandler) HandleArchive(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	userID := common.GetUserIDFromContext(r)
+	if userID == "" {
+		common.RespondUnauthorized(ctx, w)
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
@@ -202,7 +196,7 @@ func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 

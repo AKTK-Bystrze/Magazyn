@@ -25,7 +25,7 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
-		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+		common.RespondUnauthorized(ctx, w)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 
 	// Validate equipment_id if provided (basic UUID check)
 	if query.EquipmentID != nil && *query.EquipmentID != "" {
-		if len(*query.EquipmentID) != 36 {
+		if len(*query.EquipmentID) != constants.UUIDLength {
 			common.RespondError(ctx, w, http.StatusBadRequest, "equipment_id must be a valid UUID")
 			return
 		}
@@ -69,7 +69,7 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 
 	// Validate start_date format if provided
 	if query.StartDate != nil && *query.StartDate != "" {
-		if len(*query.StartDate) != 10 {
+		if len(*query.StartDate) != constants.DateLengthISO {
 			common.RespondError(ctx, w, http.StatusBadRequest, "start_date must be in YYYY-MM-DD format")
 			return
 		}

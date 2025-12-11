@@ -9,6 +9,7 @@ import (
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -44,6 +45,11 @@ func RespondJSON(ctx context.Context, w http.ResponseWriter, status int, data in
 // It's a convenience wrapper around RespondJSON for error responses.
 func RespondError(ctx context.Context, w http.ResponseWriter, status int, message string) {
 	RespondJSON(ctx, w, status, map[string]string{"error": message})
+}
+
+// RespondUnauthorized sends a JSON error response with status 401 Unauthorized.
+func RespondUnauthorized(ctx context.Context, w http.ResponseWriter) {
+	RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 }
 
 // GetUserIDFromContext extracts the authenticated user's ID from the request context.
@@ -93,4 +99,21 @@ func GetUserRoleFromContext(r *http.Request) string {
 		return ""
 	}
 	return p.Role
+}
+
+// ParsePagination extracts page and per_page from query parameters.
+// Returns (page, perPage) with default values if not provided or invalid.
+// Defaults are defined in constants package, but here we fallback to provided defaults if 0.
+func ParsePagination(r *http.Request, defaultPage, defaultPerPage int) (int, int) {
+	page := defaultPage
+	if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
+		page = p
+	}
+
+	perPage := defaultPerPage
+	if pp, err := strconv.Atoi(r.URL.Query().Get("per_page")); err == nil && pp > 0 {
+		perPage = pp
+	}
+
+	return page, perPage
 }

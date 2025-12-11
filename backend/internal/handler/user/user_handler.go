@@ -10,7 +10,6 @@ import (
 	"magazyn/backend/internal/service/user"
 	"magazyn/backend/internal/types"
 	"net/http"
-	"strconv"
 )
 
 // UserHandler handles HTTP requests for user management.
@@ -33,7 +32,7 @@ func (h *UserHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 	if id == "" || id == "me" {
 		userID := common.GetUserIDFromContext(r)
 		if userID == "" {
-			common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
+			common.RespondUnauthorized(ctx, w)
 			return
 		}
 		id = userID
@@ -52,15 +51,7 @@ func (h *UserHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	
-	page := constants.DefaultPage
-	if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil {
-		page = p
-	}
-
-	perPage := constants.DefaultPerPage
-	if pp, err := strconv.Atoi(r.URL.Query().Get("per_page")); err == nil {
-		perPage = pp
-	}
+	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 
 	role := r.URL.Query().Get("role")
 	search := r.URL.Query().Get("search")
