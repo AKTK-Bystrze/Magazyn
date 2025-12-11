@@ -20,9 +20,9 @@ import (
 // Reservation Service Interface
 // ============================================================================
 
-// ReservationService defines operations for reservation management
+// ReservationService defines operations for reservation management.
 type ReservationService interface {
-	// List retrieves a paginated list of reservations
+	// List retrieves a paginated list of reservations based on the provided query filters.
 	List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error)
 
 	// GetByID retrieves detailed reservation information

@@ -16,14 +16,14 @@ type equipmentRepository struct {
 	client *supabase.Client
 }
 
-// NewEquipmentRepository creates a new Supabase implementation of EquipmentRepository
+// NewEquipmentRepository creates a new Supabase implementation of EquipmentRepository.
 func NewEquipmentRepository(client *supabase.Client) repository.EquipmentRepository {
 	return &equipmentRepository{
 		client: client,
 	}
 }
 
-// List retrieves a paginated list of equipment based on filters
+// List retrieves a paginated list of equipment based on filters.
 func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
 	qb := r.client.From("equipment").Select("*", "exact", false)
 
@@ -127,7 +127,7 @@ func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID str
 		return false, nil 
 	}
     
-    return data != nil && len(data) > 2, nil 
+    return len(data) > 2, nil 
 }
 
 // Create creates a new equipment record

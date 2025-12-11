@@ -10,17 +10,19 @@ import (
 	"strconv"
 )
 
-// AnalyticsHandler handles HTTP requests for analytics endpoints
+// AnalyticsHandler handles HTTP requests for analytics endpoints.
+// It exposes methods to retrieve statistical data about equipment usage and user activity.
 type AnalyticsHandler struct {
 	service calendarservice.AnalyticsService
 }
 
-// NewAnalyticsHandler creates a new AnalyticsHandler
+// NewAnalyticsHandler creates a new instance of AnalyticsHandler with the given service dependency.
 func NewAnalyticsHandler(s calendarservice.AnalyticsService) *AnalyticsHandler {
 	return &AnalyticsHandler{service: s}
 }
 
-// HandleGetEquipmentStats handles GET /analytics/equipment-stats
+// HandleGetEquipmentStats handles GET /analytics/equipment-stats.
+// It retrieves equipment usage statistics, optionally filtered by year, month, or specific equipment ID.
 func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
