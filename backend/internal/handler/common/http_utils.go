@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/logger"
+	"magazyn/backend/internal/types"
 	"net/http"
 	"strings"
 )
@@ -42,4 +44,53 @@ func RespondJSON(ctx context.Context, w http.ResponseWriter, status int, data in
 // It's a convenience wrapper around RespondJSON for error responses.
 func RespondError(ctx context.Context, w http.ResponseWriter, status int, message string) {
 	RespondJSON(ctx, w, status, map[string]string{"error": message})
+}
+
+// GetUserIDFromContext extracts the authenticated user's ID from the request context.
+// Returns empty string if user is not authenticated or context key is missing.
+func GetUserIDFromContext(r *http.Request) string {
+	val := r.Context().Value(appcontext.UserContextKey)
+	if val == nil {
+		return ""
+	}
+	if u, ok := val.(*types.User); ok {
+		return u.ID
+	}
+	return ""
+}
+
+// GetUserFromContext extracts the authenticated user from the request context.
+// Returns nil if user is not authenticated or context key is missing.
+func GetUserFromContext(r *http.Request) *types.User {
+	val := r.Context().Value(appcontext.UserContextKey)
+	if val == nil {
+		return nil
+	}
+	if u, ok := val.(*types.User); ok {
+		return u
+	}
+	return nil
+}
+
+// GetUserProfileFromContext extracts the user profile from the request context.
+// Returns nil if profile is not available or context key is missing.
+func GetUserProfileFromContext(r *http.Request) *types.PublicProfilesSelect {
+	val := r.Context().Value(appcontext.UserProfileContextKey)
+	if val == nil {
+		return nil
+	}
+	if p, ok := val.(*types.PublicProfilesSelect); ok {
+		return p
+	}
+	return nil
+}
+
+// GetUserRoleFromContext extracts the user's role from the profile in the request context.
+// Returns empty string if profile is not available.
+func GetUserRoleFromContext(r *http.Request) string {
+	p := GetUserProfileFromContext(r)
+	if p == nil {
+		return ""
+	}
+	return p.Role
 }

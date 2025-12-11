@@ -2,6 +2,7 @@ package calendar
 
 import (
 	"context"
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
@@ -48,18 +49,9 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 		return nil, types.NewInternalError("Failed to fetch equipment stats", err)
 	}
 
-	// Fetch all equipment types for type name lookup
-	allTypes, err := s.typeRepo.ListAll(ctx)
-	if err != nil {
-		logger.Warnf(ctx, "Failed to fetch equipment types: %v", err)
-		allTypes = []types.PublicEquipmentTypesSelect{}
-	}
-
-	// Build type name map
-	typeNames := make(map[string]string)
-	for _, t := range allTypes {
-		typeNames[t.Id] = t.Name
-	}
+	// TODO: The analytics view doesn't include equipment type_id.
+	// To populate EquipmentType, either update the view or make additional queries.
+	// For now, typeRepo is kept for future enhancement but not used.
 
 	// Transform to DTOs with top renters
 	stats := make([]types.EquipmentStatsDTO, 0, len(rawStats))
@@ -89,7 +81,7 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 		}
 
 		// Fetch top renters for this equipment
-		topRenters, err := s.analyticsRepo.GetTopRentersForEquipment(ctx, *raw.EquipmentId, 5)
+		topRenters, err := s.analyticsRepo.GetTopRentersForEquipment(ctx, *raw.EquipmentId, constants.TopRentersLimit)
 		if err != nil {
 			logger.Warnf(ctx, "Failed to fetch top renters for equipment %s: %v", *raw.EquipmentId, err)
 			topRenters = []types.TopRenterDTO{}

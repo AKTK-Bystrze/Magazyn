@@ -6,6 +6,8 @@ import (
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"sort"
+	"time"
 
 	"github.com/supabase-community/supabase-go"
 )
@@ -170,14 +172,10 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 		result = append(result, *stats)
 	}
 
-	// Simple bubble sort for top N (limit is small, typically 5)
-	for i := 0; i < len(result)-1; i++ {
-		for j := i + 1; j < len(result); j++ {
-			if result[j].ReservationCount > result[i].ReservationCount {
-				result[i], result[j] = result[j], result[i]
-			}
-		}
-	}
+	// Sort by reservation count (descending)
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ReservationCount > result[j].ReservationCount
+	})
 
 	// Limit results
 	if len(result) > limit {
@@ -242,10 +240,21 @@ func (r *analyticsRepository) GetFavoriteEquipmentTypeForUser(ctx context.Contex
 	return &typeName, nil
 }
 
-// calculateDays calculates the number of days between two dates (inclusive)
+// calculateDays calculates the number of days between two dates (inclusive).
+// TODO: This calculation uses time.Parse which may have issues with timezones.
+// For production, consider using a more robust date library.
 func calculateDays(startDate, endDate string) int {
-	// Simple calculation assuming YYYY-MM-DD format
-	// In production, use time.Parse for accurate calculation
-	// For now, return 1 as minimum
-	return 1
+	start, err := time.Parse(constants.DateFormatISO, startDate)
+	if err != nil {
+		return 1
+	}
+	end, err := time.Parse(constants.DateFormatISO, endDate)
+	if err != nil {
+		return 1
+	}
+	days := int(end.Sub(start).Hours()/24) + 1
+	if days < 1 {
+		return 1
+	}
+	return days
 }

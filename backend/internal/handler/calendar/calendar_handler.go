@@ -1,7 +1,7 @@
 package calendar
 
 import (
-	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	calendarservice "magazyn/backend/internal/service/calendar"
@@ -20,22 +20,10 @@ func NewCalendarHandler(s calendarservice.CalendarService) *CalendarHandler {
 	return &CalendarHandler{service: s}
 }
 
-// getUserID extracts user ID from request context
-func getUserID(r *http.Request) string {
-	user := r.Context().Value(appcontext.UserContextKey)
-	if user == nil {
-		return ""
-	}
-	if u, ok := user.(*types.User); ok {
-		return u.ID
-	}
-	return ""
-}
-
 // HandleGetAvailability handles GET /calendar/availability
 func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -43,7 +31,7 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 
 	// Parse query parameters
 	query := types.CalendarAvailabilityQuery{
-		Days: 30, // default
+		Days: constants.CalendarDefaultDays,
 	}
 
 	if equipmentID := r.URL.Query().Get("equipment_id"); equipmentID != "" {
@@ -56,11 +44,11 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 
 	if daysStr := r.URL.Query().Get("days"); daysStr != "" {
 		if days, err := strconv.Atoi(daysStr); err == nil {
-			if days < 1 {
+			if days < constants.CalendarMinDays {
 				common.RespondError(ctx, w, http.StatusBadRequest, "days must be at least 1")
 				return
 			}
-			if days > 90 {
+			if days > constants.CalendarMaxDays {
 				common.RespondError(ctx, w, http.StatusBadRequest, "days must not exceed 90")
 				return
 			}

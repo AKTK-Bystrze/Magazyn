@@ -75,3 +75,18 @@ const (
 const (
 	StorageBucket = "equipment" // Supabase storage bucket name for equipment images
 )
+
+// ============================================================================
+// Calendar Constants
+// ============================================================================
+
+// Calendar-related defaults and limits for availability endpoints.
+const (
+	CalendarDefaultDays   = 30   // Default number of days for calendar view
+	CalendarMaxDays       = 90   // Maximum number of days allowed in a single request
+	CalendarMinDays       = 1    // Minimum number of days for calendar view
+	TopRentersLimit       = 5    // Number of top renters to include in equipment stats
+	AnalyticsMinYear      = 2000 // Minimum year for analytics filters
+	AnalyticsMaxYear      = 2100 // Maximum year for analytics filters
+	DateFormatISO         = "2006-01-02" // ISO date format for Go time parsing
+)

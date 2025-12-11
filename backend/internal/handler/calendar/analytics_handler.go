@@ -1,7 +1,7 @@
 package calendar
 
 import (
-	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	calendarservice "magazyn/backend/internal/service/calendar"
@@ -20,22 +20,10 @@ func NewAnalyticsHandler(s calendarservice.AnalyticsService) *AnalyticsHandler {
 	return &AnalyticsHandler{service: s}
 }
 
-// getAnalyticsUserID extracts user ID from request context
-func getAnalyticsUserID(r *http.Request) string {
-	user := r.Context().Value(appcontext.UserContextKey)
-	if user == nil {
-		return ""
-	}
-	if u, ok := user.(*types.User); ok {
-		return u.ID
-	}
-	return ""
-}
-
 // HandleGetEquipmentStats handles GET /analytics/equipment-stats
 func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getAnalyticsUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -46,7 +34,7 @@ func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *htt
 
 	if yearStr := r.URL.Query().Get("year"); yearStr != "" {
 		if year, err := strconv.Atoi(yearStr); err == nil {
-			if year < 2000 || year > 2100 {
+			if year < constants.AnalyticsMinYear || year > constants.AnalyticsMaxYear {
 				common.RespondError(ctx, w, http.StatusBadRequest, "year must be between 2000 and 2100")
 				return
 			}
@@ -91,7 +79,7 @@ func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *htt
 // HandleGetUserStats handles GET /analytics/user-stats
 func (h *AnalyticsHandler) HandleGetUserStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getAnalyticsUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -102,7 +90,7 @@ func (h *AnalyticsHandler) HandleGetUserStats(w http.ResponseWriter, r *http.Req
 
 	if yearStr := r.URL.Query().Get("year"); yearStr != "" {
 		if year, err := strconv.Atoi(yearStr); err == nil {
-			if year < 2000 || year > 2100 {
+			if year < constants.AnalyticsMinYear || year > constants.AnalyticsMaxYear {
 				common.RespondError(ctx, w, http.StatusBadRequest, "year must be between 2000 and 2100")
 				return
 			}

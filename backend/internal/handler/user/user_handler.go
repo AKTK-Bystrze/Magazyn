@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
@@ -26,22 +25,13 @@ func NewUserHandler(service user.UserService) *UserHandler {
 	}
 }
 
-// getUserID retrieves the authenticated user's ID from the request context.
-func getUserID(r *http.Request) string {
-	val := r.Context().Value(appcontext.UserContextKey)
-	if u, ok := val.(*types.User); ok {
-		return u.ID
-	}
-	return ""
-}
-
 // HandleGetProfile handles GET /users/me and /users/{id}.
 func (h *UserHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
 
 	if id == "" || id == "me" {
-		userID := getUserID(r)
+		userID := common.GetUserIDFromContext(r)
 		if userID == "" {
 			common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 			return

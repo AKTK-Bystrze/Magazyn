@@ -2,6 +2,7 @@ package calendar
 
 import (
 	"context"
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
@@ -40,22 +41,22 @@ func (s *calendarService) GetCalendarAvailability(ctx context.Context, query typ
 	logger.Infof(ctx, "GetCalendarAvailability - EquipmentID: %v, StartDate: %v, Days: %d", query.EquipmentID, query.StartDate, query.Days)
 
 	// Set defaults
-	startDate := time.Now().Format("2006-01-02")
+	startDate := time.Now().Format(constants.DateFormatISO)
 	if query.StartDate != nil && *query.StartDate != "" {
 		startDate = *query.StartDate
 	}
-	days := 30
-	if query.Days > 0 && query.Days <= 90 {
+	days := constants.CalendarDefaultDays
+	if query.Days > 0 && query.Days <= constants.CalendarMaxDays {
 		days = query.Days
 	}
 
 	// Parse start date and calculate end date
-	start, err := time.Parse("2006-01-02", startDate)
+	start, err := time.Parse(constants.DateFormatISO, startDate)
 	if err != nil {
 		return nil, types.NewValidationError("Invalid start_date format", map[string]interface{}{"start_date": "must be YYYY-MM-DD"})
 	}
 	end := start.AddDate(0, 0, days-1)
-	endDate := end.Format("2006-01-02")
+	endDate := end.Format(constants.DateFormatISO)
 
 	// Fetch equipment (filtered by ID if provided)
 	equipment, err := s.calendarRepo.GetEquipmentForCalendar(ctx, query.EquipmentID)
@@ -94,10 +95,10 @@ func (s *calendarService) GetCalendarAvailability(ctx context.Context, query typ
 		}
 
 		// Mark all dates this reservation covers
-		resStart, _ := time.Parse("2006-01-02", res.StartDate)
-		resEnd, _ := time.Parse("2006-01-02", res.EndDate)
+		resStart, _ := time.Parse(constants.DateFormatISO, res.StartDate)
+		resEnd, _ := time.Parse(constants.DateFormatISO, res.EndDate)
 		for d := resStart; !d.After(resEnd); d = d.AddDate(0, 0, 1) {
-			dateStr := d.Format("2006-01-02")
+			dateStr := d.Format(constants.DateFormatISO)
 			// Only include dates within our query range
 			if !d.Before(start) && !d.After(end) {
 				reservationLookup[res.EquipmentId][dateStr] = res
@@ -110,7 +111,7 @@ func (s *calendarService) GetCalendarAvailability(ctx context.Context, query typ
 	for _, eq := range equipment {
 		eqName := equipmentNames[eq.Id]
 		for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-			dateStr := d.Format("2006-01-02")
+			dateStr := d.Format(constants.DateFormatISO)
 			entry := types.CalendarEntryDTO{
 				Date:          dateStr,
 				EquipmentID:   eq.Id,

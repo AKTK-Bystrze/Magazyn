@@ -5,7 +5,6 @@ package reservation
 
 import (
 	"encoding/json"
-	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
@@ -26,51 +25,13 @@ func NewReservationHandler(s reservation.ReservationService) *ReservationHandler
 	return &ReservationHandler{service: s}
 }
 
-// Helpers
-func getUser(r *http.Request) *types.User {
-	val := r.Context().Value(appcontext.UserContextKey)
-	if val == nil {
-		return nil
-	}
-	if u, ok := val.(*types.User); ok {
-		return u
-	}
-	// Fallback/Safety
-	return nil
-}
 
-func getProfile(r *http.Request) *types.PublicProfilesSelect {
-	val := r.Context().Value(appcontext.UserProfileContextKey)
-	if val == nil {
-		return nil
-	}
-	if p, ok := val.(*types.PublicProfilesSelect); ok {
-		return p
-	}
-	return nil
-}
-
-func getUserID(r *http.Request) string {
-	u := getUser(r)
-	if u == nil {
-		return ""
-	}
-	return u.ID
-}
-
-func getUserRole(r *http.Request) string {
-	p := getProfile(r)
-	if p == nil {
-		return ""
-	}
-	return p.Role
-}
 
 // HandleList GET /reservations
 func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
-	role := getUserRole(r)
+	userID := common.GetUserIDFromContext(r)
+	role := common.GetUserRoleFromContext(r)
 	
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
@@ -135,8 +96,8 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 // HandleGetByID GET /reservations/{id}
 func (h *ReservationHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
-	role := getUserRole(r)
+	userID := common.GetUserIDFromContext(r)
+	role := common.GetUserRoleFromContext(r)
 	id := r.PathValue("id")
 
 	if userID == "" {
@@ -169,7 +130,7 @@ func (h *ReservationHandler) HandleGetByID(w http.ResponseWriter, r *http.Reques
 // HandleCreate POST /reservations
 func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
@@ -209,8 +170,8 @@ func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request
 // HandleUpdate PATCH /reservations/{id}
 func (h *ReservationHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
-	role := getUserRole(r)
+	userID := common.GetUserIDFromContext(r)
+	role := common.GetUserRoleFromContext(r)
 	id := r.PathValue("id")
 
 	if userID == "" {
@@ -253,7 +214,7 @@ func (h *ReservationHandler) HandleUpdate(w http.ResponseWriter, r *http.Request
 // HandleBulkUpdate PATCH /reservations/bulk
 func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	role := getUserRole(r)
+	role := common.GetUserRoleFromContext(r)
 	
 	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 		common.RespondError(ctx, w, http.StatusForbidden, "Admin access only")
@@ -279,7 +240,7 @@ func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Req
 // HandleDashboardStats GET /reservations/dashboard
 func (h *ReservationHandler) HandleDashboardStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	role := getUserRole(r)
+	role := common.GetUserRoleFromContext(r)
 	
 	if role != "admin" && role != "super_admin" {
 		common.RespondError(ctx, w, http.StatusForbidden, "Admin access only")

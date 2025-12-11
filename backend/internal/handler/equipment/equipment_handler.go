@@ -2,7 +2,6 @@ package equipment
 
 import (
 	"encoding/json"
-	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
@@ -20,23 +19,12 @@ func NewEquipmentHandler(s equipmentservice.EquipmentService) *EquipmentHandler 
 	return &EquipmentHandler{service: s}
 }
 
-// Helper to get UserID from context
-func getUserID(r *http.Request) string {
-	user := r.Context().Value(appcontext.UserContextKey)
-	if user == nil {
-		return ""
-	}
 
-	if u, ok := user.(*types.User); ok {
-		return u.ID
-	}
-	return ""
-}
 
 // List handles get equpiment list
 func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -111,7 +99,7 @@ func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request)
 // Create handles creating new equipment
 func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return
@@ -138,7 +126,7 @@ func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) 
 // Update handles updating equipment
 func (h *EquipmentHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
@@ -212,7 +200,7 @@ func (h *EquipmentHandler) HandleCheckAvailability(w http.ResponseWriter, r *htt
 // HandleListEquipmentTypes handles listing equipment types
 func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := getUserID(r)
+	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
 		common.RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 		return

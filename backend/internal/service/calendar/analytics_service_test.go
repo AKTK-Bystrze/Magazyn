@@ -87,7 +87,6 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 			{UserID: "user-1", Username: "john", ReservationCount: 5, DaysRented: 12},
 		}
 
-		mockTypeRepo.On("ListAll", ctx).Return([]types.PublicEquipmentTypesSelect{}, nil)
 		mockAnalyticsRepo.On("GetEquipmentStats", ctx, query).Return(rawStats, nil)
 		mockAnalyticsRepo.On("GetTopRentersForEquipment", ctx, equipmentID, 5).Return(topRenters, nil)
 
@@ -106,7 +105,6 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 		assert.Len(t, stat.TopRenters, 1)
 
 		mockAnalyticsRepo.AssertExpectations(t)
-		mockTypeRepo.AssertExpectations(t)
 	})
 
 	t.Run("returns empty stats when no equipment found", func(t *testing.T) {
@@ -117,7 +115,6 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 
 		query := types.AnalyticsPeriodQuery{}
 
-		mockTypeRepo.On("ListAll", ctx).Return([]types.PublicEquipmentTypesSelect{}, nil)
 		mockAnalyticsRepo.On("GetEquipmentStats", ctx, query).Return([]types.PublicAnalyticsEquipmentStatsSelect{}, nil)
 
 		result, err := service.GetEquipmentStats(ctx, query)
@@ -137,7 +134,6 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 		month := 12
 		query := types.AnalyticsPeriodQuery{Year: &year, Month: &month}
 
-		mockTypeRepo.On("ListAll", ctx).Return([]types.PublicEquipmentTypesSelect{}, nil)
 		mockAnalyticsRepo.On("GetEquipmentStats", ctx, query).Return([]types.PublicAnalyticsEquipmentStatsSelect{}, nil)
 
 		result, err := service.GetEquipmentStats(ctx, query)
