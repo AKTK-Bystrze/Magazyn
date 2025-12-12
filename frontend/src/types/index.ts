@@ -10,8 +10,17 @@ export type * from "../db/database.types";
 // Auth types
 export type * from "./auth.types";
 
-// Equipment types (includes reservations, maintenance, etc.)
-export type * from "./equipment.types";
+// Equipment domain (split from equipment.types.ts)
+export * from "./equipment";
+
+// Reservations domain (split from equipment.types.ts)
+export * from "./reservations";
+
+// Credits domain (split from equipment.types.ts)
+export * from "./credits";
+
+// Analytics domain (split from equipment.types.ts)
+export * from "./analytics";
 
 // API types (pagination, errors, etc.)
 export type * from "./api.types";

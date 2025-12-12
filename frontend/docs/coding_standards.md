@@ -14,414 +14,11 @@
 8. [Environment Configuration](#environment-configuration)
 9. [Component Development](#component-development)
 10. [Error Handling](#error-handling)
-11. [Testing Requirements](#testing-requirements)
+11. [Quality Assurance](#quality-assurance)
+12. [Documentation Standards](#documentation-standards)
+13. [Common Pitfalls](#common-pitfalls)
 
 ---
-
-## Naming Conventions
-
-Consistent naming makes code easier to read, navigate, and maintain. Follow these conventions across the codebase.
-
-### File Naming
-
-#### React Components (`.tsx`)
-- **PascalCase** for component files
-- Match the exported component name
-- Use descriptive, specific names
-
-```
-✅ EquipmentCard.tsx
-✅ FilterSidebar.tsx
-✅ QueryProvider.tsx
-
-❌ equipment.tsx
-❌ Card.tsx (too generic)
-❌ query_provider.tsx (snake_case)
-```
-
-#### Astro Pages (`.astro`)
-- **kebab-case** for routing clarity
-- Matches URL structure
-
-```
-✅ login.astro          → /login
-✅ account-disabled.astro → /account-disabled
-✅ dashboard.astro       → /dashboard
-
-❌ Login.astro
-❌ accountDisabled.astro
-```
-
-#### API Routes (`.ts` in `pages/api`)
-- **kebab-case** for directories
-- `index.ts` for the main endpoint handler
-
-```
-✅ pages/api/equipment/index.ts  → GET /api/equipment
-✅ pages/api/equipment-types.ts  → GET /api/equipment-types
-✅ pages/api/auth/login.ts       → POST /api/auth/login
-
-❌ pages/api/Equipment.ts
-❌ pages/api/equipmentTypes.ts
-```
-
-#### Utility Files (`.ts`)
-- **kebab-case** for multi-word utilities
-- **camelCase** for single-word utilities
-
-```
-✅ cookie-utils.ts
-✅ redirect-manager.ts
-✅ api.ts
-✅ supabase.ts
-
-❌ CookieUtils.ts
-❌ cookie_utils.ts
-```
-
-#### Type Definition Files (`.ts`)
-- **singular** for shared types: `types.ts`
-- **PascalCase** for specific type modules: `DatabaseTypes.ts`
-
-```
-✅ types.ts              (shared application types)
-✅ database.types.ts     (generated Supabase types)
-✅ env.d.ts             (environment declarations)
-
-❌ Types.ts
-❌ types.d.ts (unless ambient declarations)
-```
-
-### Component Naming
-
-#### React Components
-- **PascalCase** for component names
-- Use descriptive, domain-specific names
-
-```tsx
-// ✅ GOOD: Clear, specific names
-export function EquipmentCard({ item }: Props) { }
-export function FilterSidebar({ filters }: Props) { }
-export function EquipmentSearchContainer() { }
-
-// ❌ BAD: Generic or unclear names
-export function Card() { }
-export function Sidebar() { }
-export function Container() { }
-```
-
-#### Component Props Interfaces
-- Component name + `Props` suffix
-
-```tsx
-// ✅ GOOD
-interface EquipmentCardProps {
-  item: EquipmentSearchItem;
-  onSelect: (id: string) => void;
-}
-
-export function EquipmentCard({ item, onSelect }: EquipmentCardProps) { }
-
-// ❌ BAD
-interface CardProps { }  // Too generic
-interface IEquipmentCard { }  // Hungarian notation
-interface Props { }  // Not specific
-```
-
-### Function Naming
-
-#### Event Handlers
-- Prefix with `handle` for clarity
-- Use descriptive action verbs
-
-```tsx
-// ✅ GOOD
-const handleSubmit = () => { };
-const handleFilterChange = (key: string, value: any) => { };
-const handleReset = () => { };
-
-// ❌ BAD
-const submit = () => { };  // Ambiguous
-const onChange = () => { };  // Could be prop or handler
-const onFilterChange = () => { };  // Use 'handle' for internal handlers
-```
-
-#### Callback Props
-- Prefix with `on` for props passed to children
-
-```tsx
-// ✅ GOOD
-interface Props {
-  onSelect: (id: string) => void;
-  onFilterChange: (key: string, value: any) => void;
-  onReset: () => void;
-}
-
-// Component usage
-<EquipmentCard onSelect={handleSelect} />
-```
-
-#### Utility Functions
-- Use **camelCase**
-- Start with a verb describing the action
-
-```tsx
-// ✅ GOOD
-function buildHeaders(): Headers { }
-function validateToken(token: string): boolean { }
-function transformEquipment(data: BackendEquipment): Equipment { }
-
-// ❌ BAD
-function Headers() { }  // Looks like a component
-function token_validator() { }  // snake_case
-function equipment() { }  // Not descriptive
-```
-
-#### Boolean Functions
-- Prefix with `is`, `has`, `can`, `should`
-
-```tsx
-// ✅ GOOD
-function isAuthenticated(user: User | null): boolean { }
-function hasPermission(role: string, resource: string): boolean { }
-function canEditEquipment(user: User, item: Equipment): boolean { }
-
-// ❌ BAD
-function authenticated() { }
-function permission() { }
-function editEquipment() { }  // Sounds like an action
-```
-
-### Variable Naming
-
-#### Constants
-- **SCREAMING_SNAKE_CASE** for true constants
-- **camelCase** for configuration values
-
-```tsx
-// ✅ GOOD: True constants
-const MAX_RETRY_ATTEMPTS = 3;
-const DEFAULT_PAGE_SIZE = 25;
-const API_TIMEOUT_MS = 5000;
-
-// ✅ GOOD: Configuration (could change based on env)
-const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
-const defaultHeaders = { 'Content-Type': 'application/json' };
-
-// ❌ BAD
-const max_retry_attempts = 3;  // snake_case
-const BackendUrl = "...";  // PascalCase for non-components
-```
-
-#### Boolean Variables
-- Prefix with `is`, `has`, `should`, `can`
-
-```tsx
-// ✅ GOOD
-const isLoading = true;
-const hasError = false;
-const shouldShowModal = user?.role === 'admin';
-const canDelete = permissions.includes('delete');
-
-// ❌ BAD
-const loading = true;  // Ambiguous type
-const error = false;  // Could be error object or boolean
-const showModal = true;  // Less clear
-```
-
-#### Arrays and Collections
-- Use **plural nouns**
-
-```tsx
-// ✅ GOOD
-const items = [...];
-const equipmentTypes = [...];
-const activeFilters = [...];
-
-// ❌ BAD
-const item = [...];  // Confusing
-const equipmentTypeList = [...];  // Redundant suffix
-```
-
-### Type & Interface Naming
-
-#### Interfaces
-- **PascalCase**
-- Use descriptive, domain-specific names
-- NO `I` prefix (not Hungarian notation)
-
-```tsx
-// ✅ GOOD
-interface EquipmentSearchItem { }
-interface PaginationMeta { }
-interface SessionInfo { }
-
-// ❌ BAD
-interface IEquipmentSearchItem { }  // No 'I' prefix
-interface equipmentSearchItem { }  // Not PascalCase
-interface Item { }  // Too generic
-```
-
-#### Type Aliases
-- **PascalCase**
-- Use `Type` suffix for generic wrappers only when needed
-
-```tsx
-// ✅ GOOD
-type EquipmentStatus = 'ok' | 'broken' | 'blocked';
-type UserId = string;
-type PaginatedResponse<T> = {
-  data: T[];
-  pagination: PaginationMeta;
-};
-
-// ❌ BAD
-type equipmentStatus = ...;  // Not PascalCase
-type EquipmentStatusType = ...;  // Redundant suffix
-```
-
-#### Enums
-- **PascalCase** for the enum name
-- **SCREAMING_SNAKE_CASE** for enum values (when representing constants)
-- **PascalCase** for enum values (when representing state/types)
-
-```tsx
-// ✅ GOOD: Constant-like values
-enum HttpStatus {
-  OK = 200,
-  NOT_FOUND = 404,
-  SERVER_ERROR = 500,
-}
-
-// ✅ GOOD: Type-like values
-enum UserRole {
-  Admin = 'admin',
-  User = 'user',
-  Guest = 'guest',
-}
-
-// ❌ BAD
-enum httpStatus { }  // Not PascalCase
-enum HTTP_STATUS { }  // All caps for enum name
-```
-
-### CSS Class Names
-
-#### Tailwind Utility Classes
-- Use Tailwind utilities directly in JSX
-- Compose with `cn()` helper for conditional classes
-
-```tsx
-// ✅ GOOD
-<div className="flex items-center gap-2">
-<Button className={cn(
-  "bg-primary text-white",
-  isDisabled && "opacity-50 cursor-not-allowed"
-)}>
-
-// ❌ BAD: Custom CSS for spacing/layout (use Tailwind)
-<div className="equipment-container">  // .equipment-container { display: flex; }
-```
-
-#### Custom CSS Classes (when needed)
-- **kebab-case**
-- Use BEM-like structure for complex components
-
-```css
-/* ✅ GOOD */
-.equipment-card { }
-.equipment-card__header { }
-.equipment-card__title { }
-.equipment-card--highlighted { }
-
-/* ❌ BAD */
-.equipmentCard { }  /* camelCase in CSS */
-.equipment_card { }  /* snake_case */
-.EquipmentCard { }  /* PascalCase */
-```
-
-### API Route Naming
-
-#### Endpoint Paths
-- **kebab-case** for multi-word resources
-- Use **plural nouns** for collections
-- Use **RESTful** structure
-
-```
-✅ GET  /api/equipment
-✅ GET  /api/equipment/{id}
-✅ GET  /api/equipment-types
-✅ POST /api/auth/login
-
-❌ GET  /api/equipments (no 's' for countable collections in our convention)
-❌ GET  /api/EquipmentTypes (PascalCase)
-❌ GET  /api/get-equipment (verb in path)
-```
-
-#### Query Parameters
-- **snake_case** to match backend convention
-
-```
-✅ GET /api/equipment?type_id=123&status=ok&page=1
-❌ GET /api/equipment?typeId=123 (camelCase)
-```
-
-### Hook Naming
-
-#### Custom Hooks
-- Always prefix with `use`
-- Use descriptive names
-
-```tsx
-// ✅ GOOD
-export function useEquipmentSearch() { }
-export function useAuth() { }
-export function useDebounce<T>(value: T, delay: number) { }
-
-// ❌ BAD
-export function equipmentSearch() { }  // Missing 'use' prefix
-export function Use EquipmentSearch() { }  // Extra space
-export function useHook() { }  // Not descriptive
-```
-
-### Directory Naming
-
-- **kebab-case** for multi-word directories
-- **singular** for utility directories
-- **plural** for collection directories when it makes sense
-
-```
-✅ src/components/equipment/
-✅ src/lib/auth/
-✅ src/pages/api/
-✅ src/hooks/
-
-❌ src/Components/
-❌ src/lib_services/
-❌ src/pages_api/
-```
-
-### Quick Reference
-
-| Item | Convention | Example |
-|------|-----------|---------|
-| React Component File | PascalCase | `EquipmentCard.tsx` |
-| Astro Page File | kebab-case | `account-disabled.astro` |
-| Utility File | kebab-case | `cookie-utils.ts` |
-| Component Name | PascalCase | `function EquipmentCard()` |
-| Props Interface | ComponentName + Props | `EquipmentCardProps` |
-| Event Handler | handle + Action | `handleSubmit` |
-| Callback Prop | on + Action | `onSelect` |
-| Boolean Function | is/has/can/should | `isAuthenticated()` |
-| Boolean Variable | is/has/can/should | `isLoading` |
-| Constant | SCREAMING_SNAKE_CASE | `MAX_RETRY_ATTEMPTS` |
-| Type/Interface | PascalCase | `EquipmentSearchItem` |
-| CSS Class | kebab-case | `equipment-card` |
-| API Endpoint | kebab-case | `/api/equipment-types` |
-| Custom Hook | use + Name | `useEquipmentSearch` |
-| Directory | kebab-case | `components/equipment/` |
-
-
 
 ## Core Principles
 
@@ -477,215 +74,129 @@ Treat documentation with the same care as code - it should be accurate, up-to-da
 
 ---
 
-## Documentation Workflow
+## Naming Conventions
 
-### When to Update Documentation
+### Quick Reference
 
-Documentation should be updated whenever you make changes that affect:
+| Item | Convention | Example |
+|------|-----------|---------|
+| React Component File | PascalCase | `EquipmentCard.tsx` |
+| Astro Page File | kebab-case | `account-disabled.astro` |
+| Utility File | kebab-case | `cookie-utils.ts` |
+| Component Name | PascalCase | `function EquipmentCard()` |
+| Props Interface | ComponentName + Props | `EquipmentCardProps` |
+| Event Handler | handle + Action | `handleSubmit` |
+| Callback Prop | on + Action | `onSelect` |
+| Boolean Function/Variable | is/has/can/should | `isAuthenticated()`, `isLoading` |
+| Constant | SCREAMING_SNAKE_CASE | `MAX_RETRY_ATTEMPTS` |
+| Type/Interface | PascalCase | `EquipmentSearchItem` |
+| CSS Class | kebab-case | `equipment-card` |
+| API Endpoint | kebab-case | `/api/equipment-types` |
+| Custom Hook | use + Name | `useEquipmentSearch` |
+| Directory | kebab-case | `components/equipment/` |
 
-**Architecture Changes**:
-- New directories or file structure changes →Update [architecture.md](./architecture.md)
-- New architectural patterns → Add to "Architectural Patterns" section
-- Changes to data flow → Update flow diagrams
-
-**Coding Standards**:
-- New naming conventions → Update [coding_standards.md](./coding_standards.md)
-- New patterns or anti-patterns discovered → Add examples
-- Error resolution patterns → Document in relevant section
-
-**Domain-Specific Documentation**:
-- Changes to redirect logic → Update [redirect-flow.md](./redirect-flow.md)
-- New auth flows → Document security implications
-- API integration changes → Update API sections
-
-**Rule Files** (`docs/rules/*.md`):
-- Framework-specific best practices → Update relevant rule file
-- New dependencies → Document usage patterns
-- Testing strategies → Update vitest-unit-testing.md
-
-### Approval Process
-
-> [!IMPORTANT]
-> All documentation changes require review and approval before merging.
-
-**For Minor Updates** (typo fixes, clarifications):
-1. Make the change
-2. Note the update in your commit message
-3. Submit for review
-
-**For Major Updates** (new sections, restructuring):
-1. **Create a plan** outlining the documentation changes
-2. **Request approval** before making changes
-3. **Update documentation** after approval
-4. **Request review** of the final documentation
-5. **Incorporate feedback** and finalize
-
-**For Architecture/Design Documentation**:
-1. **Draft the documentation** with diagrams and examples
-2. **Request approval** from the team
-3. **Validate** documentation against actual implementation
-4. **Update** based on feedback
-5. **Final review** before merging
-
-### What Requires Documentation
-
-#### Always Document
-
-✅ **New Features**:
-- Public API changes
-- New components or utilities
-- Authentication/authorization changes
-- Data transformation logic
-
-✅ **Architectural Decisions**:
-- Why a pattern was chosen
-- Trade-offs considered
-- Alternatives evaluated
-
-✅ **Breaking Changes**:
-- What changed
-- Migration guide
-- Impact on existing code
-
-✅ **Security Changes**:
-- New validation rules
-- Authentication flows
-- Authorization patterns
-- URL sanitization
-
-#### Usually Document
-
-🟡 **Bug Fixes that Reveal Patterns**:
-- If the fix demonstrates a common mistake
-- If it clarifies existing documentation
-- If it adds a new best practice
-
-🟡 **Refactoring**:
-- If file locations change
-- If import paths change
-- If patterns evolve
-
-#### Rarely Document
-
-⚪ **Internal Refactoring**:
-- Variable renaming (if follows conventions)
-- Code formatting
-- Minor optimizations
-
-### Documentation Review Checklist
-
-Before submitting documentation for review:
-
-**Accuracy**:
-- [ ] Code examples are tested and work
-- [ ] File paths are correct and verified
-- [ ] Links to other docs resolve correctly
-- [ ] Diagrams match current implementation
-- [ ] No references to removed/deprecated code
-
-**Completeness**:
-- [ ] All new concepts explained
-- [ ] Examples provided for complex topics
-- [ ] Edge cases documented
-- [ ] Error handling covered
-
-**Clarity**:
-- [  ] Uses consistent terminology
-- [ ] Follows existing documentation style
-- [ ] Diagrams are clear and labeled
-- [ ] Code blocks have language specified
-- [ ] Use of emojis/alerts is appropriate
-
-**Compliance**:
-- [ ] Follows naming conventions
-- [ ] References use relative paths (not absolute)
-- [ ] No broken links to `.ai` or non-existent directories
-- [ ] Language is English (except for UI strings)
-- [ ] Markdown is properly formatted
-
-**Integration**:
-- [ ] Added to Table of Contents if new page
-- [ ] Linked from related documentation
-- [ ] Cross-references updated
-- [ ] Rule files updated if applicable
-
-### Documentation Standards
-
-#### File Organization
+### File Naming
 
 ```
-docs/
-├── architecture.md          # System architecture
-├── coding_standards.md      # This file - coding guidelines
-├── redirect-flow.md         # Domain-specific flows
-└── rules/                   # Framework-specific rules
-    ├── astro.md
-    ├── react.md
-    ├── shared.md
-    └── ...
+✅ EquipmentCard.tsx           (React component)
+✅ login.astro                 (Astro page → /login)
+✅ pages/api/equipment/index.ts (API route → GET /api/equipment)
+✅ cookie-utils.ts             (Utility)
+✅ types.ts                    (Shared types)
+
+❌ equipment.tsx               (should be PascalCase)
+❌ Login.astro                 (should be kebab-case)
+❌ CookieUtils.ts              (should be kebab-case)
 ```
 
-#### Markdown Formatting
+### Component Naming
 
-**Headers**: Use `#` for document title, `##` for main sections, `###` for subsections
-
-**Code Blocks**: Always specify language
 ```tsx
-// ✅ GOOD
-export function Component() { }
+// ✅ GOOD: Clear, specific names with proper props interface
+interface EquipmentCardProps {
+  item: EquipmentSearchItem;
+  onSelect: (id: string) => void;
+}
+
+export function EquipmentCard({ item, onSelect }: EquipmentCardProps) { }
+
+// ❌ BAD: Generic or unclear
+interface Props { }
+export function Card() { }
 ```
 
-**Links**: Use relative paths from the current file
-```markdown
-✅ [Architecture](./architecture.md)
-❌ [Architecture](/docs/architecture.md)
-❌ [Architecture](file:///e:/path/architecture.md)
+### Function Naming
+
+```tsx
+// ✅ Event Handlers (internal)
+const handleSubmit = () => { };
+const handleFilterChange = (key: string, value: any) => { };
+
+// ✅ Callback Props (passed to children)
+interface Props {
+  onSelect: (id: string) => void;
+  onFilterChange: (key: string, value: any) => void;
+}
+
+// ✅ Utility Functions
+function buildHeaders(): Headers { }
+function validateToken(token: string): boolean { }
+function transformEquipment(data: EquipmentDTO): Equipment { }
+
+// ✅ Boolean Functions
+function isAuthenticated(user: User | null): boolean { }
+function hasPermission(role: string): boolean { }
 ```
 
-**Alerts**: Use for important information
+### Variable Naming
 
-> [!NOTE]
-> Background information
+```tsx
+// ✅ Constants
+const MAX_RETRY_ATTEMPTS = 3;
+const DEFAULT_PAGE_SIZE = 25;
 
-> [!IMPORTANT]
-> Critical requirements
+// ✅ Configuration
+const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
 
-> [!WARNING]
-> Breaking changes or gotchas
+// ✅ Boolean Variables
+const isLoading = true;
+const hasError = false;
+const shouldShowModal = user?.role === 'admin';
 
-#### Diagrams
-
-Use **Mermaid** for:
-- Flow diagrams (`graph TD`, `sequenceDiagram`)
-- State diagrams (`stateDiagram-v2`)
-- Architecture diagrams
-
-**Example**:
-```mermaid
-graph TD
-    A[User Request] --> B[Middleware]
-    B --> C[Protected Page]
+// ✅ Arrays (plural)
+const items = [...];
+const equipmentTypes = [...];
 ```
 
-### Keeping Documentation Current
+### Type & Interface Naming
 
-**Regular Review**:
-- Review documentation quarterly
-- Update when refactoring
-- Validate examples still work
-- Remove outdated patterns
+```tsx
+// ✅ GOOD: PascalCase, descriptive, no Hungarian notation
+interface EquipmentSearchItem { }
+interface PaginationMeta { }
+type EquipmentStatus = 'ok' | 'broken' | 'blocked';
 
-**When Implementation Changes**:
-- Update docs in the same PR as code
-- Mark outdated sections for update
-- Verify all references still valid
+// ❌ BAD
+interface IEquipmentSearchItem { }  // No 'I' prefix
+interface Item { }  // Too generic
+```
 
-**Red Flags** (Documentation Debt):
-- Comments saying "see old docs"
-- Multiple versions of truth
-- Broken links or references
-- Examples that don't work
-- Undocumented features
+### API Route Naming
+
+```
+✅ GET  /api/equipment
+✅ GET  /api/equipment/{id}
+✅ GET  /api/equipment-types
+✅ POST /api/auth/login
+
+❌ GET  /api/equipments          (avoid plural 's' in our convention)
+❌ GET  /api/EquipmentTypes      (should be kebab-case)
+❌ GET  /api/get-equipment       (no verb in path)
+
+Query Parameters (snake_case to match backend):
+✅ GET /api/equipment?type_id=123&status=ok&page=1
+❌ GET /api/equipment?typeId=123  (camelCase)
+```
 
 ---
 
@@ -695,9 +206,7 @@ graph TD
 
 Always match backend response structures exactly in your types.
 
-**Problem Encountered**: Backend returned `{ equipment: [], pagination: {} }` but code expected `{ data: [], pagination: {} }`.
-
-**Solution**:
+**Problem**: Backend returned `{ equipment: [], pagination: {} }` but code expected `{ data: [], pagination: {} }`.
 
 ```tsx
 // types.ts
@@ -716,17 +225,13 @@ const items = data?.equipment || []; // Type-safe access
 
 ### Field Name Consistency
 
-**Problem Encountered**: Component used `filters.q` but type defined `filters.search`.
-
-**Rule**: Never access object properties without TypeScript validation.
-
 ```tsx
 // ❌ BAD: No type checking
 <Input value={filters.q || ""} />
 
 // ✅ GOOD: TypeScript validates at compile time
 interface SearchParams {
-  search?: string;  // Clearly defined
+  search?: string;
   typeId?: string;
   status?: string;
 }
@@ -735,8 +240,6 @@ interface SearchParams {
 ```
 
 ### Import All Required Types
-
-**Problem Encountered**: `PaginationMeta` was used but not imported, causing runtime errors.
 
 ```tsx
 // ✅ Always import all types used in your file
@@ -754,8 +257,6 @@ import type {
 ### Use API Proxies for Backend Calls
 
 **Never call the backend directly from React components.**
-
-**Problem Encountered**: Components were calling `http://localhost:8080/api/equipment` directly instead of using `/api/equipment` proxy.
 
 ```tsx
 // ❌ BAD: Direct backend calls
@@ -812,7 +313,6 @@ export const GET: APIRoute = async ({ locals, request }) => {
 **File**: `src/lib/api.ts`
 
 ```ts
-// ✅ API client calls relative URLs (proxies)
 export const api = {
   get: async <T>(url: string, params?: Record<string, any>): Promise<{ data: T }> => {
     const headers = await buildHeaders();
@@ -857,7 +357,7 @@ export const api = {
 
 ### Always Provide QueryClient
 
-**Problem Encountered**: `useQuery` hooks failed with "No QueryClient set" error.
+**Problem**: `useQuery` hooks failed with "No QueryClient set" error.
 
 **Solution**: Wrap components using React Query with `QueryClientProvider`.
 
@@ -909,7 +409,7 @@ export default function ComponentWithProvider() {
 
 ### Token Forwarding Pattern
 
-**Problem Encountered**: API proxies couldn't access session token because middleware and proxies used different Supabase instances.
+**Problem**: API proxies couldn't access session token because middleware and proxies used different Supabase instances.
 
 **Solution**: Store validated token in `context.locals`.
 
@@ -971,7 +471,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
 ### Transform Backend Data to Match Frontend Types
 
-**Problem Encountered**: Backend returned snake_case flat structure, frontend expected camelCase nested structure.
+**Problem**: Backend returned snake_case flat structure, frontend expected camelCase nested structure.
 
 **Backend Response**:
 ```json
@@ -1038,10 +538,6 @@ const equipment: EquipmentSearchItem[] = (equipmentData?.data?.equipment || []).
 ## Environment Configuration
 
 ### Environment Variable Format
-
-**Problem Encountered**: `PUBLIC_BACKEND_URL=localhost:8080` was missing protocol, breaking URL construction.
-
-**Rules**:
 
 ```bash
 # ❌ BAD: Missing protocol
@@ -1119,8 +615,6 @@ export function EquipmentList({ items, onSelect }: ComponentProps) {
 
 ### Avoid React Warnings
 
-**Problem Encountered**: `asChild` prop caused React warning.
-
 ```tsx
 // ❌ BAD: Non-standard props on DOM elements
 <Button asChild>
@@ -1182,7 +676,42 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
 ---
 
-## Testing Requirements
+## Quality Assurance
+
+### Linting Tools
+
+The frontend uses automated code quality tools:
+
+- **Prettier**: Code formatting (enforced on commit)
+- **TypeScript**: Type checking and compile-time validation
+- **Vitest**: Test runner with coverage reporting
+- **Husky + lint-staged**: Pre-commit hooks
+
+### Running Linters
+
+```bash
+# Format Check (Prettier)
+npx prettier --check "src/**/*.{ts,tsx,astro,json,md}"
+npx prettier --write "src/**/*.{ts,tsx,astro,json,md}"  # Auto-fix
+
+# Type Checking (TypeScript)
+npx astro check
+npx tsc --noEmit
+
+# Run Tests
+npm test
+npm run test:coverage
+npm run test:ui
+```
+
+### Pre-Commit Hooks
+
+**Automatically enforced via Husky:**
+
+When you commit code, the following happens automatically:
+1. **lint-staged** runs Prettier on staged files
+2. Files are auto-formatted if needed
+3. Commit proceeds only if formatting succeeds
 
 ### Unit Tests
 
@@ -1208,8 +737,6 @@ describe('Equipment data transformation', () => {
 
 ### Integration Tests
 
-Test API integration and data flow:
-
 ```tsx
 // ✅ Test API proxies
 describe('/api/equipment endpoint', () => {
@@ -1224,26 +751,135 @@ describe('/api/equipment endpoint', () => {
 });
 ```
 
-### Manual Testing Checklist
+### IDE Integration (VS Code)
 
-Before deploying:
+**Install extensions:**
+- Prettier - Code formatter
+- Astro
+- TypeScript and JavaScript Language Features (built-in)
 
+**Settings** (`.vscode/settings.json`):
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  }
+}
+```
+
+### Quality Checklist
+
+**Before committing:**
+- [ ] No TypeScript errors in IDE
+- [ ] All tests passing (`npm test`)
+- [ ] Code formatted by Prettier (automatic on commit)
+- [ ] No `console.log` statements (unless intentional)
+- [ ] No `@ts-ignore` or `any` types (without justification)
+
+**Before pushing:**
+- [ ] Run `npx astro check` - no type errors
+- [ ] Run `npm run test:coverage` - tests pass, coverage acceptable
+- [ ] Check browser console for warnings/errors
 - [ ] Load page without authentication → redirects to login
 - [ ] Load page with authentication → displays data
-- [ ] Check browser console for errors
 - [ ] Test filtering and pagination
 - [ ] Verify network requests use correct endpoints
-- [ ] Check authentication tokens are included in requests
 
 ---
 
-## Common Pitfalls to Avoid
+## Documentation Standards
+
+### When to Update Documentation
+
+Update documentation when changes affect:
+
+**Architecture Changes**:
+- New directories or file structure → Update [architecture.md](./architecture.md)
+- New architectural patterns → Add to relevant sections
+- Changes to data flow → Update flow diagrams
+
+**Coding Standards**:
+- New naming conventions → Update this file
+- New patterns or anti-patterns discovered → Add examples
+- Error resolution patterns → Document in relevant section
+
+**Domain-Specific Documentation**:
+- Changes to redirect logic → Update [redirect-flow.md](./redirect-flow.md)
+- New auth flows → Document security implications
+- API integration changes → Update API sections
+
+### Approval Process
+
+> [!IMPORTANT]
+> All documentation changes require review and approval before merging.
+
+**For Minor Updates** (typo fixes, clarifications):
+1. Make the change
+2. Note the update in commit message
+3. Submit for review
+
+**For Major Updates** (new sections, restructuring):
+1. Create a plan outlining changes
+2. Request approval before making changes
+3. Update documentation after approval
+4. Request review of final documentation
+5. Incorporate feedback and finalize
+
+### What Requires Documentation
+
+✅ **Always Document**:
+- Public API changes
+- New components or utilities
+- Authentication/authorization changes
+- Architectural decisions and trade-offs
+- Breaking changes with migration guide
+- Security changes (validation, auth flows)
+
+🟡 **Usually Document**:
+- Bug fixes that reveal patterns
+- Refactoring that changes file locations or import paths
+
+⚪ **Rarely Document**:
+- Variable renaming (if follows conventions)
+- Code formatting
+- Minor optimizations
+
+### Documentation Checklist
+
+Before submitting documentation:
+
+**Accuracy**:
+- [ ] Code examples are tested and work
+- [ ] File paths are correct and verified
+- [ ] Links to other docs resolve correctly
+- [ ] No references to removed/deprecated code
+
+**Completeness**:
+- [ ] All new concepts explained
+- [ ] Examples provided for complex topics
+- [ ] Edge cases documented
+- [ ] Error handling covered
+
+**Clarity**:
+- [ ] Uses consistent terminology
+- [ ] Follows existing documentation style
+- [ ] Code blocks have language specified
+- [ ] Use of emojis/alerts is appropriate
+
+---
+
+## Common Pitfalls
 
 ### ❌ Don't: Mix Backend and Frontend Concerns
 
 ```tsx
 // ❌ BAD: Calling backend directly from component
 const data = await fetch(`${BACKEND_URL}/equipment`);
+
+// ✅ GOOD: Use API proxy
+const data = await api.get('/api/equipment');
 ```
 
 ### ❌ Don't: Use `any` Type
@@ -1251,6 +887,9 @@ const data = await fetch(`${BACKEND_URL}/equipment`);
 ```tsx
 // ❌ BAD: Any defeats TypeScript
 const data: any = await fetchData();
+
+// ✅ GOOD: Define proper types
+const data: EquipmentResponse = await fetchData();
 ```
 
 ### ❌ Don't: Ignore Type Mismatches
@@ -1258,6 +897,9 @@ const data: any = await fetchData();
 ```tsx
 // ❌ BAD: Accessing wrong property
 const items = data?.data || [];  // Backend returns data.equipment
+
+// ✅ GOOD: Match backend structure
+const items = data?.equipment || [];
 ```
 
 ### ❌ Don't: Forget to Handle Loading States
@@ -1266,6 +908,11 @@ const items = data?.data || [];  // Backend returns data.equipment
 // ❌ BAD: No loading state
 const { data } = useQuery(...);
 return <div>{data.map(...)}</div>;  // Crashes if data is undefined
+
+// ✅ GOOD: Handle all states
+if (isLoading) return <LoadingSkeleton />;
+if (!data) return <EmptyState />;
+return <div>{data.map(...)}</div>;
 ```
 
 ### ❌ Don't: Hard-code Configuration
@@ -1297,190 +944,9 @@ When adding a new feature:
 
 ---
 
-## Linting Requirements
-
-### Overview
-
-The frontend uses automated code quality tools to maintain consistency and catch errors early:
-
-- **Prettier**: Code formatting (enforced on commit)
-- **TypeScript**: Type checking and compile-time validation
-- **Vitest**: Test runner with coverage reporting
-- **Husky + lint-staged**: Pre-commit hooks
-
-### Running Linters
-
-#### Format Check (Prettier)
-
-```bash
-# Check if files are formatted correctly
-npx prettier --check "src/**/*.{ts,tsx,astro,json,md}"
-
-# Auto-fix formatting issues
-npx prettier --write "src/**/*.{ts,tsx,astro,json,md}"
-```
-
-#### Type Checking (TypeScript)
-
-```bash
-# Check for type errors
-npx astro check
-
-# Check TypeScript compilation
-npx tsc --noEmit
-```
-
-#### Run Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run tests with UI
-npm run test:ui
-```
-
-### Pre-Commit Hooks
-
-**Automatically enforced via Husky:**
-
-When you commit code, the following happens automatically:
-
-1. **lint-staged** runs Prettier on staged files
-2. Files are auto-formatted if needed
-3. Commit proceeds only if formatting succeeds
-
-**Configuration** (in `package.json`):
-```json
-{
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,md}": [
-      "prettier --write"
-    ]
-  }
-}
-```
-
-### When to Run Linters
-
-#### During Development
-
-- **TypeScript errors**: Show in your IDE in real-time
-- **Save on format**: Configure your editor to run Prettier on save
-
-#### Before Committing
-
-- **Automatic**: Husky runs Prettier automatically
-- **Manual check**: Run `npm test` to ensure tests pass
-
-#### Before Pushing
-
-- Run full type check: `npx astro check`
-- Run full test suite: `npm run test:coverage`
-- Verify no console errors in browser
-
-### IDE Integration
-
-#### VS Code (Recommended)
-
-**Install extensions:**
-- Prettier - Code formatter
-- Astro
-- TypeScript and JavaScript Language Features (built-in)
-
-**Settings** (`.vscode/settings.json`):
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[astro]": {
-    "editor.defaultFormatter": "astro-build.astro-vscode"
-  }
-}
-```
-
-### TypeScript Strict Mode
-
-**Configuration** (`tsconfig.json`):
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true
-  }
-}
-```
-
-**What this enforces:**
-- No implicit `any` types
-- Strict null checks
-- No unused variables or parameters
-- All code paths must return a value
-
-### Common Lint Errors
-
-#### Prettier Formatting
-
-**Error**: `Delete ··⏎` (extra whitespace)
-```tsx
-// ❌ BAD
-function example(  ) {
-  return  "value"  ;
-}
-
-// ✅ GOOD
-function example() {
-  return "value";
-}
-```
-
-**Fix**: Run `prettier --write` or save file in IDE
-
-#### TypeScript Errors
-
-**Error**: `Type 'null' is not assignable to type 'string'`
-```tsx
-// ❌ BAD
-const name: string = user.name; // user.name could be null
-
-// ✅ GOOD
-const name: string = user.name ?? "Unknown";
-```
-
-**Error**: `Parameter 'item' implicitly has an 'any' type`
-```tsx
-// ❌ BAD
-items.map(item => item.id)
-
-// ✅ GOOD
-items.map((item: Equipment) => item.id)
-```
-
-### Linting Checklist
-
-Before committing:
-
-- [ ] No TypeScript errors in IDE
-- [ ] All tests passing (`npm test`)
-- [ ] Code formatted by Prettier (automatic on commit)
-- [ ] No `console.log` statements (unless intentional)
-- [ ] No `@ts-ignore` or `any` types (without justification)
-
-Before pushing:
-
-- [ ] Run `npx astro check` - no type errors
-- [ ] Run `npm run test:coverage` - tests pass, coverage acceptable
-- [ ] Check browser console for warnings/errors
-
----
-
 ## Related Documentation
 
+- [Architecture](./architecture.md)
 - [React Guidelines](./rules/react.md)
 - [Astro Guidelines](./rules/astro.md)
 - [Shared Coding Standards](./rules/shared.md)

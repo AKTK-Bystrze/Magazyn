@@ -4,11 +4,12 @@ export const prerender = false;
 import Layout from '@/layouts/Layout.astro';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2 } from 'lucide-react';
+import { ROUTES } from '@/lib/config/routes';
 
 const { user, sessionInfo } = Astro.locals;
 
 if (!user || !sessionInfo) {
-  return Astro.redirect('/login?redirect=/reservations');
+  return Astro.redirect(`${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.RESERVATIONS)}`);
 }
 
 const success = Astro.url.searchParams.get('success') === 'true';

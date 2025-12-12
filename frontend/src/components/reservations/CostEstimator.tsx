@@ -110,7 +110,7 @@ export function CostEstimator({
         </div>
 
         {hasInsufficientCredits && (
-          <Alert variant="destructive">
+          <Alert className="border-destructive bg-destructive/10">
             <AlertCircle className={ICON_SIZE_SM} />
             <div className="ml-2">
               <p className="font-semibold">Insufficient Credits</p>

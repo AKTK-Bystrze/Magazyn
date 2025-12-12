@@ -324,7 +324,7 @@ describe('cookie-utils', () => {
       await waitForCookieAndRedirect('test-token', '/dashboard');
       
       expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Cookie not set after 100ms')
+        expect.stringContaining('Cookie not set after initial wait')
       );
     });
 

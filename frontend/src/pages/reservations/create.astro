@@ -3,11 +3,12 @@ export const prerender = false;
 
 import Layout from "@/layouts/Layout.astro";
 import { ReservationCartView } from "@/components/reservations/ReservationCartView";
+import { ROUTES } from "@/lib/config/routes";
 
 const { user, sessionInfo } = Astro.locals;
 
 if (!user || !sessionInfo) {
-  return Astro.redirect("/login?redirect=/reservations/create");
+  return Astro.redirect(`${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.RESERVATIONS_CREATE)}`);
 }
 
 // Use credit balance from sessionInfo (already fetched by middleware)

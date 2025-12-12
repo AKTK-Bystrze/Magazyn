@@ -30,6 +30,7 @@ export const ROUTES = {
     ACCOUNT_DISABLED: '/account-disabled',
     CREDIT_REQUESTS: '/credit-requests',
     RESERVATIONS: '/reservations',
+    RESERVATIONS_CREATE: '/reservations/create',
   },
 } as const;
 
