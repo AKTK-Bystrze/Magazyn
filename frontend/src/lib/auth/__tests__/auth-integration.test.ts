@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { User } from '@supabase/supabase-js';
 import { setAuthCookie, hasAuthCookie } from '@/lib/auth/cookie-utils';
 import { getUserSession } from '@/lib/auth/session-utils';
 import { RedirectManager } from '@/lib/auth/redirect-manager';
@@ -74,7 +75,7 @@ describe('Auth Integration Tests', () => {
       expect(hasAuthCookie()).toBe(true);
 
       // 4. Determine redirect
-      const mockUser = { id: 'user-123', email: 'test@example.com' } as any;
+      const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
@@ -112,7 +113,7 @@ describe('Auth Integration Tests', () => {
       expect(session?.isEnabled).toBe(false);
 
       // 3. Determine redirect
-      const mockUser = { id: 'user-456', email: 'disabled@example.com' } as any;
+      const mockUser = { id: 'user-456', email: 'disabled@example.com' } as unknown as User;
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
@@ -152,7 +153,7 @@ describe('Auth Integration Tests', () => {
       setAuthCookie('admin-token');
 
       // 4. Determine redirect
-      const mockUser = { id: 'admin-789', email: 'admin@example.com' } as any;
+      const mockUser = { id: 'admin-789', email: 'admin@example.com' } as unknown as User;
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
@@ -187,7 +188,7 @@ describe('Auth Integration Tests', () => {
       expect(isSafeRedirect(maliciousRedirect, 'http://localhost:4321')).toBe(false);
       
       // RedirectManager should sanitize it
-      const mockUser = { id: 'user-123', email: 'test@example.com' } as any;
+      const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         validSession,

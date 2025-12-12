@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { EquipmentSearchParams, EquipmentStatus } from '@/types';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from '@/lib/config/constants';
 
@@ -31,7 +31,7 @@ export function useEquipmentSearch() {
   }, []);
 
   // Update filter handler
-  const updateFilter = useCallback((key: keyof EquipmentSearchParams, value: any) => {
+  const updateFilter = useCallback((key: keyof EquipmentSearchParams, value: string | number | undefined) => {
     setFilters((prev) => {
       const newFilters = { ...prev, [key]: value };
 

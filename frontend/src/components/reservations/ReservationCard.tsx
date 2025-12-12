@@ -28,7 +28,6 @@ interface ReservationCardProps {
  */
 export function ReservationCard({
   reservation,
-  mode,
   onModify,
   onCancel,
   onViewDetails,

@@ -28,7 +28,6 @@ export function ReservationCartView({
 }: ReservationCartViewProps) {
   const {
     cartState,
-    addItem, 
     removeItem,
     updateStartDate,
     updateEndDate,

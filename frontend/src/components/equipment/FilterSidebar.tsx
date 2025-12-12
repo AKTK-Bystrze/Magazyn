@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 interface FilterSidebarProps {
   filters: EquipmentSearchParams;
   types: EquipmentType[];
-  onFilterChange: (key: keyof EquipmentSearchParams, value: any) => void;
+  onFilterChange: (key: keyof EquipmentSearchParams, value: string | undefined) => void;
   onReset: () => void;
 }
 

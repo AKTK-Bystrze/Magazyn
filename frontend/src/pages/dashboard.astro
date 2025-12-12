@@ -31,16 +31,16 @@ if (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) {
 ---
 
 <Layout title="Dashboard | Equipment Rental">
-  <main class="flex min-h-screen flex-col items-center justify-center p-24">
-    <h1 class="text-4xl font-bold">User Dashboard</h1>
-    <p class="mt-4 text-xl">Welcome, {user.email}!</p>
-    <p class="mt-2 text-muted-foreground">This is your personal dashboard.</p>
+  <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <h1 className="text-4xl font-bold">User Dashboard</h1>
+    <p className="mt-4 text-xl">Welcome, {user.email}!</p>
+    <p className="mt-2 text-muted-foreground">This is your personal dashboard.</p>
     
-    <div class="mt-8 flex gap-4">
-      <a href="/equipment" class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+    <div className="mt-8 flex gap-4">
+      <a href="/equipment" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
         Browse Equipment
       </a>
-      <a href="/reservations" class="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
+      <a href="/reservations" className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
         My Reservations
       </a>
     </div>

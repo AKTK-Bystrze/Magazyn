@@ -283,13 +283,13 @@ describe('cookie-utils', () => {
 
     it('waits additional time if cookie not set after 100ms', async () => {
       // Simulate slow cookie setting
-      let cookieSetTime = 0;
+
       Object.defineProperty(document, 'cookie', {
         get: () => mockCookie,
         set: (value: string) => {
           setTimeout(() => {
             mockCookie = value;
-            cookieSetTime = Date.now();
+
           }, 150); // Delay cookie setting
         },
         configurable: true,
@@ -307,7 +307,7 @@ describe('cookie-utils', () => {
       vi.spyOn(console, 'warn').mockImplementation(() => {});
       
       // Simulate cookie not being set immediately
-      const originalGetter = Object.getOwnPropertyDescriptor(document, 'cookie')?.get;
+      // Simulate cookie not being set immediately
       let callCount = 0;
       Object.defineProperty(document, 'cookie', {
         get: () => {

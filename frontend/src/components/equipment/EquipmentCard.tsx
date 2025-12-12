@@ -5,7 +5,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, Plus, Check } from "lucide-react";
+import { ShoppingCart, Check } from "lucide-react";
 import { saveCartToStorage, loadCartFromStorage } from "@/lib/utils/cart-storage";
 import type { CartItem } from "@/types/reservation-cart.types";
 import { FEEDBACK_DISPLAY_DURATION_MS } from "@/lib/config/constants";

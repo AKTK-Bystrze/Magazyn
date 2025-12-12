@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { RedirectManager, getDefaultRouteForUser, hasRole } from '../redirect-manager';
+import { RedirectManager, hasRole } from '../redirect-manager';
 import type { User } from '@supabase/supabase-js';
 import type { SessionInfo } from '../../../types';
-import { ROUTES } from '../../config/routes';
+
 
 describe('redirect-manager', () => {
   const origin = 'http://localhost:4321';

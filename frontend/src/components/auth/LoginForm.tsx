@@ -40,6 +40,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     try {
       await login({ email });
       onSuccess(email);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       // Fallback for error message structure

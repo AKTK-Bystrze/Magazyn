@@ -28,6 +28,7 @@ module.exports = {
   rules: {
     // Enforce documented standards
     'react/react-in-jsx-scope': 'off', // Not needed in React 19
+    'react/prop-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'react-hooks/rules-of-hooks': 'error',

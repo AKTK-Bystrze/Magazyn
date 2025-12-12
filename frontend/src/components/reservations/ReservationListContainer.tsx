@@ -14,10 +14,7 @@ import {
 } from "@/lib/config/constants";
 import type { ReservationListItem, ReservationListProps } from "@/types";
 
-/**
- * Props for the inner reservation list container component
- */
-interface ReservationListContainerInnerProps extends ReservationListProps {}
+
 
 /**
  * Inner component that uses the useReservations hook
@@ -26,7 +23,7 @@ interface ReservationListContainerInnerProps extends ReservationListProps {}
 function ReservationListContainerInner({
   mode,
   initialFilters,
-}: ReservationListContainerInnerProps) {
+}: ReservationListProps) {
   const {
     data,
     isLoading,
@@ -63,7 +60,8 @@ function ReservationListContainerInner({
   }, [errorMessage]);
 
   // Handle modify action - TODO: Implement ModifyReservationDialog
-  const handleModify = React.useCallback((reservation: ReservationListItem) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleModify = React.useCallback((_reservation: ReservationListItem) => {
     // Will be implemented in Phase 5
     setErrorMessage("Modify functionality coming soon!");
   }, []);
@@ -131,7 +129,8 @@ function ReservationListContainerInner({
 
   // Handle bulk modify dates
   const handleModifyDatesAll = React.useCallback(
-    (reservations: ReservationListItem[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (_reservations: ReservationListItem[]) => {
       // TODO: Implement bulk modify dates dialog
       setErrorMessage("Bulk modify dates functionality coming soon!");
     },

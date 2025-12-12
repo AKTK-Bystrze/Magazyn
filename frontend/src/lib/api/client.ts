@@ -27,7 +27,7 @@ export const api = {
    * @param data - Request body data
    * @returns Response data wrapped in an object
    */
-  post: async <T>(url: string, data: any): Promise<{ data: T }> => {
+  post: async <T>(url: string, data: unknown): Promise<{ data: T }> => {
     const headers = await buildHeaders();
 
     const response = await fetch(url, {
@@ -51,7 +51,7 @@ export const api = {
    * @param params - Optional query parameters
    * @returns Response data wrapped in an object
    */
-  get: async <T>(url: string, params?: Record<string, any>): Promise<{ data: T }> => {
+  get: async <T>(url: string, params?: Record<string, string | number | boolean>): Promise<{ data: T }> => {
     const headers = await buildHeaders();
 
     const queryParams = new URLSearchParams();

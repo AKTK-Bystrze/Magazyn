@@ -8,7 +8,6 @@ import {
   setAuthCookie,
   removeAuthCookie,
   waitForCookieAndRedirect,
-  AUTH_COOKIE_NAME
 } from '@/lib/auth/cookie-utils';
 
 /**
