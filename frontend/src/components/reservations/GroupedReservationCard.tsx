@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { GroupedReservation, ReservationListItem } from "@/types";
+import { RESERVATION_STATUS } from "@/lib/config/constants";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
@@ -37,7 +38,7 @@ export function GroupedReservationCard({
   mode,
 }: GroupedReservationCardProps) {
   const days = calculateDays(group.startDate, group.endDate);
-  const canBulkModify = group.status === "PENDING";
+  const canBulkModify = group.status === RESERVATION_STATUS.PENDING;
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">

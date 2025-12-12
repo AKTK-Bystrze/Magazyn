@@ -12,10 +12,15 @@ import {
   RESERVATION_FILTER_OPTIONS,
   RESERVATION_SORT_OPTIONS,
   ICON_SIZE_SM,
+  DEFAULT_STATUS_FILTER,
+  DEFAULT_SORT_OPTION,
 } from "@/lib/config/constants";
 import type { ReservationFilterState, ReservationSortOption } from "@/types";
 import type { Enums } from "@/db/database.types";
 
+/**
+ * Props for the ReservationFilters component
+ */
 interface ReservationFiltersProps {
   filters: ReservationFilterState;
   onFilterChange: <K extends keyof ReservationFilterState>(
@@ -39,11 +44,15 @@ export function ReservationFilters({
   onReset,
 }: ReservationFiltersProps) {
   const hasActiveFilters =
-    filters.status !== "ALL" || filters.sort !== "created_desc";
+    filters.status !== DEFAULT_STATUS_FILTER ||
+    filters.sort !== DEFAULT_SORT_OPTION;
 
   const handleStatusChange = React.useCallback(
     (value: string) => {
-      onFilterChange("status", value as Enums<"reservation_status"> | "ALL");
+      onFilterChange(
+        "status",
+        value as Enums<"reservation_status"> | typeof DEFAULT_STATUS_FILTER
+      );
     },
     [onFilterChange]
   );

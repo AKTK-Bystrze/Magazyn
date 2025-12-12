@@ -7,6 +7,7 @@ import type {
   ReservationAuditEntry,
   UpdateReservationCommand,
 } from "@/types";
+import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
 // =============================================================================
 // REQUEST TRANSFORMERS (Frontend → Backend: camelCase → snake_case)
@@ -161,7 +162,7 @@ export function transformReservationListResponse(
     reservations: (dto.reservations || []).map(transformReservationItem),
     pagination: {
       page: dto.pagination?.page ?? 1,
-      perPage: dto.pagination?.per_page ?? 25,
+      perPage: dto.pagination?.per_page ?? DEFAULT_PAGE_SIZE,
       totalItems: dto.pagination?.total_items ?? 0,
       totalPages: dto.pagination?.total_pages ?? 0,
     },

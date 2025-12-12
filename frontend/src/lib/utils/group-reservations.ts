@@ -1,4 +1,5 @@
 import type { ReservationListItem, GroupedReservation } from "@/types";
+import { MIXED_STATUS } from "@/lib/config/constants";
 
 /**
  * Groups reservations by user ID and date range.
@@ -32,7 +33,7 @@ export function groupReservationsByDateRange(
 
     // Determine aggregate status
     const statuses = new Set(items.map((item) => item.status));
-    const status = statuses.size === 1 ? items[0].status : "MIXED";
+    const status = statuses.size === 1 ? items[0].status : MIXED_STATUS;
 
     // Find earliest createdAt
     const createdAt = items

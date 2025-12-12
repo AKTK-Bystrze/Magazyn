@@ -59,6 +59,15 @@ export const COOKIE_EXTENDED_WAIT_MS = 200;
 
 // Redirect delays (milliseconds)
 export const SUCCESS_REDIRECT_DELAY_MS = 1500;
+export const MESSAGE_AUTO_DISMISS_MS = 5000;
+
+// React Query
+export const QUERY_STALE_TIME_MS = 1000 * 60; // 1 minute
+
+// Reservation Defaults
+export const DEFAULT_STATUS_FILTER = "ALL";
+export const DEFAULT_SORT_OPTION = "created_desc";
+export const MIXED_STATUS = "MIXED";
 
 // =============================================================================
 // RESERVATION STATUS CONFIGURATION

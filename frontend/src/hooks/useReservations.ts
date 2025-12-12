@@ -7,7 +7,13 @@ import type {
   UpdateReservationCommand,
   UpdateReservationResponse,
 } from "@/types";
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_STATUS_FILTER,
+  DEFAULT_SORT_OPTION,
+  QUERY_STALE_TIME_MS,
+} from "@/lib/config/constants";
 
 /**
  * Default filter state for reservation list
@@ -15,8 +21,8 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 const DEFAULT_FILTERS: ReservationFilterState = {
   page: DEFAULT_PAGE,
   perPage: DEFAULT_PAGE_SIZE,
-  status: "ALL",
-  sort: "created_desc",
+  status: DEFAULT_STATUS_FILTER,
+  sort: DEFAULT_SORT_OPTION,
 };
 
 /**
@@ -29,8 +35,13 @@ const QUERY_KEYS = {
   detail: (id: string) => [...QUERY_KEYS.all, "detail", id] as const,
 };
 
+/**
+ * Configuration options for useReservations hook
+ */
 interface UseReservationsOptions {
+  /** Initial filter values to apply */
   initialFilters?: Partial<ReservationFilterState>;
+  /** Whether the query should successfully run */
   enabled?: boolean;
 }
 
@@ -92,7 +103,7 @@ export function useReservations(
     queryKey: QUERY_KEYS.list(filters),
     queryFn: () => reservationsApi.list(filters),
     enabled,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: QUERY_STALE_TIME_MS,
   });
 
   // Update mutation

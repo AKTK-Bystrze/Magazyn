@@ -6,9 +6,17 @@ import { ReservationFilters } from "./ReservationFilters";
 import { CancelReservationDialog } from "./CancelReservationDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { ICON_SIZE_SM } from "@/lib/config/constants";
+import {
+  ICON_SIZE_SM,
+  MESSAGE_AUTO_DISMISS_MS,
+  DEFAULT_STATUS_FILTER,
+  DEFAULT_SORT_OPTION,
+} from "@/lib/config/constants";
 import type { ReservationListItem, ReservationListProps } from "@/types";
 
+/**
+ * Props for the inner reservation list container component
+ */
 interface ReservationListContainerInnerProps extends ReservationListProps {}
 
 /**
@@ -42,22 +50,21 @@ function ReservationListContainerInner({
   // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
 
   React.useEffect(() => {
     if (errorMessage) {
-      const timer = setTimeout(() => setErrorMessage(null), 5000);
+      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);
 
   // Handle modify action - TODO: Implement ModifyReservationDialog
   const handleModify = React.useCallback((reservation: ReservationListItem) => {
-    // For now, just log - will be implemented in Phase 5
-    console.log("Modify reservation:", reservation.id);
+    // Will be implemented in Phase 5
     setErrorMessage("Modify functionality coming soon!");
   }, []);
 
@@ -97,18 +104,26 @@ function ReservationListContainerInner({
   // Handle bulk cancel
   const handleCancelAll = React.useCallback(
     async (reservations: ReservationListItem[]) => {
-      try {
-        // Cancel all reservations sequentially
-        for (const reservation of reservations) {
-          await cancelReservation(reservation.id);
-        }
+      // Cancel all reservations in parallel for better performance
+      const results = await Promise.allSettled(
+        reservations.map((reservation) => cancelReservation(reservation.id))
+      );
+
+      const successful = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      if (failed === 0) {
         setSuccessMessage(
-          `${reservations.length} reservations have been cancelled. Credits have been refunded.`
+          `${successful} ${successful === 1 ? "reservation has" : "reservations have"} been cancelled. Credits have been refunded.`
         );
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to cancel reservations";
-        setErrorMessage(message);
+      } else if (successful === 0) {
+        setErrorMessage(
+          `Failed to cancel all ${reservations.length} reservations. Please try again.`
+        );
+      } else {
+        setSuccessMessage(
+          `${successful} reservations cancelled successfully. ${failed} failed - please try again for those.`
+        );
       }
     },
     [cancelReservation]
@@ -118,7 +133,6 @@ function ReservationListContainerInner({
   const handleModifyDatesAll = React.useCallback(
     (reservations: ReservationListItem[]) => {
       // TODO: Implement bulk modify dates dialog
-      console.log("Modify dates for all:", reservations.map((r) => r.id));
       setErrorMessage("Bulk modify dates functionality coming soon!");
     },
     []
@@ -143,7 +157,8 @@ function ReservationListContainerInner({
 
   // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
-    filters.status !== "ALL" || filters.sort !== "created_desc";
+    filters.status !== DEFAULT_STATUS_FILTER ||
+    filters.sort !== DEFAULT_SORT_OPTION;
 
   return (
     <div className="space-y-6">

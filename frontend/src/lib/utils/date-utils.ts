@@ -4,7 +4,6 @@ import {
   MIDNIGHT_MINUTES,
   MIDNIGHT_SECONDS,
   MIDNIGHT_MILLISECONDS,
-  DEFAULT_LOCALE,
 } from "@/lib/config/constants";
 
 /**
