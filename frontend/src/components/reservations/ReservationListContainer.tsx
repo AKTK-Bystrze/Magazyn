@@ -94,6 +94,36 @@ function ReservationListContainerInner({
     setSelectedReservation(null);
   }, []);
 
+  // Handle bulk cancel
+  const handleCancelAll = React.useCallback(
+    async (reservations: ReservationListItem[]) => {
+      try {
+        // Cancel all reservations sequentially
+        for (const reservation of reservations) {
+          await cancelReservation(reservation.id);
+        }
+        setSuccessMessage(
+          `${reservations.length} reservations have been cancelled. Credits have been refunded.`
+        );
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to cancel reservations";
+        setErrorMessage(message);
+      }
+    },
+    [cancelReservation]
+  );
+
+  // Handle bulk modify dates
+  const handleModifyDatesAll = React.useCallback(
+    (reservations: ReservationListItem[]) => {
+      // TODO: Implement bulk modify dates dialog
+      console.log("Modify dates for all:", reservations.map((r) => r.id));
+      setErrorMessage("Bulk modify dates functionality coming soon!");
+    },
+    []
+  );
+
   // Handle view details - TODO: Navigate to detail page
   const handleViewDetails = React.useCallback(
     (reservation: ReservationListItem) => {
@@ -129,7 +159,7 @@ function ReservationListContainerInner({
 
       {/* Error Message */}
       {(error || errorMessage) && (
-        <Alert variant="destructive">
+        <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
           <AlertDescription>
             {errorMessage || error?.message || "An error occurred"}
@@ -151,9 +181,12 @@ function ReservationListContainerInner({
         currentPage={filters.page}
         totalPages={data?.pagination.totalPages ?? 0}
         hasFilters={hasActiveFilters}
+        mode={mode}
         onPageChange={handlePageChange}
         onModify={mode === "user" ? handleModify : undefined}
         onCancel={mode === "user" ? handleCancelClick : undefined}
+        onCancelAll={mode === "user" ? handleCancelAll : undefined}
+        onModifyDatesAll={mode === "user" ? handleModifyDatesAll : undefined}
         onViewDetails={handleViewDetails}
       />
 

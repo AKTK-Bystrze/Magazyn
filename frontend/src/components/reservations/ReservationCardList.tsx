@@ -1,9 +1,11 @@
 import * as React from "react";
 import { ReservationCard } from "./ReservationCard";
+import { GroupedReservationCard } from "./GroupedReservationCard";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Package } from "lucide-react";
 import { ICON_SIZE_LG } from "@/lib/config/constants";
+import { groupReservationsByDateRange } from "@/lib/utils/group-reservations";
 import type { ReservationListItem } from "@/types";
 
 interface ReservationCardListProps {
@@ -12,25 +14,19 @@ interface ReservationCardListProps {
   currentPage: number;
   totalPages: number;
   hasFilters?: boolean;
+  mode: "user" | "admin";
   onPageChange: (page: number) => void;
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
+  onCancelAll?: (reservations: ReservationListItem[]) => void;
+  onModifyDatesAll?: (reservations: ReservationListItem[]) => void;
   onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
 /**
- * Displays a list of reservation cards with pagination
+ * Displays a list of reservation cards with pagination and grouping support
+ * Groups reservations with same dates by same user into expandable cards
  * Handles loading and empty states
- *
- * @param reservations - Array of reservations to display
- * @param isLoading - Loading state
- * @param currentPage - Current page number
- * @param totalPages - Total number of pages
- * @param hasFilters - Whether filters are applied (affects empty state message)
- * @param onPageChange - Callback when page changes
- * @param onModify - Callback for modify action
- * @param onCancel - Callback for cancel action
- * @param onViewDetails - Callback for view details action
  */
 export function ReservationCardList({
   reservations,
@@ -38,11 +34,37 @@ export function ReservationCardList({
   currentPage,
   totalPages,
   hasFilters = false,
+  mode,
   onPageChange,
   onModify,
   onCancel,
+  onCancelAll,
+  onModifyDatesAll,
   onViewDetails,
 }: ReservationCardListProps) {
+  // Track expanded groups
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(
+    new Set()
+  );
+
+  // Group reservations by date range
+  const groups = React.useMemo(
+    () => groupReservationsByDateRange(reservations),
+    [reservations]
+  );
+
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) {
+        next.delete(groupKey);
+      } else {
+        next.add(groupKey);
+      }
+      return next;
+    });
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -65,15 +87,36 @@ export function ReservationCardList({
     <div className="space-y-6">
       {/* Reservation Cards */}
       <div className="grid gap-4">
-        {reservations.map((reservation) => (
-          <ReservationCard
-            key={reservation.id}
-            reservation={reservation}
-            onModify={onModify}
-            onCancel={onCancel}
-            onViewDetails={onViewDetails}
-          />
-        ))}
+        {groups.map((group) => {
+          // Single-item groups render as regular cards
+          if (group.items.length === 1) {
+            return (
+              <ReservationCard
+                key={group.items[0].id}
+                reservation={group.items[0]}
+                onModify={onModify}
+                onCancel={onCancel}
+                onViewDetails={onViewDetails}
+                mode={mode}
+              />
+            );
+          }
+
+          // Multi-item groups render as expandable grouped cards
+          return (
+            <GroupedReservationCard
+              key={group.groupKey}
+              group={group}
+              isExpanded={expandedGroups.has(group.groupKey)}
+              onToggle={() => toggleGroup(group.groupKey)}
+              onCancelAll={() => onCancelAll?.(group.items)}
+              onModifyDatesAll={() => onModifyDatesAll?.(group.items)}
+              onCancelSingle={(item) => onCancel?.(item)}
+              onModifySingle={(item) => onModify?.(item)}
+              mode={mode}
+            />
+          );
+        })}
       </div>
 
       {/* Pagination */}

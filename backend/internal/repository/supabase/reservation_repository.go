@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
@@ -29,38 +28,13 @@ func NewReservationRepository(client *supabase.Client, url string, key string) r
 	}
 }
 
-// getClientWithAuth creates a Supabase client authenticated with the user's JWT token.
-// This ensures RLS policies can identify the user via auth.uid().
-// If no token is in context, returns the default client (with anon key).
-func (r *reservationRepository) getClientWithAuth(ctx context.Context) *supabase.Client {
-	token, ok := ctx.Value(appcontext.AccessTokenContextKey).(string)
-	if !ok || token == "" {
-		return r.client
-	}
-
-	clientWithAuth, err := supabase.NewClient(
-		r.supabaseURL,
-		r.supabaseKey,
-		&supabase.ClientOptions{
-			Headers: map[string]string{
-				"Authorization": "Bearer " + token,
-			},
-		},
-	)
-	if err != nil {
-		logger.Warnf(ctx, "Failed to create authenticated client, using default: %v", err)
-		return r.client
-	}
-	return clientWithAuth
-}
-
 // GetReservations retrieves a paginated list of reservations based on filters
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
 	// Use authenticated client for RLS enforcement
-	client := r.getClientWithAuth(ctx)
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	
-	// Select basics + joined data
-	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name))"
+	// Select basics + joined data including credit_cost_per_day for calculation
+	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
 
 	qb := client.From("reservations").Select(selectStr, "exact", false)
 
@@ -114,6 +88,10 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	// Map to ListItem
 	result := make([]types.ReservationListItem, len(rawItems))
 	for i, item := range rawItems {
+		// Calculate credit cost: days * cost_per_day
+		days := calculateDays(item.StartDate, item.EndDate)
+		creditCost := int32(days) * item.Equipment.EquipmentType.CreditCostPerDay
+		
 		result[i] = types.ReservationListItem{
 			ID:            item.Id,
 			UserID:        item.UserId,
@@ -124,7 +102,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 			StartDate:     item.StartDate,
 			EndDate:       item.EndDate,
 			Status:        item.Status,
-			CreditCost:    0, // Placeholder
+			CreditCost:    creditCost,
 			CreatedAt:     item.CreatedAt,
 			UpdatedAt:     item.UpdatedAt,
 		}
@@ -223,7 +201,8 @@ type joinedResponse struct {
 	Equipment struct {
 		Name          string `json:"name"`
 		EquipmentType struct {
-			Name string `json:"name"`
+			Name              string `json:"name"`
+			CreditCostPerDay int32  `json:"credit_cost_per_day"`
 		} `json:"equipment_types"`
 	} `json:"equipment"`
 }

@@ -202,3 +202,19 @@ export type ReservationListResponse = {
     totalPages: number;
   };
 };
+
+/**
+ * Grouped reservation containing multiple items with same dates
+ * Used for collapsing reservations created on the same date range
+ */
+export type GroupedReservation = {
+  groupKey: string;                  // `${userId}-${startDate}-${endDate}`
+  userId: string;
+  username: string;
+  startDate: string;
+  endDate: string;
+  status: string;                    // Aggregated: same status or "MIXED"
+  totalCreditCost: number;           // Sum of all items
+  items: ReservationListItem[];      // Individual reservations
+  createdAt: string;                 // Earliest created_at
+};

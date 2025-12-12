@@ -10,22 +10,25 @@ import type { ReservationListItem } from "@/types";
 
 interface ReservationCardProps {
   reservation: ReservationListItem;
+  mode: "user" | "admin";
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
   onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
 /**
- * Displays a single reservation as a card for user view
+ * Displays a single reservation as a card
  * Shows equipment info, dates, status, and available actions
  *
  * @param reservation - Reservation data
+ * @param mode - View mode (user or admin)
  * @param onModify - Callback for modify action (PENDING only)
  * @param onCancel - Callback for cancel action (PENDING only)
  * @param onViewDetails - Callback for view details action
  */
 export function ReservationCard({
   reservation,
+  mode,
   onModify,
   onCancel,
   onViewDetails,

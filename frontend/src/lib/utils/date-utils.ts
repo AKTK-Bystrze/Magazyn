@@ -35,20 +35,17 @@ export function getTodayAsString(): string {
 }
 
 /**
- * Formats a date string to a human-readable format
+ * Formats a date string to dd.mm format
  * Single source of truth for date formatting
  *
  * @param dateString - Date in YYYY-MM-DD format
- * @param locale - Locale for formatting (defaults to DEFAULT_LOCALE)
- * @returns Formatted date string (e.g., "December 11, 2025")
+ * @returns Formatted date string (e.g., "11.12")
  */
-export function formatDate(dateString: string, locale = DEFAULT_LOCALE): string {
+export function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}.${month}`;
 }
 
 /**
