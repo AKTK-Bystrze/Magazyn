@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
+import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 export type AuthCallback = (event: AuthChangeEvent, session: Session | null) => void;
 

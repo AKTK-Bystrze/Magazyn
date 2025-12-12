@@ -1,15 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { Button } from '../components/ui/button';
-import { AUTH_COOKIE_NAME } from '../lib/auth/cookie-utils';
+
 
 export const prerender = false;
 
 // Check if user is authenticated
 const user = Astro.locals.user;
 
-// Get session to check if user is actually disabled
-const accessToken = Astro.cookies.get(AUTH_COOKIE_NAME)?.value;
 ---
 
 <Layout title="Zaloguj się | Wynajem Sprzętu">

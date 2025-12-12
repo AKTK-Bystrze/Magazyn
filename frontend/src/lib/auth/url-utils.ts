@@ -2,7 +2,7 @@
  * URL utility functions for redirect validation and path normalization
  * Prevents open redirect attacks (OWASP A1:2021)
  */
-import { getAllRoutes } from '../config/routes';
+import { getAllRoutes, type AppRoute } from '../config/routes';
 
 /**
  * Normalizes a path by removing trailing slash
@@ -65,7 +65,7 @@ export function isSafeRedirect(url: string, origin: string): boolean {
  */
 function isAllowedPath(path: string): boolean {
   const allowedPaths = getAllRoutes();
-  return allowedPaths.includes(path as any);
+  return allowedPaths.includes(path as AppRoute);
 }
 
 /**

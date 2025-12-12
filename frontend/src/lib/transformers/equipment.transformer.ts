@@ -1,10 +1,3 @@
-import type {
-  EquipmentDTO,
-  EquipmentListResponseDTO,
-  EquipmentTypeDTO,
-  EquipmentTypesResponseDTO,
-  PaginationResponseDTO,
-} from '@/types';
 import type { EquipmentSearchItem, EquipmentType, PaginationMeta } from '@/types';
 import {
   equipmentDTOSchema,

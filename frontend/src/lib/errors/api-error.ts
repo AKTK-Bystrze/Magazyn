@@ -1,9 +1,12 @@
+// Define a type for error details to avoid 'any'
+export type ErrorDetails = Record<string, unknown> | unknown;
+
 export class ApiError extends Error {
   constructor(
     public message: string,
     public status: number,
     public code: string,
-    public details?: any
+    public details?: ErrorDetails
   ) {
     super(message);
     this.name = 'ApiError';
@@ -42,7 +45,7 @@ export function handleApiError(error: unknown): Response {
 
 // Error Factories
 export const ApiErrors = {
-  badRequest: (message: string, details?: any) => 
+  badRequest: (message: string, details?: ErrorDetails) => 
     new ApiError(message, 400, 'BAD_REQUEST', details),
     
   unauthorized: (message: string = 'Unauthorized') => 
@@ -54,7 +57,7 @@ export const ApiErrors = {
   notFound: (resource: string) => 
     new ApiError(`${resource} not found`, 404, 'NOT_FOUND'),
     
-  conflict: (message: string, details?: any) => 
+  conflict: (message: string, details?: ErrorDetails) => 
     new ApiError(message, 409, 'CONFLICT', details),
     
   internal: (message: string = 'Internal server error') => 

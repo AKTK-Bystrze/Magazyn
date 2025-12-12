@@ -2,7 +2,6 @@ import { defineMiddleware } from "astro:middleware";
 import { supabaseClient } from "../db/supabase.client";
 import { ApiErrors, handleApiError } from "../lib/errors/api-error";
 import { getUserSession } from "../lib/auth/session-utils";
-import { ROUTES } from "../lib/config/routes";
 import { RedirectManager } from "../lib/auth/redirect-manager";
 import { AUTH_COOKIE_NAME } from "../lib/auth/cookie-utils";
 import type { SessionInfo } from "../types";
@@ -56,10 +55,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       console.log('✅ Middleware: Session found via standard Supabase method');
     }
 
-    // Define route checks using centralized route constants
-    const isPublicRoute = url.pathname === ROUTES.PUBLIC.LOGIN;
     const isAuthApiRoute = url.pathname.startsWith("/api/auth");
-    const isAccountDisabledRoute = url.pathname === ROUTES.PROTECTED.ACCOUNT_DISABLED;
 
     // 2. Fetch user session info if authenticated (to check isEnabled status)
     let sessionInfo: SessionInfo | null = null;

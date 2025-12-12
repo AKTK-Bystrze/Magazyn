@@ -139,6 +139,7 @@ describe('getDefaultRouteForUser', () => {
       const user = createMockUser();
       const sessionInfo = createMockSessionInfo({
         isEnabled: true,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         role: 'unknown_role' as any,
       });
       expect(getDefaultRouteForUser(user, sessionInfo)).toBe('/dashboard');
@@ -189,6 +190,7 @@ describe('isAdmin', () => {
 
   it('should return false when sessionInfo has no role', () => {
     const sessionInfo = createMockSessionInfo({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       role: '' as any,
     });
     expect(isAdmin(sessionInfo)).toBe(false);
