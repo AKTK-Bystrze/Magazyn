@@ -28,3 +28,5 @@ Update
 BulkUpdate
  to ensure admin cancellations process refunds correctly.
 6. reservation status update. user should be able to change status of his own reservation when renting and returning equipment
+7. mechanism for finding and handling tokens expiration. It is valid on frontend but not on backend. I am permanetnly logged in on browser
+8. no alert when adding to cart

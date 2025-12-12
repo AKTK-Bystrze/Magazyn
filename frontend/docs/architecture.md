@@ -784,9 +784,89 @@ Component shows error state
 ```javascript
 // Console shows:
 Equipment DTO validation failed {
+```
   errors: { credit_cost_per_day: ["Expected number, received string"] },
   receivedData: { /* actual data */ }
 }
+```
+
+#### Bidirectional Transformers (Outgoing Data)
+
+**Problem**: Frontend needs to send data to backend in snake_case format
+
+**Solution**: Create reverse transformers for commands/mutations
+
+Transform in `lib/transformers/reservation.transformer.ts`:
+
+```typescript
+import type { CreateReservationsCommand } from '@/types';
+
+/**
+ * Transforms frontend command to backend format
+ * Converts camelCase → snake_case for API submission
+ */
+export function transformCreateReservationsCommand(
+  command: CreateReservationsCommand
+): unknown {
+  return {
+    reservations: command.reservations.map((item) => ({
+      equipment_id: item.equipmentId,
+      start_date: item.startDate,
+      end_date: item.endDate,
+    })),
+    ...(command.userId && { user_id: command.userId }),
+  };
+}
+```
+
+**Usage in Components**:
+
+```tsx
+import { transformCreateReservationsCommand } from '@/lib/transformers/reservation.transformer';
+
+const handleSubmit = async () => {
+  // 1. Create command with camelCase (TypeScript-safe)
+  const command: CreateReservationsCommand = {
+    reservations: items.map(item => ({
+      equipmentId: item.id,
+      startDate: startDate,
+      endDate: endDate,
+    })),
+  };
+
+  // 2. Transform to backend format (snake_case)
+  const backendCommand = transformCreateReservationsCommand(command);
+
+  // 3. Send to API
+  const response = await fetch('/api/reservations', {
+    method: 'POST',
+    body: JSON.stringify(backendCommand),
+  });
+};
+```
+
+**Benefits**:
+- ✅ **Consistency**: Same pattern for both directions
+- ✅ **Type Safety**: Frontend code uses TypeScript types
+- ✅ **Single Source of Truth**: Transformation logic in one place
+- ✅ **Maintainable**: Easy to update when backend changes
+- ✅ **Reusable**: Same transformer used across all components
+
+**Complete Bidirectional Flow**:
+```
+Frontend (camelCase)
+  ↓
+Outgoing Transformer (camelCase → snake_case)
+  ↓
+API Proxy
+  ↓
+Backend (snake_case)
+  ↓
+Response (snake_case)
+  ↓
+Incoming Transformer (snake_case → camelCase)
+  ↓
+Frontend (camelCase)
 ```
 
 ### 7. Error Boundary Pattern
