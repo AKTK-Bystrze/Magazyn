@@ -46,6 +46,7 @@ func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.H
 			}
 
 			ctx := context.WithValue(r.Context(), appcontext.UserContextKey, user)
+			ctx = context.WithValue(ctx, appcontext.AccessTokenContextKey, token)
 
 			if profile != nil {
 				if !profile.IsEnabled && r.URL.Path != "/auth/session" {

@@ -74,7 +74,7 @@ func LoadConfig() (*AppState, error) {
 		log.Fatal("SUPABASE_URL and SUPABASE_KEY (or VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY) must be set in environment variables")
 	}
 
-	log.Println("🔑 Using Anon Key - RLS policies will enforce access control")
+	log.Println("🔑 Using Anon Key with JWT forwarding - RLS policies enforced per user")
 
 	client, err := supabase.NewClient(cfg.SupabaseURL, cfg.SupabaseKey, nil)
 	if err != nil {

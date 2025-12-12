@@ -26,6 +26,7 @@ export const ROUTES = {
   },
   PROTECTED: {
     ADMIN: '/admin',
+    ADMIN_RESERVATIONS: '/admin/reservations',
     DASHBOARD: '/dashboard',
     ACCOUNT_DISABLED: '/account-disabled',
     CREDIT_REQUESTS: '/credit-requests',

@@ -79,4 +79,31 @@ export const api = {
     const resData = await response.json();
     return { data: resData };
   },
+
+  /**
+   * Performs a PATCH request
+   *
+   * @param url - Endpoint URL
+   * @param data - Request body data
+   * @returns Response data wrapped in an object
+   */
+  patch: async <T>(url: string, data: unknown): Promise<{ data: T }> => {
+    const headers = await buildHeaders();
+
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: "Network error" }));
+      throw errorData;
+    }
+
+    const resData = await response.json();
+    return { data: resData };
+  },
 };

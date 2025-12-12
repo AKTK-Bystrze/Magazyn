@@ -1,0 +1,185 @@
+import * as React from "react";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { useReservations } from "@/hooks/useReservations";
+import { ReservationCardList } from "./ReservationCardList";
+import { ReservationFilters } from "./ReservationFilters";
+import { CancelReservationDialog } from "./CancelReservationDialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { ICON_SIZE_SM } from "@/lib/config/constants";
+import type { ReservationListItem, ReservationListProps } from "@/types";
+
+interface ReservationListContainerInnerProps extends ReservationListProps {}
+
+/**
+ * Inner component that uses the useReservations hook
+ * Wrapped by QueryProvider in the exported component
+ */
+function ReservationListContainerInner({
+  mode,
+  initialFilters,
+}: ReservationListContainerInnerProps) {
+  const {
+    data,
+    isLoading,
+    error,
+    filters,
+    setFilter,
+    resetFilters,
+    cancelReservation,
+    isMutating,
+  } = useReservations({ initialFilters });
+
+  // Dialog states
+  const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
+  const [selectedReservation, setSelectedReservation] =
+    React.useState<ReservationListItem | null>(null);
+
+  // Feedback states
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  // Clear messages after timeout
+  React.useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  React.useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
+  // Handle modify action - TODO: Implement ModifyReservationDialog
+  const handleModify = React.useCallback((reservation: ReservationListItem) => {
+    // For now, just log - will be implemented in Phase 5
+    console.log("Modify reservation:", reservation.id);
+    setErrorMessage("Modify functionality coming soon!");
+  }, []);
+
+  // Handle cancel action
+  const handleCancelClick = React.useCallback(
+    (reservation: ReservationListItem) => {
+      setSelectedReservation(reservation);
+      setCancelDialogOpen(true);
+    },
+    []
+  );
+
+  // Confirm cancel
+  const handleCancelConfirm = React.useCallback(async () => {
+    if (!selectedReservation) return;
+
+    try {
+      await cancelReservation(selectedReservation.id);
+      setSuccessMessage(
+        `Reservation for "${selectedReservation.equipmentName}" has been cancelled. Credits have been refunded.`
+      );
+      setCancelDialogOpen(false);
+      setSelectedReservation(null);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to cancel reservation";
+      setErrorMessage(message);
+    }
+  }, [selectedReservation, cancelReservation]);
+
+  // Handle cancel dialog close
+  const handleCancelDialogClose = React.useCallback(() => {
+    setCancelDialogOpen(false);
+    setSelectedReservation(null);
+  }, []);
+
+  // Handle view details - TODO: Navigate to detail page
+  const handleViewDetails = React.useCallback(
+    (reservation: ReservationListItem) => {
+      // Navigate to details page
+      window.location.href = `/reservations/${reservation.id}`;
+    },
+    []
+  );
+
+  // Handle page change
+  const handlePageChange = React.useCallback(
+    (page: number) => {
+      setFilter("page", page);
+    },
+    [setFilter]
+  );
+
+  // Determine if filters are active (for empty state messaging)
+  const hasActiveFilters =
+    filters.status !== "ALL" || filters.sort !== "created_desc";
+
+  return (
+    <div className="space-y-6">
+      {/* Success Message */}
+      {successMessage && (
+        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+          <CheckCircle2 className={ICON_SIZE_SM + " text-green-600"} />
+          <AlertDescription className="text-green-800 dark:text-green-200">
+            {successMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Error Message */}
+      {(error || errorMessage) && (
+        <Alert variant="destructive">
+          <AlertCircle className={ICON_SIZE_SM} />
+          <AlertDescription>
+            {errorMessage || error?.message || "An error occurred"}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Filters */}
+      <ReservationFilters
+        filters={filters}
+        onFilterChange={setFilter}
+        onReset={resetFilters}
+      />
+
+      {/* Reservation List */}
+      <ReservationCardList
+        reservations={data?.reservations ?? []}
+        isLoading={isLoading}
+        currentPage={filters.page}
+        totalPages={data?.pagination.totalPages ?? 0}
+        hasFilters={hasActiveFilters}
+        onPageChange={handlePageChange}
+        onModify={mode === "user" ? handleModify : undefined}
+        onCancel={mode === "user" ? handleCancelClick : undefined}
+        onViewDetails={handleViewDetails}
+      />
+
+      {/* Cancel Dialog */}
+      <CancelReservationDialog
+        isOpen={cancelDialogOpen}
+        reservation={selectedReservation}
+        isSubmitting={isMutating}
+        onConfirm={handleCancelConfirm}
+        onClose={handleCancelDialogClose}
+      />
+    </div>
+  );
+}
+
+/**
+ * Main reservation list container with QueryProvider wrapper
+ * Handles data fetching, filtering, pagination, and actions
+ *
+ * @param mode - 'user' for user view, 'admin' for admin view
+ * @param initialFilters - Optional initial filter values
+ */
+export function ReservationListContainer(props: ReservationListProps) {
+  return (
+    <QueryProvider>
+      <ReservationListContainerInner {...props} />
+    </QueryProvider>
+  );
+}

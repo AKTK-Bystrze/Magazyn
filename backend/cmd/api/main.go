@@ -45,7 +45,7 @@ func main() {
 	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
-	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient)
+	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	calendarRepo := supabaserepo.NewCalendarRepository(appState.SupabaseClient)
 	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
 	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
@@ -14,22 +15,54 @@ import (
 )
 
 type reservationRepository struct {
-	client *supabase.Client
+	client      *supabase.Client
+	supabaseURL string
+	supabaseKey string
 }
 
 // NewReservationRepository creates a new Supabase implementation of ReservationRepository
-func NewReservationRepository(client *supabase.Client) repository.ReservationRepository {
+func NewReservationRepository(client *supabase.Client, url string, key string) repository.ReservationRepository {
 	return &reservationRepository{
-		client: client,
+		client:      client,
+		supabaseURL: url,
+		supabaseKey: key,
 	}
+}
+
+// getClientWithAuth creates a Supabase client authenticated with the user's JWT token.
+// This ensures RLS policies can identify the user via auth.uid().
+// If no token is in context, returns the default client (with anon key).
+func (r *reservationRepository) getClientWithAuth(ctx context.Context) *supabase.Client {
+	token, ok := ctx.Value(appcontext.AccessTokenContextKey).(string)
+	if !ok || token == "" {
+		return r.client
+	}
+
+	clientWithAuth, err := supabase.NewClient(
+		r.supabaseURL,
+		r.supabaseKey,
+		&supabase.ClientOptions{
+			Headers: map[string]string{
+				"Authorization": "Bearer " + token,
+			},
+		},
+	)
+	if err != nil {
+		logger.Warnf(ctx, "Failed to create authenticated client, using default: %v", err)
+		return r.client
+	}
+	return clientWithAuth
 }
 
 // GetReservations retrieves a paginated list of reservations based on filters
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
+	// Use authenticated client for RLS enforcement
+	client := r.getClientWithAuth(ctx)
+	
 	// Select basics + joined data
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name))"
 
-	qb := r.client.From("reservations").Select(selectStr, "exact", false)
+	qb := client.From("reservations").Select(selectStr, "exact", false)
 
 	if query.Status != nil && *query.Status != "" {
 		qb = qb.Eq("status", *query.Status)

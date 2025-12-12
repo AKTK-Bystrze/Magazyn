@@ -160,3 +160,45 @@ export type ReservationDashboardSummary = {
   };
   overdueItems: OverdueItem[];
 };
+
+// =============================================================================
+// VIEW STATE TYPES
+// =============================================================================
+
+/**
+ * Sort options for reservation list
+ */
+export type ReservationSortOption = "created_desc" | "date_asc" | "date_desc";
+
+/**
+ * Filter state for reservation list view
+ * Synced with URL search params for shareable links
+ */
+export type ReservationFilterState = {
+  page: number;
+  perPage: number;
+  status: Enums<"reservation_status"> | "ALL";
+  sort: ReservationSortOption;
+  query?: string;
+};
+
+/**
+ * Props for reservation list components
+ */
+export type ReservationListProps = {
+  mode: "user" | "admin";
+  initialFilters?: Partial<ReservationFilterState>;
+};
+
+/**
+ * Paginated response for reservation list
+ */
+export type ReservationListResponse = {
+  reservations: ReservationListItem[];
+  pagination: {
+    page: number;
+    perPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};

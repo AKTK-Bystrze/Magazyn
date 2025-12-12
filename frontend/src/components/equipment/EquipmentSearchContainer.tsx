@@ -3,6 +3,7 @@ import { useEquipmentSearch } from "@/hooks/use-equipment-search";
 import { useEquipmentList, useEquipmentTypes } from "@/hooks/use-equipment-api";
 import { FilterSidebar } from "./FilterSidebar";
 import { EquipmentGrid } from "./EquipmentGrid";
+import { CartIndicator } from "./CartIndicator";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -126,6 +127,9 @@ function EquipmentSearchContainer() {
            </div>
         )}
       </main>
+
+      {/* Floating Cart Indicator */}
+      <CartIndicator />
     </div>
   );
 }

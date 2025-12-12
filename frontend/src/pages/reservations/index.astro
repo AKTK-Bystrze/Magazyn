@@ -3,8 +3,10 @@ export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ReservationListContainer } from '@/components/reservations/ReservationListContainer';
 import { CheckCircle2 } from 'lucide-react';
 import { ROUTES } from '@/lib/config/routes';
+import { Button } from '@/components/ui/button';
 
 const { user, sessionInfo } = Astro.locals;
 
@@ -17,8 +19,17 @@ const success = Astro.url.searchParams.get('success') === 'true';
 
 <Layout title="My Reservations | Magazyn">
   <div class="container mx-auto py-8 px-4 max-w-7xl">
-    <h1 class="text-3xl font-bold tracking-tight mb-6">My Reservations</h1>
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <h1 class="text-3xl font-bold tracking-tight">My Reservations</h1>
+      <a href={ROUTES.PUBLIC.EQUIPMENT}>
+        <Button variant="outline">
+          Browse Equipment
+        </Button>
+      </a>
+    </div>
 
+    <!-- Success Message from Redirect -->
     {success && (
       <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
         <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -28,13 +39,7 @@ const success = Astro.url.searchParams.get('success') === 'true';
       </Alert>
     )}
 
-    <div class="bg-card rounded-lg border shadow-sm p-8 text-center">
-      <p class="text-muted-foreground">
-        Reservation list view coming soon...
-      </p>
-      <a href="/equipment" class="inline-block mt-4 text-primary hover:underline">
-        ← Back to Equipment
-      </a>
-    </div>
+    <!-- Reservation List -->
+    <ReservationListContainer mode="user" client:load />
   </div>
 </Layout>

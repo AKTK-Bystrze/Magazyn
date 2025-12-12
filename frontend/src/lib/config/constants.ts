@@ -59,3 +59,62 @@ export const COOKIE_EXTENDED_WAIT_MS = 200;
 
 // Redirect delays (milliseconds)
 export const SUCCESS_REDIRECT_DELAY_MS = 1500;
+
+// =============================================================================
+// RESERVATION STATUS CONFIGURATION
+// =============================================================================
+
+/**
+ * Reservation status values matching database enum
+ */
+export const RESERVATION_STATUS = {
+    PENDING: "PENDING",
+    RENTED: "RENTED",
+    RETURNED: "RETURNED",
+    DENIED: "DENIED",
+} as const;
+
+/**
+ * Human-readable labels for reservation statuses
+ */
+export const RESERVATION_STATUS_LABELS: Record<string, string> = {
+    PENDING: "Pending",
+    RENTED: "Rented",
+    RETURNED: "Returned",
+    DENIED: "Cancelled",
+    ALL: "All Statuses",
+};
+
+/**
+ * Badge variants for each reservation status
+ * Maps to Shadcn Badge component variants
+ */
+export const RESERVATION_STATUS_VARIANTS: Record<
+    string,
+    "default" | "secondary" | "destructive" | "outline"
+> = {
+    PENDING: "default",
+    RENTED: "secondary",
+    RETURNED: "outline",
+    DENIED: "destructive",
+};
+
+/**
+ * Status filter options for reservation lists (including 'ALL')
+ */
+export const RESERVATION_FILTER_OPTIONS = [
+    { value: "ALL", label: "All Statuses" },
+    { value: "PENDING", label: "Pending" },
+    { value: "RENTED", label: "Rented" },
+    { value: "RETURNED", label: "Returned" },
+    { value: "DENIED", label: "Cancelled" },
+] as const;
+
+/**
+ * Sort options for reservation lists
+ */
+export const RESERVATION_SORT_OPTIONS = [
+    { value: "created_desc", label: "Newest First" },
+    { value: "date_asc", label: "Start Date (Ascending)" },
+    { value: "date_desc", label: "Start Date (Descending)" },
+] as const;
