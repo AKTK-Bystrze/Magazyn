@@ -53,22 +53,25 @@ The implementation will heavily leverage existing components from `src/component
 - **State**: `page`, `status`, `sort`, `search`.
 - **Interactions**: Updates URL on filter change.
 
-### `ReservationTable` (Admin)
-- **Purpose**: High-density view for admins.
-- **Columns**: Selection (checkbox), Equipment + ID, User (Avatar + Name), Dates, Status, Cost, Actions.
-- **Features**: Sortable headers.
-- **Props**: `data: ReservationListItem[]`, `onSelectionChange`, `onSort`.
-- **Reuse**: Use `src/lib/utils/date-utils.ts` for all date formatting.
+### `ReservationTable` (Admin) - **SKIPPED**
+- **Note**: Replaced by `ReservationCardList` with grouping enabled to maintain consistent UI between User and Admin views.
 
-### `ReservationCard` (User)
-- **Purpose**: User-friendly display of a single reservation.
-- **Content**: Equipment Image (thumbnail), Name, Date Range, Status Badge, Cost.
-- **Actions**: "Modify" (if PENDING), "Cancel" (if PENDING), "View Details".
+### `GroupedReservationCard` (New)
+- **Purpose**: Collapsible container for multiple reservations created on same dates.
+- **Content (Collapsed)**: Date range, total item count, total cost, aggregate status, equipment names list (comma-separated).
+- **Content (Expanded)**: List of individual `ReservationCard` items.
+- **Actions**: "Cancel All" (Bulk), "Modify Dates All" (Bulk).
+- **Interactions**: Click header to toggle expand/collapse.
+
+### `ReservationCard`
+- **Purpose**: Display of a single reservation. Used within `ReservationCardList` or inside `GroupedReservationCard`.
+- **Props**: Added `mode: 'user' | 'admin'` to control available actions.
+- **Content**: Equipment Name/Type, Date Range (dd.mm), Status Badge, Cost.
+- **Actions**: "Modify" (PENDING), "Cancel" (PENDING), "View Details".
 - **Reuse**:
   - `src/components/ui/card.tsx` for container.
   - `src/components/ui/badge.tsx` for status.
   - `src/lib/utils/date-utils.ts` for date formatting (`formatDate`, `calculateDays`).
-  - `src/lib/utils/text-utils.ts` for pluralization.
 
 ### `ModifyReservationDialog`
 - **Purpose**: Allows users to change dates.
@@ -177,24 +180,39 @@ New ViewModels/Props:
 
 ## 11. Implementation Steps
 
-1.  **Setup Types**: Verify `reservation.types.ts` covers all DTOs (it appears complete). Add `FilterState` interfaces locally.
-2.  **API Services**: Update `src/lib/api/reservations.ts` and **extend `src/lib/transformers/reservation.transformer.ts`** to handle incoming reservation data transformation.
-3.  **UI Components Auditing**:
-    - Verify `src/components/reservations/DateRangePicker.tsx` is importable.
-    - Review `src/lib/utils/date-utils.ts` for all date needs.
-    - Create `StatusBadge` using `src/components/ui/badge.tsx`.
-4.  **Feature Components**:
-    - Build `ReservationListContainer` structure.
-    - Implement `ReservationFilters` with URL sync.
+1.  **Setup Types [Completed]**:
+    - Verified `reservation.types.ts`.
+    - Added `ReservationFilterState`, `ReservationListItem`, `ReservationListResponse`, and **`GroupedReservation`** types.
+2.  **API Services & Backend [Completed]**:
+    - Implemented `src/lib/api/reservations-api.ts` (GET, PATCH) and transformers.
+    - **Backend**: Implemented `auth_utils.go` for **JWT Forwarding (RLS)**.
+    - **Backend**: Fixed `credit_cost` calculation in `reservation_repository.go` using `equipment_types` data.
+3.  **UI Components Auditing [Completed]**:
+    - Created `StatusBadge.tsx` and `Pagination.tsx`.
+    - Updated `date-utils.ts` to support `dd.mm` formatting.
+4.  **Feature Components [Completed]**:
+    - Built `ReservationListContainer` and `ReservationFilters`.
+    - **Grouped View Feature**: Implemented `GroupedReservationCard.tsx` and `group-reservations.ts` utility to collapse same-date reservations.
+    - **Note**: Used `ReservationCardList` for Admin view as well (Replaced planned Table view for consistency).
 5.  **Dialog Implementation**:
-    - Build `ModifyReservationDialog` using **`DateRangePicker`**.
-    - Build `CancelReservationDialog`.
-6.  **Integration**:
-    - Connect `useQuery` in Container.
-    - Connect `useMutation` in Actions.
-7.  **Pages**:
-    - Create `src/pages/reservations/index.astro`.
-    - Create `src/pages/admin/reservations/index.astro` (with Admin flag prop).
-8.  **Review**:
-    - Verify User cannot see other users' data (API enforced, but UI should be clean).
-    - Verify Admin bulk actions work.
+    - `CancelReservationDialog` [Completed].
+    - `ModifyReservationDialog` [Pending] (Deferred to Phase 5).
+6.  **Integration [Completed]**:
+    - Connected `useReservations` hook (React Query) in Container.
+    - Implemented Single and Bulk cancellation logic.
+7.  **Pages [Completed]**:
+    - Created `src/pages/reservations/index.astro` (User View).
+    - Created `src/pages/admin/reservations/index.astro` (Admin View).
+8.  **Review [Completed]**:
+    - Verified User/Admin isolation and RLS.
+    - Verified Grouped view rendering and responsive design.
+
+## 12. Reusable Components & Patterns Established
+The following components were built with high reusability in mind and should be leveraged in future views:
+
+-   **`StatusBadge`**: Generic wrapper for consistent status styling (variants defined in constants).
+-   **`Pagination`**: Fully decoupled pagination control.
+-   **`ReservationCard`**: Context-aware (Admin/User modes) card for displaying rental items.
+-   **`GroupedReservationCard`**: Pattern for collapsing related items by date/user. 
+-   **`ReservationFilters`**: Clean implementation of Status/Sort filters synced with URL state.
+-   **`auth_utils.go (Backend)`**: Pattern for forwarding JWTs to enforce RLS in Supabase repositories.
