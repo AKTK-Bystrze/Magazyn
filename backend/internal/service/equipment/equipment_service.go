@@ -37,6 +37,9 @@ type EquipmentService interface {
 
 	// ListEquipmentTypes retrieves all equipment types
 	ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error)
+
+	// CreateEquipmentType creates a new equipment type
+	CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error)
 }
 
 // ============================================================================
@@ -340,4 +343,20 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 	projectURL = strings.TrimSuffix(projectURL, "/")
 	url := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", projectURL, constants.StorageBucket, *imagePath)
 	return &url
+}
+
+func (s *equipmentService) CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error) {
+	// 1. Create Type
+	t := types.PublicEquipmentTypesInsert{
+		Name:             cmd.Name,
+		CreditCostPerDay: cmd.CreditCostPerDay,
+	}
+
+	created, err := s.typeRepo.Create(ctx, t)
+	if err != nil {
+		logger.Errorf(ctx, "Failed to create equipment type: %v", err)
+		return nil, types.NewInternalError("Failed to create equipment type", err)
+	}
+
+	return created, nil
 }

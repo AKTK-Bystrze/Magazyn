@@ -5,7 +5,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, Plus } from "lucide-react";
+import { ShoppingCart, Plus, Check } from "lucide-react";
 import { saveCartToStorage, loadCartFromStorage } from "@/lib/utils/cart-storage";
 import type { CartItem } from "@/types/reservation-cart.types";
 
@@ -14,6 +14,9 @@ interface EquipmentCardProps {
 }
 
 export function EquipmentCard({ item }: EquipmentCardProps) {
+  const [addedToCart, setAddedToCart] = React.useState(false);
+  const [alreadyInCart, setAlreadyInCart] = React.useState(false);
+
   const isAvailable = item.status === "ok";
   const statusColor = item.status === "ok" ? "bg-green-500" : item.status === "broken" ? "bg-destructive" : "bg-yellow-500";
   const statusLabel = item.status === "ok" ? "Available" : item.status === "broken" ? "Broken" : "Blocked";
@@ -32,7 +35,8 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
 
     // Check if already in cart
     if (currentCart.items.some(i => i.equipmentId === cartItem.equipmentId)) {
-      alert("Item is already in your cart!");
+      setAlreadyInCart(true);
+      setTimeout(() => setAlreadyInCart(false), 3000);
       return;
     }
 
@@ -42,7 +46,9 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
     // Dispatch event for UI updates (for potential navbar badge)
     window.dispatchEvent(new Event('cart-updated'));
 
-    alert("Item added to cart!");
+    // Show success feedback
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 3000);
   };
 
   return (
@@ -95,8 +101,30 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
         </div>
         <div className="flex gap-2">
           {isAvailable && (
-            <Button size="sm" variant="outline" onClick={handleAddToCart} title="Add to Cart">
-              <ShoppingCart className="h-4 w-4" />
+            <Button
+              size="sm"
+              variant={addedToCart ? "default" : alreadyInCart ? "destructive" : "outline"}
+              onClick={handleAddToCart}
+              title={addedToCart ? "Added to cart!" : alreadyInCart ? "Already in cart" : "Add to Cart"}
+              disabled={addedToCart}
+              className={cn(
+                "transition-all duration-300",
+                addedToCart && "bg-green-600 hover:bg-green-600"
+              )}
+            >
+              {addedToCart ? (
+                <>
+                  <Check className="h-4 w-4 mr-1" />
+                  Added!
+                </>
+              ) : alreadyInCart ? (
+                <>
+                  <ShoppingCart className="h-4 w-4 mr-1" />
+                  In Cart
+                </>
+              ) : (
+                <ShoppingCart className="h-4 w-4" />
+              )}
             </Button>
           )}
           <a

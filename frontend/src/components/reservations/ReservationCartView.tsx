@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Trash2, CheckCircle2 } from "lucide-react";
 import type { CreateReservationsCommand } from "@/types";
 import type { AvailabilityCheckResult } from "@/types/reservation-cart.types";
+import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
 
 interface ReservationCartViewProps {
   initialCreditBalance: number;
@@ -43,6 +44,7 @@ export function ReservationCartView({
   });
   
   const [submissionError, setSubmissionError] = React.useState<string | null>(null);
+  const [clearCartPending, setClearCartPending] = React.useState(false);
 
   // Derived state for validation
   const costBreakdown = calculateCost();
@@ -95,17 +97,34 @@ export function ReservationCartView({
         })),
       };
 
+      // Transform to backend format (snake_case)
+      const backendCommand = transformCreateReservationsCommand(command);
+
       const response = await fetch("/api/reservations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(command),
+        body: JSON.stringify(backendCommand),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create reservation");
+        let errorMessage = errorData.message || errorData.error || "Failed to create reservation";
+
+        // Replace equipment IDs with names for better UX
+        cartState.items.forEach((item) => {
+          if (errorMessage.includes(item.equipmentId)) {
+            errorMessage = errorMessage.replace(item.equipmentId, `"${item.name}"`);
+          }
+        });
+
+        // Make conflict errors more user-friendly
+        if (errorMessage.includes("Conflict detected")) {
+          errorMessage = errorMessage.replace("Conflict detected for equipment", "This equipment is already reserved:");
+        }
+
+        throw new Error(errorMessage);
       }
 
       // Success!
@@ -127,8 +146,14 @@ export function ReservationCartView({
   };
 
   const handleClearCart = () => {
-    if (confirm("Are you sure you want to clear the cart?")) {
+    if (!clearCartPending) {
+      // First click - show warning
+      setClearCartPending(true);
+      setTimeout(() => setClearCartPending(false), 3000);
+    } else {
+    // Second click - actually clear
       clearCart();
+      setClearCartPending(false);
     }
   };
 
@@ -140,9 +165,14 @@ export function ReservationCartView({
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Complete Reservation</h1>
         {!isEmpty && (
-          <Button variant="outline" onClick={handleClearCart} size="sm">
+          <Button
+            variant={clearCartPending ? "destructive" : "outline"}
+            onClick={handleClearCart}
+            size="sm"
+            className="transition-all duration-300"
+          >
             <Trash2 className="mr-2 h-4 w-4" />
-            Clear Cart
+            {clearCartPending ? "Click again to confirm" : "Clear Cart"}
           </Button>
         )}
       </div>
@@ -161,10 +191,22 @@ export function ReservationCartView({
            <AlertCircle className="h-4 w-4" />
            <h5 className="mb-1 font-medium leading-none tracking-tight">Availability Issues Detected</h5>
            <AlertDescription>
-             <ul className="list-disc pl-5 mt-2 space-y-1">
+            <ul className="list-disc pl-5 mt-2 space-y-2">
                {availabilityResult.unavailableItems.map(item => (
                  <li key={item.equipmentId}>
                    <strong>{item.name}</strong>: {item.reason}
+                   {item.conflictingReservations && item.conflictingReservations.length > 0 && (
+                     <div className="mt-1 text-sm">
+                       <span className="font-medium">Conflicting reservations:</span>
+                       <ul className="list-none pl-4 mt-1 space-y-1">
+                         {item.conflictingReservations.map((conflict, idx) => (
+                           <li key={idx} className="text-xs">
+                             • {conflict.startDate} to {conflict.endDate}
+                           </li>
+                         ))}
+                       </ul>
+                     </div>
+                   )}
                  </li>
                ))}
              </ul>

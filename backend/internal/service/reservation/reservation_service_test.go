@@ -237,7 +237,7 @@ func TestReservationService_Create_Success(t *testing.T) {
 	}, nil)
 
 	// Mock Creation Atomic
-	expectedCost := int32(20)
+	expectedCost := int32(10)
 	t.Logf("Setting up CreateReservationsAtomic mock with cost: %d", expectedCost)
 	mockRepo.On("CreateReservationsAtomic", mock.Anything, userID, expectedCost, mock.Anything).
 		Return([]string{"res-1"}, int32(990), nil)
@@ -259,7 +259,7 @@ func TestReservationService_Create_Success(t *testing.T) {
 	resp, err := svc.Create(ctx, cmd, userID)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
-	assert.Equal(t, int32(20), resp.TotalCreditCost)
+	assert.Equal(t, int32(10), resp.TotalCreditCost)
 	assert.Len(t, resp.Reservations, 1)
 }
 
@@ -299,7 +299,7 @@ func TestReservationService_Update_RefundTrigger(t *testing.T) {
 	}, nil)
 
 	// Mock Refund Call
-	mockRepo.On("RefundCredits", ctx, resID, int32(20)).Return(nil)
+	mockRepo.On("RefundCredits", ctx, resID, int32(10)).Return(nil)
 
 	// Mock Update Call
 	mockRepo.On("UpdateReservation", ctx, resID, mock.AnythingOfType("types.PublicReservationsUpdate")).

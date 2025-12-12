@@ -125,9 +125,10 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 
 	// 1. Validation & Cost Calculation (Read-Only)
 	totalCost := int32(0)
+	costMap := make(map[int]int32)
 	
 	// Pre-validate equipment existence and status
-	for _, req := range cmd.Reservations {
+	for i, req := range cmd.Reservations {
 		eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
 		if err != nil {
 			return nil, types.NewValidationError(fmt.Sprintf("Equipment %s not found", req.EquipmentID), nil)
@@ -145,6 +146,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		days := s.calculateDays(req.StartDate, req.EndDate)
 		cost := days * eqType.CreditCostPerDay
 		totalCost += cost
+		costMap[i] = cost
 
 		logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d", 
 			req.EquipmentID, eq.TypeId, days, eqType.CreditCostPerDay, cost)
@@ -175,7 +177,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 				StartDate:   req.StartDate,
 				EndDate:     req.EndDate,
 				Status:      constants.ReservationStatusPending,
-				CreditCost:  0, // We could store per-item cost if we calculated it above
+				CreditCost:  costMap[i],
 			})
 		}
 	}
@@ -337,7 +339,9 @@ func (s *reservationService) calculateDays(start, end string) int32 {
 	t2, _ := time.Parse(layout, end)
 	
 	days := int32(t2.Sub(t1).Hours() / 24)
-	if days < 1 { days = 1 } // Minimum 1 day
+	if days < 0 {
+		return 0
+	}
 	return days + 1
 }
 

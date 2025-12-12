@@ -13,6 +13,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
   try {
     const body = await request.json();
+    console.log('[Reservations API] Request body:', JSON.stringify(body, null, 2));
+
     const headers = new Headers({
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -25,6 +27,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
     });
 
     const data = await response.json();
+    console.log('[Reservations API] Response status:', response.status);
+    console.log('[Reservations API] Response data:', JSON.stringify(data, null, 2));
 
     return new Response(JSON.stringify(data), {
       status: response.status,

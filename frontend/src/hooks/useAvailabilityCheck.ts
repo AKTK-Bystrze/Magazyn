@@ -51,7 +51,22 @@ export function useAvailabilityCheck(
             throw new Error(ERROR_AVAILABILITY_CHECK_FAILED);
           }
 
-          const data: EquipmentAvailability = await response.json();
+          const rawData: any = await response.json();
+          console.log(`[Availability] ${item.name} (raw):`, rawData);
+
+          // Transform snake_case to camelCase
+          const data: EquipmentAvailability = {
+            equipmentId: rawData.equipment_id,
+            isAvailable: rawData.is_available,
+            conflictingReservations: (rawData.conflicting_reservations || []).map((r: any) => ({
+              id: r.id,
+              startDate: r.start_date,
+              endDate: r.end_date,
+              status: r.status,
+            })),
+          };
+
+          console.log(`[Availability] ${item.name} (transformed):`, data);
           return { item, availability: data };
         } catch (error) {
           console.error(
@@ -77,7 +92,7 @@ export function useAvailabilityCheck(
           equipmentId: r.item.equipmentId,
           name: r.item.name,
           reason: ERROR_UNAVAILABLE_FOR_DATES,
-          conflictingReservations: r.availability.conflictingReservations.map(
+          conflictingReservations: (r.availability.conflictingReservations || []).map(
             (reservation) => ({
               startDate: reservation.startDate,
               endDate: reservation.endDate,

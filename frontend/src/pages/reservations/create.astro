@@ -3,36 +3,16 @@ export const prerender = false;
 
 import Layout from "@/layouts/Layout.astro";
 import { ReservationCartView } from "@/components/reservations/ReservationCartView";
-import { BACKEND_URL } from "@/lib/config/api";
 
-const session = await Astro.locals.supabase.auth.getSession();
-if (!session.data.session) {
+const { user, sessionInfo } = Astro.locals;
+
+if (!user || !sessionInfo) {
   return Astro.redirect("/login?redirect=/reservations/create");
 }
 
-let initialCreditBalance = 0;
-let error = null;
-
-try {
-  const token = session.data.session.access_token;
-  const response = await fetch(`${BACKEND_URL}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (response.ok) {
-    const userData = await response.json();
-    initialCreditBalance = userData.credit_balance;
-  } else {
-    console.error("Failed to fetch user data", response.status);
-    error = "Failed to load user profile. Please check your connection.";
-  }
-} catch (e) {
-  console.error("Error fetching user data", e);
-  error = "An error occurred while loading your profile.";
-}
+// Use credit balance from sessionInfo (already fetched by middleware)
+const initialCreditBalance = sessionInfo.creditBalance || 0;
+const error = null;
 ---
 
 <Layout title="Finish Reservation | Magazyn">
@@ -45,7 +25,7 @@ try {
       </div>
     ) : (
       <ReservationCartView
-        client:load
+        client:only="react"
         initialCreditBalance={initialCreditBalance}
       />
     )}

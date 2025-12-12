@@ -13,14 +13,15 @@ export const GET: APIRoute = async ({ request, params, locals }) => {
     backendUrl.searchParams.append(key, value);
   });
 
-  const { data: { session } } = await locals.supabase.auth.getSession();
+  // Get token from middleware
+  const token = locals.accessToken;
 
   const headers = new Headers({
     'Content-Type': 'application/json',
   });
 
-  if (session?.access_token) {
-    headers.set('Authorization', `Bearer ${session.access_token}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   const response = await fetch(backendUrl.toString(), {

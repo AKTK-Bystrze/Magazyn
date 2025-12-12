@@ -209,3 +209,34 @@ func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *ht
 
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
+
+// HandleCreateEquipmentType handles creating new equipment type
+func (h *EquipmentHandler) HandleCreateEquipmentType(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID := common.GetUserIDFromContext(r)
+	if userID == "" {
+		common.RespondUnauthorized(ctx, w)
+		return
+	}
+
+	var cmd types.CreateEquipmentTypeRequest
+	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+    // Validation (simple check)
+    if cmd.Name == "" {
+        common.RespondError(ctx, w, http.StatusBadRequest, "Name is required")
+        return
+    }
+
+	response, err := h.service.CreateEquipmentType(ctx, cmd)
+	if err != nil {
+		logger.Errorf(ctx, "HandleCreateEquipmentType error: %v", err)
+		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.RespondJSON(ctx, w, http.StatusCreated, response)
+}
