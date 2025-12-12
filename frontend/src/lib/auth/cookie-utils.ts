@@ -3,6 +3,13 @@
  * Centralizes all cookie operations to eliminate duplication and magic numbers
  */
 
+import {
+  COOKIE_WAIT_TIMEOUT_MS,
+  COOKIE_POLL_INTERVAL_MS,
+  COOKIE_INITIAL_WAIT_MS,
+  COOKIE_EXTENDED_WAIT_MS,
+} from '@/lib/config/constants';
+
 // Cookie configuration constants
 export const AUTH_COOKIE_NAME = 'magazyn-auth-token';
 
@@ -60,25 +67,25 @@ export function hasAuthCookie(): boolean {
  * This is useful after setting a cookie, as there can be a small delay
  * before document.cookie reflects the change.
  * 
- * @param timeout - Maximum time to wait in milliseconds (default: 300ms)
+ * @param timeout - Maximum time to wait in milliseconds (default from constants)
  * @returns Promise that resolves to true if cookie was set, false if timeout
  * 
  * @example
  * setAuthCookie(token);
- * const success = await waitForCookie(300);
+ * const success = await waitForCookie();
  * if (success) {
  *   // Cookie is confirmed set, safe to redirect
  * }
  */
-export async function waitForCookie(timeout: number = 300): Promise<boolean> {
+export async function waitForCookie(timeout: number = COOKIE_WAIT_TIMEOUT_MS): Promise<boolean> {
   const startTime = Date.now();
   
   while (Date.now() - startTime < timeout) {
     if (hasAuthCookie()) {
       return true;
     }
-    // Check every 50ms
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Check every COOKIE_POLL_INTERVAL_MS
+    await new Promise(resolve => setTimeout(resolve, COOKIE_POLL_INTERVAL_MS));
   }
   
   return false;
@@ -98,12 +105,12 @@ export async function waitForCookieAndRedirect(
   setAuthCookie(accessToken);
   
   // Wait a bit for cookie to be set
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, COOKIE_INITIAL_WAIT_MS));
   
   // Double-check cookie is set
   if (!hasAuthCookie()) {
-    console.warn('⚠️ Cookie not set after 100ms, waiting longer...');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    console.warn('⚠️ Cookie not set after initial wait, waiting longer...');
+    await new Promise(resolve => setTimeout(resolve, COOKIE_EXTENDED_WAIT_MS));
   }
   
   // Perform redirect

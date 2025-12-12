@@ -12,7 +12,13 @@ import { AlertCircle, Trash2, CheckCircle2 } from "lucide-react";
 import type { CreateReservationsCommand } from "@/types";
 import type { AvailabilityCheckResult } from "@/types/reservation-cart.types";
 import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
+import { CLEAR_CART_CONFIRM_TIMEOUT_MS } from "@/lib/config/constants";
+import { ROUTES } from "@/lib/config/routes";
 
+/**
+ * Props for ReservationCartView component
+ * @param initialCreditBalance - User's current credit balance for cost calculations and validation
+ */
 interface ReservationCartViewProps {
   initialCreditBalance: number;
 }
@@ -134,8 +140,8 @@ export function ReservationCartView({
       clearCart();
       setIsConfirmationOpen(false);
       
-      // Redirect to reservations page
-      window.location.href = "/reservations?success=true";
+      // Redirect to reservations page with success indicator
+      window.location.href = `${ROUTES.PROTECTED.RESERVATIONS}?success=true`;
     } catch (error) {
       console.error("Reservation failed:", error);
       setSubmissionError(error instanceof Error ? error.message : "An unexpected error occurred");
@@ -149,7 +155,7 @@ export function ReservationCartView({
     if (!clearCartPending) {
       // First click - show warning
       setClearCartPending(true);
-      setTimeout(() => setClearCartPending(false), 3000);
+      setTimeout(() => setClearCartPending(false), CLEAR_CART_CONFIRM_TIMEOUT_MS);
     } else {
     // Second click - actually clear
       clearCart();

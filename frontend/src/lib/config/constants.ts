@@ -46,3 +46,16 @@ export const STORAGE_KEY_CART = "reservation-cart";
 
 // Localization
 export const DEFAULT_LOCALE = "en-US";
+
+// UI Feedback Timing (milliseconds)
+export const FEEDBACK_DISPLAY_DURATION_MS = 3000;
+export const CLEAR_CART_CONFIRM_TIMEOUT_MS = 3000;
+
+// Cookie wait timing (milliseconds)
+export const COOKIE_WAIT_TIMEOUT_MS = 300;
+export const COOKIE_POLL_INTERVAL_MS = 50;
+export const COOKIE_INITIAL_WAIT_MS = 100;
+export const COOKIE_EXTENDED_WAIT_MS = 200;
+
+// Redirect delays (milliseconds)
+export const SUCCESS_REDIRECT_DELAY_MS = 1500;

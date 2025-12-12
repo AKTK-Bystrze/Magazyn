@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { ShoppingCart, Plus, Check } from "lucide-react";
 import { saveCartToStorage, loadCartFromStorage } from "@/lib/utils/cart-storage";
 import type { CartItem } from "@/types/reservation-cart.types";
+import { FEEDBACK_DISPLAY_DURATION_MS } from "@/lib/config/constants";
 
 interface EquipmentCardProps {
   item: EquipmentSearchItem;
@@ -36,7 +37,7 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
     // Check if already in cart
     if (currentCart.items.some(i => i.equipmentId === cartItem.equipmentId)) {
       setAlreadyInCart(true);
-      setTimeout(() => setAlreadyInCart(false), 3000);
+      setTimeout(() => setAlreadyInCart(false), FEEDBACK_DISPLAY_DURATION_MS);
       return;
     }
 
@@ -48,7 +49,7 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
 
     // Show success feedback
     setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 3000);
+    setTimeout(() => setAddedToCart(false), FEEDBACK_DISPLAY_DURATION_MS);
   };
 
   return (

@@ -3,11 +3,12 @@ import type {
   CartItem,
   AvailabilityCheckResult,
 } from "@/types/reservation-cart.types";
-import type { EquipmentAvailability } from "@/types";
 import {
   ERROR_AVAILABILITY_CHECK_FAILED,
   ERROR_UNAVAILABLE_FOR_DATES,
 } from "@/lib/config/error-messages";
+import { transformEquipmentAvailabilityDTO } from "@/lib/transformers/availability.transformer";
+import { debug } from "@/lib/utils/debug";
 
 /**
  * Custom hook for checking equipment availability for cart items
@@ -51,28 +52,16 @@ export function useAvailabilityCheck(
             throw new Error(ERROR_AVAILABILITY_CHECK_FAILED);
           }
 
-          const rawData: any = await response.json();
-          console.log(`[Availability] ${item.name} (raw):`, rawData);
+          const rawData = await response.json();
+          debug.log('Availability', `${item.name} (raw):`, rawData);
 
-          // Transform snake_case to camelCase
-          const data: EquipmentAvailability = {
-            equipmentId: rawData.equipment_id,
-            isAvailable: rawData.is_available,
-            conflictingReservations: (rawData.conflicting_reservations || []).map((r: any) => ({
-              id: r.id,
-              startDate: r.start_date,
-              endDate: r.end_date,
-              status: r.status,
-            })),
-          };
+          // Transform using availability transformer
+          const data = transformEquipmentAvailabilityDTO(rawData);
+          debug.log('Availability', `${item.name} (transformed):`, data);
 
-          console.log(`[Availability] ${item.name} (transformed):`, data);
           return { item, availability: data };
         } catch (error) {
-          console.error(
-            `Failed to check availability for ${item.name}:`,
-            error
-          );
+          debug.error('Availability', `Failed to check availability for ${item.name}:`, error);
           return {
             item,
             availability: {

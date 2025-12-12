@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Layout from '../layouts/Layout.astro';
 import { Button } from '../components/ui/button';
+import { AUTH_COOKIE_NAME } from '../lib/auth/cookie-utils';
 
 export const prerender = false;
 
@@ -9,7 +9,7 @@ export const prerender = false;
 const user = Astro.locals.user;
 
 // Get session to check if user is actually disabled
-const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
+const accessToken = Astro.cookies.get(AUTH_COOKIE_NAME)?.value;
 ---
 
 <Layout title="Zaloguj się | Wynajem Sprzętu">
@@ -92,9 +92,27 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
   </main>
 
   <script>
-    // Import BACKEND_URL from centralized config at runtime
-    const BACKEND_URL = 'http://localhost:8080'; // Will be replaced by Astro with env var
-    const accessToken = document.cookie.match(/magazyn-auth-token=([^;]+)/)?.[1];
+    // Constants - synchronized with lib/config
+    const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const AUTH_COOKIE_NAME = 'magazyn-auth-token';
+    const SUCCESS_REDIRECT_DELAY_MS = 1500;
+    const LOGIN_ROUTE = '/login';
+    
+    // Get access token from cookie
+    const accessToken = document.cookie.match(new RegExp(`${AUTH_COOKIE_NAME}=([^;]+)`))?.[1];
+    
+    /**
+     * Helper function to update status message
+     * Eliminates repeated querySelector calls
+     */
+    function setStatusMessage(element, text, className) {
+      const p = element.querySelector('p');
+      if (p) {
+        p.textContent = text;
+        p.className = className;
+      }
+      element.classList.remove('hidden');
+    }
 
     // Refresh status button
     document.getElementById('refresh-status-btn')?.addEventListener('click', async () => {
@@ -122,18 +140,22 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
           
           if (data.isEnabled) {
             // Account is now enabled! Redirect to appropriate page
-            statusMsg.querySelector('p').textContent = 'Konto włączone! Przekierowuję…';
-            statusMsg.querySelector('p').className = 'text-sm text-green-600 dark:text-green-500';
-            statusMsg.classList.remove('hidden');
+            setStatusMessage(
+              statusMsg,
+              'Konto włączone! Przekierowuję…',
+              'text-sm text-green-600 dark:text-green-500'
+            );
             
             setTimeout(() => {
               window.location.href = '/';
-            }, 1500);
+            }, SUCCESS_REDIRECT_DELAY_MS);
           } else {
             // Still disabled
-            statusMsg.querySelector('p').textContent = 'Konto nadal oczekuje na zatwierdzenie.';
-            statusMsg.querySelector('p').className = 'text-sm text-yellow-600 dark:text-yellow-500';
-            statusMsg.classList.remove('hidden');
+            setStatusMessage(
+              statusMsg,
+              'Konto nadal oczekuje na zatwierdzenie.',
+              'text-sm text-yellow-600 dark:text-yellow-500'
+            );
             
             btn.textContent = 'Check Account Status';
             btn.removeAttribute('disabled');
@@ -143,9 +165,11 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
         }
       } catch (error) {
         console.error('Error checking account status:', error);
-        statusMsg.querySelector('p').textContent = 'Nie udało się sprawdzić statusu. Spróbuj ponownie.';
-        statusMsg.querySelector('p').className = 'text-sm text-red-600 dark:text-red-500';
-        statusMsg.classList.remove('hidden');
+        setStatusMessage(
+          statusMsg,
+          'Nie udało się sprawdzić statusu. Spróbuj ponownie.',
+          'text-sm text-red-600 dark:text-red-500'
+        );
         
         btn.textContent = 'Check Account Status';
         btn.removeAttribute('disabled');
@@ -161,11 +185,11 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
       btn.setAttribute('disabled', 'true');
 
       try {
-        // Clear the auth cookie manually
-        document.cookie = 'magazyn-auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        // Clear the auth cookie
+        document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
         
-        // Clear Supabase local storage (identified custom key from src/lib/supabase.ts)
-        localStorage.removeItem('magazyn-auth-token');
+        // Clear Supabase local storage
+        localStorage.removeItem(AUTH_COOKIE_NAME);
         
         // Fallback for default key
         localStorage.removeItem('sb-gwamxxqarkcpvgzvpanc-auth-token');
@@ -173,7 +197,7 @@ const accessToken = Astro.cookies.get('magazyn-auth-token')?.value;
         // Optional: Dispatch a storage event or similar if we need to notify other tabs/components immediately
         // But the redirect to /login should handle it as AuthListener checks cookies/storage on mount
         
-        window.location.href = '/login';
+        window.location.href = LOGIN_ROUTE;
       } catch (error) {
         console.error('Błąd przy wylogowywaniu:', error);
         btn.textContent = 'Wyloguj się';

@@ -29,6 +29,7 @@ export const ROUTES = {
     DASHBOARD: '/dashboard',
     ACCOUNT_DISABLED: '/account-disabled',
     CREDIT_REQUESTS: '/credit-requests',
+    RESERVATIONS: '/reservations',
   },
 } as const;
 

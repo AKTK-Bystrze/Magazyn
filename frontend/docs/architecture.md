@@ -130,16 +130,26 @@ frontend/
 │   │   │   └── api-schemas.ts      # API validation
 │   │   │
 │   │   ├── transformers/          # Data transformation layer
-│   │   │   └── equipment.transformer.ts
+│   │   │   ├── equipment.transformer.ts
+│   │   │   ├── availability.transformer.ts
+│   │   │   └── reservation.transformer.ts
 │   │   │
 │   │   ├── validators/            # Runtime validation (Zod)
-│   │   │   └── equipment.validator.ts
+│   │   │   ├── equipment.validator.ts
+│   │   │   └── availability.validator.ts
 │   │   │
 │   │   ├── api/                   # API client modules
 │   │   │   ├── index.ts            # Barrel export
 │   │   │   ├── client.ts           # Generic HTTP client
 │   │   │   ├── auth.ts             # Auth endpoints
 │   │   │   └── equipment-api.ts    # Equipment endpoints
+│   │   │
+│   │   ├── utils/                 # Utility functions
+│   │   │   ├── debug.ts            # Development logging
+│   │   │   ├── cart-storage.ts     # Cart persistence
+│   │   │   ├── cart-validation.ts  # Cart validation
+│   │   │   ├── date-utils.ts       # Date helpers
+│   │   │   └── text-utils.ts       # Text formatting
 │   │   │
 │   │   ├── supabase.ts             # Supabase helpers
 │   │   └── utils.ts                # General utilities
