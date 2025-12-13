@@ -1,17 +1,17 @@
-base navigation
+reservation flow - select dates and preview available equipment
+reservation flow - changing statuses by user
+reservation flow - changing statuses by admin
+equipments - admin view
 
-frontend plans
-    equipments - details etc
-
-e2e testy
-implementacja pozostalych endpointow
+credits request
 dokumentacja
 
 deploy - konteneryzacja 
+e2e testy
 
 backend left to do from api-plan:
     credit request
-    mainteneace logs
+    mainteneace logs/analytics
 
 
 refactor 
