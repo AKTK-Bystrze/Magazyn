@@ -30,6 +30,9 @@ export const ICON_SIZE_SM = "h-4 w-4";
 export const ICON_SIZE_MD = "h-5 w-5";
 export const ICON_SIZE_LG = "h-6 w-6";
 
+// Table loading states
+export const SKELETON_ROW_COUNT = 5;
+
 // Modal/Overlay
 export const MODAL_BACKDROP_OPACITY = "50"; // as in bg-black/50
 export const MODAL_MAX_HEIGHT = "90vh";
@@ -129,3 +132,81 @@ export const RESERVATION_SORT_OPTIONS = [
   { value: "date_asc", label: "Start Date (Ascending)" },
   { value: "date_desc", label: "Start Date (Descending)" },
 ] as const;
+
+// =============================================================================
+// USER ROLE CONFIGURATION
+// =============================================================================
+
+/**
+ * User role values matching database enum
+ */
+export const USER_ROLE = {
+  USER: "user",
+  ADMIN: "admin",
+  SUPER_ADMIN: "super_admin",
+} as const;
+
+/**
+ * Human-readable labels for user roles
+ */
+export const USER_ROLE_LABELS: Record<string, string> = {
+  user: "User",
+  admin: "Admin",
+  super_admin: "Super Admin",
+  ALL: "All Roles",
+};
+
+/**
+ * Badge variants for each user role
+ * Maps to Shadcn Badge component variants
+ */
+export const USER_ROLE_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  user: "outline",
+  admin: "secondary",
+  super_admin: "default",
+};
+
+/**
+ * Role filter options for user lists (including 'ALL')
+ */
+export const USER_ROLE_FILTER_OPTIONS = [
+  { value: "ALL", label: "All Roles" },
+  { value: "user", label: "User" },
+  { value: "admin", label: "Admin" },
+  { value: "super_admin", label: "Super Admin" },
+] as const;
+
+/**
+ * Default filter for user role
+ */
+export const DEFAULT_ROLE_FILTER = "ALL";
+
+// =============================================================================
+// USER VALIDATION MESSAGES
+// =============================================================================
+
+/**
+ * Validation error messages for user forms
+ * Centralized for consistency and i18n readiness
+ */
+export const USER_VALIDATION_MESSAGES = {
+  EMAIL_REQUIRED: "Email is required",
+  EMAIL_INVALID: "Invalid email format",
+  USERNAME_REQUIRED: "Username is required",
+  USERNAME_INVALID: "Username can only contain letters, numbers, and underscores",
+  CREDIT_BALANCE_INVALID: "Credit balance must be non-negative",
+  CREATE_FAILED: "Failed to create user",
+  UPDATE_FAILED: "Failed to update user",
+} as const;
+
+/**
+ * Validation patterns for user forms
+ */
+export const USER_VALIDATION_PATTERNS = {
+  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  USERNAME: /^[a-zA-Z0-9_]+$/,
+} as const;
+

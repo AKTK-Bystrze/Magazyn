@@ -60,3 +60,26 @@ export function calculateDays(startDate: string, endDate: string): number {
   const days = Math.floor((end.getTime() - start.getTime()) / MILLISECONDS_IN_DAY) + 1;
   return days;
 }
+
+/**
+ * Formats a date string for localized display
+ * Used for user-facing date displays in tables and cards
+ *
+ * @param dateString - ISO 8601 date string
+ * @param locale - Locale string (default: 'en-US')
+ * @returns Formatted date string (e.g., "Jan 15, 2024")
+ */
+export function formatDateLocalized(
+  dateString: string,
+  locale: string = "en-US"
+): string {
+  try {
+    return new Date(dateString).toLocaleDateString(locale, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+}

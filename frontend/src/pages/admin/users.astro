@@ -1,54 +1,33 @@
 ---
 /**
- * Admin Users Page - Mock implementation
- * Displays "Coming Soon" placeholder until feature is implemented.
+ * Admin Users Page - User Management
+ * SuperAdmin: Can view, create, and edit users
+ * Admin: Can view users only
  */
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { UserListContainer } from '../../components/users/UserListContainer';
 import { ROUTES } from '../../lib/config/routes';
 import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../../lib/auth/roles';
 
 const user = Astro.locals.user;
 const sessionInfo = Astro.locals.sessionInfo;
 
+// Redirect to login if not authenticated
 if (!user) {
   return Astro.redirect(ROUTES.PUBLIC.LOGIN);
 }
 
+// Redirect to dashboard if not admin or super_admin
 if (!sessionInfo || (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUPER_ADMIN_ROLE)) {
   return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
 }
+
+// Determine if current user is super admin (can create/edit)
+const isSuperAdmin = sessionInfo.role === SUPER_ADMIN_ROLE;
 ---
 
 <AdminLayout title="Manage Users | Magazyn">
-  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-    <div className="rounded-full bg-muted p-6 mb-6">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="48"
-        height="48"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-muted-foreground"
-      >
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-      </svg>
-    </div>
-    <h1 className="text-3xl font-bold mb-2">Manage Users</h1>
-    <p className="text-muted-foreground mb-6 max-w-md">
-      User management including roles and permissions. This feature is coming soon.
-    </p>
-    <a 
-      href={ROUTES.PROTECTED.ADMIN}
-      className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2 hover:bg-primary/90"
-    >
-      Back to Admin Dashboard
-    </a>
+  <div class="space-y-6">
+    <UserListContainer client:load isSuperAdmin={isSuperAdmin} />
   </div>
 </AdminLayout>

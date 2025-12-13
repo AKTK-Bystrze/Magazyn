@@ -74,3 +74,32 @@ export type UpdateUserCommand = {
   role?: Enums<"user_role">;
   creditBalance?: number;
 };
+
+// =============================================================================
+// USER LIST & FILTERING TYPES
+// =============================================================================
+
+/**
+ * Filter state for user list queries
+ * Used by useUsers hook for pagination and filtering
+ */
+export type UserFilterState = {
+  page: number;
+  perPage: number;
+  role: Enums<"user_role"> | "ALL";
+  search?: string;
+};
+
+/**
+ * Paginated user list response
+ * Matches GET /users response structure (transformed from backend snake_case)
+ */
+export type UserListResponse = {
+  users: UserListItem[];
+  pagination: {
+    page: number;
+    perPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
