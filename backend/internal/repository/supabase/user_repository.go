@@ -32,7 +32,10 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 	// Calculate offset
 	offset := (page - 1) * perPage
 
-	query := r.client.From(constants.TableProfiles).Select("*", "exact", false)
+	// Use authenticated client for RLS enforcement
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
+	query := client.From(constants.TableProfiles).Select("*", "", false)
 
 	if role != "" {
 		query = query.Eq("role", role)
@@ -45,7 +48,7 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 	}
 
 	// Pagination
-	query = query.Range(offset, offset+perPage-1, "exact")
+	query = query.Range(offset, offset+perPage-1, "")
 
 	data, count, err := query.Execute()
 	if err != nil {
@@ -62,8 +65,10 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 
 // GetByID retrieves a single user profile by ID.
 func (r *userRepository) GetByID(ctx context.Context, id string) (*types.PublicProfilesSelect, error) {
-	data, _, err := r.client.From(constants.TableProfiles).
-		Select("*", "exact", false).
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
+	data, _, err := client.From(constants.TableProfiles).
+		Select("*", "", false).
 		Eq("id", id).
 		Single().
 		Execute()
@@ -82,8 +87,10 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*types.PublicP
 
 // GetByEmail retrieves a single user profile by Email.
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*types.PublicProfilesSelect, error) {
-	data, _, err := r.client.From(constants.TableProfiles).
-		Select("*", "exact", false).
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
+	data, _, err := client.From(constants.TableProfiles).
+		Select("*", "", false).
 		Eq("email", email).
 		Single().
 		Execute()
@@ -102,7 +109,9 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*types.P
 
 // Create creates a new user profile record in the database.
 func (r *userRepository) Create(ctx context.Context, profile types.PublicProfilesInsert) (*types.PublicProfilesSelect, error) {
-	data, _, err := r.client.From(constants.TableProfiles).
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
+	data, _, err := client.From(constants.TableProfiles).
 		Insert(profile, false, "", "", "representation").
 		Single().
 		Execute()
@@ -121,7 +130,9 @@ func (r *userRepository) Create(ctx context.Context, profile types.PublicProfile
 
 // Update updates an existing user profile record in the database.
 func (r *userRepository) Update(ctx context.Context, id string, profile types.PublicProfilesUpdate) (*types.PublicProfilesSelect, error) {
-	data, _, err := r.client.From(constants.TableProfiles).
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
+	data, _, err := client.From(constants.TableProfiles).
 		Update(profile, "", "").
 		Eq("id", id).
 		Single().
