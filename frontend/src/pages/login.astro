@@ -1,9 +1,13 @@
 ---
-import Layout from '../layouts/Layout.astro';
+/**
+ * Login Page
+ * Authentication page with email magic link login.
+ */
+import AuthLayout from '../layouts/AuthLayout.astro';
 import { LoginFormContainer } from '@/components/auth/LoginFormContainer';
 ---
 
-<Layout title="Zaloguj się | Wynajem Sprzętu">
+<AuthLayout title="Zaloguj się | Magazyn">
   <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
     <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
       <div className="absolute inset-0 bg-stone-900" />
@@ -20,21 +24,20 @@ import { LoginFormContainer } from '@/components/auth/LoginFormContainer';
         >
           <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
         </svg>
-        Bystrze Magazyn
+        Magazyn
       </div>
       <div className="relative z-20 mt-auto">
         <blockquote className="space-y-2">
           <p className="text-lg">
-            &quot;Eluwina&quot;
+            Equipment rental management system
           </p>
         </blockquote>
       </div>
     </div>
     <div className="lg:p-8 flex items-center justify-center p-8">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <LoginFormContainer client:load /> 
-
+        <LoginFormContainer client:load />
       </div>
     </div>
   </div>
-</Layout>
+</AuthLayout>

@@ -1,0 +1,59 @@
+---
+/**
+ * AppLayout - Standard user application layout
+ * 
+ * Includes navigation bar configured for regular users with:
+ * - Dashboard, Equipment, Reservations, Credits links
+ * - User menu with logout
+ * - Breadcrumbs for nested pages
+ * 
+ * @example
+ * <AppLayout title="My Reservations">
+ *   <ReservationsContainer client:load />
+ * </AppLayout>
+ */
+import BaseLayout from './BaseLayout.astro';
+import { TopNavBar } from '@/components/navigation/TopNavBar';
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs';
+import { QueryProvider } from '@/components/providers/QueryProvider';
+
+interface Props {
+  /** Page title displayed in browser tab */
+  title: string;
+  /** Optional meta description */
+  description?: string;
+  /** Whether to show breadcrumbs (default: true, hidden on dashboard) */
+  showBreadcrumbs?: boolean;
+}
+
+const { title, description, showBreadcrumbs = true } = Astro.props;
+
+const user = Astro.locals.user;
+const sessionInfo = Astro.locals.sessionInfo;
+const currentPath = Astro.url.pathname;
+---
+
+<BaseLayout title={title} description={description}>
+  <div className="min-h-screen flex flex-col">
+    <QueryProvider client:load>
+      <TopNavBar 
+        client:load 
+        user={user ? { email: user.email || '', id: user.id } : null}
+        role={sessionInfo?.role || 'user'}
+        currentPath={currentPath}
+        creditBalance={sessionInfo?.creditBalance}
+      />
+    </QueryProvider>
+    
+    <main className="flex-1">
+      {showBreadcrumbs && currentPath !== '/dashboard' && (
+        <div className="container mx-auto px-4 py-4">
+          <Breadcrumbs client:load currentPath={currentPath} />
+        </div>
+      )}
+      <div className="container mx-auto px-4 py-6">
+        <slot />
+      </div>
+    </main>
+  </div>
+</BaseLayout>

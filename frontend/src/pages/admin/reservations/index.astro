@@ -1,10 +1,9 @@
 ---
 export const prerender = false;
 
-import Layout from '@/layouts/Layout.astro';
+import AdminLayout from '@/layouts/AdminLayout.astro';
 import { ReservationListContainer } from '@/components/reservations/ReservationListContainer';
 import { ROUTES } from '@/lib/config/routes';
-import { Button } from '@/components/ui/button';
 
 const { user, sessionInfo } = Astro.locals;
 
@@ -20,24 +19,18 @@ if (!isAdmin) {
 }
 ---
 
-<Layout title="Reservations Manager | Magazyn Admin">
-  <div className="container mx-auto py-8 px-4 max-w-7xl">
+<AdminLayout title="Reservations Manager | Magazyn Admin">
+  <div class="space-y-6">
     <!-- Header -->
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Reservations Manager</h1>
-        <p className="text-muted-foreground mt-1">
-          View and manage all reservations across the system
-        </p>
-      </div>
-      <a href={ROUTES.PROTECTED.ADMIN}>
-        <Button variant="outline">
-          ← Back to Admin
-        </Button>
-      </a>
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Reservations Manager</h1>
+      <p class="text-muted-foreground mt-1">
+        View and manage all reservations across the system
+      </p>
     </div>
 
     <!-- Reservation List (Admin Mode) -->
     <ReservationListContainer mode="admin" client:load />
   </div>
-</Layout>
+</AdminLayout>
+

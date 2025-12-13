@@ -1,0 +1,59 @@
+---
+/**
+ * BaseLayout - Core HTML shell for the application
+ * 
+ * Provides the foundational HTML structure including:
+ * - Meta tags and SEO basics
+ * - Theme script for FOUC prevention
+ * - Global styles
+ * - AuthListener for session management
+ * 
+ * @example
+ * <BaseLayout title="Dashboard" description="User dashboard page">
+ *   <main>Page content</main>
+ * </BaseLayout>
+ */
+import { AuthListener } from '@/components/auth/AuthListener';
+
+interface Props {
+  /** Page title displayed in browser tab */
+  title: string;
+  /** Optional meta description for SEO */
+  description?: string;
+}
+
+const { title, description = 'Equipment rental management system' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" className="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    
+    <!-- Theme script - prevents Flash of Unstyled Content (FOUC) -->
+    {/* eslint-disable-next-line react/no-unknown-property */}
+    <script is:inline>
+      (function() {
+        const STORAGE_KEY_THEME = 'theme';
+        const stored = localStorage.getItem(STORAGE_KEY_THEME);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (stored === 'dark' || (!stored && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else if (stored === 'light') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <AuthListener client:load />
+    <slot />
+  </body>
+</html>
