@@ -27,7 +27,7 @@ const isSuperAdmin = sessionInfo.role === SUPER_ADMIN_ROLE;
 ---
 
 <AdminLayout title="Manage Users | Magazyn">
-  <div class="space-y-6">
+  <div className="space-y-6">
     <UserListContainer client:load isSuperAdmin={isSuperAdmin} />
   </div>
 </AdminLayout>
