@@ -169,23 +169,23 @@ func TestCreateUser_Success(t *testing.T) {
 	// Expect GetByID after creation
 	mockRepo.On("GetByID", ctx, "auth-id-123").
 		Return(&types.PublicProfilesSelect{
-			ID: "generated-id",
-			Email: email,
+			ID:       "generated-id",
+			Email:    email,
 			Username: username,
-			Role: string(role),
+			Role:     string(role),
 		}, nil)
 
 	// Expect Update causing final map
 	// NOTE: Implementation of CreateUser changed to Update after Create.
 	// We need to adjust expectations to match implementation.
 	// Impl: Check Email -> Check Username -> Auth.CreateUser -> UserRepo.GetByID -> UserRepo.Update
-	
+
 	mockRepo.On("Update", ctx, "auth-id-123", mock.AnythingOfType("types.PublicProfilesUpdate")).
 		Return(&types.PublicProfilesSelect{
-			ID: "generated-id",
-			Email: email,
-			Username: username,
-			Role: string(role),
+			ID:            "generated-id",
+			Email:         email,
+			Username:      username,
+			Role:          string(role),
 			CreditBalance: credit,
 		}, nil)
 

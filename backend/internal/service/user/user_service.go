@@ -144,12 +144,12 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 	// NOTE: Real implementation should probably send an invite or use a specific flow.
 	// For now using a hardcoded placeholder or UUID as password to satisfy the requirement.
 	// Ideally we would trigger a password reset email.
-	
+
 	// Create user in Supabase Auth
 	tempPassword := "TempPass123!@" // In prod, generate this
 	// Create user in Supabase Auth
 	authUser, err := s.authRepo.CreateUser(ctx, req.Email, tempPassword)
-	
+
 	if err != nil {
 		logger.Errorf(ctx, "AuthRepo.CreateUser failed: %v", err)
 		return nil, types.NewInternalError("Failed to create auth user", err)
