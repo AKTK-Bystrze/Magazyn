@@ -25,3 +25,7 @@ build:
 # Run the application
 run:
 	go run ./cmd/api/main.go
+
+# Run linter
+lint:
+	golangci-lint run ./...

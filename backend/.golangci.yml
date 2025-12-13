@@ -1,0 +1,20 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - revive
+    - gosec
+    - typecheck
+    - goimports
+    - misspell
+
+linters-settings:
+  revive:
+    rules:
+      - name: var-naming
+  goimports:
+    local-prefixes: magazyn/backend
