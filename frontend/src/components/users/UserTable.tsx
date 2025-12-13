@@ -35,12 +35,12 @@ interface UserTableProps {
 function SkeletonRow() {
   return (
     <TableRow>
-      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+      <TableCell><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-32 mt-1 md:hidden" /></TableCell>
+      <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-40" /></TableCell>
+      <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
       <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+      <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-16" /></TableCell>
+      <TableCell className="hidden xl:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
       <TableCell><Skeleton className="h-8 w-8" /></TableCell>
     </TableRow>
   );
@@ -82,16 +82,16 @@ export function UserTable({
   );
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Username</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead className="text-right">Credits</TableHead>
+            <TableHead className="hidden md:table-cell">Email</TableHead>
+            <TableHead className="hidden lg:table-cell text-right">Credits</TableHead>
             <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead className="hidden md:table-cell">Status</TableHead>
+            <TableHead className="hidden xl:table-cell">Created</TableHead>
             {isSuperAdmin && <TableHead className="w-[70px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
@@ -107,15 +107,18 @@ export function UserTable({
             // User rows
             users.map((user) => (
               <TableRow key={user.id} className={`hover:bg-muted/50 ${!user.isEnabled ? 'opacity-60 bg-muted/20' : ''}`}>
-                <TableCell className="font-medium">{user.username}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell>
+                  <div className="font-medium">{user.username}</div>
+                  <div className="text-xs text-muted-foreground md:hidden">{user.email}</div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{user.email}</TableCell>
+                <TableCell className="hidden lg:table-cell text-right tabular-nums">
                   {user.creditBalance}
                 </TableCell>
                 <TableCell>
                   <RoleBadge role={user.role} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   {user.isEnabled ? (
                     <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500/15 text-green-700 hover:bg-green-500/25">
                       Active
@@ -126,7 +129,7 @@ export function UserTable({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="hidden xl:table-cell text-muted-foreground">
                   {formatDateLocalized(user.createdAt)}
                 </TableCell>
                 {isSuperAdmin && (

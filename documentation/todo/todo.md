@@ -1,4 +1,3 @@
-continue dashboard display adjustments, remove mock tiles, continue conversation
 
 reservation flow - select dates and preview available equipment
 reservation flow - user can see all reservations

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { ThemeToggle } from '@/components/navigation/ThemeToggle';
@@ -29,6 +29,10 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
            {/* Mobile Sidebar */}
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetDescription>Main navigation items for the admin area</SheetDescription>
+          </SheetHeader>
            <AdminSidebar 
              currentPath={currentPath} 
              className="h-full border-r-0" 
