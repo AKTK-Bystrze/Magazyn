@@ -1,8 +1,9 @@
 package common
 
 import (
-	"magazyn/backend/internal/logger"
 	"net/http"
+
+	"magazyn/backend/internal/logger"
 )
 
 // CORSMiddleware creates a CORS (Cross-Origin Resource Sharing) middleware with specified allowed origins.

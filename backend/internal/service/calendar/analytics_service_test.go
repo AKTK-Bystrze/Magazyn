@@ -2,9 +2,10 @@ package calendar
 
 import (
 	"context"
+	"testing"
+
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -75,7 +76,7 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 
 		rawStats := []types.PublicAnalyticsEquipmentStatsSelect{
 			{
-				EquipmentId:       &equipmentID,
+				EquipmentID:       &equipmentID,
 				EquipmentName:     &equipmentName,
 				TotalReservations: &totalReservations,
 				TotalDaysRented:   &totalDaysRented,
@@ -161,7 +162,7 @@ func TestGetUserStats_Success(t *testing.T) {
 
 		rawStats := []types.PublicAnalyticsUserStatsSelect{
 			{
-				UserId:              &userID,
+				UserID:              &userID,
 				Username:            &username,
 				TotalReservations:   &totalReservations,
 				TotalCreditsSpent:   &totalCreditsSpent,
@@ -206,7 +207,7 @@ func TestGetUserStats_Success(t *testing.T) {
 
 		rawStats := []types.PublicAnalyticsUserStatsSelect{
 			{
-				UserId:            &userID,
+				UserID:            &userID,
 				Username:          &username,
 				TotalReservations: &totalReservations,
 				TotalCreditsSpent: &totalCreditsSpent,

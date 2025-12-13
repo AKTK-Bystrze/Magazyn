@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service/user"
 	"magazyn/backend/internal/types"
-	"net/http"
 )
 
 // UserHandler handles HTTP requests for user management.
@@ -50,7 +51,7 @@ func (h *UserHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 // HandleListUsers handles GET /users.
 func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 
 	role := r.URL.Query().Get("role")

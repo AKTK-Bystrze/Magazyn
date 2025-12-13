@@ -4,6 +4,10 @@ package main
 
 import (
 	"context"
+	"net/http"
+	"os"
+	"time"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/config"
 	authhandler "magazyn/backend/internal/handler/auth"
@@ -23,9 +27,6 @@ import (
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
-	"net/http"
-	"os"
-	"time"
 )
 
 func main() {
@@ -41,8 +42,8 @@ func main() {
 	logger.SetMinLevel(appState.Config.LogLevel)
 	logger.Infof(ctx, "Log level set to: %s", appState.Config.LogLevel)
 
-    // Initialize Repositories
-    authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
+	// Initialize Repositories
+	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
@@ -51,18 +52,18 @@ func main() {
 	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
 	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient)
 
-    // Initialize Services
+	// Initialize Services
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
 	userService := userservice.NewUserService(userRepo)
 	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
 	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)
 	creditService := creditservice.NewCreditHistoryService(creditRepo, userRepo)
-	
+
 	emailService := email.NewNoopEmailService()
 	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
 
-    // Initialize Handlers
+	// Initialize Handlers
 	authHandler := authhandler.NewAuthHandler(authService)
 	equipmentHandler := equipmenthandler.NewEquipmentHandler(equipmentService)
 	userHandler := userhandler.NewUserHandler(userService)
@@ -71,7 +72,7 @@ func main() {
 	analyticsHandler := calendarhandler.NewAnalyticsHandler(analyticsService)
 	creditHandler := credithandler.NewCreditHistoryHandler(creditService)
 
-    // Initialize Middleware
+	// Initialize Middleware
 	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
 
 	mux := http.NewServeMux()

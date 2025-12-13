@@ -2,12 +2,13 @@ package reservation_test
 
 import (
 	"context"
+	"testing"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/service/reservation"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -225,14 +226,14 @@ func TestReservationService_Create_Success(t *testing.T) {
 
 	// Mock Equipment Retrieval
 	mockEqRepo.On("GetByID", ctx, equipID).Return(&types.PublicEquipmentSelect{
-		Id:     equipID,
-		TypeId: typeID,
+		ID:     equipID,
+		TypeID: typeID,
 		Status: constants.EquipmentStatusOK,
 		Name:   stringPtr("Camera"),
 	}, nil)
 
 	mockEqRepo.On("GetTypeByID", ctx, typeID).Return(&types.PublicEquipmentTypesSelect{
-		Id:               typeID,
+		ID:               typeID,
 		CreditCostPerDay: 10,
 	}, nil)
 
@@ -291,8 +292,8 @@ func TestReservationService_Update_RefundTrigger(t *testing.T) {
 
 	// Mock Equipment for refund calc
 	mockEqRepo.On("GetByID", ctx, equipID).Return(&types.PublicEquipmentSelect{
-		Id:     equipID,
-		TypeId: typeID,
+		ID:     equipID,
+		TypeID: typeID,
 	}, nil)
 	mockEqRepo.On("GetTypeByID", ctx, typeID).Return(&types.PublicEquipmentTypesSelect{
 		CreditCostPerDay: 10,
@@ -304,7 +305,7 @@ func TestReservationService_Update_RefundTrigger(t *testing.T) {
 	// Mock Update Call
 	mockRepo.On("UpdateReservation", ctx, resID, mock.AnythingOfType("types.PublicReservationsUpdate")).
 		Return(&types.PublicReservationsSelect{
-			Id:     resID,
+			ID:     resID,
 			Status: constants.ReservationStatusDenied,
 		}, nil)
 

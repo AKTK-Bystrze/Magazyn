@@ -57,7 +57,7 @@ func TestRequireRoles(t *testing.T) {
 		middleware := RequireRoles("admin", "super_admin")(next)
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "user-123",
+			ID:        "user-123",
 			Role:      "user",
 			IsEnabled: true,
 		}
@@ -82,7 +82,7 @@ func TestRequireRoles(t *testing.T) {
 		middleware := RequireRoles("admin", "super_admin")(next)
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "admin-123",
+			ID:        "admin-123",
 			Role:      "admin",
 			IsEnabled: true,
 		}
@@ -106,7 +106,7 @@ func TestRequireRoles(t *testing.T) {
 		middleware := RequireRoles("admin", "super_admin")(next)
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "superadmin-123",
+			ID:        "superadmin-123",
 			Role:      "super_admin",
 			IsEnabled: true,
 		}
@@ -130,7 +130,7 @@ func TestRequireRoles(t *testing.T) {
 		middleware := RequireRoles("user")(next)
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "user-123",
+			ID:        "user-123",
 			Role:      "user",
 			IsEnabled: true,
 		}
@@ -154,7 +154,7 @@ func TestRequireRoles(t *testing.T) {
 		middleware := RequireRoles("user", "admin", "super_admin")(next)
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "user-123",
+			ID:        "user-123",
 			Role:      "user",
 			IsEnabled: true,
 		}
@@ -178,7 +178,7 @@ func TestRequireRoles(t *testing.T) {
 		middleware := RequireRoles("ADMIN")(next)
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "admin-123",
+			ID:        "admin-123",
 			Role:      "admin", // lowercase in DB
 			IsEnabled: true,
 		}
@@ -203,7 +203,7 @@ func TestRequireRoles_EdgeCases(t *testing.T) {
 		middleware := RequireRoles()(next) // No roles specified
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "admin-123",
+			ID:        "admin-123",
 			Role:      "admin",
 			IsEnabled: true,
 		}
@@ -228,7 +228,7 @@ func TestRequireRoles_EdgeCases(t *testing.T) {
 		middleware := RequireRoles("admin")(next)
 
 		profile := &types.PublicProfilesSelect{
-			Id:        "admin-123",
+			ID:        "admin-123",
 			Role:      "admin",
 			IsEnabled: true,
 		}

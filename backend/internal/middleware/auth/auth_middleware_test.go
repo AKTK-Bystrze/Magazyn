@@ -66,7 +66,7 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		userID := uuid.New()
 		user := &types.User{ID: userID.String(), Email: "test@example.com"}
 		profile := &types.PublicProfilesSelect{
-			Id:        userID.String(),
+			ID:        userID.String(),
 			Email:     "test@example.com",
 			Username:  "tester",
 			Role:      "user",
@@ -127,7 +127,7 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		userID := uuid.New()
 		user := &types.User{ID: userID.String(), Email: "disabled@example.com"}
 		profile := &types.PublicProfilesSelect{
-			Id:        userID.String(),
+			ID:        userID.String(),
 			Email:     "disabled@example.com",
 			Username:  "disabled_user",
 			Role:      "user",
@@ -160,7 +160,7 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		userID := uuid.New()
 		user := &types.User{ID: userID.String(), Email: "disabled@example.com"}
 		profile := &types.PublicProfilesSelect{
-			Id:        userID.String(),
+			ID:        userID.String(),
 			Email:     "disabled@example.com",
 			Username:  "disabled_user",
 			Role:      "user",

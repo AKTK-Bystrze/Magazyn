@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"time"
 
 	"github.com/supabase-community/supabase-go"
 )
@@ -32,7 +33,7 @@ func NewReservationRepository(client *supabase.Client, url string, key string) r
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
 	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	
+
 	// Select basics + joined data including credit_cost_per_day for calculation
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
 
@@ -90,13 +91,14 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	for i, item := range rawItems {
 		// Calculate credit cost: days * cost_per_day
 		days := calculateDays(item.StartDate, item.EndDate)
-		creditCost := int32(days) * item.Equipment.EquipmentType.CreditCostPerDay
-		
+		// days is always a small positive integer (1-365 range), safe to cast to int32
+		creditCost := int32(days) * item.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
+
 		result[i] = types.ReservationListItem{
-			ID:            item.Id,
-			UserID:        item.UserId,
+			ID:            item.ID,
+			UserID:        item.UserID,
 			Username:      item.Profile.Username,
-			EquipmentID:   item.EquipmentId,
+			EquipmentID:   item.EquipmentID,
 			EquipmentName: item.Equipment.Name,
 			EquipmentType: item.Equipment.EquipmentType.Name,
 			StartDate:     item.StartDate,
@@ -137,10 +139,10 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 
 	detail := &types.ReservationDetail{
 		ReservationListItem: types.ReservationListItem{
-			ID:            raw.Id,
-			UserID:        raw.UserId,
+			ID:            raw.ID,
+			UserID:        raw.UserID,
 			Username:      raw.Profile.Username,
-			EquipmentID:   raw.EquipmentId,
+			EquipmentID:   raw.EquipmentID,
 			EquipmentName: raw.Equipment.Name,
 			EquipmentType: raw.Equipment.EquipmentType.Name,
 			StartDate:     raw.StartDate,
@@ -178,7 +180,7 @@ func (r *reservationRepository) getAuditTrail(ctx context.Context, reservationID
 	for i, item := range activeRaw {
 		username := item.Profile.Username
 		result[i] = types.ReservationAuditEntry{
-			ID:                item.Id,
+			ID:                item.ID,
 			StartDate:         item.StartDate,
 			EndDate:           item.EndDate,
 			Status:            item.Status,
@@ -201,7 +203,7 @@ type joinedResponse struct {
 	Equipment struct {
 		Name          string `json:"name"`
 		EquipmentType struct {
-			Name              string `json:"name"`
+			Name             string `json:"name"`
 			CreditCostPerDay int32  `json:"credit_cost_per_day"`
 		} `json:"equipment_types"`
 	} `json:"equipment"`
@@ -261,7 +263,7 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	// If I can't find it, I'll revert to r.client.Rpc and hope.
 	// Let's try r.client.Rpc returns string, and we parses it.
 	// If error occurs, maybe the string is the error JSON?
-	
+
 	// Debug params
 	paramBytes, _ := json.Marshal(params)
 	logger.Infof(ctx, "RPC Params: %s", string(paramBytes))
@@ -269,7 +271,7 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	// Temporarily:
 	jsonStr := r.client.Rpc("create_reservation_atomic", "", params)
 	logger.Infof(ctx, "RPC Response: %s", jsonStr)
-	
+
 	var result struct {
 		ReservationIDs []string `json:"reservation_ids"`
 		NewBalance     int32    `json:"new_balance"`
@@ -282,7 +284,7 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	// Check for error in response
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
-		return nil, 0, types.NewInternalError("Failed to parse RPC response: " + jsonStr, err)
+		return nil, 0, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
 	}
 
 	if msg, ok := rawResponse["message"]; ok {
@@ -301,7 +303,7 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	}
 
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
-		return nil, 0, types.NewInternalError("RPC failed to map result: " + jsonStr, err)
+		return nil, 0, types.NewInternalError("RPC failed to map result: "+jsonStr, err)
 	}
 
 	return result.ReservationIDs, result.NewBalance, nil
@@ -449,5 +451,3 @@ func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID
 	_ = r.client.Rpc("refund_reservation_credits", "", params)
 	return nil
 }
-
-

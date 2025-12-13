@@ -5,13 +5,14 @@ package reservation
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service/reservation"
 	"magazyn/backend/internal/types"
-	"net/http"
 )
 
 // ReservationHandler handles HTTP requests for reservation resources.

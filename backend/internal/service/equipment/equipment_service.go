@@ -3,12 +3,13 @@ package equipment
 import (
 	"context"
 	"fmt"
+	"math"
+	"strings"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"math"
-	"strings"
 )
 
 // ============================================================================
@@ -79,36 +80,38 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 		favoriteIDs = make(map[string]bool)
 	}
 
-    // Collect Type IDs
-    typeIDs := make([]string, len(equipmentList))
-    for i, eq := range equipmentList {
-        typeIDs[i] = eq.TypeId
-    }
+	// Collect Type IDs
+	typeIDs := make([]string, len(equipmentList))
+	for i, eq := range equipmentList {
+		typeIDs[i] = eq.TypeID
+	}
 
-    // Bulk fetch types
-    typesMap, err := s.typeRepo.GetTypesByIDs(ctx, typeIDs)
-    if err != nil {
-         logger.Warnf(ctx, "Failed to fetch types: %v", err)
-         typesMap = make(map[string]types.PublicEquipmentTypesSelect)
-    }
+	// Bulk fetch types
+	typesMap, err := s.typeRepo.GetTypesByIDs(ctx, typeIDs)
+	if err != nil {
+		logger.Warnf(ctx, "Failed to fetch types: %v", err)
+		typesMap = make(map[string]types.PublicEquipmentTypesSelect)
+	}
 
-    dtos := make([]types.EquipmentDTO, len(equipmentList))
-    for i, eq := range equipmentList {
-        typ, ok := typesMap[eq.TypeId]
-        typeName := "Unknown"
-        cost := int32(0)
-        if ok {
-            typeName = typ.Name
-            cost = typ.CreditCostPerDay
-        }
-        
-        isFav := favoriteIDs[eq.Id]
-        dtos[i] = s.mapToEquipmentDTO(eq, typeName, cost, &isFav)
-    }
+	dtos := make([]types.EquipmentDTO, len(equipmentList))
+	for i, eq := range equipmentList {
+		typ, ok := typesMap[eq.TypeID]
+		typeName := "Unknown"
+		cost := int32(0)
+		if ok {
+			typeName = typ.Name
+			cost = typ.CreditCostPerDay
+		}
+
+		isFav := favoriteIDs[eq.ID]
+		dtos[i] = s.mapToEquipmentDTO(eq, typeName, cost, &isFav)
+	}
 
 	// Calculate pagination
 	totalPages := int(math.Ceil(float64(totalItems) / float64(query.PerPage)))
-    if totalPages < 1 { totalPages = 1 }
+	if totalPages < 1 {
+		totalPages = 1
+	}
 
 	return &types.EquipmentListResponse{
 		Equipment: dtos,
@@ -122,58 +125,58 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 }
 
 func (s *equipmentService) mapToEquipmentDTO(eq types.PublicEquipmentSelect, typeName string, cost int32, isFav *bool) types.EquipmentDTO {
-    return types.EquipmentDTO{
-        ID:               eq.Id,
-        InternalID:       eq.InternalId,
-        TypeID:           eq.TypeId,
-        TypeName:         typeName,
-        Name:             eq.Name,
-        Description:      eq.Description,
-        Status:           eq.Status,
-        CreditCostPerDay: cost,
-        ImageURL:         s.generateImageURL(eq.ImagePath),
-        IsFavorite:       isFav,
-        IsArchived:       eq.IsArchived,
-        CreatedAt:        eq.CreatedAt,
-        UpdatedAt:        eq.UpdatedAt,
-    }
+	return types.EquipmentDTO{
+		ID:               eq.ID,
+		InternalID:       eq.InternalID,
+		TypeID:           eq.TypeID,
+		TypeName:         typeName,
+		Name:             eq.Name,
+		Description:      eq.Description,
+		Status:           eq.Status,
+		CreditCostPerDay: cost,
+		ImageURL:         s.generateImageURL(eq.ImagePath),
+		IsFavorite:       isFav,
+		IsArchived:       eq.IsArchived,
+		CreatedAt:        eq.CreatedAt,
+		UpdatedAt:        eq.UpdatedAt,
+	}
 }
 
 func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error) {
 	logger.Infof(ctx, "Fetching equipment details for ID: %s", id)
-    
+
 	eq, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, types.NewNotFoundError("Equipment", id)
 	}
 
-    typ, _ := s.repo.GetTypeByID(ctx, eq.TypeId)
-    typeName := ""
-    cost := int32(0)
-    if typ != nil {
-        typeName = typ.Name
-        cost = typ.CreditCostPerDay
-    }
+	typ, _ := s.repo.GetTypeByID(ctx, eq.TypeID)
+	typeName := ""
+	cost := int32(0)
+	if typ != nil {
+		typeName = typ.Name
+		cost = typ.CreditCostPerDay
+	}
 
 	logs, err := s.repo.GetMaintenanceLogsWithAdmin(ctx, id)
-    logDTOs := make([]types.MaintenanceLogDTO, 0)
-    if err == nil {
-        for _, l := range logs {
-            logDTOs = append(logDTOs, types.MaintenanceLogDTO{
-                ID:             l.Id,
-                PreviousStatus: l.PreviousStatus,
-                NewStatus:      l.NewStatus,
-                Notes:          l.Notes,
-                AdminUsername:  l.AdminUsername,
-                CreatedAt:      l.CreatedAt,
-            })
-        }
-    }
+	logDTOs := make([]types.MaintenanceLogDTO, 0)
+	if err == nil {
+		for _, l := range logs {
+			logDTOs = append(logDTOs, types.MaintenanceLogDTO{
+				ID:             l.ID,
+				PreviousStatus: l.PreviousStatus,
+				NewStatus:      l.NewStatus,
+				Notes:          l.Notes,
+				AdminUsername:  l.AdminUsername,
+				CreatedAt:      l.CreatedAt,
+			})
+		}
+	}
 
 	return &types.EquipmentDetailDTO{
-		ID:               eq.Id,
-		InternalID:       eq.InternalId,
-		TypeID:           eq.TypeId,
+		ID:               eq.ID,
+		InternalID:       eq.InternalID,
+		TypeID:           eq.TypeID,
 		TypeName:         typeName,
 		Name:             eq.Name,
 		Description:      eq.Description,
@@ -188,15 +191,15 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 }
 
 func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
-    typ, err := s.repo.GetTypeByID(ctx, cmd.TypeID)
-    if err != nil {
-        return nil, types.NewNotFoundError("Equipment Type", cmd.TypeID)
-    }
+	typ, err := s.repo.GetTypeByID(ctx, cmd.TypeID)
+	if err != nil {
+		return nil, types.NewNotFoundError("Equipment Type", cmd.TypeID)
+	}
 
-    exists, _ := s.repo.GetInternalIDCheck(ctx, cmd.TypeID, cmd.InternalID)
-    if exists {
+	exists, _ := s.repo.GetInternalIDCheck(ctx, cmd.TypeID, cmd.InternalID)
+	if exists {
 		return nil, types.NewConflictError("Internal ID exists", nil)
-    }
+	}
 
 	status := constants.EquipmentStatusOK
 	if cmd.Status != nil {
@@ -204,8 +207,8 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 	}
 
 	insert := types.PublicEquipmentInsert{
-		InternalId:  cmd.InternalID,
-		TypeId:      cmd.TypeID,
+		InternalID:  cmd.InternalID,
+		TypeID:      cmd.TypeID,
 		Name:        cmd.Name,
 		Description: cmd.Description,
 		Status:      &status,
@@ -218,9 +221,9 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 	}
 
 	return &types.EquipmentDTO{
-		ID:               created.Id,
-		InternalID:       created.InternalId,
-		TypeID:           created.TypeId,
+		ID:               created.ID,
+		InternalID:       created.InternalID,
+		TypeID:           created.TypeID,
 		TypeName:         typ.Name,
 		Name:             created.Name,
 		Description:      created.Description,
@@ -234,10 +237,10 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 }
 
 func (s *equipmentService) Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
-    _, err := s.repo.GetByID(ctx, id)
-    if err != nil {
-        return nil, types.NewNotFoundError("Equipment", id)
-    }
+	_, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, types.NewNotFoundError("Equipment", id)
+	}
 
 	update := types.PublicEquipmentUpdate{
 		Name:        cmd.Name,
@@ -251,20 +254,20 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 		return nil, types.NewInternalError("Failed to update", err)
 	}
 
-    typ, _ := s.repo.GetTypeByID(ctx, updated.TypeId)
-    typeName := ""
-    cost := int32(0)
-    if typ != nil {
-        typeName = typ.Name
-        cost = typ.CreditCostPerDay
-    }
+	typ, _ := s.repo.GetTypeByID(ctx, updated.TypeID)
+	typeName := ""
+	cost := int32(0)
+	if typ != nil {
+		typeName = typ.Name
+		cost = typ.CreditCostPerDay
+	}
 
 	return &types.EquipmentDTO{
-		ID:               updated.Id,
-		InternalID:       updated.InternalId,
-		TypeID:           updated.TypeId,
+		ID:               updated.ID,
+		InternalID:       updated.InternalID,
+		TypeID:           updated.TypeID,
 		TypeName:         typeName,
-        Name:             updated.Name,
+		Name:             updated.Name,
 		Description:      updated.Description,
 		Status:           updated.Status,
 		CreditCostPerDay: cost,
@@ -276,42 +279,42 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 }
 
 func (s *equipmentService) Archive(ctx context.Context, id string) error {
-    exists, err := s.repo.GetByID(ctx, id)
-    if err != nil {
-        return types.NewNotFoundError("Equipment", id)
-    }
-    if exists.IsArchived {
-        return types.NewValidationError("Already archived", nil)
-    }
+	exists, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return types.NewNotFoundError("Equipment", id)
+	}
+	if exists.IsArchived {
+		return types.NewValidationError("Already archived", nil)
+	}
 
-    active, err := s.repo.GetActiveReservations(ctx, id)
-    if err == nil && len(active) > 0 {
-        return types.NewConflictError("Has active reservations", nil)
-    }
+	active, err := s.repo.GetActiveReservations(ctx, id)
+	if err == nil && len(active) > 0 {
+		return types.NewConflictError("Has active reservations", nil)
+	}
 
 	return s.repo.Archive(ctx, id)
 }
 
 func (s *equipmentService) CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error) {
 	_, err := s.repo.GetByID(ctx, id)
-    if err != nil {
-        return nil, types.NewNotFoundError("Equipment", id)
-    }
+	if err != nil {
+		return nil, types.NewNotFoundError("Equipment", id)
+	}
 
-    conflicts, err := s.repo.GetConflictingReservations(ctx, id, query.StartDate, query.EndDate)
-    if err != nil {
-        return nil, err
-    }
+	conflicts, err := s.repo.GetConflictingReservations(ctx, id, query.StartDate, query.EndDate)
+	if err != nil {
+		return nil, err
+	}
 
-    conflictDTOs := make([]types.ConflictingReservation, len(conflicts))
-    for i, c := range conflicts {
-        conflictDTOs[i] = types.ConflictingReservation{
-            ID: c.Id,
-            StartDate: c.StartDate,
-            EndDate: c.EndDate,
-            Status: c.Status,
-        }
-    }
+	conflictDTOs := make([]types.ConflictingReservation, len(conflicts))
+	for i, c := range conflicts {
+		conflictDTOs[i] = types.ConflictingReservation{
+			ID:        c.ID,
+			StartDate: c.StartDate,
+			EndDate:   c.EndDate,
+			Status:    c.Status,
+		}
+	}
 
 	return &types.AvailabilityResponse{
 		EquipmentID:             id,

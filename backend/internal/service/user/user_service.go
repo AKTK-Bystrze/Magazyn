@@ -2,11 +2,12 @@ package user
 
 import (
 	"context"
+	"math"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"math"
 )
 
 // ============================================================================
@@ -107,12 +108,12 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 	}
 
 	// Check if username already exists
-	// We reuse 'List' with exact search hack or need new repo method. 
+	// We reuse 'List' with exact search hack or need new repo method.
 	// Efficient way: List with search=username strictly or add GetByUsername to repo.
 	// For now using List with filters which uses ILIKE, so if List returns exact match we abort.
 	// Or better, add GetByUsername to repo. But for now relying on List is acceptable if exact match logic is verified.
 	// A better approach is trusting the DB constraint but user asked for "check before inserting".
-	// Let's rely on Repo's `List` with `search` param which does ILIKE. 
+	// Let's rely on Repo's `List` with `search` param which does ILIKE.
 	// If any user matches username exactly, reject.
 	// Note: Provide 'role' as empty to search all users.
 	existingUsers, _, err := s.repo.List(ctx, 1, 1, "", req.Username)
@@ -123,7 +124,7 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 			}
 		}
 	}
-	
+
 	// Default credit balance
 	creditBalance := int32(0)
 	if req.CreditBalance != nil {
@@ -174,7 +175,7 @@ func (s *userService) UpdateUser(ctx context.Context, id string, req types.Updat
 // mapToUserResponse maps the database entity to the API response DTO.
 func (s *userService) mapToUserResponse(p *types.PublicProfilesSelect) *types.UserResponse {
 	return &types.UserResponse{
-		ID:            p.Id,
+		ID:            p.ID,
 		Email:         p.Email,
 		Username:      p.Username,
 		Role:          p.Role,

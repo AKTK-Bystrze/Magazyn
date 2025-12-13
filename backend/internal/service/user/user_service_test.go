@@ -2,9 +2,10 @@ package user
 
 import (
 	"context"
+	"testing"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -64,7 +65,7 @@ func TestGetProfile_Success(t *testing.T) {
 	email := "test@example.com"
 	role := "user"
 	mockRepo.On("GetByID", ctx, id).Return(&types.PublicProfilesSelect{
-		Id:    id,
+		ID:    id,
 		Email: email,
 		Role:  role,
 	}, nil)
@@ -105,8 +106,8 @@ func TestListUsers_Success(t *testing.T) {
 	search := ""
 
 	mockProfiles := []types.PublicProfilesSelect{
-		{Id: "1", Username: "User1", Role: "admin"},
-		{Id: "2", Username: "User2", Role: "admin"},
+		{ID: "1", Username: "User1", Role: "admin"},
+		{ID: "2", Username: "User2", Role: "admin"},
 	}
 
 	mockRepo.On("List", ctx, page, perPage, role, search).
@@ -147,7 +148,7 @@ func TestCreateUser_Success(t *testing.T) {
 	// 3. Create
 	mockRepo.On("Create", ctx, mock.AnythingOfType("types.PublicProfilesInsert")).
 		Return(&types.PublicProfilesSelect{
-			Id:            "generated-id",
+			ID:            "generated-id",
 			Email:         email,
 			Username:      username,
 			Role:          role,
@@ -177,7 +178,7 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 	}
 
 	// 1. Check Email - found existing user
-	mockRepo.On("GetByEmail", ctx, email).Return(&types.PublicProfilesSelect{Id: "1", Email: email}, nil)
+	mockRepo.On("GetByEmail", ctx, email).Return(&types.PublicProfilesSelect{ID: "1", Email: email}, nil)
 
 	resp, err := service.CreateUser(ctx, req)
 
@@ -205,7 +206,7 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 
 	// 2. Check Username - found existing
 	mockRepo.On("List", ctx, 1, 1, "", username).Return([]types.PublicProfilesSelect{
-		{Id: "1", Username: username},
+		{ID: "1", Username: username},
 	}, int64(1), nil)
 
 	resp, err := service.CreateUser(ctx, req)
@@ -230,11 +231,11 @@ func TestUpdateUser_Success(t *testing.T) {
 	}
 
 	// We expect Check for existence first
-	mockRepo.On("GetByID", ctx, id).Return(&types.PublicProfilesSelect{Id: id}, nil)
+	mockRepo.On("GetByID", ctx, id).Return(&types.PublicProfilesSelect{ID: id}, nil)
 
 	mockRepo.On("Update", ctx, id, mock.AnythingOfType("types.PublicProfilesUpdate")).
 		Return(&types.PublicProfilesSelect{
-			Id:   id,
+			ID:   id,
 			Role: role,
 		}, nil)
 

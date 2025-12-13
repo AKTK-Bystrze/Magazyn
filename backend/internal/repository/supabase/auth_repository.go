@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 
@@ -44,7 +45,7 @@ func (r *authRepository) VerifyOTP(ctx context.Context, email, token string, otp
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &types.Session{
 		AccessToken: resp.AccessToken,
 		User: types.User{

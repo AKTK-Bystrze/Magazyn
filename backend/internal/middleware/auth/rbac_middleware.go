@@ -1,11 +1,12 @@
 package auth
 
 import (
+	"net/http"
+
 	"magazyn/backend/internal/appcontext"
 	authutil "magazyn/backend/internal/auth"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
-	"net/http"
 )
 
 // RequireRoles creates a middleware that enforces role-based access control (RBAC).
@@ -32,7 +33,7 @@ func RequireRoles(allowedRoles ...string) func(http.Handler) http.Handler {
 			}
 
 			if !authutil.HasRole(profile, allowedRoles...) {
-				logger.Warnf(ctx, "Access denied: User %s (Role: %s) attempted to access protected resource. Required: %v", profile.Id, profile.Role, allowedRoles)
+				logger.Warnf(ctx, "Access denied: User %s (Role: %s) attempted to access protected resource. Required: %v", profile.ID, profile.Role, allowedRoles)
 				http.Error(w, "Forbidden: Insufficient permissions", http.StatusForbidden)
 				return
 			}

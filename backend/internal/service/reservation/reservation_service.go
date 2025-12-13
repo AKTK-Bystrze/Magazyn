@@ -7,13 +7,14 @@ package reservation
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/service/email"
 	"magazyn/backend/internal/types"
-	"time"
 )
 
 // ============================================================================
@@ -69,9 +70,9 @@ func NewReservationService(
 
 // List retrieves a paginated list of reservations
 func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error) {
-	// Security: If user is not admin, they should only see their own - handled by controller/calling layer usually, 
-	// but here we can enforce it if userID is passed in query. 
-	// The plan says "GET /reservations: ... user_id (admin), equipment_id...". 
+	// Security: If user is not admin, they should only see their own - handled by controller/calling layer usually,
+	// but here we can enforce it if userID is passed in query.
+	// The plan says "GET /reservations: ... user_id (admin), equipment_id...".
 	// We assume the Controller sets query.UserID to the requester's ID if they are not admin.
 
 	items, total, err := s.repo.GetReservations(ctx, query)
@@ -126,7 +127,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	// 1. Validation & Cost Calculation (Read-Only)
 	totalCost := int32(0)
 	costMap := make(map[int]int32)
-	
+
 	// Pre-validate equipment existence and status
 	for i, req := range cmd.Reservations {
 		eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
@@ -138,18 +139,18 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		}
 
 		// Calculate Cost
-		eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeId)
+		eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
 		if err != nil {
 			return nil, types.NewInternalError("failed to fetch equipment type", err)
 		}
-		
+
 		days := s.calculateDays(req.StartDate, req.EndDate)
 		cost := days * eqType.CreditCostPerDay
 		totalCost += cost
 		costMap[i] = cost
 
-		logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d", 
-			req.EquipmentID, eq.TypeId, days, eqType.CreditCostPerDay, cost)
+		logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d",
+			req.EquipmentID, eq.TypeID, days, eqType.CreditCostPerDay, cost)
 	}
 
 	// 2. Execute Atomic Transaction (RPC)
@@ -159,14 +160,14 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		// Map RPC errors if possible, or return internal.
 		// If RPC returns "Insufficient credits", we could map it.
 		// For now return as internal or error.
-		return nil, types.NewConflictError("Reservation failed: " + err.Error(), nil)
+		return nil, types.NewConflictError("Reservation failed: "+err.Error(), nil)
 	}
 
 	// 3. Construct Response
 	// We lack full details of created items (e.g. timestamps) unless we fetch them back.
 	// But we have IDs.
 	// For performance, we can construct the response from input + IDs. create_at will be missing or now().
-	
+
 	var succeeded []types.ReservationListItem
 	for i, req := range cmd.Reservations {
 		if i < len(reservationIDs) {
@@ -184,11 +185,11 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 
 	// Send Email (Async)
 	go func() {
-		// Needs a detached context or careful context handling. 
+		// Needs a detached context or careful context handling.
 		// Using Background context to ensure it runs even if request context cancels.
 		// In production, use a task queue.
 		bgCtx := context.Background()
-		
+
 		// Fetch user email if not available. ideally passed in or we fetch profile.
 		// We have targetUserID.
 		profile, _ := s.userRepo.GetByID(bgCtx, targetUserID)
@@ -196,11 +197,11 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		if profile != nil {
 			emailAddr = profile.Email
 		}
-		
+
 		details := map[string]interface{}{
 			"user_id": targetUserID,
-			"count": len(succeeded),
-			"cost": totalCost,
+			"count":   len(succeeded),
+			"cost":    totalCost,
 			"balance": newBalance,
 		}
 		_ = s.emailService.SendReservationConfirmation(bgCtx, emailAddr, details)
@@ -224,10 +225,10 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	// Admin can do anything.
 	// User can only update OWN reservation.
 	// User can only update if status is PENDING.
-	// User can only cancel (Status -> DENIED/CANCELLED?). 
+	// User can only cancel (Status -> DENIED/CANCELLED?).
 	// Plan says: "User ... Can only cancel (status -> DENIED)".
 	// Wait, plan says "PATCH /reservations/:id ... status: DENIED".
-	
+
 	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
 	isOwner := current.UserID == userID
 
@@ -258,7 +259,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		}
 		updateData.Status = cmd.Status
 		needsUpdate = true
-		
+
 		// If cancelling (DENIED), refund credits?
 		if *cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled {
 			// Refund logic: Calculate cost and refund
@@ -266,13 +267,13 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			if errEq != nil {
 				logger.Errorf(ctx, "Refund failed: equipment %s not found", current.EquipmentID)
 			} else {
-				eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeId)
+				eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
 				if errType != nil {
-					logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeId)
+					logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeID)
 				} else {
 					days := s.calculateDays(current.StartDate, current.EndDate)
 					refundAmount := days * eqType.CreditCostPerDay
-					
+
 					if refundAmount > 0 {
 						if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 							logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
@@ -288,13 +289,19 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	// Handle Date Change
 	if (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate) {
 		start := current.StartDate
-		if cmd.StartDate != nil { start = *cmd.StartDate }
+		if cmd.StartDate != nil {
+			start = *cmd.StartDate
+		}
 		end := current.EndDate
-		if cmd.EndDate != nil { end = *cmd.EndDate }
+		if cmd.EndDate != nil {
+			end = *cmd.EndDate
+		}
 
 		// Check availability
 		conflicts, err := s.repo.GetOverlappingReservations(ctx, current.EquipmentID, start, end, &id)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		if len(conflicts) > 0 {
 			return nil, types.NewConflictError("Dates not available", nil)
 		}
@@ -302,7 +309,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		updateData.StartDate = &start
 		updateData.EndDate = &end
 		needsUpdate = true
-		
+
 		// Recalculate cost diff and adjust credits... (Complex logic)
 	}
 
@@ -316,8 +323,8 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	}
 
 	return &types.UpdateReservationResponse{
-		ID: updated.Id,
-		Status: updated.Status,
+		ID:        updated.ID,
+		Status:    updated.Status,
 		UpdatedAt: safeString(updated.UpdatedAt),
 	}, nil
 }
@@ -337,7 +344,7 @@ func (s *reservationService) calculateDays(start, end string) int32 {
 	layout := constants.DateFormatISO
 	t1, _ := time.Parse(layout, start)
 	t2, _ := time.Parse(layout, end)
-	
+
 	days := int32(t2.Sub(t1).Hours() / 24)
 	if days < 0 {
 		return 0
@@ -346,6 +353,8 @@ func (s *reservationService) calculateDays(start, end string) int32 {
 }
 
 func safeString(s *string) string {
-	if s == nil { return "" }
+	if s == nil {
+		return ""
+	}
 	return *s
 }

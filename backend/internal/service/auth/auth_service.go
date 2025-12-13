@@ -2,9 +2,10 @@ package auth
 
 import (
 	"context"
+	"time"
+
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"time"
 )
 
 // AuthService provides authentication and session management operations.
@@ -17,8 +18,7 @@ type AuthService interface {
 }
 
 type authService struct {
-
-	repo        repository.AuthRepository
+	repo repository.AuthRepository
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -90,7 +90,7 @@ func (s *authService) GetSession(ctx context.Context, userID string, userToken s
 	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
 
 	response := &types.SessionResponse{
-		UserID:        profile.Id,
+		UserID:        profile.ID,
 		Email:         profile.Email,
 		Username:      profile.Username,
 		Role:          profile.Role,

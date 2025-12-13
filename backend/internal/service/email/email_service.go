@@ -2,6 +2,7 @@ package email
 
 import (
 	"context"
+
 	"magazyn/backend/internal/logger"
 )
 

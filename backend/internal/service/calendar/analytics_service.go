@@ -2,6 +2,7 @@ package calendar
 
 import (
 	"context"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
@@ -56,7 +57,7 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 	// Transform to DTOs with top renters
 	stats := make([]types.EquipmentStatsDTO, 0, len(rawStats))
 	for _, raw := range rawStats {
-		if raw.EquipmentId == nil {
+		if raw.EquipmentID == nil {
 			continue
 		}
 
@@ -81,14 +82,14 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 		}
 
 		// Fetch top renters for this equipment
-		topRenters, err := s.analyticsRepo.GetTopRentersForEquipment(ctx, *raw.EquipmentId, constants.TopRentersLimit)
+		topRenters, err := s.analyticsRepo.GetTopRentersForEquipment(ctx, *raw.EquipmentID, constants.TopRentersLimit)
 		if err != nil {
-			logger.Warnf(ctx, "Failed to fetch top renters for equipment %s: %v", *raw.EquipmentId, err)
+			logger.Warnf(ctx, "Failed to fetch top renters for equipment %s: %v", *raw.EquipmentID, err)
 			topRenters = []types.TopRenterDTO{}
 		}
 
 		dto := types.EquipmentStatsDTO{
-			EquipmentID:       *raw.EquipmentId,
+			EquipmentID:       *raw.EquipmentID,
 			EquipmentName:     equipmentName,
 			EquipmentType:     "", // Will be populated if we have type info
 			TotalReservations: totalReservations,
@@ -126,7 +127,7 @@ func (s *analyticsService) GetUserStats(ctx context.Context, query types.Analyti
 	// Transform to DTOs with favorite equipment type
 	stats := make([]types.UserStatsDTO, 0, len(rawStats))
 	for _, raw := range rawStats {
-		if raw.UserId == nil {
+		if raw.UserID == nil {
 			continue
 		}
 
@@ -146,14 +147,14 @@ func (s *analyticsService) GetUserStats(ctx context.Context, query types.Analyti
 		}
 
 		// Fetch favorite equipment type for this user
-		favoriteType, err := s.analyticsRepo.GetFavoriteEquipmentTypeForUser(ctx, *raw.UserId)
+		favoriteType, err := s.analyticsRepo.GetFavoriteEquipmentTypeForUser(ctx, *raw.UserID)
 		if err != nil {
-			logger.Warnf(ctx, "Failed to fetch favorite type for user %s: %v", *raw.UserId, err)
+			logger.Warnf(ctx, "Failed to fetch favorite type for user %s: %v", *raw.UserID, err)
 			favoriteType = nil
 		}
 
 		dto := types.UserStatsDTO{
-			UserID:                *raw.UserId,
+			UserID:                *raw.UserID,
 			Username:              username,
 			TotalReservations:     totalReservations,
 			TotalCreditsSpent:     totalCreditsSpent,

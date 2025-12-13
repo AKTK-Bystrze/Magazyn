@@ -2,9 +2,10 @@ package calendar
 
 import (
 	"context"
+	"testing"
+
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -88,13 +89,13 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		}
 
 		equipment := []types.PublicEquipmentSelect{
-			{Id: "eq-uuid-1", InternalId: "K-01", Name: stringPtr("Red Kayak")},
+			{ID: "eq-uuid-1", InternalID: "K-01", Name: stringPtr("Red Kayak")},
 		}
 
 		reservations := []types.PublicReservationsSelect{
 			{
-				Id:          "res-1",
-				EquipmentId: "eq-uuid-1",
+				ID:          "res-1",
+				EquipmentID: "eq-uuid-1",
 				StartDate:   "2025-12-02",
 				EndDate:     "2025-12-02",
 				Status:      "PENDING",
@@ -152,7 +153,7 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		query := types.CalendarAvailabilityQuery{} // Empty query - should use defaults
 
 		equipment := []types.PublicEquipmentSelect{
-			{Id: "eq-uuid-1", InternalId: "K-01"},
+			{ID: "eq-uuid-1", InternalID: "K-01"},
 		}
 
 		mockCalendarRepo.On("GetEquipmentForCalendar", ctx, (*string)(nil)).Return(equipment, nil)
@@ -197,14 +198,14 @@ func TestGetCalendarAvailability_MultiDayReservation(t *testing.T) {
 	}
 
 	equipment := []types.PublicEquipmentSelect{
-		{Id: "eq-uuid-1", InternalId: "K-01", Name: stringPtr("Kayak")},
+		{ID: "eq-uuid-1", InternalID: "K-01", Name: stringPtr("Kayak")},
 	}
 
 	// Reservation spans days 2-4
 	reservations := []types.PublicReservationsSelect{
 		{
-			Id:          "res-1",
-			EquipmentId: "eq-uuid-1",
+			ID:          "res-1",
+			EquipmentID: "eq-uuid-1",
 			StartDate:   "2025-12-02",
 			EndDate:     "2025-12-04",
 			Status:      "RENTED",

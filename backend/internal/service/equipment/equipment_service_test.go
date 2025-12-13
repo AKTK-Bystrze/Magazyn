@@ -2,10 +2,11 @@ package equipment
 
 import (
 	"context"
+	"testing"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -161,9 +162,9 @@ func TestCreateEquipment_Success(t *testing.T) {
 	mockRepo.On("GetInternalIDCheck", ctx, "type-uuid", "K-01").Return(false, nil)
 
 	mockRepo.On("Create", ctx, mock.AnythingOfType("types.PublicEquipmentInsert")).Return(&types.PublicEquipmentSelect{
-		Id:         "eq-uuid",
-		InternalId: "K-01",
-		TypeId:     "type-uuid",
+		ID:         "eq-uuid",
+		InternalID: "K-01",
+		TypeID:     "type-uuid",
 		Name:       stringPtr("Kayak"),
 		Status:     constants.EquipmentStatusOK,
 	}, nil)
@@ -206,7 +207,7 @@ func TestArchiveEquipment_Success(t *testing.T) {
 	ctx := context.Background()
 	id := "eq-uuid"
 
-	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{Id: id, IsArchived: false}, nil)
+	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{ID: id, IsArchived: false}, nil)
 	mockRepo.On("GetActiveReservations", ctx, id).Return([]types.PublicReservationsSelect{}, nil)
 	mockRepo.On("Archive", ctx, id).Return(nil)
 
@@ -223,8 +224,8 @@ func TestArchiveEquipment_ActiveReservations(t *testing.T) {
 	ctx := context.Background()
 	id := "eq-uuid"
 
-	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{Id: id, IsArchived: false}, nil)
-	mockRepo.On("GetActiveReservations", ctx, id).Return([]types.PublicReservationsSelect{{Id: "res-1"}}, nil)
+	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{ID: id, IsArchived: false}, nil)
+	mockRepo.On("GetActiveReservations", ctx, id).Return([]types.PublicReservationsSelect{{ID: "res-1"}}, nil)
 
 	err := service.Archive(ctx, id)
 
@@ -241,7 +242,7 @@ func TestCheckAvailability_Available(t *testing.T) {
 	id := "eq-uuid"
 	query := types.AvailabilityQuery{StartDate: "2023-01-01", EndDate: "2023-01-05"}
 
-	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{Id: id}, nil)
+	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{ID: id}, nil)
 	mockRepo.On("GetConflictingReservations", ctx, id, "2023-01-01", "2023-01-05").Return([]types.PublicReservationsSelect{}, nil)
 
 	result, err := service.CheckAvailability(ctx, id, query)

@@ -2,10 +2,11 @@ package credit
 
 import (
 	"context"
+	"math"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"math"
 )
 
 // CreditHistoryService defines the business logic for credit history retrieval.

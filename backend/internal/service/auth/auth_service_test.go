@@ -2,8 +2,9 @@ package auth
 
 import (
 	"context"
-	"magazyn/backend/internal/types"
 	"testing"
+
+	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -69,7 +70,7 @@ func TestAuthService_GetSession(t *testing.T) {
 	token := "valid-token"
 
 	profile := &types.PublicProfilesSelect{
-		Id:            userID,
+		ID:            userID,
 		Email:         "test@example.com",
 		Username:      "testuser",
 		Role:          "user",

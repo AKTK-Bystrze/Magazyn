@@ -2,11 +2,12 @@ package auth
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
-	"net/http"
-	"strings"
 )
 
 // NewAuthMiddleware creates an authentication middleware that validates JWT tokens and enforces user authentication.

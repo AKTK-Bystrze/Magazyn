@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"magazyn/backend/internal/types"
 )
 
@@ -14,7 +15,7 @@ type ReservationRepository interface {
 	GetReservationByID(ctx context.Context, id string) (*types.ReservationDetail, error)
 
 	// CreateReservation creates a new reservation record
-	// Note: Providing a transaction object/context might be needed for atomicity with credits, 
+	// Note: Providing a transaction object/context might be needed for atomicity with credits,
 	// but for now we define the basic operation.
 	CreateReservation(ctx context.Context, reservation types.PublicReservationsInsert) (*types.PublicReservationsSelect, error)
 
@@ -35,9 +36,9 @@ type ReservationRepository interface {
 	GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error)
 
 	// GetReservationsInRange retrieves coupons that overlap with the specified date range.
-    // Optionally filters by equipmentID if provided.
-    // rangeStart and rangeEnd should be in YYYY-MM-DD format.
-    GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error)
+	// Optionally filters by equipmentID if provided.
+	// rangeStart and rangeEnd should be in YYYY-MM-DD format.
+	GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error)
 
 	// RefundCredits refunds credits to the user for a cancelled reservation
 	RefundCredits(ctx context.Context, reservationID string, amount int32) error

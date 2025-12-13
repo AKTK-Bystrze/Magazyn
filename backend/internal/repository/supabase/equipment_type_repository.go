@@ -3,6 +3,7 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 
@@ -72,10 +73,10 @@ func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []strin
 	}
 
 	// Supabase (Postgrest) "in" filter format: (id1,id2,id3)
-    // Note: supabase-go might handle slice for In directly?
-    // Looking at previous usages like `In("status", []string{...})`, it seems supported.
-    
-    // We'll use In filter.
+	// Note: supabase-go might handle slice for In directly?
+	// Looking at previous usages like `In("status", []string{...})`, it seems supported.
+
+	// We'll use In filter.
 	data, _, err := r.client.From("equipment_types").
 		Select("*", "exact", false).
 		In("id", uniqueIDs).
@@ -92,7 +93,7 @@ func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []strin
 
 	result := make(map[string]types.PublicEquipmentTypesSelect)
 	for _, t := range typeList {
-		result[t.Id] = t
+		result[t.ID] = t
 	}
 
 	return result, nil

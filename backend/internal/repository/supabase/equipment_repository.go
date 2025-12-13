@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"strings"
 
 	"github.com/supabase-community/supabase-go"
 )
@@ -46,7 +47,7 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	if err != nil {
 		return nil, 0, err
 	}
-    
+
 	var allItems []interface{} // simplified
 	if err := json.Unmarshal(countData, &allItems); err != nil {
 		return nil, 0, err
@@ -122,12 +123,12 @@ func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID str
 
 	if err != nil {
 		// Assume error means not found (or single row requirement failed which means 0 or >1)
-        // If >1, it exists (duplicate). If 0, it doesn't.
-        // We'll simplisticly assume error/empty implies not found.
-		return false, nil 
+		// If >1, it exists (duplicate). If 0, it doesn't.
+		// We'll simplisticly assume error/empty implies not found.
+		return false, nil
 	}
-    
-    return len(data) > 2, nil 
+
+	return len(data) > 2, nil
 }
 
 // Create creates a new equipment record
@@ -138,9 +139,9 @@ func (r *equipmentRepository) Create(ctx context.Context, equipment types.Public
 		Execute()
 
 	if err != nil {
-        if isUniqueViolation(err) {
-            return nil, types.NewConflictError("Equipment with this internal ID or name already exists", err.Error())
-        }
+		if isUniqueViolation(err) {
+			return nil, types.NewConflictError("Equipment with this internal ID or name already exists", err.Error())
+		}
 		return nil, err
 	}
 
@@ -157,30 +158,30 @@ func (r *equipmentRepository) Update(ctx context.Context, id string, equipment t
 	data, _, err := r.client.From("equipment").
 		Update(equipment, "", "representation").
 		Eq("id", id).
-		Single(). 
+		Single().
 		Execute()
 
 	if err != nil {
-        if isUniqueViolation(err) {
-             return nil, types.NewConflictError("Equipment with this internal ID or name already exists", err.Error())
-        }
+		if isUniqueViolation(err) {
+			return nil, types.NewConflictError("Equipment with this internal ID or name already exists", err.Error())
+		}
 		return nil, err
 	}
-    
-    // Check if empty response (means ID not found or RLS blocked)
-    if len(data) == 0 {
-         return nil, types.NewNotFoundError("Equipment", id)
-    }
 
-    var updated types.PublicEquipmentSelect // Single() returns object
-    if err := json.Unmarshal(data, &updated); err != nil {
-        // Fallback if it returned array
-        var updatedArr []types.PublicEquipmentSelect
-        if err2 := json.Unmarshal(data, &updatedArr); err2 == nil && len(updatedArr) > 0 {
-             return &updatedArr[0], nil
-        }
-        return nil, err
-    }
+	// Check if empty response (means ID not found or RLS blocked)
+	if len(data) == 0 {
+		return nil, types.NewNotFoundError("Equipment", id)
+	}
+
+	var updated types.PublicEquipmentSelect // Single() returns object
+	if err := json.Unmarshal(data, &updated); err != nil {
+		// Fallback if it returned array
+		var updatedArr []types.PublicEquipmentSelect
+		if err2 := json.Unmarshal(data, &updatedArr); err2 == nil && len(updatedArr) > 0 {
+			return &updatedArr[0], nil
+		}
+		return nil, err
+	}
 
 	return &updated, nil
 }
@@ -202,7 +203,7 @@ func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
 
 // GetTypeForEquipment loads the type information for a piece of equipment
 func (r *equipmentRepository) GetTypeForEquipment(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error) {
-    return r.GetTypeByID(ctx, typeID)
+	return r.GetTypeByID(ctx, typeID)
 }
 
 // GetMaintenanceLogs retrieves maintenance logs for equipment
@@ -236,24 +237,24 @@ func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, e
 		return nil, err
 	}
 
-    var rawLogs []struct {
-        types.PublicMaintenanceLogsSelect
-        Admin struct {
-            Username string `json:"username"`
-        } `json:"admin"`
-    }
+	var rawLogs []struct {
+		types.PublicMaintenanceLogsSelect
+		Admin struct {
+			Username string `json:"username"`
+		} `json:"admin"`
+	}
 
 	if err := json.Unmarshal(data, &rawLogs); err != nil {
 		return nil, err
 	}
-    
-    result := make([]repository.MaintenanceLogWithAdmin, len(rawLogs))
-    for i, log := range rawLogs {
-        result[i] = repository.MaintenanceLogWithAdmin{
-            PublicMaintenanceLogsSelect: log.PublicMaintenanceLogsSelect,
-            AdminUsername: log.Admin.Username,
-        }
-    }
+
+	result := make([]repository.MaintenanceLogWithAdmin, len(rawLogs))
+	for i, log := range rawLogs {
+		result[i] = repository.MaintenanceLogWithAdmin{
+			PublicMaintenanceLogsSelect: log.PublicMaintenanceLogsSelect,
+			AdminUsername:               log.Admin.Username,
+		}
+	}
 
 	return result, nil
 }
@@ -329,21 +330,21 @@ func (r *equipmentRepository) GetUserFavorites(ctx context.Context, userID strin
 			maxCount = c
 		}
 	}
-    
-    favCount := 0
-    for eqID, c := range counts {
-        if c == maxCount && favCount < 3 {
-            favorites[eqID] = true
-            favCount++
-        }
-    }
+
+	favCount := 0
+	for eqID, c := range counts {
+		if c == maxCount && favCount < 3 {
+			favorites[eqID] = true
+			favCount++
+		}
+	}
 
 	return favorites, nil
 }
 
 // Helper to check for unique violation
 func isUniqueViolation(err error) bool {
-    // Check for Postgres error code 23505 (unique_violation)
-    // or string matching if code is not directly accessible (Supabase-go wrapping)
-    return err != nil && (strings.Contains(err.Error(), "duplicate key value") || strings.Contains(err.Error(), "23505"))
+	// Check for Postgres error code 23505 (unique_violation)
+	// or string matching if code is not directly accessible (Supabase-go wrapping)
+	return err != nil && (strings.Contains(err.Error(), "duplicate key value") || strings.Contains(err.Error(), "23505"))
 }

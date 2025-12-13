@@ -2,12 +2,13 @@ package credit
 
 import (
 	"context"
-	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/auth"
-	"magazyn/backend/internal/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/auth"
+	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -40,7 +41,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			name: "Success - Regular User Own History",
 			user: &types.User{ID: "user-123"},
 			profile: &types.PublicProfilesSelect{
-				Id:   "user-123",
+				ID:   "user-123",
 				Role: auth.RoleUser,
 			},
 			queryParams: map[string]string{},
@@ -61,7 +62,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			name: "Success - Admin Filter by User",
 			user: &types.User{ID: "admin-123"},
 			profile: &types.PublicProfilesSelect{
-				Id:   "admin-123",
+				ID:   "admin-123",
 				Role: auth.RoleAdmin,
 			},
 			queryParams: map[string]string{
@@ -85,7 +86,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			name: "Forbidden - Regular User Try Filter",
 			user: &types.User{ID: "user-123"},
 			profile: &types.PublicProfilesSelect{
-				Id:   "user-123",
+				ID:   "user-123",
 				Role: auth.RoleUser,
 			},
 			queryParams: map[string]string{
@@ -106,7 +107,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			name: "Bad Request - Invalid Page",
 			user: &types.User{ID: "user-123"},
 			profile: &types.PublicProfilesSelect{
-				Id:   "user-123",
+				ID:   "user-123",
 				Role: auth.RoleUser,
 			},
 			queryParams: map[string]string{
@@ -126,7 +127,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 
 			// Create Request
 			req := httptest.NewRequest("GET", "/credit-history", nil)
-			
+
 			// Add Query Params
 			q := req.URL.Query()
 			for k, v := range tc.queryParams {

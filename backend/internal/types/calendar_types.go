@@ -13,7 +13,7 @@ type CalendarAvailabilityQuery struct {
 
 // CalendarEntryDTO represents a single day's availability for equipment
 type CalendarEntryDTO struct {
-	Date              string  `json:"date"`                         // YYYY-MM-DD format
+	Date              string  `json:"date"` // YYYY-MM-DD format
 	EquipmentID       string  `json:"equipment_id"`
 	EquipmentName     string  `json:"equipment_name"`
 	IsAvailable       bool    `json:"is_available"`

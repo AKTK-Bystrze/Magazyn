@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"magazyn/backend/internal/types"
 )
 
@@ -34,9 +35,9 @@ type EquipmentRepository interface {
 
 	// GetMaintenanceLogs retrieves maintenance logs for equipment
 	GetMaintenanceLogs(ctx context.Context, equipmentID string) ([]types.PublicMaintenanceLogsSelect, error)
-    
-    // GetMaintenanceLogsWithAdmin retrieves logs joined with admin profile
-    GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]MaintenanceLogWithAdmin, error)
+
+	// GetMaintenanceLogsWithAdmin retrieves logs joined with admin profile
+	GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]MaintenanceLogWithAdmin, error)
 
 	// GetActiveReservations checks for active reservations for equipment
 	GetActiveReservations(ctx context.Context, equipmentID string) ([]types.PublicReservationsSelect, error)
@@ -58,6 +59,6 @@ type MaintenanceLogWithAdmin struct {
 type EquipmentTypeRepository interface {
 	ListAll(ctx context.Context) ([]types.PublicEquipmentTypesSelect, error)
 	Create(ctx context.Context, et types.PublicEquipmentTypesInsert) (*types.PublicEquipmentTypesSelect, error)
- 	// GetTypesByIDs retrieves multiple equipment types by their IDs
+	// GetTypesByIDs retrieves multiple equipment types by their IDs
 	GetTypesByIDs(ctx context.Context, ids []string) (map[string]types.PublicEquipmentTypesSelect, error)
 }

@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/logger"
-	"magazyn/backend/internal/types"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/logger"
+	"magazyn/backend/internal/types"
 )
 
 // ExtractBearerToken extracts the JWT token from the Authorization header.

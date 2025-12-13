@@ -1,13 +1,14 @@
 package calendar
 
 import (
+	"net/http"
+	"strconv"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	calendarservice "magazyn/backend/internal/service/calendar"
 	"magazyn/backend/internal/types"
-	"net/http"
-	"strconv"
 )
 
 // CalendarHandler handles HTTP requests for calendar endpoints

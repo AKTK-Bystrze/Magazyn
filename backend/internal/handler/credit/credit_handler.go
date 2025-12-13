@@ -3,14 +3,15 @@ package credit
 import (
 	"context"
 	"errors"
+	"net/http"
+	"strconv"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service/credit"
 	"magazyn/backend/internal/types"
-	"net/http"
-	"strconv"
 )
 
 // CreditHistoryHandler handles HTTP requests for credit history.
@@ -41,7 +42,7 @@ func (h *CreditHistoryHandler) HandleGetCreditHistory(w http.ResponseWriter, r *
 	// If we use common.ParsePagination, it sets defaults for us if missing/invalid.
 	// But service wants to throw error if invalid allowed value.
 	// So we should parse manually to differentiate "missing" vs "invalid".
-	
+
 	pageStr := r.URL.Query().Get("page")
 	perPageStr := r.URL.Query().Get("per_page")
 	filterUserID := r.URL.Query().Get("user_id")

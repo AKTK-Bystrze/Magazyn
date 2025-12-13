@@ -3,11 +3,12 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+	"sort"
+	"time"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"sort"
-	"time"
 
 	"github.com/supabase-community/supabase-go"
 )
@@ -139,8 +140,8 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 	}
 
 	var rawReservations []struct {
-		UserID    string `json:"user_id"`
-		Profile   struct {
+		UserID  string `json:"user_id"`
+		Profile struct {
 			Username string `json:"username"`
 		} `json:"profiles"`
 		StartDate string `json:"start_date"`

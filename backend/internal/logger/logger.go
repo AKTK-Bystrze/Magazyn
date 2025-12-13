@@ -6,10 +6,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"magazyn/backend/internal/appcontext"
-	model "magazyn/backend/internal/types"
 	"os"
 	"time"
+
+	"magazyn/backend/internal/appcontext"
+	model "magazyn/backend/internal/types"
 )
 
 // LogLevel represents the severity of a log message.

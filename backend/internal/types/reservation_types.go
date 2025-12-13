@@ -107,11 +107,11 @@ type BulkUpdateReservationsCommand struct {
 
 // ReservationListQuery represents filters for listing reservations
 type ReservationListQuery struct {
-	Page         int     `json:"page"`
-	PerPage      int     `json:"per_page"`
-	Status       *string `json:"status"`
-	UserID       *string `json:"user_id"`
-	EquipmentID  *string `json:"equipment_id"`
+	Page          int     `json:"page"`
+	PerPage       int     `json:"per_page"`
+	Status        *string `json:"status"`
+	UserID        *string `json:"user_id"`
+	EquipmentID   *string `json:"equipment_id"`
 	StartDateFrom *string `json:"start_date_from"`
 	StartDateTo   *string `json:"start_date_to"`
 }

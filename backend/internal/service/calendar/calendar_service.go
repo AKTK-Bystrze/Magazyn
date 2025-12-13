@@ -2,11 +2,12 @@ package calendar
 
 import (
 	"context"
+	"time"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"time"
 )
 
 // ============================================================================
@@ -79,19 +80,19 @@ func (s *calendarService) GetCalendarAvailability(ctx context.Context, query typ
 	// Build equipment name map
 	equipmentNames := make(map[string]string)
 	for _, eq := range equipment {
-		name := eq.InternalId
+		name := eq.InternalID
 		if eq.Name != nil && *eq.Name != "" {
 			name = *eq.Name
 		}
-		equipmentNames[eq.Id] = name
+		equipmentNames[eq.ID] = name
 	}
 
 	// Build reservation lookup: equipmentID -> date -> reservation
 	reservationLookup := make(map[string]map[string]*types.PublicReservationsSelect)
 	for i := range reservations {
 		res := &reservations[i]
-		if _, exists := reservationLookup[res.EquipmentId]; !exists {
-			reservationLookup[res.EquipmentId] = make(map[string]*types.PublicReservationsSelect)
+		if _, exists := reservationLookup[res.EquipmentID]; !exists {
+			reservationLookup[res.EquipmentID] = make(map[string]*types.PublicReservationsSelect)
 		}
 
 		// Mark all dates this reservation covers
@@ -101,7 +102,7 @@ func (s *calendarService) GetCalendarAvailability(ctx context.Context, query typ
 			dateStr := d.Format(constants.DateFormatISO)
 			// Only include dates within our query range
 			if !d.Before(start) && !d.After(end) {
-				reservationLookup[res.EquipmentId][dateStr] = res
+				reservationLookup[res.EquipmentID][dateStr] = res
 			}
 		}
 	}
@@ -109,21 +110,21 @@ func (s *calendarService) GetCalendarAvailability(ctx context.Context, query typ
 	// Build calendar entries
 	var calendar []types.CalendarEntryDTO
 	for _, eq := range equipment {
-		eqName := equipmentNames[eq.Id]
+		eqName := equipmentNames[eq.ID]
 		for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 			dateStr := d.Format(constants.DateFormatISO)
 			entry := types.CalendarEntryDTO{
 				Date:          dateStr,
-				EquipmentID:   eq.Id,
+				EquipmentID:   eq.ID,
 				EquipmentName: eqName,
 				IsAvailable:   true,
 			}
 
 			// Check if there's a reservation for this equipment on this date
-			if eqReservations, exists := reservationLookup[eq.Id]; exists {
+			if eqReservations, exists := reservationLookup[eq.ID]; exists {
 				if res, reserved := eqReservations[dateStr]; reserved {
 					entry.IsAvailable = false
-					entry.ReservationID = &res.Id
+					entry.ReservationID = &res.ID
 					entry.ReservationStatus = &res.Status
 				}
 			}

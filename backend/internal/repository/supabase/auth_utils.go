@@ -2,6 +2,7 @@ package supabase
 
 import (
 	"context"
+
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/logger"
 

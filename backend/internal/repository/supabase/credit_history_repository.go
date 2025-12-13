@@ -3,6 +3,7 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
@@ -67,14 +68,14 @@ func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *
 	result := make([]types.CreditHistoryItemDTO, len(rawData))
 	for i, item := range rawData {
 		dto := types.CreditHistoryItemDTO{
-			ID:            item.Id,
-			UserID:        item.UserId,
+			ID:            item.ID,
+			UserID:        item.UserID,
 			Username:      item.User.Username,
 			Amount:        item.Amount,
 			Reason:        item.Reason,
 			Description:   item.Description,
-			ReservationID: item.ReservationId,
-			AdminID:       item.AdminId,
+			ReservationID: item.ReservationID,
+			AdminID:       item.AdminID,
 			CreatedAt:     item.CreatedAt,
 		}
 
