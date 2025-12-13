@@ -16,7 +16,7 @@ The `internal` directory contains the core application code, strictly separated 
 
 - **`appcontext/`**: Defines context keys used to pass data (like User Identity) through the request lifecycle.
 - **`auth/`**: Contains authentication-related constants and role definitions.
-- **`config/`**: Handles configuration loading from environment variables.
+- **`config/`**: Handles configuration loading (`SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
 - **`constants/`**: Shared application constants (e.g., pagination defaults, reservation statuses).
 - **`handler/`**: HTTP Handlers (Controllers) responsible for parsing requests and writing responses.
   - **`auth/`**: Authentication handlers (`auth.handler.go`).

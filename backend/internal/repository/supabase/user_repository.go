@@ -123,6 +123,7 @@ func (r *userRepository) Create(ctx context.Context, profile types.PublicProfile
 		Execute()
 
 	if err != nil {
+		logger.Errorf(ctx, "Repo Create Failed: %v", err)
 		return nil, err
 	}
 

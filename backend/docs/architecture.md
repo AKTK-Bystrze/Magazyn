@@ -64,11 +64,12 @@ We follow a **Layered Architecture** with elements of **Hexagonal Architecture (
     *   `create_reservation_atomic`: Handles reservation creation, credit balance checking, deduction, and conflict detection in a single transaction.
     *   `refund_reservation_credits`: Atomically refunds credits to a user and logs the transaction upon reservation cancellation.
 
-### JWT Forwarding for RLS Enforcement
-*   **Description**: Row-Level Security (RLS) policies in Supabase/PostgreSQL rely on `auth.uid()` to identify the authenticated user. To enforce RLS, we forward the user's JWT token from the request context to Supabase client calls.
-*   **Implementation**: `internal/repository/supabase/auth_utils.go` provides `getClientWithAuth()` which creates an authenticated Supabase client using the JWT from context (`AccessTokenContextKey`).
-*   **Why**: Allows RLS policies to correctly filter data based on user identity while maintaining security. The backend authenticates the token via middleware, then passes it to Supabase for database-level access control.
-*   **Example**: `reservation_repository.go` uses `getClientWithAuth()` to ensure users only see their own reservations, while admins can see all (based on RLS policies checking user role).
+### Authentication Contexts: User Token vs Service Role Key
+*   **User Token (RLS)**: For standard operations, we use the user's JWT (forwarded from the frontend) with the public/anon key. This adheres to Supabase's Row-Level Security (RLS) policies, ensuring users only access their own data.
+    *   **Usage**: Most Repository methods (e.g., `GetProfile`, `CreateReservation`).
+*   **Service Role Key (Admin)**: For privileged operations that must bypass RLS or interact with the Supabase Admin API (e.g., creating users programmatically, managing global settings), we use the `SUPABASE_SERVICE_ROLE_KEY`.
+    *   **Usage**: `AuthRepository.CreateUser` (Admin User Creation), System background jobs.
+    *   **Security**: This key is kept secret on the backend and never exposed to the client. It bypasses all RLS policies.
 
 ## 3. Error Handling Design
 

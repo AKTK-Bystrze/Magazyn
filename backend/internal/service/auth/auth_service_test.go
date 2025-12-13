@@ -48,6 +48,14 @@ func (m *MockAuthRepository) GetProfile(ctx context.Context, userID string, toke
 	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
 }
 
+func (m *MockAuthRepository) CreateUser(ctx context.Context, email, password string) (*types.User, error) {
+	args := m.Called(ctx, email, password)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.User), args.Error(1)
+}
+
 func TestAuthService_Login(t *testing.T) {
 	mockRepo := new(MockAuthRepository)
 	service := NewAuthService(mockRepo)

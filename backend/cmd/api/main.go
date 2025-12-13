@@ -42,8 +42,14 @@ func main() {
 	logger.SetMinLevel(appState.Config.LogLevel)
 	logger.Infof(ctx, "Log level set to: %s", appState.Config.LogLevel)
 
+	if appState.Config.SupabaseServiceKey == "" {
+		logger.Warn(ctx, "⚠️ SUPABASE_SERVICE_ROLE_KEY is not set. Admin user creation will fail.")
+	} else {
+		logger.Info(ctx, "✅ SUPABASE_SERVICE_ROLE_KEY loaded.")
+	}
+
 	// Initialize Repositories
-	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
+	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey)
 	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
@@ -55,7 +61,7 @@ func main() {
 	// Initialize Services
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
-	userService := userservice.NewUserService(userRepo)
+	userService := userservice.NewUserService(userRepo, authRepo)
 	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
 	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)
 	creditService := creditservice.NewCreditHistoryService(creditRepo, userRepo)

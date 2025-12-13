@@ -16,14 +16,16 @@ type authRepository struct {
 	client      *supabase.Client
 	supabaseURL string
 	supabaseKey string
+	serviceKey  string
 }
 
 // NewAuthRepository creates a new Supabase implementation of AuthRepository
-func NewAuthRepository(client *supabase.Client, url string, key string) repository.AuthRepository {
+func NewAuthRepository(client *supabase.Client, url string, key string, serviceKey string) repository.AuthRepository {
 	return &authRepository{
 		client:      client,
 		supabaseURL: url,
 		supabaseKey: key,
+		serviceKey:  serviceKey,
 	}
 }
 
@@ -33,6 +35,38 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 		Email:      email,
 		CreateUser: true,
 	})
+}
+
+// CreateUser creates a new user in Supabase Auth using the service key (Admin only)
+func (r *authRepository) CreateUser(ctx context.Context, email, password string) (*types.User, error) {
+	// Create user in Supabase Auth using the service key (Admin only)
+	// We verify the service key is present
+	if r.serviceKey == "" {
+		return nil, fmt.Errorf("service key is empty")
+	}
+
+	// Create a new client with the service key
+	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create admin client: %w", err)
+	}
+
+	// Admin requests require the Service Key to be sent as the Bearer token.
+	// supabase-go/gotrue-go might not set this automatically from the 'key' arg in NewClient
+	// (which sets the 'apikey' header). We explicitly set the token here.
+	user, err := adminClient.Auth.WithToken(r.serviceKey).AdminCreateUser(gotruetypes.AdminCreateUserRequest{
+		Email:        email,
+		Password:     &password,
+		EmailConfirm: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create auth user: %w", err)
+	}
+
+	return &types.User{
+		ID:    user.ID.String(),
+		Email: user.Email,
+	}, nil
 }
 
 // VerifyOTP verifies the OTP and returns the session

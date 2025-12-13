@@ -20,6 +20,9 @@ type AuthRepository interface {
 	// VerifyOTP verifies the OTP and returns the session
 	VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.Session, error)
 
+	// CreateUser creates a new user in Supabase Auth (Admin only)
+	CreateUser(ctx context.Context, email, password string) (*types.User, error)
+
 	// GetProfile retrieves the user's profile using their token (RLS)
 	GetProfile(ctx context.Context, userID string, token string) (*types.PublicProfilesSelect, error)
 }

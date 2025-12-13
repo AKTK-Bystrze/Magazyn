@@ -15,6 +15,7 @@ import (
 type Config struct {
 	SupabaseURL        string   // URL of the Supabase project
 	SupabaseKey        string   // Supabase anon/public key for client operations
+	SupabaseServiceKey string   // Supabase service role key for admin operations
 	Port               string   // HTTP server port
 	LogLevel           string   // Logging verbosity: DEBUG, INFO, WARN, or ERROR
 	CORSAllowedOrigins []string // List of allowed CORS origins for cross-origin requests
@@ -41,10 +42,11 @@ func LoadConfig() (*AppState, error) {
 	}
 
 	cfg := &Config{
-		SupabaseURL: os.Getenv("SUPABASE_URL"),
-		SupabaseKey: os.Getenv("SUPABASE_KEY"),
-		Port:        os.Getenv("PORT"),
-		LogLevel:    os.Getenv("LOG_LEVEL"),
+		SupabaseURL:        os.Getenv("SUPABASE_URL"),
+		SupabaseKey:        os.Getenv("SUPABASE_KEY"),
+		SupabaseServiceKey: os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
+		Port:               os.Getenv("PORT"),
+		LogLevel:           os.Getenv("LOG_LEVEL"),
 	}
 
 	corsOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")

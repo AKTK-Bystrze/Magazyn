@@ -12,13 +12,13 @@ type PublicProfilesSelect struct {
 }
 
 type PublicProfilesInsert struct {
-	CreatedAt     *string `json:"created_at"`
-	CreditBalance *int32  `json:"credit_balance"`
+	CreatedAt     *string `json:"created_at,omitempty"`
+	CreditBalance *int32  `json:"credit_balance,omitempty"`
 	Email         string  `json:"email"`
-	ID            string  `json:"id"`
-	IsEnabled     *bool   `json:"is_enabled"`
-	Role          *string `json:"role"`
-	UpdatedAt     *string `json:"updated_at"`
+	ID            string  `json:"id,omitempty"`
+	IsEnabled     *bool   `json:"is_enabled,omitempty"`
+	Role          *string `json:"role,omitempty"`
+	UpdatedAt     *string `json:"updated_at,omitempty"`
 	Username      string  `json:"username"`
 }
 
