@@ -1,4 +1,8 @@
+continue dashboard display adjustments, remove mock tiles
+
 reservation flow - select dates and preview available equipment
+reservation flow - user can see all reservations
+reservation flow - admin see username on reservations list
 reservation flow - changing statuses by user
 reservation flow - changing statuses by admin
 equipments - admin view

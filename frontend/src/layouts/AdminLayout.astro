@@ -13,8 +13,8 @@
  * </AdminLayout>
  */
 import BaseLayout from './BaseLayout.astro';
-import { TopNavBar } from '@/components/navigation/TopNavBar';
-import { Breadcrumbs } from '@/components/navigation/Breadcrumbs';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 
 interface Props {
@@ -22,38 +22,42 @@ interface Props {
   title: string;
   /** Optional meta description */
   description?: string;
-  /** Whether to show breadcrumbs (default: true) */
-  showBreadcrumbs?: boolean;
+
 }
 
-const { title, description, showBreadcrumbs = true } = Astro.props;
-
+const { title, description } = Astro.props;
 const user = Astro.locals.user;
-const sessionInfo = Astro.locals.sessionInfo;
 const currentPath = Astro.url.pathname;
 ---
 
 <BaseLayout title={title} description={description}>
-  <div className="min-h-screen flex flex-col">
-    <QueryProvider client:load>
-      <TopNavBar 
-        client:load 
-        user={user ? { email: user.email || '', id: user.id } : null}
-        role={sessionInfo?.role || 'admin'}
-        currentPath={currentPath}
-        creditBalance={sessionInfo?.creditBalance}
-      />
-    </QueryProvider>
-    
-    <main className="flex-1">
-      {showBreadcrumbs && currentPath !== '/admin' && (
-        <div className="container mx-auto px-4 py-4">
-          <Breadcrumbs client:load currentPath={currentPath} isAdmin />
-        </div>
-      )}
-      <div className="container mx-auto px-4 py-6">
-        <slot />
+  {/* 
+    The layout uses a grid structure on desktop:
+    - Sidebar: fixed width
+    - Main Content: remaining space
+  */}
+  <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+    {/* Desktop Sidebar (hidden on mobile/tablet) */}
+    <div class="hidden border-r bg-muted/40 lg:block">
+      <div class="flex h-full max-h-screen flex-col gap-2">
+        <AdminSidebar client:load currentPath={currentPath} />
       </div>
-    </main>
+    </div>
+
+    {/* Main Content Area */}
+    <div class="flex flex-col">
+      <QueryProvider client:load>
+        <AdminHeader 
+          client:load 
+          user={user ? { email: user.email || '', id: user.id } : null}
+          currentPath={currentPath}
+        />
+      </QueryProvider>
+      
+      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <slot />
+      </main>
+    </div>
   </div>
 </BaseLayout>
+
