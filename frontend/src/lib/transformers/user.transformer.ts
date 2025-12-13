@@ -21,6 +21,7 @@ interface UserDTO {
   username: string;
   role: string;
   credit_balance: number;
+  is_enabled: boolean;
   created_at: string;
   updated_at: string | null;
 }
@@ -81,6 +82,9 @@ export function transformUpdateUserCommand(
   if (command.creditBalance !== undefined) {
     result.credit_balance = command.creditBalance;
   }
+  if (command.isEnabled !== undefined) {
+    result.is_enabled = command.isEnabled;
+  }
 
   return result;
 }
@@ -102,6 +106,7 @@ export function transformUserListItem(dto: UserDTO): UserListItem {
     username: dto.username,
     role: dto.role as UserListItem["role"],
     creditBalance: dto.credit_balance,
+    isEnabled: dto.is_enabled,
     createdAt: dto.created_at,
   };
 }

@@ -51,6 +51,7 @@ export type UserListItem = {
   username: string;
   role: Enums<"user_role">;
   creditBalance: number;
+  isEnabled: boolean;
   createdAt: string;
 };
 
@@ -73,6 +74,7 @@ export type UpdateUserCommand = {
   email?: string;
   role?: Enums<"user_role">;
   creditBalance?: number;
+  isEnabled?: boolean;
 };
 
 // =============================================================================

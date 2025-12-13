@@ -22,6 +22,7 @@ import {
   USER_VALIDATION_MESSAGES,
   USER_VALIDATION_PATTERNS,
 } from "@/lib/config/constants";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { UserListItem, UpdateUserCommand } from "@/types";
 import type { Enums } from "@/db/database.types";
 
@@ -63,6 +64,7 @@ export function EditUserDialog({
     email: "",
     role: USER_ROLE.USER as Enums<"user_role">,
     creditBalance: 0,
+    isEnabled: true,
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
@@ -70,6 +72,7 @@ export function EditUserDialog({
   const emailId = React.useId();
   const roleId = React.useId();
   const creditsId = React.useId();
+  const statusId = React.useId();
 
   // Initialize form with user data when dialog opens
   React.useEffect(() => {
@@ -78,6 +81,7 @@ export function EditUserDialog({
         email: user.email,
         role: user.role,
         creditBalance: user.creditBalance,
+        isEnabled: user.isEnabled,
       });
       setErrors({});
     }
@@ -137,6 +141,9 @@ export function EditUserDialog({
     }
     if (formData.creditBalance !== user.creditBalance) {
       command.creditBalance = formData.creditBalance;
+    }
+    if (formData.isEnabled !== user.isEnabled) {
+      command.isEnabled = formData.isEnabled;
     }
 
     // Return null if nothing changed
@@ -272,6 +279,34 @@ export function EditUserDialog({
               <p className="text-xs text-muted-foreground">
                 Changes to credit balance are logged in the user&apos;s credit
                 history
+              </p>
+            </div>
+
+            {/* Account Status Field */}
+            <div className="grid gap-2">
+              <Label>Account Status</Label>
+              <RadioGroup
+                value={formData.isEnabled ? "active" : "disabled"}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isEnabled: value === "active",
+                  }))
+                }
+                disabled={isSubmitting}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="active" id={`${statusId}-active`} />
+                  <Label htmlFor={`${statusId}-active`}>Active</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="disabled" id={`${statusId}-disabled`} />
+                  <Label htmlFor={`${statusId}-disabled`}>Disabled</Label>
+                </div>
+              </RadioGroup>
+              <p className="text-xs text-muted-foreground">
+                Disabled users cannot log in to the system
               </p>
             </div>
 

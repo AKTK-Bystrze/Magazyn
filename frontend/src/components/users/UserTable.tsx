@@ -39,6 +39,7 @@ function SkeletonRow() {
       <TableCell><Skeleton className="h-4 w-40" /></TableCell>
       <TableCell><Skeleton className="h-4 w-16" /></TableCell>
       <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
       <TableCell><Skeleton className="h-4 w-24" /></TableCell>
       <TableCell><Skeleton className="h-8 w-8" /></TableCell>
     </TableRow>
@@ -51,7 +52,7 @@ function SkeletonRow() {
 function EmptyState() {
   return (
     <TableRow>
-      <TableCell colSpan={6} className="h-24 text-center">
+      <TableCell colSpan={7} className="h-24 text-center">
         <p className="text-muted-foreground">No users found</p>
       </TableCell>
     </TableRow>
@@ -89,6 +90,7 @@ export function UserTable({
             <TableHead>Email</TableHead>
             <TableHead className="text-right">Credits</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
             {isSuperAdmin && <TableHead className="w-[70px]">Actions</TableHead>}
           </TableRow>
@@ -104,7 +106,7 @@ export function UserTable({
           ) : (
             // User rows
             users.map((user) => (
-              <TableRow key={user.id} className="hover:bg-muted/50">
+              <TableRow key={user.id} className={`hover:bg-muted/50 ${!user.isEnabled ? 'opacity-60 bg-muted/20' : ''}`}>
                 <TableCell className="font-medium">{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell className="text-right tabular-nums">
@@ -112,6 +114,17 @@ export function UserTable({
                 </TableCell>
                 <TableCell>
                   <RoleBadge role={user.role} />
+                </TableCell>
+                <TableCell>
+                  {user.isEnabled ? (
+                    <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500/15 text-green-700 hover:bg-green-500/25">
+                      Active
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive/15 text-destructive hover:bg-destructive/25">
+                      Disabled
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatDateLocalized(user.createdAt)}

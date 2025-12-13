@@ -18,6 +18,7 @@ export const userDTOSchema = z.object({
     errorMap: () => ({ message: 'Role must be one of: user, admin, super_admin' }),
   }),
   credit_balance: z.number().int().min(0, 'Credit balance must be non-negative'),
+  is_enabled: z.boolean(),
   created_at: z.string(),
   updated_at: z.string().nullable(),
 });
@@ -49,6 +50,7 @@ export const createUserCommandSchema = z.object({
     errorMap: () => ({ message: 'Role must be one of: user, admin, super_admin' }),
   }),
   credit_balance: z.number().int().min(0, 'Credit balance must be non-negative').optional().default(0),
+  is_enabled: z.boolean().optional().default(true),
 });
 
 /**
@@ -61,6 +63,7 @@ export const updateUserCommandSchema = z.object({
     errorMap: () => ({ message: 'Role must be one of: user, admin, super_admin' }),
   }).optional(),
   credit_balance: z.number().int().min(0, 'Credit balance must be non-negative').optional(),
+  is_enabled: z.boolean().optional(),
 });
 
 /**

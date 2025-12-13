@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 
@@ -53,6 +54,11 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 	data, count, err := query.Execute()
 	if err != nil {
 		return nil, 0, err
+	}
+
+	// Debug logging
+	if len(data) > 0 {
+		logger.Debugf(ctx, "Repo List Raw JSON (len=%d): %s", len(data), string(data))
 	}
 
 	var profiles []types.PublicProfilesSelect
@@ -139,6 +145,7 @@ func (r *userRepository) Update(ctx context.Context, id string, profile types.Pu
 		Execute()
 
 	if err != nil {
+		logger.Errorf(ctx, "Repo Update Failed for ID %s: %v", id, err)
 		return nil, err
 	}
 

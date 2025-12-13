@@ -7,6 +7,7 @@ type UserResponse struct {
 	Username      string  `json:"username"`
 	Role          string  `json:"role"`
 	CreditBalance int32   `json:"credit_balance"`
+	IsEnabled     bool    `json:"is_enabled"`
 	CreatedAt     string  `json:"created_at"`
 	UpdatedAt     *string `json:"updated_at,omitempty"`
 }
@@ -31,6 +32,7 @@ type CreateUserRequest struct {
 	Username      string `json:"username" binding:"required"`
 	Role          string `json:"role" binding:"required,oneof=user admin super_admin"`
 	CreditBalance *int32 `json:"credit_balance"`
+	IsEnabled     *bool  `json:"is_enabled"`
 }
 
 // UpdateUserRequest defines the structure for updating an existing user's details.
@@ -38,4 +40,5 @@ type UpdateUserRequest struct {
 	Email         *string `json:"email" binding:"omitempty,email"`
 	Role          *string `json:"role" binding:"omitempty,oneof=user admin super_admin"`
 	CreditBalance *int32  `json:"credit_balance" binding:"omitempty,min=0"`
+	IsEnabled     *bool   `json:"is_enabled"`
 }
