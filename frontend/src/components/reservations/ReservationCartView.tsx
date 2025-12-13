@@ -9,22 +9,57 @@ import { ConfirmationModal } from "./ConfirmationModal";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Trash2, CheckCircle2 } from "lucide-react";
-import type { CreateReservationsCommand } from "@/types";
+import type { CreateReservationsCommand, UserListItem } from "@/types";
 import type { AvailabilityCheckResult } from "@/types/reservation-cart.types";
 import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
 import { CLEAR_CART_CONFIRM_TIMEOUT_MS } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
+import { UserSelector } from "@/components/admin/UserSelector";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { calculateCost as calculateCartCost } from "@/lib/utils/cart-validation";
 
 /**
  * Props for ReservationCartView component
- * @param initialCreditBalance - User's current credit balance for cost calculations and validation
  */
 interface ReservationCartViewProps {
+  /** User's current credit balance for cost calculations and validation */
   initialCreditBalance: number;
+  /** Enable admin mode to create reservations on behalf of other users */
+  isAdmin?: boolean;
+  /** Route to redirect after successful reservation */
+  successRedirectPath?: string;
+  /** Pre-selected user ID (admin mode) - defaults to admin's own ID */
+  initialSelectedUserId?: string;
+  /** Pre-selected user's credit balance (admin mode) */
+  initialSelectedUserCreditBalance?: number;
+  /** Path to equipment browse page for empty cart. Defaults to public equipment. */
+  equipmentBrowsePath?: string;
 }
 
+/**
+ * Main checkout view for completing equipment reservations.
+ * Displays cart items, date selection, cost estimation, and confirmation flow.
+ * In admin mode, allows creating reservations for other users.
+ *
+ * @param props - Component props
+ * @returns Reservation checkout interface
+ *
+ * @example
+ * ```tsx
+ * // User checkout
+ * <ReservationCartView initialCreditBalance={100} />
+ *
+ * // Admin checkout
+ * <ReservationCartView initialCreditBalance={0} isAdmin />
+ * ```
+ */
 export function ReservationCartView({
   initialCreditBalance,
+  isAdmin = false,
+  successRedirectPath = ROUTES.PROTECTED.RESERVATIONS,
+  initialSelectedUserId,
+  initialSelectedUserCreditBalance = 0,
+  equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
 }: ReservationCartViewProps) {
   const {
     cartState,
@@ -51,15 +86,47 @@ export function ReservationCartView({
   const [submissionError, setSubmissionError] = React.useState<string | null>(null);
   const [clearCartPending, setClearCartPending] = React.useState(false);
 
-  // Derived state for validation
-  const costBreakdown = calculateCost();
+  // Admin-only: selected user for creating reservations on their behalf
+  // Initialize with admin's own ID if provided
+  const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
+    initialSelectedUserId ?? null
+  );
+  const [selectedUserCreditBalance, setSelectedUserCreditBalance] = React.useState<number>(
+    initialSelectedUserCreditBalance
+  );
+
+  /**
+   * Handler for admin user selection.
+   * Updates both the user ID and their credit balance.
+   */
+  const handleUserSelect = React.useCallback((user: UserListItem) => {
+    setSelectedUserId(user.id);
+    setSelectedUserCreditBalance(user.creditBalance);
+  }, []);
+
+  // Use selected user's credit balance in admin mode, otherwise use initial (logged-in user's)
+  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : initialCreditBalance;
+
+  // Calculate cost breakdown with the effective credit balance
+  // This ensures admin mode uses selected user's balance, not the admin's
+  const costBreakdown = React.useMemo(() => {
+    if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
+      return null;
+    }
+    return calculateCartCost(
+      cartState.items,
+      cartState.startDate,
+      cartState.endDate,
+      effectiveCreditBalance
+    );
+  }, [cartState.items, cartState.startDate, cartState.endDate, effectiveCreditBalance]);
   
   // Create a default safe breakdown if null (e.g. missing dates)
   const safeCostBreakdown = costBreakdown || {
     itemCosts: [],
     totalCreditCost: 0,
-    currentBalance: initialCreditBalance,
-    remainingBalance: initialCreditBalance,
+    currentBalance: effectiveCreditBalance,
+    remainingBalance: effectiveCreditBalance,
   };
 
   const validation = validateCart(
@@ -70,15 +137,21 @@ export function ReservationCartView({
 
   // Check availability when user tries to proceed
   const handleProceed = async () => {
-    // 1. Basic validation first
+    // 1. Admin mode requires a selected user
+    if (isAdmin && !selectedUserId) {
+      setSubmissionError("Please select a user to create the reservation for.");
+      return;
+    }
+
+    // 2. Basic validation
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
       return;
     }
 
-    // 2. clear previous errors
+    // 3. Clear previous errors
     setSubmissionError(null);
 
-    // 3. Check real-time availability
+    // 4. Check real-time availability
     const result = await checkAvailability();
     setAvailabilityResult(result);
 
@@ -100,6 +173,8 @@ export function ReservationCartView({
           startDate: cartState.startDate!,
           endDate: cartState.endDate!,
         })),
+        // Admin mode: include selected user ID
+        ...(isAdmin && selectedUserId && { userId: selectedUserId }),
       };
 
       // Transform to backend format (snake_case)
@@ -140,7 +215,7 @@ export function ReservationCartView({
       setIsConfirmationOpen(false);
       
       // Redirect to reservations page with success indicator
-      window.location.href = `${ROUTES.PROTECTED.RESERVATIONS}?success=true`;
+      window.location.href = `${successRedirectPath}?success=true`;
     } catch (error) {
       console.error("Reservation failed:", error);
       setSubmissionError(error instanceof Error ? error.message : "An unexpected error occurred");
@@ -181,6 +256,25 @@ export function ReservationCartView({
           </Button>
         )}
       </div>
+
+      {/* Admin User Selector */}
+      {isAdmin && !isEmpty && (
+        <section className="bg-card rounded-lg border shadow-sm p-6">
+          <h2 className="text-lg font-semibold mb-4">Create Reservation For</h2>
+          <QueryProvider>
+            <UserSelector
+              selectedUserId={selectedUserId}
+              onSelect={handleUserSelect}
+              label="Select the user for this reservation"
+            />
+          </QueryProvider>
+          {!selectedUserId && (
+            <p className="text-sm text-muted-foreground mt-2">
+              You must select a user before completing the reservation.
+            </p>
+          )}
+        </section>
+      )}
 
       {submissionError && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
@@ -226,7 +320,8 @@ export function ReservationCartView({
           <section className="bg-card rounded-lg border shadow-sm p-6">
             <CartItemList 
               items={cartState.items} 
-              onRemoveItem={removeItem} 
+              onRemoveItem={removeItem}
+              equipmentBrowsePath={equipmentBrowsePath}
             />
           </section>
 
@@ -250,14 +345,14 @@ export function ReservationCartView({
               items={cartState.items}
               startDate={cartState.startDate}
               endDate={cartState.endDate}
-              currentCreditBalance={initialCreditBalance}
+              currentCreditBalance={effectiveCreditBalance}
             />
 
             <Button 
               size="lg" 
               className="w-full text-lg font-semibold" 
               onClick={handleProceed}
-              disabled={!validation.isValid || isChecking}
+              disabled={!validation.isValid || isChecking || (isAdmin && !selectedUserId)}
             >
               {isChecking ? (
                 <>Checking Availability...</>

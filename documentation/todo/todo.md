@@ -1,5 +1,6 @@
 
 reservation flow - select dates and preview available equipment
+
 reservation flow - user can see all reservations
 reservation flow - admin see username on reservations list
 reservation flow - changing statuses by user

@@ -4,16 +4,30 @@ import { CartItem } from "./CartItem";
 import { ShoppingCart } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 
+/**
+ * Props for CartItemList component
+ */
 interface CartItemListProps {
+  /** Cart items to display */
   items: CartItemType[];
+  /** Callback when removing an item */
   onRemoveItem: (equipmentId: string) => void;
+  /** Path to equipment browse page. Defaults to public equipment page. */
+  equipmentBrowsePath?: string;
 }
 
 /**
- * Displays the list of equipment items in the reservation cart
- * Shows empty state when no items are present
+ * Displays the list of equipment items in the reservation cart.
+ * Shows empty state when no items are present.
+ *
+ * @param props - Component props
+ * @returns Cart item list or empty state
  */
-export function CartItemList({ items, onRemoveItem }: CartItemListProps) {
+export function CartItemList({
+  items,
+  onRemoveItem,
+  equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
+}: CartItemListProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-lg">
@@ -25,7 +39,7 @@ export function CartItemList({ items, onRemoveItem }: CartItemListProps) {
           Browse equipment and add items to your cart to create a reservation.
         </p>
         <a
-          href={ROUTES.PUBLIC.EQUIPMENT}
+          href={equipmentBrowsePath}
           className="mt-6 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
         >
           Browse Equipment

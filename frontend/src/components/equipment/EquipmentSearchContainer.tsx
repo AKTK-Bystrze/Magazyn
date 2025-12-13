@@ -15,7 +15,22 @@ import {
 import { Filter } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 
-function EquipmentSearchContainer() {
+/**
+ * Props for EquipmentSearchContainer component
+ */
+interface EquipmentSearchContainerProps {
+  /** Custom checkout path for cart navigation. Defaults to user checkout route. */
+  checkoutPath?: string;
+}
+
+/**
+ * Container component for equipment search with filtering, pagination, and cart.
+ * Handles data fetching and state management for the equipment browsing experience.
+ *
+ * @param props - Component props
+ * @returns Equipment search interface with filters, grid, and cart indicator
+ */
+function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProps) {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
 
@@ -129,15 +144,44 @@ function EquipmentSearchContainer() {
       </main>
 
       {/* Floating Cart Indicator */}
-      <CartIndicator />
+      <CartIndicator checkoutPath={checkoutPath} />
     </div>
   );
 }
 
-export default function EquipmentSearchContainerWithProvider() {
+/**
+ * Props for EquipmentSearchContainerWithProvider component
+ */
+interface EquipmentSearchContainerWithProviderProps {
+  /** Custom checkout path for cart navigation */
+  checkoutPath?: string;
+}
+
+/**
+ * Wrapper component that provides React Query context for EquipmentSearchContainer.
+ * Use this component in Astro pages.
+ *
+ * @param props - Component props
+ * @returns Equipment search container wrapped with QueryProvider
+ *
+ * @example
+ * ```tsx
+ * // User equipment page
+ * <EquipmentSearchContainerWithProvider client:only="react" />
+ *
+ * // Admin equipment page
+ * <EquipmentSearchContainerWithProvider
+ *   client:only="react"
+ *   checkoutPath={ROUTES.PROTECTED.ADMIN_RESERVATIONS_CREATE}
+ * />
+ * ```
+ */
+export default function EquipmentSearchContainerWithProvider({
+  checkoutPath,
+}: EquipmentSearchContainerWithProviderProps) {
   return (
     <QueryProvider>
-      <EquipmentSearchContainer />
+      <EquipmentSearchContainer checkoutPath={checkoutPath} />
     </QueryProvider>
   );
 }

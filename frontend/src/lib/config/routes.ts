@@ -30,6 +30,7 @@ export const ROUTES = {
     ADMIN_EQUIPMENT: '/admin/equipment',
     ADMIN_USERS: '/admin/users',
     ADMIN_ANALYTICS: '/admin/analytics',
+    ADMIN_RESERVATIONS_CREATE: '/admin/reservations/create',
     DASHBOARD: '/dashboard',
     ACCOUNT_DISABLED: '/account-disabled',
     CREDIT_REQUESTS: '/credit-requests',

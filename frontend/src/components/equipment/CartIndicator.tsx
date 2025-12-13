@@ -6,10 +6,32 @@ import { ROUTES } from "@/lib/config/routes";
 import { pluralize } from "@/lib/utils/text-utils";
 
 /**
- * Floating cart indicator that shows when items are in the cart
- * Displays item count and provides navigation to reservation creation
+ * Props for CartIndicator component
  */
-export function CartIndicator() {
+interface CartIndicatorProps {
+  /** Custom checkout path. Defaults to user reservation create route. */
+  checkoutPath?: string;
+}
+
+/**
+ * Floating cart indicator that shows when items are in the cart.
+ * Displays item count and provides navigation to reservation creation.
+ *
+ * @param props - Component props
+ * @returns Floating cart button or null if cart is empty
+ *
+ * @example
+ * ```tsx
+ * // User flow (default)
+ * <CartIndicator />
+ *
+ * // Admin flow
+ * <CartIndicator checkoutPath={ROUTES.PROTECTED.ADMIN_RESERVATIONS_CREATE} />
+ * ```
+ */
+export function CartIndicator({
+  checkoutPath = ROUTES.PROTECTED.RESERVATIONS_CREATE,
+}: CartIndicatorProps) {
   const [itemCount, setItemCount] = React.useState(0);
 
   // Load cart count on mount and listen for updates
@@ -39,7 +61,7 @@ export function CartIndicator() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 duration-300">
-      <a href={ROUTES.PROTECTED.RESERVATIONS_CREATE}>
+      <a href={checkoutPath}>
         <Button
           size="lg"
           className="shadow-lg hover:shadow-xl transition-shadow gap-2 pr-4"
