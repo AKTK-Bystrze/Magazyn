@@ -1,18 +1,7 @@
-fix linter (ESLint v9 migration needed)
+base navigation
 
 frontend plans
-    users
-    ✅ reservations (COMPLETED - see .ai/reservations-view-implementation-summary.md)
     equipments - details etc
-    
-frontend implementation
-    ✅ reservations view (user + admin)
-    
-Phase 5 - Reservations View Enhancements:
-    - ModifyReservationDialog implementation
-    - Reservation details page (/reservations/[id])
-    - Admin bulk actions (Mark Rented/Returned)
-    - Audit timeline display
 
 e2e testy
 implementacja pozostalych endpointow
