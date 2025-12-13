@@ -35,11 +35,11 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 }
 
 // VerifyOTP verifies the OTP and returns the session
-func (r *authRepository) VerifyOTP(ctx context.Context, email, token string, type_ string) (*types.Session, error) {
+func (r *authRepository) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.Session, error) {
 	resp, err := r.client.Auth.VerifyForUser(gotruetypes.VerifyForUserRequest{
 		Email: email,
 		Token: token,
-		Type:  gotruetypes.VerificationType(type_),
+		Type:  gotruetypes.VerificationType(otpType),
 	})
 	if err != nil {
 		return nil, err

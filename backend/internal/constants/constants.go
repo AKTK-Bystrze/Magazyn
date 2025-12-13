@@ -10,15 +10,13 @@ import "time"
 
 // Database table names to avoid hardcoded strings.
 const (
-	TableProfiles      = "profiles"
-	TableEquipment     = "equipment"
-	TableReservations  = "reservations"
-	TableEquipmentTypes = "equipment_types"
+	TableProfiles        = "profiles"
+	TableEquipment       = "equipment"
+	TableReservations    = "reservations"
+	TableEquipmentTypes  = "equipment_types"
 	TableMaintenanceLogs = "maintenance_logs"
 	TableCreditHistory   = "credit_history"
 )
-
-
 
 // ============================================================================
 // Reservation Status Constants
@@ -26,10 +24,10 @@ const (
 
 // Reservation status values that represent the lifecycle of an equipment rental.
 const (
-	ReservationStatusPending  = "PENDING"  // Reservation created but equipment not yet picked up
-	ReservationStatusRented   = "RENTED"   // Equipment currently rented out
-	ReservationStatusReturned = "RETURNED" // Equipment returned and reservation complete
-	ReservationStatusDenied   = "DENIED"   // Reservation denied by admin
+	ReservationStatusPending   = "PENDING"   // Reservation created but equipment not yet picked up
+	ReservationStatusRented    = "RENTED"    // Equipment currently rented out
+	ReservationStatusReturned  = "RETURNED"  // Equipment returned and reservation complete
+	ReservationStatusDenied    = "DENIED"    // Reservation denied by admin
 	ReservationStatusCancelled = "CANCELLED" // Reservation cancelled
 )
 
@@ -86,13 +84,13 @@ const (
 
 // Calendar-related defaults and limits for availability endpoints.
 const (
-	CalendarDefaultDays   = 30   // Default number of days for calendar view
-	CalendarMaxDays       = 90   // Maximum number of days allowed in a single request
-	CalendarMinDays       = 1    // Minimum number of days for calendar view
-	TopRentersLimit       = 5    // Number of top renters to include in equipment stats
-	AnalyticsMinYear      = 2000 // Minimum year for analytics filters
-	AnalyticsMaxYear      = 2100 // Maximum year for analytics filters
-	DateFormatISO         = "2006-01-02" // ISO date format for Go time parsing
+	CalendarDefaultDays = 30           // Default number of days for calendar view
+	CalendarMaxDays     = 90           // Maximum number of days allowed in a single request
+	CalendarMinDays     = 1            // Minimum number of days for calendar view
+	TopRentersLimit     = 5            // Number of top renters to include in equipment stats
+	AnalyticsMinYear    = 2000         // Minimum year for analytics filters
+	AnalyticsMaxYear    = 2100         // Maximum year for analytics filters
+	DateFormatISO       = "2006-01-02" // ISO date format for Go time parsing
 )
 
 // ============================================================================

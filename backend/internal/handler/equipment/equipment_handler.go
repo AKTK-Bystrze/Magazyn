@@ -18,8 +18,6 @@ func NewEquipmentHandler(s equipmentservice.EquipmentService) *EquipmentHandler 
 	return &EquipmentHandler{service: s}
 }
 
-
-
 // List handles get equpiment list
 func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -225,11 +223,11 @@ func (h *EquipmentHandler) HandleCreateEquipmentType(w http.ResponseWriter, r *h
 		return
 	}
 
-    // Validation (simple check)
-    if cmd.Name == "" {
-        common.RespondError(ctx, w, http.StatusBadRequest, "Name is required")
-        return
-    }
+	// Validation (simple check)
+	if cmd.Name == "" {
+		common.RespondError(ctx, w, http.StatusBadRequest, "Name is required")
+		return
+	}
 
 	response, err := h.service.CreateEquipmentType(ctx, cmd)
 	if err != nil {

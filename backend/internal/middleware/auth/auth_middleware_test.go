@@ -63,10 +63,10 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		mockRepo := setupMocks()
 
 		token := "valid.token"
-		userId := uuid.New()
-		user := &types.User{ID: userId.String(), Email: "test@example.com"}
+		userID := uuid.New()
+		user := &types.User{ID: userID.String(), Email: "test@example.com"}
 		profile := &types.PublicProfilesSelect{
-			Id:        userId.String(),
+			Id:        userID.String(),
 			Email:     "test@example.com",
 			Username:  "tester",
 			Role:      "user",
@@ -75,13 +75,13 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 
 		// Expectations
 		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
-		mockRepo.On("GetProfile", mock.Anything, userId.String(), token).Return(profile, nil)
+		mockRepo.On("GetProfile", mock.Anything, userID.String(), token).Return(profile, nil)
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			// Verify context populated
 			ctxUser := r.Context().Value(appcontext.UserContextKey).(*types.User)
-			assert.Equal(t, userId.String(), ctxUser.ID)
+			assert.Equal(t, userID.String(), ctxUser.ID)
 			ctxProfile := r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
 			assert.Equal(t, "tester", ctxProfile.Username)
 		})
@@ -124,10 +124,10 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		mockRepo := setupMocks()
 
 		token := "valid.token"
-		userId := uuid.New()
-		user := &types.User{ID: userId.String(), Email: "disabled@example.com"}
+		userID := uuid.New()
+		user := &types.User{ID: userID.String(), Email: "disabled@example.com"}
 		profile := &types.PublicProfilesSelect{
-			Id:        userId.String(),
+			Id:        userID.String(),
 			Email:     "disabled@example.com",
 			Username:  "disabled_user",
 			Role:      "user",
@@ -135,7 +135,7 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		}
 
 		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
-		mockRepo.On("GetProfile", mock.Anything, userId.String(), token).Return(profile, nil)
+		mockRepo.On("GetProfile", mock.Anything, userID.String(), token).Return(profile, nil)
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t.Error("Next should not be called")
@@ -157,10 +157,10 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		mockRepo := setupMocks()
 
 		token := "valid.token"
-		userId := uuid.New()
-		user := &types.User{ID: userId.String(), Email: "disabled@example.com"}
+		userID := uuid.New()
+		user := &types.User{ID: userID.String(), Email: "disabled@example.com"}
 		profile := &types.PublicProfilesSelect{
-			Id:        userId.String(),
+			Id:        userID.String(),
 			Email:     "disabled@example.com",
 			Username:  "disabled_user",
 			Role:      "user",
@@ -168,7 +168,7 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		}
 
 		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
-		mockRepo.On("GetProfile", mock.Anything, userId.String(), token).Return(profile, nil)
+		mockRepo.On("GetProfile", mock.Anything, userID.String(), token).Return(profile, nil)
 
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK) // Success

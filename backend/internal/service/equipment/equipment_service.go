@@ -337,9 +337,7 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 		return nil
 	}
 	projectURL := s.baseURL
-	if strings.HasSuffix(projectURL, "/rest/v1") {
-		projectURL = strings.TrimSuffix(projectURL, "/rest/v1")
-	}
+	projectURL = strings.TrimSuffix(projectURL, "/rest/v1")
 	projectURL = strings.TrimSuffix(projectURL, "/")
 	url := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", projectURL, constants.StorageBucket, *imagePath)
 	return &url

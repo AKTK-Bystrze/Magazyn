@@ -84,16 +84,16 @@ func TestHandleLogout_Success(t *testing.T) {
 func TestHandleGetSession_Success(t *testing.T) {
 	h, mockService := createTestHandler()
 
-	userId := uuid.New()
-	user := &types.User{ID: userId.String(), Email: "user@example.com"}
+	userID := uuid.New()
+	user := &types.User{ID: userID.String(), Email: "user@example.com"}
 
 	expectedSession := &types.SessionResponse{
-		UserId:   userId.String(),
+		UserID:   userID.String(),
 		Email:    "user@example.com",
 		Username: "testuser",
 	}
 
-	mockService.On("GetSession", mock.Anything, userId.String(), mock.Anything).Return(expectedSession, nil)
+	mockService.On("GetSession", mock.Anything, userID.String(), mock.Anything).Return(expectedSession, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
 	req.Header.Set("Authorization", "Bearer test-token")

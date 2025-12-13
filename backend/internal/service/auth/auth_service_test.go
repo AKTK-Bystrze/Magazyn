@@ -23,8 +23,8 @@ func (m *MockAuthRepository) Logout(ctx context.Context, token string) error {
 	return args.Error(0)
 }
 
-func (m *MockAuthRepository) VerifyOTP(ctx context.Context, email, token, type_ string) (*types.Session, error) {
-	args := m.Called(ctx, email, token, type_)
+func (m *MockAuthRepository) VerifyOTP(ctx context.Context, email, token, otpType string) (*types.Session, error) {
+	args := m.Called(ctx, email, token, otpType)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -82,7 +82,7 @@ func TestAuthService_GetSession(t *testing.T) {
 	session, err := service.GetSession(ctx, userID, token)
 
 	assert.NoError(t, err)
-	assert.Equal(t, userID, session.UserId)
+	assert.Equal(t, userID, session.UserID)
 	assert.Equal(t, "testuser", session.Username)
 	assert.NotEmpty(t, session.ExpiresAt)
 	mockRepo.AssertExpectations(t)

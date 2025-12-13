@@ -17,7 +17,7 @@ type AuthRepository interface {
 	GetUser(ctx context.Context, token string) (*types.User, error)
 
 	// VerifyOTP verifies the OTP and returns the session
-	VerifyOTP(ctx context.Context, email, token string, type_ string) (*types.Session, error)
+	VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.Session, error)
 
 	// GetProfile retrieves the user's profile using their token (RLS)
 	GetProfile(ctx context.Context, userID string, token string) (*types.PublicProfilesSelect, error)

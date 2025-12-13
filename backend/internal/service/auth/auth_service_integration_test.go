@@ -96,7 +96,7 @@ func TestGetSession_Integration(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.NotNil(t, session)
-		assert.Equal(t, user.ID.String(), session.UserId)
+		assert.Equal(t, user.ID.String(), session.UserID)
 		assert.Equal(t, email, session.Email)
 		// Username is usually generated or empty initially depending on trigger logic
 		// Just verify we got a response

@@ -30,8 +30,8 @@ func (m *MockAuthRepository) GetUser(ctx context.Context, token string) (*types.
 	return args.Get(0).(*types.User), args.Error(1)
 }
 
-func (m *MockAuthRepository) VerifyOTP(ctx context.Context, email, token string, type_ string) (*types.Session, error) {
-	args := m.Called(ctx, email, token, type_)
+func (m *MockAuthRepository) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.Session, error) {
+	args := m.Called(ctx, email, token, otpType)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

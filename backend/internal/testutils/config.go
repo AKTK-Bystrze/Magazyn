@@ -100,11 +100,11 @@ func CreateTestUser(email, password string) (*types.User, error) {
 }
 
 // DeleteTestUser removes a user by ID (cleanup)
-func DeleteTestUser(userId string) error {
+func DeleteTestUser(userID string) error {
 	if TestAppState == nil || TestAppState.SupabaseClient == nil {
 		return fmt.Errorf("TestAppState not initialized")
 	}
-	uid, err := uuid.Parse(userId)
+	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return fmt.Errorf("invalid user id uuid: %w", err)
 	}

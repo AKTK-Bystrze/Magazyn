@@ -450,10 +450,4 @@ func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID
 	return nil
 }
 
-// Helper to safely handle ptr to string
-func safeString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
+

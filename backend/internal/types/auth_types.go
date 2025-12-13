@@ -32,7 +32,7 @@ type VerifyOTPRequest struct {
 
 // SessionResponse defines the structure for session data returned to the client
 type SessionResponse struct {
-	UserId        string `json:"userId"`
+	UserID        string `json:"userId"`
 	Email         string `json:"email"`
 	Username      string `json:"username"`
 	Role          string `json:"role"`

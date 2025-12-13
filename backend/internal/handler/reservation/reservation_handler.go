@@ -24,14 +24,12 @@ func NewReservationHandler(s reservation.ReservationService) *ReservationHandler
 	return &ReservationHandler{service: s}
 }
 
-
-
 // HandleList GET /reservations
 func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	role := common.GetUserRoleFromContext(r)
-	
+
 	if userID == "" {
 		common.RespondUnauthorized(ctx, w)
 		return
@@ -48,9 +46,6 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		// Only admin can filter by other user ID
 		if role == auth.RoleAdmin || role == auth.RoleSuperAdmin {
 			query.UserID = &qUserID
-		} else {
-			// Ignore or enforce own ID? 
-			// We enforce own ID for non-admins below usually.
 		}
 	}
 	if eqID := r.URL.Query().Get("equipment_id"); eqID != "" {
@@ -116,7 +111,7 @@ func (h *ReservationHandler) HandleGetByID(w http.ResponseWriter, r *http.Reques
 func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
-	
+
 	if userID == "" {
 		common.RespondUnauthorized(ctx, w)
 		return
@@ -200,7 +195,7 @@ func (h *ReservationHandler) HandleUpdate(w http.ResponseWriter, r *http.Request
 func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	role := common.GetUserRoleFromContext(r)
-	
+
 	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 		common.RespondError(ctx, w, http.StatusForbidden, "Admin access only")
 		return
@@ -226,7 +221,7 @@ func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Req
 func (h *ReservationHandler) HandleDashboardStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	role := common.GetUserRoleFromContext(r)
-	
+
 	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 		common.RespondError(ctx, w, http.StatusForbidden, "Admin access only")
 		return

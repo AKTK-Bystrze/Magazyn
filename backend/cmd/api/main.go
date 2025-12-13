@@ -25,6 +25,7 @@ import (
 	userservice "magazyn/backend/internal/service/user"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
@@ -121,7 +122,15 @@ func main() {
 
 	httpHandler := commonmiddleware.CORSMiddleware(appState.Config.CORSAllowedOrigins)(mux)
 
-	if err := http.ListenAndServe(port, httpHandler); err != nil {
+	server := &http.Server{
+		Addr:         port,
+		Handler:      httpHandler,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		logger.Errorf(ctx, "Server failed to start: %v", err)
 		os.Exit(1)
 	}

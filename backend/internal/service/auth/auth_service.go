@@ -11,14 +11,13 @@ import (
 // It orchestrates interactions between the repository and domain logic.
 type AuthService interface {
 	Login(ctx context.Context, email string) (*types.LoginResponse, error)
-	VerifyOTP(ctx context.Context, email, token string, type_ string) (*types.SessionResponse, error)
+	VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.SessionResponse, error)
 	Logout(ctx context.Context, accessToken string) error
-	GetSession(ctx context.Context, userId string, userToken string) (*types.SessionResponse, error)
+	GetSession(ctx context.Context, userID string, userToken string) (*types.SessionResponse, error)
 }
 
 type authService struct {
-	supabaseURL string
-	apiKey      string
+
 	repo        repository.AuthRepository
 }
 
@@ -43,8 +42,8 @@ func (s *authService) Login(ctx context.Context, email string) (*types.LoginResp
 }
 
 // VerifyOTP verifies the OTP and returns the session
-func (s *authService) VerifyOTP(ctx context.Context, email, token string, type_ string) (*types.SessionResponse, error) {
-	session, err := s.repo.VerifyOTP(ctx, email, token, type_)
+func (s *authService) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.SessionResponse, error) {
+	session, err := s.repo.VerifyOTP(ctx, email, token, otpType)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +61,7 @@ func (s *authService) VerifyOTP(ctx context.Context, email, token string, type_ 
 	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
 
 	return &types.SessionResponse{
-		UserId:        session.User.ID,
+		UserID:        session.User.ID,
 		Email:         session.User.Email,
 		Username:      profile.Username,
 		Role:          string(profile.Role),
@@ -78,9 +77,9 @@ func (s *authService) Logout(ctx context.Context, accessToken string) error {
 }
 
 // GetSession retrieves the current user's session details including profile information
-func (s *authService) GetSession(ctx context.Context, userId string, userToken string) (*types.SessionResponse, error) {
+func (s *authService) GetSession(ctx context.Context, userID string, userToken string) (*types.SessionResponse, error) {
 	// 1. Get Profile (RLS enforced by repo using userToken)
-	profile, err := s.repo.GetProfile(ctx, userId, userToken)
+	profile, err := s.repo.GetProfile(ctx, userID, userToken)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +90,7 @@ func (s *authService) GetSession(ctx context.Context, userId string, userToken s
 	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
 
 	response := &types.SessionResponse{
-		UserId:        profile.Id,
+		UserID:        profile.Id,
 		Email:         profile.Email,
 		Username:      profile.Username,
 		Role:          profile.Role,

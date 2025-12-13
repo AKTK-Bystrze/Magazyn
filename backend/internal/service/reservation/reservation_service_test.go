@@ -138,7 +138,7 @@ func (m *MockEquipmentRepository) GetMaintenanceLogs(ctx context.Context, equipm
 	return args.Get(0).([]types.PublicMaintenanceLogsSelect), args.Error(1)
 }
 
-// We need to import repository package to use MaintenanceLogWithAdmin or define alias. 
+// We need to import repository package to use MaintenanceLogWithAdmin or define alias.
 // Since we are in reservation_test, we can import repository.
 // Wait, circular dependency if we import repository? No, repository imports types.
 // We are in reservation_test package, so we can import repository.
@@ -312,7 +312,7 @@ func TestReservationService_Update_RefundTrigger(t *testing.T) {
 		Status: stringPtr(constants.ReservationStatusDenied),
 	}
 
-	// Acting as Admin to allow status change to DENIED if not owner? 
+	// Acting as Admin to allow status change to DENIED if not owner?
 	// Or user cancelling self.
 	// User can cancel own pending.
 	resp, err := svc.Update(ctx, resID, cmd, userID, auth.RoleUser)

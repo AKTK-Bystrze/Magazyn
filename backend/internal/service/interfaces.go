@@ -49,5 +49,5 @@ type PostgrestFilterBuilder interface {
 type AuthServiceInterface interface {
 	Login(ctx context.Context, email string) (*types.LoginResponse, error)
 	Logout(ctx context.Context, token string) error
-	GetSession(ctx context.Context, userId string, userToken string) (*types.SessionResponse, error)
+	GetSession(ctx context.Context, userID string, userToken string) (*types.SessionResponse, error)
 }
