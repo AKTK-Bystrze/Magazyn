@@ -5,10 +5,10 @@ reservation flow - changing statuses by admin
 equipments - admin view
 
 credits request
-dokumentacja
+documentation
 
-deploy - konteneryzacja 
-e2e testy
+deploy - containerization 
+e2e tests
 
 backend left to do from api-plan:
     credit request

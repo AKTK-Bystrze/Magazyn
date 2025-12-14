@@ -31,33 +31,25 @@ const currentPath = Astro.url.pathname;
 ---
 
 <BaseLayout title={title} description={description}>
-  {/* 
-    The layout uses a grid structure on desktop:
-    - Sidebar: fixed width
-    - Main Content: remaining space
-  */}
-  <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
-    {/* Desktop Sidebar (hidden on mobile/tablet) */}
-    <div className="hidden border-r bg-muted/40 lg:block">
-      <div className="flex h-full max-h-screen flex-col gap-2">
+  <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+    <div class="!hidden border-r bg-muted/40 lg:!block">
+      <div class="flex h-full max-h-screen flex-col gap-2">
         <AdminSidebar client:load currentPath={currentPath} />
       </div>
     </div>
 
-    {/* Main Content Area */}
-    <div className="flex flex-col">
+    <div class="flex flex-col">
       <QueryProvider client:load>
-        <AdminHeader 
-          client:load 
+        <AdminHeader
+          client:load
           user={user ? { email: user.email || '', id: user.id } : null}
           currentPath={currentPath}
         />
       </QueryProvider>
-      
-      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+
+      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         <slot />
       </main>
     </div>
   </div>
 </BaseLayout>
-
