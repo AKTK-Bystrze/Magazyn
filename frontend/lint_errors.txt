@@ -1,0 +1,12 @@
+
+> magazyn@0.0.1 lint:fix
+> cross-env ESLINT_USE_FLAT_CONFIG=false eslint . --ext .ts,.tsx,.astro --fix
+
+
+E:\bystrze\Magazyn\frontend\src\components\reservations\ReservationCard.tsx
+  42:3  error  'onViewDetails' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 1 problem (1 error, 0 warnings)
+
+(node:1017244) ESLintRCWarning: You are using an eslintrc configuration file, which is deprecated and support will be removed in v10.0.0. Please migrate to an eslint.config.js file. See https://eslint.org/docs/latest/use/configure/migration-guide for details. An eslintrc configuration file is used because you have the ESLINT_USE_FLAT_CONFIG environment variable set to false. If you want to use an eslint.config.js file, remove the environment variable. If you want to find the location of the eslintrc configuration file, use the --debug flag.
+(Use `node --trace-warnings ...` to show where the warning was created)

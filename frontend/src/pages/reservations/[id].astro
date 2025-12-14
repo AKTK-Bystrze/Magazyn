@@ -24,7 +24,7 @@ const isAdmin = user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.SUPER_A
 ---
 
 <AppLayout title="Reservation Details | Magazyn">
-  <div class="container mx-auto py-8 px-4 max-w-4xl">
+  <div className="container mx-auto py-8 px-4 max-w-4xl">
     <ReservationDetailsContainer 
       reservationId={id}
       currentUserId={user.id}

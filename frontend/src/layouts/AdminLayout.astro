@@ -31,14 +31,14 @@ const currentPath = Astro.url.pathname;
 ---
 
 <BaseLayout title={title} description={description}>
-  <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
-    <div class="!hidden border-r bg-muted/40 lg:!block">
-      <div class="flex h-full max-h-screen flex-col gap-2">
+  <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+    <div className="!hidden border-r bg-muted/40 lg:!block">
+      <div className="flex h-full max-h-screen flex-col gap-2">
         <AdminSidebar client:load currentPath={currentPath} />
       </div>
     </div>
 
-    <div class="flex flex-col">
+    <div className="flex flex-col">
       <QueryProvider client:load>
         <AdminHeader
           client:load
@@ -47,7 +47,7 @@ const currentPath = Astro.url.pathname;
         />
       </QueryProvider>
 
-      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         <slot />
       </main>
     </div>

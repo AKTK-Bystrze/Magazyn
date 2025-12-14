@@ -39,7 +39,6 @@ export function ReservationCard({
   showActions = true,
   onModify,
   onCancel,
-  onViewDetails,
 }: ReservationCardProps) {
   const isPending = reservation.status === RESERVATION_STATUS.PENDING;
   const days = calculateDays(reservation.startDate, reservation.endDate);
@@ -52,9 +51,7 @@ export function ReservationCard({
     onCancel?.(reservation);
   }, [onCancel, reservation]);
 
-  const handleViewDetails = React.useCallback(() => {
-    onViewDetails?.(reservation);
-  }, [onViewDetails, reservation]);
+
 
   return (
     <Card

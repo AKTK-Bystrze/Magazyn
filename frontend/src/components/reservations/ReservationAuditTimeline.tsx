@@ -22,17 +22,17 @@ interface ReservationAuditTimelineProps {
 export function ReservationAuditTimeline({
   auditTrail,
 }: ReservationAuditTimelineProps) {
+  // Sort by createdAt descending (newest first for display)
+  const sortedEntries = React.useMemo(
+    () => auditTrail ? [...auditTrail].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ) : [],
+    [auditTrail]
+  );
+
   if (!auditTrail || auditTrail.length === 0) {
     return null;
   }
-
-  // Sort by createdAt descending (newest first for display)
-  const sortedEntries = React.useMemo(
-    () => [...auditTrail].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ),
-    [auditTrail]
-  );
 
   return (
     <Card>

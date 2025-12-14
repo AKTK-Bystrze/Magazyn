@@ -1,6 +1,18 @@
 
-resolve astro check
-reservation can be cancelled only if it is in PENDING state
+design status changes
+
+statuses:
+- PENDING (when created)
+- RETURNED
+- DENIED
+
+transitions:
+ - pending -> returned
+ - pending -> denied
+
+user can change reservation dates only when pending
+when reservation status is returned or denied it cannot be changed
+
 
 reservation flow -
     - user can cancel their own reservation
@@ -8,6 +20,8 @@ reservation flow -
     - admin can change status of any reservation
     - admin can cancel any reservation
     - reservation history shows all changes. It shows date of change and who made it
+    - A reservation tile has button for cancell, button for modyfication, button for next status change
+    - reservation can be cancelled only when pending
 
     
 
