@@ -112,6 +112,8 @@ type EquipmentListQuery struct {
 	Search          *string `json:"search"`
 	Status          *string `json:"status"`
 	IncludeArchived bool    `json:"include_archived"`
+	AvailableFrom   *string `json:"available_from"` // ISO date YYYY-MM-DD
+	AvailableTo     *string `json:"available_to"`   // ISO date YYYY-MM-DD
 }
 
 // AvailabilityQuery represents parameters for availability check

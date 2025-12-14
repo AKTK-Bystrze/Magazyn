@@ -158,6 +158,14 @@ func (m *MockEquipmentRepository) GetConflictingReservations(ctx context.Context
 	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
 }
 
+func (m *MockEquipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error) {
+	args := m.Called(ctx, startDate, endDate)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 func (m *MockEquipmentRepository) GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error) {
 	args := m.Called(ctx, userID)
 	return args.Get(0).(map[string]bool), args.Error(1)

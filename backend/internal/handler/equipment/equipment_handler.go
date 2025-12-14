@@ -3,6 +3,7 @@ package equipment
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
@@ -44,6 +45,46 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 	if inc := r.URL.Query().Get("include_archived"); inc == "true" {
 		query.IncludeArchived = true
+	}
+
+	// Parse availability date range parameters
+	if availFrom := r.URL.Query().Get("available_from"); availFrom != "" {
+		query.AvailableFrom = &availFrom
+	}
+	if availTo := r.URL.Query().Get("available_to"); availTo != "" {
+		query.AvailableTo = &availTo
+	}
+
+	// DEBUG: Log all incoming query parameters
+	logger.Infof(ctx, "[DEBUG] HandleList - Raw URL Query: %s", r.URL.RawQuery)
+	logger.Infof(ctx, "[DEBUG] HandleList - Query params: Page=%d, PerPage=%d, TypeID=%v, Status=%v, Search=%v, AvailableFrom=%v, AvailableTo=%v",
+		query.Page, query.PerPage, query.TypeID, query.Status, query.Search, query.AvailableFrom, query.AvailableTo)
+
+	// Validate that both availability dates are provided together
+	if (query.AvailableFrom != nil) != (query.AvailableTo != nil) {
+		common.RespondError(ctx, w, http.StatusBadRequest,
+			"Both available_from and available_to must be provided together")
+		return
+	}
+
+	// Validate date format and logical ordering
+	if query.AvailableFrom != nil && query.AvailableTo != nil {
+		logger.Infof(ctx, "[DEBUG] HandleList - Availability filter active: from=%s, to=%s", *query.AvailableFrom, *query.AvailableTo)
+		if !isValidISODate(*query.AvailableFrom) {
+			common.RespondError(ctx, w, http.StatusBadRequest,
+				"Invalid available_from date format, expected YYYY-MM-DD")
+			return
+		}
+		if !isValidISODate(*query.AvailableTo) {
+			common.RespondError(ctx, w, http.StatusBadRequest,
+				"Invalid available_to date format, expected YYYY-MM-DD")
+			return
+		}
+		if *query.AvailableFrom > *query.AvailableTo {
+			common.RespondError(ctx, w, http.StatusBadRequest,
+				"available_from must be before or equal to available_to")
+			return
+		}
 	}
 
 	response, err := h.service.List(ctx, userID, query)
@@ -238,4 +279,10 @@ func (h *EquipmentHandler) HandleCreateEquipmentType(w http.ResponseWriter, r *h
 	}
 
 	common.RespondJSON(ctx, w, http.StatusCreated, response)
+}
+
+// isValidISODate validates that a date string is in YYYY-MM-DD format
+func isValidISODate(dateStr string) bool {
+	_, err := time.Parse("2006-01-02", dateStr)
+	return err == nil
 }

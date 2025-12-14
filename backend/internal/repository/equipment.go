@@ -45,6 +45,10 @@ type EquipmentRepository interface {
 	// GetConflictingReservations checks for reservations overlapping a date range
 	GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.PublicReservationsSelect, error)
 
+	// GetEquipmentIDsWithConflicts returns IDs of equipment that have conflicting reservations
+	// for the given date range. Only considers active reservations (PENDING, RENTED status).
+	GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error)
+
 	// GetUserFavorites retrieves IDs of equipment that are user's favorites
 	GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error)
 }

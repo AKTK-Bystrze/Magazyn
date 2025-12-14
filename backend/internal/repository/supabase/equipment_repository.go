@@ -14,62 +14,100 @@ import (
 )
 
 type equipmentRepository struct {
-	client *supabase.Client
+	client      *supabase.Client
+	supabaseURL string
+	serviceKey  string
 }
 
 // NewEquipmentRepository creates a new Supabase implementation of EquipmentRepository.
-func NewEquipmentRepository(client *supabase.Client) repository.EquipmentRepository {
+// The serviceKey is used to bypass RLS for availability checks that need to see ALL reservations.
+func NewEquipmentRepository(client *supabase.Client, supabaseURL, serviceKey string) repository.EquipmentRepository {
 	return &equipmentRepository{
-		client: client,
+		client:      client,
+		supabaseURL: supabaseURL,
+		serviceKey:  serviceKey,
 	}
 }
 
 // List retrieves a paginated list of equipment based on filters.
 func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
-	qb := r.client.From("equipment").Select("*", "exact", false)
+	// Build base query with all filters
+	baseQuery := r.client.From("equipment").Select("*", "exact", false)
 
 	if !query.IncludeArchived {
-		qb = qb.Eq("is_archived", "false")
+		baseQuery = baseQuery.Eq("is_archived", "false")
 	}
 	if query.TypeID != nil && *query.TypeID != "" {
-		qb = qb.Eq("type_id", *query.TypeID)
+		baseQuery = baseQuery.Eq("type_id", *query.TypeID)
 	}
 	if query.Status != nil && *query.Status != "" {
-		qb = qb.Eq("status", *query.Status)
+		baseQuery = baseQuery.Eq("status", *query.Status)
 	}
 	if query.Search != nil && *query.Search != "" {
 		searchTerm := *query.Search
-		qb = qb.Or(fmt.Sprintf("name.ilike.%%%s%%,description.ilike.%%%s%%", searchTerm, searchTerm), "")
+		baseQuery = baseQuery.Or(fmt.Sprintf("name.ilike.%%%s%%,description.ilike.%%%s%%", searchTerm, searchTerm), "")
 	}
 
-	// Get count
-	countData, _, err := qb.Execute()
+	// Filter by availability - get equipment IDs to exclude
+	var conflictIDs []string
+	if query.AvailableFrom != nil && query.AvailableTo != nil {
+		ids, err := r.GetEquipmentIDsWithConflicts(ctx, *query.AvailableFrom, *query.AvailableTo)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to check equipment availability: %w", err)
+		}
+		conflictIDs = ids
+		// Debug logging
+		fmt.Printf("[DEBUG] Availability filter: %s to %s, found %d conflicting equipment IDs: %v\n", 
+			*query.AvailableFrom, *query.AvailableTo, len(conflictIDs), conflictIDs)
+	}
+
+	// NOTE: The Supabase Go client doesn't support NOT IN filter properly,
+	// so we'll filter the results in Go after fetching
+	
+	// Get all matching equipment first
+	countData, _, err := baseQuery.Execute()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	var allItems []interface{} // simplified
+	var allItems []types.PublicEquipmentSelect
 	if err := json.Unmarshal(countData, &allItems); err != nil {
 		return nil, 0, err
 	}
-	totalItems := int64(len(allItems))
 
-	// Pagination
+	// Filter out unavailable equipment in Go
+	var filteredItems []types.PublicEquipmentSelect
+	conflictSet := make(map[string]bool)
+	for _, id := range conflictIDs {
+		conflictSet[id] = true
+	}
+	
+	for _, item := range allItems {
+		if !conflictSet[item.ID] {
+			filteredItems = append(filteredItems, item)
+		}
+	}
+	
+	if len(conflictIDs) > 0 {
+		fmt.Printf("[DEBUG] Filtered out %d unavailable equipment, %d remaining\n", 
+			len(allItems)-len(filteredItems), len(filteredItems))
+	}
+
+	totalItems := int64(len(filteredItems))
+
+	// Apply pagination to filtered results
 	offset := (query.Page - 1) * query.PerPage
-	qb = qb.Range(offset, offset+query.PerPage-1, "")
-	qb = qb.Order("name", nil)
-
-	data, _, err := qb.Execute()
-	if err != nil {
-		return nil, 0, err
+	endIndex := offset + query.PerPage
+	if endIndex > len(filteredItems) {
+		endIndex = len(filteredItems)
+	}
+	if offset >= len(filteredItems) {
+		return []types.PublicEquipmentSelect{}, totalItems, nil
 	}
 
-	var equipment []types.PublicEquipmentSelect
-	if err := json.Unmarshal(data, &equipment); err != nil {
-		return nil, 0, err
-	}
+	paginatedItems := filteredItems[offset:endIndex]
 
-	return equipment, totalItems, nil
+	return paginatedItems, totalItems, nil
 }
 
 // GetByID retrieves a single equipment by ID
@@ -297,6 +335,81 @@ func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, eq
 		return nil, err
 	}
 	return reservations, nil
+}
+
+// GetEquipmentIDsWithConflicts finds all equipment IDs that have active reservations
+// overlapping with the given date range
+func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error) {
+	fmt.Printf("[DEBUG] GetEquipmentIDsWithConflicts called with: startDate=%s, endDate=%s\n", startDate, endDate)
+	
+	// Use admin client to bypass RLS - we need to see ALL reservations, not just the user's
+	if r.serviceKey == "" {
+		fmt.Printf("[DEBUG] WARNING: No service key configured, using regular client (RLS will apply)\n")
+	}
+	
+	// Create admin client to bypass RLS
+	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
+	if err != nil {
+		fmt.Printf("[DEBUG] Error creating admin client: %v, falling back to regular client\n", err)
+		adminClient = r.client
+	}
+	
+	// Debug: First fetch all active reservations to see what's in the database
+	allData, _, allErr := adminClient.From("reservations").
+		Select("equipment_id, start_date, end_date, status", "exact", false).
+		In("status", []string{constants.ReservationStatusPending, constants.ReservationStatusRented}).
+		Execute()
+	if allErr == nil {
+		var allRes []struct {
+			EquipmentID string `json:"equipment_id"`
+			StartDate   string `json:"start_date"`
+			EndDate     string `json:"end_date"`
+			Status      string `json:"status"`
+		}
+		if json.Unmarshal(allData, &allRes) == nil {
+			fmt.Printf("[DEBUG] ALL active reservations in database (via admin client): %+v\n", allRes)
+		}
+	} else {
+		fmt.Printf("[DEBUG] Error fetching all reservations: %v\n", allErr)
+	}
+	
+	data, _, err := adminClient.From("reservations").
+		Select("equipment_id, start_date, end_date, status", "exact", false).
+		Lte("start_date", endDate).
+		Gte("end_date", startDate).
+		In("status", []string{constants.ReservationStatusPending, constants.ReservationStatusRented}).
+		Execute()
+
+	if err != nil {
+		fmt.Printf("[DEBUG] Error querying reservations: %v\n", err)
+		return nil, err
+	}
+
+	var reservations []struct {
+		EquipmentID string `json:"equipment_id"`
+		StartDate   string `json:"start_date"`
+		EndDate     string `json:"end_date"`
+		Status      string `json:"status"`
+	}
+	if err := json.Unmarshal(data, &reservations); err != nil {
+		fmt.Printf("[DEBUG] Error unmarshaling reservations: %v\n", err)
+		return nil, err
+	}
+
+	fmt.Printf("[DEBUG] Found %d overlapping reservations: %+v\n", len(reservations), reservations)
+
+	// Deduplicate equipment IDs
+	seen := make(map[string]bool)
+	var ids []string
+	for _, r := range reservations {
+		if !seen[r.EquipmentID] {
+			seen[r.EquipmentID] = true
+			ids = append(ids, r.EquipmentID)
+		}
+	}
+
+	fmt.Printf("[DEBUG] Deduplicated to %d unique equipment IDs: %v\n", len(ids), ids)
+	return ids, nil
 }
 
 // GetUserFavorites retrieves IDs of equipment that are user's favorites

@@ -3,6 +3,7 @@ import { cartStateSchema } from "@/lib/validators/cart.validator";
 import { STORAGE_KEY_CART } from "@/lib/config/constants";
 
 const CART_STORAGE_KEY = STORAGE_KEY_CART;
+const FILTER_DATES_STORAGE_KEY = "reservation_filter_dates";
 
 /**
  * Saves the cart state to sessionStorage
@@ -48,4 +49,52 @@ export function loadCartFromStorage(): CartState | null {
  */
 export function clearCartFromStorage(): void {
   sessionStorage.removeItem(CART_STORAGE_KEY);
+}
+
+/**
+ * Saves equipment filter dates to sessionStorage
+ * Used to automatically populate reservation dates when navigating from equipment browse to checkout
+ *
+ * @param availableFrom - Start date filter (YYYY-MM-DD)
+ * @param availableTo - End date filter (YYYY-MM-DD)
+ */
+export function saveFilterDatesToStorage(availableFrom: string | undefined, availableTo: string | undefined): void {
+  try {
+    if (availableFrom && availableTo) {
+      sessionStorage.setItem(FILTER_DATES_STORAGE_KEY, JSON.stringify({ availableFrom, availableTo }));
+    } else {
+      sessionStorage.removeItem(FILTER_DATES_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error("Failed to save filter dates to sessionStorage:", error);
+  }
+}
+
+/**
+ * Loads equipment filter dates from sessionStorage
+ *
+ * @returns Filter dates or null if not found
+ */
+export function loadFilterDatesFromStorage(): { availableFrom: string; availableTo: string } | null {
+  try {
+    const data = sessionStorage.getItem(FILTER_DATES_STORAGE_KEY);
+    if (!data) return null;
+
+    const parsed = JSON.parse(data);
+    if (parsed.availableFrom && parsed.availableTo) {
+      return parsed;
+    }
+    return null;
+  } catch (error) {
+    console.error("Failed to load filter dates from sessionStorage:", error);
+    return null;
+  }
+}
+
+/**
+ * Clears filter dates from sessionStorage
+ * Called after dates are applied to cart to prevent stale data
+ */
+export function clearFilterDatesFromStorage(): void {
+  sessionStorage.removeItem(FILTER_DATES_STORAGE_KEY);
 }

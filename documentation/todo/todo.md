@@ -2,6 +2,8 @@
 reservation flow - select dates and preview available equipment
  - avaiabl_range_plan.md
 
+ double click on adding to cart should remove it, the add to cart button should change
+
 reservation flow - user can see all reservations
 reservation flow - admin see username on reservations list
 reservation flow - changing statuses by user

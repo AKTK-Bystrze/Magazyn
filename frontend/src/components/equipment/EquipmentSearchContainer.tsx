@@ -146,7 +146,13 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
       </main>
 
       {/* Floating Cart Indicator */}
-      <CartIndicator checkoutPath={checkoutPath} />
+      <CartIndicator
+        checkoutPath={checkoutPath}
+        filterDates={{
+          availableFrom: filters.availableFrom,
+          availableTo: filters.availableTo,
+        }}
+      />
     </div>
   );
 }

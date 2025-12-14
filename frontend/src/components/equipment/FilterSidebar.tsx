@@ -40,7 +40,7 @@ export function FilterSidebar({ filters, types, onFilterChange, onReset }: Filte
     }
 
     if (filters.availableFrom && filters.availableTo) {
-      if (filters.availableTo <= filters.availableFrom) {
+      if (filters.availableTo < filters.availableFrom) {
         errors.endDate = ERROR_END_DATE_BEFORE_START;
       }
     }

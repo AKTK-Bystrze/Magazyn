@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowRight } from "lucide-react";
-import { loadCartFromStorage } from "@/lib/utils/cart-storage";
+import { loadCartFromStorage, saveFilterDatesToStorage } from "@/lib/utils/cart-storage";
 import { ROUTES } from "@/lib/config/routes";
 import { pluralize } from "@/lib/utils/text-utils";
 
@@ -11,6 +11,11 @@ import { pluralize } from "@/lib/utils/text-utils";
 interface CartIndicatorProps {
   /** Custom checkout path. Defaults to user reservation create route. */
   checkoutPath?: string;
+  /** Current equipment filter dates to copy to reservation */
+  filterDates?: {
+    availableFrom?: string;
+    availableTo?: string;
+  };
 }
 
 /**
@@ -31,6 +36,7 @@ interface CartIndicatorProps {
  */
 export function CartIndicator({
   checkoutPath = ROUTES.PROTECTED.RESERVATIONS_CREATE,
+  filterDates,
 }: CartIndicatorProps) {
   const [itemCount, setItemCount] = React.useState(0);
 
@@ -54,6 +60,13 @@ export function CartIndicator({
     };
   }, []);
 
+  // Save filter dates when navigating to checkout
+  const handleCheckoutClick = () => {
+    if (filterDates?.availableFrom && filterDates?.availableTo) {
+      saveFilterDatesToStorage(filterDates.availableFrom, filterDates.availableTo);
+    }
+  };
+
   // Don't render if cart is empty
   if (itemCount === 0) {
     return null;
@@ -61,7 +74,7 @@ export function CartIndicator({
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 duration-300">
-      <a href={checkoutPath}>
+      <a href={checkoutPath} onClick={handleCheckoutClick}>
         <Button
           size="lg"
           className="shadow-lg hover:shadow-xl transition-shadow gap-2 pr-4"

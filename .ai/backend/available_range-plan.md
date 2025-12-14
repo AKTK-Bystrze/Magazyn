@@ -264,13 +264,13 @@ func TestHandleList_AvailabilityFilter_ValidationError(t *testing.T) {
 3. Test queries:
    ```bash
    # Should return both A and B
-   curl "http://localhost:8080/api/equipment"
+   curl "http://localhost:8080/api/v1/equipment"
    
    # Should return only A (B has conflict)
-   curl "http://localhost:8080/api/equipment?available_from=2024-01-16&available_to=2024-01-18"
+   curl "http://localhost:8080/api/v1/equipment?available_from=2024-01-16&available_to=2024-01-18"
    
    # Should return both (no conflict in this range)
-   curl "http://localhost:8080/api/equipment?available_from=2024-01-21&available_to=2024-01-25"
+   curl "http://localhost:8080/api/v1/equipment?available_from=2024-01-21&available_to=2024-01-25"
    ```
 
 ---

@@ -34,7 +34,14 @@ export const equipmentApi = {
       if (params.availableTo) queryParams.available_to = params.availableTo;
     }
 
+    // DEBUG: Log API request parameters
+    console.log('[DEBUG] equipmentApi.list - Input params:', params);
+    console.log('[DEBUG] equipmentApi.list - Query params sent to API:', queryParams);
+
     const response = await api.get('/api/equipment', Object.keys(queryParams).length > 0 ? queryParams : undefined);
+
+    // DEBUG: Log response
+    console.log('[DEBUG] equipmentApi.list - Response equipment count:', (response.data as { equipment?: unknown[] })?.equipment?.length);
 
     // Transform backend response to frontend format
     return transformEquipmentListResponse(response.data);

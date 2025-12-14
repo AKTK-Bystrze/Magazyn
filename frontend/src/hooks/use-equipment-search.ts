@@ -62,6 +62,8 @@ export function useEquipmentSearch() {
     const timer = setTimeout(() => {
       setDebouncedFilters(filters);
       updateUrl(filters); // Sync URL when debounce settles
+      // DEBUG: Log debounced filters
+      console.log('[DEBUG] useEquipmentSearch - Debounced filters applied:', filters);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
