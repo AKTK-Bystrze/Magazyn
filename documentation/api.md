@@ -46,7 +46,12 @@ The following tree illustrates the available REST endpoints exposed by the Go Ba
 │           └── POST                # Add maintenance log (Admin)
 │
 ├── /reservations
-│   ├── GET  /                      # List reservations (User: own, Admin: all)
+│   ├── GET  /                      # List reservations
+│   │                               #   Query params:
+│   │                               #   - scope=my (default): User's own reservations
+│   │                               #   - scope=all: All reservations (read-only for users, editable for admin)
+│   │                               #   - status: Filter by status
+│   │                               #   - page, per_page: Pagination
 │   ├── POST /                      # Create reservation(s)
 │   ├── PATCH /bulk                 # Bulk status update (Admin)
 │   ├── GET   /dashboard            # Admin dashboard summary
