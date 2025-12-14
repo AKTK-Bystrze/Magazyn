@@ -15,6 +15,9 @@ export default defineConfig({
     plugins: [tailwindcss(), tsconfigPaths()],
     envDir: '..',
     envPrefix: ['VITE_', 'SUPABASE_', 'PUBLIC_'],
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+    },
   },
 });
 

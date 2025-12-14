@@ -15,41 +15,64 @@ interface EquipmentCardProps {
 }
 
 export function EquipmentCard({ item }: EquipmentCardProps) {
-  const [addedToCart, setAddedToCart] = React.useState(false);
-  const [alreadyInCart, setAlreadyInCart] = React.useState(false);
+  const [isInCart, setIsInCart] = React.useState(false);
+  const [justAdded, setJustAdded] = React.useState(false);
 
   const isAvailable = item.status === "ok";
   const statusColor = item.status === "ok" ? "bg-green-500" : item.status === "broken" ? "bg-destructive" : "bg-yellow-500";
   const statusLabel = item.status === "ok" ? "Available" : item.status === "broken" ? "Broken" : "Blocked";
 
-  const handleAddToCart = () => {
-    const cartItem: CartItem = {
-      equipmentId: item.id,
-      name: item.name,
-      typeName: item.type.name,
-      description: item.description,
-      creditCostPerDay: item.type.creditCostPerDay,
-      imageUrl: item.imagePath,
-    };
+  // Check if item is in cart
+  const checkCartStatus = React.useCallback(() => {
+    const currentCart = loadCartFromStorage();
+    if (currentCart) {
+      const exists = currentCart.items.some(i => i.equipmentId === item.id);
+      setIsInCart(exists);
+    } else {
+      setIsInCart(false);
+    }
+  }, [item.id]);
 
+  // Initial check and event listener
+  React.useEffect(() => {
+    checkCartStatus();
+
+    const handleCartUpdate = () => checkCartStatus();
+    window.addEventListener('cart-updated', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('cart-updated', handleCartUpdate);
+    };
+  }, [checkCartStatus]);
+
+  const handleToggleCart = () => {
     const currentCart = loadCartFromStorage() || { items: [], startDate: null, endDate: null };
 
-    // Check if already in cart
-    if (currentCart.items.some(i => i.equipmentId === cartItem.equipmentId)) {
-      setAlreadyInCart(true);
-      setTimeout(() => setAlreadyInCart(false), FEEDBACK_DISPLAY_DURATION_MS);
-      return;
+    if (isInCart) {
+      // Remove from cart
+      currentCart.items = currentCart.items.filter(i => i.equipmentId !== item.id);
+      saveCartToStorage(currentCart);
+      setJustAdded(false);
+    } else {
+      // Add to cart
+      const cartItem: CartItem = {
+        equipmentId: item.id,
+        name: item.name,
+        typeName: item.type.name,
+        description: item.description,
+        creditCostPerDay: item.type.creditCostPerDay,
+        imageUrl: item.imagePath,
+      };
+      currentCart.items.push(cartItem);
+      saveCartToStorage(currentCart);
+
+      // Show feedback
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), FEEDBACK_DISPLAY_DURATION_MS);
     }
 
-    currentCart.items.push(cartItem);
-    saveCartToStorage(currentCart);
-
-    // Dispatch event for UI updates (for potential navbar badge)
+    // Dispatch event to update other components
     window.dispatchEvent(new Event('cart-updated'));
-
-    // Show success feedback
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), FEEDBACK_DISPLAY_DURATION_MS);
   };
 
   return (
@@ -104,27 +127,34 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
           {isAvailable && (
             <Button
               size="sm"
-              variant={addedToCart ? "default" : alreadyInCart ? "destructive" : "outline"}
-              onClick={handleAddToCart}
-              title={addedToCart ? "Added to cart!" : alreadyInCart ? "Already in cart" : "Add to Cart"}
-              disabled={addedToCart}
+              variant={isInCart ? (justAdded ? "default" : "secondary") : "outline"}
+              onClick={handleToggleCart}
               className={cn(
-                "transition-all duration-300",
-                addedToCart && "bg-green-600 hover:bg-green-600"
+                "transition-all duration-300 min-w-[110px]",
+                justAdded && "bg-green-600 hover:bg-green-600 text-white",
+                !justAdded && isInCart && "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
               )}
             >
-              {addedToCart ? (
+              {justAdded ? (
                 <>
                   <Check className="h-4 w-4 mr-1" />
-                  Added!
+                  Added
                 </>
-              ) : alreadyInCart ? (
+              ) : isInCart ? (
                 <>
-                  <ShoppingCart className="h-4 w-4 mr-1" />
-                  In Cart
+                    <span className="group-hover:hidden flex items-center">
+                      <Check className="h-4 w-4 mr-1" />
+                      In Cart
+                    </span>
+                    <span className="hidden group-hover:flex items-center">
+                      Remove
+                    </span>
                 </>
               ) : (
-                <ShoppingCart className="h-4 w-4" />
+                    <>
+                      <ShoppingCart className="h-4 w-4 mr-1" />
+                      Add
+                    </>
               )}
             </Button>
           )}

@@ -67,7 +67,6 @@ export function ReservationCartView({
     updateStartDate,
     updateEndDate,
     clearCart,
-    calculateCost,
   } = useReservationCart(initialCreditBalance);
 
   const { checkAvailability, isChecking } = useAvailabilityCheck(

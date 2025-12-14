@@ -13,8 +13,8 @@
  * </AppLayout>
  */
 import BaseLayout from './BaseLayout.astro';
-import { TopNavBar } from '@/components/navigation/TopNavBar';
-import { Breadcrumbs } from '@/components/navigation/Breadcrumbs';
+import { UserSidebar } from '@/components/navigation/UserSidebar';
+import { UserHeader } from '@/components/navigation/UserHeader';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 
 interface Props {
@@ -22,11 +22,11 @@ interface Props {
   title: string;
   /** Optional meta description */
   description?: string;
-  /** Whether to show breadcrumbs (default: true, hidden on dashboard) */
+  /** Whether to show breadcrumbs (deprecated, handled by header) */
   showBreadcrumbs?: boolean;
 }
 
-const { title, description, showBreadcrumbs = true } = Astro.props;
+const { title, description } = Astro.props;
 
 const user = Astro.locals.user;
 const sessionInfo = Astro.locals.sessionInfo;
@@ -34,26 +34,33 @@ const currentPath = Astro.url.pathname;
 ---
 
 <BaseLayout title={title} description={description}>
-  <div className="min-h-screen flex flex-col">
-    <QueryProvider client:load>
-      <TopNavBar 
-        client:load 
-        user={user ? { email: user.email || '', id: user.id } : null}
-        role={sessionInfo?.role || 'user'}
-        currentPath={currentPath}
-        creditBalance={sessionInfo?.creditBalance}
-      />
-    </QueryProvider>
-    
-    <main className="flex-1">
-      {showBreadcrumbs && currentPath !== '/dashboard' && (
-        <div className="container mx-auto px-4 py-4">
-          <Breadcrumbs client:load currentPath={currentPath} />
-        </div>
-      )}
-      <div className="container mx-auto px-4 py-6">
-        <slot />
+  {/* 
+    The layout uses a grid structure on desktop:
+    - Sidebar: fixed width
+    - Main Content: remaining space
+  */}
+  <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+    {/* Desktop Sidebar (hidden on mobile/tablet) */}
+    <div className="hidden border-r bg-muted/40 lg:block">
+      <div className="flex h-full max-h-screen flex-col gap-2">
+        <UserSidebar client:load currentPath={currentPath} />
       </div>
-    </main>
+    </div>
+
+    {/* Main Content Area */}
+    <div className="flex flex-col">
+      <QueryProvider client:load>
+        <UserHeader 
+          client:load 
+          user={user ? { email: user.email || '', id: user.id } : null}
+          currentPath={currentPath}
+          creditBalance={sessionInfo?.creditBalance}
+        />
+      </QueryProvider>
+      
+      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <slot />
+      </main>
+    </div>
   </div>
 </BaseLayout>

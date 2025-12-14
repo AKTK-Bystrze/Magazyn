@@ -1,10 +1,10 @@
 ---
-import Layout from '@/layouts/Layout.astro';
+import AppLayout from '@/layouts/AppLayout.astro';
 import EquipmentSearchContainer from '@/components/equipment/EquipmentSearchContainer';
 ---
 
-<Layout title="Equipment Search | Bystrze Magazyn">
+<AppLayout title="Equipment Search | Bystrze Magazyn">
   <div className="container mx-auto">
     <EquipmentSearchContainer client:only="react" />
   </div>
-</Layout>
+</AppLayout>

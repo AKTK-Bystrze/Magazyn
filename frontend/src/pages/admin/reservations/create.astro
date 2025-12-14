@@ -24,7 +24,7 @@ if (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUPER_ADMIN_ROLE) {
 ---
 
 <AdminLayout title="Create Reservation | Magazyn">
-  <div class="min-h-screen bg-background">
+  <div className="min-h-screen bg-background">
     <ReservationCartView
       client:only="react"
       initialCreditBalance={sessionInfo.creditBalance}

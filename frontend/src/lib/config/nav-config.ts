@@ -10,6 +10,15 @@ import type { ComponentType } from "react";
 import { ROUTES } from "./routes";
 import { STORAGE_KEY_THEME } from "./constants";
 
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Wrench,
+  CreditCard,
+  Users,
+  BarChart
+} from 'lucide-react';
+
 /**
  * Navigation item definition
  */
@@ -31,21 +40,25 @@ export const USER_NAV_ITEMS: NavItem[] = [
   {
     label: "Dashboard",
     href: ROUTES.PROTECTED.DASHBOARD,
+    icon: LayoutDashboard,
     activePattern: /^\/dashboard$/,
   },
   {
     label: "Equipment",
     href: ROUTES.PUBLIC.EQUIPMENT,
+    icon: Wrench,
     activePattern: /^\/equipment/,
   },
   {
     label: "Reservations",
     href: ROUTES.PROTECTED.RESERVATIONS,
+    icon: CalendarDays,
     activePattern: /^\/reservations/,
   },
   {
     label: "Credits",
     href: ROUTES.PROTECTED.CREDITS_HISTORY,
+    icon: CreditCard,
     activePattern: /^\/credits/,
   },
 ];
@@ -57,26 +70,31 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   {
     label: "Overview",
     href: ROUTES.PROTECTED.ADMIN,
+    icon: LayoutDashboard,
     activePattern: /^\/admin$/,
   },
   {
     label: "Reservations",
     href: ROUTES.PROTECTED.ADMIN_RESERVATIONS,
+    icon: CalendarDays,
     activePattern: /^\/admin\/reservations/,
   },
   {
     label: "Equipment",
     href: ROUTES.PROTECTED.ADMIN_EQUIPMENT,
+    icon: Wrench,
     activePattern: /^\/admin\/equipment/,
   },
   {
     label: "Users",
     href: ROUTES.PROTECTED.ADMIN_USERS,
+    icon: Users,
     activePattern: /^\/admin\/users/,
   },
   {
     label: "Analytics",
     href: ROUTES.PROTECTED.ADMIN_ANALYTICS,
+    icon: BarChart,
     activePattern: /^\/admin\/analytics/,
   },
 ];

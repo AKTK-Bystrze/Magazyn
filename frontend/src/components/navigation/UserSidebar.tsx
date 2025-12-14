@@ -1,16 +1,16 @@
 /**
- * AdminSidebar Component
+ * UserSidebar Component
  * 
- * Renders the sidebar navigation for admin users.
+ * Renders the sidebar navigation for standard users.
  * Uses centralized navigation configuration for consistency.
  * 
  * @example
- * <AdminSidebar currentPath="/admin" />
+ * <UserSidebar currentPath="/dashboard" />
  */
 import { cn } from '@/lib/utils';
-import { ADMIN_NAV_ITEMS } from '@/lib/config/nav-config';
+import { USER_NAV_ITEMS } from '@/lib/config/nav-config';
 
-interface AdminSidebarProps {
+interface UserSidebarProps {
   /** Current URL path for active state highlighting */
   currentPath: string;
   /** Optional class name override */
@@ -20,9 +20,9 @@ interface AdminSidebarProps {
 }
 
 /**
- * Sidebar navigation component for admin dashboard
+ * Sidebar navigation component for user dashboard
  */
-export function AdminSidebar({ currentPath, className, onNavigate }: AdminSidebarProps) {
+export function UserSidebar({ currentPath, className, onNavigate }: UserSidebarProps) {
   const isActive = (activePattern: RegExp) => {
     return activePattern.test(currentPath);
   };
@@ -47,10 +47,10 @@ export function AdminSidebar({ currentPath, className, onNavigate }: AdminSideba
             </svg>
             <h2 className="text-lg font-semibold tracking-tight">Magazyn</h2>
           </div>
-
+          
           {/* Navigation Items */}
           <div className="space-y-1">
-            {ADMIN_NAV_ITEMS.map((item) => (
+            {USER_NAV_ITEMS.map((item) => (
               <a
                 key={item.href}
                 href={item.href}

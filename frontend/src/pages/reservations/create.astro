@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import Layout from "@/layouts/Layout.astro";
+import AppLayout from "@/layouts/AppLayout.astro";
 import { ReservationCartView } from "@/components/reservations/ReservationCartView";
 import { ROUTES } from "@/lib/config/routes";
 
@@ -16,7 +16,7 @@ const initialCreditBalance = sessionInfo.creditBalance || 0;
 const error = null;
 ---
 
-<Layout title="Finish Reservation | Magazyn">
+<AppLayout title="Finish Reservation | Magazyn">
   <div className="min-h-screen bg-background">
     {error ? (
       <div className="container mx-auto py-12 px-4 text-center">
@@ -31,4 +31,4 @@ const error = null;
       />
     )}
   </div>
-</Layout>
+</AppLayout>
