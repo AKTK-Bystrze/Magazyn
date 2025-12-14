@@ -86,6 +86,30 @@
 
 ---
 
+## US-021A: View All System Reservations
+
+**Description:** As a user, I want to view all reservations in the system (not just my own) so I can see equipment availability and what others have reserved.
+
+**Acceptance Criteria:**
+
+- User can access "All Reservations" tab from the reservations page
+- Reservations page has two tabs: "My Reservations" (default) and "All Reservations"
+- Tab selection updates URL query param (`?scope=my` / `?scope=all`) for shareable links
+- "All Reservations" view displays all users' reservations with full details:
+  - Equipment name, type
+  - User name (who made the reservation)
+  - Start and end dates
+  - Status
+  - Credit cost
+- Current user's reservations are visually highlighted (e.g., subtle border, badge)
+- **No action buttons** are shown in "All Reservations" view for regular users (read-only)
+- Admin users CAN see action buttons on all reservations in "All Reservations" view
+- All existing filters (status, sort) work in both tabs
+- Pagination works in both tabs
+- Default view is "My Reservations" when navigating to `/reservations`
+
+---
+
 ## US-047: Handle Date Modification Warning
 
 **Description:** As a user, I want to be warned when I significantly extend my reservation dates so I understand the credit impact.

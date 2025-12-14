@@ -15,13 +15,15 @@ if (!user || !sessionInfo) {
 }
 
 const success = Astro.url.searchParams.get('success') === 'true';
+const scopeParam = Astro.url.searchParams.get('scope');
+const initialScope = scopeParam === 'all' ? 'all' : 'my';
 ---
 
-<AppLayout title="My Reservations | Magazyn">
-  <div className="container mx-auto py-8 px-4 max-w-7xl">
+<AppLayout title="Reservations | Magazyn">
+  <div class="container mx-auto py-8 px-4 max-w-7xl">
     <!-- Header -->
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <h1 className="text-3xl font-bold tracking-tight">My Reservations</h1>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <h1 class="text-3xl font-bold tracking-tight">Reservations</h1>
       <a href={ROUTES.PUBLIC.EQUIPMENT}>
         <Button variant="outline">
           Browse Equipment
@@ -40,6 +42,11 @@ const success = Astro.url.searchParams.get('success') === 'true';
     )}
 
     <!-- Reservation List -->
-    <ReservationListContainer mode="user" client:load />
+    <ReservationListContainer 
+      mode="user" 
+      currentUserId={user.id}
+      initialFilters={{ scope: initialScope }}
+      client:load 
+    />
   </div>
 </AppLayout>

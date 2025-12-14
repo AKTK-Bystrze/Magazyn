@@ -15,24 +15,37 @@ import (
 )
 
 type reservationRepository struct {
-	client      *supabase.Client
-	supabaseURL string
-	supabaseKey string
+	client         *supabase.Client
+	supabaseURL    string
+	supabaseKey    string
+	serviceRoleKey string
 }
 
 // NewReservationRepository creates a new Supabase implementation of ReservationRepository
-func NewReservationRepository(client *supabase.Client, url string, key string) repository.ReservationRepository {
+func NewReservationRepository(client *supabase.Client, url string, key string, serviceRoleKey string) repository.ReservationRepository {
 	return &reservationRepository{
-		client:      client,
-		supabaseURL: url,
-		supabaseKey: key,
+		client:         client,
+		supabaseURL:    url,
+		supabaseKey:    key,
+		serviceRoleKey: serviceRoleKey,
 	}
 }
 
 // GetReservations retrieves a paginated list of reservations based on filters
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
-	// Use authenticated client for RLS enforcement
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	// Use authenticated client for RLS enforcement, unless BypassRLS is set
+	var client *supabase.Client
+	var err error
+	if query.BypassRLS && r.serviceRoleKey != "" {
+		// Use service role client to bypass RLS for viewing all reservations
+		client, err = supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
+		if err != nil {
+			logger.Warnf(ctx, "Failed to create service role client, falling back to auth client: %v", err)
+			client = getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+		}
+	} else {
+		client = getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	}
 
 	// Select basics + joined data including credit_cost_per_day for calculation
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"

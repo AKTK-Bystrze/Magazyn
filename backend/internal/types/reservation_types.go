@@ -114,4 +114,5 @@ type ReservationListQuery struct {
 	EquipmentID   *string `json:"equipment_id"`
 	StartDateFrom *string `json:"start_date_from"`
 	StartDateTo   *string `json:"start_date_to"`
+	BypassRLS     bool    `json:"-"` // If true, use unauthenticated client (for "all" scope)
 }

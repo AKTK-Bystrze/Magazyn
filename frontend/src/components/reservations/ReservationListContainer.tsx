@@ -3,6 +3,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { useReservations } from "@/hooks/useReservations";
 import { ReservationCardList } from "./ReservationCardList";
 import { ReservationFilters } from "./ReservationFilters";
+import { ReservationViewTabs, type ReservationScope } from "./ReservationViewTabs";
 import { CancelReservationDialog } from "./CancelReservationDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
@@ -22,6 +23,7 @@ import type { ReservationListItem, ReservationListProps } from "@/types";
  */
 function ReservationListContainerInner({
   mode,
+  currentUserId,
   initialFilters,
 }: ReservationListProps) {
   const {
@@ -154,6 +156,22 @@ function ReservationListContainerInner({
     [setFilter]
   );
 
+  // Handle scope change with URL update
+  const handleScopeChange = React.useCallback(
+    (scope: ReservationScope) => {
+      setFilter("scope", scope);
+      // Update URL query param for shareable links
+      const url = new URL(window.location.href);
+      if (scope === "my") {
+        url.searchParams.delete("scope");
+      } else {
+        url.searchParams.set("scope", scope);
+      }
+      window.history.replaceState({}, "", url.toString());
+    },
+    [setFilter]
+  );
+
   // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
     filters.status !== DEFAULT_STATUS_FILTER ||
@@ -181,6 +199,12 @@ function ReservationListContainerInner({
         </Alert>
       )}
 
+      {/* View Tabs */}
+      <ReservationViewTabs
+        activeScope={filters.scope}
+        onScopeChange={handleScopeChange}
+      />
+
       {/* Filters */}
       <ReservationFilters
         filters={filters}
@@ -196,11 +220,13 @@ function ReservationListContainerInner({
         totalPages={data?.pagination.totalPages ?? 0}
         hasFilters={hasActiveFilters}
         mode={mode}
+        scope={filters.scope}
+        currentUserId={currentUserId}
         onPageChange={handlePageChange}
-        onModify={mode === "user" ? handleModify : undefined}
-        onCancel={mode === "user" ? handleCancelClick : undefined}
-        onCancelAll={mode === "user" ? handleCancelAll : undefined}
-        onModifyDatesAll={mode === "user" ? handleModifyDatesAll : undefined}
+        onModify={mode === "user" && filters.scope === "my" ? handleModify : undefined}
+        onCancel={mode === "user" && filters.scope === "my" ? handleCancelClick : undefined}
+        onCancelAll={mode === "user" && filters.scope === "my" ? handleCancelAll : undefined}
+        onModifyDatesAll={mode === "user" && filters.scope === "my" ? handleModifyDatesAll : undefined}
         onViewDetails={handleViewDetails}
       />
 

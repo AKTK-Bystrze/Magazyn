@@ -23,6 +23,7 @@ const DEFAULT_FILTERS: ReservationFilterState = {
   perPage: DEFAULT_PAGE_SIZE,
   status: DEFAULT_STATUS_FILTER,
   sort: DEFAULT_SORT_OPTION,
+  scope: "my",
 };
 
 /**

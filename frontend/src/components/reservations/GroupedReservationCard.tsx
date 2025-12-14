@@ -15,6 +15,8 @@ import { pluralize } from "@/lib/utils/text-utils";
 interface GroupedReservationCardProps {
   group: GroupedReservation;
   isExpanded: boolean;
+  scope: "my" | "all";
+  currentUserId?: string;
   onToggle: () => void;
   onCancelAll: () => void;
   onModifyDatesAll: () => void;
@@ -30,6 +32,8 @@ interface GroupedReservationCardProps {
 export function GroupedReservationCard({
   group,
   isExpanded,
+  scope,
+  currentUserId,
   onToggle,
   onCancelAll,
   onModifyDatesAll,
@@ -39,6 +43,8 @@ export function GroupedReservationCard({
 }: GroupedReservationCardProps) {
   const days = calculateDays(group.startDate, group.endDate);
   const canBulkModify = group.status === RESERVATION_STATUS.PENDING;
+  const showActions = mode === "admin" || (mode === "user" && scope === "my");
+  const isOwn = currentUserId ? group.userId === currentUserId : false;
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -56,12 +62,13 @@ export function GroupedReservationCard({
             )}
 
             <div className="flex flex-col gap-3 flex-1 min-w-0">
-              {/* User (Admin only) */}
-              {mode === "admin" && (
+              {/* User (Admin or All Reservations view) */}
+              {(mode === "admin" || scope === "all") && (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="font-medium text-foreground text-sm">
                     {group.username}
+                    {scope === "all" && isOwn && " (You)"}
                   </span>
                 </div>
               )}
@@ -113,7 +120,7 @@ export function GroupedReservationCard({
       {isExpanded && (
         <CardContent className="pt-6 space-y-4">
           {/* Bulk Actions */}
-          {canBulkModify && (
+          {showActions && canBulkModify && (
             <div className="flex gap-2 pb-4 border-b">
               <Button
                 variant="outline"
@@ -140,15 +147,20 @@ export function GroupedReservationCard({
 
           {/* Individual Items */}
           <div className="space-y-3">
-            {group.items.map((item) => (
-              <ReservationCard
-                key={item.id}
-                reservation={item}
-                onCancel={() => onCancelSingle(item)}
-                onModify={() => onModifySingle(item)}
-                mode={mode}
-              />
-            ))}
+            {group.items.map((item) => {
+              const itemIsOwn = currentUserId ? item.userId === currentUserId : false;
+              return (
+                <ReservationCard
+                  key={item.id}
+                  reservation={item}
+                  isOwn={scope === "all" && itemIsOwn}
+                  showActions={showActions}
+                  onCancel={showActions ? () => onCancelSingle(item) : undefined}
+                  onModify={showActions ? () => onModifySingle(item) : undefined}
+                  mode={mode}
+                />
+              );
+            })}
           </div>
         </CardContent>
       )}

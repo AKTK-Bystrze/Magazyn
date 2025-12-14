@@ -180,6 +180,7 @@ export type ReservationFilterState = {
   status: Enums<"reservation_status"> | "ALL";
   sort: ReservationSortOption;
   query?: string;
+  scope: "my" | "all";
 };
 
 /**
@@ -187,6 +188,7 @@ export type ReservationFilterState = {
  */
 export type ReservationListProps = {
   mode: "user" | "admin";
+  currentUserId?: string;
   initialFilters?: Partial<ReservationFilterState>;
 };
 

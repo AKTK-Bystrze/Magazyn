@@ -15,6 +15,8 @@ interface ReservationCardListProps {
   totalPages: number;
   hasFilters?: boolean;
   mode: "user" | "admin";
+  scope: "my" | "all";
+  currentUserId?: string;
   onPageChange: (page: number) => void;
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
@@ -35,6 +37,8 @@ export function ReservationCardList({
   totalPages,
   hasFilters = false,
   mode,
+  scope,
+  currentUserId,
   onPageChange,
   onModify,
   onCancel,
@@ -90,10 +94,14 @@ export function ReservationCardList({
         {groups.map((group) => {
           // Single-item groups render as regular cards
           if (group.items.length === 1) {
+            const reservation = group.items[0];
+            const isOwn = currentUserId ? reservation.userId === currentUserId : false;
             return (
               <ReservationCard
-                key={group.items[0].id}
-                reservation={group.items[0]}
+                key={reservation.id}
+                reservation={reservation}
+                isOwn={scope === "all" && isOwn}
+                showActions={mode === "admin" || (mode === "user" && scope === "my")}
                 onModify={onModify}
                 onCancel={onCancel}
                 onViewDetails={onViewDetails}
@@ -108,6 +116,8 @@ export function ReservationCardList({
               key={group.groupKey}
               group={group}
               isExpanded={expandedGroups.has(group.groupKey)}
+              scope={scope}
+              currentUserId={currentUserId}
               onToggle={() => toggleGroup(group.groupKey)}
               onCancelAll={() => onCancelAll?.(group.items)}
               onModifyDatesAll={() => onModifyDatesAll?.(group.items)}

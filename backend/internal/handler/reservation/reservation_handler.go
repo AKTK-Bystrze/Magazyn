@@ -59,10 +59,22 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		query.StartDateTo = &end
 	}
 
-	// Enforce non-admin can only see own
-	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
+	// Check scope parameter for filtering
+	scope := r.URL.Query().Get("scope")
+
+	logger.Debugf(ctx, "Reservations list - Role: %s, Scope: %s, UserID: %s", role, scope, userID)
+
+	// Apply ownership filter based on scope
+	// scope="all" → show all reservations (any authenticated user)
+	// scope="my" or empty → show only user's own reservations
+	if scope == "all" {
+		// Bypass RLS to allow seeing all reservations
+		query.BypassRLS = true
+	} else {
 		query.UserID = &userID
 	}
+
+	logger.Debugf(ctx, "Reservations list - query.UserID: %v, BypassRLS: %v", query.UserID, query.BypassRLS)
 
 	response, err := h.service.List(ctx, query)
 	if err != nil {

@@ -52,8 +52,8 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	client, err = supa.NewClient(supabaseURL, supabaseKey, nil)
 	require.NoError(t, err)
 
-	reservationRepo := supabase.NewReservationRepository(client)
-	equipmentRepo := supabase.NewEquipmentRepository(client)
+	reservationRepo := supabase.NewReservationRepository(client, supabaseURL, supabaseKey, supabaseKey)
+	equipmentRepo := supabase.NewEquipmentRepository(client, supabaseURL, supabaseKey)
 	// equipmentTypeRepo used only if service needs it.
 	// svc := reservation.NewReservationService(reservationRepo, equipmentRepo, userRepo)
 	// If NewReservationService doesn't take eqTypes, we don't need it.

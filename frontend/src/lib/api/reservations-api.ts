@@ -33,6 +33,7 @@ export const reservationsApi = {
       page: filters.page,
       per_page: filters.perPage,
       sort: filters.sort,
+      scope: filters.scope,
     };
 
     // Only add status if not 'ALL'

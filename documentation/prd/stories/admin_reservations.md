@@ -36,13 +36,20 @@
 
 ---
 
-## US-023: Admin - View All Reservations
+## US-023: Admin - Manage All Reservations
 
-**Description:** As an admin, I want to view all reservations with user information so I can manage the entire rental system.
+**Description:** As an admin, I want to manage all reservations with full modification capabilities so I can administer the entire rental system.
+
+> **Note:** All users can now view all reservations via the "All Reservations" tab (see US-021A). This story focuses on admin-specific capabilities.
 
 **Acceptance Criteria:**
 
-- Admin can access all reservations list
+- Admin can access all reservations list (same view as regular users with "All Reservations" tab)
+- Admin has **action buttons visible** on all reservations (unlike regular users who have read-only access)
+- Admin can modify any reservation:
+  - Change status (PENDING → RENTED → RETURNED, or PENDING → DENIED)
+  - Modify dates
+  - Cancel reservation
 - List displays:
   - User name and email
   - Equipment name and type
