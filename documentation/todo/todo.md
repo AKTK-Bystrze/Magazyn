@@ -1,5 +1,6 @@
 reservation flow - user can see all reservations
-reservation flow - admin see username on reservations list
+continue "Reservation view Design change" -> update api and stories after creating plan
+
 reservation flow - changing statuses by user
 reservation flow - changing statuses by admin
 equipments - admin view
