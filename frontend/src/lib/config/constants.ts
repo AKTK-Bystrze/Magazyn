@@ -231,3 +231,72 @@ export const EQUIPMENT_FILTER_UI_STRINGS = {
   CLEAR_DATES: "Clear",
 } as const;
 
+// =============================================================================
+// RESERVATION STATUS VIEW UI STRINGS
+// =============================================================================
+
+/**
+ * UI text strings for reservation status view
+ * Centralized for consistency and i18n readiness
+ */
+export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
+  // Page title
+  RESERVATION_DETAILS: "Reservation Details",
+  BACK_TO_LIST: "Back to Reservations",
+
+  // Section headers
+  RESERVATION_INFO: "Reservation Information",
+  AUDIT_HISTORY: "Change History",
+
+  // Info labels
+  EQUIPMENT: "Equipment",
+  DATES: "Dates",
+  CREDIT_COST: "Credit Cost",
+  USER: "User",
+  CREATED_AT: "Created",
+
+  // Action buttons
+  CANCEL_RESERVATION: "Cancel Reservation",
+  MARK_RETURNED: "Mark as Returned",
+  CHANGE_STATUS: "Change Status",
+
+  // Confirmation messages
+  CONFIRM_CANCEL_TITLE: "Cancel Reservation?",
+  CONFIRM_CANCEL_MESSAGE:
+    "This action cannot be undone. The equipment will become available for others to reserve.",
+  CONFIRM_REFUND_LABEL: "Refund Amount:",
+  CONFIRM_CANCEL_BUTTON: "Cancel Reservation",
+  KEEP_RESERVATION: "Keep Reservation",
+
+  CONFIRM_MARK_RETURNED_TITLE: "Mark as Returned?",
+  CONFIRM_MARK_RETURNED_MESSAGE:
+    "Confirm that this equipment has been returned and is back in inventory.",
+  CONFIRM_MARK_RETURNED_BUTTON: "Mark as Returned",
+
+  CONFIRM_STATUS_CHANGE_TITLE: "Change Reservation Status?",
+  CONFIRM_STATUS_CHANGE_MESSAGE: "You are changing the status from",
+  CONFIRM_STATUS_CHANGE_BUTTON: "Change Status",
+  CANCEL_CHANGE: "Cancel",
+
+  // Success messages
+  STATUS_CHANGED_SUCCESS: "Reservation status changed successfully",
+  CANCELLED_SUCCESS: "Reservation cancelled. Credits have been refunded.",
+  MARKED_RETURNED_SUCCESS: "Reservation marked as returned",
+
+  // Error messages
+  UNAUTHORIZED: "You don't have permission to view this reservation",
+  NOT_FOUND: "Reservation not found",
+  CONFLICT: "The reservation status has already been changed",
+  NETWORK_ERROR: "Connection error. Please try again",
+  STATUS_CHANGE_FAILED: "Failed to change reservation status",
+
+  // Loading states
+  LOADING: "Loading...",
+  UPDATING: "Updating...",
+
+  // Audit timeline
+  CHANGED_BY: "Changed by",
+  INITIAL_CREATION: "Reservation created",
+  SYSTEM: "System",
+} as const;
+

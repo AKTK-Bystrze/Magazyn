@@ -128,9 +128,12 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 
 // GetReservationByID retrieves a single reservation with full details by ID
 func (r *reservationRepository) GetReservationByID(ctx context.Context, id string) (*types.ReservationDetail, error) {
+	// Use authenticated client for RLS enforcement
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
 	selectStr := "*, profiles!user_id(username, email), equipment(name, internal_id, equipment_types(name))"
 
-	data, _, err := r.client.From("reservations").
+	data, _, err := client.From("reservations").
 		Select(selectStr, "exact", false).
 		Eq("id", id).
 		Single().
@@ -173,8 +176,11 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 }
 
 func (r *reservationRepository) getAuditTrail(ctx context.Context, reservationID string) ([]types.ReservationAuditEntry, error) {
+	// Use authenticated client for RLS enforcement
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
 	selectStr := "*, profiles!changed_by_user_id(username)"
-	data, _, err := r.client.From("reservation_history").
+	data, _, err := client.From("reservation_history").
 		Select(selectStr, "exact", false).
 		Eq("reservation_id", reservationID).
 		Order("created_at", nil).

@@ -138,16 +138,13 @@ export function ReservationCard({
               </Button>
             )}
 
-            {onViewDetails && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleViewDetails}
-                className="ml-auto"
-              >
-                View Details
-              </Button>
-            )}
+
+            <a
+              href={`/reservations/${reservation.id}`}
+              className="ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
+            >
+              View Details
+            </a>
           </div>
         )}
       </CardContent>

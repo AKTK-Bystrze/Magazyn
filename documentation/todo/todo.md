@@ -1,12 +1,15 @@
-reservation flow - user can see all reservations
-continue "Reservation view Design change" -> update api and stories after creating plan
+
+resolve astro check
+reservation can be cancelled only if it is in PENDING state
 
 reservation flow -
-    - user can cancel reservation
-    - user can change status
-    - admin can change status
-    - admin can cancel reservation
-    - reservation history
+    - user can cancel their own reservation
+    - user can change status of their own reservation
+    - admin can change status of any reservation
+    - admin can cancel any reservation
+    - reservation history shows all changes. It shows date of change and who made it
+
+    
 
 equipments - admin view
     - add equipment
