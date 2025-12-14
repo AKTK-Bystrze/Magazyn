@@ -13,12 +13,11 @@
 - User can access calendar view from navigation
 - Calendar displays 30 days (current date + 29 days ahead)
 - Calendar shows all equipment reservations
-- Dates are color-coded:
-  - Green: Available
-  - Red: Reserved
-  - Gray: Past dates
-- User can click on dates to pre-fill search form
-- Calendar updates in real-time based on current reservations
+- A plate spanning a range of dates is showing users reservations:
+    - on each plate is user name and equipment name
+    - on each plate is a button details that will redirect to reservation details page if it is one reservation. When it is couple of reservations then it will redirect to reservations list page with filter for this dates range selected
+    - on each plate is button "join" that will redirect to equipment reservation page with the same dates range selected
+    - when couple of users have reservation on the same dates range then on the plate their names are listed only
 
 ---
 
