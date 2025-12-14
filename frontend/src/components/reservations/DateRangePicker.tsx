@@ -3,10 +3,11 @@ import type { DateRangeValidationErrors } from "@/types/reservation-cart.types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { calculateDays, getTodayAsString } from "@/lib/utils/date-utils";
 import { pluralize } from "@/lib/utils/text-utils";
-import { ICON_SIZE_SM } from "@/lib/config/constants";
+import { ICON_SIZE_SM, EQUIPMENT_FILTER_UI_STRINGS } from "@/lib/config/constants";
 import { ERROR_SELECT_DATES } from "@/lib/config/error-messages";
 
 interface DateRangePickerProps {
@@ -15,11 +16,20 @@ interface DateRangePickerProps {
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
   validationErrors: DateRangeValidationErrors;
+  /** Optional: Custom title, defaults to "Reservation Dates", set null to hide */
+  title?: string | null;
+  /** Optional: Show clear button for filter use cases */
+  showClearButton?: boolean;
+  /** Optional: Callback when clear button clicked */
+  onClear?: () => void;
+  /** Optional: Compact mode for sidebar filters */
+  compact?: boolean;
 }
 
 /**
  * Date range picker component for reservation dates
  * Handles start and end date selection with validation
+ * Can be used in compact mode for filtering scenarios
  */
 export function DateRangePicker({
   startDate,
@@ -27,27 +37,49 @@ export function DateRangePicker({
   onStartDateChange,
   onEndDateChange,
   validationErrors,
+  title = "Reservation Dates",
+  showClearButton = false,
+  onClear,
+  compact = false,
 }: DateRangePickerProps) {
+  const startDateId = React.useId();
+  const endDateId = React.useId();
   const today = getTodayAsString();
   const days =
     startDate && endDate ? calculateDays(startDate, endDate) : null;
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Reservation Dates</h2>
+    <div className={compact ? "space-y-3" : "space-y-4"}>
+      {title && (
+        <div className="flex items-center justify-between">
+          <h2 className={compact ? "text-lg font-semibold" : "text-2xl font-bold"}>{title}</h2>
+          {showClearButton && (startDate || endDate) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClear}
+              className="h-8 px-2 text-xs"
+            >
+              {EQUIPMENT_FILTER_UI_STRINGS.CLEAR_DATES}
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="start-date" className="flex items-center gap-2">
+          <Label htmlFor={startDateId} className="flex items-center gap-2">
             <CalendarIcon className={ICON_SIZE_SM} />
             Start Date
           </Label>
           <Input
-            id="start-date"
+            id={startDateId}
             type="date"
             value={startDate || ""}
             onChange={(e) => onStartDateChange(e.target.value)}
             min={today}
+            aria-invalid={!!validationErrors.startDate}
+            aria-describedby={validationErrors.startDate ? `${startDateId}-error` : undefined}
             className={
               validationErrors.startDate
                 ? "border-destructive focus-visible:ring-destructive"
@@ -55,23 +87,25 @@ export function DateRangePicker({
             }
           />
           {validationErrors.startDate && (
-            <p className="text-sm text-destructive">
+            <p id={`${startDateId}-error`} className="text-sm text-destructive">
               {validationErrors.startDate}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="end-date" className="flex items-center gap-2">
+          <Label htmlFor={endDateId} className="flex items-center gap-2">
             <CalendarIcon className={ICON_SIZE_SM} />
             End Date
           </Label>
           <Input
-            id="end-date"
+            id={endDateId}
             type="date"
             value={endDate || ""}
             onChange={(e) => onEndDateChange(e.target.value)}
             min={startDate || today}
+            aria-invalid={!!validationErrors.endDate}
+            aria-describedby={validationErrors.endDate ? `${endDateId}-error` : undefined}
             className={
               validationErrors.endDate
                 ? "border-destructive focus-visible:ring-destructive"
@@ -79,7 +113,7 @@ export function DateRangePicker({
             }
           />
           {validationErrors.endDate && (
-            <p className="text-sm text-destructive">
+            <p id={`${endDateId}-error`} className="text-sm text-destructive">
               {validationErrors.endDate}
             </p>
           )}

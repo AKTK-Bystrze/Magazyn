@@ -21,18 +21,20 @@ export const equipmentApi = {
     equipment: EquipmentSearchItem[];
     pagination: PaginationMeta;
   }> {
-    // Convert frontend params to backend format if needed
-    const queryParams = params
-      ? {
-          search: params.search,
-          type_id: params.type_id,
-          status: params.status,
-          page: params.page,
-          per_page: params.perPage,
-        }
-      : undefined;
+    // Convert frontend params to backend format, only include defined values
+    const queryParams: Record<string, string | number | boolean> = {};
 
-    const response = await api.get('/api/equipment', queryParams);
+    if (params) {
+      if (params.search) queryParams.search = params.search;
+      if (params.type_id) queryParams.type_id = params.type_id;
+      if (params.status) queryParams.status = params.status;
+      if (params.page !== undefined) queryParams.page = params.page;
+      if (params.perPage !== undefined) queryParams.per_page = params.perPage;
+      if (params.availableFrom) queryParams.available_from = params.availableFrom;
+      if (params.availableTo) queryParams.available_to = params.availableTo;
+    }
+
+    const response = await api.get('/api/equipment', Object.keys(queryParams).length > 0 ? queryParams : undefined);
 
     // Transform backend response to frontend format
     return transformEquipmentListResponse(response.data);

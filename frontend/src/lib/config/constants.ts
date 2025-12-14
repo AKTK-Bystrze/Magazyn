@@ -210,3 +210,24 @@ export const USER_VALIDATION_PATTERNS = {
   USERNAME: /^[a-zA-Z0-9_]+$/,
 } as const;
 
+// =============================================================================
+// EQUIPMENT FILTER UI STRINGS
+// =============================================================================
+
+/**
+ * UI text strings for equipment filters
+ * Centralized for consistency and i18n readiness
+ */
+export const EQUIPMENT_FILTER_UI_STRINGS = {
+  FILTER_BY_AVAILABILITY: "Filter by Availability",
+  SEARCH_PLACEHOLDER: "Search by name...",
+  ALL_TYPES: "All Types",
+  EQUIPMENT_TYPE_LABEL: "Equipment Type",
+  AVAILABILITY_LABEL: "Availability",
+  STATUS_ALL: "All",
+  STATUS_AVAILABLE: "Available",
+  STATUS_BROKEN: "Broken/Unavailable",
+  RESET_FILTERS: "Reset Filters",
+  CLEAR_DATES: "Clear",
+} as const;
+

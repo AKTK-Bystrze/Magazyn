@@ -15,6 +15,8 @@ export function useEquipmentSearch() {
       status: (params.get('status') as EquipmentStatus) || undefined,
       page: Number(params.get('page')) || DEFAULT_PAGE,
       perPage: Number(params.get('per_page')) || DEFAULT_PAGE_SIZE,
+      availableFrom: params.get('available_from') || undefined,
+      availableTo: params.get('available_to') || undefined,
     };
   });
 
@@ -25,6 +27,8 @@ export function useEquipmentSearch() {
     if (newFilters.type_id) params.set('type_id', newFilters.type_id);
     if (newFilters.status) params.set('status', newFilters.status);
     if (newFilters.page > 1) params.set('page', String(newFilters.page));
+    if (newFilters.availableFrom) params.set('available_from', newFilters.availableFrom);
+    if (newFilters.availableTo) params.set('available_to', newFilters.availableTo);
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);

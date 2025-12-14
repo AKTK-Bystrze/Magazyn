@@ -12,6 +12,8 @@ export interface EquipmentSearchParams {
   status?: EquipmentStatus;
   page: number;
   perPage: number;
+  availableFrom?: string; // ISO date string YYYY-MM-DD
+  availableTo?: string; // ISO date string YYYY-MM-DD
 }
 
 /**

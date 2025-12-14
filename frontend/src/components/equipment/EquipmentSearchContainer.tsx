@@ -57,6 +57,8 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
     updateFilter("search", "");
     updateFilter("type_id", undefined);
     updateFilter("status", undefined);
+    updateFilter("availableFrom", undefined);
+    updateFilter("availableTo", undefined);
     // Page automatically resets to 1 in hook
   };
 
