@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { ReservationCard } from "./ReservationCard";
-import { ChevronDown, ChevronRight, Calendar, CreditCard } from "lucide-react";
+import { ChevronDown, ChevronRight, Calendar, CreditCard, User } from "lucide-react";
 import { formatDate, calculateDays } from "@/lib/utils/date-utils";
 import { pluralize } from "@/lib/utils/text-utils";
 
@@ -56,6 +56,15 @@ export function GroupedReservationCard({
             )}
 
             <div className="flex flex-col gap-3 flex-1 min-w-0">
+              {/* User (Admin only) */}
+              {mode === "admin" && (
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="font-medium text-foreground text-sm">
+                    {group.username}
+                  </span>
+                </div>
+              )}
               {/* Date and Status Row */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2">

@@ -23,6 +23,7 @@ const createMockUserDTO = (overrides: Record<string, unknown> = {}) => ({
   credit_balance: 100,
   created_at: '2024-01-15T10:30:00Z',
   updated_at: '2024-06-20T14:45:00Z',
+  is_enabled: true,
   ...overrides,
 });
 

@@ -51,7 +51,7 @@ export const api = {
    * @param params - Optional query parameters
    * @returns Response data wrapped in an object
    */
-  get: async <T>(url: string, params?: Record<string, string | number | boolean>): Promise<{ data: T }> => {
+  get: async <T>(url: string, params?: Record<string, string | number | boolean | undefined | null>): Promise<{ data: T }> => {
     const headers = await buildHeaders();
 
     const queryParams = new URLSearchParams();
