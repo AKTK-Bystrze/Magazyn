@@ -1,19 +1,21 @@
+<VIEW NAME> </VIEW NAME>
+<VIEW CONTEXT> </VIEW CONTEXT>
+
 Task: Prepare a UI prompt file located at 
-.ai/reservations-view-ui-prompt.md
+.ai/<VIEW NAME>-view-ui-prompt.md
 .
 
 Template: Use the structure defined in 
 .ai/prompts/ui-plan.md
  (referred to as @ui-plan.md) as your base template.
 
-Context Sources: Fill in the template by extracting relevant implementation details for the "Reservations View" from the following documents:
+Context Sources: Fill in the template by extracting relevant implementation details for the <VIEW NAME> from the following documents:
 
 @documentation/prd
 @documentation/ui-plan.md
 @documentation/api-plan.md
 @documentation/architecture.md
 @index.md
-View Requirements: The prompt must cover a "Reservations View" that supports two main contexts:
+View Requirements: The prompt must cover a "<VIEW NAME>" that supports main context:
 
-My Reservations: A view where a logged-in user can see only their own reservations.
-All Reservations: A view (e.g., for admins) to see reservations for all users.
+<VIEW CONTEXT>
