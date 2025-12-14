@@ -102,3 +102,19 @@
 - System maintains data consistency
 
 ---
+
+
+## US-051: Filter Equipment by Availability Date Range
+
+**Description:** As a user, I want to filter equipment by a date range within which the equipment has to be available so that I can quickly find items I can actually reserve for my desired period.
+
+**Acceptance Criteria:**
+
+- User can specify a start date and end date filter
+- System only shows equipment that is available for the entire specified date range
+- Items with conflicting reservations for any part of the date range are excluded
+- Filter can be combined with other existing filters (name, type, category, availability status)
+- Clearing the date filter shows all equipment again (respecting other active filters)
+- Date validation follows the same rules as reservation creation (start date in future, end date after start date)
+
+---

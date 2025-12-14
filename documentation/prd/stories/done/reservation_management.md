@@ -40,3 +40,93 @@
 ---
 
 
+## US-015: View Reservation Details
+
+**Description:** As a user, I want to view detailed information about a specific reservation so I can see all relevant details.
+
+**Acceptance Criteria:**
+
+- User can click on reservation from list to view details
+- Reservation details page shows:
+  - Equipment name, type, description
+  - Start and end dates
+  - Status
+  - Credit cost
+  - Date created
+  - Status change history (if available)
+  - **Audit trail timeline** showing chronological list of all changes:
+    - What changed (dates, status, etc.)
+    - Who made the change (user or admin name)
+    - When the change occurred (timestamp)
+- User can see if reservation is modifiable (PENDING status)
+- User can navigate back to reservation list
+
+---
+
+## US-020: View Rental History
+
+**Description:** As a user, I want to see my rental change history so I can track all my past reservations.
+
+**Acceptance Criteria:**
+
+- User can access rental history from dashboard
+- History displays all past and current reservations
+- History shows:
+  - Equipment name and type
+  - Dates
+  - Status
+  - Credit cost
+  - Date created and modified
+- History is sorted by most recent first
+- History supports pagination (10, 25, 50, 100 items per page)
+- All history is kept indefinitely
+- User can filter by status or date range
+
+---
+
+
+## US-020A: View Reservation Change History (Audit Trail)
+
+**Description:** As a user, I want to see a timeline of all changes made to my reservations so I can track what was modified and by whom.
+
+**Acceptance Criteria:**
+
+- User can view audit trail from reservation details page
+- Audit trail displays chronological list of all changes
+- Each audit record shows:
+  - What changed (initial creation, status change, date modification)
+  - Complete snapshot of reservation state at that moment (equipment, dates, status)
+  - Who made the change (username or admin name)
+  - When the change occurred (timestamp)
+- Audit records are displayed in chronological order (oldest to newest)
+- Users can only view audit trail for their own reservations
+- Admins can view audit trail for all reservations
+- Audit trail is read-only (cannot be modified or deleted)
+- Timeline clearly shows the progression of reservation from creation to current state
+
+---
+
+## US-021A: View All System Reservations
+
+**Description:** As a user, I want to view all reservations in the system (not just my own) so I can see equipment availability and what others have reserved.
+
+**Acceptance Criteria:**
+
+- User can access "All Reservations" tab from the reservations page
+- Reservations page has two tabs: "My Reservations" (default) and "All Reservations"
+- Tab selection updates URL query param (`?scope=my` / `?scope=all`) for shareable links
+- "All Reservations" view displays all users' reservations with full details:
+  - Equipment name, type
+  - User name (who made the reservation)
+  - Start and end dates
+  - Status
+  - Credit cost
+- Current user's reservations are visually highlighted (e.g., subtle border, badge)
+- **No action buttons** are shown in "All Reservations" view for regular users (read-only)
+- Admin users CAN see action buttons on all reservations in "All Reservations" view
+- All existing filters (status, sort) work in both tabs
+- Pagination works in both tabs
+- Default view is "My Reservations" when navigating to `/reservations`
+
+---
+

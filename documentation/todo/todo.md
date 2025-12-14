@@ -16,8 +16,8 @@ when reservation status is returned or denied it cannot be changed
 
 reservation flow -
     - user can cancel their own reservation
-    - user can change status of their own reservation
-    - admin can change status of any reservation
+    - user can return their own reservation
+    - admin can return any reservation
     - admin can cancel any reservation
     - reservation history shows all changes. It shows date of change and who made it
     - A reservation tile has button for cancell, button for modyfication, button for next status change

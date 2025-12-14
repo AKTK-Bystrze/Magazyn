@@ -20,21 +20,7 @@
 
 ---
 
-## US-022: Admin - Filter Reservations
 
-**Description:** As an admin, I want to filter reservations by status so I can focus on urgent tasks.
-
-**Acceptance Criteria:**
-
-- Admin can access quick filters: PENDING, Today, Overdue, All
-- Filtering by PENDING shows all pending reservations
-- Filtering by Today shows reservations starting today
-- Filtering by Overdue shows items past end date with status not RETURNED
-- Filtering by All shows all reservations
-- Filtered results display with user information
-- Admin can combine filters or use single filter
-
----
 
 ## US-023: Admin - Manage All Reservations
 
@@ -47,7 +33,7 @@
 - Admin can access all reservations list (same view as regular users with "All Reservations" tab)
 - Admin has **action buttons visible** on all reservations (unlike regular users who have read-only access)
 - Admin can modify any reservation:
-  - Change status (PENDING → RENTED → RETURNED, or PENDING → DENIED)
+  - Change status (PENDING → RETURNED, or PENDING → DENIED)
   - Modify dates
   - Cancel reservation
 - List displays:
@@ -63,20 +49,6 @@
 
 ---
 
-## US-024: Admin - View User Reservations
-
-**Description:** As an admin, I want to see a selected user's reservation history so I can help with user inquiries.
-
-**Acceptance Criteria:**
-
-- Admin can search for user by name or email
-- Admin can select user from list
-- Admin can view all reservations for selected user
-- User reservations display same information as all reservations view
-- Admin can filter and sort user's reservations
-- Admin can access user profile from reservation view
-
----
 
 ## US-025: Admin - Change Reservation Status
 
@@ -85,7 +57,6 @@
 **Acceptance Criteria:**
 
 - Admin can change status of any reservation (except final states RETURNED and DENIED)
-- Admin can change PENDING to RENTED
 - Admin can change RENTED to RETURNED
 - Admin can change PENDING to DENIED
 - Status changes are saved immediately
