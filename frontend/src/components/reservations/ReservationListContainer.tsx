@@ -7,8 +7,6 @@ import { ReservationViewTabs, type ReservationScope } from "./ReservationViewTab
 import { CancelReservationDialog } from "./CancelReservationDialog";
 import { ModifyDatesDialog } from "./ModifyDatesDialog";
 import { ReturnWithDatesDialog } from "./ReturnWithDatesDialog";
-import { usersApi } from "@/lib/api/users-api";
-import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import {
@@ -77,14 +75,9 @@ function ReservationListContainerInner({
     }
   }, [errorMessage]);
 
-  // Fetch user data for credit balance (when dialogs open)
-  const { data: userData } = useQuery({
-    queryKey: ["user", selectedReservation?.userId],
-    queryFn: () => usersApi.getById(selectedReservation!.userId),
-    enabled: !!selectedReservation && (modifyDialogOpen || returnDialogOpen),
-  });
-
-  const currentUserBalance = userData?.creditBalance ?? 0;
+  // Credit balance validation is handled by backend
+  // We don't fetch it here to avoid permission issues for regular users
+  const currentUserBalance = 0;
 
   // Handle modify action
   const handleModify = React.useCallback(

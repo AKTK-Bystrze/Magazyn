@@ -131,7 +131,7 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
-	selectStr := "*, profiles!user_id(username, email), equipment(name, internal_id, equipment_types(name))"
+	selectStr := "*, profiles!user_id(username, email), equipment(name, internal_id, equipment_types(name, credit_cost_per_day))"
 
 	data, _, err := client.From("reservations").
 		Select(selectStr, "exact", false).
@@ -153,6 +153,10 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 		return nil, err
 	}
 
+	// Calculate credit cost: days * cost_per_day (same logic as list view)
+	days := calculateDays(raw.StartDate, raw.EndDate)
+	creditCost := int32(days) * raw.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
+
 	detail := &types.ReservationDetail{
 		ReservationListItem: types.ReservationListItem{
 			ID:            raw.ID,
@@ -164,6 +168,7 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 			StartDate:     raw.StartDate,
 			EndDate:       raw.EndDate,
 			Status:        raw.Status,
+			CreditCost:    creditCost,
 			CreatedAt:     raw.CreatedAt,
 			UpdatedAt:     raw.UpdatedAt,
 		},
@@ -238,7 +243,8 @@ type detailResponse struct {
 		Name          string `json:"name"`
 		InternalID    string `json:"internal_id"`
 		EquipmentType struct {
-			Name string `json:"name"`
+			Name             string `json:"name"`
+			CreditCostPerDay int32  `json:"credit_cost_per_day"`
 		} `json:"equipment_types"`
 	} `json:"equipment"`
 }
@@ -413,7 +419,7 @@ func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, 
 	if err != nil {
 		return nil, types.NewInternalError("Failed to create service client", err)
 	}
-	
+
 	qb := client.From("reservations").
 		Select("*", "exact", false).
 		Eq("equipment_id", equipmentID).
@@ -487,7 +493,7 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 func (r *reservationRepository) GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
 	// Availability check - usually public, but let's stick to auth client if available
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	
+
 	qb := client.From("reservations").
 		Select("*", "exact", false).
 		Lte("start_date", rangeEnd).

@@ -1,9 +1,6 @@
+in reservation details view credits are 0 but are correctly displayed on list view
 
-remove service role key usage
-wrong credits calculation in details credits are 0 but are correctly displayed on list view
-in top bar credits re invisible on mobile view
 the start date can be in past if it is original date, can be moved to future - dates changing is not working
-return all button
 ===
 
 design status changes
@@ -19,18 +16,6 @@ transitions:
 
 user can change reservation dates only when pending
 when reservation status is returned or denied it cannot be changed
-
-
-reservation flow -
-    - user can cancel their own reservation
-    - user can return their own reservation
-    - admin can return any reservation
-    - admin can cancel any reservation
-    - reservation history shows all changes. It shows date of change and who made it
-    - A reservation tile has button for cancell, button for modyfication, button for next status change
-    - reservation can be cancelled only when pending
-
-    
 
 equipments - admin view
     - add equipment
@@ -67,3 +52,6 @@ BulkUpdate
 8. in reservation details, on top in navigation instead of the reservation id, use the reservation dates...?
 9. highlight of my reservation is not properly working, not all mine reservations are highlighted
 10. When link is sent then user can jusr refresh page to login
+11. remove service role key usage
+12. in top bar credits re invisible on mobile view
+13. remove approved status 

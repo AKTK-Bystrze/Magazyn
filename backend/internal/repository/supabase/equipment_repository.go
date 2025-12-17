@@ -57,13 +57,13 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 		}
 		conflictIDs = ids
 		// Debug logging
-		fmt.Printf("[DEBUG] Availability filter: %s to %s, found %d conflicting equipment IDs: %v\n", 
+		fmt.Printf("[DEBUG] Availability filter: %s to %s, found %d conflicting equipment IDs: %v\n",
 			*query.AvailableFrom, *query.AvailableTo, len(conflictIDs), conflictIDs)
 	}
 
 	// NOTE: The Supabase Go client doesn't support NOT IN filter properly,
 	// so we'll filter the results in Go after fetching
-	
+
 	// Get all matching equipment first
 	countData, _, err := baseQuery.Execute()
 	if err != nil {
@@ -81,15 +81,15 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	for _, id := range conflictIDs {
 		conflictSet[id] = true
 	}
-	
+
 	for _, item := range allItems {
 		if !conflictSet[item.ID] {
 			filteredItems = append(filteredItems, item)
 		}
 	}
-	
+
 	if len(conflictIDs) > 0 {
-		fmt.Printf("[DEBUG] Filtered out %d unavailable equipment, %d remaining\n", 
+		fmt.Printf("[DEBUG] Filtered out %d unavailable equipment, %d remaining\n",
 			len(allItems)-len(filteredItems), len(filteredItems))
 	}
 
@@ -341,19 +341,19 @@ func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, eq
 // overlapping with the given date range
 func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error) {
 	fmt.Printf("[DEBUG] GetEquipmentIDsWithConflicts called with: startDate=%s, endDate=%s\n", startDate, endDate)
-	
+
 	// Use admin client to bypass RLS - we need to see ALL reservations, not just the user's
 	if r.serviceKey == "" {
 		fmt.Printf("[DEBUG] WARNING: No service key configured, using regular client (RLS will apply)\n")
 	}
-	
+
 	// Create admin client to bypass RLS
 	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
 	if err != nil {
 		fmt.Printf("[DEBUG] Error creating admin client: %v, falling back to regular client\n", err)
 		adminClient = r.client
 	}
-	
+
 	// Debug: First fetch all active reservations to see what's in the database
 	allData, _, allErr := adminClient.From("reservations").
 		Select("equipment_id, start_date, end_date, status", "exact", false).
@@ -372,7 +372,7 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 	} else {
 		fmt.Printf("[DEBUG] Error fetching all reservations: %v\n", allErr)
 	}
-	
+
 	data, _, err := adminClient.From("reservations").
 		Select("equipment_id, start_date, end_date, status", "exact", false).
 		Lte("start_date", endDate).
