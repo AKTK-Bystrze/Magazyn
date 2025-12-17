@@ -27,6 +27,7 @@ import type { UpdateReservationCommand } from "@/types/reservations/reservation.
 interface ReservationStatusActionsProps {
   reservation: ReservationDetail;
   currentUserId: string;
+  currentUserBalance: number; // User's credit balance from session
   isAdmin: boolean;
   onStatusChange: (newStatus: Enums<"reservation_status">) => Promise<void>;
   isUpdating: boolean;
@@ -40,6 +41,7 @@ interface ReservationStatusActionsProps {
 export function ReservationStatusActions({
   reservation,
   currentUserId,
+  currentUserBalance,
   isAdmin,
   onStatusChange,
   isUpdating,
@@ -54,15 +56,18 @@ export function ReservationStatusActions({
   const actions = canChangeStatus(reservation.status, isOwner, isAdmin);
 
   // Fetch reservation owner's profile to get current credit balance
-  // This is needed for credit validation in dialogs
-  const { data: userProfile } = useQuery({
+  // Only needed when admin is modifying another user's reservation
+  const needsOwnerProfile = !isOwner && (modifyDatesOpen || returnDialogOpen);
+
+  const { data: ownerProfile } = useQuery({
     queryKey: ["user", reservation.userId],
     queryFn: () => usersApi.getById(reservation.userId),
-    enabled: !!reservation.userId && (modifyDatesOpen || returnDialogOpen),
+    enabled: needsOwnerProfile,
     staleTime: 0, // Always fetch fresh balance when dialog opens
   });
 
-  const userBalance = userProfile?.creditBalance ?? 0;
+  // Use current user's balance if they're the owner, otherwise use fetched owner's balance
+  const userBalance = isOwner ? currentUserBalance : (ownerProfile?.creditBalance ?? 0);
 
   // Handlers
   const handleCancelClick = () => {

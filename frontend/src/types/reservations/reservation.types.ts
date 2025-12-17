@@ -189,6 +189,7 @@ export type ReservationFilterState = {
 export type ReservationListProps = {
   mode: "user" | "admin";
   currentUserId?: string;
+  currentUserBalance?: number;
   initialFilters?: Partial<ReservationFilterState>;
 };
 

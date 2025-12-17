@@ -45,6 +45,7 @@ const initialScope = scopeParam === 'all' ? 'all' : 'my';
     <ReservationListContainer 
       mode="user" 
       currentUserId={user.id}
+      currentUserBalance={sessionInfo.creditBalance}
       initialFilters={{ scope: initialScope }}
       client:load 
     />

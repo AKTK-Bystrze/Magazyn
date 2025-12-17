@@ -5,6 +5,7 @@ import { ReservationDetailsView } from "./ReservationDetailsView";
 interface ReservationDetailsContainerProps {
   reservationId: string;
   currentUserId: string;
+  currentUserBalance: number;
   isAdmin: boolean;
 }
 
@@ -15,6 +16,7 @@ interface ReservationDetailsContainerProps {
 export function ReservationDetailsContainer({
   reservationId,
   currentUserId,
+  currentUserBalance,
   isAdmin,
 }: ReservationDetailsContainerProps) {
   return (
@@ -22,6 +24,7 @@ export function ReservationDetailsContainer({
       <ReservationDetailsView
         reservationId={reservationId}
         currentUserId={currentUserId}
+        currentUserBalance={currentUserBalance}
         isAdmin={isAdmin}
       />
     </QueryProvider>

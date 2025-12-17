@@ -30,7 +30,12 @@ if (!isAdmin) {
     </div>
 
     <!-- Reservation List (Admin Mode) -->
-    <ReservationListContainer mode="admin" client:load />
+    <ReservationListContainer 
+      mode="admin" 
+      currentUserId={user.id}
+      currentUserBalance={sessionInfo.creditBalance}
+      client:load 
+    />
   </div>
 </AdminLayout>
 

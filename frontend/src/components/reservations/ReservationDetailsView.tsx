@@ -27,6 +27,7 @@ import type { Enums } from "@/db/database.types";
 interface ReservationDetailsViewProps {
   reservationId: string;
   currentUserId: string;
+  currentUserBalance: number;
   isAdmin: boolean;
 }
 
@@ -41,6 +42,7 @@ interface ReservationDetailsViewProps {
 export function ReservationDetailsView({
   reservationId,
   currentUserId,
+  currentUserBalance,
   isAdmin,
 }: ReservationDetailsViewProps) {
   const { reservation, isLoading, error, updateStatus, isUpdating } =
@@ -178,6 +180,7 @@ export function ReservationDetailsView({
       <ReservationStatusActions
         reservation={reservation}
         currentUserId={currentUserId}
+        currentUserBalance={currentUserBalance}
         isAdmin={isAdmin}
         onStatusChange={handleStatusChange}
         isUpdating={isUpdating}

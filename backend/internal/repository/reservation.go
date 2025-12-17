@@ -43,4 +43,8 @@ type ReservationRepository interface {
 
 	// RefundCredits refunds credits to the user for a cancelled reservation
 	RefundCredits(ctx context.Context, reservationID string, amount int32) error
+
+	// ModifyReservationDatesWithCredits updates reservation dates and adjusts credits atomically
+	// Returns updated reservation with credit adjustment details
+	ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error)
 }

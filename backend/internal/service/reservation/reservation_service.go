@@ -286,7 +286,10 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	}
 
 	// Handle Date Change
-	if (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate) {
+	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
+	dateOnlyChange := datesChanging && cmd.Status == nil
+
+	if datesChanging {
 		start := current.StartDate
 		if cmd.StartDate != nil {
 			start = *cmd.StartDate
@@ -305,11 +308,47 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			return nil, types.NewConflictError("Dates not available", nil)
 		}
 
+		// If ONLY dates are changing (no status change), use the atomic credit adjustment function
+		if dateOnlyChange {
+			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end)
+			if err != nil {
+				logger.Errorf(ctx, "Failed to modify dates with credits: %v", err)
+				return nil, err
+			}
+
+			// Log successful credit adjustment
+			if result.CreditAdjustment != 0 {
+				if result.CreditAdjustment > 0 {
+					logger.Infof(ctx, "Refunded %d credits for shortening reservation %s", result.CreditAdjustment, id)
+				} else {
+					logger.Infof(ctx, "Charged %d credits for extending reservation %s", -result.CreditAdjustment, id)
+				}
+			}
+
+			//  Calculate new credit cost for response
+			eq, _ := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
+			eqType, _ := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+			days := s.calculateDays(start, end)
+			newCost := days * eqType.CreditCostPerDay
+
+			return  &types.UpdateReservationResponse{
+				ID:               result.ID,
+				EquipmentID:      current.EquipmentID,
+				StartDate:        result.StartDate,
+				EndDate:          result.EndDate,
+				Status:           result.Status,
+				CreditCost:       newCost,
+				CreditAdjustment: result.CreditAdjustment,
+				RemainingBalance: result.NewBalance,
+				UpdatedAt:        result.UpdatedAt,
+			}, nil
+		}
+
+		// If both dates AND status are changing, just update dates in the update data
+		// Status change refund logic will handle credits
 		updateData.StartDate = &start
 		updateData.EndDate = &end
 		needsUpdate = true
-
-		// Recalculate cost diff and adjust credits... (Complex logic)
 	}
 
 	if !needsUpdate {

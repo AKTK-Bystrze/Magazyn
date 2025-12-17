@@ -107,7 +107,11 @@ export function ModifyDatesDialog({
 
     if (!startDate) {
       errors.startDate = UI.START_DATE_REQUIRED;
-    } else if (reservation.status === "PENDING" && startDate <= today) {
+    } else if (
+      reservation.status === "PENDING" &&
+      startDate <= today &&
+      startDate !== reservation.startDate
+    ) {
       errors.startDate = UI.START_DATE_MUST_BE_FUTURE;
     }
 
@@ -130,7 +134,7 @@ export function ModifyDatesDialog({
     }
 
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    return !Object.values(errors).some((error) => error !== null);
   };
 
   // Handle confirm

@@ -16,6 +16,8 @@ import {
   DEFAULT_SORT_OPTION,
 } from "@/lib/config/constants";
 import type { ReservationListItem, ReservationListProps, UpdateReservationCommand } from "@/types";
+import { useQuery } from "@tanstack/react-query";
+import { usersApi } from "@/lib/api/users-api";
 
 /**
  * Inner component that uses the useReservations hook
@@ -24,6 +26,7 @@ import type { ReservationListItem, ReservationListProps, UpdateReservationComman
 function ReservationListContainerInner({
   mode,
   currentUserId,
+  currentUserBalance: sessionUserBalance = 0,
   initialFilters,
 }: ReservationListProps) {
   const {
@@ -75,9 +78,18 @@ function ReservationListContainerInner({
     }
   }, [errorMessage]);
 
-  // Credit balance validation is handled by backend
-  // We don't fetch it here to avoid permission issues for regular users
-  const currentUserBalance = 0;
+  const dialogReservation = selectedReservation || batchReservations[0];
+  const isOwner = dialogReservation?.userId === currentUserId;
+  const needsOwnerProfile = !isOwner && !!dialogReservation && (modifyDialogOpen || returnDialogOpen);
+
+  const { data: ownerProfile } = useQuery({
+    queryKey: ["user", dialogReservation?.userId],
+    queryFn: () => usersApi.getById(dialogReservation!.userId),
+    enabled: needsOwnerProfile,
+    staleTime: 0,
+  });
+
+  const currentUserBalance = isOwner ? sessionUserBalance : (ownerProfile?.creditBalance ?? 0);
 
   // Handle modify action
   const handleModify = React.useCallback(
@@ -339,7 +351,7 @@ function ReservationListContainerInner({
   // Admins: actions in both "My Reservations" and "All Reservations"
   const showActions = mode === "admin" || filters.scope === "my";
 
-  const dialogReservation = selectedReservation || batchReservations[0];
+  // Moved dialogReservation definition up to hook usage
 
   return (
     <div className="space-y-6">

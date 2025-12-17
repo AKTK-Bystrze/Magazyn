@@ -58,6 +58,19 @@ type UpdateReservationResponse struct {
 	UpdatedAt        string `json:"updated_at"`
 }
 
+// ModifyDatesResponse represents the response from modifying reservation dates with credit adjustment
+type ModifyDatesResponse struct {
+	ID               string `json:"id"`
+	StartDate        string `json:"start_date"`
+	EndDate          string `json:"end_date"`
+	Status           string `json:"status"`
+	UpdatedAt        string `json:"updated_at"`
+	OldCost          int32  `json:"old_cost"`
+	NewCost          int32  `json:"new_cost"`
+	CreditAdjustment int32  `json:"credit_adjustment"` // positive = refund, negative = charge
+	NewBalance       int32  `json:"new_balance"`
+}
+
 // ReservationListResponse represents paginated list response
 type ReservationListResponse struct {
 	Reservations []ReservationListItem `json:"reservations"`

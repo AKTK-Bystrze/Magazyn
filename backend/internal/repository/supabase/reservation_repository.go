@@ -530,3 +530,45 @@ func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID
 	_ = client.Rpc("refund_reservation_credits", "", params)
 	return nil
 }
+
+// ModifyReservationDatesWithCredits modifies reservation dates and adjusts credits atom ically
+func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
+	// Use Service Role since this might be an admin modifying another user's reservation
+	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
+	if err != nil {
+		return nil, types.NewInternalError("Failed to create service client", err)
+	}
+
+	params := map[string]interface{}{
+		"p_reservation_id":     reservationID,
+		"p_changed_by_user_id": changedByUserID,
+		"p_new_start_date":     newStartDate,
+		"p_new_end_date":       newEndDate,
+	}
+
+	jsonStr := client.Rpc("modify_reservation_dates_with_credits", "", params)
+
+	if jsonStr == "" {
+		return nil, types.NewInternalError("RPC returned empty response", nil)
+	}
+
+	// Check for error in response
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
+		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
+	}
+
+	// Check for error message
+	if msg, ok := rawResponse["message"]; ok {
+		// Error response from database
+		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
+	}
+
+	// Parse successful response
+	var result types.ModifyDatesResponse
+	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+		return nil, types.NewInternalError("Failed to parse modify result: "+jsonStr, err)
+	}
+
+	return &result, nil
+}

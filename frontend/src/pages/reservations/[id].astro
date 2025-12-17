@@ -28,6 +28,7 @@ const isAdmin = user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.SUPER_A
     <ReservationDetailsContainer 
       reservationId={id}
       currentUserId={user.id}
+      currentUserBalance={sessionInfo.creditBalance}
       isAdmin={isAdmin}
       client:only="react"
     />

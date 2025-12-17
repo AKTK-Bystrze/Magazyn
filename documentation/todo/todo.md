@@ -1,6 +1,4 @@
-in reservation details view credits are 0 but are correctly displayed on list view
-
-the start date can be in past if it is original date, can be moved to future - dates changing is not working
+user should be able to change start date to the past and same for admin
 ===
 
 design status changes
