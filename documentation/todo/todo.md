@@ -55,3 +55,4 @@ BulkUpdate
 11. remove service role key usage
 12. in top bar credits re invisible on mobile view
 13. remove approved status 
+14. in reservation when chanign status to returned, show dates in the form with filled values the same as in reservation. User and Admin can change the dates at this moment
