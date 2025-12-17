@@ -104,8 +104,9 @@ export function ReservationCardList({
               <ReservationCard
                 key={reservation.id}
                 reservation={reservation}
-                isOwn={scope === "all" && isOwn}
-                showActions={mode === "admin" || (mode === "user" && scope === "my")}
+                isOwn={isOwn}
+                showOwnershipBadge={scope === "all"}
+                showActions={mode === "admin" || scope === "my"}
                 onModify={onModify}
                 onCancel={onCancel}
                 onReturn={onReturn}

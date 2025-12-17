@@ -342,8 +342,9 @@ function ReservationListContainerInner({
     filters.status !== DEFAULT_STATUS_FILTER ||
     filters.sort !== DEFAULT_SORT_OPTION;
 
-  const showActions =
-    mode === "admin" || (mode === "user" && filters.scope === "my");
+  // Regular users: actions only in "My Reservations"
+  // Admins: actions in both "My Reservations" and "All Reservations"
+  const showActions = mode === "admin" || filters.scope === "my";
 
   const dialogReservation = selectedReservation || batchReservations[0];
 

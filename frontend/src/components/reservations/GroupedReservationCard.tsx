@@ -50,7 +50,9 @@ export function GroupedReservationCard({
   const canBulkReturn =
     group.status === RESERVATION_STATUS.PENDING ||
     group.status === RESERVATION_STATUS.RENTED;
-  const showActions = mode === "admin" || (mode === "user" && scope === "my");
+  // Regular users: actions only in "My Reservations"  
+  // Admins: actions in both "My Reservations" and "All Reservations"
+  const showActions = mode === "admin" || scope === "my";
   const isOwn = currentUserId ? group.userId === currentUserId : false;
 
   return (
@@ -177,7 +179,8 @@ export function GroupedReservationCard({
                 <ReservationCard
                   key={item.id}
                   reservation={item}
-                  isOwn={scope === "all" && itemIsOwn}
+                  isOwn={itemIsOwn}
+                  showOwnershipBadge={scope === "all"}
                   showActions={showActions}
                   onCancel={showActions ? () => onCancelSingle(item) : undefined}
                   onModify={showActions ? () => onModifySingle(item) : undefined}

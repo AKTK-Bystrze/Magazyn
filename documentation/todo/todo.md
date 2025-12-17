@@ -1,10 +1,8 @@
-continue status design
-fix linter and astro conflicts
-fix sidebar always on top
-missing rented button
+
 remove service role key usage
-wrong credits calculation
-the start date can be in past if it is original date, can be moved to future
+wrong credits calculation in details credits are 0 but are correctly displayed on list view
+in top bar credits re invisible on mobile view
+the start date can be in past if it is original date, can be moved to future - dates changing is not working
 return all button
 ===
 

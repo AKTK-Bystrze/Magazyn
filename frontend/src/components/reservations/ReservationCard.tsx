@@ -17,6 +17,8 @@ interface ReservationCardProps {
   isOwn?: boolean;
   /** Whether to show action buttons */
   showActions?: boolean;
+  /** Whether to show the 'Your reservation' badge */
+  showOwnershipBadge?: boolean;
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
   onReturn?: (reservation: ReservationListItem) => void;
@@ -32,6 +34,7 @@ export function ReservationCard({
   mode,
   isOwn = false,
   showActions = true,
+  showOwnershipBadge = false,
   onModify,
   onCancel,
   onReturn,
@@ -63,7 +66,7 @@ export function ReservationCard({
     <Card
       className={cn(
         "hover:shadow-md transition-shadow",
-        isOwn && "ring-2 ring-primary/30 bg-primary/5"
+        showOwnershipBadge && isOwn && "ring-2 ring-primary/30 bg-primary/5"
       )}
     >
       <CardHeader className="pb-3">
@@ -73,7 +76,7 @@ export function ReservationCard({
               <h3 className="font-semibold text-lg truncate">
                 {reservation.equipmentName}
               </h3>
-              {isOwn && (
+              {showOwnershipBadge && isOwn && (
                 <Badge variant="secondary" className="text-xs">
                   Your reservation
                 </Badge>
