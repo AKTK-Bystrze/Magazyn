@@ -1,3 +1,12 @@
+continue status design
+fix linter and astro conflicts
+fix sidebar always on top
+missing rented button
+remove service role key usage
+wrong credits calculation
+the start date can be in past if it is original date, can be moved to future
+return all button
+===
 
 design status changes
 

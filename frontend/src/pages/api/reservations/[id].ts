@@ -94,6 +94,10 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     const data = await response.json();
     debug.log("Reservations API", "PATCH Response status:", response.status);
 
+    if (!response.ok) {
+      debug.error("Reservations API", "PATCH Backend Error:", data);
+    }
+
     return new Response(JSON.stringify(data), {
       status: response.status,
       headers: { "Content-Type": "application/json" },

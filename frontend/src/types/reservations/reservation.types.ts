@@ -210,13 +210,40 @@ export type ReservationListResponse = {
  * Used for collapsing reservations created on the same date range
  */
 export type GroupedReservation = {
-  groupKey: string;                  // `${userId}-${startDate}-${endDate}`
+  groupKey: string; // `${userId}-${startDate}-${endDate}`
   userId: string;
   username: string;
   startDate: string;
   endDate: string;
-  status: string;                    // Aggregated: same status or "MIXED"
-  totalCreditCost: number;           // Sum of all items
-  items: ReservationListItem[];      // Individual reservations
-  createdAt: string;                 // Earliest created_at
+  status: string; // Aggregated: same status or "MIXED"
+  totalCreditCost: number; // Sum of all items
+  items: ReservationListItem[]; // Individual reservations
+  createdAt: string; // Earliest created_at
+};
+
+// =============================================================================
+// DATE MODIFICATION TYPES
+// =============================================================================
+
+/**
+ * Credit adjustment calculation result
+ * Used for previewing changes before confirmation
+ */
+export type CreditAdjustmentInfo = {
+  originalDays: number;
+  newDays: number;
+  originalCost: number;
+  newCost: number;
+  adjustment: number; // positive = refund, negative = charge
+  newBalance: number; // user's balance after adjustment
+  isSignificantExtension: boolean;
+};
+
+/**
+ * Date modification command for API
+ * Subset of UpdateReservationCommand focused on dates
+ */
+export type ModifyDatesCommand = {
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
 };

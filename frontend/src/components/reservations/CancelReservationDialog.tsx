@@ -15,29 +15,38 @@ import type { ReservationListItem } from "@/types";
 
 interface CancelReservationDialogProps {
   isOpen: boolean;
-  reservation: ReservationListItem | null;
+  reservation?: ReservationListItem | null;
+  reservations?: ReservationListItem[];
   isSubmitting: boolean;
   onConfirm: () => Promise<void>;
   onClose: () => void;
 }
 
 /**
- * Confirmation dialog for cancelling a reservation
+ * Confirmation dialog for cancelling a reservation (or multiple)
  * Shows reservation details and refund information
- *
- * @param isOpen - Whether the dialog is open
- * @param reservation - Reservation to cancel
- * @param isSubmitting - Loading state for cancel action
- * @param onConfirm - Callback when user confirms cancellation
- * @param onClose - Callback when dialog closes
  */
 export function CancelReservationDialog({
   isOpen,
   reservation,
+  reservations,
   isSubmitting,
   onConfirm,
   onClose,
 }: CancelReservationDialogProps) {
+  // Determine target(s)
+  const targets = React.useMemo(() => {
+    if (reservations && reservations.length > 0) return reservations;
+    if (reservation) return [reservation];
+    return [];
+  }, [reservation, reservations]);
+
+  const isBulk = targets.length > 1;
+  const totalCredits = React.useMemo(
+    () => targets.reduce((sum, item) => sum + item.creditCost, 0),
+    [targets]
+  );
+
   // Handle escape key
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -57,7 +66,9 @@ export function CancelReservationDialog({
     };
   }, [isOpen, isSubmitting, onClose]);
 
-  if (!isOpen || !reservation) return null;
+  if (!isOpen || targets.length === 0) return null;
+
+  const firstItem = targets[0];
 
   return (
     <div
@@ -88,7 +99,7 @@ export function CancelReservationDialog({
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
             <h2 id="cancel-dialog-title" className="text-xl font-bold">
-              Cancel Reservation
+              {isBulk ? `Cancel ${targets.length} Reservations` : "Cancel Reservation"}
             </h2>
             <Button
               variant="ghost"
@@ -115,24 +126,43 @@ export function CancelReservationDialog({
           {/* Reservation Details */}
           <div className="space-y-3">
             <h3 className="font-medium text-sm text-muted-foreground">
-              Reservation Details
+              {isBulk ? "Summary" : "Reservation Details"}
             </h3>
             <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Equipment:</span>
-                <span className="font-medium">{reservation.equipmentName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Dates:</span>
-                <span>
-                  {formatDate(reservation.startDate)} —{" "}
-                  {formatDate(reservation.endDate)}
-                </span>
-              </div>
+              {isBulk ? (
+                <>
+                  <div className="flex justify-between border-b pb-2 mb-2">
+                    <span className="text-muted-foreground">Items:</span>
+                    <span className="font-medium">{targets.length} reservations</span>
+                  </div>
+                  <div className="max-h-24 overflow-y-auto space-y-1 text-muted-foreground text-xs mb-2">
+                    {targets.map((t) => (
+                      <div key={t.id} className="truncate">
+                        • {t.equipmentName}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Equipment:</span>
+                      <span className="font-medium">{firstItem.equipmentName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Dates:</span>
+                      <span>
+                        {formatDate(firstItem.startDate)} —{" "}
+                        {formatDate(firstItem.endDate)}
+                      </span>
+                    </div>
+                </>
+              )}
+
               <div className="flex justify-between border-t pt-2 mt-2">
-                <span className="text-muted-foreground">Refund Amount:</span>
+                <span className="text-muted-foreground">Total Refund:</span>
                 <span className="font-semibold text-green-600">
-                  +{reservation.creditCost} credits
+                  +{totalCredits} credits
                 </span>
               </div>
             </div>

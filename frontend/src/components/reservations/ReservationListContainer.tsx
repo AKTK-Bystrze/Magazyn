@@ -5,6 +5,10 @@ import { ReservationCardList } from "./ReservationCardList";
 import { ReservationFilters } from "./ReservationFilters";
 import { ReservationViewTabs, type ReservationScope } from "./ReservationViewTabs";
 import { CancelReservationDialog } from "./CancelReservationDialog";
+import { ModifyDatesDialog } from "./ModifyDatesDialog";
+import { ReturnWithDatesDialog } from "./ReturnWithDatesDialog";
+import { usersApi } from "@/lib/api/users-api";
+import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import {
@@ -13,9 +17,7 @@ import {
   DEFAULT_STATUS_FILTER,
   DEFAULT_SORT_OPTION,
 } from "@/lib/config/constants";
-import type { ReservationListItem, ReservationListProps } from "@/types";
-
-
+import type { ReservationListItem, ReservationListProps, UpdateReservationCommand } from "@/types";
 
 /**
  * Inner component that uses the useReservations hook
@@ -34,44 +36,178 @@ function ReservationListContainerInner({
     setFilter,
     resetFilters,
     cancelReservation,
+    updateReservation,
     isMutating,
   } = useReservations({ initialFilters });
 
   // Dialog states
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
+  const [modifyDialogOpen, setModifyDialogOpen] = React.useState(false);
+  const [returnDialogOpen, setReturnDialogOpen] = React.useState(false);
   const [selectedReservation, setSelectedReservation] =
     React.useState<ReservationListItem | null>(null);
+  const [batchReservations, setBatchReservations] = React.useState<
+    ReservationListItem[]
+  >([]);
 
   // Feedback states
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(
+    null
+  );
 
   // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
+      const timer = setTimeout(
+        () => setSuccessMessage(null),
+        MESSAGE_AUTO_DISMISS_MS
+      );
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
 
   React.useEffect(() => {
     if (errorMessage) {
-      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
+      const timer = setTimeout(
+        () => setErrorMessage(null),
+        MESSAGE_AUTO_DISMISS_MS
+      );
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);
 
-  // Handle modify action - TODO: Implement ModifyReservationDialog
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleModify = React.useCallback((_reservation: ReservationListItem) => {
-    // Will be implemented in Phase 5
-    setErrorMessage("Modify functionality coming soon!");
-  }, []);
+  // Fetch user data for credit balance (when dialogs open)
+  const { data: userData } = useQuery({
+    queryKey: ["user", selectedReservation?.userId],
+    queryFn: () => usersApi.getById(selectedReservation!.userId),
+    enabled: !!selectedReservation && (modifyDialogOpen || returnDialogOpen),
+  });
+
+  const currentUserBalance = userData?.creditBalance ?? 0;
+
+  // Handle modify action
+  const handleModify = React.useCallback(
+    (reservation: ReservationListItem) => {
+      setSelectedReservation(reservation);
+      setModifyDialogOpen(true);
+    },
+    []
+  );
+
+  // Handle return action
+  const handleReturn = React.useCallback(
+    (reservation: ReservationListItem) => {
+      setSelectedReservation(reservation);
+      setReturnDialogOpen(true);
+    },
+    []
+  );
+
+  // Handle modify dates confirm
+  const handleModifyDatesConfirm = React.useCallback(
+    async (start: Date, end: Date) => {
+      const targets =
+        batchReservations.length > 0
+          ? batchReservations
+          : selectedReservation
+            ? [selectedReservation]
+            : [];
+      if (targets.length === 0) return;
+
+      try {
+        const command = {
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        };
+
+        if (targets.length === 1) {
+          await updateReservation(targets[0].id, command);
+          setSuccessMessage(
+            `Reservation dates for "${targets[0].equipmentName}" updated successfully.`
+          );
+        } else {
+          // Bulk update
+          const results = await Promise.allSettled(
+            targets.map((target) => updateReservation(target.id, command))
+          );
+          const successful = results.filter(
+            (r) => r.status === "fulfilled"
+          ).length;
+
+          if (successful === targets.length) {
+            setSuccessMessage(`${successful} reservations updated successfully.`);
+          } else {
+            setSuccessMessage(
+              `${successful} updated. ${targets.length - successful} failed.`
+            );
+          }
+        }
+
+        setModifyDialogOpen(false);
+        setSelectedReservation(null);
+        setBatchReservations([]);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to update dates";
+        setErrorMessage(message);
+      }
+    },
+    [selectedReservation, batchReservations, updateReservation]
+  );
+
+  // Handle return confirm
+  const handleReturnConfirm = React.useCallback(
+    async (command: UpdateReservationCommand) => {
+      const targets =
+        batchReservations.length > 0
+          ? batchReservations
+          : selectedReservation
+            ? [selectedReservation]
+            : [];
+      if (targets.length === 0) return;
+
+      try {
+        if (targets.length === 1) {
+          await updateReservation(targets[0].id, command);
+          setSuccessMessage(
+            `Equipment "${targets[0].equipmentName}" marked as returned.`
+          );
+        } else {
+          // Bulk return
+          const results = await Promise.allSettled(
+            targets.map((target) => updateReservation(target.id, command))
+          );
+          const successful = results.filter(
+            (r) => r.status === "fulfilled"
+          ).length;
+
+          if (successful === targets.length) {
+            setSuccessMessage(`${successful} items marked as returned.`);
+          } else {
+            setSuccessMessage(
+              `${successful} returned. ${targets.length - successful} failed.`
+            );
+          }
+        }
+
+        setReturnDialogOpen(false);
+        setSelectedReservation(null);
+        setBatchReservations([]);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to return equipment";
+        setErrorMessage(message);
+      }
+    },
+    [selectedReservation, batchReservations, updateReservation]
+  );
 
   // Handle cancel action
   const handleCancelClick = React.useCallback(
     (reservation: ReservationListItem) => {
       setSelectedReservation(reservation);
+      setBatchReservations([]); // Clear batch
       setCancelDialogOpen(true);
     },
     []
@@ -79,62 +215,91 @@ function ReservationListContainerInner({
 
   // Confirm cancel
   const handleCancelConfirm = React.useCallback(async () => {
-    if (!selectedReservation) return;
+    const targets =
+      batchReservations.length > 0
+        ? batchReservations
+        : selectedReservation
+          ? [selectedReservation]
+          : [];
+
+    if (targets.length === 0) return;
 
     try {
-      await cancelReservation(selectedReservation.id);
-      setSuccessMessage(
-        `Reservation for "${selectedReservation.equipmentName}" has been cancelled. Credits have been refunded.`
-      );
+      if (targets.length === 1) {
+        // Single cancel
+        await cancelReservation(targets[0].id);
+        setSuccessMessage(
+          `Reservation for "${targets[0].equipmentName}" has been cancelled. Credits have been refunded.`
+        );
+      } else {
+        // Bulk cancel
+        const results = await Promise.allSettled(
+          targets.map((reservation) => cancelReservation(reservation.id))
+        );
+
+        const successful = results.filter(
+          (r) => r.status === "fulfilled"
+        ).length;
+        const failed = results.filter((r) => r.status === "rejected").length;
+
+        if (failed === 0) {
+          setSuccessMessage(
+            `${successful} reservations have been cancelled. Credits have been refunded.`
+          );
+        } else if (successful === 0) {
+          setErrorMessage(
+            `Failed to cancel all ${targets.length} reservations. Please try again.`
+          );
+        } else {
+          setSuccessMessage(
+            `${successful} reservations cancelled successfully. ${failed} failed - please try again for those.`
+          );
+        }
+      }
+
       setCancelDialogOpen(false);
       setSelectedReservation(null);
+      setBatchReservations([]);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to cancel reservation";
       setErrorMessage(message);
     }
-  }, [selectedReservation, cancelReservation]);
+  }, [selectedReservation, batchReservations, cancelReservation]);
 
   // Handle cancel dialog close
   const handleCancelDialogClose = React.useCallback(() => {
     setCancelDialogOpen(false);
     setSelectedReservation(null);
+    setBatchReservations([]);
   }, []);
 
   // Handle bulk cancel
   const handleCancelAll = React.useCallback(
-    async (reservations: ReservationListItem[]) => {
-      // Cancel all reservations in parallel for better performance
-      const results = await Promise.allSettled(
-        reservations.map((reservation) => cancelReservation(reservation.id))
-      );
-
-      const successful = results.filter((r) => r.status === "fulfilled").length;
-      const failed = results.filter((r) => r.status === "rejected").length;
-
-      if (failed === 0) {
-        setSuccessMessage(
-          `${successful} ${successful === 1 ? "reservation has" : "reservations have"} been cancelled. Credits have been refunded.`
-        );
-      } else if (successful === 0) {
-        setErrorMessage(
-          `Failed to cancel all ${reservations.length} reservations. Please try again.`
-        );
-      } else {
-        setSuccessMessage(
-          `${successful} reservations cancelled successfully. ${failed} failed - please try again for those.`
-        );
-      }
+    (reservations: ReservationListItem[]) => {
+      setBatchReservations(reservations);
+      setSelectedReservation(null); // Clear single
+      setCancelDialogOpen(true);
     },
-    [cancelReservation]
+    []
   );
 
   // Handle bulk modify dates
   const handleModifyDatesAll = React.useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (_reservations: ReservationListItem[]) => {
-      // TODO: Implement bulk modify dates dialog
-      setErrorMessage("Bulk modify dates functionality coming soon!");
+    (reservations: ReservationListItem[]) => {
+      setBatchReservations(reservations);
+      setSelectedReservation(null);
+      setModifyDialogOpen(true);
+    },
+    []
+  );
+
+  // Handle bulk return
+  const handleReturnAll = React.useCallback(
+    (reservations: ReservationListItem[]) => {
+      setBatchReservations(reservations);
+      setSelectedReservation(null);
+      setReturnDialogOpen(true);
     },
     []
   );
@@ -176,6 +341,11 @@ function ReservationListContainerInner({
   const hasActiveFilters =
     filters.status !== DEFAULT_STATUS_FILTER ||
     filters.sort !== DEFAULT_SORT_OPTION;
+
+  const showActions =
+    mode === "admin" || (mode === "user" && filters.scope === "my");
+
+  const dialogReservation = selectedReservation || batchReservations[0];
 
   return (
     <div className="space-y-6">
@@ -223,10 +393,12 @@ function ReservationListContainerInner({
         scope={filters.scope}
         currentUserId={currentUserId}
         onPageChange={handlePageChange}
-        onModify={mode === "user" && filters.scope === "my" ? handleModify : undefined}
-        onCancel={mode === "user" && filters.scope === "my" ? handleCancelClick : undefined}
-        onCancelAll={mode === "user" && filters.scope === "my" ? handleCancelAll : undefined}
-        onModifyDatesAll={mode === "user" && filters.scope === "my" ? handleModifyDatesAll : undefined}
+        onModify={showActions ? handleModify : undefined}
+        onCancel={showActions ? handleCancelClick : undefined}
+        onReturn={showActions ? handleReturn : undefined}
+        onCancelAll={showActions ? handleCancelAll : undefined}
+        onModifyDatesAll={showActions ? handleModifyDatesAll : undefined}
+        onReturnAll={showActions ? handleReturnAll : undefined}
         onViewDetails={handleViewDetails}
       />
 
@@ -234,10 +406,43 @@ function ReservationListContainerInner({
       <CancelReservationDialog
         isOpen={cancelDialogOpen}
         reservation={selectedReservation}
+        reservations={batchReservations}
         isSubmitting={isMutating}
         onConfirm={handleCancelConfirm}
         onClose={handleCancelDialogClose}
       />
+
+      {/* Modify Dates Dialog */}
+      {dialogReservation && (
+        <ModifyDatesDialog
+          open={modifyDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) setModifyDialogOpen(false);
+          }}
+          reservation={dialogReservation}
+          reservations={batchReservations}
+          onConfirm={async ({ startDate, endDate }) => {
+            await handleModifyDatesConfirm(new Date(startDate), new Date(endDate));
+          }}
+          isSubmitting={isMutating}
+          currentUserBalance={currentUserBalance}
+        />
+      )}
+
+      {/* Return With Dates Dialog */}
+      {dialogReservation && (
+        <ReturnWithDatesDialog
+          open={returnDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) setReturnDialogOpen(false);
+          }}
+          reservation={dialogReservation}
+          reservations={batchReservations}
+          onConfirm={handleReturnConfirm}
+          isSubmitting={isMutating}
+          currentUserBalance={currentUserBalance}
+        />
+      )}
     </div>
   );
 }

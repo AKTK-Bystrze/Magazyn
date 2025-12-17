@@ -11,21 +11,21 @@ const user = Astro.locals.user;
 ---
 
 <Layout title="Zaloguj się | Wynajem Sprzętu">
-  <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
-    <div className="max-w-md w-full space-y-8 text-center">
+  <main class="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+    <div class="max-w-md w-full space-y-8 text-center">
       <!-- Icon -->
-      <div className="flex justify-center">
-        <div className="rounded-full bg-yellow-100 dark:bg-yellow-900/20 p-6">
+      <div class="flex justify-center">
+        <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/20 p-6">
           <svg 
-            className="w-16 h-16 text-yellow-600 dark:text-yellow-500" 
+            class="w-16 h-16 text-yellow-600 dark:text-yellow-500" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
           >
             <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
@@ -33,46 +33,46 @@ const user = Astro.locals.user;
       </div>
 
       <!-- Title -->
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+      <div class="space-y-2">
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">
           Witaj
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p class="text-sm text-muted-foreground">
           Wpisz swój e‑mail, aby zalogować się do swojego konta
         </p>
       </div>
 
       <!-- Message -->
-      <div className="bg-card border border-border rounded-lg p-6 space-y-4 text-left">
-        <div className="space-y-2">
-          <h2 className="font-semibold text-lg text-foreground">Co się dzieje?</h2>
-          <p className="text-sm text-muted-foreground">
+      <div class="bg-card border border-border rounded-lg p-6 space-y-4 text-left">
+        <div class="space-y-2">
+          <h2 class="font-semibold text-lg text-foreground">Co się dzieje?</h2>
+          <p class="text-sm text-muted-foreground">
             Twoje konto jest obecnie wyłączone i czeka na zatwierdzenie przez Super‑Admina. 
             Nie będziesz mógł uzyskać dostępu do aplikacji, dopóki konto nie zostanie włączone.
           </p>
         </div>
 
-        <div className="space-y-2">
-          <h2 className="font-semibold text-lg text-foreground">Co powinieneś zrobić?</h2>
-          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+        <div class="space-y-2">
+          <h2 class="font-semibold text-lg text-foreground">Co powinieneś zrobić?</h2>
+          <ul class="text-sm text-muted-foreground space-y-1 list-disc list-inside">
             <li>Poczekaj, aż Super‑Admin zweryfikuje i włączy Twoje konto</li>
             <li>Skontaktuj się z administratorem, jeśli potrzebujesz natychmiastowego dostępu</li>
             <li>Sprawdź ponownie później lub kliknij przycisk odświeżania poniżej</li>
           </ul>
         </div>
 
-        <div className="pt-2 border-t border-border">
-          <p className="text-xs text-muted-foreground">
+        <div class="pt-2 border-t border-border">
+          <p class="text-xs text-muted-foreground">
             <strong>Account:</strong> {user?.email || 'Unknown'}
           </p>
         </div>
       </div>
 
       <!-- Actions -->
-      <div className="flex flex-col gap-3">
+      <div class="flex flex-col gap-3">
         <button
           id="refresh-status-btn"
-          className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+          class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
         >
           Sprawdź status konta
         </button>
@@ -83,8 +83,8 @@ const user = Astro.locals.user;
       </div>
 
       <!-- Status message -->
-      <div id="status-message" className="hidden">
-        <p className="text-sm text-muted-foreground"></p>
+      <div id="status-message" class="hidden">
+        <p class="text-sm text-muted-foreground"></p>
       </div>
     </div>
   </main>

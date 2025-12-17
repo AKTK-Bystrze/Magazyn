@@ -251,11 +251,10 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 
 	// Handle Status Change
 	if cmd.Status != nil && *cmd.Status != current.Status {
-		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied {
-			// User tried to set something other than DENIED
-			// Actually plan says: "Can only cancel (status -> DENIED)".
-			// So if user passes "RENTED", reject.
-			return nil, types.NewValidationError("Users can only cancel pending reservations", nil)
+		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
+			// User tried to set something other than DENIED or RETURNED
+			// Users can cancel (DENIED) or return (RETURNED) their own pending reservations
+			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
 		}
 		updateData.Status = cmd.Status
 		needsUpdate = true

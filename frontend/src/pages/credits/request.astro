@@ -13,8 +13,8 @@ if (!user) {
 ---
 
 <AppLayout title="Request Credits | Magazyn">
-  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-    <div className="rounded-full bg-muted p-6 mb-6">
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+    <div class="rounded-full bg-muted p-6 mb-6">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="48"
@@ -22,23 +22,23 @@ if (!user) {
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-muted-foreground"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="text-muted-foreground"
       >
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="8" x2="12" y2="16"></line>
         <line x1="8" y1="12" x2="16" y2="12"></line>
       </svg>
     </div>
-    <h1 className="text-3xl font-bold mb-2">Request Credits</h1>
-    <p className="text-muted-foreground mb-6 max-w-md">
+    <h1 class="text-3xl font-bold mb-2">Request Credits</h1>
+    <p class="text-muted-foreground mb-6 max-w-md">
       Submit a request for additional credits. This feature is coming soon.
     </p>
     <a 
       href={ROUTES.PROTECTED.DASHBOARD}
-      className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2 hover:bg-primary/90"
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2 hover:bg-primary/90"
     >
       Back to Dashboard
     </a>

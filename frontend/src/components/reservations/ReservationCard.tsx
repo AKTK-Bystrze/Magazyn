@@ -8,29 +8,24 @@ import { formatDate, calculateDays } from "@/lib/utils/date-utils";
 import { pluralize } from "@/lib/utils/text-utils";
 import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
 import { cn } from "@/lib/utils";
+import { canChangeStatus } from "@/lib/utils/status-utils";
 import type { ReservationListItem } from "@/types";
 
 interface ReservationCardProps {
   reservation: ReservationListItem;
   mode: "user" | "admin";
-  /** Highlight this card as the current user's reservation (in 'all' view) */
   isOwn?: boolean;
   /** Whether to show action buttons */
   showActions?: boolean;
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
+  onReturn?: (reservation: ReservationListItem) => void;
   onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
 /**
  * Displays a single reservation as a card
  * Shows equipment info, dates, status, and available actions
- *
- * @param reservation - Reservation data
- * @param mode - View mode (user or admin)
- * @param onModify - Callback for modify action (PENDING only)
- * @param onCancel - Callback for cancel action (PENDING only)
- * @param onViewDetails - Callback for view details action
  */
 export function ReservationCard({
   reservation,
@@ -39,7 +34,16 @@ export function ReservationCard({
   showActions = true,
   onModify,
   onCancel,
+  onReturn,
+  // onViewDetails - reserved for future use
 }: ReservationCardProps) {
+  const isAdmin = mode === "admin";
+  // Determine available actions based on status and permissions
+  const { canCancel, canMarkReturned } = React.useMemo(
+    () => canChangeStatus(reservation.status, isOwn, isAdmin),
+    [reservation.status, isOwn, isAdmin]
+  );
+
   const isPending = reservation.status === RESERVATION_STATUS.PENDING;
   const days = calculateDays(reservation.startDate, reservation.endDate);
 
@@ -51,7 +55,9 @@ export function ReservationCard({
     onCancel?.(reservation);
   }, [onCancel, reservation]);
 
-
+  const handleReturn = React.useCallback(() => {
+    onReturn?.(reservation);
+  }, [onReturn, reservation]);
 
   return (
     <Card
@@ -111,6 +117,7 @@ export function ReservationCard({
         {/* Actions */}
         {showActions && (
           <div className="flex flex-wrap gap-2 pt-2">
+            {/* Modify - Only for Pending */}
             {isPending && onModify && (
               <Button
                 variant="outline"
@@ -123,7 +130,8 @@ export function ReservationCard({
               </Button>
             )}
 
-            {isPending && onCancel && (
+            {/* Cancel - If allowed by status utils */}
+            {canCancel && onCancel && (
               <Button
                 variant="outline"
                 size="sm"
@@ -132,6 +140,19 @@ export function ReservationCard({
               >
                 <X className={ICON_SIZE_SM} />
                 Cancel
+              </Button>
+            )}
+
+            {/* Return - If allowed by status utils */}
+            {canMarkReturned && onReturn && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReturn}
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
+              >
+                <Calendar className={ICON_SIZE_SM} />
+                Return
               </Button>
             )}
 

@@ -43,6 +43,10 @@ module.exports = {
         extraFileExtensions: ['.astro'],
       },
       extends: ['plugin:astro/recommended'],
+      rules: {
+        // Astro templates use native HTML 'class', not React's 'className'
+        'react/no-unknown-property': 'off',
+      },
     },
   ],
 };

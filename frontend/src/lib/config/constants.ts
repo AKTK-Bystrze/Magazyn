@@ -300,3 +300,61 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
   SYSTEM: "System",
 } as const;
 
+// =============================================================================
+// RESERVATION DATE MODIFICATION UI STRINGS
+// =============================================================================
+
+/**
+ * UI text strings for date modification dialogs
+ * Centralized for consistency and i18n readiness
+ */
+export const RESERVATION_DATE_MODIFICATION_UI_STRINGS = {
+  // Modify Dates Dialog
+  MODIFY_DATES_TITLE: "Modify Reservation Dates",
+  MODIFY_DATES_DESCRIPTION:
+    "Change the start and end dates for this reservation. Credits will be adjusted based on the new duration.",
+  MODIFY_DATES_BUTTON: "Modify Dates",
+  CONFIRM_CHANGES: "Confirm Changes",
+  CANCEL_CHANGES: "Cancel",
+
+  // Return with Dates Dialog
+  RETURN_WITH_DATES_TITLE: "Mark as Returned",
+  RETURN_WITH_DATES_DESCRIPTION:
+    "Mark this reservation as returned. You can optionally modify the dates before returning.",
+  MODIFY_DATES_BEFORE_RETURN: "Modify dates before returning",
+  MODIFY_DATES_CHECKBOX_HINT:
+    "Check this if the equipment was returned earlier or later than planned",
+  CONFIRM_RETURN: "Confirm Return",
+  FINAL_STATUS_WARNING: "⚠️ RETURNED is a final status and cannot be changed afterwards.",
+
+  // Credit Adjustment
+  CREDIT_ADJUSTMENT_TITLE: "Credit Adjustment",
+  DATE_COMPARISON: "Date Comparison",
+  ORIGINAL_DATES: "Original",
+  NEW_DATES: "New",
+  CREDIT_ADJUSTMENT: "Credit Adjustment",
+  CURRENT_BALANCE: "Current Balance",
+  NEW_BALANCE: "New Balance",
+
+  // Warnings
+  SIGNIFICANT_EXTENSION_WARNING: "Significant Extension Detected",
+  INSUFFICIENT_CREDITS_WARNING:
+    "Insufficient credits. You need {amount} more credits to complete this modification.",
+
+  // Validation Errors
+  START_DATE_REQUIRED: "Start date is required",
+  END_DATE_REQUIRED: "End date is required",
+  START_DATE_MUST_BE_FUTURE: "Start date must be in the future",
+  END_DATE_MUST_BE_AFTER_START: "End date must be on or after start date",
+  EQUIPMENT_NOT_AVAILABLE: "Equipment not available for selected dates",
+  DATES_MUST_CHANGE: "Please select different dates to modify the reservation",
+
+  // Success Messages
+  DATES_MODIFIED_SUCCESS: "Reservation dates modified successfully",
+  RETURNED_WITH_DATES_SUCCESS: "Reservation marked as returned and dates updated",
+  RETURNED_SUCCESS: "Reservation marked as returned",
+
+  // Loading States
+  VALIDATING_DATES: "Validating dates...",
+  UPDATING_RESERVATION: "Updating reservation...",
+} as const;

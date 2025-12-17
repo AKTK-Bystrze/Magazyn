@@ -7,15 +7,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StatusChangeDialog } from "./StatusChangeDialog";
-import { ChevronDown, X, CheckCircle } from "lucide-react";
+import { ModifyDatesDialog } from "./ModifyDatesDialog";
+import { ReturnWithDatesDialog } from "./ReturnWithDatesDialog";
+import { ChevronDown, X, CheckCircle, CalendarClock } from "lucide-react";
 import { canChangeStatus } from "@/lib/utils/status-utils";
 import {
   ICON_SIZE_SM,
   RESERVATION_STATUS_VIEW_UI_STRINGS as UI,
+  RESERVATION_DATE_MODIFICATION_UI_STRINGS as DATE_UI,
   RESERVATION_STATUS_LABELS,
 } from "@/lib/config/constants";
+import { useQuery } from "@tanstack/react-query";
+import { usersApi } from "@/lib/api/users-api";
+import { reservationsApi } from "@/lib/api/reservations-api";
 import type { ReservationDetail } from "@/types";
 import type { Enums } from "@/db/database.types";
+import type { UpdateReservationCommand } from "@/types/reservations/reservation.types";
 
 interface ReservationStatusActionsProps {
   reservation: ReservationDetail;
@@ -28,12 +35,7 @@ interface ReservationStatusActionsProps {
 /**
  * Renders available status change actions based on user role and current status
  * Shows button actions for users and dropdown for admins
- *
- * @param reservation - Current reservation
- * @param currentUserId - ID of logged-in user
- * @param isAdmin - Whether user is admin
- * @param onStatusChange - Callback when status change confirmed
- * @param isUpdating - Loading state during mutation
+ * Integrated with dialogs for modifying dates and returning equipment
  */
 export function ReservationStatusActions({
   reservation,
@@ -42,42 +44,74 @@ export function ReservationStatusActions({
   onStatusChange,
   isUpdating,
 }: ReservationStatusActionsProps) {
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [dialogMode, setDialogMode] = React.useState<
-    "cancel" | "mark_returned" | "admin_change"
-  >("cancel");
-  const [targetStatus, setTargetStatus] =
-    React.useState<Enums<"reservation_status"> | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
+  const [modifyDatesOpen, setModifyDatesOpen] = React.useState(false);
+  const [returnDialogOpen, setReturnDialogOpen] = React.useState(false);
+  const [adminStatusDialogOpen, setAdminStatusDialogOpen] = React.useState(false);
+  const [targetStatus, setTargetStatus] = React.useState<Enums<"reservation_status"> | null>(null);
 
   const isOwner = reservation.userId === currentUserId;
   const actions = canChangeStatus(reservation.status, isOwner, isAdmin);
 
-  // Handle cancel action
-  const handleCancel = () => {
-    setDialogMode("cancel");
+  // Fetch reservation owner's profile to get current credit balance
+  // This is needed for credit validation in dialogs
+  const { data: userProfile } = useQuery({
+    queryKey: ["user", reservation.userId],
+    queryFn: () => usersApi.getById(reservation.userId),
+    enabled: !!reservation.userId && (modifyDatesOpen || returnDialogOpen),
+    staleTime: 0, // Always fetch fresh balance when dialog opens
+  });
+
+  const userBalance = userProfile?.creditBalance ?? 0;
+
+  // Handlers
+  const handleCancelClick = () => {
     setTargetStatus("DENIED");
-    setDialogOpen(true);
+    setCancelDialogOpen(true);
   };
 
-  // Handle mark returned action
-  const handleMarkReturned = () => {
-    setDialogMode("mark_returned");
-    setTargetStatus("RETURNED");
-    setDialogOpen(true);
+  const handleModifyDatesClick = () => {
+    setModifyDatesOpen(true);
   };
 
-  // Handle admin status change
-  const handleAdminChange = (newStatus: Enums<"reservation_status">) => {
-    setDialogMode("admin_change");
+  const handleMarkReturnedClick = () => {
+    setReturnDialogOpen(true);
+  };
+
+  const handleAdminStatusClick = (newStatus: Enums<"reservation_status">) => {
     setTargetStatus(newStatus);
-    setDialogOpen(true);
+    setAdminStatusDialogOpen(true);
   };
 
-  // Confirm dialog action
-  const handleConfirm = async () => {
+  // Confirmations
+  const handleCancelConfirm = async () => {
+    await onStatusChange("DENIED");
+    setCancelDialogOpen(false);
+  };
+
+  const handleAdminStatusConfirm = async () => {
     if (targetStatus) {
       await onStatusChange(targetStatus);
+      setAdminStatusDialogOpen(false);
     }
+  };
+
+  const handleModifyDatesConfirm = async (newDates: {
+    startDate: string;
+    endDate: string;
+  }) => {
+    const command: UpdateReservationCommand = {
+      startDate: newDates.startDate,
+      endDate: newDates.endDate,
+    };
+    await reservationsApi.update(reservation.id, command);
+    // Reload page or invalidate queries handled by parent/hook
+    window.location.reload(); // Simple refresh to show updated data
+  };
+
+  const handleReturnConfirm = async (command: UpdateReservationCommand) => {
+    await reservationsApi.update(reservation.id, command);
+    window.location.reload();
   };
 
   // No actions available
@@ -91,11 +125,23 @@ export function ReservationStatusActions({
 
   return (
     <div className="flex flex-wrap gap-3">
-      {/* Cancel button (user/admin) */}
+      {/* Modify Dates Button (Pending only) */}
+      {reservation.status === "PENDING" && (isOwner || isAdmin) && (
+        <Button
+          variant="outline"
+          onClick={handleModifyDatesClick}
+          disabled={isUpdating}
+        >
+          <CalendarClock className={ICON_SIZE_SM + " mr-2"} />
+          {DATE_UI.MODIFY_DATES_BUTTON}
+        </Button>
+      )}
+
+      {/* Cancel Button */}
       {actions.canCancel && (
         <Button
           variant="outline"
-          onClick={handleCancel}
+          onClick={handleCancelClick}
           disabled={isUpdating}
           className="text-destructive hover:text-destructive"
         >
@@ -104,11 +150,11 @@ export function ReservationStatusActions({
         </Button>
       )}
 
-      {/* Mark Returned button (user/admin) */}
+      {/* Mark Returned Button */}
       {actions.canMarkReturned && (
         <Button
           variant="outline"
-          onClick={handleMarkReturned}
+          onClick={handleMarkReturnedClick}
           disabled={isUpdating}
         >
           <CheckCircle className={ICON_SIZE_SM + " mr-2"} />
@@ -116,7 +162,7 @@ export function ReservationStatusActions({
         </Button>
       )}
 
-      {/* Admin status dropdown */}
+      {/* Admin Status Dropdown */}
       {actions.canChangeStatus && actions.availableStatuses.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -129,7 +175,7 @@ export function ReservationStatusActions({
             {actions.availableStatuses.map((status) => (
               <DropdownMenuItem
                 key={status}
-                onClick={() => handleAdminChange(status)}
+                onClick={() => handleAdminStatusClick(status)}
                 variant={status === "DENIED" ? "destructive" : "default"}
               >
                 {RESERVATION_STATUS_LABELS[status]}
@@ -139,15 +185,43 @@ export function ReservationStatusActions({
         </DropdownMenu>
       )}
 
-      {/* Confirmation dialog */}
+      {/* Dialogs */}
       <StatusChangeDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        reservation={reservation}
+        targetStatus="DENIED"
+        onConfirm={handleCancelConfirm}
+        isSubmitting={isUpdating}
+        mode="cancel"
+      />
+
+      <StatusChangeDialog
+        open={adminStatusDialogOpen}
+        onOpenChange={setAdminStatusDialogOpen}
         reservation={reservation}
         targetStatus={targetStatus}
-        onConfirm={handleConfirm}
+        onConfirm={handleAdminStatusConfirm}
         isSubmitting={isUpdating}
-        mode={dialogMode}
+        mode="admin_change"
+      />
+
+      <ModifyDatesDialog
+        open={modifyDatesOpen}
+        onOpenChange={setModifyDatesOpen}
+        reservation={reservation}
+        onConfirm={handleModifyDatesConfirm}
+        isSubmitting={isUpdating}
+        currentUserBalance={userBalance}
+      />
+
+      <ReturnWithDatesDialog
+        open={returnDialogOpen}
+        onOpenChange={setReturnDialogOpen}
+        reservation={reservation}
+        onConfirm={handleReturnConfirm}
+        isSubmitting={isUpdating}
+        currentUserBalance={userBalance}
       />
     </div>
   );

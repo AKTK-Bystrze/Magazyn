@@ -252,7 +252,9 @@ type auditRaw struct {
 
 // CreateReservation creates a new reservation record
 func (r *reservationRepository) CreateReservation(ctx context.Context, reservation types.PublicReservationsInsert) (*types.PublicReservationsSelect, error) {
-	data, _, err := r.client.From("reservations").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
+	data, _, err := client.From("reservations").
 		Insert(reservation, false, "", "", "").
 		Single().
 		Execute()
@@ -271,24 +273,20 @@ func (r *reservationRepository) CreateReservation(ctx context.Context, reservati
 
 // CreateReservationsAtomic creates multiple reservations and deducts credits atomically
 func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, reservations []types.CreateReservationItem) ([]string, int32, error) {
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
 	params := map[string]interface{}{
 		"p_user_id":      userID,
 		"p_total_cost":   totalCost,
 		"p_reservations": reservations,
 	}
 
-	// Try accessing underlying Postgrest client if wrapper is weird.
-	// r.client.DB... or r.client.Rest...
-	// If I can't find it, I'll revert to r.client.Rpc and hope.
-	// Let's try r.client.Rpc returns string, and we parses it.
-	// If error occurs, maybe the string is the error JSON?
-
 	// Debug params
 	paramBytes, _ := json.Marshal(params)
 	logger.Infof(ctx, "RPC Params: %s", string(paramBytes))
 
 	// Temporarily:
-	jsonStr := r.client.Rpc("create_reservation_atomic", "", params)
+	jsonStr := client.Rpc("create_reservation_atomic", "", params)
 	logger.Infof(ctx, "RPC Response: %s", jsonStr)
 
 	var result struct {
@@ -330,7 +328,13 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 
 // UpdateReservation updates an existing reservation
 func (r *reservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate) (*types.PublicReservationsSelect, error) {
-	data, _, err := r.client.From("reservations").
+	// Use Service Role to bypass restrictive RLS on non-Pending statuses
+	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
+	if err != nil {
+		return nil, types.NewInternalError("Failed to create service client", err)
+	}
+
+	data, _, err := client.From("reservations").
 		Update(reservation, "", "").
 		Eq("id", id).
 		Single().
@@ -358,11 +362,16 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 
 // BulkUpdateReservations updates the status of multiple reservations
 func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids []string, status string) error {
+	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
+	if err != nil {
+		return types.NewInternalError("Failed to create service client", err)
+	}
+
 	updateData := types.PublicReservationsUpdate{
 		Status: &status,
 	}
 
-	_, _, err := r.client.From("reservations").
+	_, _, err = client.From("reservations").
 		Update(updateData, "", "").
 		In("id", ids).
 		Execute()
@@ -372,7 +381,13 @@ func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids 
 
 // GetOverlappingReservations checks if there are any approved/pending reservations for the given equipment in the date range.
 func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
-	qb := r.client.From("reservations").
+	// Use Service Role to ensure we see ALL reservations regardless of RLS
+	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
+	if err != nil {
+		return nil, types.NewInternalError("Failed to create service client", err)
+	}
+	
+	qb := client.From("reservations").
 		Select("*", "exact", false).
 		Eq("equipment_id", equipmentID).
 		Lte("start_date", endDate).
@@ -399,15 +414,22 @@ func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, 
 
 // GetDashboardStats retrieves summary statistics for the admin dashboard
 func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
+	// Admin only, should have auth
+	// Use Service Role to ensure complete data visibility
+	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
+	if err != nil {
+		return nil, types.NewInternalError("Failed to create service client", err)
+	}
+
 	// Pending
-	_, pCount, err := r.client.From("reservations").Select("*", "exact", true).Eq("status", constants.ReservationStatusPending).Execute()
+	_, pCount, err := client.From("reservations").Select("*", "exact", true).Eq("status", constants.ReservationStatusPending).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	now := time.Now().Format("2006-01-02")
 	// Overdue
-	_, oCount, err := r.client.From("reservations").
+	_, oCount, err := client.From("reservations").
 		Select("*", "exact", true).
 		Eq("status", constants.ReservationStatusRented).
 		Lt("end_date", now).
@@ -417,7 +439,7 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 	}
 
 	// Active Today
-	_, aCount, err := r.client.From("reservations").
+	_, aCount, err := client.From("reservations").
 		Select("*", "exact", true).
 		Eq("status", constants.ReservationStatusRented).
 		Lte("start_date", now).
@@ -436,7 +458,10 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 
 // GetReservationsInRange retrieves reservations overlapping standard range
 func (r *reservationRepository) GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
-	qb := r.client.From("reservations").
+	// Availability check - usually public, but let's stick to auth client if available
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	
+	qb := client.From("reservations").
 		Select("*", "exact", false).
 		Lte("start_date", rangeEnd).
 		Gte("end_date", rangeStart).
@@ -461,12 +486,14 @@ func (r *reservationRepository) GetReservationsInRange(ctx context.Context, rang
 
 // RefundCredits refunds credits to the user for a cancelled reservation
 func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID string, amount int32) error {
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
 	params := map[string]interface{}{
 		"p_reservation_id": reservationID,
 		"p_amount":         amount,
 	}
 	// RPC returns the response body as string
 	// TODO: Parse response to check for errors properly if library supports it.
-	_ = r.client.Rpc("refund_reservation_credits", "", params)
+	_ = client.Rpc("refund_reservation_credits", "", params)
 	return nil
 }

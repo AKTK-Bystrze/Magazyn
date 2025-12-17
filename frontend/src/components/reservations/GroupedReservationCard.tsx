@@ -20,8 +20,10 @@ interface GroupedReservationCardProps {
   onToggle: () => void;
   onCancelAll: () => void;
   onModifyDatesAll: () => void;
+  onReturnAll?: () => void;
   onCancelSingle: (reservation: ReservationListItem) => void;
   onModifySingle: (reservation: ReservationListItem) => void;
+  onReturnSingle?: (reservation: ReservationListItem) => void;
   mode: "user" | "admin";
 }
 
@@ -37,12 +39,17 @@ export function GroupedReservationCard({
   onToggle,
   onCancelAll,
   onModifyDatesAll,
+  onReturnAll,
   onCancelSingle,
   onModifySingle,
+  onReturnSingle,
   mode,
 }: GroupedReservationCardProps) {
   const days = calculateDays(group.startDate, group.endDate);
   const canBulkModify = group.status === RESERVATION_STATUS.PENDING;
+  const canBulkReturn =
+    group.status === RESERVATION_STATUS.PENDING ||
+    group.status === RESERVATION_STATUS.RENTED;
   const showActions = mode === "admin" || (mode === "user" && scope === "my");
   const isOwn = currentUserId ? group.userId === currentUserId : false;
 
@@ -120,28 +127,45 @@ export function GroupedReservationCard({
       {isExpanded && (
         <CardContent className="pt-6 space-y-4">
           {/* Bulk Actions */}
-          {showActions && canBulkModify && (
-            <div className="flex gap-2 pb-4 border-b">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onModifyDatesAll();
-                }}
-              >
-                Modify Dates for All
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCancelAll();
-                }}
-              >
-                Cancel All
-              </Button>
+          {showActions && (canBulkModify || canBulkReturn) && (
+            <div className="flex gap-2 pb-4 border-b overflow-x-auto">
+              {canBulkModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onModifyDatesAll();
+                  }}
+                >
+                  Modify Dates for All
+                </Button>
+              )}
+              {canBulkReturn && onReturnAll && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReturnAll();
+                  }}
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
+                >
+                  Return All
+                </Button>
+              )}
+              {canBulkModify && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancelAll();
+                  }}
+                >
+                  Cancel All
+                </Button>
+              )}
             </div>
           )}
 
@@ -157,6 +181,11 @@ export function GroupedReservationCard({
                   showActions={showActions}
                   onCancel={showActions ? () => onCancelSingle(item) : undefined}
                   onModify={showActions ? () => onModifySingle(item) : undefined}
+                  onReturn={
+                    showActions && onReturnSingle
+                      ? () => onReturnSingle(item)
+                      : undefined
+                  }
                   mode={mode}
                 />
               );

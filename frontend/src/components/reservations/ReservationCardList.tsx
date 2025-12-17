@@ -20,8 +20,10 @@ interface ReservationCardListProps {
   onPageChange: (page: number) => void;
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
+  onReturn?: (reservation: ReservationListItem) => void;
   onCancelAll?: (reservations: ReservationListItem[]) => void;
   onModifyDatesAll?: (reservations: ReservationListItem[]) => void;
+  onReturnAll?: (reservations: ReservationListItem[]) => void;
   onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
@@ -42,8 +44,10 @@ export function ReservationCardList({
   onPageChange,
   onModify,
   onCancel,
+  onReturn,
   onCancelAll,
   onModifyDatesAll,
+  onReturnAll,
   onViewDetails,
 }: ReservationCardListProps) {
   // Track expanded groups
@@ -104,6 +108,7 @@ export function ReservationCardList({
                 showActions={mode === "admin" || (mode === "user" && scope === "my")}
                 onModify={onModify}
                 onCancel={onCancel}
+                onReturn={onReturn}
                 onViewDetails={onViewDetails}
                 mode={mode}
               />
@@ -121,8 +126,10 @@ export function ReservationCardList({
               onToggle={() => toggleGroup(group.groupKey)}
               onCancelAll={() => onCancelAll?.(group.items)}
               onModifyDatesAll={() => onModifyDatesAll?.(group.items)}
+              onReturnAll={() => onReturnAll?.(group.items)}
               onCancelSingle={(item) => onCancel?.(item)}
               onModifySingle={(item) => onModify?.(item)}
+              onReturnSingle={(item) => onReturn?.(item)}
               mode={mode}
             />
           );

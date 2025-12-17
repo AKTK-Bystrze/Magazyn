@@ -43,7 +43,9 @@ export function canChangeStatus(
   if (isOwner && !isAdmin) {
     return {
       canCancel: currentStatus === RESERVATION_STATUS.PENDING,
-      canMarkReturned: currentStatus === RESERVATION_STATUS.PENDING,
+      canMarkReturned:
+        currentStatus === RESERVATION_STATUS.PENDING ||
+        currentStatus === RESERVATION_STATUS.RENTED,
       canChangeStatus: false,
       availableStatuses: [],
     };
@@ -53,7 +55,9 @@ export function canChangeStatus(
   if (isAdmin) {
     return {
       canCancel: currentStatus === RESERVATION_STATUS.PENDING,
-      canMarkReturned: currentStatus === RESERVATION_STATUS.PENDING,
+      canMarkReturned:
+        currentStatus === RESERVATION_STATUS.PENDING ||
+        currentStatus === RESERVATION_STATUS.RENTED,
       canChangeStatus: true,
       availableStatuses: getAvailableTransitions(currentStatus, isAdmin),
     };
