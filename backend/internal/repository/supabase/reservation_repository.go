@@ -326,38 +326,65 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	return result.ReservationIDs, result.NewBalance, nil
 }
 
-// UpdateReservation updates an existing reservation
-func (r *reservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate) (*types.PublicReservationsSelect, error) {
+// UpdateReservation updates an existing reservation using RPC for proper audit trail
+func (r *reservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate, changedByUserID string) (*types.PublicReservationsSelect, error) {
 	// Use Service Role to bypass restrictive RLS on non-Pending statuses
 	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
 	if err != nil {
 		return nil, types.NewInternalError("Failed to create service client", err)
 	}
 
-	data, _, err := client.From("reservations").
-		Update(reservation, "", "").
-		Eq("id", id).
-		Single().
-		Execute()
-
-	if err != nil {
-		return nil, err
+	// Build RPC params
+	params := map[string]interface{}{
+		"p_reservation_id":     id,
+		"p_changed_by_user_id": changedByUserID,
+	}
+	if reservation.Status != nil {
+		params["p_status"] = *reservation.Status
+	}
+	if reservation.StartDate != nil {
+		params["p_start_date"] = *reservation.StartDate
+	}
+	if reservation.EndDate != nil {
+		params["p_end_date"] = *reservation.EndDate
 	}
 
-	if len(data) == 0 {
-		return nil, types.NewNotFoundError("Reservation", id)
+	jsonStr := client.Rpc("update_reservation_with_audit", "", params)
+
+	if jsonStr == "" {
+		return nil, types.NewInternalError("RPC returned empty response", nil)
 	}
 
-	var updated types.PublicReservationsSelect
-	if err := json.Unmarshal(data, &updated); err != nil {
-		var updatedArr []types.PublicReservationsSelect
-		if err2 := json.Unmarshal(data, &updatedArr); err2 == nil && len(updatedArr) > 0 {
-			return &updatedArr[0], nil
-		}
-		return nil, err
+	// Check for error in response
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
+		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
 	}
 
-	return &updated, nil
+	if msg, ok := rawResponse["message"]; ok {
+		// It's an error
+		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
+	}
+
+	// Parse successful response
+	var result struct {
+		ID        string  `json:"id"`
+		Status    string  `json:"status"`
+		StartDate string  `json:"start_date"`
+		EndDate   string  `json:"end_date"`
+		UpdatedAt *string `json:"updated_at"`
+	}
+	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+		return nil, types.NewInternalError("Failed to parse update result: "+jsonStr, err)
+	}
+
+	return &types.PublicReservationsSelect{
+		ID:        result.ID,
+		Status:    result.Status,
+		StartDate: result.StartDate,
+		EndDate:   result.EndDate,
+		UpdatedAt: result.UpdatedAt,
+	}, nil
 }
 
 // BulkUpdateReservations updates the status of multiple reservations

@@ -66,3 +66,6 @@ refactor
 BulkUpdate
  to ensure admin cancellations process refunds correctly.
 7. mechanism for finding and handling tokens expiration. It is valid on frontend but not on backend. I am permanetnly logged in on browser
+8. in reservation details, on top in navigation instead of the reservation id, use the reservation dates...?
+9. highlight of my reservation is not properly working, not all mine reservations are highlighted
+10. When link is sent then user can jusr refresh page to login

@@ -23,7 +23,8 @@ type ReservationRepository interface {
 	CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, reservations []types.CreateReservationItem) ([]string, int32, error)
 
 	// UpdateReservation updates an existing reservation
-	UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate) (*types.PublicReservationsSelect, error)
+	// changedByUserID is used for audit trail - tracks who made the change
+	UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate, changedByUserID string) (*types.PublicReservationsSelect, error)
 
 	// BulkUpdateReservations updates the status of multiple reservations
 	BulkUpdateReservations(ctx context.Context, ids []string, status string) error

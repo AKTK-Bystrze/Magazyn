@@ -316,7 +316,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		return nil, nil // Or return current
 	}
 
-	updated, err := s.repo.UpdateReservation(ctx, id, updateData)
+	updated, err := s.repo.UpdateReservation(ctx, id, updateData, userID)
 	if err != nil {
 		return nil, err
 	}
