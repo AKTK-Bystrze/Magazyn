@@ -171,7 +171,13 @@ func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID str
 
 // Create creates a new equipment record
 func (r *equipmentRepository) Create(ctx context.Context, equipment types.PublicEquipmentInsert) (*types.PublicEquipmentSelect, error) {
-	data, _, err := r.client.From("equipment").
+	// Use admin client to bypass RLS for equipment management
+	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create admin client: %w", err)
+	}
+
+	data, _, err := adminClient.From("equipment").
 		Insert(equipment, false, "", "representation", "").
 		Single().
 		Execute()
@@ -193,7 +199,13 @@ func (r *equipmentRepository) Create(ctx context.Context, equipment types.Public
 
 // Update updates an existing equipment record
 func (r *equipmentRepository) Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error) {
-	data, _, err := r.client.From("equipment").
+	// Use admin client to bypass RLS for equipment management
+	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create admin client: %w", err)
+	}
+
+	data, _, err := adminClient.From("equipment").
 		Update(equipment, "", "representation").
 		Eq("id", id).
 		Single().
@@ -226,12 +238,18 @@ func (r *equipmentRepository) Update(ctx context.Context, id string, equipment t
 
 // Archive sets the is_archived flag to true
 func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
+	// Use admin client to bypass RLS for equipment management
+	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create admin client: %w", err)
+	}
+
 	archived := true
 	updateData := types.PublicEquipmentUpdate{
 		IsArchived: &archived,
 	}
 
-	_, _, err := r.client.From("equipment").
+	_, _, err = adminClient.From("equipment").
 		Update(updateData, "", "").
 		Eq("id", id).
 		Execute()

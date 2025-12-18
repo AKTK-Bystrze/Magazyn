@@ -108,13 +108,7 @@ func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request)
 
 	response, err := h.service.GetByID(ctx, id)
 	if err != nil {
-		// Handle specific errors
-		if _, ok := err.(*types.NotFoundError); ok {
-			common.RespondError(ctx, w, http.StatusNotFound, "Equipment not found")
-			return
-		}
-		logger.Errorf(ctx, "HandleGetByID error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -138,10 +132,7 @@ func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) 
 
 	response, err := h.service.Create(ctx, cmd, userID)
 	if err != nil {
-		// Handle errors (conflict, not found, etc)
-		// For brevity, generic 500 or 400
-		logger.Errorf(ctx, "HandleCreate error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error()) // Should be cleaner
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -170,8 +161,7 @@ func (h *EquipmentHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) 
 
 	response, err := h.service.Update(ctx, id, cmd, userID)
 	if err != nil {
-		logger.Errorf(ctx, "HandleUpdate error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -194,8 +184,7 @@ func (h *EquipmentHandler) HandleArchive(w http.ResponseWriter, r *http.Request)
 
 	err := h.service.Archive(ctx, id)
 	if err != nil {
-		logger.Errorf(ctx, "HandleArchive error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 

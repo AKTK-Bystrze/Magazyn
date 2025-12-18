@@ -159,13 +159,19 @@ export function AddEquipmentDialog({
         });
         onClose();
       } catch (err) {
-        // Handle API errors 
-        const errorMessage =
-          err instanceof Error ? err.message : VALIDATION.CREATE_FAILED;
+        // Handle API errors - extract message from either Error object or response body
+        let errorMessage: string = VALIDATION.CREATE_FAILED;
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === 'object' && err !== null && 'error' in err) {
+          errorMessage = String(err.error);
+        }
         
         // Map API errors to form fields
-        if (errorMessage.toLowerCase().includes("internal_id") || 
-            errorMessage.toLowerCase().includes("already exists")) {
+        if (errorMessage.toLowerCase().includes("internal id") ||
+          errorMessage.toLowerCase().includes("already exists") ||
+          (typeof err === 'object' && err !== null && 'code' in err && err.code === 'CONFLICT')) {
           setErrors((prev) => ({ ...prev, internalId: VALIDATION.INTERNAL_ID_EXISTS }));
         } else {
           setErrors((prev) => ({ ...prev, form: errorMessage }));

@@ -56,7 +56,7 @@ export function transformEquipmentDTO(dto: unknown): EquipmentSearchItem {
       name: equipment.type_name,
       creditCostPerDay: equipment.credit_cost_per_day,
     },
-    status: equipment.status as 'ok' | 'broken',
+    status: equipment.status as 'ok' | 'broken' | 'blocked',
     imagePath: equipment.image_url,
     internalId: equipment.internal_id,
     isFavorite: equipment.is_favorite ?? false,

@@ -48,6 +48,56 @@ func RespondError(ctx context.Context, w http.ResponseWriter, status int, messag
 	RespondJSON(ctx, w, status, map[string]string{"error": message})
 }
 
+// RespondWithError maps an error type to an appropriate HTTP status code and sends it.
+func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
+	if err == nil {
+		return
+	}
+
+	status := http.StatusInternalServerError
+	message := "Internal Server Error"
+	var details interface{}
+	code := "INTERNAL_ERROR"
+
+	// Check if it's one of our custom error types
+	switch e := err.(type) {
+	case *types.NotFoundError:
+		status = http.StatusNotFound
+		message = e.Message
+		details = e.Details
+		code = e.Code
+	case *types.ConflictError:
+		status = http.StatusConflict
+		message = e.Message
+		details = e.Details
+		code = e.Code
+	case *types.ValidationError:
+		status = http.StatusBadRequest
+		message = e.Message
+		details = e.Details
+		code = e.Code
+	case *types.ForbiddenError:
+		status = http.StatusForbidden
+		message = e.Message
+		details = e.Details
+		code = e.Code
+	case *types.InternalError:
+		status = http.StatusInternalServerError
+		message = e.Message
+		details = e.Details
+		code = e.Code
+	default:
+		// Generic error
+		message = err.Error()
+	}
+
+	RespondJSON(ctx, w, status, map[string]interface{}{
+		"error":   message,
+		"code":    code,
+		"details": details,
+	})
+}
+
 // RespondUnauthorized sends a JSON error response with status 401 Unauthorized.
 func RespondUnauthorized(ctx context.Context, w http.ResponseWriter) {
 	RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")

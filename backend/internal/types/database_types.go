@@ -41,9 +41,9 @@ type PublicEquipmentTypesSelect struct {
 }
 
 type PublicEquipmentTypesInsert struct {
-	CreatedAt        *string `json:"created_at"`
+	CreatedAt        *string `json:"created_at,omitempty"`
 	CreditCostPerDay int32   `json:"credit_cost_per_day"`
-	ID               *string `json:"id"`
+	ID               *string `json:"id,omitempty"`
 	Name             string  `json:"name"`
 }
 
@@ -68,16 +68,16 @@ type PublicEquipmentSelect struct {
 }
 
 type PublicEquipmentInsert struct {
-	CreatedAt   *string `json:"created_at"`
-	Description *string `json:"description"`
-	ID          *string `json:"id"`
-	ImagePath   *string `json:"image_path"`
+	CreatedAt   *string `json:"created_at,omitempty"`
+	Description *string `json:"description,omitempty"`
+	ID          *string `json:"id,omitempty"`
+	ImagePath   *string `json:"image_path,omitempty"`
 	InternalID  string  `json:"internal_id"`
-	IsArchived  *bool   `json:"is_archived"`
-	Name        *string `json:"name"`
-	Status      *string `json:"status"`
+	IsArchived  *bool   `json:"is_archived,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Status      *string `json:"status,omitempty"`
 	TypeID      string  `json:"type_id"`
-	UpdatedAt   *string `json:"updated_at"`
+	UpdatedAt   *string `json:"updated_at,omitempty"`
 }
 
 type PublicEquipmentUpdate struct {
@@ -105,13 +105,13 @@ type PublicReservationsSelect struct {
 }
 
 type PublicReservationsInsert struct {
-	CreatedAt   *string `json:"created_at"`
+	CreatedAt   *string `json:"created_at,omitempty"`
 	EndDate     string  `json:"end_date"`
 	EquipmentID string  `json:"equipment_id"`
-	ID          *string `json:"id"`
+	ID          *string `json:"id,omitempty"`
 	StartDate   string  `json:"start_date"`
-	Status      *string `json:"status"`
-	UpdatedAt   *string `json:"updated_at"`
+	Status      *string `json:"status,omitempty"`
+	UpdatedAt   *string `json:"updated_at,omitempty"`
 	UserID      string  `json:"user_id"`
 }
 
@@ -138,13 +138,13 @@ type PublicCreditHistorySelect struct {
 }
 
 type PublicCreditHistoryInsert struct {
-	AdminID       *string `json:"admin_id"`
+	AdminID       *string `json:"admin_id,omitempty"`
 	Amount        int32   `json:"amount"`
-	CreatedAt     *string `json:"created_at"`
-	Description   *string `json:"description"`
-	ID            *string `json:"id"`
+	CreatedAt     *string `json:"created_at,omitempty"`
+	Description   *string `json:"description,omitempty"`
+	ID            *string `json:"id,omitempty"`
 	Reason        string  `json:"reason"`
-	ReservationID *string `json:"reservation_id"`
+	ReservationID *string `json:"reservation_id,omitempty"`
 	UserID        string  `json:"user_id"`
 }
 
@@ -172,14 +172,14 @@ type PublicCreditRequestsSelect struct {
 }
 
 type PublicCreditRequestsInsert struct {
-	AdminID     *string `json:"admin_id"`
-	AdminNote   *string `json:"admin_note"`
+	AdminID     *string `json:"admin_id,omitempty"`
+	AdminNote   *string `json:"admin_note,omitempty"`
 	Amount      int32   `json:"amount"`
-	CreatedAt   *string `json:"created_at"`
+	CreatedAt   *string `json:"created_at,omitempty"`
 	Description string  `json:"description"`
-	ID          *string `json:"id"`
-	Status      *string `json:"status"`
-	UpdatedAt   *string `json:"updated_at"`
+	ID          *string `json:"id,omitempty"`
+	Status      *string `json:"status,omitempty"`
+	UpdatedAt   *string `json:"updated_at,omitempty"`
 	UserID      string  `json:"user_id"`
 }
 
@@ -206,13 +206,13 @@ type PublicMaintenanceLogsSelect struct {
 }
 
 type PublicMaintenanceLogsInsert struct {
-	AdminID        *string `json:"admin_id"`
-	CreatedAt      *string `json:"created_at"`
+	AdminID        *string `json:"admin_id,omitempty"`
+	CreatedAt      *string `json:"created_at,omitempty"`
 	EquipmentID    string  `json:"equipment_id"`
-	ID             *string `json:"id"`
+	ID             *string `json:"id,omitempty"`
 	NewStatus      string  `json:"new_status"`
-	Notes          *string `json:"notes"`
-	PreviousStatus *string `json:"previous_status"`
+	Notes          *string `json:"notes,omitempty"`
+	PreviousStatus *string `json:"previous_status,omitempty"`
 }
 
 type PublicMaintenanceLogsUpdate struct {
@@ -238,11 +238,11 @@ type PublicReservationHistorySelect struct {
 }
 
 type PublicReservationHistoryInsert struct {
-	ChangedByUserID *string `json:"changed_by_user_id"`
-	CreatedAt       *string `json:"created_at"`
+	ChangedByUserID *string `json:"changed_by_user_id,omitempty"`
+	CreatedAt       *string `json:"created_at,omitempty"`
 	EndDate         string  `json:"end_date"`
 	EquipmentID     string  `json:"equipment_id"`
-	ID              *string `json:"id"`
+	ID              *string `json:"id,omitempty"`
 	ReservationID   string  `json:"reservation_id"`
 	StartDate       string  `json:"start_date"`
 	Status          string  `json:"status"`

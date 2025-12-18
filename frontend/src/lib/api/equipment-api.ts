@@ -91,7 +91,7 @@ export const equipmentApi = {
     // Transform single equipment response
     const { equipment } = transformEquipmentListResponse({
       equipment: [response.data],
-      pagination: { page: 1, per_page: 1, total: 1, total_pages: 1 }
+      pagination: { page: 1, per_page: 1, total_items: 1, total_pages: 1 }
     });
     return equipment[0];
   },

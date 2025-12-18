@@ -60,15 +60,15 @@ export const GET: APIRoute = async ({ request, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   const backendUrl = `${BACKEND_URL}/equipment`;
 
-  // Get session token for forwarding
-  const { data: { session } } = await locals.supabase.auth.getSession();
+  // Use token from middleware (already validated)
+  const token = locals.accessToken;
 
   const headers = new Headers({
     'Content-Type': 'application/json',
   });
 
-  if (session?.access_token) {
-    headers.set('Authorization', `Bearer ${session.access_token}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   const body = await request.text();

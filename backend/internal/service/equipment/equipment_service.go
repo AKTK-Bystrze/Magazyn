@@ -215,9 +215,12 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 		ImagePath:   cmd.ImagePath,
 	}
 
+	logger.Infof(ctx, "Creating equipment with: InternalID=%s, TypeID=%s, Status=%s", cmd.InternalID, cmd.TypeID, status)
+
 	created, err := s.repo.Create(ctx, insert)
 	if err != nil {
-		return nil, types.NewInternalError("Failed to create", err)
+		logger.Errorf(ctx, "Repository Create failed: %v", err)
+		return nil, err
 	}
 
 	return &types.EquipmentDTO{
@@ -251,7 +254,8 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 
 	updated, err := s.repo.Update(ctx, id, update)
 	if err != nil {
-		return nil, types.NewInternalError("Failed to update", err)
+		logger.Errorf(ctx, "Repository Update failed: %v", err)
+		return nil, err
 	}
 
 	typ, _ := s.repo.GetTypeByID(ctx, updated.TypeID)

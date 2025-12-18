@@ -219,16 +219,23 @@ export function EquipmentTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={handleViewDetails(item)}>
+                      <DropdownMenuItem
+                        onSelect={handleViewDetails(item)}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Eye className={ICON_SIZE_SM + " mr-2"} />
                         {UI.VIEW_DETAILS}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={handleEdit(item)}>
+                      <DropdownMenuItem
+                        onSelect={handleEdit(item)}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Pencil className={ICON_SIZE_SM + " mr-2"} />
                         {UI.EDIT_EQUIPMENT}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={handleArchive(item)}
+                        onClick={(e) => e.stopPropagation()}
                         className="text-destructive focus:text-destructive"
                       >
                         <Archive className={ICON_SIZE_SM + " mr-2"} />

@@ -146,9 +146,15 @@ export function EditEquipmentDialog({
         await onSubmit(equipment.id, command);
         onClose();
       } catch (err) {
-        // Handle API errors
-        const errorMessage =
-          err instanceof Error ? err.message : VALIDATION.UPDATE_FAILED;
+        // Handle API errors - extract message from either Error object or response body
+        let errorMessage: string = VALIDATION.UPDATE_FAILED;
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === 'object' && err !== null && 'error' in err) {
+          errorMessage = String(err.error);
+        }
+
         setErrors((prev) => ({ ...prev, form: errorMessage }));
       }
     },
