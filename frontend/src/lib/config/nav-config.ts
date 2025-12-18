@@ -80,10 +80,16 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     activePattern: /^\/admin\/reservations/,
   },
   {
-    label: "Equipment",
+    label: "Browse Equipment",
     href: ROUTES.PROTECTED.ADMIN_EQUIPMENT,
     icon: Wrench,
-    activePattern: /^\/admin\/equipment/,
+    activePattern: /^\/admin\/equipment$/,
+  },
+  {
+    label: "Manage Equipment",
+    href: ROUTES.PROTECTED.ADMIN_EQUIPMENT_MANAGE,
+    icon: Wrench,
+    activePattern: /^\/admin\/equipment\/manage/,
   },
   {
     label: "Users",
@@ -131,6 +137,7 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   admin: "Admin",
   users: "Users",
   analytics: "Analytics",
+  manage: "Manage",
 };
 
 /**

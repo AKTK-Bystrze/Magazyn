@@ -28,6 +28,7 @@ export const ROUTES = {
     ADMIN: '/admin',
     ADMIN_RESERVATIONS: '/admin/reservations',
     ADMIN_EQUIPMENT: '/admin/equipment',
+    ADMIN_EQUIPMENT_MANAGE: '/admin/equipment/manage',
     ADMIN_USERS: '/admin/users',
     ADMIN_ANALYTICS: '/admin/analytics',
     ADMIN_RESERVATIONS_CREATE: '/admin/reservations/create',

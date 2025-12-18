@@ -34,6 +34,7 @@ export const api = {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -69,6 +70,7 @@ export const api = {
     const response = await fetch(fullUrl, {
       method: 'GET',
       headers,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -94,6 +96,7 @@ export const api = {
       method: "PATCH",
       headers,
       body: JSON.stringify(data),
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -105,5 +108,33 @@ export const api = {
 
     const resData = await response.json();
     return { data: resData };
+  },
+
+  /**
+   * Performs a DELETE request
+   *
+   * @param url - Endpoint URL
+   * @returns Response data wrapped in an object (may be empty)
+   */
+  delete: async <T = void>(url: string): Promise<{ data: T }> => {
+    const headers = await buildHeaders();
+
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: "Network error" }));
+      throw errorData;
+    }
+
+    // Some DELETE endpoints return empty responses
+    const text = await response.text();
+    const resData = text ? JSON.parse(text) : undefined;
+    return { data: resData as T };
   },
 };

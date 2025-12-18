@@ -120,3 +120,30 @@ export type UpdateEquipmentCommand = {
   status?: Enums<"equipment_status">;
   imagePath?: string | null;
 };
+
+/**
+ * Filter state for Equipment Manager view
+ * Used for admin equipment list with search, type, and status filters
+ */
+export interface EquipmentManagerFilterState {
+  search?: string;
+  typeId?: string;
+  status?: EquipmentStatus | "ALL";
+  page: number;
+  perPage: number;
+}
+
+/**
+ * Equipment reservation history item
+ * Used in EquipmentDetailsSheet to show reservation history
+ */
+export type EquipmentReservationHistoryItem = {
+  id: string;
+  userId: string;
+  username: string;
+  startDate: string;
+  endDate: string;
+  status: "PENDING" | "RENTED" | "RETURNED" | "DENIED";
+  creditCost: number;
+  createdAt: string;
+};

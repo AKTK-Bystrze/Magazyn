@@ -358,3 +358,137 @@ export const RESERVATION_DATE_MODIFICATION_UI_STRINGS = {
   VALIDATING_DATES: "Validating dates...",
   UPDATING_RESERVATION: "Updating reservation...",
 } as const;
+
+// =============================================================================
+// EQUIPMENT MANAGER UI STRINGS
+// =============================================================================
+
+/**
+ * Equipment status values matching database enum
+ */
+export const EQUIPMENT_STATUS = {
+  OK: "ok",
+  BROKEN: "broken",
+  BLOCKED: "blocked",
+} as const;
+
+/**
+ * Human-readable labels for equipment statuses
+ */
+export const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
+  ok: "OK",
+  broken: "Broken",
+  blocked: "Blocked",
+  ALL: "All Statuses",
+};
+
+/**
+ * Equipment status filter options for equipment lists (including 'ALL')
+ */
+export const EQUIPMENT_STATUS_FILTER_OPTIONS = [
+  { value: "ALL", label: "All Statuses" },
+  { value: "ok", label: "OK" },
+  { value: "broken", label: "Broken" },
+  { value: "blocked", label: "Blocked" },
+] as const;
+
+/**
+ * Default filter for equipment status
+ */
+export const DEFAULT_EQUIPMENT_STATUS_FILTER = "ALL";
+
+/**
+ * Validation error messages for equipment forms
+ * Centralized for consistency and i18n readiness
+ */
+export const EQUIPMENT_VALIDATION_MESSAGES = {
+  INTERNAL_ID_REQUIRED: "Internal ID is required",
+  TYPE_ID_REQUIRED: "Equipment type is required",
+  NAME_MAX_LENGTH: "Name must be 200 characters or less",
+  IMAGE_MAX_SIZE: "Image must be 2MB or smaller",
+  IMAGE_INVALID_TYPE: "Only JPEG and PNG images are allowed",
+  CREATE_FAILED: "Failed to create equipment",
+  UPDATE_FAILED: "Failed to update equipment",
+  ARCHIVE_FAILED: "Failed to archive equipment",
+  ARCHIVE_HAS_ACTIVE_RESERVATIONS: "Cannot archive equipment with active reservations",
+  INTERNAL_ID_EXISTS: "Internal ID already exists for this type",
+} as const;
+
+/**
+ * UI text strings for equipment manager view
+ */
+export const EQUIPMENT_MANAGER_UI_STRINGS = {
+  // Page title
+  PAGE_TITLE: "Equipment Manager",
+  PAGE_DESCRIPTION: "Manage equipment inventory, add new items, and track maintenance.",
+
+  // Actions
+  ADD_EQUIPMENT: "Add Equipment",
+  EDIT_EQUIPMENT: "Edit Equipment",
+  VIEW_DETAILS: "View Details",
+  ARCHIVE_EQUIPMENT: "Archive",
+  TOGGLE_STATUS: "Toggle Status",
+
+  // Filters
+  SEARCH_PLACEHOLDER: "Search by name or ID...",
+  ALL_TYPES: "All Types",
+  FILTER_BY_TYPE: "Filter by Type",
+  FILTER_BY_STATUS: "Filter by Status",
+  RESET_FILTERS: "Reset",
+
+  // Table headers
+  INTERNAL_ID: "ID",
+  NAME: "Name",
+  TYPE: "Type",
+  STATUS: "Status",
+  CREDIT_COST: "Cost/Day",
+  CREATED: "Created",
+  ACTIONS: "Actions",
+
+  // Dialogs
+  ADD_DIALOG_TITLE: "Add New Equipment",
+  ADD_DIALOG_DESCRIPTION: "Add a new piece of equipment to the inventory.",
+  EDIT_DIALOG_TITLE: "Edit Equipment",
+  EDIT_DIALOG_DESCRIPTION: "Update equipment information.",
+  ARCHIVE_DIALOG_TITLE: "Archive Equipment?",
+  ARCHIVE_DIALOG_MESSAGE: "This will hide the equipment from the catalog. It cannot be reserved but can be restored later.",
+  ARCHIVE_BUTTON: "Archive Equipment",
+  CANCEL_BUTTON: "Cancel",
+  SAVE_BUTTON: "Save Changes",
+  CREATE_BUTTON: "Create Equipment",
+
+  // Form fields
+  FORM_INTERNAL_ID: "Internal ID",
+  FORM_INTERNAL_ID_PLACEHOLDER: "e.g., CAM-001",
+  FORM_TYPE: "Equipment Type",
+  FORM_TYPE_PLACEHOLDER: "Select a type...",
+  FORM_NAME: "Display Name",
+  FORM_NAME_PLACEHOLDER: "Optional display name",
+  FORM_DESCRIPTION: "Description",
+  FORM_DESCRIPTION_PLACEHOLDER: "Optional description...",
+  FORM_STATUS: "Status",
+  FORM_IMAGE: "Image",
+
+  // Details sheet
+  DETAILS_TITLE: "Equipment Details",
+  MAINTENANCE_HISTORY: "Maintenance History",
+  RESERVATION_HISTORY: "Reservation History",
+  ADD_MAINTENANCE_LOG: "Add Maintenance Note",
+  NO_MAINTENANCE_HISTORY: "No maintenance history recorded",
+  NO_RESERVATION_HISTORY: "No reservations yet",
+
+  // Empty state
+  NO_EQUIPMENT: "No equipment found",
+  NO_EQUIPMENT_HINT: "Try adjusting your filters or add new equipment.",
+
+  // Success messages
+  CREATED_SUCCESS: "Equipment created successfully",
+  UPDATED_SUCCESS: "Equipment updated successfully",
+  ARCHIVED_SUCCESS: "Equipment archived successfully",
+  STATUS_CHANGED_SUCCESS: "Equipment status changed",
+  MAINTENANCE_LOG_ADDED: "Maintenance note added",
+
+  // Loading states
+  LOADING: "Loading...",
+  SAVING: "Saving...",
+} as const;
