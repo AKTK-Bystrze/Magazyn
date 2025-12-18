@@ -1,41 +1,23 @@
-user should be able to change start date to the past and same for admin
-===
 
-design status changes
-
-statuses:
-- PENDING (when created)
-- RETURNED
-- DENIED
-
-transitions:
- - pending -> returned
- - pending -> denied
-
-user can change reservation dates only when pending
-when reservation status is returned or denied it cannot be changed
 
 equipments - admin view
     - add equipment
     - update equipment
     - delete equipment
     - equipment details
+    - equipment reservation history
 
 user 
-    - superAdmin can change users history by adding or retracting in place of changing balance
+    - superAdmin can change users credits by adding or retracting in place of changing balance
 
 credits
-    - request credits
     - credit history
 
+code 
 documentation
 
 deploy - containerization 
 e2e tests
-
-backend left to do from api-plan:
-    credit request
-    mainteneace logs/analytics
 
 
 refactor 

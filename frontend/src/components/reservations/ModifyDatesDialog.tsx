@@ -13,7 +13,7 @@ import { DateRangePicker } from "./DateRangePicker";
 import { CreditAdjustmentPreview } from "./CreditAdjustmentPreview";
 import { SignificantExtensionWarning } from "./SignificantExtensionWarning";
 import { Loader2 } from "lucide-react";
-import { calculateDays, getTodayAsString } from "@/lib/utils/date-utils";
+import { calculateDays } from "@/lib/utils/date-utils";
 import { calculateCreditAdjustment } from "@/lib/utils/credit-utils";
 import { RESERVATION_DATE_MODIFICATION_UI_STRINGS as UI } from "@/lib/config/constants";
 import type { Reservation } from "@/types";
@@ -34,7 +34,6 @@ interface ModifyDatesDialogProps {
  * Shows date picker, credit adjustment preview, and significant extension warning
  *
  * Validates:
- * - Start date must be in the future (for PENDING reservations)
  * - End date must be >= start date
  * - Dates must be different from current dates
  * - User has sufficient credits for extensions
@@ -63,8 +62,6 @@ export function ModifyDatesDialog({
     endDate: null,
   });
   const [apiError, setApiError] = React.useState<string | null>(null);
-
-  const today = getTodayAsString();
 
   // Reset state when dialog opens
   React.useEffect(() => {
@@ -107,12 +104,6 @@ export function ModifyDatesDialog({
 
     if (!startDate) {
       errors.startDate = UI.START_DATE_REQUIRED;
-    } else if (
-      reservation.status === "PENDING" &&
-      startDate <= today &&
-      startDate !== reservation.startDate
-    ) {
-      errors.startDate = UI.START_DATE_MUST_BE_FUTURE;
     }
 
     if (!endDate) {
@@ -194,6 +185,7 @@ export function ModifyDatesDialog({
             validationErrors={validationErrors}
             title={null}
             compact={true}
+            allowPastDates={true}
           />
 
           {/* Credit Adjustment Preview */}

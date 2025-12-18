@@ -211,6 +211,7 @@ export function ReturnWithDatesDialog({
                 validationErrors={validationErrors}
                 title={null}
                 compact={true}
+                allowPastDates={true}
               />
 
               {datesChanged && startDate && endDate && (

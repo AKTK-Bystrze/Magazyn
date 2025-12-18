@@ -24,6 +24,8 @@ interface DateRangePickerProps {
   onClear?: () => void;
   /** Optional: Compact mode for sidebar filters */
   compact?: boolean;
+  /** Optional: Allow selecting past dates (for modifying existing reservations) */
+  allowPastDates?: boolean;
 }
 
 /**
@@ -41,6 +43,7 @@ export function DateRangePicker({
   showClearButton = false,
   onClear,
   compact = false,
+  allowPastDates = false,
 }: DateRangePickerProps) {
   const startDateId = React.useId();
   const endDateId = React.useId();
@@ -77,7 +80,7 @@ export function DateRangePicker({
             type="date"
             value={startDate || ""}
             onChange={(e) => onStartDateChange(e.target.value)}
-            min={today}
+            min={allowPastDates ? undefined : today}
             aria-invalid={!!validationErrors.startDate}
             aria-describedby={validationErrors.startDate ? `${startDateId}-error` : undefined}
             className={
