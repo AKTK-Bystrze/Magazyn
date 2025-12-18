@@ -6,7 +6,7 @@
 import AdminLayout from '../layouts/AdminLayout.astro';
 import { ROUTES } from '../lib/config/routes';
 import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../lib/auth/roles';
-import { DashboardStats } from '@/components/admin/DashboardStats';
+// import { DashboardStats } from '@/components/admin/DashboardStats';
 
 const user = Astro.locals.user;
 const sessionInfo = Astro.locals.sessionInfo;
@@ -32,8 +32,8 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
       <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
     </div>
 
-    {/* Stats Overview */}
-    <DashboardStats client:load />
+    {/* Stats Overview - Removed mock tiles as requested */}
+    {/* <DashboardStats client:load /> */}
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
       {/* Quick Actions / Recent Activity Area */}
