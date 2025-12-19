@@ -165,8 +165,11 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 
 	logs, err := s.repo.GetMaintenanceLogsWithAdmin(ctx, id)
 	logDTOs := make([]types.MaintenanceLogDTO, 0)
-	if err == nil {
+	if err != nil {
+		logger.Errorf(ctx, "Failed to fetch maintenance logs for equipment %s: %v", id, err)
+	} else {
 		for _, l := range logs {
+			// ... (rest of the loop)
 			logDTOs = append(logDTOs, types.MaintenanceLogDTO{
 				ID:             l.ID,
 				PreviousStatus: l.PreviousStatus,
@@ -245,7 +248,7 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 }
 
 func (s *equipmentService) Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
-	_, err := s.repo.GetByID(ctx, id)
+	oldEq, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, types.NewNotFoundError("Equipment", id)
 	}
@@ -261,6 +264,16 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 	if err != nil {
 		logger.Errorf(ctx, "Repository Update failed: %v", err)
 		return nil, err
+	}
+
+	// Create maintenance log if status changed
+	if cmd.Status != nil && *cmd.Status != oldEq.Status {
+		// We deliberately do not check for error here to not fail the update if logging fails
+		// but we log the error
+		_, logErr := s.repo.CreateMaintenanceLog(ctx, id, oldEq.Status, *cmd.Status, nil, adminID)
+		if logErr != nil {
+			logger.Errorf(ctx, "Failed to create status change log: %v", logErr)
+		}
 	}
 
 	typ, _ := s.repo.GetTypeByID(ctx, updated.TypeID)

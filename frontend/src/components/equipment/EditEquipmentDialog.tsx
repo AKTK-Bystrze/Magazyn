@@ -117,8 +117,8 @@ export function EditEquipmentDialog({
 
   // Handle form submit
   const handleSubmit = React.useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+    async (e?: React.FormEvent | React.MouseEvent) => {
+      if (e) e.preventDefault();
 
       if (!equipment) return;
 
@@ -282,7 +282,11 @@ export function EditEquipmentDialog({
             >
               {UI.CANCEL_BUTTON}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? UI.SAVING : UI.SAVE_BUTTON}
             </Button>
           </DialogFooter>

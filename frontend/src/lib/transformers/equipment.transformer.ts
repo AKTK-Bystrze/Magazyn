@@ -79,8 +79,8 @@ export function transformEquipmentListResponse(response: unknown): {
 
   if (!validated.success) {
     console.error('Equipment list response validation failed', {
-      errors: validated.error.format(),
-      receivedData: response,
+      errors: JSON.stringify(validated.error.format(), null, 2),
+      receivedData: JSON.stringify(response, null, 2),
     });
     throw new EquipmentTransformError(
       'Invalid equipment list data received from API',

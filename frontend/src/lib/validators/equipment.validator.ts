@@ -19,8 +19,8 @@ export const equipmentDTOSchema = z.object({
   is_favorite: z.boolean().optional(),
   is_archived: z.boolean(),
   created_at: z.string(), // ISO 8601 string from backend
-  updated_at: z.string().optional(),
-});
+  updated_at: z.string().nullable().optional(),
+}).passthrough(); // Allow extra fields like maintenance_logs from detail endpoint
 
 /**
  * Zod schema for pagination response

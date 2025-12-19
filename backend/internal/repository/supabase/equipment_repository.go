@@ -10,6 +10,7 @@ import (
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 
+	"github.com/supabase-community/postgrest-go"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -283,10 +284,17 @@ func (r *equipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentI
 
 // GetMaintenanceLogsWithAdmin retrieves logs joined with admin profile
 func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
-	data, _, err := r.client.From("maintenance_logs").
+	// Use admin client to bypass RLS - maintenance logs don't have user-specific RLS
+	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create admin client: %w", err)
+	}
+
+	desc := true
+	data, _, err := adminClient.From("maintenance_logs").
 		Select("*, admin:profiles!admin_id(username)", "exact", false).
 		Eq("equipment_id", equipmentID).
-		Order("created_at", nil).
+		Order("created_at", &postgrest.OrderOpts{Ascending: !desc}).
 		Execute()
 
 	if err != nil {

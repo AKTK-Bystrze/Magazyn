@@ -1,5 +1,4 @@
 ## In progress
-- maintenance logs - console errors
 - credit history view needed
 
 ## Equipment Views

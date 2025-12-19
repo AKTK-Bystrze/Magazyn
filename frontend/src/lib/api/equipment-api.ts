@@ -1,5 +1,6 @@
 import { api } from './client';
 import {
+  transformEquipmentDTO,
   transformEquipmentListResponse,
   transformEquipmentTypesResponse,
 } from '@/lib/transformers/equipment.transformer';
@@ -82,11 +83,7 @@ export const equipmentApi = {
     const response = await api.post('/api/equipment', payload);
 
     // Transform single equipment response
-    const { equipment } = transformEquipmentListResponse({
-      equipment: [response.data],
-      pagination: { page: 1, per_page: 1, total_items: 1, total_pages: 1 }
-    });
-    return equipment[0];
+    return transformEquipmentDTO(response.data);
   },
 
   /**
@@ -107,11 +104,7 @@ export const equipmentApi = {
     const response = await api.patch(`/api/equipment/${id}`, payload);
 
     // Transform single equipment response
-    const { equipment } = transformEquipmentListResponse({
-      equipment: [response.data],
-      pagination: { page: 1, per_page: 1, total: 1, total_pages: 1 }
-    });
-    return equipment[0];
+    return transformEquipmentDTO(response.data);
   },
 
   /**
@@ -137,17 +130,14 @@ export const equipmentApi = {
   }> {
     const response = await api.get(`/api/equipment/${id}`);
 
-    // Transform equipment
-    const { equipment } = transformEquipmentListResponse({
-      equipment: [response.data],
-      pagination: { page: 1, per_page: 1, total: 1, total_pages: 1 }
-    });
+    // Transform single equipment using the DTO transformer directly
+    const equipment = transformEquipmentDTO(response.data);
 
     // Extract and transform maintenance logs
     const data = response.data as { maintenance_logs?: MaintenanceLogDTO[] };
     const maintenanceLogs = (data.maintenance_logs ?? []).map(transformMaintenanceLog);
 
-    return { equipment: equipment[0], maintenanceLogs };
+    return { equipment, maintenanceLogs };
   },
 
   /**
