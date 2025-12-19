@@ -131,12 +131,9 @@ Add handler method:
 // HandleCreateMaintenanceLog handles POST /equipment/{id}/maintenance-logs
 func (h *EquipmentHandler) HandleCreateMaintenanceLog(w http.ResponseWriter, r *http.Request) {
     ctx := r.Context()
-    adminID := common.GetUserIDFromContext(r)
-    role := common.GetUserRoleFromContext(r)
-
-    // Admin-only check
-    if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
-        common.RespondError(ctx, w, http.StatusForbidden, "Admin access required")
+    userID := common.GetUserIDFromContext(r)
+    if userID == "" {
+        common.RespondUnauthorized(ctx, w)
         return
     }
 
@@ -195,7 +192,7 @@ mux.HandleFunc("POST /equipment/{id}/maintenance-logs",
   "previous_status": "ok",
   "new_status": "ok",
   "notes": "Replaced battery pack, cleaned lens",
-  "admin_username": "",
+  "admin_username": "john_doe",
   "created_at": "2024-01-15T10:30:00Z"
 }
 ```
@@ -204,7 +201,7 @@ mux.HandleFunc("POST /equipment/{id}/maintenance-logs",
 
 ## Authorization
 
-- **POST `/equipment/{id}/maintenance-logs`**: Admin role required
+- **POST `/equipment/{id}/maintenance-logs`**: All authenticated users
 
 ---
 

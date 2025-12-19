@@ -1,4 +1,5 @@
 ## In progress
+- maintenance logs - console errors
 - credit history view needed
 
 ## Equipment Views
@@ -19,6 +20,7 @@
 - containerization
 - deployment
 - e2e tests
+- unit tests
 
 ## Future Work
 - credits request feature

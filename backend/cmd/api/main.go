@@ -60,7 +60,7 @@ func main() {
 
 	// Initialize Services
 	authService := authservice.NewAuthService(authRepo)
-	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
+	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, userRepo, appState.Config.SupabaseURL)
 	userService := userservice.NewUserService(userRepo, authRepo, creditRepo)
 	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
 	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)

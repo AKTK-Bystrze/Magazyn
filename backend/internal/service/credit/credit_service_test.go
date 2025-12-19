@@ -71,6 +71,11 @@ func (m *MockUserRepository) Update(ctx context.Context, id string, profile type
 	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
 }
 
+func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
+	args := m.Called(ctx, userIDs, adminID, amount, reason, description)
+	return args.Error(0)
+}
+
 func TestGetCreditHistory_Pagination(t *testing.T) {
 	// Setup
 	mockRepo := new(MockCreditHistoryRepository)

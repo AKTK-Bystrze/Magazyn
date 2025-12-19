@@ -53,14 +53,16 @@ type EquipmentService interface {
 type equipmentService struct {
 	repo     repository.EquipmentRepository
 	typeRepo repository.EquipmentTypeRepository
+	userRepo repository.UserRepository
 	baseURL  string
 }
 
 // NewEquipmentService creates a new instance of EquipmentService
-func NewEquipmentService(repo repository.EquipmentRepository, typeRepo repository.EquipmentTypeRepository, baseURL string) EquipmentService {
+func NewEquipmentService(repo repository.EquipmentRepository, typeRepo repository.EquipmentTypeRepository, userRepo repository.UserRepository, baseURL string) EquipmentService {
 	return &equipmentService{
 		repo:     repo,
 		typeRepo: typeRepo,
+		userRepo: userRepo,
 		baseURL:  baseURL,
 	}
 }
@@ -383,12 +385,18 @@ func (s *equipmentService) CreateMaintenanceLog(ctx context.Context, equipmentID
 		return nil, types.NewInternalError("Failed to create maintenance log", err)
 	}
 
+	// Fetch author username
+	authorUsername := ""
+	if user, err := s.userRepo.GetByID(ctx, userID); err == nil && user != nil {
+		authorUsername = user.Username
+	}
+
 	return &types.MaintenanceLogDTO{
 		ID:             log.ID,
 		PreviousStatus: log.PreviousStatus,
 		NewStatus:      log.NewStatus,
 		Notes:          log.Notes,
-		AdminUsername:  "", // User who created it - could be fetched if needed
+		AdminUsername:  authorUsername,
 		CreatedAt:      log.CreatedAt,
 	}, nil
 }
