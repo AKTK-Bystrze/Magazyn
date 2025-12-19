@@ -17,9 +17,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, CreditCard } from "lucide-react";
 import { handleLogout } from "@/lib/auth/logout";
 import { getInitials } from "@/lib/utils/user-utils";
+import { ROUTES } from "@/lib/config/routes";
 
 interface UserMenuProps {
   /** User information */
@@ -54,6 +55,12 @@ export function UserMenu({ user }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <a href={ROUTES.PROTECTED.CREDITS_HISTORY} className="flex w-full items-center">
+            <CreditCard className="mr-2 h-4 w-4" />
+            <span>Credit History</span>
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuItem disabled>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>

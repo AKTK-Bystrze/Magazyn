@@ -29,7 +29,7 @@ func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *
 	// We select all fields from credit_history, plus the username from the associated user profile
 	// and the username from the associated admin profile (if any).
 	query := r.client.From(constants.TableCreditHistory).
-		Select("*, user:profiles!user_id(username), admin:profiles!admin_id(username)", "exact", false)
+		Select("*, user:profiles!user_id(username), admin:profiles!admin_id(username)", "", false)
 
 	// Apply UserID filter if provided
 	if userID != nil {

@@ -103,6 +103,12 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: BarChart,
     activePattern: /^\/admin\/analytics/,
   },
+  {
+    label: "Credits",
+    href: ROUTES.PROTECTED.CREDITS_HISTORY,
+    icon: CreditCard,
+    activePattern: /^\/credits/,
+  },
 ];
 
 /**

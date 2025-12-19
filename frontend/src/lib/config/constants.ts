@@ -493,3 +493,28 @@ export const EQUIPMENT_MANAGER_UI_STRINGS = {
   LOADING: "Loading...",
   SAVING: "Saving...",
 } as const;
+
+// =============================================================================
+// CREDIT HISTORY UI STRINGS
+// =============================================================================
+
+/**
+ * UI text strings for credit history view
+ */
+export const CREDIT_HISTORY_UI_STRINGS = {
+  PAGE_TITLE: "Credit History",
+  PAGE_DESCRIPTION: "View your credit transactions, including charges for reservations and work credits.",
+  CURRENT_BALANCE: "Current Balance",
+  TABLE_DATE: "Date",
+  TABLE_REASON: "Reason",
+  TABLE_DESCRIPTION: "Description",
+  TABLE_AMOUNT: "Amount",
+  TABLE_ADMIN: "Admin",
+  REASON_RESERVATION_CHARGE: "Reservation Charge",
+  REASON_RESERVATION_REFUND: "Reservation Refund",
+  REASON_RESERVATION_ADJUSTMENT: "Reservation Adjustment",
+  REASON_ADMIN_ADJUSTMENT: "Admin Adjustment",
+  REASON_WORK_CREDIT: "Work Credit",
+  NO_HISTORY: "No credit transactions found.",
+  ERROR_FETCHING: "Failed to load credit history.",
+} as const;
