@@ -473,6 +473,37 @@ func (r *equipmentRepository) GetUserFavorites(ctx context.Context, userID strin
 	return favorites, nil
 }
 
+// CreateMaintenanceLog creates a new maintenance log entry
+func (r *equipmentRepository) CreateMaintenanceLog(ctx context.Context, equipmentID string, previousStatus, newStatus string, notes *string, userID string) (*types.PublicMaintenanceLogsSelect, error) {
+	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create admin client: %w", err)
+	}
+
+	insert := types.PublicMaintenanceLogsInsert{
+		EquipmentID:    equipmentID,
+		PreviousStatus: &previousStatus,
+		NewStatus:      newStatus,
+		Notes:          notes,
+		AdminID:        &userID,
+	}
+
+	data, _, err := adminClient.From(constants.TableMaintenanceLogs).
+		Insert(insert, false, "", "representation", "").
+		Single().
+		Execute()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create maintenance log: %w", err)
+	}
+
+	var log types.PublicMaintenanceLogsSelect
+	if err := json.Unmarshal(data, &log); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal maintenance log: %w", err)
+	}
+
+	return &log, nil
+}
+
 // Helper to check for unique violation
 func isUniqueViolation(err error) bool {
 	// Check for Postgres error code 23505 (unique_violation)

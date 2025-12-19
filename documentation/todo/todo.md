@@ -1,6 +1,5 @@
-## In Progress
-- equipment manager view optimization
-- maintenance logs implementation
+## In progress
+- credit history view needed
 
 ## Equipment Views
 - Equipment manager + viewer component reuse improved
@@ -8,20 +7,20 @@
 - Admin sees dates filter hidden in browse view
 - Equipment details sheet: readOnly prop for users, editable for admins
 
-## Credits
-- credit history view needed
-
 ## Code Quality
+- logout and login improvements
 - cleanup
 - API simplification
 - documentation
+- review with obselete
+- refactoring needed
 
 ## Deployment
 - containerization
+- deployment
 - e2e tests
 
 ## Future Work
-- logout and login improvements
 - credits request feature
 - favorite items
 - calendar view

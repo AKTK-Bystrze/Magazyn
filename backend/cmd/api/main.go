@@ -105,6 +105,7 @@ func main() {
 	mux.Handle("PATCH /equipment/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleUpdate))))
 	mux.Handle("DELETE /equipment/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(equipmentHandler.HandleArchive))))
 	mux.Handle("GET /equipment/{id}/availability", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
+	mux.Handle("POST /equipment/{id}/maintenance-logs", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCreateMaintenanceLog)))
 
 	// Reservation Routes
 	mux.Handle("GET /reservations", authMiddleware(http.HandlerFunc(reservationHandler.HandleList)))

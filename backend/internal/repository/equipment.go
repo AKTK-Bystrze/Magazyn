@@ -51,6 +51,9 @@ type EquipmentRepository interface {
 
 	// GetUserFavorites retrieves IDs of equipment that are user's favorites
 	GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error)
+
+	// CreateMaintenanceLog creates a new maintenance log entry
+	CreateMaintenanceLog(ctx context.Context, equipmentID string, previousStatus, newStatus string, notes *string, userID string) (*types.PublicMaintenanceLogsSelect, error)
 }
 
 // MaintenanceLogWithAdmin extends the log with admin username

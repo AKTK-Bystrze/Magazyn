@@ -104,6 +104,11 @@ type UpdateEquipmentCommand struct {
 	ImagePath   *string `json:"image_path"`
 }
 
+// CreateMaintenanceLogCommand represents a request to create a maintenance log
+type CreateMaintenanceLogCommand struct {
+	Notes *string `json:"notes"`
+}
+
 // EquipmentListQuery represents filters for listing equipment
 type EquipmentListQuery struct {
 	Page            int     `json:"page"`

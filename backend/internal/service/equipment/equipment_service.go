@@ -41,6 +41,9 @@ type EquipmentService interface {
 
 	// CreateEquipmentType creates a new equipment type
 	CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error)
+
+	// CreateMaintenanceLog adds a maintenance log entry for equipment
+	CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error)
 }
 
 // ============================================================================
@@ -364,4 +367,28 @@ func (s *equipmentService) CreateEquipmentType(ctx context.Context, cmd types.Cr
 	}
 
 	return created, nil
+}
+
+// CreateMaintenanceLog adds a maintenance log entry for equipment
+func (s *equipmentService) CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error) {
+	eq, err := s.repo.GetByID(ctx, equipmentID)
+	if err != nil {
+		return nil, types.NewNotFoundError("Equipment", equipmentID)
+	}
+
+	// Create log with current status as both previous and new (note-only entry)
+	log, err := s.repo.CreateMaintenanceLog(ctx, equipmentID, eq.Status, eq.Status, notes, userID)
+	if err != nil {
+		logger.Errorf(ctx, "Failed to create maintenance log: %v", err)
+		return nil, types.NewInternalError("Failed to create maintenance log", err)
+	}
+
+	return &types.MaintenanceLogDTO{
+		ID:             log.ID,
+		PreviousStatus: log.PreviousStatus,
+		NewStatus:      log.NewStatus,
+		Notes:          log.Notes,
+		AdminUsername:  "", // User who created it - could be fetched if needed
+		CreatedAt:      log.CreatedAt,
+	}, nil
 }

@@ -119,6 +119,14 @@ func (m *MockEquipmentRepository) GetUserFavorites(ctx context.Context, userID s
 	return args.Get(0).(map[string]bool), args.Error(1)
 }
 
+func (m *MockEquipmentRepository) CreateMaintenanceLog(ctx context.Context, equipmentID string, previousStatus, newStatus string, notes *string, userID string) (*types.PublicMaintenanceLogsSelect, error) {
+	args := m.Called(ctx, equipmentID, previousStatus, newStatus, notes, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.PublicMaintenanceLogsSelect), args.Error(1)
+}
+
 // MockEquipmentTypeRepository is a mock implementation of EquipmentTypeRepository
 type MockEquipmentTypeRepository struct {
 	mock.Mock
