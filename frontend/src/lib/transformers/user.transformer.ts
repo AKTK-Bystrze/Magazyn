@@ -4,6 +4,7 @@ import type {
   UserListResponse,
   CreateUserCommand,
   UpdateUserCommand,
+  BulkAdjustCreditsCommand,
 } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
@@ -87,6 +88,34 @@ export function transformUpdateUserCommand(
   }
 
   return result;
+}
+
+/**
+ * Transforms BulkAdjustCreditsCommand to backend format
+ *
+ * @param command - Frontend bulk adjust credits command
+ * @returns Backend-compatible object with snake_case fields
+ */
+export function transformBulkAdjustCreditsCommand(
+  command: BulkAdjustCreditsCommand
+): Record<string, unknown> {
+  // Build description: combine user's reason with optional notes
+  const descriptionParts: string[] = [];
+  if (command.reason) {
+    descriptionParts.push(command.reason);
+  }
+  if (command.description) {
+    descriptionParts.push(command.description);
+  }
+
+  return {
+    user_ids: command.userIds,
+    amount: command.amount,
+    // Always use 'admin_adjustment' enum value for manual credit adjustments
+    reason: "admin_adjustment",
+    // User's reason text becomes the human-readable description
+    description: descriptionParts.join(" - ") || "Manual credit adjustment",
+  };
 }
 
 // =============================================================================

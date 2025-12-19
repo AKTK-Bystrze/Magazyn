@@ -16,7 +16,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { BREADCRUMB_LABELS, BREADCRUMB_HIDDEN_PATHS } from '@/lib/config/nav-config';
-import { Fragment } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 
 interface BreadcrumbsProps {
   /** Current URL path */
@@ -32,40 +32,46 @@ interface BreadcrumbSegment {
 }
 
 /**
- * Parses URL path into breadcrumb segments
- */
-function parsePathToSegments(path: string): BreadcrumbSegment[] {
-  const segments = path.split('/').filter(Boolean);
-  const result: BreadcrumbSegment[] = [];
-  
-  let currentHref = '';
-  
-  for (let i = 0; i < segments.length; i++) {
-    const segment = segments[i];
-    currentHref += `/${segment}`;
-    
-    const label = BREADCRUMB_LABELS[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
-    
-    result.push({
-      label,
-      href: currentHref,
-      isLast: i === segments.length - 1,
-    });
-  }
-  
-  return result;
-}
-
-/**
  * Breadcrumb trail navigation component
  */
 export function Breadcrumbs({ currentPath, isAdmin = false }: BreadcrumbsProps) {
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const handleUpdate = (event: CustomEvent<{ path: string; label: string }>) => {
+      const { path, label } = event.detail;
+      setDynamicLabels(prev => ({ ...prev, [path]: label }));
+    };
+
+    window.addEventListener('magazyn:breadcrumb-label' as any, handleUpdate);
+    return () => window.removeEventListener('magazyn:breadcrumb-label' as any, handleUpdate);
+  }, []);
+
   if (BREADCRUMB_HIDDEN_PATHS.includes(currentPath)) {
     return null;
   }
 
-  const segments = parsePathToSegments(currentPath);
+  /**
+   * Parses URL path into breadcrumb segments
+   */
+  const segments: BreadcrumbSegment[] = [];
+  const parts = currentPath.split('/').filter(Boolean);
+  let currentHref = '';
   
+  for (let i = 0; i < parts.length; i++) {
+    const segment = parts[i];
+    currentHref += `/${segment}`;
+    
+    // Check dynamic labels first, then static config, then fallback to capitalized segment
+    const label = dynamicLabels[currentHref] || BREADCRUMB_LABELS[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+    
+    segments.push({
+      label,
+      href: currentHref,
+      isLast: i === parts.length - 1,
+    });
+  }
+
   if (segments.length === 0) {
     return null;
   }

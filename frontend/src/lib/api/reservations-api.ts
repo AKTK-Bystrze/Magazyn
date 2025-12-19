@@ -6,7 +6,7 @@ import type {
   UpdateReservationCommand,
   UpdateReservationResponse,
   BulkUpdateReservationsCommand,
-  BulkUpdateReservationsResponse,
+  BulkStatusUpdateResponse,
 } from "@/types";
 import {
   transformReservationListResponse,
@@ -98,12 +98,12 @@ export const reservationsApi = {
    */
   bulkUpdate: async (
     command: BulkUpdateReservationsCommand
-  ): Promise<BulkUpdateReservationsResponse> => {
+  ): Promise<BulkStatusUpdateResponse> => {
     const body = {
       reservation_ids: command.reservationIds,
       status: command.status,
     };
-    const { data } = await api.patch<BulkUpdateReservationsResponse>(
+    const { data } = await api.patch<BulkStatusUpdateResponse>(
       "/api/reservations/bulk",
       body
     );

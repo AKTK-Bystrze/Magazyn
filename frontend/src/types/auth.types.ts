@@ -77,6 +77,17 @@ export type UpdateUserCommand = {
   isEnabled?: boolean;
 };
 
+/**
+ * Command to adjust credits for multiple users
+ * SuperAdmin only
+ */
+export type BulkAdjustCreditsCommand = {
+  userIds: string[];
+  amount: number;
+  reason: string;
+  description?: string;
+};
+
 // =============================================================================
 // USER LIST & FILTERING TYPES
 // =============================================================================

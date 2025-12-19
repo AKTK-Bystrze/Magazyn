@@ -36,7 +36,7 @@ type ReservationService interface {
 	Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error)
 
 	// BulkUpdate updates multiple reservations (Admin only)
-	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand) error
+	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error)
 
 	// GetDashboardStats retrieves admin dashboard stats
 	GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error)
@@ -368,8 +368,8 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 }
 
 // BulkUpdate updates multiple reservations
-func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand) error {
-	return s.repo.BulkUpdateReservations(ctx, cmd.ReservationIDs, cmd.Status)
+func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error) {
+	return s.repo.BulkUpdateStatusAtomic(ctx, cmd.ReservationIDs, cmd.Status, adminID)
 }
 
 // GetDashboardStats retrieves admin dashboard stats

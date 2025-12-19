@@ -1,38 +1,44 @@
+## In Progress
+- equipment manager view optimization
+- credits bulk operation frontend integration testing
 
+## Equipment Views
+- Equipment manager + viewer component reuse improved
+- Both share FilterSidebar (horizontal for manager, vertical for browse)
+- Admin sees dates filter hidden in browse view
+- Equipment details sheet: readOnly prop for users, editable for admins
 
-equipments - admin view
-    - add equipment
-    - update equipment
-    - delete equipment
-    - equipment details
-    - equipment reservation history
+## Credits
+- credit history view needed
 
-user 
-    - superAdmin can change users credits by adding or retracting in place of changing balance
+## Code Quality
+- cleanup
+- API simplification
+- documentation
 
-credits
-    - credit history
+## Deployment
+- containerization
+- e2e tests
 
-code 
-documentation
+## Future Work
+- logout and login improvements
+- credits request feature
+- favorite items
+- calendar view
+- notifications
+- events - reservation events
 
-deploy - containerization 
-e2e tests
-
-
-refactor 
-1. nowy uzytkonwik nie moze sie tworzyc automatycznie. Wylaczycz tworzenie, tylko admin moze dodawac
-2. translate ui to english
-3. notification service a centralized service for sending notifications to users
-4. Implement credit recalculation logic in Update when dates are modified.
-5. Implement a bulk refund mechanism (or iterative service calls) for 
-BulkUpdate
- to ensure admin cancellations process refunds correctly.
-7. mechanism for finding and handling tokens expiration. It is valid on frontend but not on backend. I am permanetnly logged in on browser
-8. in reservation details, on top in navigation instead of the reservation id, use the reservation dates...?
-9. highlight of my reservation is not properly working, not all mine reservations are highlighted
-10. When link is sent then user can jusr refresh page to login
-11. remove service role key usage
-12. in top bar credits re invisible on mobile view
-13. remove approved status 
-14. in reservation when chanign status to returned, show dates in the form with filled values the same as in reservation. User and Admin can change the dates at this moment
+## Refactoring Needed
+1. New user creation should be admin-only (disable auto-creation)
+2. Translate UI to English
+3. Notification service - centralized for sending notifications
+4. Credit recalculation on date modification in Update
+5. Bulk refund mechanism for BulkUpdate admin cancellations
+6. Token expiration handling - valid on frontend but not backend
+7. Link-sent login - just refresh page to login
+8. Reservation details navigation - show dates/item name instead of ID
+9. Highlight my reservations - fix status-based highlighting
+10. Remove service role key usage
+11. Top bar credits invisible on mobile view
+12. Remove approved status
+13. Return dialog should show current reservation dates prefilled

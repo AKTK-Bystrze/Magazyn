@@ -88,3 +88,12 @@ func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *
 
 	return result, count, nil
 }
+
+// Create records a new credit history entry in the database.
+func (r *creditHistoryRepository) Create(ctx context.Context, item types.PublicCreditHistoryInsert) error {
+	_, _, err := r.client.From(constants.TableCreditHistory).
+		Insert(item, false, "", "", "representation").
+		Execute()
+
+	return err
+}

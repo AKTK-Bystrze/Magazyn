@@ -16,9 +16,20 @@ interface FilterSidebarProps {
   types: EquipmentType[];
   onFilterChange: (key: keyof EquipmentSearchParams, value: string | undefined) => void;
   onReset: () => void;
+  showDates?: boolean;
+  orientation?: "vertical" | "horizontal";
 }
 
-export function FilterSidebar({ filters, types, onFilterChange, onReset }: FilterSidebarProps) {
+export function FilterSidebar({
+  filters,
+  types,
+  onFilterChange,
+  onReset,
+  showDates = true,
+  orientation = "vertical"
+}: FilterSidebarProps) {
+  const [searchValue, setSearchValue] = React.useState(filters.search || "");
+
   // Validate date range
   const [dateValidationErrors, setDateValidationErrors] = React.useState<DateRangeValidationErrors>({
     startDate: null,
@@ -48,6 +59,22 @@ export function FilterSidebar({ filters, types, onFilterChange, onReset }: Filte
     setDateValidationErrors(errors);
   }, [filters.availableFrom, filters.availableTo]);
 
+  // Handle debounced search
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchValue !== (filters.search || "")) {
+        onFilterChange("search", searchValue || undefined);
+      }
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchValue, filters.search, onFilterChange]);
+
+  // Sync search value if updated from outside (e.g. reset)
+  React.useEffect(() => {
+    setSearchValue(filters.search || "");
+  }, [filters.search]);
+
   const handleStartDateChange = (date: string) => {
     onFilterChange("availableFrom", date || undefined);
   };
@@ -60,24 +87,25 @@ export function FilterSidebar({ filters, types, onFilterChange, onReset }: Filte
     onFilterChange("availableFrom", undefined);
     onFilterChange("availableTo", undefined);
   };
+  const isHorizontal = orientation === "horizontal";
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    <div className={isHorizontal ? "flex flex-row flex-wrap items-end gap-x-4 gap-y-2" : "space-y-6"}>
+      <div className={isHorizontal ? "flex-1 min-w-[200px]" : "space-y-2"}>
         <Label htmlFor="search">Search</Label>
         <Input
           id="search"
           placeholder={EQUIPMENT_FILTER_UI_STRINGS.SEARCH_PLACEHOLDER}
-          value={filters.search || ""}
-          onChange={(e) => onFilterChange("search", e.target.value)}
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
         />
       </div>
 
-      <div className="space-y-2">
+      <div className={isHorizontal ? "w-[180px]" : "space-y-2"}>
         <Label htmlFor="type">{EQUIPMENT_FILTER_UI_STRINGS.EQUIPMENT_TYPE_LABEL}</Label>
         <Select
-          value={filters.type_id || "all"}
-          onValueChange={(val) => onFilterChange("type_id", val === "all" ? undefined : val)}
+          value={filters.typeId || "all"}
+          onValueChange={(val) => onFilterChange("typeId", val === "all" ? undefined : val)}
         >
           <SelectTrigger id="type">
             <SelectValue placeholder={EQUIPMENT_FILTER_UI_STRINGS.ALL_TYPES} />
@@ -93,42 +121,65 @@ export function FilterSidebar({ filters, types, onFilterChange, onReset }: Filte
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className={isHorizontal ? "w-[160px]" : "space-y-2"}>
         <Label>{EQUIPMENT_FILTER_UI_STRINGS.AVAILABILITY_LABEL}</Label>
-        <RadioGroup
-          value={filters.status || "all"}
-          onValueChange={(val) => onFilterChange("status", val === "all" ? undefined : val)}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="all" id="status-all" />
-            <Label htmlFor="status-all">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_ALL}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="ok" id="status-ok" />
-            <Label htmlFor="status-ok">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_AVAILABLE}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="broken" id="status-broken" />
-            <Label htmlFor="status-broken">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BROKEN}</Label>
-          </div>
-        </RadioGroup>
+        {isHorizontal ? (
+          <Select
+            value={filters.status || "all"}
+            onValueChange={(val) => onFilterChange("status", val === "all" ? undefined : val)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_ALL}</SelectItem>
+              <SelectItem value="ok">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_AVAILABLE}</SelectItem>
+              <SelectItem value="broken">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BROKEN}</SelectItem>
+              <SelectItem value="blocked">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BLOCKED}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+            <RadioGroup
+              value={filters.status || "all"}
+              onValueChange={(val) => onFilterChange("status", val === "all" ? undefined : val)}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="status-all" />
+                <Label htmlFor="status-all">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_ALL}</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="ok" id="status-ok" />
+                <Label htmlFor="status-ok">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_AVAILABLE}</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="broken" id="status-broken" />
+                <Label htmlFor="status-broken">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BROKEN}</Label>
+              </div>
+            </RadioGroup>
+        )}
       </div>
 
-      <div className="space-y-2">
-        <DateRangePicker
-          startDate={filters.availableFrom || null}
-          endDate={filters.availableTo || null}
-          onStartDateChange={handleStartDateChange}
-          onEndDateChange={handleEndDateChange}
-          validationErrors={dateValidationErrors}
-          title={EQUIPMENT_FILTER_UI_STRINGS.FILTER_BY_AVAILABILITY}
-          showClearButton={true}
-          onClear={handleClearDates}
-          compact={true}
-        />
-      </div>
+      {showDates && (
+        <div className={isHorizontal ? "w-auto" : "space-y-2"}>
+          <DateRangePicker
+            startDate={filters.availableFrom || null}
+            endDate={filters.availableTo || null}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
+            validationErrors={dateValidationErrors}
+            title={isHorizontal ? null : EQUIPMENT_FILTER_UI_STRINGS.FILTER_BY_AVAILABILITY}
+            showClearButton={true}
+            onClear={handleClearDates}
+            compact={true}
+          />
+        </div>
+      )}
 
-      <Button variant="outline" className="w-full" onClick={onReset}>
+      <Button
+        variant="outline"
+        className={isHorizontal ? "w-auto" : "w-full"}
+        onClick={onReset}
+      >
         {EQUIPMENT_FILTER_UI_STRINGS.RESET_FILTERS}
       </Button>
     </div>

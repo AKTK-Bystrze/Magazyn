@@ -6,6 +6,8 @@ import type {
   ReservationListResponse,
   UpdateReservationCommand,
   UpdateReservationResponse,
+  BulkUpdateReservationsCommand,
+  BulkStatusUpdateResponse,
 } from "@/types";
 import {
   DEFAULT_PAGE,
@@ -71,6 +73,10 @@ interface UseReservationsReturn {
     id: string,
     command: UpdateReservationCommand
   ) => Promise<UpdateReservationResponse>;
+  /** Bulk update reservation status */
+  bulkUpdateStatus: (
+    command: BulkUpdateReservationsCommand
+  ) => Promise<BulkStatusUpdateResponse>;
   /** Mutation loading state */
   isMutating: boolean;
 }
@@ -130,6 +136,15 @@ export function useReservations(
     },
   });
 
+  // Bulk update mutation
+  const bulkUpdateMutation = useMutation({
+    mutationFn: (command: BulkUpdateReservationsCommand) =>
+      reservationsApi.bulkUpdate(command),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+    },
+  });
+
   // Update a single filter
   const setFilter = React.useCallback(
     <K extends keyof ReservationFilterState>(
@@ -168,6 +183,13 @@ export function useReservations(
     [updateMutation]
   );
 
+  const bulkUpdateStatus = React.useCallback(
+    async (command: BulkUpdateReservationsCommand) => {
+      return bulkUpdateMutation.mutateAsync(command);
+    },
+    [bulkUpdateMutation]
+  );
+
   return {
     data,
     isLoading,
@@ -178,6 +200,10 @@ export function useReservations(
     refetch,
     cancelReservation,
     updateReservation,
-    isMutating: updateMutation.isPending || cancelMutation.isPending,
+    bulkUpdateStatus,
+    isMutating:
+      updateMutation.isPending ||
+      cancelMutation.isPending ||
+      bulkUpdateMutation.isPending,
   };
 }

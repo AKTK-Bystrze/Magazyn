@@ -5,12 +5,14 @@ import type {
   UserProfile,
   CreateUserCommand,
   UpdateUserCommand,
+  BulkAdjustCreditsCommand,
 } from "@/types";
 import {
   transformUserListResponse,
   transformUserProfile,
   transformCreateUserCommand,
   transformUpdateUserCommand,
+  transformBulkAdjustCreditsCommand,
 } from "@/lib/transformers/user.transformer";
 
 /**
@@ -94,5 +96,18 @@ export const usersApi = {
     const body = transformUpdateUserCommand(command);
     const { data } = await api.patch<unknown>(`/api/users/${id}`, body);
     return transformUserProfile(data);
+  },
+
+  /**
+   * Adjusts credit balance for multiple users
+   * User must be SuperAdmin
+   *
+   * @param command - Bulk adjustment command
+   */
+  bulkAdjustCredits: async (
+    command: BulkAdjustCreditsCommand
+  ): Promise<void> => {
+    const body = transformBulkAdjustCreditsCommand(command);
+    await api.post<unknown>("/api/users/bulk-adjust-credits", body);
   },
 };

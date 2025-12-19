@@ -38,6 +38,7 @@ function ReservationListContainerInner({
     resetFilters,
     cancelReservation,
     updateReservation,
+    bulkUpdateStatus,
     isMutating,
   } = useReservations({ initialFilters });
 
@@ -179,20 +180,28 @@ function ReservationListContainerInner({
             `Equipment "${targets[0].equipmentName}" marked as returned.`
           );
         } else {
-          // Bulk return
-          const results = await Promise.allSettled(
-            targets.map((target) => updateReservation(target.id, command))
-          );
-          const successful = results.filter(
-            (r) => r.status === "fulfilled"
-          ).length;
+          const hasDateChange = !!(command.startDate || command.endDate);
 
-          if (successful === targets.length) {
-            setSuccessMessage(`${successful} items marked as returned.`);
-          } else {
-            setSuccessMessage(
-              `${successful} returned. ${targets.length - successful} failed.`
+          if (hasDateChange) {
+            // Individual updates if dates change (no atomic RPC for both yet)
+            const results = await Promise.allSettled(
+              targets.map((target) => updateReservation(target.id, command))
             );
+            const successful = results.filter(
+              (r) => r.status === "fulfilled"
+            ).length;
+
+            setSuccessMessage(
+              `${successful} items updated and returned. ${targets.length - successful} failed.`
+            );
+          } else {
+            // Bulk return (Atomic RPC)
+            const result = await bulkUpdateStatus({
+              reservationIds: targets.map((t) => t.id),
+              status: "RETURNED",
+            });
+
+            setSuccessMessage(`${result.updated_count} items marked as returned.`);
           }
         }
 
@@ -237,29 +246,15 @@ function ReservationListContainerInner({
           `Reservation for "${targets[0].equipmentName}" has been cancelled. Credits have been refunded.`
         );
       } else {
-        // Bulk cancel
-        const results = await Promise.allSettled(
-          targets.map((reservation) => cancelReservation(reservation.id))
+        // Bulk cancel (Atomic RPC)
+        const result = await bulkUpdateStatus({
+          reservationIds: targets.map((t) => t.id),
+          status: "DENIED",
+        });
+
+        setSuccessMessage(
+          `${result.updated_count} reservations cancelled. ${result.refund_count} refunds processed.`
         );
-
-        const successful = results.filter(
-          (r) => r.status === "fulfilled"
-        ).length;
-        const failed = results.filter((r) => r.status === "rejected").length;
-
-        if (failed === 0) {
-          setSuccessMessage(
-            `${successful} reservations have been cancelled. Credits have been refunded.`
-          );
-        } else if (successful === 0) {
-          setErrorMessage(
-            `Failed to cancel all ${targets.length} reservations. Please try again.`
-          );
-        } else {
-          setSuccessMessage(
-            `${successful} reservations cancelled successfully. ${failed} failed - please try again for those.`
-          );
-        }
       }
 
       setCancelDialogOpen(false);

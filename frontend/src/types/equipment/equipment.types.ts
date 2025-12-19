@@ -8,7 +8,7 @@ export type EquipmentStatus = Enums<"equipment_status">;
 
 export interface EquipmentSearchParams {
   search?: string;
-  type_id?: string;
+  typeId?: string;
   status?: EquipmentStatus;
   page: number;
   perPage: number;

@@ -7,6 +7,7 @@ import type {
   UserProfile,
   CreateUserCommand,
   UpdateUserCommand,
+  BulkAdjustCreditsCommand,
 } from "@/types";
 import {
   DEFAULT_PAGE,
@@ -70,6 +71,8 @@ interface UseUsersReturn {
   createUser: (command: CreateUserCommand) => Promise<UserProfile>;
   /** Update an existing user */
   updateUser: (id: string, command: UpdateUserCommand) => Promise<UserProfile>;
+  /** Adjust credits for multiple users */
+  bulkAdjustCredits: (command: BulkAdjustCreditsCommand) => Promise<void>;
   /** Mutation loading state */
   isMutating: boolean;
 }
@@ -134,6 +137,16 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     },
   });
 
+  // Bulk adjust credits mutation
+  const bulkAdjustCreditsMutation = useMutation({
+    mutationFn: (command: BulkAdjustCreditsCommand) =>
+      usersApi.bulkAdjustCredits(command),
+    onSuccess: () => {
+      // Invalidate list and any cached details
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+    },
+  });
+
   // Update a single filter
   const setFilter = React.useCallback(
     <K extends keyof UserFilterState>(key: K, value: UserFilterState[K]) => {
@@ -170,6 +183,14 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     [updateMutation]
   );
 
+  // Bulk adjust credits handler
+  const bulkAdjustCredits = React.useCallback(
+    async (command: BulkAdjustCreditsCommand) => {
+      return bulkAdjustCreditsMutation.mutateAsync(command);
+    },
+    [bulkAdjustCreditsMutation]
+  );
+
   return {
     data,
     isLoading,
@@ -180,6 +201,10 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     refetch,
     createUser,
     updateUser,
-    isMutating: createMutation.isPending || updateMutation.isPending,
+    bulkAdjustCredits,
+    isMutating:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      bulkAdjustCreditsMutation.isPending,
   };
 }

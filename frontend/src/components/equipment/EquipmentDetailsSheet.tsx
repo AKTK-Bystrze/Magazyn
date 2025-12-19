@@ -30,6 +30,8 @@ interface EquipmentDetailsSheetProps {
   equipment: EquipmentSearchItem | null;
   /** Callback when sheet closes */
   onClose: () => void;
+  /** Whether the sheet is in read-only mode */
+  readOnly?: boolean;
 }
 
 /**
@@ -57,6 +59,7 @@ export function EquipmentDetailsSheet({
   isOpen,
   equipment,
   onClose,
+  readOnly = false,
 }: EquipmentDetailsSheetProps) {
   const { 
     maintenanceLogs, 
@@ -168,6 +171,7 @@ export function EquipmentDetailsSheet({
                 equipmentId={equipment.id}
                 onAddLog={addMaintenanceLog}
                 isSubmitting={isMutating}
+                  readOnly={readOnly}
               />
             )}
           </div>

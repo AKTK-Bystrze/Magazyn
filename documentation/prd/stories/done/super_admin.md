@@ -1,9 +1,3 @@
-# Super Admin Stories
-
-[← Back to Index](../index.md)
-
----
-
 ## US-035: SuperAdmin - Create User Account
 
 **Description:** As a superAdmin, I want to create user accounts so new members can access the system.
@@ -45,6 +39,7 @@
 
 ---
 
+
 ## US-037: SuperAdmin - Edit User Profile
 
 **Description:** As a superAdmin, I want to edit user profiles so I can update user information and manage accounts.
@@ -62,5 +57,3 @@
 - Updated information appears in user list
 
 ---
-
-[← Back to Index](../index.md)

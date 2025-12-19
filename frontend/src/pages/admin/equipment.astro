@@ -29,5 +29,6 @@ if (!sessionInfo || (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUP
   <EquipmentSearchContainer
     client:only="react"
     checkoutPath={ROUTES.PROTECTED.ADMIN_RESERVATIONS_CREATE}
+    isAdmin={true}
   />
 </AdminLayout>

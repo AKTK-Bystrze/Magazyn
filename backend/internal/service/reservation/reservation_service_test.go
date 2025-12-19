@@ -48,8 +48,8 @@ func (m *MockReservationRepository) CreateReservationsAtomic(ctx context.Context
 	return args.Get(0).([]string), args.Get(1).(int32), args.Error(2)
 }
 
-func (m *MockReservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate) (*types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, id, reservation)
+func (m *MockReservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate, changedByUserID string) (*types.PublicReservationsSelect, error) {
+	args := m.Called(ctx, id, reservation, changedByUserID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -59,6 +59,14 @@ func (m *MockReservationRepository) UpdateReservation(ctx context.Context, id st
 func (m *MockReservationRepository) BulkUpdateReservations(ctx context.Context, ids []string, status string) error {
 	args := m.Called(ctx, ids, status)
 	return args.Error(0)
+}
+
+func (m *MockReservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids []string, status string, adminID string) (*types.BulkStatusUpdateResponse, error) {
+	args := m.Called(ctx, ids, status, adminID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.BulkStatusUpdateResponse), args.Error(1)
 }
 
 func (m *MockReservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
@@ -82,6 +90,14 @@ func (m *MockReservationRepository) GetReservationsInRange(ctx context.Context, 
 func (m *MockReservationRepository) RefundCredits(ctx context.Context, reservationID string, amount int32) error {
 	args := m.Called(ctx, reservationID, amount)
 	return args.Error(0)
+}
+
+func (m *MockReservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
+	args := m.Called(ctx, reservationID, changedByUserID, newStartDate, newEndDate)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*types.ModifyDatesResponse), args.Error(1)
 }
 
 type MockEquipmentRepository struct {
@@ -206,6 +222,11 @@ func (m *MockUserRepository) Update(ctx context.Context, id string, profile type
 	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
 }
 
+func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
+	args := m.Called(ctx, userIDs, adminID, amount, reason, description)
+	return args.Error(0)
+}
+
 type MockEmailService struct {
 	mock.Mock
 }
@@ -311,7 +332,7 @@ func TestReservationService_Update_RefundTrigger(t *testing.T) {
 	mockRepo.On("RefundCredits", ctx, resID, int32(10)).Return(nil)
 
 	// Mock Update Call
-	mockRepo.On("UpdateReservation", ctx, resID, mock.AnythingOfType("types.PublicReservationsUpdate")).
+	mockRepo.On("UpdateReservation", ctx, resID, mock.AnythingOfType("types.PublicReservationsUpdate"), userID).
 		Return(&types.PublicReservationsSelect{
 			ID:     resID,
 			Status: constants.ReservationStatusDenied,

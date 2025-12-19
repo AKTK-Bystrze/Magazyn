@@ -116,22 +116,11 @@ export type BulkUpdateReservationsCommand = {
 };
 
 /**
- * Response from bulk update
+ * Response from atomic bulk update RPC
  */
-export type BulkUpdateReservationsResponse = {
-  successful: Array<{
-    id: string;
-    status: Enums<"reservation_status">;
-  }>;
-  failed: Array<{
-    id: string;
-    error: string;
-  }>;
-  summary: {
-    total: number;
-    successfulCount: number;
-    failedCount: number;
-  };
+export type BulkStatusUpdateResponse = {
+  updated_count: number;
+  refund_count: number;
 };
 
 /**

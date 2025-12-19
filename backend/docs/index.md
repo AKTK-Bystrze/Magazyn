@@ -27,7 +27,7 @@ The `internal` directory contains the core application code, strictly separated 
   - **`auth/`**: Authentication and RBAC middleware (`auth.middleware.go`, `rbac.middleware.go`).
   - **`common/`**: General middleware like CORS (`cors.middleware.go`).
 - **`repository/`**: Data Access Layer.
-  - `interfaces.go`: Defines `AuthRepository` and `EquipmentRepository` interfaces.
+  - `interfaces.go`: Currently interfaces are defined in domain files like `auth.go`, `equipment.go`, `user.go`, `reservation.go`, `credit_history.go`.
   - `supabase/`: Concrete implementations using the Supabase Go client.
 - **`service/`**: Business Logic Layer.
   - **`auth/`**: Authentication services (`auth.service.go`).

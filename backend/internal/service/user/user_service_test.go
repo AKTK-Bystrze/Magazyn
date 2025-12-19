@@ -12,6 +12,21 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// MockCreditHistoryRepository is a mock implementation of CreditHistoryRepository
+type MockCreditHistoryRepository struct {
+	mock.Mock
+}
+
+func (m *MockCreditHistoryRepository) GetCreditHistory(ctx context.Context, userID *string, page, perPage int) ([]types.CreditHistoryItemDTO, int64, error) {
+	args := m.Called(ctx, userID, page, perPage)
+	return args.Get(0).([]types.CreditHistoryItemDTO), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockCreditHistoryRepository) Create(ctx context.Context, item types.PublicCreditHistoryInsert) error {
+	args := m.Called(ctx, item)
+	return args.Error(0)
+}
+
 // MockUserRepository is a mock implementation of UserRepository
 type MockUserRepository struct {
 	mock.Mock
@@ -57,10 +72,16 @@ func (m *MockUserRepository) Update(ctx context.Context, id string, profile type
 	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
 }
 
+func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
+	args := m.Called(ctx, userIDs, adminID, amount, reason, description)
+	return args.Error(0)
+}
+
 func TestGetProfile_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	id := "user-123"
@@ -84,7 +105,8 @@ func TestGetProfile_Success(t *testing.T) {
 func TestGetProfile_NotFound(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	id := "unknown"
@@ -101,7 +123,8 @@ func TestGetProfile_NotFound(t *testing.T) {
 func TestListUsers_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	page := 1
@@ -129,7 +152,8 @@ func TestListUsers_Success(t *testing.T) {
 func TestCreateUser_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	email := "new@example.com"
@@ -151,16 +175,6 @@ func TestCreateUser_Success(t *testing.T) {
 
 	// 2. Check Username via List - expect empty list or list without our username
 	mockRepo.On("List", ctx, 1, 1, "", username).Return([]types.PublicProfilesSelect{}, int64(0), nil)
-
-	// 3. Create
-	mockRepo.On("Create", ctx, mock.AnythingOfType("types.PublicProfilesInsert")).
-		Return(&types.PublicProfilesSelect{
-			ID:            "generated-id",
-			Email:         email,
-			Username:      username,
-			Role:          role,
-			CreditBalance: credit,
-		}, nil)
 
 	// Expect AuthRepository.CreateUser call
 	mockAuthRepo.On("CreateUser", ctx, email, mock.AnythingOfType("string")).
@@ -202,7 +216,8 @@ func TestCreateUser_Success(t *testing.T) {
 func TestCreateUser_AuthFailure(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	email := "fail@example.com"
@@ -235,7 +250,8 @@ func TestCreateUser_AuthFailure(t *testing.T) {
 func TestCreateUser_EmailConflict(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	email := "existing@example.com"
@@ -260,7 +276,8 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 func TestCreateUser_UsernameConflict(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	username := "existinguser"
@@ -290,7 +307,8 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 func TestUpdateUser_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
 	ctx := context.Background()
 
 	id := "user-123"
@@ -314,5 +332,34 @@ func TestUpdateUser_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, role, resp.Role)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestBulkAdjustCredits_Success(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	mockAuthRepo := new(mocks.MockAuthRepository)
+	mockCreditRepo := new(MockCreditHistoryRepository)
+	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	ctx := context.Background()
+
+	adminID := "admin-123"
+	userIDs := []string{"user-1", "user-2"}
+	amount := int32(100)
+	reason := "Bonus"
+	description := "Holiday bonus"
+
+	req := types.BulkAdjustCreditsRequest{
+		UserIDs:     userIDs,
+		Amount:      amount,
+		Reason:      reason,
+		Description: description,
+	}
+
+	mockRepo.On("BulkAdjustCreditsAtomic", ctx, userIDs, adminID, amount, reason, description).
+		Return(nil)
+
+	err := service.BulkAdjustCredits(ctx, adminID, req)
+
+	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }

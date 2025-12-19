@@ -7,9 +7,10 @@ interface EquipmentGridProps {
   items: EquipmentSearchItem[];
   isLoading?: boolean;
   error?: Error | null;
+  onViewDetail?: (item: EquipmentSearchItem) => void;
 }
 
-export function EquipmentGrid({ items, isLoading, error }: EquipmentGridProps) {
+export function EquipmentGrid({ items, isLoading, error, onViewDetail }: EquipmentGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -53,7 +54,7 @@ export function EquipmentGrid({ items, isLoading, error }: EquipmentGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((item) => (
-        <EquipmentCard key={item.id} item={item} />
+        <EquipmentCard key={item.id} item={item} onViewDetail={onViewDetail} />
       ))}
     </div>
   );

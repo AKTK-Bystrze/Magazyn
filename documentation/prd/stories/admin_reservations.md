@@ -37,7 +37,7 @@
   - Modify dates
   - Cancel reservation
 - List displays:
-  - User name and email
+  - User name
   - Equipment name and type
   - Start and end dates
   - Status
@@ -50,22 +50,6 @@
 ---
 
 
-## US-025: Admin - Change Reservation Status
-
-**Description:** As an admin, I want to change reservation status so I can manage the rental workflow.
-
-**Acceptance Criteria:**
-
-- Admin can change status of any reservation (except final states RETURNED and DENIED)
-- Admin can change RENTED to RETURNED
-- Admin can change PENDING to DENIED
-- Status changes are saved immediately
-- **Status changes are automatically logged in audit trail**
-- Status change history is recorded
-- User is notified of status changes (if applicable)
-- Credits are adjusted if status change affects credit balance
-
----
 
 ## US-027: Admin - View Overdue Items
 
@@ -85,25 +69,7 @@
 
 ---
 
-## US-028: Admin - Bulk Status Changes
 
-**Description:** As an admin, I want to perform bulk status changes so I can efficiently manage multiple reservations.
-
-**Acceptance Criteria:**
-
-- Admin can select multiple reservations from list
-- Admin can choose new status to apply
-- System shows preview of affected reservations
-- Preview displays:
-  - Number of reservations to be changed
-  - List of affected reservations
-  - New status
-- Admin must confirm bulk operation
-- System applies status change to all selected reservations
-- System displays success message with count of changes
-- Credits are adjusted for all affected reservations if applicable
-
----
 
 ## US-048: Handle Bulk Operation Errors
 

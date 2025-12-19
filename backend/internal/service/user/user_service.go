@@ -27,6 +27,9 @@ type UserService interface {
 
 	// UpdateUser updates an existing user profile with the given inputs.
 	UpdateUser(ctx context.Context, id string, req types.UpdateUserRequest) (*types.UserResponse, error)
+
+	// BulkAdjustCredits adjusts credit balance for multiple users and records history.
+	BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error
 }
 
 // ============================================================================
@@ -34,18 +37,33 @@ type UserService interface {
 // ============================================================================
 
 type userService struct {
-	repo     repository.UserRepository
-	authRepo repository.AuthRepository
+	repo       repository.UserRepository
+	authRepo   repository.AuthRepository
+	creditRepo repository.CreditHistoryRepository
 }
 
 // NewUserService creates a new instance of UserService.
-func NewUserService(repo repository.UserRepository, authRepo repository.AuthRepository) UserService {
+func NewUserService(repo repository.UserRepository, authRepo repository.AuthRepository, creditRepo repository.CreditHistoryRepository) UserService {
 	return &userService{
-		repo:     repo,
-		authRepo: authRepo,
+		repo:       repo,
+		authRepo:   authRepo,
+		creditRepo: creditRepo,
 	}
 }
 
+// BulkAdjustCredits adjusts credit balance for multiple users and records history atomically.
+func (s *userService) BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error {
+	logger.Infof(ctx, "Bulk adjusting credits for %d users by %d", len(req.UserIDs), req.Amount)
+
+	err := s.repo.BulkAdjustCreditsAtomic(ctx, req.UserIDs, adminID, req.Amount, req.Reason, req.Description)
+	if err != nil {
+		logger.Errorf(ctx, "Bulk adjustment failed: %v", err)
+		return types.NewInternalError("Failed to adjust credits", err)
+	}
+
+	return nil
+}
+ 
 // GetProfile retrieves the profile of a user by ID.
 func (s *userService) GetProfile(ctx context.Context, id string) (*types.UserResponse, error) {
 	logger.Infof(ctx, "Fetching user profile for ID: %s", id)

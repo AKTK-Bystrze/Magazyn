@@ -393,6 +393,44 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 	}, nil
 }
 
+// BulkUpdateStatusAtomic updates the status of multiple reservations and handles refunds atomically via RPC
+func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids []string, status string, adminID string) (*types.BulkStatusUpdateResponse, error) {
+	// Use Service Role to bypass RLS and perform credit adjustments
+	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
+	if err != nil {
+		return nil, types.NewInternalError("Failed to create service client", err)
+	}
+
+	params := map[string]interface{}{
+		"p_reservation_ids": ids,
+		"p_status":          status,
+		"p_admin_id":        adminID,
+	}
+
+	jsonStr := client.Rpc("bulk_update_reservations_status", "", params)
+
+	if jsonStr == "" {
+		return nil, types.NewInternalError("RPC returned empty response", nil)
+	}
+
+	// Check for error in response
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
+		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
+	}
+
+	if msg, ok := rawResponse["message"]; ok {
+		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
+	}
+
+	var result types.BulkStatusUpdateResponse
+	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+		return nil, types.NewInternalError("Failed to parse bulk update result: "+jsonStr, err)
+	}
+
+	return &result, nil
+}
+
 // BulkUpdateReservations updates the status of multiple reservations
 func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids []string, status string) error {
 	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)

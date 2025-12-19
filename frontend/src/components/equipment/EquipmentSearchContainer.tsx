@@ -3,6 +3,7 @@ import { useEquipmentSearch } from "@/hooks/use-equipment-search";
 import { useEquipmentList, useEquipmentTypes } from "@/hooks/use-equipment-api";
 import { FilterSidebar } from "./FilterSidebar";
 import { EquipmentGrid } from "./EquipmentGrid";
+import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { CartIndicator } from "./CartIndicator";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +13,9 @@ import {
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
-import { Filter } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import type { EquipmentSearchItem } from "@/types";
 
 /**
  * Props for EquipmentSearchContainer component
@@ -21,6 +23,8 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 interface EquipmentSearchContainerProps {
   /** Custom checkout path for cart navigation. Defaults to user checkout route. */
   checkoutPath?: string;
+  /** Whether the user has admin permissions */
+  isAdmin?: boolean;
 }
 
 /**
@@ -30,9 +34,11 @@ interface EquipmentSearchContainerProps {
  * @param props - Component props
  * @returns Equipment search interface with filters, grid, and cart indicator
  */
-function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProps) {
+function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSearchContainerProps) {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
+  const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(null);
 
   // Fetch equipment types - automatically transformed to camelCase
   const { data: types = [] } = useEquipmentTypes();
@@ -55,11 +61,16 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
 
   const handleReset = () => {
     updateFilter("search", "");
-    updateFilter("type_id", undefined);
+    updateFilter("typeId", undefined);
     updateFilter("status", undefined);
     updateFilter("availableFrom", undefined);
     updateFilter("availableTo", undefined);
     // Page automatically resets to 1 in hook
+  };
+
+  const handleViewDetail = (item: EquipmentSearchItem) => {
+    setSelectedEquipment(item);
+    setIsDetailsOpen(true);
   };
 
   return (
@@ -83,6 +94,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
               types={types}
               onFilterChange={updateFilter}
               onReset={handleReset}
+              showDates={!isAdmin}
             />
           </SheetContent>
         </Sheet>
@@ -97,6 +109,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
             types={types} 
             onFilterChange={updateFilter}
             onReset={handleReset}
+            showDates={!isAdmin}
           />
         </div>
       </aside>
@@ -116,6 +129,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
             items={equipment} 
             isLoading={isLoading}
             error={error as Error | null}
+            onViewDetail={handleViewDetail}
           />
         </div>
 
@@ -145,13 +159,20 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
         )}
       </main>
 
-      {/* Floating Cart Indicator */}
       <CartIndicator
         checkoutPath={checkoutPath}
         filterDates={{
           availableFrom: filters.availableFrom,
           availableTo: filters.availableTo,
         }}
+      />
+
+      {/* Equipment Details Sheet */}
+      <EquipmentDetailsSheet
+        isOpen={isDetailsOpen}
+        equipment={selectedEquipment}
+        onClose={() => setIsDetailsOpen(false)}
+        readOnly={!isAdmin}
       />
     </div>
   );
@@ -163,6 +184,8 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
 interface EquipmentSearchContainerWithProviderProps {
   /** Custom checkout path for cart navigation */
   checkoutPath?: string;
+  /** Whether the user has admin permissions */
+  isAdmin?: boolean;
 }
 
 /**
@@ -186,10 +209,11 @@ interface EquipmentSearchContainerWithProviderProps {
  */
 export default function EquipmentSearchContainerWithProvider({
   checkoutPath,
+  isAdmin,
 }: EquipmentSearchContainerWithProviderProps) {
   return (
     <QueryProvider>
-      <EquipmentSearchContainer checkoutPath={checkoutPath} />
+      <EquipmentSearchContainer checkoutPath={checkoutPath} isAdmin={isAdmin} />
     </QueryProvider>
   );
 }

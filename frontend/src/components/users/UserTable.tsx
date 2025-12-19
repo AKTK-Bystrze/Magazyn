@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RoleBadge } from "./RoleBadge";
 import { Pencil } from "lucide-react";
 import { ICON_SIZE_SM, SKELETON_ROW_COUNT } from "@/lib/config/constants";
@@ -27,6 +28,12 @@ interface UserTableProps {
   isSuperAdmin: boolean;
   /** Callback when edit button is clicked */
   onEdit: (user: UserListItem) => void;
+  /** IDs of currently selected users */
+  selectedIds?: string[];
+  /** Callback when a user row checkbox is clicked */
+  onToggleSelect?: (userId: string) => void;
+  /** Callback when the header checkbox is clicked */
+  onToggleSelectAll?: (checked: boolean, ids: string[]) => void;
 }
 
 /**
@@ -35,6 +42,7 @@ interface UserTableProps {
 function SkeletonRow() {
   return (
     <TableRow>
+      <TableCell><Skeleton className="h-4 w-4" /></TableCell>
       <TableCell><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-32 mt-1 md:hidden" /></TableCell>
       <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-40" /></TableCell>
       <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
@@ -73,6 +81,9 @@ export function UserTable({
   isLoading,
   isSuperAdmin,
   onEdit,
+  selectedIds = [],
+  onToggleSelect,
+  onToggleSelectAll,
 }: UserTableProps) {
   const handleEdit = React.useCallback(
     (user: UserListItem) => () => {
@@ -81,11 +92,23 @@ export function UserTable({
     [onEdit]
   );
 
+  const allSelected = users.length > 0 && selectedIds.length === users.length;
+  const ids = users.map((u) => u.id);
+
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
+            {isSuperAdmin && (
+              <TableHead className="w-[40px]">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={(checked) => onToggleSelectAll?.(checked, ids)}
+                  aria-label="Select all users"
+                />
+              </TableHead>
+            )}
             <TableHead>Username</TableHead>
             <TableHead className="hidden md:table-cell">Email</TableHead>
             <TableHead className="hidden lg:table-cell text-right">Credits</TableHead>
@@ -106,7 +129,20 @@ export function UserTable({
           ) : (
             // User rows
             users.map((user) => (
-              <TableRow key={user.id} className={`hover:bg-muted/50 ${!user.isEnabled ? 'opacity-60 bg-muted/20' : ''}`}>
+              <TableRow
+                key={user.id}
+                className={`hover:bg-muted/50 ${!user.isEnabled ? "opacity-60 bg-muted/20" : ""
+                  } ${selectedIds.includes(user.id) ? "bg-muted/30" : ""}`}
+              >
+                {isSuperAdmin && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.includes(user.id)}
+                      onCheckedChange={() => onToggleSelect?.(user.id)}
+                      aria-label={`Select ${user.username}`}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>
                   <div className="font-medium">{user.username}</div>
                   <div className="text-xs text-muted-foreground md:hidden">{user.email}</div>

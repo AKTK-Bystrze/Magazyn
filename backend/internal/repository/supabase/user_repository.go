@@ -157,3 +157,50 @@ func (r *userRepository) Update(ctx context.Context, id string, profile types.Pu
 
 	return &updatedProfile, nil
 }
+
+// BulkAdjustCreditsAtomic adjusts credits for multiple users atomically via RPC.
+func (r *userRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
+	// Build params for RPC
+	params := map[string]interface{}{
+		"p_user_ids":    userIDs,
+		"p_admin_id":    adminID,
+		"p_amount":      amount,
+		"p_reason":      reason,
+		"p_description": description,
+	}
+
+	// Log the RPC call parameters for debugging
+	logger.Debugf(ctx, "BulkAdjustCredits RPC params: user_ids=%v, admin_id=%s, amount=%d, reason=%s, description=%s",
+		userIDs, adminID, amount, reason, description)
+
+	// Use service role key since this is a protected operation typically called by Admin/System
+	// or ensure the RPC itself is protected. In our case, the service role bypasses RLS.
+	// We want to use the service role key to ensure the adjustment succeeds regardless of user RLS.
+	jsonStr := r.client.Rpc("bulk_adjust_user_credits", "", params)
+
+	// Log the raw RPC response
+	logger.Debugf(ctx, "BulkAdjustCredits RPC response: %q", jsonStr)
+
+	// For void-returning functions, empty string or "null" is success
+	if jsonStr == "" || jsonStr == "null" {
+		logger.Infof(ctx, "BulkAdjustCredits RPC completed successfully for %d users", len(userIDs))
+		return nil
+	}
+
+	// Check for error in response (Supabase returns error as JSON with "message" field)
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err == nil {
+		if msg, ok := rawResponse["message"]; ok {
+			logger.Errorf(ctx, "BulkAdjustCredits RPC error message: %v", msg)
+			return types.NewInternalError(fmt.Sprintf("RPC Error: %v", msg), nil)
+		}
+		if code, ok := rawResponse["code"]; ok {
+			logger.Errorf(ctx, "BulkAdjustCredits RPC error code: %v, details: %v", code, rawResponse)
+			return types.NewInternalError(fmt.Sprintf("RPC Error (code %v): %v", code, rawResponse), nil)
+		}
+	}
+
+	// If we got here with a non-empty response that's not an error, log it and proceed
+	logger.Debugf(ctx, "BulkAdjustCredits RPC returned non-error response: %s", jsonStr)
+	return nil
+}

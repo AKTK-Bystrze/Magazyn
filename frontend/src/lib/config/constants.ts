@@ -227,6 +227,7 @@ export const EQUIPMENT_FILTER_UI_STRINGS = {
   STATUS_ALL: "All",
   STATUS_AVAILABLE: "Available",
   STATUS_BROKEN: "Broken/Unavailable",
+  STATUS_BLOCKED: "Blocked",
   RESET_FILTERS: "Reset Filters",
   CLEAR_DATES: "Clear",
 } as const;

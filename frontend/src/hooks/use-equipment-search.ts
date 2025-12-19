@@ -11,7 +11,7 @@ export function useEquipmentSearch() {
     const params = new URLSearchParams(window.location.search);
     return {
       search: params.get('search') || undefined,
-      type_id: params.get('type_id') || undefined,
+      typeId: params.get('type_id') || undefined,
       status: (params.get('status') as EquipmentStatus) || undefined,
       page: Number(params.get('page')) || DEFAULT_PAGE,
       perPage: Number(params.get('per_page')) || DEFAULT_PAGE_SIZE,
@@ -24,7 +24,7 @@ export function useEquipmentSearch() {
   const updateUrl = useCallback((newFilters: EquipmentSearchParams) => {
     const params = new URLSearchParams();
     if (newFilters.search) params.set('search', newFilters.search);
-    if (newFilters.type_id) params.set('type_id', newFilters.type_id);
+    if (newFilters.typeId) params.set('type_id', newFilters.typeId);
     if (newFilters.status) params.set('status', newFilters.status);
     if (newFilters.page > 1) params.set('page', String(newFilters.page));
     if (newFilters.availableFrom) params.set('available_from', newFilters.availableFrom);

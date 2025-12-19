@@ -29,6 +29,9 @@ type ReservationRepository interface {
 	// BulkUpdateReservations updates the status of multiple reservations
 	BulkUpdateReservations(ctx context.Context, ids []string, status string) error
 
+	// BulkUpdateStatusAtomic updates the status of multiple reservations and handles refunds atomically via RPC
+	BulkUpdateStatusAtomic(ctx context.Context, ids []string, status string, adminID string) (*types.BulkStatusUpdateResponse, error)
+
 	// GetOverlappingReservations checks if there are any approved/pending reservations for the given equipment in the date range.
 	// Used for availability checking.
 	GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error)

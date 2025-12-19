@@ -220,14 +220,15 @@ func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err := h.service.BulkUpdate(ctx, cmd)
+	adminID := common.GetUserIDFromContext(r)
+	response, err := h.service.BulkUpdate(ctx, cmd, adminID)
 	if err != nil {
 		logger.Errorf(ctx, "BulkUpdate error: %v", err)
 		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	common.RespondJSON(ctx, w, http.StatusOK, map[string]string{"message": "Bulk update successful"})
+	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
 // HandleDashboardStats GET /reservations/dashboard

@@ -5,10 +5,16 @@ import { UserTable } from "./UserTable";
 import { UserFilters } from "./UserFilters";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { EditUserDialog } from "./EditUserDialog";
+import { AdjustCreditsDialog } from "./AdjustCreditsDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
-import { AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  UserPlus,
+  Coins,
+} from "lucide-react";
 import {
   ICON_SIZE_SM,
   MESSAGE_AUTO_DISMISS_MS,
@@ -38,15 +44,25 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     resetFilters,
     createUser,
     updateUser,
+    bulkAdjustCredits,
     isMutating,
   } = useUsers();
 
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [adjustCreditsOpen, setAdjustCreditsOpen] = React.useState(false);
   const [selectedUser, setSelectedUser] = React.useState<UserListItem | null>(
     null
   );
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+
+  // Reset selection when users change (filters, page, etc)
+  React.useEffect(() => {
+    setSelectedIds([]);
+  }, [data?.users]);
 
   // Feedback states
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
@@ -130,6 +146,35 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     [setFilter]
   );
 
+  // Handlers for selection
+  const handleToggleSelect = React.useCallback((id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }, []);
+
+  const handleToggleSelectAll = React.useCallback(
+    (checked: boolean, ids: string[]) => {
+      setSelectedIds(checked ? ids : []);
+    },
+    []
+  );
+
+  // Handlers for adjust credits
+  const handleAdjustCreditsClick = React.useCallback(() => {
+    setAdjustCreditsOpen(true);
+  }, []);
+
+  const handleAdjustCreditsSubmit = React.useCallback(
+    async (command: any) => {
+      await bulkAdjustCredits(command);
+      setSuccessMessage(`Credits adjusted for ${selectedIds.length} users.`);
+      setAdjustCreditsOpen(false);
+      setSelectedIds([]);
+    },
+    [bulkAdjustCredits, selectedIds.length]
+  );
+
   // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
     filters.role !== DEFAULT_ROLE_FILTER ||
@@ -146,10 +191,22 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
           </p>
         </div>
         {isSuperAdmin && (
-          <Button onClick={handleCreateClick} className="self-start sm:self-auto">
-            <UserPlus className={ICON_SIZE_SM + " mr-2"} />
-            Create User
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center gap-2 self-start sm:self-auto">
+            {selectedIds.length > 0 && (
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 border-primary/20 hover:bg-primary/5 w-full sm:w-auto"
+                onClick={handleAdjustCreditsClick}
+              >
+                <Coins className={ICON_SIZE_SM} />
+                Adjust Credits ({selectedIds.length})
+              </Button>
+            )}
+            <Button onClick={handleCreateClick} className="flex items-center gap-2 w-full sm:w-auto">
+              <UserPlus className={ICON_SIZE_SM + " mr-2"} />
+              Create User
+            </Button>
+          </div>
         )}
       </div>
 
@@ -186,6 +243,9 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         isLoading={isLoading}
         isSuperAdmin={isSuperAdmin}
         onEdit={handleEditClick}
+        selectedIds={selectedIds}
+        onToggleSelect={handleToggleSelect}
+        onToggleSelectAll={handleToggleSelectAll}
       />
 
       {/* Pagination */}
@@ -213,6 +273,17 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
           isSubmitting={isMutating}
           onClose={handleEditDialogClose}
           onSubmit={handleEditSubmit}
+        />
+      )}
+
+      {/* Adjust Credits Dialog */}
+      {isSuperAdmin && (
+        <AdjustCreditsDialog
+          isOpen={adjustCreditsOpen}
+          isSubmitting={isMutating}
+          userIds={selectedIds}
+          onClose={() => setAdjustCreditsOpen(false)}
+          onSubmit={handleAdjustCreditsSubmit}
         />
       )}
     </div>

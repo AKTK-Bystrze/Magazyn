@@ -24,6 +24,11 @@ func (m *MockCreditHistoryRepository) GetCreditHistory(ctx context.Context, user
 	return args.Get(0).([]types.CreditHistoryItemDTO), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MockCreditHistoryRepository) Create(ctx context.Context, item types.PublicCreditHistoryInsert) error {
+	args := m.Called(ctx, item)
+	return args.Error(0)
+}
+
 // MockUserRepository mocks repository.UserRepository
 type MockUserRepository struct {
 	mock.Mock

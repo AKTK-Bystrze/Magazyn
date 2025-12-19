@@ -22,4 +22,7 @@ type UserRepository interface {
 
 	// Update updates an existing user profile record
 	Update(ctx context.Context, id string, profile types.PublicProfilesUpdate) (*types.PublicProfilesSelect, error)
+
+	// BulkAdjustCreditsAtomic adjusts credits for multiple users atomically via RPC
+	BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error
 }

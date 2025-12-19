@@ -12,9 +12,10 @@ import { FEEDBACK_DISPLAY_DURATION_MS } from "@/lib/config/constants";
 
 interface EquipmentCardProps {
   item: EquipmentSearchItem;
+  onViewDetail?: (item: EquipmentSearchItem) => void;
 }
 
-export function EquipmentCard({ item }: EquipmentCardProps) {
+export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
   const [isInCart, setIsInCart] = React.useState(false);
   const [justAdded, setJustAdded] = React.useState(false);
 
@@ -158,12 +159,13 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
               )}
             </Button>
           )}
-          <a
-            href={`/equipment/${item.id}`}
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onViewDetail?.(item)}
           >
             Details
-          </a>
+          </Button>
         </div>
       </CardFooter>
     </Card>

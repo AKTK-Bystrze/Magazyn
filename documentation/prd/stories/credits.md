@@ -2,20 +2,7 @@
 
 [← Back to Index](../index.md)
 
----
 
-## US-003: View Credit Balance
-
-**Description:** As a user, I want to see my current credit balance on every page so I always know how much I have available.
-
-**Acceptance Criteria:**
-
-- Credit balance is displayed in the navbar/header on all pages
-- Credit balance updates immediately after any credit transaction
-- Credit balance is accurate and reflects all recent changes
-- Credit balance is visible on mobile and desktop views
-
----
 
 ## US-004: View Credit History
 

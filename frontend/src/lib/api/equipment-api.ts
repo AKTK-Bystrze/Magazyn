@@ -35,7 +35,7 @@ export const equipmentApi = {
 
     if (params) {
       if (params.search) queryParams.search = params.search;
-      if (params.type_id) queryParams.type_id = params.type_id;
+      if (params.typeId) queryParams.type_id = params.typeId;
       if (params.status) queryParams.status = params.status;
       if (params.page !== undefined) queryParams.page = params.page;
       if (params.perPage !== undefined) queryParams.per_page = params.perPage;

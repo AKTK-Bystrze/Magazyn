@@ -42,3 +42,11 @@ type UpdateUserRequest struct {
 	CreditBalance *int32  `json:"credit_balance" binding:"omitempty,min=0"`
 	IsEnabled     *bool   `json:"is_enabled"`
 }
+
+// BulkAdjustCreditsRequest defines the structure for adjusting credits for multiple users.
+type BulkAdjustCreditsRequest struct {
+	UserIDs     []string `json:"user_ids" binding:"required,min=1"`
+	Amount      int32    `json:"amount" binding:"required"`
+	Reason      string   `json:"reason" binding:"required"`
+	Description string   `json:"description"`
+}

@@ -48,6 +48,20 @@ export function ReservationDetailsView({
   const { reservation, isLoading, error, updateStatus, isUpdating } =
     useReservationDetail(reservationId);
 
+  // Update breadcrumb label when data is loaded
+  React.useEffect(() => {
+    if (reservation) {
+      const label = `${formatDate(reservation.startDate)} - ${formatDate(reservation.endDate)}: ${reservation.equipmentName}`;
+      const event = new CustomEvent("magazyn:breadcrumb-label", {
+        detail: {
+          path: window.location.pathname,
+          label: label,
+        },
+      });
+      window.dispatchEvent(event);
+    }
+  }, [reservation]);
+
   const handleStatusChange = async (
     newStatus: Enums<"reservation_status">
   ) => {

@@ -61,7 +61,7 @@ func main() {
 	// Initialize Services
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, appState.Config.SupabaseURL)
-	userService := userservice.NewUserService(userRepo, authRepo)
+	userService := userservice.NewUserService(userRepo, authRepo, creditRepo)
 	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
 	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)
 	creditService := creditservice.NewCreditHistoryService(creditRepo, userRepo)
@@ -94,6 +94,7 @@ func main() {
 	mux.Handle("POST /users", authMiddleware(authmiddleware.RequireRoles(auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleCreateUser))))
 	mux.Handle("GET /users/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleGetProfile))))
 	mux.Handle("PATCH /users/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleUpdateUser))))
+	mux.Handle("POST /users/bulk-adjust-credits", authMiddleware(authmiddleware.RequireRoles(auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleBulkAdjustCredits))))
 
 	mux.Handle("GET /equipment", authMiddleware(http.HandlerFunc(equipmentHandler.HandleList)))
 	mux.Handle("GET /equipment-types", authMiddleware(http.HandlerFunc(equipmentHandler.HandleListEquipmentTypes)))

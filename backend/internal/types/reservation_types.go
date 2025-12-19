@@ -108,6 +108,12 @@ type UpdateReservationCommand struct {
 	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=PENDING RENTED RETURNED DENIED CANCELLED"`
 }
 
+// BulkStatusUpdateResponse represents the response after a bulk status update
+type BulkStatusUpdateResponse struct {
+	UpdatedCount int32 `json:"updated_count"`
+	RefundCount  int32 `json:"refund_count"`
+}
+
 // BulkUpdateReservationsCommand represents the request body for bulk status update
 type BulkUpdateReservationsCommand struct {
 	ReservationIDs []string `json:"reservation_ids" validate:"required,min=1,dive,uuid"`
