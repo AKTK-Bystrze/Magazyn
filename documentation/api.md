@@ -42,8 +42,8 @@ The following tree illustrates the available REST endpoints exposed by the Go Ba
 │       ├── PATCH                   # Update equipment (Admin)
 │       ├── DELETE                  # Archive equipment (Admin)
 │       ├── GET /availability       # Check availability for dates
-│       └── GET /maintenance-logs   # Get maintenance history
-│           └── POST                # Add maintenance log (Admin)
+│       └── /maintenance-logs
+│           └── POST                # Add maintenance log (All users)
 │
 ├── /reservations
 │   ├── GET  /                      # List reservations
