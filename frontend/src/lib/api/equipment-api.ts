@@ -43,14 +43,7 @@ export const equipmentApi = {
       if (params.availableTo) queryParams.available_to = params.availableTo;
     }
 
-    // DEBUG: Log API request parameters
-    console.log('[DEBUG] equipmentApi.list - Input params:', params);
-    console.log('[DEBUG] equipmentApi.list - Query params sent to API:', queryParams);
-
     const response = await api.get('/api/equipment', Object.keys(queryParams).length > 0 ? queryParams : undefined);
-
-    // DEBUG: Log response
-    console.log('[DEBUG] equipmentApi.list - Response equipment count:', (response.data as { equipment?: unknown[] })?.equipment?.length);
 
     // Transform backend response to frontend format
     return transformEquipmentListResponse(response.data);
@@ -131,34 +124,41 @@ export const equipmentApi = {
   },
 
   /**
-   * Get equipment details
+   * Get equipment details with maintenance logs
+   * Returns both equipment data and maintenance logs from a single API call
+   * per the equipment-details-reuse-guide.md
+   * 
+   * @param id - Equipment ID
+   * @returns Promise with equipment details and maintenance logs
+   */
+  async getDetailsWithLogs(id: string): Promise<{
+    equipment: EquipmentSearchItem;
+    maintenanceLogs: MaintenanceLog[];
+  }> {
+    const response = await api.get(`/api/equipment/${id}`);
+
+    // Transform equipment
+    const { equipment } = transformEquipmentListResponse({
+      equipment: [response.data],
+      pagination: { page: 1, per_page: 1, total: 1, total_pages: 1 }
+    });
+
+    // Extract and transform maintenance logs
+    const data = response.data as { maintenance_logs?: MaintenanceLogDTO[] };
+    const maintenanceLogs = (data.maintenance_logs ?? []).map(transformMaintenanceLog);
+
+    return { equipment: equipment[0], maintenanceLogs };
+  },
+
+  /**
+   * Get equipment details only (without maintenance logs)
    * 
    * @param id - Equipment ID
    * @returns Promise with equipment details
    */
   async getDetails(id: string): Promise<EquipmentSearchItem> {
-    const response = await api.get(`/api/equipment/${id}`);
-
-    // Transform single equipment response
-    const { equipment } = transformEquipmentListResponse({
-      equipment: [response.data],
-      pagination: { page: 1, per_page: 1, total: 1, total_pages: 1 }
-    });
-    return equipment[0];
-  },
-
-  /**
-   * Get maintenance logs for equipment
-   * 
-   * @param equipmentId - Equipment ID
-   * @returns Promise with array of maintenance logs
-   */
-  async getMaintenanceLogs(equipmentId: string): Promise<MaintenanceLog[]> {
-    const response = await api.get(`/api/equipment/${equipmentId}/maintenance-logs`);
-
-    // Transform backend response to frontend format
-    const data = response.data as { maintenance_logs?: MaintenanceLogDTO[] };
-    return (data.maintenance_logs ?? []).map(transformMaintenanceLog);
+    const { equipment } = await this.getDetailsWithLogs(id);
+    return equipment;
   },
 
   /**
@@ -181,12 +181,18 @@ export const equipmentApi = {
 
   /**
    * Get reservation history for equipment
+   * Uses GET /reservations?equipment_id={id}&scope=all instead of separate endpoint
+   * per the equipment-details-reuse-guide.md
    * 
    * @param equipmentId - Equipment ID
    * @returns Promise with array of reservation history items
    */
   async getReservationHistory(equipmentId: string): Promise<EquipmentReservationHistoryItem[]> {
-    const response = await api.get(`/api/equipment/${equipmentId}/reservations`);
+    const response = await api.get('/api/reservations', {
+      equipment_id: equipmentId,
+      scope: 'all',
+      per_page: 50,
+    });
 
     // Transform backend response to frontend format
     const data = response.data as { reservations?: ReservationHistoryDTO[] };
@@ -224,6 +230,7 @@ function transformMaintenanceLog(dto: MaintenanceLogDTO): MaintenanceLog {
 
 // =============================================================================
 // Reservation History DTO and Transformer
+// Uses the standard reservations endpoint response format
 // =============================================================================
 
 interface ReservationHistoryDTO {
@@ -233,12 +240,15 @@ interface ReservationHistoryDTO {
   start_date: string;
   end_date: string;
   status: string;
-  credits: number;
+  credit_cost: number;
   created_at: string;
 }
 
 import type { EquipmentReservationHistoryItem } from '@/types';
 
+/**
+ * Transforms reservation from reservations endpoint to equipment history format
+ */
 function transformReservationHistory(dto: ReservationHistoryDTO): EquipmentReservationHistoryItem {
   return {
     id: dto.id,
@@ -247,7 +257,7 @@ function transformReservationHistory(dto: ReservationHistoryDTO): EquipmentReser
     startDate: dto.start_date,
     endDate: dto.end_date,
     status: dto.status as EquipmentReservationHistoryItem["status"],
-    creditCost: dto.credits,
+    creditCost: dto.credit_cost,
     createdAt: dto.created_at,
   };
 }

@@ -11,10 +11,10 @@ import { QUERY_STALE_TIME_MS } from "@/lib/config/constants";
 
 /**
  * Query key factory for equipment details
+ * Note: Maintenance logs are included in the details query (single API call)
  */
 const QUERY_KEYS = {
   details: (id: string) => ["equipment", id, "details"] as const,
-  maintenanceLogs: (id: string) => ["equipment", id, "maintenance-logs"] as const,
   reservations: (id: string) => ["equipment", id, "reservations"] as const,
 };
 
@@ -55,32 +55,20 @@ export function useEquipmentDetails(
 ): UseEquipmentDetailsReturn {
   const queryClient = useQueryClient();
 
-  // Fetch equipment details
+  // Fetch equipment details with maintenance logs (single API call)
   const {
-    data: equipment,
+    data: detailsData,
     isLoading,
     error,
     refetch: refetchDetails,
   } = useQuery({
     queryKey: QUERY_KEYS.details(equipmentId ?? ""),
-    queryFn: () => equipmentApi.getDetails(equipmentId!),
+    queryFn: () => equipmentApi.getDetailsWithLogs(equipmentId!),
     enabled: !!equipmentId,
     staleTime: QUERY_STALE_TIME_MS,
   });
 
-  // Fetch maintenance logs
-  const {
-    data: maintenanceLogsData,
-    isLoading: isLogsLoading,
-    refetch: refetchLogs,
-  } = useQuery({
-    queryKey: QUERY_KEYS.maintenanceLogs(equipmentId ?? ""),
-    queryFn: () => equipmentApi.getMaintenanceLogs(equipmentId!),
-    enabled: !!equipmentId,
-    staleTime: QUERY_STALE_TIME_MS,
-  });
-
-  // Fetch reservation history
+  // Fetch reservation history (separate endpoint)
   const {
     data: reservationHistoryData,
     isLoading: isReservationsLoading,
@@ -97,10 +85,7 @@ export function useEquipmentDetails(
     mutationFn: (command: CreateMaintenanceLogCommand) =>
       equipmentApi.addMaintenanceLog(equipmentId!, command),
     onSuccess: () => {
-      // Invalidate logs and details to refetch
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.maintenanceLogs(equipmentId ?? ""),
-      });
+      // Invalidate details query (which now includes maintenance logs)
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.details(equipmentId ?? ""),
       });
@@ -118,16 +103,15 @@ export function useEquipmentDetails(
   // Refetch all
   const refetch = React.useCallback(() => {
     refetchDetails();
-    refetchLogs();
     refetchReservations();
-  }, [refetchDetails, refetchLogs, refetchReservations]);
+  }, [refetchDetails, refetchReservations]);
 
   return {
-    equipment,
-    maintenanceLogs: maintenanceLogsData ?? [],
+    equipment: detailsData?.equipment,
+    maintenanceLogs: detailsData?.maintenanceLogs ?? [],
     reservationHistory: reservationHistoryData ?? [],
     isLoading,
-    isLogsLoading,
+    isLogsLoading: isLoading, // Logs now load with details
     isReservationsLoading,
     error: error as Error | null,
     addMaintenanceLog,

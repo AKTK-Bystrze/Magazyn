@@ -42,8 +42,10 @@ describe('useEquipmentSearch', () => {
       page: 1,
       perPage: 25,
       search: undefined,
-      type_id: undefined,
+      typeId: undefined,
       status: undefined,
+      availableFrom: undefined,
+      availableTo: undefined,
     });
   });
 
@@ -53,10 +55,12 @@ describe('useEquipmentSearch', () => {
 
     expect(result.current.filters).toEqual({
       search: 'drill',
-      type_id: '123',
+      typeId: '123',
       status: 'ok',
       page: 2,
       perPage: 25,
+      availableFrom: undefined,
+      availableTo: undefined,
     });
   });
 

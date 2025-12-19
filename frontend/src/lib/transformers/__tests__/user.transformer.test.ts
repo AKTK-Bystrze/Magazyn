@@ -171,6 +171,7 @@ describe('transformUserListItem', () => {
       username: 'testuser',
       role: 'user',
       creditBalance: 100,
+      isEnabled: true,
       createdAt: '2024-01-15T10:30:00Z',
     });
   });

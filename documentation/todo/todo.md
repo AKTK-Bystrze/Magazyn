@@ -1,5 +1,6 @@
 ## In Progress
 - equipment manager view optimization
+- maintenance logs implementation
 
 ## Equipment Views
 - Equipment manager + viewer component reuse improved
@@ -26,6 +27,8 @@
 - calendar view
 - notifications
 - events - reservation events
+- links back and forth between reservation and equipment, look for others
+- add maintenance logs when returning equipment. All users should be able to add maintenance logs.
 
 ## Refactoring Needed
 1. New user creation should be admin-only (disable auto-creation)
