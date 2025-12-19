@@ -1,6 +1,5 @@
 ## In Progress
 - equipment manager view optimization
-- credits bulk operation frontend integration testing
 
 ## Equipment Views
 - Equipment manager + viewer component reuse improved
