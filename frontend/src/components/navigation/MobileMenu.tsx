@@ -57,7 +57,7 @@ export function MobileMenu({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-80">
+      <SheetContent side="right" className="w-80" data-testid="mobile-menu">
         <SheetHeader className="text-left">
           <SheetTitle>Navigation</SheetTitle>
         </SheetHeader>
@@ -92,6 +92,7 @@ export function MobileMenu({
                   "hover:bg-accent hover:text-accent-foreground",
                   isActive && "bg-accent text-accent-foreground"
                 )}
+                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 {item.label}
               </a>

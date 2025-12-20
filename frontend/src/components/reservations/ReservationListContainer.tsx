@@ -349,7 +349,7 @@ function ReservationListContainerInner({
   // Moved dialogReservation definition up to hook usage
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="reservation-list-container">
       {/* Success Message */}
       {successMessage && (
         <Alert className="border-green-500 bg-green-50 dark:bg-green-950">

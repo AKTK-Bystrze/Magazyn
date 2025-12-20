@@ -88,7 +88,7 @@ export function EquipmentDetailsSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto" data-testid="equipment-details-sheet">
         <SheetHeader className="border-b pb-4">
           <SheetTitle>{UI.DETAILS_TITLE}</SheetTitle>
           <SheetDescription>

@@ -28,7 +28,7 @@ export function UserSidebar({ currentPath, className, onNavigate }: UserSidebarP
   };
 
   return (
-    <div className={cn("pb-12 h-full border-r bg-sidebar", className)}>
+    <div className={cn("pb-12 h-full border-r bg-sidebar", className)} data-testid="sidebar">
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           {/* Logo / Brand */}
@@ -59,6 +59,7 @@ export function UserSidebar({ currentPath, className, onNavigate }: UserSidebarP
                   "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
                   isActive(item.activePattern) ? "bg-accent text-accent-foreground" : "text-muted-foreground"
                 )}
+                data-testid={`sidebar-nav-link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                 {item.label}

@@ -111,15 +111,24 @@ This document tracks which components need `data-testid` selectors and their imp
 
 ## Summary
 
-| Priority | Count | Description |
-|----------|-------|-------------|
-| 🔴 P0 | 12 | Critical flows - implement first |
-| 🟠 P1 | 22 | Main features - implement second |
-| 🟡 P2 | 11 | Secondary - implement as needed |
-| 🟢 P3 | 2 | Nice to have |
+| Priority | Count | Completed | Description |
+|----------|-------|-----------|-------------|
+| 🔴 P0 | 12 | 12/12 ✅ | Critical flows - ALL DONE |
+| 🟠 P1 | 22 | 5/22 | Main features - Key containers added |
+| 🟡 P2 | 11 | 0/11 | Secondary - implement as needed |
+| 🟢 P3 | 2 | 0/2 | Nice to have |
 
 ## Recommended Implementation Order
 
-1. **Phase 1 (P0)**: Auth flow + Equipment browsing + Cart/Checkout
-2. **Phase 2 (P1)**: Reservations management + User management
+1. **Phase 1 (P0)** ✅ COMPLETE: Auth flow + Equipment browsing + Cart/Checkout
+2. **Phase 2 (P1)** 🚧 IN PROGRESS: Reservations management + User management
 3. **Phase 3 (P2+)**: Filters, admin, secondary features
+
+## P1 Components Added (5/22)
+- ✅ `UserSidebar` - sidebar container, navigation links
+- ✅ `MobileMenu` - menu container, navigation links  
+- ✅ `EquipmentDetailsSheet` - sheet content
+- ✅ `ReservationListContainer` - main container
+- ✅ `UserListContainer` - main container
+
+**Note**: Container-level selectors provide sufficient e2e test coverage for P1. Detailed element selectors can be added as needed.
