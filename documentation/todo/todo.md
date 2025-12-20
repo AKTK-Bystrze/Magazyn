@@ -1,6 +1,3 @@
-## In progress
-- credit history view needed
-
 ## Equipment Views
 - Equipment manager + viewer component reuse improved
 - Both share FilterSidebar (horizontal for manager, vertical for browse)
@@ -23,6 +20,7 @@
 
 ## Future Work
 - credits request feature
+- users credits history view for admin
 - favorite items
 - calendar view
 - notifications

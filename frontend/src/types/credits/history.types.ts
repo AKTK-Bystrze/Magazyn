@@ -17,8 +17,8 @@ export type CreditHistoryItem = {
   reason: Enums<"credit_transaction_reason">;
   description: string | null;
   reservationId: string | null;
-  adminId: string | null;
-  adminUsername: string | null; // from admin_id → profiles.username
+  authorId: string | null; // ID of who performed the action
+  authorUsername: string | null; // from author_id → profiles.username
   createdAt: string;
 };
 

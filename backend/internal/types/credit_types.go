@@ -2,16 +2,16 @@ package types
 
 // CreditHistoryItemDTO represents a single credit transaction record with enriched user data.
 type CreditHistoryItemDTO struct {
-	ID            string  `json:"id"`
-	UserID        string  `json:"user_id"`
-	Username      string  `json:"username"`
-	Amount        int32   `json:"amount"`
-	Reason        string  `json:"reason"`
-	Description   *string `json:"description"`
-	ReservationID *string `json:"reservation_id"`
-	AdminID       *string `json:"admin_id"`
-	AdminUsername *string `json:"admin_username"`
-	CreatedAt     string  `json:"created_at"`
+	ID             string  `json:"id"`
+	UserID         string  `json:"user_id"`
+	Username       string  `json:"username"`
+	Amount         int32   `json:"amount"`
+	Reason         string  `json:"reason"`
+	Description    *string `json:"description"`
+	ReservationID  *string `json:"reservation_id"`
+	AuthorID       *string `json:"author_id"`
+	AuthorUsername *string `json:"author_username"`
+	CreatedAt      string  `json:"created_at"`
 }
 
 // CreditHistoryResponse represents the paginated credit history response.

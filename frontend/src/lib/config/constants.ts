@@ -509,7 +509,7 @@ export const CREDIT_HISTORY_UI_STRINGS = {
   TABLE_REASON: "Reason",
   TABLE_DESCRIPTION: "Description",
   TABLE_AMOUNT: "Amount",
-  TABLE_ADMIN: "Admin",
+  TABLE_AUTHOR: "By",
   REASON_RESERVATION_CHARGE: "Reservation Charge",
   REASON_RESERVATION_REFUND: "Reservation Refund",
   REASON_RESERVATION_ADJUSTMENT: "Reservation Adjustment",

@@ -13,23 +13,30 @@ import (
 )
 
 type creditHistoryRepository struct {
-	client *supabase.Client
+	client      *supabase.Client
+	supabaseURL string
+	supabaseKey string
 }
 
 // NewCreditHistoryRepository creates a new Supabase implementation of CreditHistoryRepository.
-func NewCreditHistoryRepository(client *supabase.Client) repository.CreditHistoryRepository {
+func NewCreditHistoryRepository(client *supabase.Client, url, key string) repository.CreditHistoryRepository {
 	return &creditHistoryRepository{
-		client: client,
+		client:      client,
+		supabaseURL: url,
+		supabaseKey: key,
 	}
 }
 
 // GetCreditHistory retrieves a paginated list of credit history items.
 func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *string, page, perPage int) ([]types.CreditHistoryItemDTO, int64, error) {
+	// Use authenticated client for RLS enforcement
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
 	// Build the query
 	// We select all fields from credit_history, plus the username from the associated user profile
-	// and the username from the associated admin profile (if any).
-	query := r.client.From(constants.TableCreditHistory).
-		Select("*, user:profiles!user_id(username), admin:profiles!admin_id(username)", "", false)
+	// and the username from the author profile (who performed the action).
+	query := client.From(constants.TableCreditHistory).
+		Select("*, user:profiles!user_id(username), author:profiles!author_id(username)", "exact", false)
 
 	// Apply UserID filter if provided
 	if userID != nil {
@@ -38,7 +45,7 @@ func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *
 
 	// Calculate pagination
 	offset := (page - 1) * perPage
-	query = query.Range(offset, offset+perPage-1, "exact")
+	query = query.Range(offset, offset+perPage-1, "")
 
 	// Order by created_at descending (newest first)
 	query = query.Order("created_at", &postgrest.OrderOpts{Ascending: false})
@@ -55,9 +62,9 @@ func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *
 		User struct {
 			Username string `json:"username"`
 		} `json:"user"`
-		Admin *struct {
+		Author *struct {
 			Username string `json:"username"`
-		} `json:"admin"`
+		} `json:"author"`
 	}
 
 	if err := json.Unmarshal(data, &rawData); err != nil {
@@ -75,12 +82,12 @@ func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *
 			Reason:        item.Reason,
 			Description:   item.Description,
 			ReservationID: item.ReservationID,
-			AdminID:       item.AdminID,
+			AuthorID:      item.AuthorID,
 			CreatedAt:     item.CreatedAt,
 		}
 
-		if item.Admin != nil {
-			dto.AdminUsername = &item.Admin.Username
+		if item.Author != nil {
+			dto.AuthorUsername = &item.Author.Username
 		}
 
 		result[i] = dto

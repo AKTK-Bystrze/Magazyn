@@ -14,6 +14,7 @@
  */
 import BaseLayout from './BaseLayout.astro';
 import { UserSidebar } from '@/components/navigation/UserSidebar';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { UserHeader } from '@/components/navigation/UserHeader';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 
@@ -31,13 +32,20 @@ const { title, description } = Astro.props;
 const user = Astro.locals.user;
 const sessionInfo = Astro.locals.sessionInfo;
 const currentPath = Astro.url.pathname;
+
+// Determine if user is admin
+const isAdmin = sessionInfo?.role === 'admin' || sessionInfo?.role === 'super_admin';
 ---
 
 <BaseLayout title={title} description={description}>
   <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
     <div class="!hidden border-r bg-muted/40 lg:!block">
       <div class="flex h-full max-h-screen flex-col gap-2">
-        <UserSidebar client:load currentPath={currentPath} />
+        {isAdmin ? (
+          <AdminSidebar client:load currentPath={currentPath} />
+        ) : (
+          <UserSidebar client:load currentPath={currentPath} />
+        )}
       </div>
     </div>
 

@@ -19,8 +19,8 @@ interface CreditHistoryItemDTO {
   reason: string;
   description: string | null;
   reservation_id: string | null;
-  admin_id: string | null;
-  admin_username: string | null;
+  author_id: string | null;
+  author_username: string | null;
   created_at: string;
 }
 
@@ -57,8 +57,8 @@ export function transformCreditHistoryItem(dto: CreditHistoryItemDTO): CreditHis
     reason: dto.reason as CreditHistoryItem["reason"],
     description: dto.description,
     reservationId: dto.reservation_id,
-    adminId: dto.admin_id,
-    adminUsername: dto.admin_username,
+    authorId: dto.author_id,
+    authorUsername: dto.author_username,
     createdAt: dto.created_at,
   };
 }

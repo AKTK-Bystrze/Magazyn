@@ -16,7 +16,8 @@ import {
   Wrench,
   CreditCard,
   Users,
-  BarChart
+  BarChart,
+  Package
 } from 'lucide-react';
 
 /**
@@ -82,7 +83,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   {
     label: "Browse Equipment",
     href: ROUTES.PROTECTED.ADMIN_EQUIPMENT,
-    icon: Wrench,
+    icon: Package,
     activePattern: /^\/admin\/equipment$/,
   },
   {

@@ -54,6 +54,7 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
               <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_DATE}</TableHead>
               <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_REASON}</TableHead>
               <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION}</TableHead>
+              <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR}</TableHead>
               <TableHead className="text-right">{CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT}</TableHead>
             </TableRow>
           </TableHeader>
@@ -63,6 +64,7 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell className="text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
               </TableRow>
             ))}
@@ -88,6 +90,7 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
             <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_DATE}</TableHead>
             <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_REASON}</TableHead>
             <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION}</TableHead>
+            <TableHead>{CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR}</TableHead>
             <TableHead className="text-right">{CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT}</TableHead>
           </TableRow>
         </TableHeader>
@@ -106,11 +109,9 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
                 </TableCell>
                 <TableCell className="max-w-md truncate">
                   {item.description || "-"}
-                  {item.adminUsername && (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      ({CREDIT_HISTORY_UI_STRINGS.TABLE_ADMIN}: {item.adminUsername})
-                    </span>
-                  )}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {item.authorUsername || "-"}
                 </TableCell>
                 <TableCell className={`text-right font-medium ${isNegative ? "text-destructive" : "text-primary"}`}>
                   {isNegative ? "" : "+"}{item.amount}

@@ -127,7 +127,7 @@ type PublicReservationsUpdate struct {
 }
 
 type PublicCreditHistorySelect struct {
-	AdminID       *string `json:"admin_id"`
+	AuthorID      *string `json:"author_id"`
 	Amount        int32   `json:"amount"`
 	CreatedAt     string  `json:"created_at"`
 	Description   *string `json:"description"`
@@ -138,7 +138,7 @@ type PublicCreditHistorySelect struct {
 }
 
 type PublicCreditHistoryInsert struct {
-	AdminID       *string `json:"admin_id,omitempty"`
+	AuthorID      *string `json:"author_id,omitempty"`
 	Amount        int32   `json:"amount"`
 	CreatedAt     *string `json:"created_at,omitempty"`
 	Description   *string `json:"description,omitempty"`
@@ -149,7 +149,7 @@ type PublicCreditHistoryInsert struct {
 }
 
 type PublicCreditHistoryUpdate struct {
-	AdminID       *string `json:"admin_id,omitempty"`
+	AuthorID      *string `json:"author_id,omitempty"`
 	Amount        *int32  `json:"amount,omitempty"`
 	CreatedAt     *string `json:"created_at,omitempty"`
 	Description   *string `json:"description,omitempty"`

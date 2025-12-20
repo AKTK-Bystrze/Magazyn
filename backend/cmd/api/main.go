@@ -56,7 +56,7 @@ func main() {
 	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey)
 	calendarRepo := supabaserepo.NewCalendarRepository(appState.SupabaseClient)
 	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
-	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient)
+	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 
 	// Initialize Services
 	authService := authservice.NewAuthService(authRepo)
