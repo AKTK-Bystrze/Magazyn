@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">72.56% </span>
+                <span class="strong">72.07% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>82/113</span>
+                <span class='fraction'>80/111</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">53.84% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>14/28</span>
+                <span class='fraction'>14/26</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">72.56% </span>
+                <span class="strong">72.07% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>82/113</span>
+                <span class='fraction'>80/111</span>
             </div>
         
             
@@ -220,7 +220,14 @@
 <a name='L155'></a><a href='#L155'>155</a>
 <a name='L156'></a><a href='#L156'>156</a>
 <a name='L157'></a><a href='#L157'>157</a>
-<a name='L158'></a><a href='#L158'>158</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -287,9 +294,6 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
@@ -382,13 +386,18 @@ import { supabase } from '@/lib/supabase';
 import { getUserSession } from '@/lib/auth/session-utils';
 import { ROUTES } from '@/lib/config/routes';
 import { RedirectManager } from '@/lib/auth/redirect-manager';
+import { normalizePath } from '@/lib/auth/url-utils';
 import {
   setAuthCookie,
   removeAuthCookie,
   waitForCookieAndRedirect,
-  AUTH_COOKIE_NAME
 } from '@/lib/auth/cookie-utils';
 &nbsp;
+/**
+ * Component that listens for Supabase auth state changes
+ * Handles session management, redirects, and cookie synchronization
+ * Must be placed at the root of the application (in Layout)
+ */
 export const AuthListener: React.FC = () =&gt; {
   // Use React state instead of global variable for redirect tracking
   const [isRedirectInProgress, setIsRedirectInProgress] = useState(false);
@@ -444,19 +453,16 @@ export const AuthListener: React.FC = () =&gt; {
               );
 &nbsp;
               if (redirectTo) {
-                const currentPath = window.location.pathname.replace(/\/$/, ''<span class="branch-0 cbranch-no" title="branch not covered" >) || '/';</span>
-                const targetPath = redirectTo.replace(/\/$/, ''<span class="branch-0 cbranch-no" title="branch not covered" >) || '/';</span>
-&nbsp;
-                if (currentPath !== targetPath) {
+                if (normalizePath(window.location.pathname) !== normalizePath(redirectTo)) {
                   // Check for redirect loops
-                  if (!RedirectManager.canRedirect(currentPath, redirectTo)) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >                    console.error('🚨 Redirect loop detected', { from: currentPath, to: redirectTo });</span>
+                  if (!RedirectManager.canRedirect(window.location.pathname, redirectTo)) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >                    console.error('🚨 Redirect loop detected', { from: window.location.pathname, to: redirectTo });</span>
 <span class="cstat-no" title="statement not covered" >                    setIsRedirectInProgress(false);</span>
 <span class="cstat-no" title="statement not covered" >                    return;</span>
 <span class="cstat-no" title="statement not covered" >                  }</span>
 &nbsp;
-                  RedirectManager.recordRedirect(currentPath, redirectTo);
-                  console.log(`🔗 Redirect: ${currentPath} → ${redirectTo}`);
+                  RedirectManager.recordRedirect(window.location.pathname, redirectTo);
+                  console.log(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
                   await waitForCookieAndRedirect(data.session.access_token, redirectTo);
                 }
               }
@@ -541,7 +547,7 @@ export const AuthListener: React.FC = () =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-09T14:06:10.491Z
+                at 2025-12-20T08:39:06.395Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

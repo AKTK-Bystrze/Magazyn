@@ -5,7 +5,6 @@
 - Equipment details sheet: readOnly prop for users, editable for admins
 
 ## Code Quality
-- logout and login improvements
 - cleanup
 - API simplification
 - documentation
@@ -14,8 +13,8 @@
 
 ## Deployment
 - containerization
-- deployment
 - e2e tests
+- deployment
 - unit tests
 
 ## Future Work
@@ -27,6 +26,7 @@
 - events - reservation events
 - links back and forth between reservation and equipment, look for others
 - add maintenance logs when returning equipment. All users should be able to add maintenance logs.
+- use mockery for testing
 
 ## Refactoring Needed
 1. New user creation should be admin-only (disable auto-creation)
