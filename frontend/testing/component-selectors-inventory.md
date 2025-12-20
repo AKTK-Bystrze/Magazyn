@@ -17,8 +17,8 @@ This document tracks which components need `data-testid` selectors and their imp
 
 | Component | Priority | Status | Key Selectors |
 |-----------|----------|--------|---------------|
-| `LoginForm.tsx` | 🔴 P0 | ⬜ TODO | `login-form`, `login-email-input`, `login-submit-button` |
-| `MagicLinkSent.tsx` | 🔴 P0 | ⬜ TODO | `magic-link-sent-message` |
+| `LoginForm.tsx` | 🔴 P0 | ✅ DONE | `login-form`, `login-email-input`, `login-submit-button`, `login-error-alert` |
+| `MagicLinkSent.tsx` | 🔴 P0 | ✅ DONE | `magic-link-sent-container`, `magic-link-sent-email` |
 | `AuthListener.tsx` | 🟢 P3 | ⬜ TODO | (no visible UI) |
 
 ---
@@ -27,8 +27,8 @@ This document tracks which components need `data-testid` selectors and their imp
 
 | Component | Priority | Status | Key Selectors |
 |-----------|----------|--------|---------------|
-| `TopNavBar.tsx` | 🔴 P0 | ⬜ TODO | `topbar`, `nav-logo`, `nav-mobile-menu-button` |
-| `UserMenu.tsx` | 🔴 P0 | ⬜ TODO | `user-menu-trigger`, `user-menu-dropdown`, `logout-button` |
+| `TopNavBar.tsx` | 🔴 P0 | ✅ DONE | `topbar`, `nav-logo`, `nav-mobile-menu-button`, `nav-credits-badge` |
+| `UserMenu.tsx` | 🔴 P0 | ✅ DONE | `user-menu-trigger`, `user-menu-dropdown`, `logout-button` |
 | `UserSidebar.tsx` | 🟠 P1 | ⬜ TODO | `sidebar`, `sidebar-nav-link-{name}` |
 | `MobileMenu.tsx` | 🟠 P1 | ⬜ TODO | `mobile-menu`, `mobile-nav-link-{name}` |
 | `Breadcrumbs.tsx` | 🟡 P2 | ⬜ TODO | `breadcrumbs` |
@@ -40,12 +40,12 @@ This document tracks which components need `data-testid` selectors and their imp
 
 | Component | Priority | Status | Key Selectors |
 |-----------|----------|--------|---------------|
-| `EquipmentSearchContainer.tsx` | 🔴 P0 | ⬜ TODO | `equipment-search-container` |
-| `EquipmentGrid.tsx` | 🔴 P0 | ⬜ TODO | `equipment-grid` |
-| `EquipmentCard.tsx` | 🔴 P0 | ⬜ TODO | `equipment-card-{id}`, `equipment-add-to-cart-button-{id}` |
+| `EquipmentSearchContainer.tsx` | 🔴 P0 | ✅ DONE | `equipment-search-container` |
+| `EquipmentGrid.tsx` | 🔴 P0 | ✅ DONE | `equipment-grid`, `equipment-grid-empty` |
+| `EquipmentCard.tsx` | 🔴 P0 | ✅ DONE | `equipment-card-{id}`, `equipment-add-to-cart-{id}`, `equipment-details-button-{id}`, `equipment-status-badge-{id}` |
 | `EquipmentDetailsSheet.tsx` | 🟠 P1 | ⬜ TODO | `equipment-details-sheet`, `equipment-details-close-button` |
 | `FilterSidebar.tsx` | 🟠 P1 | ⬜ TODO | `equipment-filter-sidebar`, `category-filter`, `status-filter` |
-| `CartIndicator.tsx` | 🔴 P0 | ⬜ TODO | `cart-indicator`, `cart-item-count` |
+| `CartIndicator.tsx` | 🔴 P0 | ✅ DONE | `cart-indicator`, `cart-item-count` |
 | `EquipmentManagerContainer.tsx` | 🟠 P1 | ⬜ TODO | `equipment-manager-container` |
 | `EquipmentTable.tsx` | 🟠 P1 | ⬜ TODO | `equipment-table`, `equipment-row-{id}` |
 | `AddEquipmentDialog.tsx` | 🟠 P1 | ⬜ TODO | `add-equipment-dialog`, `equipment-name-input`, `equipment-submit-button` |
@@ -58,10 +58,10 @@ This document tracks which components need `data-testid` selectors and their imp
 
 | Component | Priority | Status | Key Selectors |
 |-----------|----------|--------|---------------|
-| `ReservationCartView.tsx` | 🔴 P0 | ⬜ TODO | `reservation-cart`, `checkout-button` |
-| `DateRangePicker.tsx` | 🔴 P0 | ⬜ TODO | `date-range-picker`, `start-date-input`, `end-date-input` |
-| `CostEstimator.tsx` | 🔴 P0 | ⬜ TODO | `cost-estimator`, `total-cost-display` |
-| `ConfirmationModal.tsx` | 🔴 P0 | ⬜ TODO | `reservation-confirmation-modal`, `confirm-reservation-button` |
+| `ReservationCartView.tsx` | 🔴 P0 | ✅ DONE | `reservation-cart`, `checkout-button`, `cart-empty-state` |
+| `DateRangePicker.tsx` | 🔴 P0 | ✅ DONE | `date-range-picker`, `start-date-input`, `end-date-input` |
+| `CostEstimator.tsx` | 🔴 P0 | ✅ DONE | `cost-estimator`, `total-cost-display` |
+| `ConfirmationModal.tsx` | 🔴 P0 | ✅ DONE | `reservation-confirmation-modal`, `confirm-reservation-button`, `cancel-confirmation-button` |
 | `ReservationListContainer.tsx` | 🟠 P1 | ⬜ TODO | `reservation-list-container` |
 | `ReservationCard.tsx` | 🟠 P1 | ⬜ TODO | `reservation-card-{id}` |
 | `ReservationDetailsView.tsx` | 🟠 P1 | ⬜ TODO | `reservation-details-view` |

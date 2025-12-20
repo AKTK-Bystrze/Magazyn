@@ -52,7 +52,7 @@ export function DateRangePicker({
     startDate && endDate ? calculateDays(startDate, endDate) : null;
 
   return (
-    <div className={compact ? "space-y-3" : "space-y-4"}>
+    <div className={compact ? "space-y-3" : "space-y-4"} data-testid="date-range-picker">
       {title && (
         <div className="flex items-center justify-between">
           <h2 className={compact ? "text-lg font-semibold" : "text-2xl font-bold"}>{title}</h2>
@@ -88,6 +88,7 @@ export function DateRangePicker({
                 ? "border-destructive focus-visible:ring-destructive"
                 : ""
             }
+            data-testid="start-date-input"
           />
           {validationErrors.startDate && (
             <p id={`${startDateId}-error`} className="text-sm text-destructive">
@@ -114,6 +115,7 @@ export function DateRangePicker({
                 ? "border-destructive focus-visible:ring-destructive"
                 : ""
             }
+            data-testid="end-date-input"
           />
           {validationErrors.endDate && (
             <p id={`${endDateId}-error`} className="text-sm text-destructive">

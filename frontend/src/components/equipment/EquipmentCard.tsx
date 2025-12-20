@@ -77,7 +77,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-md">
+    <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-md" data-testid={`equipment-card-${item.id}`}>
       <div className="relative">
         <AspectRatio ratio={4 / 3} className="bg-muted">
           {item.imagePath ? (
@@ -98,6 +98,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
         </AspectRatio>
         <Badge
           className={cn("absolute top-2 right-2 text-white hover:bg-opacity-80 active:bg-opacity-80", statusColor)}
+          data-testid={`equipment-status-badge-${item.id}`}
         >
           {statusLabel}
         </Badge>
@@ -135,6 +136,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
                 justAdded && "bg-green-600 hover:bg-green-600 text-white",
                 !justAdded && isInCart && "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
               )}
+              data-testid={`equipment-add-to-cart-${item.id}`}
             >
               {justAdded ? (
                 <>
@@ -163,6 +165,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
             variant="outline"
             size="sm"
             onClick={() => onViewDetail?.(item)}
+            data-testid={`equipment-details-button-${item.id}`}
           >
             Details
           </Button>

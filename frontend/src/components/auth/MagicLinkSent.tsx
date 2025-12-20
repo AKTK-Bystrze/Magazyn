@@ -8,7 +8,10 @@ interface MagicLinkSentProps {
 
 export const MagicLinkSent: React.FC<MagicLinkSentProps> = ({ onReset, email }) => {
   return (
-    <div className="flex flex-col items-center justify-center space-y-4 text-center animate-in fade-in zoom-in duration-300">
+    <div
+      className="flex flex-col items-center justify-center space-y-4 text-center animate-in fade-in zoom-in duration-300"
+      data-testid="magic-link-sent-container"
+    >
       <div className="rounded-full bg-green-100 p-3 text-green-600 dark:bg-green-900/30 dark:text-green-400">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +31,7 @@ export const MagicLinkSent: React.FC<MagicLinkSentProps> = ({ onReset, email }) 
       </div>
       <h2 className="text-2xl font-bold tracking-tight">Check your email</h2>
       <p className="text-muted-foreground text-sm max-w-xs">
-        We sent a login link to <span className="font-medium text-foreground">{email}</span>.
+        We sent a login link to <span className="font-medium text-foreground" data-testid="magic-link-sent-email">{email}</span>.
         <br />
         Click the link to sign in.
       </p>

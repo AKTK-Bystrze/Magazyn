@@ -57,11 +57,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
   return (
     <div className="grid gap-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
+            data-testid="login-email-input"
             placeholder="name@example.com"
             type="email"
             autoCapitalize="none"
@@ -73,11 +74,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           />
         </div>
         {error && (
-          <Alert className="border-red-500/50 text-red-600 dark:border-red-500 dark:text-red-500 bg-red-50 dark:bg-red-900/10">
+          <Alert
+            className="border-red-500/50 text-red-600 dark:border-red-500 dark:text-red-500 bg-red-50 dark:bg-red-900/10"
+            data-testid="login-error-alert"
+          >
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <Button disabled={isLoading} className="w-full">
+        <Button disabled={isLoading} className="w-full" data-testid="login-submit-button">
           {isLoading && (
             <svg
               className="mr-2 h-4 w-4 animate-spin"

@@ -30,7 +30,7 @@ export function CartItemList({
 }: CartItemListProps) {
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-lg">
+      <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-lg" data-testid="cart-empty-state">
         <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
         <h3 className="text-xl font-semibold text-foreground mb-2">
           Your cart is empty

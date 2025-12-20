@@ -240,7 +240,7 @@ export function ReservationCartView({
   const isEmpty = cartState.items.length === 0;
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8 max-w-7xl">
+    <div className="container mx-auto py-8 px-4 space-y-8 max-w-7xl" data-testid="reservation-cart">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Complete Reservation</h1>
         {!isEmpty && (
@@ -352,6 +352,7 @@ export function ReservationCartView({
               className="w-full text-lg font-semibold" 
               onClick={handleProceed}
               disabled={!validation.isValid || isChecking || (isAdmin && !selectedUserId)}
+              data-testid="checkout-button"
             >
               {isChecking ? (
                 <>Checking Availability...</>

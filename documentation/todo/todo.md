@@ -14,6 +14,7 @@
 ## Deployment
 - containerization
 - e2e tests
+  - forontend testing
 - deployment
 - unit tests
 

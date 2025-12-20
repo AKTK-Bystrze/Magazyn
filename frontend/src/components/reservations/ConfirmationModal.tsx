@@ -74,6 +74,7 @@ export function ConfirmationModal({
           zIndex: Z_INDEX_MODAL_CONTENT,
           maxHeight: MODAL_MAX_HEIGHT,
         }}
+        data-testid="reservation-confirmation-modal"
       >
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
@@ -177,6 +178,7 @@ export function ConfirmationModal({
               onClick={onClose}
               disabled={isSubmitting}
               className="flex-1"
+              data-testid="cancel-confirmation-button"
             >
               Cancel
             </Button>
@@ -184,6 +186,7 @@ export function ConfirmationModal({
               onClick={onConfirm}
               disabled={isSubmitting}
               className="flex-1"
+              data-testid="confirm-reservation-button"
             >
               {isSubmitting ? (
                 <>

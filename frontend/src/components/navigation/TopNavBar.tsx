@@ -43,12 +43,13 @@ export function TopNavBar({ user, role, currentPath, creditBalance }: TopNavBarP
   const isAdmin = role === 'admin' || role === 'super_admin';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" data-testid="topbar">
       <div className="container mx-auto flex h-14 items-center px-4">
         {/* Logo */}
         <a 
           href={isAdmin ? '/admin' : '/dashboard'} 
           className="flex items-center gap-2 mr-6"
+          data-testid="nav-logo"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +76,7 @@ export function TopNavBar({ user, role, currentPath, creditBalance }: TopNavBarP
         <div className="flex items-center gap-2">
           {/* Credit Balance (User only) */}
           {!isAdmin && creditBalance !== undefined && (
-            <Badge variant="secondary" className="hidden sm:flex">
+            <Badge variant="secondary" className="hidden sm:flex" data-testid="nav-credits-badge">
               Credits: {creditBalance}
             </Badge>
           )}
@@ -95,6 +96,7 @@ export function TopNavBar({ user, role, currentPath, creditBalance }: TopNavBarP
             className="md:hidden"
             onClick={() => setIsMobileMenuOpen(true)}
             aria-label="Open menu"
+            data-testid="nav-mobile-menu-button"
           >
             <Menu className="h-5 w-5" />
           </Button>

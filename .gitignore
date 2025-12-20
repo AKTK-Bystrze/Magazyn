@@ -50,3 +50,9 @@ supabase/functions/**/.env
 /nginx
 
 frontend/.husky
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

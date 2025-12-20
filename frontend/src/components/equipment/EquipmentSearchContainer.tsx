@@ -74,7 +74,7 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]" data-testid="equipment-search-container">
       {/* Mobile Filter Trigger */}
       <div className="lg:hidden flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Equipment</h1>

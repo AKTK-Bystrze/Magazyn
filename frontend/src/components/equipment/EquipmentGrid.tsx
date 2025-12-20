@@ -38,7 +38,7 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/20 rounded-lg">
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/20 rounded-lg" data-testid="equipment-grid-empty">
         <div className="rounded-full bg-muted p-4 mb-4">
           {/* Icon placeholder */}
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-muted-foreground">
@@ -52,7 +52,7 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="equipment-grid">
       {items.map((item) => (
         <EquipmentCard key={item.id} item={item} onViewDetail={onViewDetail} />
       ))}

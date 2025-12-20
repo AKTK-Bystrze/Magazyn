@@ -53,7 +53,7 @@ export function CostEstimator({
   const hasInsufficientCredits = costBreakdown.remainingBalance < 0;
 
   return (
-    <Card>
+    <Card data-testid="cost-estimator">
       <CardHeader>
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <CreditCard className={ICON_SIZE_MD} />
@@ -103,6 +103,7 @@ export function CostEstimator({
               className={
                 hasInsufficientCredits ? "text-destructive" : "text-primary"
               }
+              data-testid="total-cost-display"
             >
               {costBreakdown.remainingBalance} credits
             </span>

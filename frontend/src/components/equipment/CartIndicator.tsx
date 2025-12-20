@@ -73,7 +73,7 @@ export function CartIndicator({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 duration-300" data-testid="cart-indicator">
       <a href={checkoutPath} onClick={handleCheckoutClick}>
         <Button
           size="lg"
@@ -81,7 +81,7 @@ export function CartIndicator({
         >
           <div className="relative">
             <ShoppingCart className="h-5 w-5" />
-            <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+            <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" data-testid="cart-item-count">
               {itemCount}
             </span>
           </div>
