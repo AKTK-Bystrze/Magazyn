@@ -264,8 +264,8 @@ test.describe('[Feature Name]', () => {
 | `npm run e2e` | Run all e2e tests |
 | `npm run e2e:ui` | Run with Playwright UI |
 | `npm run e2e:debug` | Run in debug mode |
-| `npm run e2e -- <file>` | Run specific test file |
-| `npm run e2e -- auth-diagnostic.spec.ts` | Run auth diagnostics |
+| `cd frontend && npm run e2e -- <file>` | Run specific test file |
+| `cd frontend && npm run e2e -- auth-diagnostic.spec.ts` | Run auth diagnostics |
 
 ---
 
@@ -323,7 +323,8 @@ jobs:
 ### Run Diagnostics
 
 ```bash
-npm run e2e -- auth-diagnostic.spec.ts
+```bash
+cd frontend && npm run e2e -- auth-diagnostic.spec.ts
 ```
 
 ---

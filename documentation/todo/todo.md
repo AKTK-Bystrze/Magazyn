@@ -46,3 +46,5 @@
 13. Return dialog should show current reservation dates prefilled
 14. maintenance double log
 15. in create user initial credits balance have leading zero that cant be removed
+16. remove RENTED status and rename ongoing to ACTIVE
+17. Overdue reservations status and logic
