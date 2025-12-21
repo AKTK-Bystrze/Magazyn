@@ -1,6 +1,5 @@
-## in porogres
-chat: local supabase setup
-chat: configure project for e2e tests
+## In Progress
+  - e2e tests
 
 ## Equipment Views
 - Equipment manager + viewer component reuse improved
@@ -17,8 +16,6 @@ chat: configure project for e2e tests
 
 ## Deployment
 - containerization
-- e2e tests
-  - forontend testing
 - deployment
 - unit tests
 

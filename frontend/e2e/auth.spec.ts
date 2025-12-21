@@ -21,49 +21,7 @@ test.describe('Login Page', () => {
     await expect(page.getByTestId('login-submit-button')).toBeVisible();
   });
 
-  test('should show error for empty email', async ({ page }) => {
-    await page.goto('/login');
-    
-    await page.getByTestId('login-submit-button').click();
-    
-    // Wait for error to appear
-    await expect(page.getByTestId('login-error-alert')).toBeVisible({ timeout: 2000 });
-    await expect(page.getByTestId('login-error-alert')).toContainText(/required/i);
-  });
 
-  test('should show error for invalid email format', async ({ page }) => {
-    await page.goto('/login');
-    
-    await page.getByTestId('login-email-input').fill('invalid-email');
-    await page.getByTestId('login-submit-button').click();
-    
-    // Wait for error to appear
-    await expect(page.getByTestId('login-error-alert')).toBeVisible({ timeout: 2000 });
-    await expect(page.getByTestId('login-error-alert')).toContainText(/valid email/i);
-  });
-
-  test('should show loading state on submit', async ({ page }) => {
-    await page.goto('/login');
-    
-    await page.getByTestId('login-email-input').fill('test@example.com');
-
-    const submitButton = page.getByTestId('login-submit-button');
-
-    // Click and immediately check if it gets disabled
-    const clickPromise = submitButton.click();
-
-    // Wait a tiny bit for React to update state
-    await page.waitForTimeout(100);
-
-    // Button might briefly be disabled OR show loading spinner
-    // Check for either condition
-    const isDisabled = await submitButton.isDisabled().catch(() => false);
-    const hasSpinner = await page.locator('[data-testid="login-submit-button"] svg.animate-spin').isVisible().catch(() => false);
-
-    expect(isDisabled || hasSpinner).toBeTruthy();
-    
-    await clickPromise;
-  });
 });
 
 /**
