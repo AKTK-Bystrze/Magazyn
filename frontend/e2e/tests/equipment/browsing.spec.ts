@@ -1,4 +1,5 @@
-import { test, expect } from './fixtures';
+import { test, expect } from '../../fixtures';
+import { TEST_IDS } from '../../constants';
 
 /**
  * Equipment browsing e2e tests.
@@ -14,10 +15,10 @@ test.describe('Equipment Browsing', () => {
     await authenticatedPage.goto('/equipment');
 
     // Wait for the equipment search container to load
-    await expect(authenticatedPage.getByTestId('equipment-search-container')).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_SEARCH_CONTAINER)).toBeVisible();
 
     // Check if equipment grid is visible (not empty state)
-    const equipmentGrid = authenticatedPage.getByTestId('equipment-grid');
+    const equipmentGrid = authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID);
     await expect(equipmentGrid).toBeVisible();
   });
 
@@ -25,7 +26,7 @@ test.describe('Equipment Browsing', () => {
     await authenticatedPage.goto('/equipment');
 
     // Wait for grid to load
-    await expect(authenticatedPage.getByTestId('equipment-grid')).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
 
     // Find the first equipment card
     const firstCard = authenticatedPage.locator('[data-testid^="equipment-card-"]').first();
@@ -49,12 +50,12 @@ test.describe('Equipment Browsing', () => {
   test('should show equipment count or empty state', async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/equipment');
 
-    await expect(authenticatedPage.getByTestId('equipment-search-container')).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_SEARCH_CONTAINER)).toBeVisible();
 
     // Wait for EITHER the grid OR the empty state to appear
     // This handles the loading state implicitly
-    const grid = authenticatedPage.getByTestId('equipment-grid');
-    const emptyState = authenticatedPage.getByTestId('equipment-grid-empty');
+    const grid = authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID);
+    const emptyState = authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID_EMPTY);
 
     const result = await Promise.race([
       grid.waitFor({ state: 'visible' }).then(() => 'grid'),
@@ -86,7 +87,7 @@ test.describe('Equipment Browsing', () => {
       // This ensures the click was processed and state updated
       await expect(addToCartBtn).toHaveText(/Added|In Cart/);
 
-      const cartIndicator = authenticatedPage.getByTestId('cart-indicator');
+      const cartIndicator = authenticatedPage.getByTestId(TEST_IDS.CART_INDICATOR);
       await expect(cartIndicator).toBeVisible();
     } else {
       test.skip(true, 'No available equipment to add to cart, skipping indicator check');
@@ -135,7 +136,7 @@ test.describe('Equipment Browsing', () => {
     }
 
     // Get initial cart count
-    const cartCount = authenticatedPage.getByTestId('cart-item-count');
+    const cartCount = authenticatedPage.getByTestId(TEST_IDS.CART_ITEM_COUNT);
     const initialCountVisible = await cartCount.isVisible().catch(() => false);
     const initialCount = initialCountVisible
       ? parseInt((await cartCount.textContent()) || '0')
@@ -155,8 +156,8 @@ test.describe('Equipment Browsing', () => {
     await authenticatedPage.goto('/equipment');
 
     // Wait for page to load
-    await expect(authenticatedPage.getByTestId('equipment-search-container')).toBeVisible();
-    await expect(authenticatedPage.getByTestId('equipment-grid')).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_SEARCH_CONTAINER)).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
 
     // Ensure we have an item in cart so indicator is visible
     const addToCartBtn = authenticatedPage.locator('[data-testid^="equipment-add-to-cart-"]').first();
@@ -168,7 +169,7 @@ test.describe('Equipment Browsing', () => {
       // If we can't add anything, we might already have things in cart from previous tests 
       // or we skip if strictly needed. Let's try to proceed only if indicator is visible or strictly add one.
       // Better safe: try to find indicator, if not visible, skip.
-      const indicatorVisible = await authenticatedPage.getByTestId('cart-indicator').isVisible();
+      const indicatorVisible = await authenticatedPage.getByTestId(TEST_IDS.CART_INDICATOR).isVisible();
       if (!indicatorVisible) {
         test.skip(true, 'Cannot test cart navigation without items in cart');
         return;
@@ -176,7 +177,7 @@ test.describe('Equipment Browsing', () => {
     }
 
     // Click cart indicator
-    const cartIndicator = authenticatedPage.getByTestId('cart-indicator');
+    const cartIndicator = authenticatedPage.getByTestId(TEST_IDS.CART_INDICATOR);
     await expect(cartIndicator).toBeVisible();
 
     await cartIndicator.click();
@@ -185,7 +186,7 @@ test.describe('Equipment Browsing', () => {
     await expect(authenticatedPage).toHaveURL(/\/(cart|checkout|reservation)/);
 
     // Verify reservation cart is visible
-    const reservationCart = authenticatedPage.getByTestId('reservation-cart');
+    const reservationCart = authenticatedPage.getByTestId(TEST_IDS.RESERVATION_CART);
     await expect(reservationCart).toBeVisible();
   });
 });

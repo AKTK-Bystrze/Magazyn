@@ -79,11 +79,15 @@ sequenceDiagram
 
 ```
 frontend/e2e/
-├── fixtures/index.ts        # Auth fixtures (authenticatedPage)
-├── helpers/auth.helper.ts   # Auth helper functions
-├── auth.spec.ts             # Login page + authenticated tests
-├── auth-diagnostic.spec.ts  # Comprehensive auth diagnostics
-└── equipment.spec.ts        # Equipment browsing tests
+├── tests/                   # Test files organized by feature
+│   ├── auth/                # Authentication tests
+│   └── equipment/           # Equipment feature tests
+├── fixtures/                # Test fixtures (authenticatedPage)
+├── page-objects/            # Page Object Models
+├── helpers/                 # Helper functions
+└── constants/               # Shared constants
+    ├── test-ids.ts          # Centralized data-testid values
+    └── config.ts            # Test configuration (timeouts, users)
 ```
 
 ---
@@ -99,11 +103,12 @@ frontend/e2e/
 ### Usage
 
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from '../../fixtures';
+import { TEST_IDS } from '../../constants';
 
 test('protected page access', async ({ authenticatedPage }) => {
   await authenticatedPage.goto('/equipment');
-  await expect(authenticatedPage.getByTestId('equipment-grid')).toBeVisible();
+  await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
 });
 ```
 
@@ -113,18 +118,17 @@ test('protected page access', async ({ authenticatedPage }) => {
 
 ### Rules
 
-#### 1. Use `data-testid` for Selectors
+#### 1. Use `TEST_IDS` Constants
 
-Always use `data-testid` attributes for element selection. Never rely on CSS classes or text content.
+Always use constants from `e2e/constants/test-ids.ts` instead of hardcoded strings. This ensures consistency and easier refactoring.
 
 ```typescript
 // ✅ GOOD
-await page.getByTestId('login-submit-button').click();
-await expect(page.getByTestId('equipment-grid')).toBeVisible();
+import { TEST_IDS } from '../../constants';
+await page.getByTestId(TEST_IDS.LOGIN_BUTTON).click();
 
 // ❌ BAD
-await page.click('.btn-primary');
-await page.getByText('Submit').click();
+await page.getByTestId('login-button').click();
 ```
 
 #### 2. Never Use Hardcoded Timeouts
@@ -136,13 +140,7 @@ Replace `waitForTimeout()` with explicit waits or assertions.
 await page.waitForTimeout(1000);
 
 // ✅ GOOD - Wait for specific element
-await expect(page.getByTestId('modal')).toBeVisible();
-
-// ✅ GOOD - Wait for URL change
-await expect(page).toHaveURL(/\/dashboard/);
-
-// ✅ GOOD - Wait for element state
-await page.getByTestId('submit-button').waitFor({ state: 'visible' });
+await expect(page.getByTestId(TEST_IDS.MODAL)).toBeVisible();
 ```
 
 #### 3. Use Proper Assertions
@@ -151,9 +149,7 @@ Use Playwright's built-in `expect` assertions with auto-retry.
 
 ```typescript
 // ✅ GOOD - Auto-retrying assertions
-await expect(page.getByTestId('user-menu')).toBeVisible();
-await expect(page).toHaveURL(/\/login/);
-await expect(page.getByTestId('count')).toHaveText('5');
+await expect(page.getByTestId(TEST_IDS.USER_MENU)).toBeVisible();
 
 // ❌ BAD - Manual boolean checks
 const isVisible = await page.getByTestId('menu').isVisible();
@@ -162,11 +158,11 @@ expect(isVisible).toBeTruthy();
 
 #### 4. Import from Local Fixtures
 
-Always import `test` and `expect` from `./fixtures`, not from `@playwright/test`.
+Always import `test` and `expect` from `../../fixtures`, not from `@playwright/test`.
 
 ```typescript
 // ✅ GOOD
-import { test, expect } from './fixtures';
+import { test, expect } from '../../fixtures';
 
 // ❌ BAD
 import { test, expect } from '@playwright/test';
@@ -190,7 +186,7 @@ test.describe('Protected Feature', () => {
 Use `.catch(() => false)` for elements that may not exist, and `test.skip()` when tests can't proceed.
 
 ```typescript
-const hasFeature = await page.getByTestId('optional-feature').isVisible().catch(() => false);
+const hasFeature = await page.getByTestId(TEST_IDS.OPTIONAL_FEATURE).isVisible().catch(() => false);
 
 if (!hasFeature) {
   test.skip();
@@ -218,16 +214,15 @@ test.describe('Equipment Browsing', () => {
 
 ### Test Template
 
-Use this template when creating new test files:
+Use this template when creating new test files in `e2e/tests/<feature>/`:
 
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from '../../fixtures';
+import { TEST_IDS } from '../../constants';
 
 /**
  * [Feature Name] e2e tests.
  * [Brief description of what these tests cover]
- *
- * @see fixtures/index.ts for authentication implementation
  */
 
 test.describe('[Feature Name]', () => {
@@ -236,10 +231,10 @@ test.describe('[Feature Name]', () => {
     await authenticatedPage.goto('/feature-page');
 
     // Act - Perform action
-    await authenticatedPage.getByTestId('action-button').click();
+    await authenticatedPage.getByTestId(TEST_IDS.ACTION_BUTTON).click();
 
     // Assert - Verify result
-    await expect(authenticatedPage.getByTestId('result')).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.RESULT_CONTAINER)).toBeVisible();
   });
 });
 ```
@@ -250,10 +245,10 @@ test.describe('[Feature Name]', () => {
 
 | Item | Convention | Example |
 |------|------------|---------|
-| Test file | `feature.spec.ts` | `equipment.spec.ts` |
+| Test file | `tests/<feature>/<name>.spec.ts` | `tests/equipment/browsing.spec.ts` |
 | Test describe block | Feature name | `'Equipment Browsing'` |
 | Test name | `should + behavior` | `'should display equipment grid'` |
-| Test ID | `component-element-id` | `equipment-card-123` |
+| Constant key | `UPPER_SNAKE_CASE` or `functionName` | `TEST_IDS.EQUIPMENT_GRID` |
 
 ---
 
@@ -264,8 +259,8 @@ test.describe('[Feature Name]', () => {
 | `npm run e2e` | Run all e2e tests |
 | `npm run e2e:ui` | Run with Playwright UI |
 | `npm run e2e:debug` | Run in debug mode |
-| `cd frontend && npm run e2e -- <file>` | Run specific test file |
-| `cd frontend && npm run e2e -- auth-diagnostic.spec.ts` | Run auth diagnostics |
+| `cd frontend && npm run e2e -- <file>` | Run specific test file (e.g. `tests/auth/login.spec.ts`) |
+| `cd frontend && npm run e2e -- diagnostic` | Run auth diagnostics |
 
 ---
 

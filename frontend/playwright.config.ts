@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './e2e/tests',
   
   /* Run tests in files in parallel */
   fullyParallel: true,

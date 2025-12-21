@@ -1,4 +1,5 @@
-import { test, expect } from './fixtures';
+import { test, expect } from '../../fixtures';
+import { TEST_IDS } from '../../constants';
 
 /**
  * Authentication flow e2e tests.
@@ -34,7 +35,7 @@ test.describe('Authenticated User', () => {
     await expect(authenticatedPage).not.toHaveURL(/\/login/);
 
     // Should see navigation elements
-    await expect(authenticatedPage.getByTestId('topbar')).toBeVisible();
-    await expect(authenticatedPage.getByTestId('user-menu-trigger')).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.TOPBAR)).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.USER_MENU_TRIGGER)).toBeVisible();
   });
 });
