@@ -106,6 +106,22 @@ export const AuthListener: React.FC = () => {
         removeAuthCookie();
       }
 
+      // Handle token refresh
+      if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('🔄 Token refreshed, updating cookie');
+        setAuthCookie(session.access_token);
+      }
+
+      // Handle token refresh failures (network issues, expired refresh token)
+      // Note: Supabase may not always emit this event - verify in production
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.error('❌ Token refresh failed, logging out');
+        await supabase.auth.signOut();
+        removeAuthCookie();
+        window.location.href = ROUTES.PUBLIC.LOGIN;
+        return;
+      }
+
       if (event === 'SIGNED_IN' && session) {
         // Skip if hash present (hash handler processes) or redirect in progress
         if (window.location.hash.includes('access_token')) {

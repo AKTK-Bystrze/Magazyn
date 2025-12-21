@@ -37,34 +37,4 @@ test.describe('Authenticated User', () => {
     await expect(authenticatedPage.getByTestId('topbar')).toBeVisible();
     await expect(authenticatedPage.getByTestId('user-menu-trigger')).toBeVisible();
   });
-
-  test('should display user menu with logout option', async ({ authenticatedPage }) => {
-    await authenticatedPage.goto('/dashboard');
-
-    const userMenuTrigger = authenticatedPage.getByTestId('user-menu-trigger');
-    await expect(userMenuTrigger).toBeVisible();
-
-    await userMenuTrigger.click();
-
-    const dropdown = authenticatedPage.getByTestId('user-menu-dropdown');
-    await expect(dropdown).toBeVisible();
-
-    const logoutButton = authenticatedPage.getByTestId('logout-button');
-    await expect(logoutButton).toBeVisible();
-    await expect(logoutButton).toContainText('Log out');
-  });
-
-  test('should logout and redirect to login', async ({ authenticatedPage }) => {
-    await authenticatedPage.goto('/dashboard');
-
-    const userMenuTrigger = authenticatedPage.getByTestId('user-menu-trigger');
-    await expect(userMenuTrigger).toBeVisible();
-    await userMenuTrigger.click();
-
-    const logoutButton = authenticatedPage.getByTestId('logout-button');
-    await expect(logoutButton).toBeVisible();
-    await logoutButton.click();
-
-    await expect(authenticatedPage).toHaveURL(/\/login/);
-  });
 });

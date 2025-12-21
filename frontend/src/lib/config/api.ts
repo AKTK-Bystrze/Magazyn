@@ -20,7 +20,7 @@
  * // Production
  * PUBLIC_BACKEND_URL=https://api.yourdomain.com
  */
-export const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
+export const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8080';
 
 /**
  * Default headers for all API requests

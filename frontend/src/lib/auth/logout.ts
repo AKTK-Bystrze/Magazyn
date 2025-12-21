@@ -27,8 +27,20 @@ import { supabase } from "@/lib/supabase";
  * <Button onClick={handleLogout}>Log out</Button>
  */
 export async function handleLogout(): Promise<void> {
-  // Sign out from Supabase - this clears the session
-  await supabase.auth.signOut();
+  try {
+    // Sign out from Supabase - this clears the session
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Continue with local cleanup even if server logout fails
+  }
+
+  // Call server-side logout to clear cookies reliably
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } catch (e) {
+    console.error('Failed to call logout API', e);
+  }
 
   // Remove auth cookie
   removeAuthCookie();

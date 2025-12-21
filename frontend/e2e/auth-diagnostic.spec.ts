@@ -51,7 +51,7 @@ test.describe('Auth Diagnostics', () => {
     const testEmail = process.env.E2E_TEST_EMAIL!;
 
     const adminClient = createClient(supabaseUrl, serviceKey);
-    const { data: users, error: listError } = await adminClient.auth.admin.listUsers();
+    const { data: users, error: listError } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
 
     if (listError) {
       console.log('❌ Failed to list users:', listError.message);

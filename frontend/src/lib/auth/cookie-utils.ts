@@ -24,6 +24,7 @@ export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
  * - path=/: Cookie available across entire site
  * - max-age: Cookie expires after 1 year
  * - SameSite=Lax: Provides CSRF protection while allowing normal navigation
+ * - Secure: (production only) Only transmit over HTTPS
  * 
  * @param accessToken - The Supabase access token to store
  * 
@@ -31,7 +32,11 @@ export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
  * setAuthCookie(session.access_token)
  */
 export function setAuthCookie(accessToken: string): void {
-  document.cookie = `${AUTH_COOKIE_NAME}=${accessToken}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+  // Detect production environment
+  const isProd = import.meta.env.PROD;
+  const secureFlag = isProd ? '; Secure' : '';
+
+  document.cookie = `${AUTH_COOKIE_NAME}=${accessToken}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax${secureFlag}`;
 }
 
 /**
@@ -39,7 +44,16 @@ export function setAuthCookie(accessToken: string): void {
  * Used during logout or when authentication fails
  */
 export function removeAuthCookie(): void {
+  // Try removing with default domain
   document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
+
+  // Try removing with current hostname (needed if cookie was set with explicit domain)
+  document.cookie = `${AUTH_COOKIE_NAME}=; path=/; domain=${window.location.hostname}; max-age=0`;
+
+  // Try removing with localhost explicitly (for development/testing)
+  if (window.location.hostname === 'localhost') {
+    document.cookie = `${AUTH_COOKIE_NAME}=; path=/; domain=localhost; max-age=0`;
+  }
 }
 
 /**

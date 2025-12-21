@@ -46,7 +46,7 @@ export const PLACEHOLDER_EQUIPMENT_IMAGE = "/placeholder-equipment.svg";
 
 // Storage keys
 export const STORAGE_KEY_CART = "reservation-cart";
-export const STORAGE_KEY_SUPABASE_AUTH = "sb-gwamxxqarkcpvgzvpanc-auth-token";
+export const STORAGE_KEY_SUPABASE_AUTH = "magazyn-auth-token";
 export const STORAGE_KEY_THEME = "theme";
 
 // Localization

@@ -42,7 +42,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         }
 
         if (user && !error) {
-          console.log('✅ Middleware: Cookie token valid for user:', user.email);
+          console.log('✅ Middleware: Cookie token valid for user ID:', user.id);
           context.locals.user = user;
           token = authCookie.value;
         } else {
