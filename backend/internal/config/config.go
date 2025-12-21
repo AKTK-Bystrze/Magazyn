@@ -29,16 +29,21 @@ type AppState struct {
 }
 
 // LoadConfig initializes and returns application configuration and state.
-// It loads environment variables from a .env file, validates required settings,
-// and initializes the Supabase client with the anon key for RLS-enforced access.
+// It loads environment variables from .env.test first (if exists), then .env.
+// This ensures consistent behavior with Playwright E2E tests.
 func LoadConfig() (*AppState, error) {
 	envPath := os.Getenv("ENV_FILE_PATH")
 	if envPath == "" {
-		envPath = "../.env"
-	}
-
-	if err := godotenv.Load(envPath); err != nil {
-		log.Printf("No .env file found at %s, relying on existing environment variables", envPath)
+		// Load .env.test first (for E2E testing), then .env as fallback
+		// godotenv.Load does NOT override existing env vars, so order matters
+		_ = godotenv.Load("../.env.test") // Ignore error if not exists
+		if err := godotenv.Load("../.env"); err != nil {
+			log.Printf("No .env file found, relying on existing environment variables")
+		}
+	} else {
+		if err := godotenv.Load(envPath); err != nil {
+			log.Printf("No .env file found at %s, relying on existing environment variables", envPath)
+		}
 	}
 
 	cfg := &Config{

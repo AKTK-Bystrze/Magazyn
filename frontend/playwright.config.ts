@@ -7,7 +7,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load e2e environment variables from project root
+// Load test environment first (if exists), then fallback to .env
+dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 export default defineConfig({

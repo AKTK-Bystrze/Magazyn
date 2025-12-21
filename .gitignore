@@ -56,3 +56,7 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# E2E Testing
+**/e2e-config.local
+**/supabase_env.txt
