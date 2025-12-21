@@ -53,28 +53,24 @@ test.describe('Authenticated User', () => {
   });
 
   test('should display user menu', async ({ authenticatedPage }) => {
-    console.log('[TEST] Starting user menu test');
-    console.log('[TEST] Current URL:', authenticatedPage.url());
-
     await authenticatedPage.goto('/dashboard');
-    console.log('[TEST] Navigated to dashboard, URL:', authenticatedPage.url());
 
-    console.log('[TEST] Looking for user menu trigger...');
+    // Wait for hydration/rendering
     const userMenuTrigger = authenticatedPage.getByTestId('user-menu-trigger');
     await expect(userMenuTrigger).toBeVisible();
-    console.log('[TEST] User menu trigger found and visible');
-    
-    console.log('[TEST] Clicking user menu...');
+
+    // Small delay to ensure any initial reloads/auth checks are settled
+    // (This helps if the "too many redirects" issue causes a reload shortly after load)
+    await authenticatedPage.waitForTimeout(500);
+
     await userMenuTrigger.click();
-    console.log('[TEST] User menu clicked');
     
-    console.log('[TEST] Waiting for dropdown...');
-    await expect(authenticatedPage.getByTestId('user-menu-dropdown')).toBeVisible();
-    console.log('[TEST] Dropdown visible');
+    const dropdown = authenticatedPage.getByTestId('user-menu-dropdown');
+    await expect(dropdown).toBeVisible();
 
-    await expect(authenticatedPage.getByTestId('logout-button')).toBeVisible();
-    console.log('[TEST] Logout button visible');
-
-    console.log('[TEST] User menu test complete');
+    // Check for the logout button specifically
+    const logoutButton = authenticatedPage.getByTestId('logout-button');
+    await expect(logoutButton).toBeVisible();
+    await expect(logoutButton).toContainText('Log out');
   });
 });

@@ -84,6 +84,7 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
     await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
       password: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
       email_confirm: true,
+      user_metadata: { role: 'user' }
     });
 
     return { id: existingUser.id, email: existingUser.email! };
