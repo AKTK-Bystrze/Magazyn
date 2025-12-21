@@ -10,6 +10,7 @@ import type { Enums } from "@/db/database.types";
 interface StatusBadgeProps {
   status: Enums<"reservation_status"> | typeof MIXED_STATUS | string;
   className?: string;
+  "data-testid"?: string;
 }
 
 /**
@@ -19,10 +20,10 @@ interface StatusBadgeProps {
  * @param status - Reservation status from database enum
  * @param className - Optional additional CSS classes
  */
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, className, "data-testid": testId }: StatusBadgeProps) {
   if (status === MIXED_STATUS) {
     return (
-      <Badge variant="outline" className={className}>
+      <Badge variant="outline" className={className} data-testid={testId}>
         Mixed
       </Badge>
     );
@@ -32,7 +33,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const label = RESERVATION_STATUS_LABELS[status] ?? status;
 
   return (
-    <Badge variant={variant} className={className}>
+    <Badge variant={variant} className={className} data-testid={testId}>
       {label}
     </Badge>
   );

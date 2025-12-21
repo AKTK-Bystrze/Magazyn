@@ -34,6 +34,7 @@ export function SignificantExtensionWarning({ creditAdjustment }: DateChangeCred
           ? "border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/20"
           : "border-2 border-blue-500 bg-blue-50 dark:bg-blue-950/20"
       }
+      data-testid="extension-warning"
     >
       <Info
         className={`${ICON_SIZE_SM} ${

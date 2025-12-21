@@ -100,7 +100,7 @@ export function CreditAdjustmentPreview({
       </div>
 
       {/* Credit Adjustment */}
-      <Alert className={adjustment !== 0 ? "border-2" : ""}>
+      <Alert className={adjustment !== 0 ? "border-2" : ""} data-testid="credit-adjustment">
         <Coins className={ICON_SIZE_SM} />
         <AlertDescription>
           <div className="space-y-2">

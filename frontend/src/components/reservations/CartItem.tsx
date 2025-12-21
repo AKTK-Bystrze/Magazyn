@@ -17,7 +17,7 @@ interface CartItemProps {
  */
 export function CartItem({ item, onRemove }: CartItemProps) {
   return (
-    <Card className="h-full flex flex-col overflow-hidden">
+    <Card className="h-full flex flex-col overflow-hidden" data-testid={`cart-item-${item.equipmentId}`}>
       <div className="relative">
         <AspectRatio ratio={16 / 9} className="bg-muted">
           {item.imageUrl ? (
@@ -42,6 +42,7 @@ export function CartItem({ item, onRemove }: CartItemProps) {
           className="absolute top-2 right-2 h-8 w-8"
           onClick={() => onRemove(item.equipmentId)}
           aria-label={`Remove ${item.name} from cart`}
+          data-testid={`cart-item-remove-${item.equipmentId}`}
         >
           <X className={ICON_SIZE_SM} />
         </Button>

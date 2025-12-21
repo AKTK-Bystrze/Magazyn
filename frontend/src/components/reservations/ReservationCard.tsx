@@ -68,6 +68,7 @@ export function ReservationCard({
         "hover:shadow-md transition-shadow",
         showOwnershipBadge && isOwn && "ring-2 ring-primary/30 bg-primary/5"
       )}
+      data-testid={`reservation-row-${reservation.id}`}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
@@ -86,7 +87,7 @@ export function ReservationCard({
               {reservation.equipmentType}
             </p>
           </div>
-          <StatusBadge status={reservation.status} />
+          <StatusBadge status={reservation.status} data-testid={`reservation-status-${reservation.id}`} />
         </div>
       </CardHeader>
 
@@ -127,6 +128,7 @@ export function ReservationCard({
                 size="sm"
                 onClick={handleModify}
                 className="flex items-center gap-1"
+                data-testid="modify-dates-button"
               >
                 <Edit2 className={ICON_SIZE_SM} />
                 Modify
@@ -140,6 +142,7 @@ export function ReservationCard({
                 size="sm"
                 onClick={handleCancel}
                 className="flex items-center gap-1 text-destructive hover:text-destructive"
+                data-testid="cancel-reservation-button"
               >
                 <X className={ICON_SIZE_SM} />
                 Cancel

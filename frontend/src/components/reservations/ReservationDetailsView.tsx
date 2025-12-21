@@ -159,8 +159,8 @@ export function ReservationDetailsView({
             <div className="flex-1">
               <p className="font-medium">{UI.DATES}</p>
               <p className="text-sm">
-                {formatDate(reservation.startDate)} —{" "}
-                {formatDate(reservation.endDate)}
+                <span data-testid="reservation-start-date">{formatDate(reservation.startDate)}</span> —{" "}
+                <span data-testid="reservation-end-date">{formatDate(reservation.endDate)}</span>
               </p>
               <p className="text-xs text-muted-foreground">
                 {days} {pluralize(days, "day")}

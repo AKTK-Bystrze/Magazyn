@@ -161,11 +161,11 @@ export function ConfirmationModal({
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Current Balance:</span>
-                <span>{costBreakdown.currentBalance} credits</span>
+                <span data-testid="confirmation-current-balance">{costBreakdown.currentBalance} credits</span>
               </div>
               <div className="flex justify-between font-semibold text-lg border-t pt-2">
                 <span>Remaining Balance:</span>
-                <span className="text-primary">
+                <span className="text-primary" data-testid="confirmation-remaining-balance">
                   {costBreakdown.remainingBalance} credits
                 </span>
               </div>

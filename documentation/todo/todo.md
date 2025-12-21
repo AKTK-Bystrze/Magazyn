@@ -1,9 +1,9 @@
 ## In Progress
-  - e2e tests for user reservation flow
+  - e2e tests for user reservation flow reservation-e2e-plan.md
 
 ## Next
   - e2e tests for admin reservation flow
-  - integration tests for reservation flow ( verify that integrtaion tests for admin case is needed. Is user case covering all the cases?)
+  - integration tests for reservation flow reservation-integration-tests-plan.md ( verify that integrtaion tests for admin case is needed. Is user case covering all the cases?)
   - e2e tests for equipment manager
 
 ## Equipment Views
@@ -54,3 +54,4 @@
 16. remove RENTED status and rename ongoing to ACTIVE
 17. Overdue reservations status and logic
 18. Warning messages for reservations that have the overlapping dates e.g start date is the same as end date of another reservation
+19.  One test ID (reservation-success-message) will need to be added when you implement success state handling (currently redirects with ?success=true)

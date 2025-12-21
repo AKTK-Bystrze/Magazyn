@@ -285,7 +285,7 @@ export function ReservationCartView({
 
       {/* Availability Errors Display */}
       {!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0 && (
-         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
+         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive" data-testid="error-reservation-conflict">
            <AlertCircle className="h-4 w-4" />
            <h5 className="mb-1 font-medium leading-none tracking-tight">Availability Issues Detected</h5>
            <AlertDescription>

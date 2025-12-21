@@ -169,7 +169,7 @@ export function ModifyDatesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="modify-dates-dialog">
         <DialogHeader>
           <DialogTitle>{UI.MODIFY_DATES_TITLE}</DialogTitle>
           <DialogDescription>{UI.MODIFY_DATES_DESCRIPTION}</DialogDescription>
@@ -222,6 +222,7 @@ export function ModifyDatesDialog({
           <Button
             onClick={handleConfirm}
             disabled={isSubmitting || !datesChanged || adjustmentInfo.newBalance < 0}
+            data-testid="save-dates-button"
           >
             {isSubmitting ? (
               <>

@@ -87,13 +87,13 @@ export function CostEstimator({
         <div className="border-t pt-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Current Balance</span>
-            <span className="font-medium">
+            <span className="font-medium" data-testid="current-credit-balance">
               {costBreakdown.currentBalance} credits
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Total Cost</span>
-            <span className="font-medium">
+            <span className="font-medium" data-testid="reservation-total-cost">
               -{costBreakdown.totalCreditCost} credits
             </span>
           </div>
@@ -103,7 +103,7 @@ export function CostEstimator({
               className={
                 hasInsufficientCredits ? "text-destructive" : "text-primary"
               }
-              data-testid="total-cost-display"
+              data-testid="remaining-credit-balance"
             >
               {costBreakdown.remainingBalance} credits
             </span>
@@ -111,7 +111,7 @@ export function CostEstimator({
         </div>
 
         {hasInsufficientCredits && (
-          <Alert className="border-destructive bg-destructive/10">
+          <Alert className="border-destructive bg-destructive/10" data-testid="error-insufficient-credits">
             <AlertCircle className={ICON_SIZE_SM} />
             <div className="ml-2">
               <p className="font-semibold">Insufficient Credits</p>
