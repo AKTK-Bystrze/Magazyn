@@ -80,9 +80,9 @@ sequenceDiagram
 ```
 frontend/e2e/
 ├── fixtures/index.ts        # Auth fixtures (authenticatedPage)
+├── helpers/auth.helper.ts   # Auth helper functions
 ├── auth.spec.ts             # Login page + authenticated tests
-├── auth-diagnostic.spec.ts  # Quick auth verification
-├── diagnose-auth.spec.ts    # Detailed Supabase diagnostics
+├── auth-diagnostic.spec.ts  # Comprehensive auth diagnostics
 └── equipment.spec.ts        # Equipment browsing tests
 ```
 
@@ -109,6 +109,154 @@ test('protected page access', async ({ authenticatedPage }) => {
 
 ---
 
+## Writing New Tests
+
+### Rules
+
+#### 1. Use `data-testid` for Selectors
+
+Always use `data-testid` attributes for element selection. Never rely on CSS classes or text content.
+
+```typescript
+// ✅ GOOD
+await page.getByTestId('login-submit-button').click();
+await expect(page.getByTestId('equipment-grid')).toBeVisible();
+
+// ❌ BAD
+await page.click('.btn-primary');
+await page.getByText('Submit').click();
+```
+
+#### 2. Never Use Hardcoded Timeouts
+
+Replace `waitForTimeout()` with explicit waits or assertions.
+
+```typescript
+// ❌ BAD - Arbitrary timeout
+await page.waitForTimeout(1000);
+
+// ✅ GOOD - Wait for specific element
+await expect(page.getByTestId('modal')).toBeVisible();
+
+// ✅ GOOD - Wait for URL change
+await expect(page).toHaveURL(/\/dashboard/);
+
+// ✅ GOOD - Wait for element state
+await page.getByTestId('submit-button').waitFor({ state: 'visible' });
+```
+
+#### 3. Use Proper Assertions
+
+Use Playwright's built-in `expect` assertions with auto-retry.
+
+```typescript
+// ✅ GOOD - Auto-retrying assertions
+await expect(page.getByTestId('user-menu')).toBeVisible();
+await expect(page).toHaveURL(/\/login/);
+await expect(page.getByTestId('count')).toHaveText('5');
+
+// ❌ BAD - Manual boolean checks
+const isVisible = await page.getByTestId('menu').isVisible();
+expect(isVisible).toBeTruthy();
+```
+
+#### 4. Import from Local Fixtures
+
+Always import `test` and `expect` from `./fixtures`, not from `@playwright/test`.
+
+```typescript
+// ✅ GOOD
+import { test, expect } from './fixtures';
+
+// ❌ BAD
+import { test, expect } from '@playwright/test';
+```
+
+#### 5. Use `authenticatedPage` for Protected Routes
+
+Use the `authenticatedPage` fixture for any test requiring authentication.
+
+```typescript
+test.describe('Protected Feature', () => {
+  test('should access feature', async ({ authenticatedPage }) => {
+    await authenticatedPage.goto('/protected-page');
+    // ...
+  });
+});
+```
+
+#### 6. Handle Optional Elements Gracefully
+
+Use `.catch(() => false)` for elements that may not exist, and `test.skip()` when tests can't proceed.
+
+```typescript
+const hasFeature = await page.getByTestId('optional-feature').isVisible().catch(() => false);
+
+if (!hasFeature) {
+  test.skip();
+  return;
+}
+```
+
+#### 7. Add TSDoc Comments
+
+Document test files and complex tests with TSDoc comments.
+
+```typescript
+/**
+ * Equipment browsing e2e tests.
+ * Tests the equipment listing, filtering, and cart functionality.
+ *
+ * @see fixtures/index.ts for authentication implementation
+ */
+test.describe('Equipment Browsing', () => {
+  // ...
+});
+```
+
+---
+
+### Test Template
+
+Use this template when creating new test files:
+
+```typescript
+import { test, expect } from './fixtures';
+
+/**
+ * [Feature Name] e2e tests.
+ * [Brief description of what these tests cover]
+ *
+ * @see fixtures/index.ts for authentication implementation
+ */
+
+test.describe('[Feature Name]', () => {
+  test('should [expected behavior]', async ({ authenticatedPage }) => {
+    // Arrange - Navigate to page
+    await authenticatedPage.goto('/feature-page');
+
+    // Act - Perform action
+    await authenticatedPage.getByTestId('action-button').click();
+
+    // Assert - Verify result
+    await expect(authenticatedPage.getByTestId('result')).toBeVisible();
+  });
+});
+```
+
+---
+
+### Naming Conventions
+
+| Item | Convention | Example |
+|------|------------|---------|
+| Test file | `feature.spec.ts` | `equipment.spec.ts` |
+| Test describe block | Feature name | `'Equipment Browsing'` |
+| Test name | `should + behavior` | `'should display equipment grid'` |
+| Test ID | `component-element-id` | `equipment-card-123` |
+
+---
+
 ## Commands
 
 | Command | Description |
@@ -117,7 +265,7 @@ test('protected page access', async ({ authenticatedPage }) => {
 | `npm run e2e:ui` | Run with Playwright UI |
 | `npm run e2e:debug` | Run in debug mode |
 | `npm run e2e -- <file>` | Run specific test file |
-| `npm run e2e -- diagnose-auth.spec.ts` | Run auth diagnostics |
+| `npm run e2e -- auth-diagnostic.spec.ts` | Run auth diagnostics |
 
 ---
 
@@ -175,7 +323,7 @@ jobs:
 ### Run Diagnostics
 
 ```bash
-npm run e2e -- diagnose-auth.spec.ts
+npm run e2e -- auth-diagnostic.spec.ts
 ```
 
 ---
@@ -185,3 +333,4 @@ npm run e2e -- diagnose-auth.spec.ts
 - [Auth Workflow](../../documentation/workflows/auth-workflow.md)
 - [Frontend Auth](./auth.md)
 - [Backend Auth](../../backend/docs/auth.md)
+

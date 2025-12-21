@@ -111,14 +111,11 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
 }
 
 /**
- * Injects a valid Supabase session into the browser
- * Signs in using password to get REAL JWT tokens, then injects them
- */ async function injectSupabaseSession(
-   page: Page,
-   supabaseAdmin: SupabaseClient,
-   userId: string
- ): Promise<void> {
-   console.log('[AUTH] Getting real session tokens via signInWithPassword...');
+ * Injects a valid Supabase session into the browser.
+ * Signs in using password to get REAL JWT tokens, then injects them.
+ */
+async function injectSupabaseSession(page: Page): Promise<void> {
+  console.log('[AUTH] Getting real session tokens via signInWithPassword...');
 
    // Use a separate client to sign in (not admin) to get the session
    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -195,13 +192,8 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
      return value ? 'Session found' : 'Session NOT found';
    }, storageKey);
 
-   console.log('[AUTH] Verification:', storedSession);
-
-   // Reload page to let Supabase client pick up the session  
-   console.log('[AUTH] Reloading page to activate session...');
-   await page.reload({ waitUntil: 'networkidle' });
-
-   console.log('[AUTH] ✅ Session injected and activated');
+  console.log('[AUTH] Verification:', storedSession);
+  console.log('[AUTH] ✅ Session injected and activated');
 }
 
 export const test = base.extend<AuthFixtures>({
@@ -221,7 +213,7 @@ export const test = base.extend<AuthFixtures>({
     const page = await context.newPage();
 
     // Inject valid session into browser
-    await injectSupabaseSession(page, supabaseAdmin, user.id);
+    await injectSupabaseSession(page);
 
     console.log('[AUTH] ✅ Authenticated page ready');
 
