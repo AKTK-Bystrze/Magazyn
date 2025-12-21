@@ -1,5 +1,10 @@
 ## In Progress
-  - e2e tests
+  - e2e tests for user reservation flow
+
+## Next
+  - e2e tests for admin reservation flow
+  - integration tests for reservation flow ( verify that integrtaion tests for admin case is needed. Is user case covering all the cases?)
+  - e2e tests for equipment manager
 
 ## Equipment Views
 - Equipment manager + viewer component reuse improved
@@ -48,3 +53,4 @@
 15. in create user initial credits balance have leading zero that cant be removed
 16. remove RENTED status and rename ongoing to ACTIVE
 17. Overdue reservations status and logic
+18. Warning messages for reservations that have the overlapping dates e.g start date is the same as end date of another reservation
