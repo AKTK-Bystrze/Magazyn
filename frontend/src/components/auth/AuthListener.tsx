@@ -4,11 +4,6 @@ import { getUserSession } from '@/lib/auth/session-utils';
 import { ROUTES } from '@/lib/config/routes';
 import { RedirectManager, type RedirectContext } from '@/lib/auth/redirect-manager';
 import { normalizePath } from '@/lib/auth/url-utils';
-import {
-  setAuthCookie,
-  removeAuthCookie,
-  waitForCookieAndRedirect,
-} from '@/lib/auth/cookie-utils';
 
 /**
  * Component that listens for Supabase auth state changes
@@ -83,7 +78,8 @@ export const AuthListener: React.FC = () => {
 
                   RedirectManager.recordRedirect(window.location.pathname, redirectTo, redirectContextRef.current);
                   console.log(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
-                  await waitForCookieAndRedirect(data.session.access_token, redirectTo);
+                  // Cookies are automatically managed by @supabase/ssr
+                  window.location.replace(redirectTo);
                 }
               }
             }
@@ -102,17 +98,11 @@ export const AuthListener: React.FC = () => {
     checkHashForToken();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Sync cookie using centralized utility
-      if (session?.access_token) {
-        setAuthCookie(session.access_token);
-      } else if (event === 'SIGNED_OUT') {
-        removeAuthCookie();
-      }
+      // @supabase/ssr automatically manages cookies - no manual sync needed
 
       // Handle token refresh
       if (event === 'TOKEN_REFRESHED' && session) {
-        console.log('🔄 Token refreshed, updating cookie');
-        setAuthCookie(session.access_token);
+        console.log('🔄 Token refreshed (cookies auto-updated)');
       }
 
       // Handle token refresh failures (network issues, expired refresh token)
@@ -120,7 +110,6 @@ export const AuthListener: React.FC = () => {
       if (event === 'TOKEN_REFRESHED' && !session) {
         console.error('❌ Token refresh failed, logging out');
         await supabase.auth.signOut();
-        removeAuthCookie();
         window.location.href = ROUTES.PUBLIC.LOGIN;
         return;
       }
@@ -164,7 +153,8 @@ export const AuthListener: React.FC = () => {
 
             RedirectManager.recordRedirect(currentPath, redirectTo, redirectContextRef.current);
             console.log(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
-            await waitForCookieAndRedirect(session.access_token, redirectTo);
+            // Cookies automatically managed by @supabase/ssr
+            window.location.replace(redirectTo);
           }
         }
       } else if (session && window.location.hash.includes('access_token')) {

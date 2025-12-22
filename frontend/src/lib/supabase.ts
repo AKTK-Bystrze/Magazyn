@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-console.log('🔧 Supabase Client Configuration:');
+console.log('🔧 Supabase Browser Client Configuration:');
 console.log('  URL:', supabaseUrl);
 console.log('  Anon Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING');
 
@@ -11,17 +11,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing Supabase environment variables');
   console.error('  PUBLIC_SUPABASE_URL:', supabaseUrl);
   console.error('  PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'present' : 'MISSING');
+  throw new Error('Missing required Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    flowType: 'pkce',
-    autoRefreshToken: true,
-    // IMPORTANT: detectSessionInUrl must be false because AuthListener 
-    // manually processes the URL hash. Setting this to true causes race 
-    // conditions where both Supabase and AuthListener try to process the hash.
-    detectSessionInUrl: false,
-    persistSession: true,
-    storageKey: 'magazyn-auth-token',
-  }
-});
+/**
+ * Supabase browser client configured for SSR compatibility
+ * 
+ * Uses @supabase/ssr's createBrowserClient for automatic cookie management.
+ * This ensures session synchronization between client-side and server-side (middleware).
+ * 
+ * The client automatically:
+ * - Manages authentication cookies (sb-*-auth-token)
+ * - Handles PKCE flow for magic links
+ * - Syncs session state across tabs
+ * - Refreshes tokens automatically
+ */
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
