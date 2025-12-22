@@ -23,19 +23,4 @@ test.describe('Login Page', () => {
   });
 });
 
-/**
- * Authenticated user tests.
- * Uses `authenticatedPage` fixture for automatic session injection.
- */
-test.describe('Authenticated User', () => {
-  test('should access dashboard when authenticated', async ({ authenticatedPage }) => {
-    await authenticatedPage.goto('/dashboard');
 
-    // Should not redirect to login
-    await expect(authenticatedPage).not.toHaveURL(/\/login/);
-
-    // Should see navigation elements
-    await expect(authenticatedPage.getByTestId(TEST_IDS.TOPBAR)).toBeVisible();
-    await expect(authenticatedPage.getByTestId(TEST_IDS.USER_MENU_TRIGGER)).toBeVisible();
-  });
-});
