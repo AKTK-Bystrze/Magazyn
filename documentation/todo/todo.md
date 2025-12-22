@@ -7,6 +7,8 @@
   - ⚠️ Topbar not visible after reload, continuing anyway. What is this log??
   
   - Optimize fixture setup/teardown
+  - e2e tests clean up, duplicated logs, hardcoded values etc
+  - reduce auth and browsing tests
   - Test Data Management
   - Document test data strategy
 

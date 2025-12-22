@@ -11,6 +11,9 @@ export default defineConfig({
   adapter: node({
     mode: 'standalone',
   }),
+  devToolbar: {
+    enabled: process.env.E2E_TESTING !== 'true',
+  },
   vite: {
     plugins: [tailwindcss(), tsconfigPaths()],
     envDir: '..',

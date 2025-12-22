@@ -76,6 +76,18 @@ sequenceDiagram
 > [!NOTE]
 > Password auth works at the API level even though the app UI only shows magic links.
 
+### Dev Toolbar Configuration
+
+The Astro dev toolbar is automatically disabled during E2E tests to prevent it from intercepting pointer events. This is configured in `astro.config.mjs`:
+
+```javascript
+devToolbar: {
+  enabled: process.env.E2E_TESTING !== 'true',
+}
+```
+
+Playwright sets `E2E_TESTING=true` when starting the dev server, ensuring the toolbar doesn't interfere with test interactions while remaining available during regular development.
+
 ---
 
 ## Test Structure
