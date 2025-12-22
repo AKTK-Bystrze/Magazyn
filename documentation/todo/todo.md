@@ -1,11 +1,9 @@
 ## In Progress
-  - Optimize fixture setup/teardown
-  - Test Data Management
-  - Document test data strategy
-
+ - integration tests for reservation flow reservation-integration-tests-plan.
+ 
 ## Next
   - e2e tests for admin reservation flow
-  - integration tests for reservation flow reservation-integration-tests-plan.md ( verify that integrtaion tests for admin case is needed. Is user case covering all the cases?)
+ md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
   - e2e tests for equipment manager
 
 ## Deployment

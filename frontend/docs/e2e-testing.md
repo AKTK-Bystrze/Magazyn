@@ -76,6 +76,31 @@ sequenceDiagram
 > [!NOTE]
 > Password auth works at the API level even though the app UI only shows magic links.
 
+---
+
+## Test Data Strategy
+
+We use a **Hybrid Strategy** to balance performance and reliability:
+
+### 1. Shared User (Performance)
+*   **Strategy**: Reuse a single test user (`test.dev.g6@gmail.com`) across all tests.
+*   **Why**: Creating a new user for every test is too slow (Auth API rate limits + latency).
+*   **Management**: The generic `testUser` fixture ensures this user exists.
+*   **Risk**: Potential for shared state (e.g., credit balance changes).
+*   **Mitigation**: Tests must explicitly **reset relevant user state** (like credits) in `beforeEach` or `afterEach` if they modify it.
+
+### 2. Isolated Resources (Reliability)
+*   **Strategy**: Create fresh, unique resources (Equipment, Reservations) for *every* test that needs them.
+*   **Why**: Prevents race conditions in parallel execution.
+*   **Implementation**: Use the `testEquipment` fixture. It creates 2 unique items for the worker and deletes them afterwards.
+*   **Guidance**: **Never** hardcode equipment IDs in tests. Always use the IDs provided by the `testEquipment` fixture.
+
+### 3. Database State
+*   **Strategy**: Use `supabaseAdmin` (Admin API) for setup/teardown, NOT the UI.
+*   **Why**: API is faster and less flaky than UI interactions for prerequisite data.
+
+---
+
 ### Dev Toolbar Configuration
 
 The Astro dev toolbar is automatically disabled during E2E tests to prevent it from intercepting pointer events. This is configured in `astro.config.mjs`:
@@ -110,16 +135,29 @@ frontend/e2e/
 
 ---
 
-## Available Fixtures
+## Fixtures & Optimization
 
-| Fixture | Scope | Purpose |
-|---------|-------|---------|
-| `page` | test | Standard Playwright page (no auth) |
-| `authenticatedPage` | test | Pre-authenticated page with test user session |
-| `supabaseAdmin` | test | Supabase admin client for setup/teardown |
-| `testUser` | test | Test user information (id and email) |
-| `workerIndex` | worker | Worker index for parallel test isolation |
-| `testEquipment` | test | Dedicated test equipment for this worker (2 items) |
+### Core Fixtures
+
+| Fixture | Scope | Description | Cost/Optimization |
+|---------|-------|-------------|-------------------|
+| `page` | test | Standard Playwright page (no auth) | Low |
+| `authenticatedPage` | test | Page with injected Supabase session | **High** (Performs login). Use only for protected routes. |
+| `supabaseAdmin` | test | Supabase admin client | Low (Service creation only). |
+| `testUser` | test | Test user info (id, email) | **Medium** (Checks DB existence). |
+| `testEquipment` | test | [Equip1, Equip2] dedicated resources | **High** (DB Inserts/Deletes). **Lazy-loaded**: Only requested if argument is present. |
+| `workerIndex` | worker | Worker ID for isolation | Zero |
+
+### 🔍 Optimization Tips
+
+1.  **Lazy Instantiation**: Fixtures are only created if you request them in the test function arguments.
+    *   ✅ **Fast**: `test('landing page', async ({ page }) => { ... })` (No auth, no DB setup)
+    *   ⚠️ **Slower**: `test('dashboard', async ({ authenticatedPage }) => { ... })` (Performs login)
+    *   🛑 **Slowest**: `test('reservation', async ({ authenticatedPage, testEquipment }) => { ... })` (Login + DB Inserts)
+
+2.  **Grouping**: Group tests that need similar heavy setup if possible, although Playwright's parallel execution model encourages isolation over sharing.
+
+3.  **Conditional Logic**: Use `test.skip()` early if prerequisites aren't met to avoid wasting resources on doomed tests.
 
 ### Usage
 
@@ -128,6 +166,7 @@ import { test, expect } from '../../fixtures';
 import { TEST_IDS } from '../../constants';
 
 test('protected page access', async ({ authenticatedPage }) => {
+  // authenticatedPage implies "I need a logged-in user"
   await authenticatedPage.goto('/equipment');
   await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
 });
@@ -138,6 +177,7 @@ test('protected page access', async ({ authenticatedPage }) => {
 For tests that need dedicated equipment (to avoid conflicts in parallel execution):
 
 ```typescript
+// Requests 'testEquipment', so it will be created and cleaned up automatically
 test('reservation flow', async ({ authenticatedPage, testEquipment, workerIndex }) => {
   const [equip1, equip2] = testEquipment;
   
@@ -210,13 +250,15 @@ import { test, expect } from '@playwright/test';
 ```
 
 #### 5. Use `testEquipment` for Cart/Reservation Tests
-
-For tests that add items to cart or create reservations, use the worker-isolated `testEquipment` fixture:
-
+ 
+For tests that add items to cart or create reservations, use the worker-isolated `testEquipment` fixture. This aligns with our [Test Data Strategy](#test-data-strategy) (Isolated Resources).
+ 
+**Performance Note**: Requesting this fixture triggers DB inserts/deletes. Do not request it for read-only tests.
+ 
 ```typescript
 test('cart functionality', async ({ authenticatedPage, testEquipment }) => {
   const [equip1] = testEquipment;
-  
+   
   // This equipment is unique to this worker - no conflicts
   await addToCart(authenticatedPage, equip1.id);
 });
@@ -395,4 +437,4 @@ cd frontend && npm run e2e -- auth-diagnostic.spec.ts
 - [Auth Workflow](../../documentation/workflows/auth-workflow.md)
 - [Frontend Auth](./auth.md)
 - [Backend Auth](../../backend/docs/auth.md)
-- [E2E Refactor Plan](../../.ai/e2e-tests-all-merge.md)
+
