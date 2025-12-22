@@ -1,92 +1,80 @@
 import { defineMiddleware } from "astro:middleware";
-import { supabaseClient } from "../db/supabase.client";
+import { createSupabaseServerClient } from "../lib/auth/supabase-ssr";
 import { ApiErrors, handleApiError } from "../lib/errors/api-error";
 import { getUserSession } from "../lib/auth/session-utils";
-import { RedirectManager } from "../lib/auth/redirect-manager";
-import { AUTH_COOKIE_NAME } from "../lib/auth/cookie-utils";
+import { RedirectManager, type RedirectContext } from "../lib/auth/redirect-manager";
 import type { SessionInfo } from "../types";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
-  const cookieHeader = context.request.headers.get('cookie');
-  const hasAuthCookie = cookieHeader?.includes(AUTH_COOKIE_NAME);
 
-  console.log(`\n📍 [${url.pathname}] Request received. Cookie present: ${hasAuthCookie}`);
+  console.log(`\n📍 [${url.pathname}] Request received`);
 
-  context.locals.supabase = supabaseClient;
+  // Create request-scoped Supabase client for proper SSR session isolation
+  const supabase = createSupabaseServerClient(context.request, context.cookies);
+  context.locals.supabase = supabase;
 
   try {
-    // 1. Get session from Supabase
-    // Note: In a real SSR scenario, we should pass request cookies to Supabase
-    // But since we are using a singleton client here, it may strictly rely on 
-    // Authorization header or standard client-side cookie behavior for subsequent calls.
-    // For robust SSR auth, Supabase helpers for Astro should be used.
-    // Here we perform a best-effort check.
-    const {
-      data: { session },
-    } = await supabaseClient.auth.getSession();
+    // 1. Get user from Supabase using getUser() (recommended for SSR)
+    // This validates the session server-side instead of relying on client-provided session
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    context.locals.user = session?.user || null;
+    if (error) {
+      console.log('⚠️ Auth error:', error.message);
+    }
 
-    // Fallback: Check for manual auth cookie if session is missing
-    let token = session?.access_token;
+    context.locals.user = user || null;
 
-    if (!context.locals.user) {
-      const authCookie = context.cookies.get(AUTH_COOKIE_NAME);
-
-      if (authCookie?.value) {
-        const { data: { user }, error } = await supabaseClient.auth.getUser(authCookie.value);
-
-        if (error) {
-          console.error('❌ Middleware: Failed to validate cookie token:', error.message);
-        }
-
-        if (user && !error) {
-          console.log('✅ Middleware: Cookie token valid for user ID:', user.id);
-          context.locals.user = user;
-          token = authCookie.value;
-        } else {
-          console.log('❌ Middleware: User is null despite no error? User:', user);
-        }
-      } else {
-        console.log('⚠️ Middleware: No auth cookie found');
-      }
+    if (user) {
+      console.log('✅ Middleware: User authenticated:', user.id);
     } else {
-      console.log('✅ Middleware: Session found via standard Supabase method');
+      console.log('❌ Middleware: No authenticated user');
     }
 
     const isAuthApiRoute = url.pathname.startsWith("/api/auth");
 
     // 2. Fetch user session info if authenticated (to check isEnabled status)
     let sessionInfo: SessionInfo | null = null;
-    if (context.locals.user && token) {
-      sessionInfo = await getUserSession(token);
-      // Store sessionInfo and token in locals for pages and API routes to access
-      context.locals.sessionInfo = sessionInfo;
-      context.locals.accessToken = token;
+    let token: string | null = null;
+
+    if (user) {
+      // Get access token from session
+      const { data: { session } } = await supabase.auth.getSession();
+      token = session?.access_token || null;
+
+      if (token) {
+        sessionInfo = await getUserSession(token);
+        // Store sessionInfo and token in locals for pages and API routes to access
+        context.locals.sessionInfo = sessionInfo;
+        context.locals.accessToken = token;
+      }
     }
 
     // 3. Unified Redirect Logic - Single Source of Truth
     // SKIP redirects for API routes - they should handle auth state via 401/403 or pass through
     if (!url.pathname.startsWith("/api/")) {
+      // Request-scoped redirect tracking to prevent SSR state leakage
+      const redirectContext: RedirectContext = { history: [] };
+
       const redirectParam = url.searchParams.get("redirect");
       const redirectTo = RedirectManager.getRedirectForAuthState(
         context.locals.user,
         sessionInfo,
         url.pathname,
         redirectParam,
-        url.origin
+        url.origin,
+        redirectContext
       );
 
       if (redirectTo) {
         // Check for redirect loops before redirecting
-        if (!RedirectManager.canRedirect(url.pathname, redirectTo)) {
+        if (!RedirectManager.canRedirect(url.pathname, redirectTo, redirectContext)) {
           console.error('🚨 Redirect loop prevented:', { from: url.pathname, to: redirectTo });
           // Return error page instead of looping
           return new Response('Redirect loop detected', { status: 500 });
         }
 
-        RedirectManager.recordRedirect(url.pathname, redirectTo);
+        RedirectManager.recordRedirect(url.pathname, redirectTo, redirectContext);
         console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
         return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
       }

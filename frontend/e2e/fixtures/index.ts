@@ -285,30 +285,15 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     // Inject valid session into browser
     await injectSupabaseSession(page);
 
-    // CRITICAL: Reset RedirectManager IN BROWSER CONTEXT
-    // This must run in browser, not in Node.js test runner
-    await page.evaluate(async () => {
-      // @ts-ignore - Dynamic import in browser context
-      // Import and reset RedirectManager in browser context
-      const { RedirectManager } = await import('/src/lib/auth/redirect-manager');
-      RedirectManager.reset();
-
-      // Expose to window for test access
-      // @ts-ignore
-      window.RedirectManager = RedirectManager;
-    });
-    console.log('[AUTH] ✅ RedirectManager reset in browser context');
+    // NOTE: RedirectManager now uses request-scoped contexts
+    // No need to reset global state - each request/component gets fresh context
+    console.log('[AUTH] ✅ RedirectManager uses request-scoped contexts (no reset needed)');
 
     console.log('[AUTH] ✅ Authenticated page ready');
 
     await use(page);
     
-    // Cleanup: Reset redirect history again after test (in browser)
-    await page.evaluate(async () => {
-      // @ts-ignore - Dynamic import in browser context
-      const { RedirectManager } = await import('../../src/lib/auth/redirect-manager');
-      RedirectManager.reset();
-    });
+    // Cleanup
     await context.close();
   },
 });

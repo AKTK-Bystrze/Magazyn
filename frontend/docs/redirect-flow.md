@@ -1,7 +1,7 @@
 # Redirect Flow Architecture
 
-**Last Updated**: 2025-12-09  
-**Version**: 1.0  
+**Last Updated**: 2025-12-22  
+**Version**: 2.0  
 **Status**: Production Ready
 
 ---
@@ -137,30 +137,42 @@ stateDiagram-v2
 ### Class Structure
 
 ```typescript
+interface RedirectContext {
+  history: Array<{ from: string; to: string; timestamp: number }>;
+}
+
 class RedirectManager {
   // Static properties
-  private static redirectHistory: Array<{
-    from: string;
-    to: string;
-    timestamp: number;
-  }> = [];
-  
   private static readonly MAX_REDIRECTS = 3;
   private static readonly HISTORY_TIMEOUT = 5000; // 5 seconds
   
   // Public API
-  static canRedirect(from: string, to: string): boolean
-  static recordRedirect(from: string, to: string): void
-  static reset(): void
+  static canRedirect(from: string, to: string, ctx: RedirectContext): boolean
+  static recordRedirect(from: string, to: string, ctx: RedirectContext): void
+  static reset(ctx: RedirectContext): void
   static getRedirectForAuthState(
     user: User | null,
     sessionInfo: SessionInfo | null,
     currentPath: string,
     redirectParam: string | null,
-    origin: string
+    origin: string,
+    ctx: RedirectContext
   ): string | null
 }
 ```
+
+### Request-Scoped Context
+
+**Problem Solved**: Static `redirectHistory` leaked state across concurrent SSR requests.
+
+**Solution**: Each request/component gets its own `RedirectContext`:
+- **Server-Side (Middleware)**: Creates `{ history: [] }` per request
+- **Client-Side (AuthListener)**: Uses `useRef<RedirectContext>({ history: [] })` per component instance
+
+**Benefits**:
+- ✅ No state contamination between users
+- ✅ Thread-safe for concurrent requests
+- ✅ Proper SSR isolation
 
 ### Key Methods
 
@@ -187,7 +199,12 @@ class RedirectManager {
 ---
 
 #### `canRedirect()`
-**Purpose**: Loop prevention
+**Purpose**: Loop prevention with request-scoped tracking
+
+**Parameters**: 
+- `from`: Current path
+- `to`: Target path 
+- `ctx`: Request-scoped redirect context
 
 **Checks**:
 1. **Max Redirects**: Blocks after 3 redirects in 5 seconds
@@ -196,17 +213,19 @@ class RedirectManager {
 
 **Example**:
 ```typescript
+const ctx: RedirectContext = { history: [] };
+
 // First 3 are allowed
-RedirectManager.canRedirect('/a', '/b'); // true
-RedirectManager.canRedirect('/b', '/c'); // true
-RedirectManager.canRedirect('/c', '/d'); // true
+RedirectManager.canRedirect('/a', '/b', ctx); // true
+RedirectManager.canRedirect('/b', '/c', ctx); // true
+RedirectManager.canRedirect('/c', '/d', ctx); // true
 
 // 4th is blocked
-RedirectManager.canRedirect('/d', '/e'); // false (too many)
+RedirectManager.canRedirect('/d', '/e', ctx); // false (too many)
 
 // Circular is blocked
-RedirectManager.recordRedirect('/login', '/dashboard');
-RedirectManager.canRedirect('/dashboard', '/login'); // false (circular)
+RedirectManager.recordRedirect('/login', '/dashboard', ctx);
+RedirectManager.canRedirect('/dashboard', '/login', ctx); // false (circular)
 ```
 
 ---
@@ -240,7 +259,12 @@ graph LR
 - Only allows routes defined in `ROUTES` config
 - Current whitelist: `/login`, `/admin`, `/dashboard`, `/account-disabled`
 
-**3. Attack Vector Protection**
+**3. Role-Based Validation** 🆕
+- Redirect targets are validated against user's role
+- Admin routes (`/admin/*`) require `admin` or `super_admin` role
+- Regular users cannot access admin routes even via redirect parameter
+
+**4. Attack Vector Protection**
 ```typescript
 // ❌ Blocked
 isSafeRedirect('https://evil.com', origin)           // External
@@ -249,8 +273,13 @@ isSafeRedirect('data:text/html,<script>', origin)   // XSS
 isSafeRedirect('/secret-backdoor', origin)           // Not whitelisted
 
 // ✅ Allowed
-isSafeRedirect('/admin', origin)                     // Whitelisted
+isSafeRedirect('/admin', origin)                     // Whitelisted (role checked separately)
 isSafeRedirect('/dashboard?tab=overview', origin)   // Query params OK
+
+// 🔒 Role Validation (after URL validation)
+// User with role='user' tries to redirect to /admin
+const safeUrl = validateRedirectUrl('/admin', origin);
+isRedirectAllowedForRole(safeUrl, 'user'); // false - blocked!
 ```
 
 ---
@@ -359,17 +388,25 @@ sequenceDiagram
 
 **Key Code**:
 ```typescript
+// Request-scoped redirect tracking
+const redirectContext: RedirectContext = { history: [] };
+
 const redirectTo = RedirectManager.getRedirectForAuthState(
   user,
   sessionInfo,
   pathname,
   redirectParam,
-  url.origin
+  url.origin,
+  redirectContext  // 🆕 Pass context
 );
 
 if (redirectTo) {
-  const safeRedirect = validateRedirectUrl(redirectTo, url.origin);
-  return Response.redirect(new URL(safeRedirect, url.origin), 302);
+  if (!RedirectManager.canRedirect(pathname, redirectTo, redirectContext)) {
+    return new Response('Redirect loop detected', { status: 500 });
+  }
+  
+  RedirectManager.recordRedirect(pathname, redirectTo, redirect Context);
+  return Response.redirect(new URL(redirectTo, url.origin), 302);
 }
 ```
 
@@ -389,15 +426,25 @@ if (redirectTo) {
 
 **Key Code**:
 ```typescript
+// Component-scoped redirect context
+const redirectContextRef = useRef<RedirectContext>({ history: [] });
+
 const redirectTo = RedirectManager.getRedirectForAuthState(
   user,
   sessionInfo,
   pathname,
   redirectParam,
-  origin
+  origin,
+  redirectContextRef.current  // 🆕 Pass ref
 );
 
 if (redirectTo && pathname !== redirectTo) {
+  if (!RedirectManager.canRedirect(pathname, redirectTo, redirectContextRef.current)) {
+    console.error('Redirect loop detected');
+    return;
+  }
+  
+  RedirectManager.recordRedirect(pathname, redirectTo, redirectContextRef.current);
   await waitForCookieAndRedirect(accessToken, redirectTo);
 }
 ```

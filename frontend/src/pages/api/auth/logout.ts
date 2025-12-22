@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { AUTH_COOKIE_NAME } from "../../../lib/auth/cookie-utils";
 
-export const POST: APIRoute = async ({ cookies, redirect }) => {
+export const POST: APIRoute = async ({ cookies }) => {
   cookies.delete(AUTH_COOKIE_NAME, {
     path: "/",
   });

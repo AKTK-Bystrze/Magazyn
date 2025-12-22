@@ -5,6 +5,14 @@ import { validateRedirectUrl } from './url-utils';
 import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from './roles';
 
 /**
+ * Request-scoped context for redirect tracking
+ * Prevents SSR state leakage across concurrent requests
+ */
+export interface RedirectContext {
+  history: Array<{ from: string; to: string; timestamp: number }>;
+}
+
+/**
  * Manages redirects with loop prevention and centralized logic
  * 
  * This class eliminates the 38% code duplication across middleware,
@@ -12,7 +20,6 @@ import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from './roles';
  * truth for all redirect decisions.
  */
 export class RedirectManager {
-  private static redirectHistory: Array<{ from: string; to: string; timestamp: number }> = [];
   private static readonly MAX_REDIRECTS = 3;
   private static readonly HISTORY_TIMEOUT = 5000; // 5 seconds
 
@@ -20,9 +27,9 @@ export class RedirectManager {
    * Clears redirect history older than timeout
    * Prevents false positives from old navigation
    */
-  private static cleanHistory(): void {
+  private static cleanHistory(ctx: RedirectContext): void {
     const now = Date.now();
-    this.redirectHistory = this.redirectHistory.filter(
+    ctx.history = ctx.history.filter(
       entry => now - entry.timestamp < this.HISTORY_TIMEOUT
     );
   }
@@ -32,19 +39,20 @@ export class RedirectManager {
    * 
    * @param from - Current path
    * @param to - Target path
+   * @param ctx - Request-scoped redirect context
    * @returns false if loop detected, true if safe to redirect
    */
-  static canRedirect(from: string, to: string): boolean {
-    this.cleanHistory();
+  static canRedirect(from: string, to: string, ctx: RedirectContext): boolean {
+    this.cleanHistory(ctx);
 
     // Check redirect count
-    if (this.redirectHistory.length >= this.MAX_REDIRECTS) {
-      console.error('🚨 Redirect loop detected - too many redirects:', this.redirectHistory);
+    if (ctx.history.length >= this.MAX_REDIRECTS) {
+      console.error('🚨 Redirect loop detected - too many redirects:', ctx.history);
       return false;
     }
 
     // Check for circular redirect (A → B → A)
-    if (this.redirectHistory.some(entry => entry.from === to && entry.to === from)) {
+    if (ctx.history.some(entry => entry.from === to && entry.to === from)) {
       console.error('🚨 Circular redirect detected:', { from, to });
       return false;
     }
@@ -55,9 +63,13 @@ export class RedirectManager {
   /**
    * Records a redirect for loop detection
    * Call this before performing actual redirect
+   * 
+   * @param from - Current path
+   * @param to - Target path
+   * @param ctx - Request-scoped redirect context
    */
-  static recordRedirect(from: string, to: string): void {
-    this.redirectHistory.push({
+  static recordRedirect(from: string, to: string, ctx: RedirectContext): void {
+    ctx.history.push({
       from,
       to,
       timestamp: Date.now(),
@@ -67,9 +79,11 @@ export class RedirectManager {
   /**
    * Resets redirect history
    * Used in tests and after successful navigation
+   * 
+   * @param ctx - Request-scoped redirect context
    */
-  static reset(): void {
-    this.redirectHistory = [];
+  static reset(ctx: RedirectContext): void {
+    ctx.history = [];
   }
 
   /**
@@ -83,6 +97,7 @@ export class RedirectManager {
    * @param currentPath - Current URL pathname
    * @param redirectParam - Optional redirect parameter from query string
    * @param origin - Application origin (e.g., 'http://localhost:4321')
+   * @param ctx - Request-scoped redirect context
    * @returns URL to redirect to, or null if no redirect needed
    */
   static getRedirectForAuthState(
@@ -90,7 +105,9 @@ export class RedirectManager {
     sessionInfo: SessionInfo | null,
     currentPath: string,
     redirectParam: string | null,
-    origin: string
+    origin: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ctx: RedirectContext // Available for future use, used by callers for loop detection
   ): string | null {
     // =========================================================================
     // UNAUTHENTICATED USERS
@@ -136,9 +153,12 @@ export class RedirectManager {
       // Check for safe redirect parameter
       if (redirectParam) {
         const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
-        if (safeRedirect !== ROUTES.PUBLIC.LOGIN) {
+        // SECURITY: Validate redirect target against user's role
+        if (safeRedirect !== ROUTES.PUBLIC.LOGIN &&
+          isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)) {
           return safeRedirect;
         }
+        // Fall through to default route if redirect is not allowed
       }
       
       // Redirect to default route based on role
@@ -157,6 +177,25 @@ export class RedirectManager {
     // =========================================================================
     return null;
   }
+}
+
+/**
+ * Checks if a redirect path is allowed for a given user role
+ * 
+ * SECURITY: Prevents users from accessing admin routes via redirect parameter
+ * 
+ * @param path - The redirect target path
+ * @param role - The user's role from sessionInfo
+ * @returns true if the redirect is allowed for the user's role
+ */
+function isRedirectAllowedForRole(path: string, role: string | undefined): boolean {
+  // Admin routes are restricted to admin and super_admin roles
+  if (path.startsWith(ROUTES.PROTECTED.ADMIN)) {
+    return role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE;
+  }
+
+  // All other routes are allowed for any authenticated user
+  return true;
 }
 
 /**

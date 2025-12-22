@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { RedirectManager, hasRole } from '../redirect-manager';
+import { RedirectManager, hasRole, type RedirectContext } from '../redirect-manager';
 import type { User } from '@supabase/supabase-js';
 import type { SessionInfo } from '../../../types';
 
@@ -30,35 +30,36 @@ describe('redirect-manager', () => {
     ...overrides,
   });
 
+  // Helper to create fresh context for each test
+  const createContext = (): RedirectContext => ({ history: [] });
+
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    RedirectManager.reset();
-  });
-
-  afterEach(() => {
-    RedirectManager.reset();
+    vi.spyOn(console, 'error').mockImplementation(() => { });
   });
 
   describe('RedirectManager.canRedirect', () => {
     it('allows first redirect', () => {
-      expect(RedirectManager.canRedirect('/login', '/dashboard')).toBe(true);
+      const ctx = createContext();
+      expect(RedirectManager.canRedirect('/login', '/dashboard', ctx)).toBe(true);
     });
 
     it('allows up to 3 redirects', () => {
-      RedirectManager.recordRedirect('/login', '/dashboard');
-      expect(RedirectManager.canRedirect('/dashboard', '/admin')).toBe(true);
+      const ctx = createContext();
+      RedirectManager.recordRedirect('/login', '/dashboard', ctx);
+      expect(RedirectManager.canRedirect('/dashboard', '/admin', ctx)).toBe(true);
       
-      RedirectManager.recordRedirect('/dashboard', '/admin');
-      expect(RedirectManager.canRedirect('/admin', '/login')).toBe(true);
+      RedirectManager.recordRedirect('/dashboard', '/admin', ctx);
+      expect(RedirectManager.canRedirect('/admin', '/login', ctx)).toBe(true);
     });
 
     it('blocks redirect after 3 redirects (loop detection)', () => {
-      RedirectManager.recordRedirect('/login', '/dashboard');
-      RedirectManager.recordRedirect('/dashboard', '/admin');
-      RedirectManager.recordRedirect('/admin', '/login');
+      const ctx = createContext();
+      RedirectManager.recordRedirect('/login', '/dashboard', ctx);
+      RedirectManager.recordRedirect('/dashboard', '/admin', ctx);
+      RedirectManager.recordRedirect('/admin', '/login', ctx);
       
-      expect(RedirectManager.canRedirect('/login', '/dashboard')).toBe(false);
+      expect(RedirectManager.canRedirect('/login', '/dashboard', ctx)).toBe(false);
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('too many redirects'),
         expect.anything()
@@ -66,9 +67,10 @@ describe('redirect-manager', () => {
     });
 
     it('detects circular redirects (A → B → A)', () => {
-      RedirectManager.recordRedirect('/login', '/dashboard');
+      const ctx = createContext();
+      RedirectManager.recordRedirect('/login', '/dashboard', ctx);
       
-      expect(RedirectManager.canRedirect('/dashboard', '/login')).toBe(false);
+      expect(RedirectManager.canRedirect('/dashboard', '/login', ctx)).toBe(false);
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Circular redirect'),
         expect.objectContaining({ from: '/dashboard', to: '/login' })
@@ -76,16 +78,17 @@ describe('redirect-manager', () => {
     });
 
     it('cleans old history after timeout', async () => {
-      RedirectManager.recordRedirect('/a', '/b');
-      RedirectManager.recordRedirect('/b', '/c');
-      RedirectManager.recordRedirect('/c', '/d');
+      const ctx = createContext();
+      RedirectManager.recordRedirect('/a', '/b', ctx);
+      RedirectManager.recordRedirect('/b', '/c', ctx);
+      RedirectManager.recordRedirect('/c', '/d', ctx);
       
       // Wait for history timeout (5 seconds + buffer)
       vi.useFakeTimers();
       vi.advanceTimersByTime(6000);
       
       // Old redirects should be cleaned, allow new ones
-      expect(RedirectManager.canRedirect('/x', '/y')).toBe(true);
+      expect(RedirectManager.canRedirect('/x', '/y', ctx)).toBe(true);
       
       vi.useRealTimers();
     });
@@ -94,34 +97,40 @@ describe('redirect-manager', () => {
   describe('RedirectManager.getRedirectForAuthState', () => {
     describe('Unauthenticated Users', () => {
       it('redirects unauthenticated user to login with return URL', () => {
+        const ctx = createContext();
         const result = RedirectManager.getRedirectForAuthState(
           null,
           null,
           '/admin',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/login?redirect=%2Fadmin');
       });
 
       it('redirects unauthenticated user to login from root', () => {
+        const ctx = createContext();
         const result = RedirectManager.getRedirectForAuthState(
           null,
           null,
           '/',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/login');
       });
 
       it('does not redirect unauthenticated user already on login', () => {
+        const ctx = createContext();
         const result = RedirectManager.getRedirectForAuthState(
           null,
           null,
           '/login',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBeNull();
       });
@@ -131,30 +140,35 @@ describe('redirect-manager', () => {
       const disabledSessionInfo = createMockSessionInfo({ isEnabled: false });
 
       it('redirects disabled user to account-disabled page', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const result = RedirectManager.getRedirectForAuthState(
           user,
           disabledSessionInfo,
           '/dashboard',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/account-disabled');
       });
 
       it('does not redirect disabled user already on account-disabled', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const result = RedirectManager.getRedirectForAuthState(
           user,
           disabledSessionInfo,
           '/account-disabled',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBeNull();
       });
 
       it('redirects disabled admin to account-disabled (role ignored)', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const disabledAdmin = createMockSessionInfo({ isEnabled: false, role: 'admin' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -162,7 +176,8 @@ describe('redirect-manager', () => {
           disabledAdmin,
           '/admin',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/account-disabled');
       });
@@ -170,6 +185,7 @@ describe('redirect-manager', () => {
 
     describe('Enabled Users on Account-Disabled Page', () => {
       it('redirects enabled user away from account-disabled page', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const enabledUser = createMockSessionInfo({ isEnabled: true, role: 'user' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -177,12 +193,14 @@ describe('redirect-manager', () => {
           enabledUser,
           '/account-disabled',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/dashboard');
       });
 
       it('redirects enabled admin away from account-disabled page', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const enabledAdmin = createMockSessionInfo({ isEnabled: true, role: 'admin' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -190,7 +208,8 @@ describe('redirect-manager', () => {
           enabledAdmin,
           '/account-disabled',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/admin');
       });
@@ -200,62 +219,72 @@ describe('redirect-manager', () => {
       const user = createMockUser();
 
       it('redirects authenticated regular user from login to dashboard', () => {
+        const ctx = createContext();
         const sessionInfo = createMockSessionInfo({ role: 'user' });
         const result = RedirectManager.getRedirectForAuthState(
           user,
           sessionInfo,
           '/login',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/dashboard');
       });
 
       it('redirects authenticated admin from login to admin', () => {
+        const ctx = createContext();
         const sessionInfo = createMockSessionInfo({ role: 'admin' });
         const result = RedirectManager.getRedirectForAuthState(
           user,
           sessionInfo,
           '/login',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/admin');
       });
 
       it('uses safe redirect parameter when provided', () => {
+        const ctx = createContext();
         const sessionInfo = createMockSessionInfo({ role: 'user' });
         const result = RedirectManager.getRedirectForAuthState(
           user,
           sessionInfo,
           '/login',
           '/dashboard',
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/dashboard');
       });
 
       it('sanitizes unsafe redirect parameter', () => {
+        const ctx = createContext();
         const sessionInfo = createMockSessionInfo({ role: 'user' });
         const result = RedirectManager.getRedirectForAuthState(
           user,
           sessionInfo,
           '/login',
           'https://evil.com',
-          origin
+          origin,
+          ctx
         );
         // Should fall back to default for user
         expect(result).toBe('/dashboard');
       });
 
       it('ignores redirect parameter pointing back to login', () => {
+        const ctx = createContext();
         const sessionInfo = createMockSessionInfo({ role: 'admin' });
         const result = RedirectManager.getRedirectForAuthState(
           user,
           sessionInfo,
           '/login',
           '/login',
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/admin');
       });
@@ -263,6 +292,7 @@ describe('redirect-manager', () => {
 
     describe('Root Path Redirects', () => {
       it('redirects regular user from root to dashboard', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const sessionInfo = createMockSessionInfo({ role: 'user' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -270,12 +300,14 @@ describe('redirect-manager', () => {
           sessionInfo,
           '/',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/dashboard');
       });
 
       it('redirects admin from root to admin page', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const sessionInfo = createMockSessionInfo({ role: 'admin' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -283,12 +315,14 @@ describe('redirect-manager', () => {
           sessionInfo,
           '/',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/admin');
       });
 
       it('redirects super_admin from root to admin page', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const sessionInfo = createMockSessionInfo({ role: 'super_admin' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -296,7 +330,8 @@ describe('redirect-manager', () => {
           sessionInfo,
           '/',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBe('/admin');
       });
@@ -304,6 +339,7 @@ describe('redirect-manager', () => {
 
     describe('No Redirect Needed', () => {
       it('returns null for authenticated user on valid page', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const sessionInfo = createMockSessionInfo({ role: 'user' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -311,12 +347,14 @@ describe('redirect-manager', () => {
           sessionInfo,
           '/dashboard',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBeNull();
       });
 
       it('returns null for admin on admin page', () => {
+        const ctx = createContext();
         const user = createMockUser();
         const sessionInfo = createMockSessionInfo({ role: 'admin' });
         const result = RedirectManager.getRedirectForAuthState(
@@ -324,7 +362,8 @@ describe('redirect-manager', () => {
           sessionInfo,
           '/admin',
           null,
-          origin
+          origin,
+          ctx
         );
         expect(result).toBeNull();
       });
@@ -360,6 +399,7 @@ describe('redirect-manager', () => {
 
   describe('Integration Tests', () => {
     it('handles full redirect flow from login to dashboard', () => {
+      const ctx = createContext();
       const user = createMockUser();
       const sessionInfo = createMockSessionInfo({ role: 'user', isEnabled: true });
 
@@ -369,13 +409,14 @@ describe('redirect-manager', () => {
         sessionInfo,
         '/login',
         null,
-        origin
+        origin,
+        ctx
       );
       expect(redirect1).toBe('/dashboard');
 
       // Record the redirect
       if (redirect1) {
-        RedirectManager.recordRedirect('/login', redirect1);
+        RedirectManager.recordRedirect('/login', redirect1, ctx);
       }
 
       // User arrives at dashboard - no redirect needed
@@ -384,12 +425,14 @@ describe('redirect-manager', () => {
         sessionInfo,
         '/dashboard',
         null,
-        origin
+        origin,
+        ctx
       );
       expect(redirect2).toBeNull();
     });
 
     it('prevents redirect loop for disabled user', () => {
+      const ctx = createContext();
       const user = createMockUser();
       const disabledSessionInfo = createMockSessionInfo({ isEnabled: false });
 
@@ -399,7 +442,8 @@ describe('redirect-manager', () => {
         disabledSessionInfo,
         '/admin',
         null,
-        origin
+        origin,
+        ctx
       );
       expect(redirect1).toBe('/account-disabled');
 
@@ -409,12 +453,14 @@ describe('redirect-manager', () => {
         disabledSessionInfo,
         '/account-disabled',
         null,
-        origin
+        origin,
+        ctx
       );
       expect(redirect2).toBeNull();
     });
 
     it('handles account re-enablement flow', () => {
+      const ctx = createContext();
       const user = createMockUser();
       
       // User is disabled
@@ -424,7 +470,8 @@ describe('redirect-manager', () => {
         disabledSessionInfo,
         '/dashboard',
         null,
-        origin
+        origin,
+        ctx
       );
       expect(redirect1).toBe('/account-disabled');
 
@@ -435,7 +482,8 @@ describe('redirect-manager', () => {
         enabledSessionInfo,
         '/account-disabled',
         null,
-        origin
+        origin,
+        ctx
       );
       expect(redirect2).toBe('/dashboard');
     });

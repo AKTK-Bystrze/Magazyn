@@ -21,6 +21,8 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+> **Note**: As of 2025-12-22, the frontend uses `@supabase/ssr` for request-scoped client creation. From the backend's perspective, nothing changes—tokens are still received via `Authorization: Bearer` header and validated the same way.
+
 ---
 
 ## Key Files

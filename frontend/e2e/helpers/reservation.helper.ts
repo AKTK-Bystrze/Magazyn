@@ -17,14 +17,8 @@ export async function clearCart(page: Page): Promise<void> {
   // Navigate to /equipment to avoid redirect loop on /dashboard
   await page.goto('/equipment', { waitUntil: 'domcontentloaded' });
 
-  // Reset redirect history to prevent false loop detection
-  await page.evaluate(() => {
-    // @ts-ignore - accessing app internals for test purposes
-    if (window.RedirectManager) {
-      // @ts-ignore
-      window.RedirectManager.reset();
-    }
-  });
+  // NOTE: RedirectManager now uses request-scoped contexts
+  // No need to reset global state - each request gets fresh context
 }
 
 /**

@@ -27,6 +27,7 @@
 |------|---------|
 | `src/middleware/index.ts` | SSR auth validation, route protection |
 | `src/components/auth/AuthListener.tsx` | Client-side auth state handling |
+| `src/lib/auth/supabase-ssr.ts` | 🆕 Request-scoped Supabase client factory |
 | `src/lib/auth/cookie-utils.ts` | Cookie management utilities |
 | `src/lib/auth/session-utils.ts` | Backend session fetching |
 | `src/lib/auth/redirect-manager.ts` | Centralized redirect logic |
@@ -79,47 +80,86 @@ document.cookie = `${AUTH_COOKIE_NAME}=${token}; path=/; max-age=${COOKIE_MAX_AG
 
 ```mermaid
 graph TD
-    A[Request arrives] --> B[Check Supabase session]
-    B --> C{Session exists?}
-    C -->|Yes| D[Extract token from session]
-    C -->|No| E[Check auth cookie]
-    E --> F{Cookie valid?}
-    F -->|Yes| G[Validate with Supabase]
-    F -->|No| H[Set user = null]
-    G --> D
-    D --> I[Fetch sessionInfo from backend]
-    I --> J[RedirectManager.getRedirectForAuthState]
-    J --> K{Redirect needed?}
-    K -->|Yes| L[Redirect]
-    K -->|No| M[Continue to page/API]
+    A[Request arrives] --> B[Create request-scoped Supabase client]
+    B --> C[Call supabase.auth.getUser]
+    C --> D{User authenticated?}
+    D -->|Yes| E[Extract user and session]
+    D -->|No| F[Set user = null]
+    E --> G[Fetch sessionInfo from backend]
+    F --> H[RedirectManager.getRedirectForAuthState]
+    G --> H
+    H --> I{Redirect needed?}
+    I -->|Yes| J[Redirect]
+    I -->|No| K[Continue to page/API]
 ```
+
+### Supabase SSR Client 🆕
+
+**New in v2.0**: Using `@supabase/ssr` for proper session isolation.
+
+```typescript
+// src/lib/auth/supabase-ssr.ts
+import { createServerClient } from '@supabase/ssr';
+import type { AstroCookies } from 'astro';
+
+export function createSupabaseServerClient(
+  request: Request,
+  cookies: AstroCookies
+) {
+  return createServerClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(key: string) {
+          return cookies.get(key)?.value;
+        },
+        set(key: string, value: string, options: CookieOptions) {
+          cookies.set(key, value, options);
+        },
+        remove(key: string, options: CookieOptions) {
+          cookies.delete(key, options);
+        },
+      },
+    }
+  );
+}
+```
+
+**Why @supabase/ssr?**
+- ✅ Automatic cookie handling (no manual fallback needed)
+- ✅ Request-scoped clients prevent state leakage
+- ✅ Proper SSR session validation with `getUser()`
+- ✅ Recommended by Supabase for server-side rendering
 
 ### Key Code (`src/middleware/index.ts`)
 
 ```typescript
-// 1. Try session, fallback to cookie
-const { data: { session } } = await supabaseClient.auth.getSession();
-let token = session?.access_token;
+// 1. Create request-scoped client
+const supabase = createSupabaseServerClient(context.request, context.cookies);
+context.locals.supabase = supabase;
 
-if (!context.locals.user) {
-  const authCookie = context.cookies.get(AUTH_COOKIE_NAME);
-  if (authCookie?.value) {
-    const { data: { user } } = await supabaseClient.auth.getUser(authCookie.value);
-    context.locals.user = user;
-    token = authCookie.value;
+// 2. Get user (server-side validation)
+const { data: { user }, error } = await supabase.auth.getUser();
+context.locals.user = user || null;
+
+// 3. Fetch session info from backend
+let token: string | null = null;
+if (user) {
+  const { data: { session } } = await supabase.auth.getSession();
+  token = session?.access_token || null;
+  
+  if (token) {
+    sessionInfo = await getUserSession(token);
+    context.locals.sessionInfo = sessionInfo;
+    context.locals.accessToken = token;  // For API proxies
   }
 }
 
-// 2. Fetch session info from backend
-if (context.locals.user && token) {
-  sessionInfo = await getUserSession(token);
-  context.locals.sessionInfo = sessionInfo;
-  context.locals.accessToken = token;  // For API proxies
-}
-
-// 3. Redirect logic
+// 4. Redirect logic with request-scoped context
+const redirectContext: RedirectContext = { history: [] };
 const redirectTo = RedirectManager.getRedirectForAuthState(
-  context.locals.user, sessionInfo, url.pathname, redirectParam, url.origin
+  user, sessionInfo, url.pathname, redirectParam, url.origin, redirectContext
 );
 ```
 

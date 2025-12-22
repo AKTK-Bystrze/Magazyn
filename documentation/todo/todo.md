@@ -1,10 +1,19 @@
 ## In Progress
-chat: add reservation e2e Test IDs
+  - e2e-tests-all-merge.md
   - in code test documentation, test scenario description is missing
-  - update focus on mobile layout,
   ⚠️ Topbar not visible after reload, continuing anyway
-  redirect loop detected
+  - review existing redirections
   - e2e tests for user reservation flow reservation-e2e-plan.md
+  
+  - Performance Optimization
+   - Monitor test execution time with mobile viewport
+   - Optimize fixture setup/teardown
+   - Consider test sharding for CI/CD
+
+  - Test Data Management
+   - Document test data strategy
+   - Add cleanup verification
+   - Monitor database growth
 
 ## Next
   - e2e tests for admin reservation flow
@@ -61,3 +70,4 @@ chat: add reservation e2e Test IDs
 17. Overdue reservations status and logic
 18. Warning messages for reservations that have the overlapping dates e.g start date is the same as end date of another reservation
 19.  One test ID (reservation-success-message) will need to be added when you implement success state handling (currently redirects with ?success=true)
+20. rename envs from VITE to public

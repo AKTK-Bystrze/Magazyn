@@ -21,7 +21,7 @@
 - **Styling**: Tailwind CSS 4 + Shadcn/ui components
 - **Language**: TypeScript 5
 - **State Management**: React Query (@tanstack/react-query)
-- **Authentication**: Supabase Auth
+- **Authentication**: Supabase Auth (`@supabase/ssr` for SSR)
 - **Testing**: Vitest + React Testing Library
 
 ### Architecture Diagram
@@ -233,11 +233,11 @@ export function EquipmentGrid({ items }: EquipmentGridProps) {
 ### Authentication Flow (Overview)
 
 1. **Login**: User logs in -> Magic Link -> `set-cookie`
-2. **Middleware**: Validates cookie, sets `locals.user` & `locals.accessToken`
+2. **Middleware**: Creates per-request Supabase client, validates session, sets `locals.user` & `locals.accessToken`
 3. **API Proxy**: Injects `Authorization: Bearer <token>` from `locals`
 4. **Backend**: Validates JWT token
 
-See `middleware/index.ts` and `lib/auth/` for implementation.
+See `middleware/index.ts`, `lib/auth/supabase-ssr.ts`, and `lib/auth/` for implementation.
 
 ### Redirect Flow Architecture
 
