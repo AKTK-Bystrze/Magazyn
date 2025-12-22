@@ -31,10 +31,15 @@ func NewAuthRepository(client *supabase.Client, url string, key string, serviceK
 
 // SendMagicLink sends a magic link to the specified email
 func (r *authRepository) SendMagicLink(ctx context.Context, email string) error {
-	return r.client.Auth.OTP(gotruetypes.OTPRequest{
+	err := r.client.Auth.OTP(gotruetypes.OTPRequest{
 		Email:      email,
 		CreateUser: true,
 	})
+	if err != nil {
+		// Log the actual error from Supabase for debugging
+		fmt.Printf("Supabase OTP error for %s: %v\n", email, err)
+	}
+	return err
 }
 
 // CreateUser creates a new user in Supabase Auth using the service key (Admin only)

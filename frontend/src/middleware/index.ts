@@ -52,7 +52,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // 3. Unified Redirect Logic - Single Source of Truth
     // SKIP redirects for API routes - they should handle auth state via 401/403 or pass through
-    if (!url.pathname.startsWith("/api/")) {
+    // SKIP redirects for static assets (CSS, JS, images, fonts, etc.)
+    const isStaticAsset = /\.(css|js|mjs|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp4|webm)$/i.test(url.pathname);
+
+    if (!url.pathname.startsWith("/api/") && !isStaticAsset) {
       // Request-scoped redirect tracking to prevent SSR state leakage
       const redirectContext: RedirectContext = { history: [] };
 

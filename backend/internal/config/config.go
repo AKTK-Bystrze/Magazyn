@@ -19,6 +19,7 @@ type Config struct {
 	Port               string   // HTTP server port
 	LogLevel           string   // Logging verbosity: DEBUG, INFO, WARN, or ERROR
 	CORSAllowedOrigins []string // List of allowed CORS origins for cross-origin requests
+	AppURL             string   // Application base URL for magic link redirects and email links
 }
 
 // AppState holds the initialized application state including configuration and clients.
@@ -52,6 +53,7 @@ func LoadConfig() (*AppState, error) {
 		SupabaseServiceKey: os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
 		Port:               os.Getenv("PORT"),
 		LogLevel:           os.Getenv("LOG_LEVEL"),
+		AppURL:             os.Getenv("PUBLIC_APP_URL"),
 	}
 
 	corsOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")

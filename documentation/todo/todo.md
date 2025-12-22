@@ -1,14 +1,14 @@
 ## In Progress
- - integration tests for reservation flow reservation-integration-tests-plan.
+- containerization
  
 ## Next
+ - integration tests for reservation flow reservation-integration-tests-plan.
   - e2e tests for admin reservation flow
  md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
   - e2e tests for equipment manager
   - e2e tests for superAdmin - user management
 
 ## Deployment
-- containerization
 - deployment
   - Consider test sharding for CI/CD
 - unit tests

@@ -13,6 +13,9 @@
  * Reads from PUBLIC_BACKEND_URL environment variable with localhost fallback.
  * This should point to your Go backend API server.
  * 
+ * In SSR context (server-side), uses INTERNAL_BACKEND_URL for Docker network communication.
+ * On client-side, uses PUBLIC_BACKEND_URL for browser requests.
+ * 
  * @example
  * // Development
  * PUBLIC_BACKEND_URL=http://localhost:8080
@@ -20,8 +23,8 @@
  * // Production
  * PUBLIC_BACKEND_URL=https://api.yourdomain.com
  */
-export const BACKEND_URL = (import.meta.env.SSR && import.meta.env.INTERNAL_BACKEND_URL)
-  ? import.meta.env.INTERNAL_BACKEND_URL
+export const BACKEND_URL = (import.meta.env.SSR && typeof process !== 'undefined' && process.env.INTERNAL_BACKEND_URL)
+  ? process.env.INTERNAL_BACKEND_URL
   : (import.meta.env.PUBLIC_BACKEND_URL || 'http://127.0.0.1:8080');
 
 /**

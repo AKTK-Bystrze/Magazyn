@@ -13,7 +13,7 @@ export const creditsApi = {
    * @returns Paginated credit history items and current balance
    */
   getHistory: async (params: { page: number; perPage: number }): Promise<CreditHistoryResponse> => {
-    const { data } = await api.get<unknown>("/api/credits/history", {
+    const { data } = await api.get<unknown>("/api/credit-history", {
       page: params.page,
       per_page: params.perPage,
     });

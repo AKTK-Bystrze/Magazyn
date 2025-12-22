@@ -15,7 +15,10 @@ export async function getUserSession(accessToken: string): Promise<SessionInfo |
       "Content-Type": "application/json",
     };
 
-    const response = await fetch(`${BACKEND_URL}/auth/session`, {
+    const url = `${BACKEND_URL}/auth/session`;
+    console.log(`📡 Fetching session from: ${url}`);
+
+    const response = await fetch(url, {
       method: "GET",
       headers,
       cache: 'no-store' // Ensure we don't get cached stale responses
