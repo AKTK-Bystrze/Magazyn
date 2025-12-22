@@ -1,9 +1,5 @@
 ## In Progress
-
-  - in code test documentation, test scenario description is missing
-
   - Optimize fixture setup/teardown
-  - e2e tests clean up, duplicated logs, hardcoded values etc
   - Test Data Management
   - Document test data strategy
 

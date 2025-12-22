@@ -1,6 +1,7 @@
 import { test as base, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createTestEquipment, cleanupTestEquipment } from '../helpers/data-setup.helper';
+import { E2E_CONFIG } from '../constants';
 
 /**
  * E2E Test Fixtures with Automated Authentication
@@ -52,7 +53,11 @@ interface WorkerFixtures {
 const TEST_USER_EMAIL = process.env.E2E_TEST_EMAIL || 'test.dev.g6@gmail.com';
 
 /**
- * Creates a Supabase admin client using service role key
+ * Creates a Supabase admin client using the service role key.
+ * Used for administrative tasks like user management and data cleanup.
+ *
+ * @returns A SupabaseClient instance with service role privileges.
+ * @throws An error if required environment variables are missing.
  */
 function createSupabaseAdmin(): SupabaseClient {
   const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
@@ -74,8 +79,12 @@ function createSupabaseAdmin(): SupabaseClient {
 }
 
 /**
- * Ensures test user exists with email already confirmed
- * Uses Admin API createUser with email_confirm: true
+ * Ensures a test user exists and confirms their email.
+ * Uses the Admin API to create the user or update their password if they exist.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @returns A promise that resolves to the user's ID and email.
+ * @throws An error if user listing, creation, or profile upsert fails.
  */
 async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id: string; email: string }> {
   console.log('[SETUP] Checking if test user exists:', TEST_USER_EMAIL);
@@ -137,7 +146,7 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
       role: 'user',
       is_enabled: true,
       username: 'e2e-tester',
-      credit_balance: 100
+      credit_balance: E2E_CONFIG.DEFAULTS.INITIAL_CREDITS
     }, { onConflict: 'id' });
 
   if (profileError) {
@@ -150,12 +159,13 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
 }
 
 /**
- * Injects a valid Supabase session into the browser.
- * 
- * Uses @supabase/ssr cookie format (sb-<project-ref>-auth-token) for compatibility
- * with the new cookie-based authentication system.
- * 
- * IMPORTANT: Navigates directly to /dashboard to avoid redirect loops.
+ * Injects a valid Supabase session directly into the browser context.
+ * Uses `@supabase/ssr` cookie format (`sb-<project-ref>-auth-token`).
+ *
+ * IMPORTANT: Navigates directly to /dashboard to avoid redirect loops and triggers a reload.
+ *
+ * @param page - The Playwright Page instance.
+ * @returns A promise that resolves when the session is injected and the page is loaded.
  */
 async function injectSupabaseSession(page: Page): Promise<void> {
   console.log('[AUTH] Getting real session tokens via signInWithPassword...');
@@ -193,14 +203,12 @@ async function injectSupabaseSession(page: Page): Promise<void> {
   const sessionData = {
     access_token,
     refresh_token,
-    expires_in: 3600,
-    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    expires_in: E2E_CONFIG.DEFAULTS.AUTH_TOKEN_EXPIRY,
+    expires_at: Math.floor(Date.now() / 1000) + E2E_CONFIG.DEFAULTS.AUTH_TOKEN_EXPIRY,
     token_type: 'bearer',
     user: data.user,
   };
 
-  // Inject Supabase SSR cookie (sb-*-auth-token)
-  // This cookie format matches what @supabase/ssr expects
   await page.context().addCookies([
     {
       name: cookieName,
@@ -229,35 +237,52 @@ async function injectSupabaseSession(page: Page): Promise<void> {
 
 /* eslint-disable react-hooks/rules-of-hooks */
 export const test = base.extend<AuthFixtures, WorkerFixtures>({
+  /**
+   * Provides the worker index to the test.
+   * Useful for creating unique resource names to avoid collisions in parallel execution.
+   */
   // eslint-disable-next-line no-empty-pattern
   workerIndex: [async ({ }, use, workerInfo) => {
     await use(workerInfo.workerIndex);
   }, { scope: 'worker' }],
 
-// eslint-disable-next-line no-empty-pattern
+  /**
+   * Provides an authenticated Supabase admin client.
+   * This client has service role privileges and should be used for setup/teardown only.
+   */
+  // eslint-disable-next-line no-empty-pattern
   supabaseAdmin: async ({}, use) => {
     const client = createSupabaseAdmin();
     await use(client);
   },
 
+  /**
+   * Provides a valid test user.
+   * Ensures the user exists in Supabase and returns their ID and email.
+   */
   testUser: async ({ supabaseAdmin }, use) => {
     // Ensure test user exists and return user info
     const user = await ensureTestUserExists(supabaseAdmin);
     await use(user);
   },
 
+  /**
+   * Provides a set of test equipment dedicated to the current worker.
+   * Creates the equipment before the test and cleans it up afterwards.
+   */
   testEquipment: async ({ supabaseAdmin, workerIndex }, use) => {
-    // Create dedicated equipment for this worker
-    const equipment = await createTestEquipment(supabaseAdmin, workerIndex, 2);
+    const equipment = await createTestEquipment(supabaseAdmin, workerIndex, E2E_CONFIG.DEFAULTS.DEFAULT_EQUIPMENT_COUNT);
 
     await use(equipment);
 
-    // Cleanup: Delete equipment and any reservations
     const equipmentIds = equipment.map(e => e.id);
     await cleanupTestEquipment(supabaseAdmin, equipmentIds);
-    console.log(`[Worker ${workerIndex}] ✅ Cleaned up test equipment`);
   },
 
+  /**
+   * Provides a browser page authenticated with the test user's session.
+   * Injects the session cookie before the test starts.
+   */
   authenticatedPage: async ({ browser }, use) => {
     console.log('[AUTH] Setting up authenticated page...');
 
@@ -265,18 +290,12 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // Inject valid session into browser
     await injectSupabaseSession(page);
-
-    // NOTE: RedirectManager now uses request-scoped contexts
-    // No need to reset global state - each request/component gets fresh context
-    console.log('[AUTH] ✅ RedirectManager uses request-scoped contexts (no reset needed)');
 
     console.log('[AUTH] ✅ Authenticated page ready');
 
     await use(page);
-    
-    // Cleanup
+
     await context.close();
   },
 });

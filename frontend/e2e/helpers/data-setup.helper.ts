@@ -2,7 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { E2E_CONFIG } from '../constants';
 
 /**
- * Reset user credits to default balance.
+ * Resets a user's credit balance to the default or specified amount.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param userId - The ID of the user.
+ * @param balance - The credit balance to set (default: defined in config).
+ * @returns A promise that resolves when the balance is updated.
  */
 export async function resetCredits(
   supabaseAdmin: SupabaseClient,
@@ -16,7 +21,11 @@ export async function resetCredits(
 }
 
 /**
- * Cancel a reservation and optionally refund credits.
+ * Cancels a reservation by setting its status to 'DENIED'.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param reservationId - The ID of the reservation to cancel.
+ * @returns A promise that resolves when the status is updated.
  */
 export async function cancelReservation(
   supabaseAdmin: SupabaseClient,
@@ -29,10 +38,11 @@ export async function cancelReservation(
 }
 
 /**
- * Clear all pending reservations for a user (test cleanup).
+ * Clears all pending reservations for a specified user.
  *
- * @param supabaseAdmin - Supabase client with admin privileges
- * @param userId - User ID to clear reservations for
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param userId - The ID of the user.
+ * @returns A promise that resolves when all pending reservations are denied.
  */
 export async function clearPendingReservations(
   supabaseAdmin: SupabaseClient,
@@ -46,21 +56,19 @@ export async function clearPendingReservations(
 }
 
 /**
- * Creates test equipment for a worker.
- * Uses the first available equipment type from the database.
+ * Creates test equipment items for a specific worker.
  *
- * @param supabaseAdmin - Supabase client with admin privileges
- * @param workerIndex - Worker index for unique naming
- * @param count - Number of equipment items to create
- * @returns Array of created equipment with id and typeId
- * @throws Error if equipment type lookup or creation fails
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param workerIndex - The index of the worker executing the test.
+ * @param count - The number of equipment items to create (default: defined in config).
+ * @returns A promise that resolves to an array of created equipment objects (id, typeId).
+ * @throws An error if equipment types cannot be fetched or creation fails.
  */
 export async function createTestEquipment(
   supabaseAdmin: SupabaseClient,
   workerIndex: number,
-  count: number = 2
+  count: number = E2E_CONFIG.DEFAULTS.DEFAULT_EQUIPMENT_COUNT
 ): Promise<{ id: string; typeId: string }[]> {
-  // Get first available equipment type
   const { data: typeData, error: typeError } = await supabaseAdmin
     .from('equipment_types')
     .select('id')
@@ -94,16 +102,15 @@ export async function createTestEquipment(
     equipmentItems.push({ id: data.id, typeId: typeData.id });
   }
 
-  console.log(`[Worker ${workerIndex}] ✅ Created ${count} test equipment items`);
   return equipmentItems;
 }
 
 /**
- * Deletes test equipment created for a worker.
- * Silently continues on error to allow cleanup of other resources.
+ * Deletes test equipment and associated reservations.
  *
- * @param supabaseAdmin - Supabase client with admin privileges
- * @param equipmentIds - Array of equipment IDs to delete
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param equipmentIds - An array of equipment IDs to delete.
+ * @returns A promise that resolves when the equipment and related data are deleted.
  */
 export async function cleanupTestEquipment(
   supabaseAdmin: SupabaseClient,
@@ -111,7 +118,8 @@ export async function cleanupTestEquipment(
 ): Promise<void> {
   if (equipmentIds.length === 0) return;
 
-  // First get reservation IDs for these equipment items
+  if (equipmentIds.length === 0) return;
+
   const { data: reservations } = await supabaseAdmin
     .from('reservations')
     .select('id')
@@ -119,7 +127,6 @@ export async function cleanupTestEquipment(
 
   const reservationIds = reservations?.map(r => r.id) ?? [];
 
-  // Delete reservation_history first (child of reservations)
   if (reservationIds.length > 0) {
     const { error: historyError } = await supabaseAdmin
       .from('reservation_history')
@@ -131,7 +138,6 @@ export async function cleanupTestEquipment(
     }
   }
 
-  // Then delete reservations (child of equipment)
   const { error: resError } = await supabaseAdmin
     .from('reservations')
     .delete()
@@ -141,7 +147,6 @@ export async function cleanupTestEquipment(
     console.error(`Failed to cleanup reservations: ${resError.message}`);
   }
 
-  // Finally delete the equipment (parent)
   const { error } = await supabaseAdmin
     .from('equipment')
     .delete()
@@ -153,18 +158,14 @@ export async function cleanupTestEquipment(
 }
 
 /**
- * Cleans up orphaned test equipment from previous failed test runs.
- * Removes all equipment with internal_id starting with TEST_EQUIPMENT_PREFIX.
+ * Cleans up orphaned test equipment from previous test runs.
  *
- * @param supabaseAdmin - Supabase client with admin privileges
- * @returns Number of equipment items deleted
+ * @param supabaseAdmin - The Supabase admin client.
+ * @returns A promise that resolves to the number of deleted equipment items.
  */
 export async function cleanupOrphanedTestEquipment(
   supabaseAdmin: SupabaseClient
 ): Promise<number> {
-  console.log('[CLEANUP] Searching for orphaned test equipment...');
-
-  // Find all test equipment
   const { data: equipment, error: fetchError } = await supabaseAdmin
     .from('equipment')
     .select('id, internal_id')
@@ -176,13 +177,11 @@ export async function cleanupOrphanedTestEquipment(
   }
 
   if (!equipment || equipment.length === 0) {
-    console.log('[CLEANUP] ✅ No orphaned test equipment found');
     return 0;
   }
 
   const equipmentIds = equipment.map(e => e.id);
 
-  // Get reservation IDs first
   const { data: reservations } = await supabaseAdmin
     .from('reservations')
     .select('id')
@@ -190,7 +189,6 @@ export async function cleanupOrphanedTestEquipment(
 
   const reservationIds = reservations?.map(r => r.id) ?? [];
 
-  // Delete reservation_history first (child of reservations)
   if (reservationIds.length > 0) {
     const { error: historyError } = await supabaseAdmin
       .from('reservation_history')
@@ -202,7 +200,6 @@ export async function cleanupOrphanedTestEquipment(
     }
   }
 
-  // Delete reservations (child of equipment)
   const { error: resError } = await supabaseAdmin
     .from('reservations')
     .delete()
@@ -212,7 +209,6 @@ export async function cleanupOrphanedTestEquipment(
     console.error(`Failed to delete orphaned reservations: ${resError.message}`);
   }
 
-  // Delete equipment (parent)
   const { error: deleteError } = await supabaseAdmin
     .from('equipment')
     .delete()
@@ -223,6 +219,5 @@ export async function cleanupOrphanedTestEquipment(
     return 0;
   }
 
-  console.log(`[CLEANUP] ✅ Deleted ${equipment.length} orphaned test equipment items`);
   return equipment.length;
 }

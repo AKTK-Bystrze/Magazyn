@@ -25,6 +25,10 @@ export const E2E_CONFIG = {
   DEFAULTS: {
     CREDIT_BALANCE: 100,
     RESERVATION_DAYS_AHEAD: 7,
+    RESERVATION_DURATION_DAYS: 3,
+    INITIAL_CREDITS: 100,
+    AUTH_TOKEN_EXPIRY: 3600,
+    DEFAULT_EQUIPMENT_COUNT: 2,
   },
 
   /** Prefix for test equipment names (for cleanup identification) */

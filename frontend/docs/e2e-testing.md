@@ -105,7 +105,7 @@ frontend/e2e/
 │   └── reservation.helper.ts
 └── constants/               # Shared constants
     ├── test-ids.ts          # Centralized data-testid values
-    └── config.ts            # Test configuration (timeouts, users, prefixes)
+    └── config.ts            # Single source of truth for timeouts, user creds, and global defaults
 ```
 
 ---
@@ -171,16 +171,17 @@ await page.getByTestId(TEST_IDS.LOGIN_BUTTON).click();
 await page.getByTestId('login-button').click();
 ```
 
-#### 2. Never Use Hardcoded Timeouts
+#### 2. Configuration Management
 
-Replace `waitForTimeout()` with explicit waits or assertions.
+**Never use magic numbers or strings.** Use `E2E_CONFIG` from `e2e/constants/config.ts` for timeouts, default values, and test data.
 
 ```typescript
-// ❌ BAD - Arbitrary timeout
-await page.waitForTimeout(1000);
+// ✅ GOOD
+import { E2E_CONFIG } from '../../constants';
+await expect(el).toBeVisible({ timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
 
-// ✅ GOOD - Wait for specific element
-await expect(page.getByTestId(TEST_IDS.MODAL)).toBeVisible();
+// ❌ BAD
+await expect(el).toBeVisible({ timeout: 5000 });
 ```
 
 #### 3. Use Proper Assertions
@@ -234,20 +235,26 @@ if (!hasFeature) {
 }
 ```
 
-#### 7. Add TSDoc Comments
+#### 7. Documentation Standards
 
-Document test files and complex tests with TSDoc comments.
+*   **Strictly NO inline comments.** Code should be self-documenting.
+*   **Mandatory TSDoc** for:
+    *   All exported helper functions (param/return/throws tags).
+    *   All Page Object Model methods.
+    *   Test description blocks (`test.describe`).
+    *   Complex test scenarios (JSDoc).
 
 ```typescript
 /**
- * Equipment browsing e2e tests.
- * Tests the equipment listing, filtering, and cart functionality.
+ * Adds an item to the cart and verifies visibility.
  *
- * @see fixtures/index.ts for authentication implementation
+ * @param page - The Playwright page instance.
+ * @param equipmentId - The ID of the item to add.
+ * @throws Error if the add button is not found.
  */
-test.describe('Equipment Browsing', () => {
+export async function addToCart(page: Page, equipmentId: string): Promise<void> {
   // ...
-});
+}
 ```
 
 ---

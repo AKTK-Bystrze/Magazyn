@@ -14,6 +14,10 @@ import { TEST_IDS } from '../../constants';
  */
 
 test.describe('Login Page', () => {
+  /**
+   * Scenario: Login Page Display
+   * Verifies that the login page loads and displays the email login form.
+   */
   test('should display login form', async ({ page }) => {
     await page.goto('/login');
 

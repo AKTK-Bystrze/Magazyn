@@ -67,36 +67,48 @@ export class ReservationCartPOM {
   }
 
   /**
-   * Navigate to the cart page
+   * Navigates to the reservation cart page.
+   *
+   * @returns A promise that resolves when the cart view is visible.
    */
-  async goto() {
+  async goto(): Promise<void> {
     await this.page.goto("/reservations/create");
     await expect(this.cartView).toBeVisible();
   }
 
   /**
-   * Wait for cart view to be visible
+   * Waits for the cart view container to be visible.
+   *
+   * @returns A promise that resolves when the cart view is visible.
    */
-  async waitForCartView() {
+  async waitForCartView(): Promise<void> {
     await expect(this.cartView).toBeVisible();
   }
 
   /**
-   * Get count of items in cart
+   * Gets the total number of items currently in the cart.
+   *
+   * @returns A promise that resolves to the count of cart items.
    */
   async getItemCount(): Promise<number> {
     return await this.cartItems.count();
   }
 
   /**
-   * Get specific cart item by equipment ID
+   * Gets the locator for a specific cart item row.
+   *
+   * @param equipmentId - The ID of the equipment to locate.
+   * @returns The Locator for the specified cart item.
    */
   getCartItem(equipmentId: string): Locator {
     return this.page.getByTestId(`cart-item-${equipmentId}`);
   }
 
   /**
-   * Remove item from cart by equipment ID
+   * Removes a specific item from the cart.
+   *
+   * @param equipmentId - The ID of the equipment to remove.
+   * @returns A promise that resolves when the item is no longer visible in the cart.
    */
   async removeItem(equipmentId: string): Promise<void> {
     const removeButton = this.page.getByTestId(`cart-item-remove-${equipmentId}`);
@@ -107,36 +119,25 @@ export class ReservationCartPOM {
   }
 
   /**
-   * Set reservation dates
-   * @param startDate - ISO date string (YYYY-MM-DD)
-   * @param endDate - ISO date string (YYYY-MM-DD)
+   * Sets the reservation start and end dates in the date picker.
+   *
+   * @param startDate - The start date string in ISO format (YYYY-MM-DD).
+   * @param endDate - The end date string in ISO format (YYYY-MM-DD).
+   * @returns A promise that resolves when dates are set and checkout is enabled.
    */
   async setDates(startDate: string, endDate: string): Promise<void> {
-    // Set start date
     await this.startDateInput.fill(startDate);
-    await this.page.waitForTimeout(200);
-    
-    // Set end date
     await this.endDateInput.fill(endDate);
-    await this.page.waitForTimeout(200);
-    
-    // Wait for the button to become enabled (indicates validation passed)
-    // Increased timeout to handle slower network/processing
-    try {
-      await expect(this.checkoutButton).toBeEnabled({ timeout: 10000 });
-    } catch (e) {
-      // If button doesn't become enabled, log current values for debugging
-      const startVal = await this.startDateInput.inputValue();
-      const endVal = await this.endDateInput.inputValue();
-      console.log(`Dates not processed. Start: ${startVal}, End: ${endVal}`);
-      throw e;
-    }
+
+    await expect(this.checkoutButton).toBeEnabled({ timeout: 10000 });
   }
 
   /**
-   * Set dates X days from now
-   * @param startDaysFromNow - Days from now for start date
-   * @param endDaysFromNow - Days from now for end date
+   * Sets reservation dates calculated from the current date.
+   *
+   * @param startDaysFromNow - The number of days from now for the start date.
+   * @param endDaysFromNow - The number of days from now for the end date.
+   * @returns A promise that resolves when the dates are set.
    */
   async setDatesFromNow(startDaysFromNow: number, endDaysFromNow: number): Promise<void> {
     const startDate = new Date();
@@ -152,7 +153,9 @@ export class ReservationCartPOM {
   }
 
   /**
-   * Get total cost value
+   * Gets the total reservation cost from the cost estimator.
+   *
+   * @returns A promise that resolves to the total cost as a number.
    */
   async getTotalCost(): Promise<number> {
     const text = await this.totalCost.textContent();
@@ -164,7 +167,9 @@ export class ReservationCartPOM {
   }
 
   /**
-   * Get current credit balance
+   * Gets the current user credit balance.
+   *
+   * @returns A promise that resolves to the current balance.
    */
   async getCurrentBalance(): Promise<number> {
     const text = await this.currentBalance.textContent();
@@ -175,7 +180,9 @@ export class ReservationCartPOM {
   }
 
   /**
-   * Get remaining balance after reservation
+   * Gets the projected remaining balance after the reservation.
+   *
+   * @returns A promise that resolves to the remaining balance.
    */
   async getRemainingBalance(): Promise<number> {
     const text = await this.remainingBalance.textContent();
@@ -186,7 +193,9 @@ export class ReservationCartPOM {
   }
 
   /**
-   * Click checkout button to proceed to confirmation
+   * Clicks the checkout button to open the confirmation modal.
+   *
+   * @returns A promise that resolves when the confirmation modal is visible.
    */
   async proceedToConfirmation(): Promise<void> {
     await this.checkoutButton.click();
@@ -197,13 +206,17 @@ export class ReservationCartPOM {
 
   /**
    * Confirm reservation in the modal
+   *
+   * @returns A promise that resolves when the button is clicked.
    */
   async confirm(): Promise<void> {
     await this.confirmButton.click();
   }
 
   /**
-   * Cancel confirmation and return to cart
+   * Cancels the reservation confirmation and closes the modal.
+   *
+   * @returns A promise that resolves when the modal is no longer visible.
    */
   async cancelConfirmation(): Promise<void> {
     await this.cancelButton.click();
@@ -211,35 +224,47 @@ export class ReservationCartPOM {
   }
 
   /**
-   * Wait for success and redirect to reservations page
+   * Waits for the successful reservation redirect URL.
+   *
+   * @returns A promise that resolves when the URL matches the success pattern.
    */
   async waitForSuccess(): Promise<void> {
     await this.page.waitForURL(/\/reservations\?success=true/);
   }
 
   /**
-   * Check if insufficient credits error is visible
+   * Checks if the insufficient credits error is displayed.
+   *
+   * @returns A promise that resolves to true if the error is visible.
    */
   async hasInsufficientCreditsError(): Promise<boolean> {
     return await this.insufficientCreditsError.isVisible();
   }
 
   /**
-   * Check if conflict error is visible
+   * Checks if the reservation conflict error is displayed.
+   *
+   * @returns A promise that resolves to true if the error is visible.
    */
   async hasConflictError(): Promise<boolean> {
     return await this.conflictError.isVisible();
   }
 
   /**
-   * Check if checkout button is enabled
+   * Checks if the checkout button is enabled.
+   *
+   * @returns A promise that resolves to true if enabled.
    */
   async isCheckoutEnabled(): Promise<boolean> {
     return await this.checkoutButton.isEnabled();
   }
 
   /**
-   * Complete full checkout flow (dates → confirm → wait for success)
+   * Executes the complete checkout flow (dates -> confirm -> success).
+   *
+   * @param startDaysFromNow - Days from now for start date.
+   * @param endDaysFromNow - Days from now for end date.
+   * @returns A promise that resolves when the flow is complete.
    */
   async completeCheckout(startDaysFromNow: number, endDaysFromNow: number): Promise<void> {
     await this.setDatesFromNow(startDaysFromNow, endDaysFromNow);

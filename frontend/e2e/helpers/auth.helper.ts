@@ -1,4 +1,5 @@
 import { type Page } from '@playwright/test';
+import { E2E_CONFIG } from '../constants';
 
 /**
  * Authentication helper functions for e2e tests.
@@ -6,11 +7,11 @@ import { type Page } from '@playwright/test';
  */
 
 /**
- * Navigates to login page and submits email for magic link.
- * Use for testing the login UI flow (not for authentication setup).
- * 
- * @param page - Playwright page instance
- * @param email - Email address to submit
+ * Navigates to the login page and submits the email form.
+ *
+ * @param page - The Playwright Page instance.
+ * @param email - The email address to try logging in with.
+ * @returns A promise that resolves when the submit button has been clicked.
  */
 export async function submitLoginEmail(page: Page, email: string): Promise<void> {
   await page.goto('/login');
@@ -19,18 +20,20 @@ export async function submitLoginEmail(page: Page, email: string): Promise<void>
 }
 
 /**
- * Waits for magic link sent confirmation to appear.
- * 
- * @param page - Playwright page instance
+ * Waits for the magic link sent confirmation message to be visible.
+ *
+ * @param page - The Playwright Page instance.
+ * @returns A promise that resolves when the confirmation container is visible.
  */
 export async function waitForMagicLinkSent(page: Page): Promise<void> {
   await page.getByTestId('magic-link-sent-container').waitFor({ state: 'visible' });
 }
 
 /**
- * Performs logout by clicking the logout button in user menu.
- * 
- * @param page - Playwright page instance
+ * Logs out the current user via the user menu.
+ *
+ * @param page - The Playwright Page instance.
+ * @returns A promise that resolves when the user is logged out and redirected to login.
  */
 export async function logout(page: Page): Promise<void> {
   await page.getByTestId('user-menu-trigger').click();
@@ -41,13 +44,14 @@ export async function logout(page: Page): Promise<void> {
 }
 
 /**
- * Verifies user is logged in by checking for navigation elements.
- * 
- * @param page - Playwright page instance
+ * Verifies if the user is currently logged in by checking for the user menu trigger.
+ *
+ * @param page - The Playwright Page instance.
+ * @returns A promise that resolves to true if logged in, false otherwise.
  */
 export async function verifyLoggedIn(page: Page): Promise<boolean> {
   try {
-    await page.getByTestId('user-menu-trigger').waitFor({ state: 'visible', timeout: 5000 });
+    await page.getByTestId('user-menu-trigger').waitFor({ state: 'visible', timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
     return true;
   } catch {
     return false;

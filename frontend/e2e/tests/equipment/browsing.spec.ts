@@ -11,17 +11,19 @@ import { TEST_IDS } from '../../constants';
  */
 
 test.describe('Equipment Browsing', () => {
+  /**
+   * Scenario: Equipment Details
+   * Verifies that clicking an equipment card opens the details sheet.
+   * Checks visibility of grid, card, and details sheet.
+   */
   test('should open equipment details on click', async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/equipment');
 
-    // Wait for equipment to load
     await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
 
-    // Find first equipment card
     const firstCard = authenticatedPage.locator('[data-testid^="equipment-card-"]').first();
     await expect(firstCard).toBeVisible();
 
-    // Get the equipment ID
     const cardTestId = await firstCard.getAttribute('data-testid');
     const equipmentId = cardTestId?.replace('equipment-card-', '');
 
@@ -29,7 +31,6 @@ test.describe('Equipment Browsing', () => {
       const detailsButton = authenticatedPage.getByTestId(TEST_IDS.equipmentDetailsButton(equipmentId));
       await detailsButton.click();
 
-      // Wait for the details sheet to open using explicit wait
       const detailsSheet = authenticatedPage.getByTestId('equipment-details-sheet');
       await expect(detailsSheet).toBeVisible();
     }
