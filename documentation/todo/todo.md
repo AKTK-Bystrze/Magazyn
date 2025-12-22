@@ -4,26 +4,24 @@
   - redirect is done, review existing redirections, update e2e documentation and tests design, they are based on previous redirections
   - e2e-tests-all-merge.md - do it
   - in code test documentation, test scenario description is missing
-  ⚠️ Topbar not visible after reload, continuing anyway
+  - ⚠️ Topbar not visible after reload, continuing anyway. What is this log??
   
-  - intergation tests for reservation flow reservation-integration-tests-plan.md
-  
-  - Performance Optimization
-   - Monitor test execution time with mobile viewport
-   - Optimize fixture setup/teardown
-   - Consider test sharding for CI/CD
-
+  - Optimize fixture setup/teardown
   - Test Data Management
-   - Document test data strategy
-   - Add cleanup verification
-   - Monitor database growth
+  - Document test data strategy
 
 ## Next
   - e2e tests for admin reservation flow
   - integration tests for reservation flow reservation-integration-tests-plan.md ( verify that integrtaion tests for admin case is needed. Is user case covering all the cases?)
   - e2e tests for equipment manager
 
-## Equipment Views
+## Deployment
+- containerization
+- deployment
+  - Consider test sharding for CI/CD
+- unit tests
+
+## Equipment Views refactor
 - Equipment manager + viewer component reuse improved
 - Both share FilterSidebar (horizontal for manager, vertical for browse)
 - Admin sees dates filter hidden in browse view
@@ -35,11 +33,6 @@
 - documentation
 - review with obselete
 - refactoring needed
-
-## Deployment
-- containerization
-- deployment
-- unit tests
 
 ## Future Work
 - credits request feature
