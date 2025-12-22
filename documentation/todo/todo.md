@@ -1,9 +1,12 @@
 ## In Progress
-  - e2e-tests-all-merge.md
+  - continue chat tix is my env file, - resolve envs issue, remove duplicates, look for hardcoded values from envs
+  - e2e-tests-merge.md is done - verify tests are working
+  - redirect is done, review existing redirections, update e2e documentation and tests design, they are based on previous redirections
+  - e2e-tests-all-merge.md - do it
   - in code test documentation, test scenario description is missing
   ⚠️ Topbar not visible after reload, continuing anyway
-  - review existing redirections
-  - e2e tests for user reservation flow reservation-e2e-plan.md
+  
+  - intergation tests for reservation flow reservation-integration-tests-plan.md
   
   - Performance Optimization
    - Monitor test execution time with mobile viewport
