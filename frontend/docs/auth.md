@@ -13,9 +13,10 @@
 │ Client-Side              │ Server-Side (SSR)                    │
 │ ├─ AuthListener.tsx      │ ├─ middleware/index.ts (Astro)       │
 │ ├─ Supabase Client       │ ├─ pages/api/* (API Proxies)         │
-│ └─ Cookie Utils          │ └─ lib/auth/* (Utilities)            │
+│ └─ (Browser Client)      │ └─ lib/auth/* (Utilities)            │
 ├──────────────────────────┴──────────────────────────────────────┤
-│ Token Storage: Cookie (magazyn-auth-token)                       │
+│ Token Storage: HTTP Cookies (sb-*-auth-token)                   │
+│ Auto-managed by @supabase/ssr                                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -27,8 +28,8 @@
 |------|---------|
 | `src/middleware/index.ts` | SSR auth validation, route protection |
 | `src/components/auth/AuthListener.tsx` | Client-side auth state handling |
-| `src/lib/auth/supabase-ssr.ts` | 🆕 Request-scoped Supabase client factory |
-| `src/lib/auth/cookie-utils.ts` | Cookie management utilities |
+| `src/lib/supabase.ts` | 🆕 Browser Supabase client (createBrowserClient) |
+| `src/lib/auth/supabase-ssr.ts` | 🆕 Server Supabase client (createServerClient) |
 | `src/lib/auth/session-utils.ts` | Backend session fetching |
 | `src/lib/auth/redirect-manager.ts` | Centralized redirect logic |
 | `src/lib/auth/url-utils.ts` | URL validation for redirects |
@@ -36,41 +37,38 @@
 
 ---
 
-## Token Management
+### Browser Client Setup
 
-### Cookie Operations
+**Uses `@supabase/ssr` for automatic cookie management**:
 
 ```typescript
-import {
-  setAuthCookie,
-  removeAuthCookie,
-  getAuthCookie,
-  hasAuthCookie,
-  waitForCookieAndRedirect
-} from '@/lib/auth/cookie-utils';
+// src/lib/supabase.ts
+import { createBrowserClient } from '@supabase/ssr';
 
-// Set cookie after login
-setAuthCookie(accessToken);
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-// Clear on logout
-removeAuthCookie();
-
-// Check existence
-if (hasAuthCookie()) { ... }
-
-// Set and redirect (handles async cookie propagation)
-await waitForCookieAndRedirect(token, '/dashboard');
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 ```
+
+**Key features**:
+- ✅ Automatic cookie management (no manual `setAuthCookie` needed)
+- ✅ Syncs with server-side client
+- ✅ PKCE flow for magic links
+- ✅ Auto token refresh
 
 ### Cookie Configuration
 
-```typescript
-export const AUTH_COOKIE_NAME = 'magazyn-auth-token';
-export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
+**Automatically managed by `@supabase/ssr`**:
 
-// Set with security attributes
-document.cookie = `${AUTH_COOKIE_NAME}=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
-```
+| Attribute | Value | Purpose |
+|-----------|-------|---------|
+| Name | `sb-<project-ref>-auth-token` | Access token |
+| Path | `/` | Site-wide availability |
+| SameSite | Lax | CSRF protection |
+| HttpOnly | No | Allows client-side refresh |
+
+> **Note**: Cookies are set/removed automatically by Supabase. No manual cookie management required.
 
 ---
 
@@ -196,28 +194,27 @@ export const GET: APIRoute = async ({ locals, request }) => {
 Handles Supabase auth events on client:
 
 ```typescript
-// On SIGNED_IN
+// On SIGNED_IN - Cookies automatically set by @supabase/ssr
 onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session) {
-    // 1. Set cookie
-    setAuthCookie(session.access_token);
-    
-    // 2. Fetch fresh session info
+    // 1. Fetch fresh session info
     const sessionInfo = await getUserSession(session.access_token);
     
-    // 3. Get redirect target
+    // 2. Get redirect target
     const redirectTo = RedirectManager.getRedirectForAuthState(...);
     
-    // 4. Wait for cookie and redirect
-    await waitForCookieAndRedirect(session.access_token, redirectTo);
+    // 3. Redirect (cookies already set automatically)
+    window.location.replace(redirectTo);
   }
   
   if (event === 'SIGNED_OUT') {
-    removeAuthCookie();
+    // Cookies automatically cleared by Supabase
     window.location.href = ROUTES.PUBLIC.LOGIN;
   }
 });
 ```
+
+> **Key Change**: No manual cookie management needed - `@supabase/ssr` handles everything automatically.
 
 ---
 
@@ -323,8 +320,8 @@ Supabase SDK automatically handles token refresh:
 
 onAuthStateChange(async (event, session) => {
   if (event === 'TOKEN_REFRESHED' && session) {
-    // Update cookie with new token
-    setAuthCookie(session.access_token);
+    // Cookies automatically updated by @supabase/ssr
+    console.log('🔄 Token refreshed (cookies auto-updated)');
   }
 });
 ```
@@ -347,15 +344,13 @@ onAuthStateChange(async (event, session) => {
 
 ```typescript
 // src/components/auth/LogoutButton.tsx
-import { supabase } from '@/lib/supabase-client';
-import { removeAuthCookie } from '@/lib/auth/cookie-utils';
+import { supabase } from '@/lib/supabase';
 
 async function handleLogout() {
-  // 1. Sign out from Supabase (invalidates session)
+  // Sign out from Supabase (invalidates session + clears cookies automatically)
   await supabase.auth.signOut();
   
-  // 2. Cookie removal handled by AuthListener on SIGNED_OUT event
-  // (see AuthListener section)
+  // AuthListener handles redirect on SIGNED_OUT event
 }
 ```
 
@@ -381,7 +376,7 @@ sequenceDiagram
 ```typescript
 // Already in AuthListener.tsx
 if (event === 'SIGNED_OUT') {
-  removeAuthCookie();
+  // Cookies automatically cleared by Supabase
   window.location.href = ROUTES.PUBLIC.LOGIN;
 }
 ```

@@ -13,7 +13,7 @@ Magazyn uses **Supabase Auth** for identity management with **JWT tokens** for A
 | Layer | Component | Responsibility |
 |-------|-----------|----------------|
 | **Frontend (SSR)** | Astro Middleware | Session validation, token forwarding, route protection |
-| **Frontend (Client)** | AuthListener | Auth state changes, cookie management, client redirects |
+| **Frontend (Client)** | AuthListener | Auth state changes, client redirects (@supabase/ssr auto-cookies) |
 | **Backend** | Auth Middleware | JWT validation, user context injection |
 | **Backend** | RBAC Middleware | Role-based endpoint protection |
 | **Supabase** | Auth Service | User identity, JWT issuance, magic links |
@@ -55,13 +55,15 @@ sequenceDiagram
     participant Browser
     participant Supabase
     participant AuthListener as AuthListener (React)
+    participant SSR as @supabase/ssr
 
     User->>Browser: Click magic link
     Browser->>Supabase: Verify magic link
-    Supabase-->>Browser: Session (access_token)
-    Browser->>AuthListener: SIGNED_IN event
-    AuthListener->>Browser: Set cookie (magazyn-auth-token)
-    AuthListener->>AuthListener: Wait for cookie confirmation
+    Supabase-->>Browser: Redirect with #access_token
+    Browser->>AuthListener: Process hash token
+    AuthListener->>Supabase: setSession(token)
+    Supabase->>SSR: Auto-set HTTP cookies (sb-*-auth-token)
+    SSR-->>Browser: Cookies configured
     AuthListener->>Browser: Redirect to dashboard/admin
 ```
 
@@ -111,12 +113,17 @@ interface SessionInfo {
 
 ### Cookie Configuration
 
+**Managed automatically by `@supabase/ssr`**:
+
 | Attribute | Value | Purpose |
 |-----------|-------|---------|
-| Name | `magazyn-auth-token` | Auth token storage |
+| Name | `sb-<project-ref>-auth-token` | Access token (auto-managed) |
+| Name | `sb-<project-ref>-auth-token-code-verifier` | PKCE verifier (temporary) |
 | Path | `/` | Site-wide availability |
-| Max-Age | 1 year | Persistent sessions |
 | SameSite | Lax | CSRF protection |
+| HttpOnly | No | Allows client-side refresh |
+
+> **Note**: Cookies are automatically set by `createBrowserClient()` and read by `createServerClient()` from `@supabase/ssr`.
 
 ---
 

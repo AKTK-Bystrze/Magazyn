@@ -334,42 +334,42 @@ if (!role) {
 
 ## Cookie Management
 
-### Cookie Flow
+### Cookie Flow (Automatic via @supabase/ssr)
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant AuthListener
-    participant CookieUtils
+    participant Supabase as @supabase/ssr
     participant Browser
     
     Client->>AuthListener: SIGNED_IN event
-    AuthListener->>CookieUtils: setAuthCookie(token)
-    CookieUtils->>Browser: Set cookie with attributes
-    
-    AuthListener->>CookieUtils: waitForCookie(300ms)
-    CookieUtils->>Browser: Check cookie
-    Browser-->>CookieUtils: Cookie confirmed
-    CookieUtils-->>AuthListener: Success
+    AuthListener->>Supabase: setSession(token)
+    Supabase->>Browser: Auto-set HTTP cookies (sb-*-auth-token)
+    Browser-->>AuthListener: Cookies set
     
     AuthListener->>Browser: window.location.replace(route)
 ```
 
 ### Cookie Attributes
 
+**Automatically managed by `@supabase/ssr`**:
+
 ```typescript
-// magazyn-auth-token=<token>; path=/; max-age=31536000; SameSite=Lax
+// Cookie name format: sb-<project-ref>-auth-token
+// Example: sb-gwamxxqarkcpvgzvpanc-auth-token
+//
+// Attributes (set automatically):
+// - path=/
+// - SameSite=Lax (CSRF protection)
+// - Accessible by both browser and server
 ```
 
-**Security**:
-- `SameSite=Lax`: CSRF protection while allowing normal navigation
-- `path=/`: Available site-wide
-- `max-age=31536000`: 1 year (persistent sessions)
-
-**Why Wait for Cookie?**
-- Browser cookie setting is async
-- Redirecting before cookie is set causes loop
-- `waitForCookie()` polls every 50ms with 300ms timeout
+**Why @supabase/ssr?**
+- ✅ No manual cookie management needed
+- ✅ Consistent cookie handling between browser/server
+- ✅ Automatic cleanup on signOut()
+- ✅ PKCE flow support built-in
 
 ---
 
