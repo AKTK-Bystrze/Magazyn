@@ -37,23 +37,17 @@ func SetupIntegrationTest() (*config.AppState, error) {
 		log.Printf("Loaded .env from %s", envPath)
 	}
 
-	url := os.Getenv("SUPABASE_URL")
-	if url == "" {
-		url = os.Getenv("VITE_SUPABASE_URL")
-	}
+	url := os.Getenv("PUBLIC_SUPABASE_URL")
 
 	// Prefer Service Role Key for tests to create/delete users
 	key := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if key == "" {
 		log.Println("⚠️ SUPABASE_SERVICE_ROLE_KEY not found. Using Anon Key. Admin operations may fail.")
-		key = os.Getenv("SUPABASE_KEY")
-		if key == "" {
-			key = os.Getenv("VITE_SUPABASE_ANON_KEY")
-		}
+		key = os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 	}
 
 	if url == "" || key == "" {
-		return nil, fmt.Errorf("missing SUPABASE_URL or SUPABASE_KEY/SUPABASE_SERVICE_ROLE_KEY")
+		return nil, fmt.Errorf("missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY/SUPABASE_SERVICE_ROLE_KEY")
 	}
 
 	client, err := supabase.NewClient(url, key, nil)

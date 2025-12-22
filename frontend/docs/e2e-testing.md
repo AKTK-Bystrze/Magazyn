@@ -21,8 +21,8 @@ Add to **root `.env`**:
 
 ```bash
 # Supabase (likely already set)
-VITE_SUPABASE_URL=<your-supabase-url>
-VITE_SUPABASE_ANON_KEY=<your-anon-key>
+PUBLIC_SUPABASE_URL=<your-supabase-url>
+PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 
 # E2E Testing (required)
 SUPABASE_SERVICE_ROLE_KEY=<service-role-key>  # Supabase → Settings → API → Service Role
@@ -336,8 +336,8 @@ jobs:
       - name: Run E2E Tests
         working-directory: ./frontend
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           E2E_TEST_EMAIL: test@example.com
           E2E_TEST_PASSWORD: TestSecurePassword123!

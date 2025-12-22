@@ -63,14 +63,8 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 
 		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
 		// Get config from environment
-		url := os.Getenv("SUPABASE_URL")
-		if url == "" {
-			url = os.Getenv("VITE_SUPABASE_URL")
-		}
-		key := os.Getenv("SUPABASE_KEY")
-		if key == "" {
-			key = os.Getenv("VITE_SUPABASE_ANON_KEY")
-		}
+		url := os.Getenv("PUBLIC_SUPABASE_URL")
+		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
 		middleware := NewAuthMiddleware(repo)(next)
@@ -100,14 +94,8 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 
 		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
 		// Get config from environment
-		url := os.Getenv("SUPABASE_URL")
-		if url == "" {
-			url = os.Getenv("VITE_SUPABASE_URL")
-		}
-		key := os.Getenv("SUPABASE_KEY")
-		if key == "" {
-			key = os.Getenv("VITE_SUPABASE_ANON_KEY")
-		}
+		url := os.Getenv("PUBLIC_SUPABASE_URL")
+		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
 		middleware := NewAuthMiddleware(repo)(next)

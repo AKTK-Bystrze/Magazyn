@@ -8,8 +8,6 @@ vi.stubGlobal('import', {
       PUBLIC_BACKEND_URL: 'http://localhost:8080',
       PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
       PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
-      VITE_SUPABASE_URL: 'https://test.supabase.co',
-      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
     },
   },
 });

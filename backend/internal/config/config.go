@@ -47,8 +47,8 @@ func LoadConfig() (*AppState, error) {
 	}
 
 	cfg := &Config{
-		SupabaseURL:        os.Getenv("SUPABASE_URL"),
-		SupabaseKey:        os.Getenv("SUPABASE_KEY"),
+		SupabaseURL:        os.Getenv("PUBLIC_SUPABASE_URL"),
+		SupabaseKey:        os.Getenv("PUBLIC_SUPABASE_ANON_KEY"),
 		SupabaseServiceKey: os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
 		Port:               os.Getenv("PORT"),
 		LogLevel:           os.Getenv("LOG_LEVEL"),
@@ -64,12 +64,6 @@ func LoadConfig() (*AppState, error) {
 		cfg.CORSAllowedOrigins = []string{"http://localhost:4321", "http://localhost:3000"}
 	}
 
-	if cfg.SupabaseURL == "" {
-		cfg.SupabaseURL = os.Getenv("VITE_SUPABASE_URL")
-	}
-	if cfg.SupabaseKey == "" {
-		cfg.SupabaseKey = os.Getenv("VITE_SUPABASE_ANON_KEY")
-	}
 	if cfg.Port == "" {
 		cfg.Port = "8080"
 	}
@@ -78,7 +72,7 @@ func LoadConfig() (*AppState, error) {
 	}
 
 	if cfg.SupabaseURL == "" || cfg.SupabaseKey == "" {
-		log.Fatal("SUPABASE_URL and SUPABASE_KEY (or VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY) must be set in environment variables")
+		log.Fatal("PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
 	}
 
 	log.Println("🔑 Using Anon Key with JWT forwarding - RLS policies enforced per user")

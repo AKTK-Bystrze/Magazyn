@@ -14,8 +14,8 @@ import { createTestEquipment, cleanupTestEquipment } from '../helpers/data-setup
  * 4. Browser reload activates the session for SSR middleware
  *
  * Required environment variables:
- * - `VITE_SUPABASE_URL` / `SUPABASE_URL`
- * - `VITE_SUPABASE_ANON_KEY` / `SUPABASE_ANON_KEY`
+ * - `PUBLIC_SUPABASE_URL`
+ * - `PUBLIC_SUPABASE_ANON_KEY`
  * - `SUPABASE_SERVICE_ROLE_KEY`
  * - `E2E_TEST_EMAIL`
  * - `E2E_TEST_PASSWORD` (optional, default: 'TestSecurePassword123!')
@@ -55,13 +55,13 @@ const TEST_USER_EMAIL = process.env.E2E_TEST_EMAIL || 'test.dev.g6@gmail.com';
  * Creates a Supabase admin client using service role key
  */
 function createSupabaseAdmin(): SupabaseClient {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error(
       'Missing Supabase environment variables. ' +
-      'Ensure VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env'
+      'Ensure PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env'
     );
   }
 
@@ -163,8 +163,8 @@ async function injectSupabaseSession(page: Page): Promise<void> {
   console.log('[AUTH] Getting real session tokens via signInWithPassword...');
 
   // Use a separate client to sign in (not admin) to get the session
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.PUBLIC_SUPABASE_ANON_KEY;
   const client = createClient(supabaseUrl!, anonKey!);
 
   const { data, error } = await client.auth.signInWithPassword({

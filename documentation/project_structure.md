@@ -132,20 +132,21 @@ A template for required environment variables:
 
 ```
 # Supabase
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
+PUBLIC_SUPABASE_URL=
+PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
-# Database
-GO_DB_URI=
+# Database (same as PUBLIC_SUPABASE_URL, stored separately for backend compatibility)
+# Note: Backend now uses PUBLIC_SUPABASE_URL directly
+# GO_DB_URI=  # Deprecated
 
-# Auth
-FRONTEND_PUBLIC_SUPABASE_URL=
-FRONTEND_PUBLIC_SUPABASE_ANON_KEY=
+# Backend API
+PUBLIC_BACKEND_URL=
 
-# Email
-GO_SMTP_EMAIL=
-GO_SMTP_PASSWORD=
+# Server
+PORT=8080
+LOG_LEVEL=INFO
+CORS_ALLOWED_ORIGINS=http://localhost:4321,http://localhost:3000
 ```
 
 This file prevents configuration drift and onboarding pain.
