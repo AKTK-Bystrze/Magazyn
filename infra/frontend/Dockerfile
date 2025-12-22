@@ -13,6 +13,13 @@ RUN npm ci
 # Copy the rest of the application code
 COPY . .
 
+# Build arguments
+ARG PUBLIC_SUPABASE_URL
+ARG PUBLIC_SUPABASE_ANON_KEY
+ARG PUBLIC_BACKEND_URL
+ARG PUBLIC_APP_URL
+
+
 # Build the application
 RUN npm run build
 

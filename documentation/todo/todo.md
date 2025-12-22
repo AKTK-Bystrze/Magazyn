@@ -5,6 +5,7 @@
   - e2e tests for admin reservation flow
  md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
   - e2e tests for equipment manager
+  - e2e tests for superAdmin - user management
 
 ## Deployment
 - containerization

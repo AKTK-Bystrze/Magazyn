@@ -1,0 +1,19 @@
+# Binaries
+main
+main.exe
+api.exe
+tmp_main.exe
+bin/
+__debug_bin
+
+# Dependencies
+vendor/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Test & Coverage
+coverage.out
+coverage_report.txt
