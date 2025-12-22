@@ -6,7 +6,7 @@
 
 ## Overview
 
-Magazyn uses **Playwright** for e2e testing with **Supabase password-based authentication**. Tests authenticate using real JWT tokens obtained via `signInWithPassword` - this works even though the app UI uses magic links.
+Magazyn uses **Playwright** for e2e testing with **Supabase password-based authentication**. Tests authenticate by injecting Supabase SSR cookies (`sb-*-auth-token`) obtained via `signInWithPassword` - this works even though the app UI uses magic links.
 
 > [!IMPORTANT]
 > This application is **primarily designed for mobile devices**. All E2E tests run on mobile viewport (Pixel 5: 393x851).
@@ -68,7 +68,7 @@ sequenceDiagram
     Test->>Supabase: Create/update user (service key)
     Test->>Supabase: signInWithPassword
     Supabase-->>Test: access_token, refresh_token
-    Test->>Browser: Inject session (localStorage + cookies)
+    Test->>Browser: Inject Supabase SSR cookies (sb-*-auth-token)
     Browser->>Browser: Reload page
     Test->>Browser: Navigate to protected route
 ```
@@ -358,7 +358,7 @@ jobs:
 |-------|----------|
 | `Missing Supabase environment variables` | Set `SUPABASE_SERVICE_ROLE_KEY` in `.env` |
 | `Failed to sign in for tokens` | Check password or enable user in Supabase |
-| Redirect to `/login` | Session injection failed, check cookie format |
+| Redirect to `/login` | Session injection failed, check Supabase SSR cookie format (sb-<project-ref>-auth-token) |
 | Redirect to `/account-disabled` | Set `is_enabled = true` in profiles table |
 | Backend timeout | Start Go API on port 8080 |
 | `Conflict detected for equipment` | Use `testEquipment` fixture for isolation |

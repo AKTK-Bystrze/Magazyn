@@ -1,5 +1,5 @@
 ## In Progress
-  - continue chat tix is my env file, - resolve envs issue, remove duplicates, look for hardcoded values from envs
+
   - e2e-tests-merge.md is done - verify tests are working
   - redirect is done, review existing redirections, update e2e documentation and tests design, they are based on previous redirections
   - e2e-tests-all-merge.md - do it

@@ -21,20 +21,20 @@ test.describe('Auth Diagnostics', () => {
     console.log('ENVIRONMENT VARIABLE CHECK');
     console.log('========================================');
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.PUBLIC_SUPABASE_ANON_KEY;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const testEmail = process.env.E2E_TEST_EMAIL;
     const testPassword = process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!';
 
-    console.log('VITE_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing');
-    console.log('VITE_SUPABASE_ANON_KEY:', anonKey ? '✅ Set' : '❌ Missing');
+    console.log('PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing');
+    console.log('PUBLIC_SUPABASE_ANON_KEY:', anonKey ? '✅ Set' : '❌ Missing');
     console.log('SUPABASE_SERVICE_ROLE_KEY:', serviceKey ? '✅ Set' : '❌ Missing');
     console.log('E2E_TEST_EMAIL:', testEmail || '❌ Missing');
     console.log('E2E_TEST_PASSWORD:', testPassword ? '✅ Set' : '❌ Missing');
 
-    expect(supabaseUrl, 'VITE_SUPABASE_URL must be set').toBeTruthy();
-    expect(anonKey, 'VITE_SUPABASE_ANON_KEY must be set').toBeTruthy();
+    expect(supabaseUrl, 'PUBLIC_SUPABASE_URL must be set').toBeTruthy();
+    expect(anonKey, 'PUBLIC_SUPABASE_ANON_KEY must be set').toBeTruthy();
     expect(serviceKey, 'SUPABASE_SERVICE_ROLE_KEY must be set').toBeTruthy();
     expect(testEmail, 'E2E_TEST_EMAIL must be set').toBeTruthy();
 
@@ -46,7 +46,7 @@ test.describe('Auth Diagnostics', () => {
     console.log('ADMIN CLIENT & USER CHECK');
     console.log('========================================');
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL!;
+    const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const testEmail = process.env.E2E_TEST_EMAIL!;
 
@@ -78,8 +78,8 @@ test.describe('Auth Diagnostics', () => {
     console.log('SIGN-IN TEST');
     console.log('========================================');
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-    const anonKey = process.env.VITE_SUPABASE_ANON_KEY!;
+    const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.PUBLIC_SUPABASE_ANON_KEY!;
     const testEmail = process.env.E2E_TEST_EMAIL!;
     const testPassword = process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!';
 
@@ -114,10 +114,16 @@ test.describe('Auth Diagnostics', () => {
     console.log('[DIAG] Navigated to homepage, URL:', authenticatedPage.url());
 
     const cookies = await authenticatedPage.context().cookies();
-    const authCookie = cookies.find((c) => c.name === 'magazyn-auth-token');
 
-    expect(authCookie, 'magazyn-auth-token cookie must exist').toBeTruthy();
-    console.log('[DIAG] ✅ Auth cookie found');
+    // Extract project ref from URL to get correct cookie name
+    const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
+    const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+    const cookieName = `sb-${projectRef}-auth-token`;
+
+    const authCookie = cookies.find((c) => c.name === cookieName);
+
+    expect(authCookie, `${cookieName} cookie must exist`).toBeTruthy();
+    console.log(`[DIAG] ✅ Auth cookie found: ${cookieName}`);
 
     await authenticatedPage.screenshot({ path: 'test-results/auth-diagnostic.png' });
     console.log('[DIAG] ✅ Screenshot saved to test-results/auth-diagnostic.png');

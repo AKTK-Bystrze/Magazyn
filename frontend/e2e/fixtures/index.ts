@@ -10,7 +10,7 @@ import { createTestEquipment, cleanupTestEquipment } from '../helpers/data-setup
  * Authentication flow:
  * 1. Uses Admin API (service role key) to create/update test user with password
  * 2. Signs in via `signInWithPassword` to obtain real JWT tokens
- * 3. Injects tokens into browser localStorage + `magazyn-auth-token` cookie
+ * 3. Injects tokens into Supabase SSR cookies (sb-*-auth-token)
  * 4. Browser reload activates the session for SSR middleware
  *
  * Required environment variables:
@@ -151,13 +151,11 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
 
 /**
  * Injects a valid Supabase session into the browser.
- * Signs in using password to get REAL JWT tokens, then injects them.
- */
-/**
- * Injects a valid Supabase session into the browser.
+ * 
+ * Uses @supabase/ssr cookie format (sb-<project-ref>-auth-token) for compatibility
+ * with the new cookie-based authentication system.
  * 
  * IMPORTANT: Navigates directly to /dashboard to avoid redirect loops.
- * The root path (/) triggers middleware redirects that pollute RedirectManager history.
  */
 async function injectSupabaseSession(page: Page): Promise<void> {
   console.log('[AUTH] Getting real session tokens via signInWithPassword...');
@@ -179,19 +177,20 @@ async function injectSupabaseSession(page: Page): Promise<void> {
   const { access_token, refresh_token } = data.session;
   console.log('[AUTH] ✅ Real tokens obtained');
 
-  // Use the same storage key as configured in lib/supabase.ts
-  const storageKey = 'magazyn-auth-token';
   const baseURL = process.env.E2E_BASE_URL || 'http://localhost:4321';
 
-  console.log('[AUTH] Injecting session into localStorage and Cookies...');
+  console.log('[AUTH] Injecting Supabase SSR cookies...');
 
   // CRITICAL: Navigate to /dashboard directly, NOT root 
-  // This avoids triggering middleware redirect from / → /dashboard
-  // which would pollute RedirectManager.redirectHistory
   await page.goto(`${baseURL}/dashboard`);
 
-  // Prepare session object for localStorage
-  const session = {
+  // Extract project reference from Supabase URL
+  // e.g., "https://gwamxxqarkcpvgzvpanc.supabase.co" → "gwamxxqarkcpvgzvpanc"
+  const projectRef = new URL(supabaseUrl!).hostname.split('.')[0];
+  const cookieName = `sb-${projectRef}-auth-token`;
+
+  // Prepare session object for Supabase SSR cookie
+  const sessionData = {
     access_token,
     refresh_token,
     expires_in: 3600,
@@ -199,21 +198,13 @@ async function injectSupabaseSession(page: Page): Promise<void> {
     token_type: 'bearer',
     user: data.user,
   };
-  const sessionStr = JSON.stringify(session);
 
-  // 1. Inject into localStorage (for client-side Supabase SDK)
-  await page.evaluate(
-    ({ key, value }) => {
-      localStorage.setItem(key, value);
-    },
-    { key: storageKey, value: sessionStr }
-  );
-
-  // 2. Inject the app's auth cookie (magazyn-auth-token)
+  // Inject Supabase SSR cookie (sb-*-auth-token)
+  // This cookie format matches what @supabase/ssr expects
   await page.context().addCookies([
     {
-      name: 'magazyn-auth-token',
-      value: access_token,
+      name: cookieName,
+      value: JSON.stringify(sessionData),
       domain: 'localhost',
       path: '/',
       httpOnly: false,
@@ -222,10 +213,9 @@ async function injectSupabaseSession(page: Page): Promise<void> {
     }
   ]);
 
-  console.log('[AUTH] ✅ Session and cookie injected');
+  console.log(`[AUTH] ✅ Supabase SSR cookie injected: ${cookieName}`);
 
-  // IMPROVED: Wait for specific UI element instead of networkidle
-  // networkidle is unreliable and can cause flakiness
+  // Reload to activate the session
   await page.reload({ waitUntil: 'domcontentloaded' });
 
   // Wait for topbar to be visible (confirms app is fully loaded with auth)
@@ -235,13 +225,6 @@ async function injectSupabaseSession(page: Page): Promise<void> {
   } catch {
     console.warn('[AUTH] ⚠️ Topbar not visible after reload, continuing anyway');
   }
-
-  // Verify session was stored
-  const storedSession = await page.evaluate((key) => {
-    return localStorage.getItem(key) ? 'Session found' : 'Session NOT found';
-  }, storageKey);
-
-  console.log('[AUTH] Verification:', storedSession);
 }
 
 /* eslint-disable react-hooks/rules-of-hooks */
