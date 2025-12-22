@@ -1,21 +1,3 @@
-help me prepare a design change. 
+currently in the tests Happy Path: Complete reservation flow and Cart Management: Remove items from cart
 
-Currently a user can see only their own reservation under "reservations" view. Admin can see all reservations under "reservations" view. That is all.
-
-desired state:
-every user (all roles) should be able to see their own reservations
-every user (all roles) should be able to see all reservations of all users
-every user (all roles) should be able to modify their own reservations
-admin user should be able to modify all reservations
-
-on the sidebar all users should be able to dropdown reservations view in the sidebar and select one of the options:
-- my reservations
-- all reservations
-<goal>
-review current implementation and prepare a design change. Before proceeding ask 5 questions to me to make sure I understand the task. Suggest how to achive the desired state that it:
-design should be as simple as possible, reuse existing components and patterns. Patterns should allow to reuse as much code as possible.
-should it be the same view for all with just different filtering options?
-</goal>
-<current_implementation>
-
-</current_implementation>
+both are stuck in cart, with equipment in it, 2 and 1 item accordingly

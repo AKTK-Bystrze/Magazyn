@@ -1,4 +1,9 @@
 ## In Progress
+chat: add reservation e2e Test IDs
+  - in code test documentation, test scenario description is missing
+  - update focus on mobile layout,
+  ⚠️ Topbar not visible after reload, continuing anyway
+  redirect loop detected
   - e2e tests for user reservation flow reservation-e2e-plan.md
 
 ## Next
@@ -36,6 +41,7 @@
 - use mockery for testing
 
 ## Refactoring Needed
+0. simplify reservation flow, one modal for confirmation instead of two
 1. New user creation should be admin-only (disable auto-creation)
 2. Translate UI to English
 3. Notification service - centralized for sending notifications

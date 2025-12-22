@@ -1,5 +1,6 @@
 import { test as base, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createTestEquipment, cleanupTestEquipment } from '../helpers/data-setup.helper';
 
 /**
  * E2E Test Fixtures with Automated Authentication
@@ -30,11 +31,22 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  * ```
  */
 
+/** Test-scoped fixtures (created per test) */
 interface AuthFixtures {
   /** Pre-authenticated page with test user session */
   authenticatedPage: Page;
   /** Supabase admin client for test setup/teardown */
   supabaseAdmin: SupabaseClient;
+  /** Test user information (id and email) */
+  testUser: { id: string; email: string };
+  /** Dedicated test equipment for this worker (created/cleaned per test) */
+  testEquipment: { id: string; typeId: string }[];
+}
+
+/** Worker-scoped fixtures (shared across tests in same worker) */
+interface WorkerFixtures {
+  /** Worker index for parallel test isolation */
+  workerIndex: number;
 }
 
 const TEST_USER_EMAIL = process.env.E2E_TEST_EMAIL || 'test.dev.g6@gmail.com';
@@ -220,7 +232,7 @@ async function injectSupabaseSession(page: Page): Promise<void> {
   try {
     await page.getByTestId('topbar').waitFor({ state: 'visible', timeout: 5000 });
     console.log('[AUTH] ✅ Session activated - topbar visible');
-  } catch (e) {
+  } catch {
     console.warn('[AUTH] ⚠️ Topbar not visible after reload, continuing anyway');
   }
 
@@ -232,23 +244,39 @@ async function injectSupabaseSession(page: Page): Promise<void> {
   console.log('[AUTH] Verification:', storedSession);
 }
 
-export const test = base.extend<AuthFixtures>({
+/* eslint-disable react-hooks/rules-of-hooks */
+export const test = base.extend<AuthFixtures, WorkerFixtures>({
+  // eslint-disable-next-line no-empty-pattern
+  workerIndex: [async ({ }, use, workerInfo) => {
+    await use(workerInfo.workerIndex);
+  }, { scope: 'worker' }],
+
+// eslint-disable-next-line no-empty-pattern
   supabaseAdmin: async ({}, use) => {
     const client = createSupabaseAdmin();
     await use(client);
   },
 
-  authenticatedPage: async ({ browser, supabaseAdmin }, use) => {
-    console.log('[AUTH] Setting up authenticated page...');
-
-    // CRITICAL: Reset RedirectManager before each test
-    // Prevents redirect history from one test affecting another
-    const { RedirectManager } = await import('../../src/lib/auth/redirect-manager');
-    RedirectManager.reset();
-    console.log('[AUTH] ✅ RedirectManager history cleared');
-
-    // Ensure test user exists (creates if needed, with email confirmed)
+  testUser: async ({ supabaseAdmin }, use) => {
+    // Ensure test user exists and return user info
     const user = await ensureTestUserExists(supabaseAdmin);
+    await use(user);
+  },
+
+  testEquipment: async ({ supabaseAdmin, workerIndex }, use) => {
+    // Create dedicated equipment for this worker
+    const equipment = await createTestEquipment(supabaseAdmin, workerIndex, 2);
+
+    await use(equipment);
+
+    // Cleanup: Delete equipment and any reservations
+    const equipmentIds = equipment.map(e => e.id);
+    await cleanupTestEquipment(supabaseAdmin, equipmentIds);
+    console.log(`[Worker ${workerIndex}] ✅ Cleaned up test equipment`);
+  },
+
+  authenticatedPage: async ({ browser }, use) => {
+    console.log('[AUTH] Setting up authenticated page...');
 
     // Create new context and page
     const context = await browser.newContext();
@@ -257,12 +285,30 @@ export const test = base.extend<AuthFixtures>({
     // Inject valid session into browser
     await injectSupabaseSession(page);
 
+    // CRITICAL: Reset RedirectManager IN BROWSER CONTEXT
+    // This must run in browser, not in Node.js test runner
+    await page.evaluate(async () => {
+      // @ts-ignore - Dynamic import in browser context
+      // Import and reset RedirectManager in browser context
+      const { RedirectManager } = await import('/src/lib/auth/redirect-manager');
+      RedirectManager.reset();
+
+      // Expose to window for test access
+      // @ts-ignore
+      window.RedirectManager = RedirectManager;
+    });
+    console.log('[AUTH] ✅ RedirectManager reset in browser context');
+
     console.log('[AUTH] ✅ Authenticated page ready');
 
     await use(page);
     
-    // Cleanup: Reset redirect history again after test
-    RedirectManager.reset();
+    // Cleanup: Reset redirect history again after test (in browser)
+    await page.evaluate(async () => {
+      // @ts-ignore - Dynamic import in browser context
+      const { RedirectManager } = await import('../../src/lib/auth/redirect-manager');
+      RedirectManager.reset();
+    });
     await context.close();
   },
 });

@@ -31,7 +31,10 @@ export default defineConfig({
     ['html', { open: 'never' }],
     ['list'],
   ],
-  
+
+  /* Global teardown to cleanup orphaned test equipment */
+  globalTeardown: './e2e/global-teardown.ts',
+
   /* Shared settings for all the projects below */
   use: {
     /* Base URL from environment variable */
@@ -56,8 +59,8 @@ export default defineConfig({
     },
     
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
       dependencies: ['setup'],
     },
     

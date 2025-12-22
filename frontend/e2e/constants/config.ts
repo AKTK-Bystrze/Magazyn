@@ -26,4 +26,7 @@ export const E2E_CONFIG = {
     CREDIT_BALANCE: 100,
     RESERVATION_DAYS_AHEAD: 7,
   },
+
+  /** Prefix for test equipment names (for cleanup identification) */
+  TEST_EQUIPMENT_PREFIX: 'E2E-Test-',
 } as const;

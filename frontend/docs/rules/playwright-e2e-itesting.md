@@ -4,7 +4,7 @@
 
 #### PLAYWRIGHT
 
-- Initialize configuration only with Chromium/Desktop Chrome browser
+- Initialize configuration only with Chromium Chrome browser, mobile view
 - Use browser contexts for isolating test environments
 - Implement the Page Object Model for maintainable tests
 - Use locators for resilient element selection

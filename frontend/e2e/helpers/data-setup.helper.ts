@@ -30,6 +30,9 @@ export async function cancelReservation(
 
 /**
  * Clear all pending reservations for a user (test cleanup).
+ *
+ * @param supabaseAdmin - Supabase client with admin privileges
+ * @param userId - User ID to clear reservations for
  */
 export async function clearPendingReservations(
   supabaseAdmin: SupabaseClient,
@@ -40,4 +43,146 @@ export async function clearPendingReservations(
     .update({ status: 'DENIED' })
     .eq('user_id', userId)
     .eq('status', 'PENDING');
+}
+
+/**
+ * Creates test equipment for a worker.
+ * Uses the first available equipment type from the database.
+ *
+ * @param supabaseAdmin - Supabase client with admin privileges
+ * @param workerIndex - Worker index for unique naming
+ * @param count - Number of equipment items to create
+ * @returns Array of created equipment with id and typeId
+ * @throws Error if equipment type lookup or creation fails
+ */
+export async function createTestEquipment(
+  supabaseAdmin: SupabaseClient,
+  workerIndex: number,
+  count: number = 2
+): Promise<{ id: string; typeId: string }[]> {
+  // Get first available equipment type
+  const { data: typeData, error: typeError } = await supabaseAdmin
+    .from('equipment_types')
+    .select('id')
+    .limit(1)
+    .single();
+
+  if (typeError || !typeData) {
+    throw new Error(`Failed to get equipment type: ${typeError?.message}`);
+  }
+
+  const equipmentItems: { id: string; typeId: string }[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const uniqueId = `${E2E_CONFIG.TEST_EQUIPMENT_PREFIX}W${workerIndex}-${i}-${Date.now()}`;
+
+    const { data, error } = await supabaseAdmin
+      .from('equipment')
+      .insert({
+        internal_id: uniqueId,
+        type_id: typeData.id,
+        name: `Test Equipment W${workerIndex}-${i}`,
+        status: 'ok',
+      })
+      .select('id')
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to create test equipment: ${error?.message}`);
+    }
+
+    equipmentItems.push({ id: data.id, typeId: typeData.id });
+  }
+
+  console.log(`[Worker ${workerIndex}] ✅ Created ${count} test equipment items`);
+  return equipmentItems;
+}
+
+/**
+ * Deletes test equipment created for a worker.
+ * Silently continues on error to allow cleanup of other resources.
+ *
+ * @param supabaseAdmin - Supabase client with admin privileges
+ * @param equipmentIds - Array of equipment IDs to delete
+ */
+export async function cleanupTestEquipment(
+  supabaseAdmin: SupabaseClient,
+  equipmentIds: string[]
+): Promise<void> {
+  if (equipmentIds.length === 0) return;
+
+  // First delete any reservations for this equipment
+  const { error: resError } = await supabaseAdmin
+    .from('reservations')
+    .delete()
+    .in('equipment_id', equipmentIds);
+
+  if (resError) {
+    console.error(`Failed to cleanup reservations: ${resError.message}`);
+  }
+
+  // Then delete the equipment
+  const { error } = await supabaseAdmin
+    .from('equipment')
+    .delete()
+    .in('id', equipmentIds);
+
+  if (error) {
+    console.error(`Failed to cleanup test equipment: ${error.message}`);
+  }
+}
+
+/**
+ * Cleans up orphaned test equipment from previous failed test runs.
+ * Removes all equipment with internal_id starting with TEST_EQUIPMENT_PREFIX.
+ *
+ * @param supabaseAdmin - Supabase client with admin privileges
+ * @returns Number of equipment items deleted
+ */
+export async function cleanupOrphanedTestEquipment(
+  supabaseAdmin: SupabaseClient
+): Promise<number> {
+  console.log('[CLEANUP] Searching for orphaned test equipment...');
+
+  // Find all test equipment
+  const { data: equipment, error: fetchError } = await supabaseAdmin
+    .from('equipment')
+    .select('id, internal_id')
+    .like('internal_id', `${E2E_CONFIG.TEST_EQUIPMENT_PREFIX}%`);
+
+  if (fetchError) {
+    console.error(`Failed to fetch orphaned equipment: ${fetchError.message}`);
+    return 0;
+  }
+
+  if (!equipment || equipment.length === 0) {
+    console.log('[CLEANUP] ✅ No orphaned test equipment found');
+    return 0;
+  }
+
+  const equipmentIds = equipment.map(e => e.id);
+
+  // Delete reservations first
+  const { error: resError } = await supabaseAdmin
+    .from('reservations')
+    .delete()
+    .in('equipment_id', equipmentIds);
+
+  if (resError) {
+    console.error(`Failed to delete orphaned reservations: ${resError.message}`);
+  }
+
+  // Delete equipment
+  const { error: deleteError } = await supabaseAdmin
+    .from('equipment')
+    .delete()
+    .in('id', equipmentIds);
+
+  if (deleteError) {
+    console.error(`Failed to delete orphaned equipment: ${deleteError.message}`);
+    return 0;
+  }
+
+  console.log(`[CLEANUP] ✅ Deleted ${equipment.length} orphaned test equipment items`);
+  return equipment.length;
 }

@@ -8,6 +8,9 @@
 
 Magazyn uses **Playwright** for e2e testing with **Supabase password-based authentication**. Tests authenticate using real JWT tokens obtained via `signInWithPassword` - this works even though the app UI uses magic links.
 
+> [!IMPORTANT]
+> This application is **primarily designed for mobile devices**. All E2E tests run on mobile viewport (Pixel 5: 393x851).
+
 ---
 
 ## Quick Start
@@ -81,24 +84,30 @@ sequenceDiagram
 frontend/e2e/
 ├── tests/                   # Test files organized by feature
 │   ├── auth/                # Authentication tests
-│   └── equipment/           # Equipment feature tests
-├── fixtures/                # Test fixtures (authenticatedPage)
+│   ├── equipment/           # Equipment feature tests
+│   └── reservation-creation.spec.ts
+├── fixtures/                # Test fixtures (authenticatedPage, testEquipment)
 ├── page-objects/            # Page Object Models
 ├── helpers/                 # Helper functions
+│   ├── data-setup.helper.ts # Equipment creation/cleanup
+│   └── reservation.helper.ts
 └── constants/               # Shared constants
     ├── test-ids.ts          # Centralized data-testid values
-    └── config.ts            # Test configuration (timeouts, users)
+    └── config.ts            # Test configuration (timeouts, users, prefixes)
 ```
 
 ---
 
 ## Available Fixtures
 
-| Fixture | Purpose |
-|---------|---------|
-| `page` | Standard Playwright page (no auth) |
-| `authenticatedPage` | Pre-authenticated page with test user session |
-| `supabaseAdmin` | Supabase admin client for setup/teardown |
+| Fixture | Scope | Purpose |
+|---------|-------|---------|
+| `page` | test | Standard Playwright page (no auth) |
+| `authenticatedPage` | test | Pre-authenticated page with test user session |
+| `supabaseAdmin` | test | Supabase admin client for setup/teardown |
+| `testUser` | test | Test user information (id and email) |
+| `workerIndex` | worker | Worker index for parallel test isolation |
+| `testEquipment` | test | Dedicated test equipment for this worker (2 items) |
 
 ### Usage
 
@@ -112,6 +121,25 @@ test('protected page access', async ({ authenticatedPage }) => {
 });
 ```
 
+### Worker-Isolated Equipment
+
+For tests that need dedicated equipment (to avoid conflicts in parallel execution):
+
+```typescript
+test('reservation flow', async ({ authenticatedPage, testEquipment, workerIndex }) => {
+  const [equip1, equip2] = testEquipment;
+  
+  // Use testEquipment IDs - each worker gets unique equipment
+  await addToCart(authenticatedPage, equip1.id);
+  await addToCart(authenticatedPage, equip2.id);
+  
+  console.log(`[Worker ${workerIndex}] Using equipment: ${equip1.id}, ${equip2.id}`);
+});
+```
+
+> [!NOTE]
+> `testEquipment` is created in `beforeEach` and cleaned up (including any reservations) in `afterEach`.
+
 ---
 
 ## Writing New Tests
@@ -120,7 +148,7 @@ test('protected page access', async ({ authenticatedPage }) => {
 
 #### 1. Use `TEST_IDS` Constants
 
-Always use constants from `e2e/constants/test-ids.ts` instead of hardcoded strings. This ensures consistency and easier refactoring.
+Always use constants from `e2e/constants/test-ids.ts` instead of hardcoded strings.
 
 ```typescript
 // ✅ GOOD
@@ -168,22 +196,22 @@ import { test, expect } from '../../fixtures';
 import { test, expect } from '@playwright/test';
 ```
 
-#### 5. Use `authenticatedPage` for Protected Routes
+#### 5. Use `testEquipment` for Cart/Reservation Tests
 
-Use the `authenticatedPage` fixture for any test requiring authentication.
+For tests that add items to cart or create reservations, use the worker-isolated `testEquipment` fixture:
 
 ```typescript
-test.describe('Protected Feature', () => {
-  test('should access feature', async ({ authenticatedPage }) => {
-    await authenticatedPage.goto('/protected-page');
-    // ...
-  });
+test('cart functionality', async ({ authenticatedPage, testEquipment }) => {
+  const [equip1] = testEquipment;
+  
+  // This equipment is unique to this worker - no conflicts
+  await addToCart(authenticatedPage, equip1.id);
 });
 ```
 
 #### 6. Handle Optional Elements Gracefully
 
-Use `.catch(() => false)` for elements that may not exist, and `test.skip()` when tests can't proceed.
+Use `.catch(() => false)` for elements that may not exist.
 
 ```typescript
 const hasFeature = await page.getByTestId(TEST_IDS.OPTIONAL_FEATURE).isVisible().catch(() => false);
@@ -214,7 +242,7 @@ test.describe('Equipment Browsing', () => {
 
 ### Test Template
 
-Use this template when creating new test files in `e2e/tests/<feature>/`:
+Use this template when creating new test files:
 
 ```typescript
 import { test, expect } from '../../fixtures';
@@ -223,18 +251,22 @@ import { TEST_IDS } from '../../constants';
 /**
  * [Feature Name] e2e tests.
  * [Brief description of what these tests cover]
+ *
+ * Uses worker-isolated fixtures for parallel execution.
  */
-
 test.describe('[Feature Name]', () => {
-  test('should [expected behavior]', async ({ authenticatedPage }) => {
+  test('should [expected behavior]', async ({ authenticatedPage, testEquipment, workerIndex }) => {
     // Arrange - Navigate to page
     await authenticatedPage.goto('/feature-page');
 
-    // Act - Perform action
-    await authenticatedPage.getByTestId(TEST_IDS.ACTION_BUTTON).click();
+    // Act - Perform action (use testEquipment if modifying cart/reservations)
+    const [equip1] = testEquipment;
+    await authenticatedPage.getByTestId(`action-button-${equip1.id}`).click();
 
     // Assert - Verify result
     await expect(authenticatedPage.getByTestId(TEST_IDS.RESULT_CONTAINER)).toBeVisible();
+    
+    console.log(`[Worker ${workerIndex}] ✅ Test completed`);
   });
 });
 ```
@@ -248,7 +280,22 @@ test.describe('[Feature Name]', () => {
 | Test file | `tests/<feature>/<name>.spec.ts` | `tests/equipment/browsing.spec.ts` |
 | Test describe block | Feature name | `'Equipment Browsing'` |
 | Test name | `should + behavior` | `'should display equipment grid'` |
-| Constant key | `UPPER_SNAKE_CASE` or `functionName` | `TEST_IDS.EQUIPMENT_GRID` |
+| Constant key | `UPPER_SNAKE_CASE` | `TEST_IDS.EQUIPMENT_GRID` |
+
+---
+
+## Parallel Execution
+
+Tests run fully parallel with worker isolation:
+
+- **Each worker** gets its own `testEquipment` (2 equipment items)
+- **Equipment is created** before each test, **deleted** after each test
+- **Shared test user** is reused across all workers (no conflicts)
+
+```bash
+# Run with 4 parallel workers
+npm run e2e -- --workers=4
+```
 
 ---
 
@@ -256,11 +303,11 @@ test.describe('[Feature Name]', () => {
 
 | Command | Description |
 |---------|-------------|
-| `npm run e2e` | Run all e2e tests |
+| `npm run e2e` | Run all e2e tests on mobile viewport |
 | `npm run e2e:ui` | Run with Playwright UI |
 | `npm run e2e:debug` | Run in debug mode |
-| `cd frontend && npm run e2e -- <file>` | Run specific test file (e.g. `tests/auth/login.spec.ts`) |
-| `cd frontend && npm run e2e -- diagnostic` | Run auth diagnostics |
+| `npm run e2e -- <file>` | Run specific test file |
+| `npm run e2e -- --workers=4` | Run with 4 parallel workers |
 
 ---
 
@@ -314,10 +361,10 @@ jobs:
 | Redirect to `/login` | Session injection failed, check cookie format |
 | Redirect to `/account-disabled` | Set `is_enabled = true` in profiles table |
 | Backend timeout | Start Go API on port 8080 |
+| `Conflict detected for equipment` | Use `testEquipment` fixture for isolation |
 
 ### Run Diagnostics
 
-```bash
 ```bash
 cd frontend && npm run e2e -- auth-diagnostic.spec.ts
 ```
@@ -329,4 +376,4 @@ cd frontend && npm run e2e -- auth-diagnostic.spec.ts
 - [Auth Workflow](../../documentation/workflows/auth-workflow.md)
 - [Frontend Auth](./auth.md)
 - [Backend Auth](../../backend/docs/auth.md)
-
+- [E2E Refactor Plan](../../.ai/e2e-tests-all-merge.md)
