@@ -111,7 +111,27 @@ export async function cleanupTestEquipment(
 ): Promise<void> {
   if (equipmentIds.length === 0) return;
 
-  // First delete any reservations for this equipment
+  // First get reservation IDs for these equipment items
+  const { data: reservations } = await supabaseAdmin
+    .from('reservations')
+    .select('id')
+    .in('equipment_id', equipmentIds);
+
+  const reservationIds = reservations?.map(r => r.id) ?? [];
+
+  // Delete reservation_history first (child of reservations)
+  if (reservationIds.length > 0) {
+    const { error: historyError } = await supabaseAdmin
+      .from('reservation_history')
+      .delete()
+      .in('reservation_id', reservationIds);
+
+    if (historyError) {
+      console.error(`Failed to cleanup reservation history: ${historyError.message}`);
+    }
+  }
+
+  // Then delete reservations (child of equipment)
   const { error: resError } = await supabaseAdmin
     .from('reservations')
     .delete()
@@ -121,7 +141,7 @@ export async function cleanupTestEquipment(
     console.error(`Failed to cleanup reservations: ${resError.message}`);
   }
 
-  // Then delete the equipment
+  // Finally delete the equipment (parent)
   const { error } = await supabaseAdmin
     .from('equipment')
     .delete()
@@ -162,7 +182,27 @@ export async function cleanupOrphanedTestEquipment(
 
   const equipmentIds = equipment.map(e => e.id);
 
-  // Delete reservations first
+  // Get reservation IDs first
+  const { data: reservations } = await supabaseAdmin
+    .from('reservations')
+    .select('id')
+    .in('equipment_id', equipmentIds);
+
+  const reservationIds = reservations?.map(r => r.id) ?? [];
+
+  // Delete reservation_history first (child of reservations)
+  if (reservationIds.length > 0) {
+    const { error: historyError } = await supabaseAdmin
+      .from('reservation_history')
+      .delete()
+      .in('reservation_id', reservationIds);
+
+    if (historyError) {
+      console.error(`Failed to delete orphaned reservation history: ${historyError.message}`);
+    }
+  }
+
+  // Delete reservations (child of equipment)
   const { error: resError } = await supabaseAdmin
     .from('reservations')
     .delete()
@@ -172,7 +212,7 @@ export async function cleanupOrphanedTestEquipment(
     console.error(`Failed to delete orphaned reservations: ${resError.message}`);
   }
 
-  // Delete equipment
+  // Delete equipment (parent)
   const { error: deleteError } = await supabaseAdmin
     .from('equipment')
     .delete()

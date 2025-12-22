@@ -56,7 +56,10 @@ export function GroupedReservationCard({
   const isOwn = currentUserId ? group.userId === currentUserId : false;
 
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-md">
+    <Card
+      className="overflow-hidden transition-shadow hover:shadow-md"
+      data-testid={`reservation-row-${group.groupKey}`}
+    >
       {/* Header - Clickable to expand/collapse */}
       <CardHeader
         className="cursor-pointer select-none bg-muted/30 hover:bg-muted/50 transition-colors"

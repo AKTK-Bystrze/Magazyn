@@ -126,10 +126,13 @@ test.describe("Reservation Creation", () => {
       authenticatedPage.getByTestId("reservation-list-container")
     ).toBeVisible();
 
-    // 13. VERIFY: Reservations appear in list
+    // Wait for network to settle (reservation list API call to complete)
+    await authenticatedPage.waitForLoadState('networkidle');
+
+    // 13. VERIFY: Reservation appears in list
     await expect(
       authenticatedPage.locator('[data-testid^="reservation-row-"]').first()
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15000 });
 
     // 14. Navigate to equipment page
     await authenticatedPage.goto("/equipment");
