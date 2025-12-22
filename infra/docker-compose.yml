@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../infra/backend/Dockerfile
+    container_name: magazyn-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../.env
+    networks:
+      - magazyn-network
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../infra/frontend/Dockerfile
+    container_name: magazyn-frontend
+    restart: unless-stopped
+    ports:
+      - "4321:4321"
+    env_file:
+      - ../.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4321
+      # Ensure frontend knows public URL for client-side fetches if needed
+      - PUBLIC_API_URL=http://localhost:8080
+    networks:
+      - magazyn-network
+
+  caddy:
+    image: caddy:alpine
+    container_name: magazyn-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - magazyn-network
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  magazyn-network:
+    driver: bridge
