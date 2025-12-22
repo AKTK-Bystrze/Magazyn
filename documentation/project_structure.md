@@ -101,9 +101,9 @@ Magazyn/infra/
 
 ### Docker Compose Services
 
-- `go-api` (Go binary)
-- `astro-app` (Astro SSR)
-- `caddy` (reverse proxy)
+- `backend` (Go Main API)
+- `frontend` (Astro SSR Node Server)
+- `caddy` (Reverse Proxy & HTTPS)
 
 ---
 
