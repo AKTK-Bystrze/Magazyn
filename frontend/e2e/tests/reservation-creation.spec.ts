@@ -121,6 +121,11 @@ test.describe("Reservation Creation", () => {
     expect(authenticatedPage.url()).toContain("/reservations");
     expect(authenticatedPage.url()).toContain("success=true");
 
+    // Wait for reservation list container to load (React component with async data)
+    await expect(
+      authenticatedPage.getByTestId("reservation-list-container")
+    ).toBeVisible();
+
     // 13. VERIFY: Reservations appear in list
     await expect(
       authenticatedPage.locator('[data-testid^="reservation-row-"]').first()

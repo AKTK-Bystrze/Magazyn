@@ -29,12 +29,14 @@ export async function clearCart(page: Page): Promise<void> {
 export async function addToCart(page: Page, equipmentId: string): Promise<void> {
   await page.goto('/equipment');
   
-  // Wait for equipment to load
-  await page.waitForSelector('[data-testid^="equipment-card-"]', { timeout: 10000 });
-  
-  // Click add to cart button
+  // Wait specifically for the target equipment's "Add to Cart" button to be visible
+  // This handles:
+  // - Database replication lag after equipment creation
+  // - Pagination (Playwright's getByTestId searches entire DOM)
+  // - React hydration timing
   const addButton = page.getByTestId(`equipment-add-to-cart-${equipmentId}`);
-  await addButton.waitFor({ state: 'visible', timeout: 5000 });
+  await addButton.waitFor({ state: 'visible', timeout: 15000 });
+  
   await addButton.click();
   
   // Wait for cart indicator to appear

@@ -1,6 +1,7 @@
 ## In Progress
 
   - e2e-tests-merge.md is done - verify tests are working
+  - reduce auth and browsing tests
   - redirect is done, review existing redirections, update e2e documentation and tests design, they are based on previous redirections
   - e2e-tests-all-merge.md - do it
   - in code test documentation, test scenario description is missing
@@ -8,7 +9,6 @@
   
   - Optimize fixture setup/teardown
   - e2e tests clean up, duplicated logs, hardcoded values etc
-  - reduce auth and browsing tests
   - Test Data Management
   - Document test data strategy
 
