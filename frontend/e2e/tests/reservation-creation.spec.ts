@@ -1,5 +1,6 @@
 import { test, expect } from "../fixtures";
 import { ReservationCartPOM } from "../page-objects/reservation-cart.pom";
+import { TEST_IDS } from "../constants";
 import {
   clearCart,
   addToCart,
@@ -60,18 +61,30 @@ test.describe("Reservation Creation", () => {
     const [equip1, equip2] = testEquipment;
     const cart = new ReservationCartPOM(authenticatedPage);
 
-    // 1. Navigate to equipment page
+    // 1. Navigate to equipment page and verify browsing components
     await authenticatedPage.goto("/equipment");
     await expect(
       authenticatedPage.getByRole("heading", { name: /equipment/i })
     ).toBeVisible();
+
+    // Verify Key Browsing Elements (Replacing duplicated browsing tests)
+    // 1. Search container
+    await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_SEARCH_CONTAINER)).toBeVisible();
+
+    // 2. Equipment Grid
+    await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
+
+    // 3. Card Details (Status Badge & Details Button)
+    // We check these on the first equipment item before adding it
+    await expect(authenticatedPage.getByTestId(TEST_IDS.equipmentStatusBadge(equip1.id))).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.equipmentDetailsButton(equip1.id))).toBeVisible();
 
     // 2. Add both test equipment items to cart
     await addToCart(authenticatedPage, equip1.id);
     await addToCart(authenticatedPage, equip2.id);
 
     // 3. VERIFY: Cart indicator shows correct count
-    await expect(authenticatedPage.getByTestId("cart-item-count")).toHaveText(
+    await expect(authenticatedPage.getByTestId(TEST_IDS.CART_ITEM_COUNT)).toHaveText(
       "2"
     );
 
@@ -107,10 +120,10 @@ test.describe("Reservation Creation", () => {
 
     // 10. VERIFY: Confirmation modal shows balance info
     await expect(
-      authenticatedPage.getByTestId("confirmation-current-balance")
+      authenticatedPage.getByTestId(TEST_IDS.CONFIRMATION_CURRENT_BALANCE)
     ).toBeVisible();
     await expect(
-      authenticatedPage.getByTestId("confirmation-remaining-balance")
+      authenticatedPage.getByTestId(TEST_IDS.CONFIRMATION_REMAINING_BALANCE)
     ).toBeVisible();
 
     // 11. Confirm reservation
@@ -123,7 +136,7 @@ test.describe("Reservation Creation", () => {
 
     // Wait for reservation list container to load (React component with async data)
     await expect(
-      authenticatedPage.getByTestId("reservation-list-container")
+      authenticatedPage.getByTestId(TEST_IDS.RESERVATION_LIST_CONTAINER)
     ).toBeVisible();
 
     // Wait for network to settle (reservation list API call to complete)
@@ -139,7 +152,7 @@ test.describe("Reservation Creation", () => {
 
     // 15. VERIFY: Cart is cleared (was separate test)
     await expect(
-      authenticatedPage.getByTestId("cart-indicator")
+      authenticatedPage.getByTestId(TEST_IDS.CART_INDICATOR)
     ).not.toBeVisible();
 
     console.log(`[Worker ${workerIndex}] ✅ Happy path completed`);

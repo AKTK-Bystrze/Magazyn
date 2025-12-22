@@ -29,9 +29,18 @@ export const TEST_IDS = {
   DATE_PICKER_END: 'date-picker-end',
   DATE_VALIDATION_ERROR: 'date-validation-error',
   
+  // Confirmation Modal
+  CONFIRMATION_CURRENT_BALANCE: 'confirmation-current-balance',
+  CONFIRMATION_REMAINING_BALANCE: 'confirmation-remaining-balance',
+
+  // Reservation List
+  RESERVATION_LIST_CONTAINER: 'reservation-list-container',
+
   // Dynamic IDs (functions)
   equipmentCard: (id: string) => `equipment-card-${id}`,
   equipmentAddToCart: (id: string) => `equipment-add-to-cart-${id}`,
+  equipmentDetailsButton: (id: string) => `equipment-details-button-${id}`,
+  equipmentStatusBadge: (id: string) => `equipment-status-badge-${id}`,
   cartItem: (id: string) => `cart-item-${id}`,
   cartItemRemove: (id: string) => `cart-item-remove-${id}`,
   reservationRow: (id: string) => `reservation-row-${id}`,

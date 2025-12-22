@@ -80,27 +80,16 @@ projects: [
 
 ### Current State
 
-[browsing.spec.ts](file:///e:/bystrze/Magazyn/frontend/e2e/tests/equipment/browsing.spec.ts) has 7 tests:
+[browsing.spec.ts](file:///e:/bystrze/Magazyn/frontend/e2e/tests/equipment/browsing.spec.ts) previously had 7 tests.
 
-1. `should display equipment grid with items`
-2. `should display equipment cards with details`
-3. `should show equipment count or empty state`
-4. `should display cart indicator`
-5. `should open equipment details on click`
-6. `should allow adding equipment to cart`
-7. `should navigate to cart when clicking cart indicator`
+### Solution: Consolidate tests
 
-### Problem
-
-Tests 4, 6, 7 add items to cart → **conflict between workers** sharing the same equipment.
-
-### Solution: Consolidate into 3 Tests
+We consolidated most browsing tests into the **Happy Path** reservation test to verify browsing components (Search Container, Grid, Card functionality) as part of the user flow.
 
 | After | Merges |
 |-------|--------|
-| **Equipment Grid Display** | 1, 2, 3 (read-only, no isolation needed) |
-| **Equipment Details** | 5 (read-only, no isolation needed) |
-| **Cart Functionality** | 4, 6, 7 (uses worker-isolated `testEquipment`) |
+| **Equipment Details** | `should open equipment details on click` (Kept as standalone) |
+| **Merged into Reservation Happy Path** | Grid Display, Search Container, Card Details, Cart Indicator, Add to Cart logic |
 
 ---
 
@@ -120,9 +109,9 @@ No changes needed - both are read-only and can run parallel without conflicts.
 | Phase | Before | After | Saved |
 |-------|--------|-------|-------|
 | Reservation | 5 | 2 | 3 tests |
-| Equipment | 7 | 3 | 4 tests |
+| Equipment | 7 | 1 | 6 tests |
 | Auth | 6 | 6 | 0 (unchanged) |
-| **Total** | **18** | **11** | **7 tests** |
+| **Total** | **18** | **9** | **9 tests** |
 
 ---
 
@@ -135,8 +124,8 @@ No changes needed - both are read-only and can run parallel without conflicts.
 | `e2e/fixtures/index.ts` | MODIFY - add worker-isolated fixtures |
 | `e2e/helpers/data-setup.helper.ts` | MODIFY - add equipment creation/cleanup |
 | `e2e/helpers/reservation.helper.ts` | MODIFY - remove unused functions |
-| `e2e/tests/reservation-creation.spec.ts` | MODIFY - consolidate to 2 tests |
-| `e2e/tests/equipment/browsing.spec.ts` | MODIFY - consolidate to 3 tests |
+| `e2e/tests/reservation-creation.spec.ts` | MODIFY - consolidate to 2 tests (includes browsing checks) |
+| `e2e/tests/equipment/browsing.spec.ts` | MODIFY - consolidate to 1 test |
 | `e2e/tests/auth/login.spec.ts` | NO CHANGE |
 | `e2e/tests/auth/diagnostic.spec.ts` | NO CHANGE |
 | `frontend/docs/e2e-testing.md` | MODIFY - update documentation |
