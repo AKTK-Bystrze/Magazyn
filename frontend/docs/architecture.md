@@ -71,6 +71,10 @@ frontend/
 │   └── redirect-flow.md            # Redirect logic
 │
 ├── public/                         # Static assets (served as-is)
+│   ├── favicon.png                 # Site favicon
+│   ├── logo-bystrze-kolor.png      # Brand logo (light theme)
+│   ├── bystrze-logo-czarno-biale.png # Brand logo (dark theme)
+│   └── placeholder-equipment.svg   # Placeholder images
 │
 ├── src/
 │   ├── components/                 # React components

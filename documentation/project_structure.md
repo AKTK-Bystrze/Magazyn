@@ -39,7 +39,11 @@ Magazyn/frontend/
 │   │   ├── api/           # TanStack Query logic calling Go Backend
 │   │   └── auth/          # Supabase JS client setup
 │   └── shared/            # Shared TypeScript types from the backend
-├── public/                # Static assets
+├── public/                # Static assets (served as-is)
+│   ├── favicon.png        # Site favicon
+│   ├── logo-bystrze-kolor.png           # Brand logo (light theme)
+│   ├── bystrze-logo-czarno-biale.png    # Brand logo (dark theme)
+│   └── placeholder-equipment.svg        # Placeholder images
 ├── astro.config.mjs
 ├── package.json
 └── tsconfig.json
@@ -51,6 +55,26 @@ Magazyn/frontend/
 - React is used for interactive components (Cart, Calendar, Checkout).
 - TanStack Query manages server state.
 - Supabase Client handles login + admin uploads.
+
+### Public Folder Organization
+
+The `public/` folder contains static assets that are served directly without processing:
+
+- **Favicon**: `favicon.png` is linked in `BaseLayout.astro`
+- **Brand Assets**: 
+  - `logo-bystrze-kolor.png` - Color logo for light theme
+  - `bystrze-logo-czarno-biale.png` - Black & white logo for dark theme
+  - Theme switching is handled via Tailwind's `dark:` variant (e.g., `class="block dark:hidden"`)
+- **Placeholders**: Static SVG placeholders for missing images
+
+**Theme-Aware Asset Pattern:**
+```html
+<!-- Light theme logo -->
+<img src="/logo-bystrze-kolor.png" class="block dark:hidden" />
+<!-- Dark theme logo -->
+<img src="/bystrze-logo-czarno-biale.png" class="hidden dark:block" />
+```
+
 
 ---
 
