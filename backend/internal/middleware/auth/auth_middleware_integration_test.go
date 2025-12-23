@@ -65,8 +65,9 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		// Get config from environment
 		url := os.Getenv("PUBLIC_SUPABASE_URL")
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
+		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
-		repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey)
 		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+validToken)
@@ -82,7 +83,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 
 		assert.NotNil(t, capturedProfile, "Profile should be in context")
 		if capturedProfile != nil {
-			assert.Equal(t, user.ID.String(), capturedProfile.Id)
+			assert.Equal(t, user.ID.String(), capturedProfile.ID)
 			assert.Equal(t, email, capturedProfile.Email)
 		}
 	})
@@ -96,8 +97,9 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		// Get config from environment
 		url := os.Getenv("PUBLIC_SUPABASE_URL")
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
+		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
-		repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey)
 		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer invalid-token.signature")

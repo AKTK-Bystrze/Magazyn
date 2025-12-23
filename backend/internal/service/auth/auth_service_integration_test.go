@@ -30,8 +30,9 @@ func TestLogin_Integration(t *testing.T) {
 	// Get config from environment
 	url := os.Getenv("PUBLIC_SUPABASE_URL")
 	key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
-	repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey)
 	service := auth.NewAuthService(repo)
 
 	t.Run("sends magic link to valid email", func(t *testing.T) {
@@ -56,8 +57,9 @@ func TestGetSession_Integration(t *testing.T) {
 	// Get config from environment
 	url := os.Getenv("PUBLIC_SUPABASE_URL")
 	key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
-	repo := supabase.NewAuthRepository(testutils.TestClient, url, key)
+	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey)
 	service := auth.NewAuthService(repo)
 
 	// Create a unique user for this test

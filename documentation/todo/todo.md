@@ -8,6 +8,7 @@
 - md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
 - basic e2e tests for equipment manager, credits history, user view
 - Remove service role key usage -remove-service-role-key.md
+- supabase migrations squash and duplicates
 
 ## Equipment Views refactor
 - Equipment manager + viewer component reuse improved
@@ -53,3 +54,4 @@
 14. Return dialog should show current reservation dates prefilled
 15. One test ID (reservation-success-message) will need to be added when you implement success state handling (currently redirects with ?success=true)
 17. admin is missing dates filter in the equipment browse view
+18. currently one reservations can be made on the same day.
