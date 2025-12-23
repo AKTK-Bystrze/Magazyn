@@ -1,5 +1,6 @@
 ## Deployment
-2. on commit pipeline
+- credits hitory failure
+- sidebar
 3. test sharding for CI/CD
 4. deploy on server
 
