@@ -1,10 +1,7 @@
 ## Deployment
-1. Remove service role key usage
 2. on commit pipeline
 3. test sharding for CI/CD
 4. deploy on server
-5. translate to english
-6. favicon, logo bystrza
 
 ## Next
 - integration tests for reservation flow reservation-integration-tests-plan.
@@ -12,6 +9,7 @@
 - md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
 - e2e tests for equipment manager
 - e2e tests for superAdmin - user management
+- Remove service role key usage -remove-service-role-key.md
 
 ## Equipment Views refactor
 - Equipment manager + viewer component reuse improved
@@ -48,6 +46,7 @@
 6. Warning messages for reservations that have the overlapping dates e.g start date is the same as end date of another reservation. They are allowed
 7. simplify reservation flow, one modal for confirmation instead of two
 8. New user creation should be admin-only (disable auto-creation)
+
 9. Notification service - centralized for sending notifications
 10. Bulk refund mechanism for BulkUpdate admin cancellations
 11. Reservation details navigation - show dates/item name instead of ID
