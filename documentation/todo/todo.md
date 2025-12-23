@@ -1,14 +1,17 @@
-## Deployment
-3. test sharding for CI/CD
-4. deploy on server
+In progress:
+- integration tests, review
+- deployment strategy
 
 ## Next
-- integration tests for reservation flow reservation-integration-tests-plan.
 - e2e tests for admin reservation flow
 - md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
 - basic e2e tests for equipment manager, credits history, user view
 - Remove service role key usage -remove-service-role-key.md
 - supabase migrations squash and duplicates
+
+## Deployment
+3. test sharding for CI/CD
+4. deploy on server
 
 ## Equipment Views refactor
 - Equipment manager + viewer component reuse improved
@@ -22,6 +25,7 @@
 - documentation
 - review with obselete
 - refactoring needed
+- frontend testing
 
 ## Future Work
 - credits request feature
