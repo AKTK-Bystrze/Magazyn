@@ -26,10 +26,10 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
 }
 ---
 
-<AdminLayout title="Admin Dashboard | Magazyn">
+<AdminLayout title="Panel Administratora | Magazyn">
   <div class="flex flex-col gap-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <h1 class="text-3xl font-bold tracking-tight">Panel Administratora</h1>
     </div>
 
     {/* Stats Overview - Removed mock tiles as requested */}
@@ -40,8 +40,8 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
       <div class="col-span-4 lg:col-span-4">
         <div class="rounded-xl border bg-card text-card-foreground shadow">
           <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="font-semibold leading-none tracking-tight">Quick Actions</h3>
-            <p class="text-sm text-muted-foreground">Common administrative tasks.</p>
+            <h3 class="font-semibold leading-none tracking-tight">Szybkie Akcje</h3>
+            <p class="text-sm text-muted-foreground">Popularne zadania administracyjne.</p>
           </div>
           <div class="p-6 pt-0 grid gap-4 md:grid-cols-2">
             <a 
@@ -54,7 +54,7 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <span class="font-medium">Manage Reservations</span>
+              <span class="font-medium">Zarządzaj Rezerwacjami</span>
             </a>
             
             <a 
@@ -64,7 +64,7 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors">
                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
               </svg>
-              <span class="font-medium">Manage Equipment</span>
+              <span class="font-medium">Zarządzaj Sprzętem</span>
             </a>
 
             {userRole === SUPER_ADMIN_ROLE && (
@@ -78,7 +78,7 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
                   <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
-                <span class="font-medium">Manage Users</span>
+                <span class="font-medium">Zarządzaj Użytkownikami</span>
               </a>
             )}
 
@@ -91,7 +91,7 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
                 <line x1="18" y1="20" x2="18" y2="4"></line>
                 <line x1="6" y1="20" x2="6" y2="16"></line>
               </svg>
-              <span class="font-medium">View Analytics</span>
+              <span class="font-medium">Zobacz Analitykę</span>
             </a>
           </div>
         </div>
@@ -101,8 +101,8 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
       <div class="col-span-4 lg:col-span-3">
         <div class="rounded-xl border bg-card text-card-foreground shadow h-full">
           <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="font-semibold leading-none tracking-tight">Admin Profile</h3>
-            <p class="text-sm text-muted-foreground">Current session details.</p>
+            <h3 class="font-semibold leading-none tracking-tight">Profil Administratora</h3>
+            <p class="text-sm text-muted-foreground">Szczegóły bieżącej sesji.</p>
           </div>
           <div class="p-6 pt-0">
              <div class="flex items-center space-x-4 mb-4">
@@ -115,7 +115,7 @@ if (userRole !== ADMIN_ROLE && userRole !== SUPER_ADMIN_ROLE) {
                 </div>
              </div>
              <p class="text-sm text-muted-foreground">
-               You are currently logged in as {userRole.replace('_', ' ')}. You have full access to manage reservations, equipment, and user accounts.
+               Jesteś zalogowany jako {userRole.replace('_', ' ')}. Masz pełny dostęp do zarządzania rezerwacjami, sprzętem i kontami użytkowników.
              </p>
           </div>
         </div>

@@ -7,7 +7,7 @@ const sessionInfo = Astro.locals.sessionInfo;
 const isAdmin = sessionInfo ? (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) : false;
 ---
 
-<AppLayout title="Equipment Search | Bystrze Magazyn">
+<AppLayout title="Wyszukiwanie Sprzętu | Bystrze Magazyn">
   <div class="container mx-auto">
     <EquipmentSearchContainer client:only="react" isAdmin={isAdmin} />
   </div>

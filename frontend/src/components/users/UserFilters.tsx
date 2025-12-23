@@ -98,19 +98,19 @@ export function UserFilters({
         <Input
           id={searchInputId}
           type="search"
-          placeholder="Search by username or email..."
+          placeholder="Szukaj po nazwie użytkownika lub e-mailu..."
           value={searchValue}
           onChange={handleSearchChange}
           className="pl-10"
-          aria-label="Search users"
+          aria-label="Szukaj użytkowników"
           maxLength={MAX_SEARCH_LENGTH}
         />
       </div>
 
       {/* Role Filter */}
       <Select value={filters.role} onValueChange={handleRoleChange}>
-        <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter by role">
-          <SelectValue placeholder="All Roles" />
+        <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filtruj według roli">
+          <SelectValue placeholder="Wszystkie Role" />
         </SelectTrigger>
         <SelectContent>
           {USER_ROLE_FILTER_OPTIONS.map((option) => (
@@ -128,10 +128,10 @@ export function UserFilters({
           size="sm"
           onClick={handleReset}
           className="flex items-center gap-1"
-          aria-label="Reset filters"
+          aria-label="Resetuj filtry"
         >
           <X className={ICON_SIZE_SM} />
-          <span className="hidden sm:inline">Reset</span>
+          <span className="hidden sm:inline">Resetuj</span>
         </Button>
       )}
     </div>

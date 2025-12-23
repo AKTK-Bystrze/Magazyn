@@ -167,10 +167,10 @@ export function CreateUserDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
+          <DialogTitle>Utwórz Nowego Użytkownika</DialogTitle>
           <DialogDescription>
-            Create a new user account. The user will receive login instructions
-            via email.
+            Utwórz nowe konto użytkownika. Użytkownik otrzyma instrukcje logowania
+            przez e-mail.
           </DialogDescription>
         </DialogHeader>
 
@@ -201,12 +201,12 @@ export function CreateUserDialog({
             {/* Username Field */}
             <div className="grid gap-2">
               <Label htmlFor={usernameId}>
-                Username <span className="text-destructive">*</span>
+                Nazwa użytkownika <span className="text-destructive">*</span>
               </Label>
               <Input
                 id={usernameId}
                 type="text"
-                placeholder="john_doe"
+                placeholder="jan_kowalski"
                 value={formData.username}
                 onChange={handleInputChange("username")}
                 aria-invalid={!!errors.username}
@@ -228,7 +228,7 @@ export function CreateUserDialog({
             {/* Role Field */}
             <div className="grid gap-2">
               <Label htmlFor={roleId}>
-                Role <span className="text-destructive">*</span>
+                Rola <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={formData.role}
@@ -236,13 +236,13 @@ export function CreateUserDialog({
                 disabled={isSubmitting}
               >
                 <SelectTrigger id={roleId}>
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder="Wybierz rolę" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={USER_ROLE.USER}>User</SelectItem>
-                  <SelectItem value={USER_ROLE.ADMIN}>Admin</SelectItem>
+                  <SelectItem value={USER_ROLE.USER}>Użytkownik</SelectItem>
+                  <SelectItem value={USER_ROLE.ADMIN}>Administrator</SelectItem>
                   <SelectItem value={USER_ROLE.SUPER_ADMIN}>
-                    Super Admin
+                    Super Administrator
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -250,7 +250,7 @@ export function CreateUserDialog({
 
             {/* Credit Balance Field */}
             <div className="grid gap-2">
-              <Label htmlFor={creditsId}>Initial Credit Balance</Label>
+              <Label htmlFor={creditsId}>Początkowe Saldo Godzinek</Label>
               <Input
                 id={creditsId}
                 type="number"
@@ -287,10 +287,10 @@ export function CreateUserDialog({
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Cancel
+              Anuluj
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create User"}
+              {isSubmitting ? "Tworzenie..." : "Utwórz Użytkownika"}
             </Button>
           </DialogFooter>
         </form>

@@ -8,7 +8,12 @@
  */
 import type { ComponentType } from "react";
 import { ROUTES } from "./routes";
-import { STORAGE_KEY_THEME } from "./constants";
+import {
+  STORAGE_KEY_THEME,
+  NAV_LABELS,
+  BREADCRUMB_LABELS,
+  BREADCRUMB_HIDDEN_PATHS,
+} from "./constants";
 
 import {
   LayoutDashboard,
@@ -17,8 +22,8 @@ import {
   CreditCard,
   Users,
   BarChart,
-  Package
-} from 'lucide-react';
+  Package,
+} from "lucide-react";
 
 /**
  * Navigation item definition
@@ -39,25 +44,25 @@ export interface NavItem {
  */
 export const USER_NAV_ITEMS: NavItem[] = [
   {
-    label: "Dashboard",
+    label: NAV_LABELS.DASHBOARD,
     href: ROUTES.PROTECTED.DASHBOARD,
     icon: LayoutDashboard,
     activePattern: /^\/dashboard$/,
   },
   {
-    label: "Equipment",
+    label: NAV_LABELS.EQUIPMENT,
     href: ROUTES.PUBLIC.EQUIPMENT,
     icon: Wrench,
     activePattern: /^\/equipment/,
   },
   {
-    label: "Reservations",
+    label: NAV_LABELS.RESERVATIONS,
     href: ROUTES.PROTECTED.RESERVATIONS,
     icon: CalendarDays,
     activePattern: /^\/reservations/,
   },
   {
-    label: "Credits",
+    label: NAV_LABELS.CREDITS,
     href: ROUTES.PROTECTED.CREDITS_HISTORY,
     icon: CreditCard,
     activePattern: /^\/credits/,
@@ -69,43 +74,43 @@ export const USER_NAV_ITEMS: NavItem[] = [
  */
 export const ADMIN_NAV_ITEMS: NavItem[] = [
   {
-    label: "Overview",
+    label: NAV_LABELS.OVERVIEW,
     href: ROUTES.PROTECTED.ADMIN,
     icon: LayoutDashboard,
     activePattern: /^\/admin$/,
   },
   {
-    label: "Reservations",
+    label: NAV_LABELS.RESERVATIONS,
     href: ROUTES.PROTECTED.ADMIN_RESERVATIONS,
     icon: CalendarDays,
     activePattern: /^\/admin\/reservations/,
   },
   {
-    label: "Browse Equipment",
+    label: NAV_LABELS.BROWSE_EQUIPMENT,
     href: ROUTES.PROTECTED.ADMIN_EQUIPMENT,
     icon: Package,
     activePattern: /^\/admin\/equipment$/,
   },
   {
-    label: "Manage Equipment",
+    label: NAV_LABELS.MANAGE_EQUIPMENT,
     href: ROUTES.PROTECTED.ADMIN_EQUIPMENT_MANAGE,
     icon: Wrench,
     activePattern: /^\/admin\/equipment\/manage/,
   },
   {
-    label: "Users",
+    label: NAV_LABELS.USERS,
     href: ROUTES.PROTECTED.ADMIN_USERS,
     icon: Users,
     activePattern: /^\/admin\/users/,
   },
   {
-    label: "Analytics",
+    label: NAV_LABELS.ANALYTICS,
     href: ROUTES.PROTECTED.ADMIN_ANALYTICS,
     icon: BarChart,
     activePattern: /^\/admin\/analytics/,
   },
   {
-    label: "Credits",
+    label: NAV_LABELS.CREDITS,
     href: ROUTES.PROTECTED.CREDITS_HISTORY,
     icon: CreditCard,
     activePattern: /^\/credits/,
@@ -129,25 +134,6 @@ export const THEME = {
 
 export type Theme = (typeof THEME)[keyof typeof THEME];
 
-/**
- * Breadcrumb segment label mappings
- * Maps URL segments to human-readable labels
- */
-export const BREADCRUMB_LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
-  equipment: "Equipment",
-  reservations: "Reservations",
-  create: "Create",
-  credits: "Credits",
-  history: "History",
-  request: "Request",
-  admin: "Admin",
-  users: "Users",
-  analytics: "Analytics",
-  manage: "Manage",
-};
+// Re-export breadcrumb config from constants (for backward compatibility)
+export { BREADCRUMB_LABELS, BREADCRUMB_HIDDEN_PATHS };
 
-/**
- * Paths where breadcrumbs should be hidden
- */
-export const BREADCRUMB_HIDDEN_PATHS = ["/dashboard", "/admin", "/"];

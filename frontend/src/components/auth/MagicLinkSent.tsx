@@ -29,15 +29,15 @@ export const MagicLinkSent: React.FC<MagicLinkSentProps> = ({ onReset, email }) 
           <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold tracking-tight">Check your email</h2>
+      <h2 className="text-2xl font-bold tracking-tight">Sprawdź swoją pocztę</h2>
       <p className="text-muted-foreground text-sm max-w-xs">
-        We sent a login link to <span className="font-medium text-foreground" data-testid="magic-link-sent-email">{email}</span>.
+        Wysłaliśmy link logowania na <span className="font-medium text-foreground" data-testid="magic-link-sent-email">{email}</span>.
         <br />
-        Click the link to sign in.
+        Kliknij link, aby się zalogować.
       </p>
 
       <Button variant="ghost" onClick={onReset} className="mt-4">
-        Back to login
+        Powrót do logowania
       </Button>
     </div>
   );

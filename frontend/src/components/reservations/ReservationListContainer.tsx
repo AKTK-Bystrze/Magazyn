@@ -130,7 +130,7 @@ function ReservationListContainerInner({
         if (targets.length === 1) {
           await updateReservation(targets[0].id, command);
           setSuccessMessage(
-            `Reservation dates for "${targets[0].equipmentName}" updated successfully.`
+            `Daty rezerwacji dla "${targets[0].equipmentName}" zaktualizowane pomyślnie.`
           );
         } else {
           // Bulk update
@@ -142,10 +142,10 @@ function ReservationListContainerInner({
           ).length;
 
           if (successful === targets.length) {
-            setSuccessMessage(`${successful} reservations updated successfully.`);
+            setSuccessMessage(`${successful} rezerwacji zaktualizowano pomyślnie.`);
           } else {
             setSuccessMessage(
-              `${successful} updated. ${targets.length - successful} failed.`
+              `${successful} zaktualizowano. ${targets.length - successful} nie powiodło się.`
             );
           }
         }
@@ -155,7 +155,7 @@ function ReservationListContainerInner({
         setBatchReservations([]);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to update dates";
+          err instanceof Error ? err.message : "Nie udało się zaktualizować dat";
         setErrorMessage(message);
       }
     },
@@ -177,7 +177,7 @@ function ReservationListContainerInner({
         if (targets.length === 1) {
           await updateReservation(targets[0].id, command);
           setSuccessMessage(
-            `Equipment "${targets[0].equipmentName}" marked as returned.`
+            `Sprzęt "${targets[0].equipmentName}" oznaczony jako zwrócony.`
           );
         } else {
           const hasDateChange = !!(command.startDate || command.endDate);
@@ -192,7 +192,7 @@ function ReservationListContainerInner({
             ).length;
 
             setSuccessMessage(
-              `${successful} items updated and returned. ${targets.length - successful} failed.`
+              `${successful} elementów zaktualizowano i zwrócono. ${targets.length - successful} nie powiodło się.`
             );
           } else {
             // Bulk return (Atomic RPC)
@@ -201,7 +201,7 @@ function ReservationListContainerInner({
               status: "RETURNED",
             });
 
-            setSuccessMessage(`${result.updated_count} items marked as returned.`);
+            setSuccessMessage(`${result.updated_count} elementów oznaczono jako zwrócone.`);
           }
         }
 
@@ -210,7 +210,7 @@ function ReservationListContainerInner({
         setBatchReservations([]);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to return equipment";
+          err instanceof Error ? err.message : "Nie udało się zwrócić sprzętu";
         setErrorMessage(message);
       }
     },
@@ -243,7 +243,7 @@ function ReservationListContainerInner({
         // Single cancel
         await cancelReservation(targets[0].id);
         setSuccessMessage(
-          `Reservation for "${targets[0].equipmentName}" has been cancelled. Credits have been refunded.`
+          `Rezerwacja "${targets[0].equipmentName}" została anulowana. Godzinki zostały zwrócone.`
         );
       } else {
         // Bulk cancel (Atomic RPC)
@@ -253,7 +253,7 @@ function ReservationListContainerInner({
         });
 
         setSuccessMessage(
-          `${result.updated_count} reservations cancelled. ${result.refund_count} refunds processed.`
+          `${result.updated_count} rezerwacji anulowano. ${result.refund_count} zwrotów godzinek przetworzono.`
         );
       }
 
@@ -262,7 +262,7 @@ function ReservationListContainerInner({
       setBatchReservations([]);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to cancel reservation";
+        err instanceof Error ? err.message : "Nie udało się anulować rezerwacji";
       setErrorMessage(message);
     }
   }, [selectedReservation, batchReservations, cancelReservation]);
@@ -365,7 +365,7 @@ function ReservationListContainerInner({
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
           <AlertDescription>
-            {errorMessage || error?.message || "An error occurred"}
+            {errorMessage || error?.message || "Wystąpił błąd"}
           </AlertDescription>
         </Alert>
       )}

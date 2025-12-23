@@ -168,6 +168,35 @@ const items = [...];
 const equipmentTypes = [...];
 ```
 
+### UI Constants & Strings
+
+All Polish UI strings are centralized in `lib/config/constants/`. See [Architecture - Constants Pattern](./architecture.md#7-constants--i18n-pattern) for full details.
+
+**Import Pattern**:
+```tsx
+// ✅ Import from barrel (most common)
+import { 
+  RESERVATION_STATUS,
+  CORE_UI_STRINGS,
+  EQUIPMENT_FILTER_UI_STRINGS,
+} from '@/lib/config/constants';
+
+// ✅ Import from domain (focused imports)
+import { RESERVATION_STATUS } from '@/lib/config/constants/reservation';
+
+// ❌ Don't hardcode Polish strings in components
+<Button>Anuluj</Button>
+
+// ✅ Use constants
+<Button>{CORE_UI_STRINGS.CANCEL}</Button>
+```
+
+**Key Rules**:
+1. **Never hardcode Polish strings** - Use constants for i18n readiness
+2. **Status enums must match database** - Files marked ⚠️ in `constants/` are crucial
+3. **Reuse `CORE_UI_STRINGS`** for common actions like Save, Cancel, Loading
+4. **Add new strings to appropriate domain file** - Don't scatter in components
+
 ### Type & Interface Naming
 
 ```tsx

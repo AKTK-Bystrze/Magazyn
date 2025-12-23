@@ -95,6 +95,28 @@ frontend/
 │   │   ├── api/                    # API utilities and clients
 │   │   ├── auth/                   # Auth utilities
 │   │   ├── config/                 # Configuration files
+│   │   │   ├── constants/          # Organized constants (Polish UI)
+│   │   │   │   ├── index.ts        # Barrel export
+│   │   │   │   ├── app.ts          # Pagination, timing, storage
+│   │   │   │   ├── ui-core.ts      # Core UI strings (actions, states)
+│   │   │   │   ├── navigation.ts   # Nav labels, breadcrumbs
+│   │   │   │   ├── validation.ts   # Validation messages
+│   │   │   │   ├── reservation/    # Reservation domain
+│   │   │   │   │   ├── status.ts   # ⚠️ DB enum + labels
+│   │   │   │   │   └── ui-strings.ts
+│   │   │   │   ├── equipment/      # Equipment domain
+│   │   │   │   │   ├── status.ts   # ⚠️ DB enum + labels
+│   │   │   │   │   └── ui-strings.ts
+│   │   │   │   ├── user/           # User domain
+│   │   │   │   │   ├── role.ts     # ⚠️ DB enum + labels
+│   │   │   │   │   └── ui-strings.ts
+│   │   │   │   └── credit/
+│   │   │   │       └── ui-strings.ts
+│   │   │   ├── constants.ts        # Legacy re-export
+│   │   │   ├── routes.ts           # Route constants
+│   │   │   ├── nav-config.ts       # Navigation config
+│   │   │   ├── api.ts              # API config
+│   │   │   └── query.ts            # React Query config
 │   │   ├── errors/                 # Error handling
 │   │   ├── schemas/                # Validation schemas
 │   │   ├── transformers/           # Data transformation layer
@@ -327,6 +349,54 @@ export function transformCreateCommand(cmd: CreateCommand): unknown {
 ### 6. Error Boundary Pattern
 Wrap complex component trees with `<ErrorBoundary>` to prevent full app crashes.
 
+### 7. Constants & i18n Pattern
+
+**Problem**: UI strings scattered across components, inconsistent terminology, hard to maintain.
+**Solution**: Centralized constants organized by domain in `lib/config/constants/`.
+
+**Directory Structure**:
+```
+constants/
+├── index.ts              # Barrel export
+├── app.ts                # App-wide settings (pagination, timing)
+├── ui-core.ts            # Shared Polish strings (actions, states)
+├── navigation.ts         # Nav labels, breadcrumbs
+├── validation.ts         # Validation error messages
+│
+├── reservation/
+│   ├── status.ts         # ⚠️ CRUCIAL: DB enum + labels
+│   └── ui-strings.ts     # View/dialog strings
+│
+├── equipment/
+│   ├── status.ts         # ⚠️ CRUCIAL: DB enum + labels
+│   └── ui-strings.ts     # Filter/manager strings
+│
+├── user/
+│   ├── role.ts           # ⚠️ CRUCIAL: DB enum + labels
+│   └── ui-strings.ts     # Validation messages
+│
+└── credit/
+    └── ui-strings.ts     # Credit history strings
+```
+
+**Key Rules**:
+1. **Crucial files** (`status.ts`, `role.ts`) contain enums that **must match database exactly**
+2. **UI strings** are grouped by domain for discoverability
+3. **Core strings** (`ui-core.ts`) are reused across domains
+
+**Usage**:
+```typescript
+// Import from barrel (most common)
+import { RESERVATION_STATUS, CORE_UI_STRINGS } from '@/lib/config/constants';
+
+// Import from domain (for focused imports)
+import { RESERVATION_STATUS } from '@/lib/config/constants/reservation';
+```
+
+**Key Terminology** (Polish):
+- **credits** → `godzinki` (little hours)
+- **cart** → `worek` (bag)
+
 ---
 
 ## File Size Guidelines
@@ -334,6 +404,7 @@ Wrap complex component trees with `<ErrorBoundary>` to prevent full app crashes.
 - **Components**: Max ~200-300 lines
 - **Utilities**: Max ~150 lines
 - **Types**: Split if >500 lines
+- **Constants**: Split by domain (~50-100 lines per file)
 
 ---
 
@@ -343,3 +414,4 @@ Wrap complex component trees with `<ErrorBoundary>` to prevent full app crashes.
 - [Redirect Flow](./redirect-flow.md)
 - [Astro Guidelines](../.agent/rules/astro.md)
 - [React Guidelines](../.agent/rules/react.md)
+

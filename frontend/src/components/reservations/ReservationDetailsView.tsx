@@ -163,7 +163,7 @@ export function ReservationDetailsView({
                 <span data-testid="reservation-end-date">{formatDate(reservation.endDate)}</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                {days} {pluralize(days, "day")}
+                {days} {days === 1 ? "dzień" : "dni"}
               </p>
             </div>
           </div>
@@ -173,7 +173,7 @@ export function ReservationDetailsView({
             <CreditCard className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
             <div className="flex-1">
               <p className="font-medium">{UI.CREDIT_COST}</p>
-              <p className="text-sm">{reservation.creditCost} credits</p>
+              <p className="text-sm">{reservation.creditCost} godzinki</p>
             </div>
           </div>
 

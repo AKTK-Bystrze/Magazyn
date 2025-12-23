@@ -21,7 +21,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
 
   const isAvailable = item.status === "ok";
   const statusColor = item.status === "ok" ? "bg-green-500" : item.status === "broken" ? "bg-destructive" : "bg-yellow-500";
-  const statusLabel = item.status === "ok" ? "Available" : item.status === "broken" ? "Broken" : "Blocked";
+  const statusLabel = item.status === "ok" ? "Dostępne" : item.status === "broken" ? "Zepsute" : "Zablokowane";
 
   // Check if item is in cart
   const checkCartStatus = React.useCallback(() => {
@@ -92,7 +92,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-              No Image
+                Brak obrazu
             </div>
           )}
         </AspectRatio>
@@ -116,14 +116,14 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
       
       <CardContent className="p-4 pt-2 flex-grow">
         <p className="text-sm text-gray-600 line-clamp-2">
-          {item.description || "No description provided."}
+          {item.description || "Brak opisu."}
         </p>
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex justify-between items-center border-t bg-muted/20 mt-auto gap-2">
         <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
           <span className="text-primary">{item.type.creditCostPerDay}</span>
-          <span className="text-xs text-muted-foreground">credits/day</span>
+          <span className="text-xs text-muted-foreground">godzinki/dzień</span>
         </div>
         <div className="flex gap-2">
           {isAvailable && (
@@ -141,22 +141,22 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
               {justAdded ? (
                 <>
                   <Check className="h-4 w-4 mr-1" />
-                  Added
+                  Dodano
                 </>
               ) : isInCart ? (
                 <>
                     <span className="group-hover:hidden flex items-center">
                       <Check className="h-4 w-4 mr-1" />
-                      In Cart
+                      W Worku
                     </span>
                     <span className="hidden group-hover:flex items-center">
-                      Remove
+                      Usuń
                     </span>
                 </>
               ) : (
                     <>
                       <ShoppingCart className="h-4 w-4 mr-1" />
-                      Add
+                      Dodaj
                     </>
               )}
             </Button>
@@ -167,7 +167,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
             onClick={() => onViewDetail?.(item)}
             data-testid={`equipment-details-button-${item.id}`}
           >
-            Details
+            Szczegóły
           </Button>
         </div>
       </CardFooter>

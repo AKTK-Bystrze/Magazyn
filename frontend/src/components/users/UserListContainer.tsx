@@ -106,7 +106,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     async (command: CreateUserCommand) => {
       const user = await createUser(command);
       setSuccessMessage(
-        `User "${user.username}" has been created successfully.`
+        `Użytkownik "${user.username}" został pomyślnie utworzony.`
       );
       setCreateDialogOpen(false);
     },
@@ -130,7 +130,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     async (userId: string, command: UpdateUserCommand) => {
       const user = await updateUser(userId, command);
       setSuccessMessage(
-        `User "${user.username}" has been updated successfully.`
+        `Użytkownik "${user.username}" został pomyślnie zaktualizowany.`
       );
       setEditDialogOpen(false);
       setSelectedUser(null);
@@ -168,7 +168,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   const handleAdjustCreditsSubmit = React.useCallback(
     async (command: any) => {
       await bulkAdjustCredits(command);
-      setSuccessMessage(`Credits adjusted for ${selectedIds.length} users.`);
+      setSuccessMessage(`Godzinki dostosowane dla ${selectedIds.length} użytkowników.`);
       setAdjustCreditsOpen(false);
       setSelectedIds([]);
     },
@@ -185,9 +185,9 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       {/* Header with Create Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manage Users</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Zarządzaj Użytkownikami</h1>
           <p className="text-muted-foreground">
-            View and manage user accounts, roles, and credit balances.
+            Przeglądaj i zarządzaj kontami użytkowników, rolami i saldem godzinek.
           </p>
         </div>
         {isSuperAdmin && (
@@ -199,12 +199,12 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
                 onClick={handleAdjustCreditsClick}
               >
                 <Coins className={ICON_SIZE_SM} />
-                Adjust Credits ({selectedIds.length})
+                Dostosuj Godzinki ({selectedIds.length})
               </Button>
             )}
             <Button onClick={handleCreateClick} className="flex items-center gap-2 w-full sm:w-auto">
               <UserPlus className={ICON_SIZE_SM + " mr-2"} />
-              Create User
+              Utwórz Użytkownika
             </Button>
           </div>
         )}
@@ -225,7 +225,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
           <AlertDescription>
-            {errorMessage || error?.message || "An error occurred"}
+            {errorMessage || error?.message || "Wystąpił błąd"}
           </AlertDescription>
         </Alert>
       )}

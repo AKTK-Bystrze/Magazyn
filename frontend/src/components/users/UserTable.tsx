@@ -61,7 +61,7 @@ function EmptyState() {
   return (
     <TableRow>
       <TableCell colSpan={7} className="h-24 text-center">
-        <p className="text-muted-foreground">No users found</p>
+        <p className="text-muted-foreground">Nie znaleziono użytkowników</p>
       </TableCell>
     </TableRow>
   );
@@ -105,17 +105,17 @@ export function UserTable({
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={(checked) => onToggleSelectAll?.(checked, ids)}
-                  aria-label="Select all users"
+                  aria-label="Zaznacz wszystkich użytkowników"
                 />
               </TableHead>
             )}
-            <TableHead>Username</TableHead>
+            <TableHead>Nazwa użytkownika</TableHead>
             <TableHead className="hidden md:table-cell">Email</TableHead>
-            <TableHead className="hidden lg:table-cell text-right">Credits</TableHead>
-            <TableHead>Role</TableHead>
+            <TableHead className="hidden lg:table-cell text-right">Godzinki</TableHead>
+            <TableHead>Rola</TableHead>
             <TableHead className="hidden md:table-cell">Status</TableHead>
-            <TableHead className="hidden xl:table-cell">Created</TableHead>
-            {isSuperAdmin && <TableHead className="w-[70px]">Actions</TableHead>}
+            <TableHead className="hidden xl:table-cell">Utworzono</TableHead>
+            {isSuperAdmin && <TableHead className="w-[70px]">Akcje</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -139,7 +139,7 @@ export function UserTable({
                     <Checkbox
                       checked={selectedIds.includes(user.id)}
                       onCheckedChange={() => onToggleSelect?.(user.id)}
-                      aria-label={`Select ${user.username}`}
+                      aria-label={`Zaznacz ${user.username}`}
                     />
                   </TableCell>
                 )}
@@ -157,11 +157,11 @@ export function UserTable({
                 <TableCell className="hidden md:table-cell">
                   {user.isEnabled ? (
                     <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500/15 text-green-700 hover:bg-green-500/25">
-                      Active
+                      Aktywny
                     </div>
                   ) : (
                     <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive/15 text-destructive hover:bg-destructive/25">
-                      Disabled
+                        Wyłączony
                     </div>
                   )}
                 </TableCell>
@@ -174,7 +174,7 @@ export function UserTable({
                       variant="ghost"
                       size="icon"
                       onClick={handleEdit(user)}
-                      aria-label={`Edit ${user.username}`}
+                      aria-label={`Edytuj ${user.username}`}
                     >
                       <Pencil className={ICON_SIZE_SM} />
                     </Button>

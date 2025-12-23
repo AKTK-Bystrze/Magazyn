@@ -78,13 +78,13 @@ export function ConfirmationModal({
       >
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Confirm Reservation</h2>
+            <h2 className="text-2xl font-bold">Potwierdź Rezerwację</h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
               disabled={isSubmitting}
-              aria-label="Close modal"
+              aria-label="Zamknij okno"
             >
               <X className={ICON_SIZE_SM} />
             </Button>
@@ -93,20 +93,20 @@ export function ConfirmationModal({
 
         <CardContent className="pt-6 space-y-6">
           <div className="space-y-2">
-            <h3 className="font-semibold text-lg">Reservation Details</h3>
+            <h3 className="font-semibold text-lg">Szczegóły Rezerwacji</h3>
             <div className="bg-muted p-4 rounded-lg space-y-2">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Start Date:</span>
+                <span className="text-muted-foreground">Data Rozpoczęcia:</span>
                 <span className="font-medium">{formatDate(startDate)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">End Date:</span>
+                <span className="text-muted-foreground">Data Zakończenia:</span>
                 <span className="font-medium">{formatDate(endDate)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Duration:</span>
+                <span className="text-muted-foreground">Czas trwania:</span>
                 <span className="font-medium">
-                  {costBreakdown.itemCosts[0]?.days || 0} days
+                  {costBreakdown.itemCosts[0]?.days || 0} {(costBreakdown.itemCosts[0]?.days || 0) === 1 ? 'dzień' : 'dni'}
                 </span>
               </div>
             </div>
@@ -114,7 +114,7 @@ export function ConfirmationModal({
 
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">
-              Equipment ({items.length} items)
+              Sprzęt ({items.length} {items.length === 1 ? 'przedmiot' : 'przedmiotów'})
             </h3>
             <div className="space-y-1">
               {items.map((item) => (
@@ -129,7 +129,7 @@ export function ConfirmationModal({
                     </p>
                   </div>
                   <span className="text-muted-foreground">
-                    {item.creditCostPerDay} credits/day
+                    {item.creditCostPerDay} godzinki/dzień
                   </span>
                 </div>
               ))}
@@ -137,7 +137,7 @@ export function ConfirmationModal({
           </div>
 
           <div className="space-y-2">
-            <h3 className="font-semibold text-lg">Cost Summary</h3>
+            <h3 className="font-semibold text-lg">Podsumowanie Kosztu</h3>
             <div className="bg-muted p-4 rounded-lg space-y-2">
               {costBreakdown.itemCosts.map((item) => (
                 <div
@@ -150,23 +150,23 @@ export function ConfirmationModal({
                       ({item.creditCostPerDay} × {item.days})
                     </span>
                   </span>
-                  <span>{item.totalCost} credits</span>
+                  <span>{item.totalCost} godzinki</span>
                 </div>
               ))}
               <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
-                <span>Total Cost:</span>
+                <span>Całkowity Koszt:</span>
                 <span className="text-destructive">
-                  -{costBreakdown.totalCreditCost} credits
+                  -{costBreakdown.totalCreditCost} godzinki
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Current Balance:</span>
-                <span data-testid="confirmation-current-balance">{costBreakdown.currentBalance} credits</span>
+                <span className="text-muted-foreground">Aktualne Saldo:</span>
+                <span data-testid="confirmation-current-balance">{costBreakdown.currentBalance} godzinki</span>
               </div>
               <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                <span>Remaining Balance:</span>
+                <span>Pozostałe Saldo:</span>
                 <span className="text-primary" data-testid="confirmation-remaining-balance">
-                  {costBreakdown.remainingBalance} credits
+                  {costBreakdown.remainingBalance} godzinki
                 </span>
               </div>
             </div>
@@ -180,7 +180,7 @@ export function ConfirmationModal({
               className="flex-1"
               data-testid="cancel-confirmation-button"
             >
-              Cancel
+              Anuluj
             </Button>
             <Button
               onClick={onConfirm}
@@ -191,10 +191,10 @@ export function ConfirmationModal({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Tworzenie...
                 </>
               ) : (
-                "Confirm Reservation"
+                  "Potwierdź Rezerwację"
               )}
             </Button>
           </div>

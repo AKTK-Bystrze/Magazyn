@@ -73,7 +73,7 @@ export function ReservationFilters({
         </label>
         <Select value={filters.status} onValueChange={handleStatusChange}>
           <SelectTrigger id="status-filter" className="w-[160px]">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder="Filtruj według statusu" />
           </SelectTrigger>
           <SelectContent>
             {RESERVATION_FILTER_OPTIONS.map((option) => (
@@ -88,11 +88,11 @@ export function ReservationFilters({
       {/* Sort Options */}
       <div className="flex items-center gap-2">
         <label htmlFor="sort-filter" className="text-sm font-medium sr-only">
-          Sort by
+          Sortuj według
         </label>
         <Select value={filters.sort} onValueChange={handleSortChange}>
           <SelectTrigger id="sort-filter" className="w-[180px]">
-            <SelectValue placeholder="Sort by" />
+            <SelectValue placeholder="Sortuj według" />
           </SelectTrigger>
           <SelectContent>
             {RESERVATION_SORT_OPTIONS.map((option) => (
@@ -113,7 +113,7 @@ export function ReservationFilters({
           className="flex items-center gap-1"
         >
           <X className={ICON_SIZE_SM} />
-          Reset
+          Resetuj
         </Button>
       )}
     </div>

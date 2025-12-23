@@ -19,14 +19,14 @@ const scopeParam = Astro.url.searchParams.get('scope');
 const initialScope = scopeParam === 'all' ? 'all' : 'my';
 ---
 
-<AppLayout title="Reservations | Magazyn">
+<AppLayout title="Rezerwacje | Magazyn">
   <div class="container mx-auto py-8 px-4 max-w-7xl">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <h1 class="text-3xl font-bold tracking-tight">Reservations</h1>
+      <h1 class="text-3xl font-bold tracking-tight">Rezerwacje</h1>
       <a href={ROUTES.PUBLIC.EQUIPMENT}>
         <Button variant="outline">
-          Browse Equipment
+          Przeglądaj Sprzęt
         </Button>
       </a>
     </div>
@@ -36,7 +36,7 @@ const initialScope = scopeParam === 'all' ? 'all' : 'my';
       <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
         <CheckCircle2 className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-green-800 dark:text-green-200">
-          <strong>Success!</strong> Your reservation has been created successfully.
+          <strong>Sukces!</strong> Twoja rezerwacja została pomyślnie utworzona.
         </AlertDescription>
       </Alert>
     )}

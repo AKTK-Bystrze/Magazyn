@@ -43,14 +43,14 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="lg:hidden">
             <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
+            <span className="sr-only">Przełącz Menu</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
            {/* Mobile Sidebar */}
           <SheetHeader className="sr-only">
-            <SheetTitle>Navigation Menu</SheetTitle>
-            <SheetDescription>Main navigation items for the admin area</SheetDescription>
+            <SheetTitle>Menu Nawigacji</SheetTitle>
+            <SheetDescription>Główne elementy nawigacji dla obszaru administratora</SheetDescription>
           </SheetHeader>
            <AdminSidebar 
              currentPath={currentPath} 

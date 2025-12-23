@@ -77,17 +77,17 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
     <div className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]" data-testid="equipment-search-container">
       {/* Mobile Filter Trigger */}
       <div className="lg:hidden flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Equipment</h1>
+        <h1 className="text-2xl font-bold">Sprzęt</h1>
         <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2">
               <Filter className="h-4 w-4" />
-              Filters
+              Filtry
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
             <SheetHeader className="mb-4">
-              <SheetTitle>Filters</SheetTitle>
+              <SheetTitle>Filtry</SheetTitle>
             </SheetHeader>
             <FilterSidebar
               filters={filters}
@@ -103,7 +103,7 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6">
         <div className="sticky top-6">
-          <h2 className="text-xl font-bold mb-4">Filters</h2>
+          <h2 className="text-xl font-bold mb-4">Filtry</h2>
           <FilterSidebar
             filters={filters} 
             types={types} 
@@ -118,9 +118,9 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
       <main className="flex-1 flex flex-col">
         {/* Results Header (Desktop) */}
         <div className="hidden lg:flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Equipment Inventory</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Inwentarz Sprzętu</h1>
           <div className="text-sm text-muted-foreground">
-            Showing {equipment.length} of {meta.totalItems} items
+            Pokazywanie {equipment.length} z {meta.totalItems} elementów
           </div>
         </div>
 
@@ -142,10 +142,10 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
               disabled={meta.page <= 1}
               onClick={() => updateFilter("page", meta.page - 1)}
              >
-               Previous
+              Poprzedni
              </Button>
              <div className="flex items-center px-4 text-sm font-medium">
-              Page {meta.page} of {meta.totalPages}
+              Strona {meta.page} z {meta.totalPages}
              </div>
             <Button
               variant="outline"
@@ -153,7 +153,7 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
               disabled={meta.page >= meta.totalPages}
               onClick={() => updateFilter("page", meta.page + 1)}
              >
-               Next
+              Następny
              </Button>
            </div>
         )}

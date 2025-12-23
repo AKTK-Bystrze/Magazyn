@@ -27,12 +27,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setError(null);
 
     if (!email) {
-      setError('Email is required');
+      setError('E-mail jest wymagany');
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
+      setError('Wprowadź poprawny adres e-mail');
       return;
     }
 
@@ -48,7 +48,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         err.error ||
         err.response?.data?.error ||
         err.message ||
-        'Something went wrong. Please try again.';
+        'Coś poszło nie tak. Spróbuj ponownie.';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -59,7 +59,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     <div className="grid gap-6">
       <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">E-mail</Label>
           <Input
             id="email"
             data-testid="login-email-input"
@@ -104,7 +104,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
               ></path>
             </svg>
           )}
-          Sign In with Email
+          Zaloguj się przez E-mail
         </Button>
       </form>
     </div>

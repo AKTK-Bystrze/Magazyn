@@ -79,7 +79,7 @@ export function ReservationCard({
               </h3>
               {showOwnershipBadge && isOwn && (
                 <Badge variant="secondary" className="text-xs">
-                  Your reservation
+                  Twoja rezerwacja
                 </Badge>
               )}
             </div>
@@ -108,14 +108,14 @@ export function ReservationCard({
             {formatDate(reservation.startDate)} — {formatDate(reservation.endDate)}
           </span>
           <span className="text-muted-foreground">
-            ({days} {pluralize(days, "day")})
+            ({days} {days === 1 ? "dzień" : "dni"})
           </span>
         </div>
 
         {/* Cost */}
         <div className="flex items-center gap-2 text-sm">
           <CreditCard className={ICON_SIZE_SM + " text-muted-foreground"} />
-          <span className="font-medium">{reservation.creditCost} credits</span>
+          <span className="font-medium">{reservation.creditCost} godzinki</span>
         </div>
 
         {/* Actions */}
@@ -131,7 +131,7 @@ export function ReservationCard({
                 data-testid="modify-dates-button"
               >
                 <Edit2 className={ICON_SIZE_SM} />
-                Modify
+                Modyfikuj
               </Button>
             )}
 
@@ -145,7 +145,7 @@ export function ReservationCard({
                 data-testid="cancel-reservation-button"
               >
                 <X className={ICON_SIZE_SM} />
-                Cancel
+                Anuluj
               </Button>
             )}
 
@@ -158,7 +158,7 @@ export function ReservationCard({
                 className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
               >
                 <Calendar className={ICON_SIZE_SM} />
-                Return
+                Zwróć
               </Button>
             )}
 
@@ -167,7 +167,7 @@ export function ReservationCard({
               href={`/reservations/${reservation.id}`}
               className="ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
             >
-              View Details
+              Zobacz Szczegóły
             </a>
           </div>
         )}

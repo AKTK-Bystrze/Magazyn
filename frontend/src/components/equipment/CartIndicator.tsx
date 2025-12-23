@@ -86,7 +86,7 @@ export function CartIndicator({
             </span>
           </div>
           <span className="ml-2">
-            {itemCount} {pluralize(itemCount, "item")} in cart
+            {itemCount} {itemCount === 1 ? "przedmiot" : "przedmioty"} w worku
           </span>
           <ArrowRight className="h-4 w-4 ml-1" />
         </Button>

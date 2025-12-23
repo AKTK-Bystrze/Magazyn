@@ -6,7 +6,7 @@ import type {
 import {
   ERROR_AVAILABILITY_CHECK_FAILED,
   ERROR_UNAVAILABLE_FOR_DATES,
-} from "@/lib/config/error-messages";
+} from "@/lib/config/constants";
 import { transformEquipmentAvailabilityDTO } from "@/lib/transformers/availability.transformer";
 import { debug } from "@/lib/utils/debug";
 

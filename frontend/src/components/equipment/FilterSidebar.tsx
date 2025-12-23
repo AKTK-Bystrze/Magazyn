@@ -7,8 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { DateRangePicker } from "@/components/reservations/DateRangePicker";
-import { ERROR_START_DATE_PAST, ERROR_END_DATE_BEFORE_START } from "@/lib/config/error-messages";
-import { EQUIPMENT_FILTER_UI_STRINGS } from "@/lib/config/constants";
+import {
+  ERROR_START_DATE_PAST,
+  ERROR_END_DATE_BEFORE_START,
+  EQUIPMENT_FILTER_UI_STRINGS,
+} from "@/lib/config/constants";
 import { getTodayAsString } from "@/lib/utils/date-utils";
 
 interface FilterSidebarProps {
@@ -92,7 +95,7 @@ export function FilterSidebar({
   return (
     <div className={isHorizontal ? "flex flex-row flex-wrap items-end gap-x-4 gap-y-2" : "space-y-6"}>
       <div className={isHorizontal ? "flex-1 min-w-[200px]" : "space-y-2"}>
-        <Label htmlFor="search">Search</Label>
+        <Label htmlFor="search">Szukaj</Label>
         <Input
           id="search"
           placeholder={EQUIPMENT_FILTER_UI_STRINGS.SEARCH_PLACEHOLDER}

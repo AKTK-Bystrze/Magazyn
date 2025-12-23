@@ -32,7 +32,7 @@ export function ReservationViewTabs({
         aria-selected={activeScope === "my"}
         role="tab"
       >
-        My Reservations
+        Moje Rezerwacje
       </button>
       <button
         type="button"
@@ -46,7 +46,7 @@ export function ReservationViewTabs({
         aria-selected={activeScope === "all"}
         role="tab"
       >
-        All Reservations
+        Wszystkie Rezerwacje
       </button>
     </div>
   );

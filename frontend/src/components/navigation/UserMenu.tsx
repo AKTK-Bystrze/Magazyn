@@ -50,7 +50,7 @@ export function UserMenu({ user }: UserMenuProps) {
       <DropdownMenuContent className="w-56" align="end" forceMount data-testid="user-menu-dropdown">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Account</p>
+            <p className="text-sm font-medium leading-none">Konto</p>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuLabel>
@@ -58,23 +58,23 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuItem asChild>
           <a href={ROUTES.PROTECTED.CREDITS_HISTORY} className="flex w-full items-center">
             <CreditCard className="mr-2 h-4 w-4" />
-            <span>Credit History</span>
+            <span>Historia Godzinek</span>
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem disabled>
           <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
-          <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+          <span>Profil</span>
+          <span className="ml-auto text-xs text-muted-foreground">Wkrótce</span>
         </DropdownMenuItem>
         <DropdownMenuItem disabled>
           <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
-          <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+          <span>Ustawienia</span>
+          <span className="ml-auto text-xs text-muted-foreground">Wkrótce</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive" data-testid="logout-button">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>Wyloguj się</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

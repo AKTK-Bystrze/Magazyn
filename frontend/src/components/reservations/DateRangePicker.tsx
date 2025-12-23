@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { calculateDays, getTodayAsString } from "@/lib/utils/date-utils";
 import { pluralize } from "@/lib/utils/text-utils";
-import { ICON_SIZE_SM, EQUIPMENT_FILTER_UI_STRINGS } from "@/lib/config/constants";
-import { ERROR_SELECT_DATES } from "@/lib/config/error-messages";
+import {
+  ICON_SIZE_SM,
+  EQUIPMENT_FILTER_UI_STRINGS,
+  ERROR_SELECT_DATES,
+} from "@/lib/config/constants";
 
 interface DateRangePickerProps {
   startDate: string | null;
@@ -39,7 +42,7 @@ export function DateRangePicker({
   onStartDateChange,
   onEndDateChange,
   validationErrors,
-  title = "Reservation Dates",
+  title = "Daty Rezerwacji",
   showClearButton = false,
   onClear,
   compact = false,
@@ -73,7 +76,7 @@ export function DateRangePicker({
         <div className="space-y-2">
           <Label htmlFor={startDateId} className="flex items-center gap-2">
             <CalendarIcon className={ICON_SIZE_SM} />
-            Start Date
+            Data Rozpoczęcia
           </Label>
           <Input
             id={startDateId}
@@ -100,7 +103,7 @@ export function DateRangePicker({
         <div className="space-y-2">
           <Label htmlFor={endDateId} className="flex items-center gap-2">
             <CalendarIcon className={ICON_SIZE_SM} />
-            End Date
+            Data Zakończenia
           </Label>
           <Input
             id={endDateId}
@@ -130,7 +133,7 @@ export function DateRangePicker({
           <div className="flex items-center gap-2">
             <CalendarIcon className={ICON_SIZE_SM} />
             <p className="text-sm font-medium">
-              Reservation duration: {days} {pluralize(days, "day")}
+              Czas trwania rezerwacji: {days} {days === 1 ? "dzień" : "dni"}
             </p>
           </div>
         </Alert>

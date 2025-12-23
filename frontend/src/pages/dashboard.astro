@@ -23,12 +23,12 @@ if (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) {
 }
 ---
 
-<AppLayout title="Dashboard | Magazyn" showBreadcrumbs={false}>
+<AppLayout title="Panel | Magazyn" showBreadcrumbs={false}>
   <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
-    <h1 class="text-4xl font-bold mb-4">Welcome back!</h1>
+    <h1 class="text-4xl font-bold mb-4">Witaj ponownie!</h1>
     <p class="text-xl text-muted-foreground mb-2">{user.email}</p>
     <p class="text-muted-foreground mb-8">
-      Credits: <span class="font-semibold">{sessionInfo.creditBalance ?? 0}</span>
+      Godzinki: <span class="font-semibold">{sessionInfo.creditBalance ?? 0}</span>
     </p>
     
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
@@ -40,7 +40,7 @@ if (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) {
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <span class="font-medium">Browse Equipment</span>
+        <span class="font-medium">Przeglądaj Sprzęt</span>
       </a>
       <a 
         href={ROUTES.PROTECTED.RESERVATIONS}
@@ -52,7 +52,7 @@ if (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) {
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        <span class="font-medium">My Reservations</span>
+        <span class="font-medium">Moje Rezerwacje</span>
       </a>
     </div>
   </div>

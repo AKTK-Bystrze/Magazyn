@@ -12,7 +12,7 @@ import {
   ERROR_END_DATE_BEFORE_START,
   ERROR_ITEMS_UNAVAILABLE,
   ERROR_INSUFFICIENT_CREDITS,
-} from "@/lib/config/error-messages";
+} from "@/lib/config/constants";
 
 /**
  * Validates the date range for the reservation cart

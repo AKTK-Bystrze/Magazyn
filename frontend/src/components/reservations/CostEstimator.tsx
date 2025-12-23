@@ -38,12 +38,12 @@ export function CostEstimator({
         <CardHeader>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <CreditCard className={ICON_SIZE_MD} />
-            Cost Summary
+            Podsumowanie Kosztu
           </h3>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Select dates to see cost estimate
+            Wybierz daty, aby zobaczyć koszt
           </p>
         </CardContent>
       </Card>
@@ -57,13 +57,13 @@ export function CostEstimator({
       <CardHeader>
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <CreditCard className={ICON_SIZE_MD} />
-          Cost Summary
+          Podsumowanie Kosztu
         </h3>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-muted-foreground">
-            Item Breakdown
+            Podział według Sprzętu
           </h4>
           <div className="space-y-1">
             {costBreakdown.itemCosts.map((item) => (
@@ -75,10 +75,10 @@ export function CostEstimator({
                   {item.name}{" "}
                   <span className="text-muted-foreground">
                     ({item.creditCostPerDay} × {item.days}{" "}
-                    {pluralize(item.days, "day")})
+                    {item.days === 1 ? "dzień" : "dni"})
                   </span>
                 </span>
-                <span className="font-medium">{item.totalCost} credits</span>
+                <span className="font-medium">{item.totalCost} godzinki</span>
               </div>
             ))}
           </div>
@@ -86,26 +86,26 @@ export function CostEstimator({
 
         <div className="border-t pt-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Current Balance</span>
+            <span className="text-muted-foreground">Aktualne Saldo</span>
             <span className="font-medium" data-testid="current-credit-balance">
-              {costBreakdown.currentBalance} credits
+              {costBreakdown.currentBalance} godzinki
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Cost</span>
+            <span className="text-muted-foreground">Całkowity Koszt</span>
             <span className="font-medium" data-testid="reservation-total-cost">
-              -{costBreakdown.totalCreditCost} credits
+              -{costBreakdown.totalCreditCost} godzinki
             </span>
           </div>
           <div className="border-t pt-2 flex justify-between font-semibold">
-            <span>Remaining Balance</span>
+            <span>Pozostałe Saldo</span>
             <span
               className={
                 hasInsufficientCredits ? "text-destructive" : "text-primary"
               }
               data-testid="remaining-credit-balance"
             >
-              {costBreakdown.remainingBalance} credits
+              {costBreakdown.remainingBalance} godzinki
             </span>
           </div>
         </div>
@@ -114,16 +114,16 @@ export function CostEstimator({
           <Alert className="border-destructive bg-destructive/10" data-testid="error-insufficient-credits">
             <AlertCircle className={ICON_SIZE_SM} />
             <div className="ml-2">
-              <p className="font-semibold">Insufficient Credits</p>
+              <p className="font-semibold">Niewystarczająca liczba godzinek</p>
               <p className="text-sm mt-1">
-                You need {Math.abs(costBreakdown.remainingBalance)} more credits
-                to complete this reservation.
+                Potrzebujesz {Math.abs(costBreakdown.remainingBalance)} więcej godzinek,
+                aby dokończyć tę rezerwację.
               </p>
               <a
                 href={ROUTES.PROTECTED.CREDIT_REQUESTS}
                 className="text-sm underline hover:no-underline mt-2 inline-block"
               >
-                Request more credits
+                Proś o więcej godzinek
               </a>
             </div>
           </Alert>
