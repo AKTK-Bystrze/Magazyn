@@ -1,6 +1,4 @@
 ## In progress:
-- e2e tests for admin reservation flow
-- basic e2e tests for equipment manager, credits history, user view
 - Remove service role key usage -remove-service-role-key.md
 - supabase migrations squash and duplicates
 
