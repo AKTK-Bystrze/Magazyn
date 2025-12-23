@@ -111,7 +111,7 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	fixture.testUser2ID = profiles[1].ID
 
 	// Reset credits
-	initialBalance := int32(10000)
+	initialBalance := int32(100000)
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUserID).Execute()
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUser2ID).Execute()
 }

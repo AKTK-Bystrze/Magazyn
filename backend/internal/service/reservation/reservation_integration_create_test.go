@@ -230,9 +230,9 @@ func TestCostCalculation_Matrix(t *testing.T) {
 		wantDays  int32
 	}{
 		{"Single Day", 5, 5, 1},
-		{"Two Days", 5, 6, 2},
-		{"Week Long", 5, 11, 7},
-		{"Month Long", 5, 35, 31},
+		{"Two Days", 7, 8, 2},
+		{"Week Long", 10, 16, 7},
+		{"Month Long", 20, 50, 31},
 	}
 
 	for _, tt := range tests {
