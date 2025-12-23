@@ -35,6 +35,9 @@ export class ReservationCartPOM {
   readonly insufficientCreditsError: Locator;
   readonly conflictError: Locator;
 
+  // Admin elements
+  readonly userSelectorTrigger: Locator;
+
   constructor(page: Page) {
     this.page = page;
     
@@ -64,6 +67,31 @@ export class ReservationCartPOM {
     // Errors
     this.insufficientCreditsError = page.getByTestId("error-insufficient-credits");
     this.conflictError = page.getByTestId("error-reservation-conflict");
+
+    // Admin controls
+    this.userSelectorTrigger = page.locator("#user-selector");
+  }
+
+  /**
+   * Selects a user for the reservation (Admin only).
+   *
+   * @param usernameOrEmail - The username or email of the user to select.
+   * @returns A promise that resolves when the user is selected.
+   */
+  async selectUser(usernameOrEmail: string): Promise<void> {
+    await this.userSelectorTrigger.click();
+
+    // In shadcn/ui select, options are usually in a role="listbox" 
+    // We can select by text content
+    const option = this.page.getByRole("option", { name: usernameOrEmail });
+    await expect(option).toBeVisible();
+    await option.click();
+
+    // Verify selection - the trigger usually contains the selected value
+    await expect(this.userSelectorTrigger).toContainText(usernameOrEmail);
+
+    // Wait for any potential cart updates (e.g., credit balance refresh)
+    await this.page.waitForTimeout(500);
   }
 
   /**

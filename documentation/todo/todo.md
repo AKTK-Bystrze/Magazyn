@@ -1,14 +1,12 @@
-In progress:
-- deployment strategy
-
-## Next
+## In progress:
 - e2e tests for admin reservation flow
 - basic e2e tests for equipment manager, credits history, user view
 - Remove service role key usage -remove-service-role-key.md
 - supabase migrations squash and duplicates
 
 ## Deployment
-3. test sharding for CI/CD
+3. pipelines
+    test sharding for CI/CD
 4. deploy on server
 
 ## Equipment Views refactor
@@ -18,7 +16,7 @@ In progress:
 - Equipment details sheet: readOnly prop for users, editable for admins
 
 ## Code Quality
-- review logical flow of the tests
+- review logical flow of the backend tests
 - cleanup
 - API simplification
 - documentation
@@ -42,7 +40,7 @@ In progress:
 ## Refactoring Needed
 1. Credit recalculation on date modification in Update
 2. Token expiration handling - valid on frontend but not backend
-3. maintenance double log - in case of failure just create a report file with context
+3. maintenance loging - in case of failure just create a report file with context
 4. remove RENTED status and rename ongoing to ACTIVE, 12. Remove approved status
 5. in create user initial credits balance have leading zero that cant be removed
 6. Warning messages for reservations that have the overlapping dates e.g start date is the same as end date of another reservation. They are allowed

@@ -65,7 +65,7 @@ test.describe("Reservation Creation", () => {
 
     await authenticatedPage.goto("/equipment");
     await expect(
-      authenticatedPage.getByRole("heading", { name: /equipment/i })
+      authenticatedPage.getByRole("heading", { name: /equipment|sprzęt|inwentarz/i, level: 1 })
     ).toBeVisible();
 
     await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_SEARCH_CONTAINER)).toBeVisible();

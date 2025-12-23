@@ -28,6 +28,7 @@ const error = null;
       <ReservationCartView
         client:only="react"
         initialCreditBalance={initialCreditBalance}
+        isAdmin={sessionInfo.role === 'admin'}
       />
     )}
   </div>

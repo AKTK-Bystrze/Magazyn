@@ -136,6 +136,15 @@ export async function cleanupTestEquipment(
     if (historyError) {
       console.error(`Failed to cleanup reservation history: ${historyError.message}`);
     }
+
+    const { error: creditError } = await supabaseAdmin
+      .from('credit_history')
+      .delete()
+      .in('reservation_id', reservationIds);
+
+    if (creditError) {
+      console.error(`Failed to cleanup credit history: ${creditError.message}`);
+    }
   }
 
   const { error: resError } = await supabaseAdmin
@@ -197,6 +206,15 @@ export async function cleanupOrphanedTestEquipment(
 
     if (historyError) {
       console.error(`Failed to delete orphaned reservation history: ${historyError.message}`);
+    }
+
+    const { error: creditError } = await supabaseAdmin
+      .from('credit_history')
+      .delete()
+      .in('reservation_id', reservationIds);
+
+    if (creditError) {
+      console.error(`Failed to delete orphaned credit history: ${creditError.message}`);
     }
   }
 
