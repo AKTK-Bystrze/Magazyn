@@ -5,81 +5,16 @@ import (
 	"testing"
 
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
-
-// MockCreditHistoryRepository mocks repository.CreditHistoryRepository
-type MockCreditHistoryRepository struct {
-	mock.Mock
-}
-
-func (m *MockCreditHistoryRepository) GetCreditHistory(ctx context.Context, userID *string, page, perPage int) ([]types.CreditHistoryItemDTO, int64, error) {
-	args := m.Called(ctx, userID, page, perPage)
-	if args.Get(0) == nil {
-		return nil, args.Get(1).(int64), args.Error(2)
-	}
-	return args.Get(0).([]types.CreditHistoryItemDTO), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockCreditHistoryRepository) Create(ctx context.Context, item types.PublicCreditHistoryInsert) error {
-	args := m.Called(ctx, item)
-	return args.Error(0)
-}
-
-// MockUserRepository mocks repository.UserRepository
-type MockUserRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) List(ctx context.Context, page, perPage int, role, search string) ([]types.PublicProfilesSelect, int64, error) {
-	args := m.Called(ctx, page, perPage, role, search)
-	return args.Get(0).([]types.PublicProfilesSelect), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, email)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) Create(ctx context.Context, profile types.PublicProfilesInsert) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, profile)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) Update(ctx context.Context, id string, profile types.PublicProfilesUpdate) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, id, profile)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
-	args := m.Called(ctx, userIDs, adminID, amount, reason, description)
-	return args.Error(0)
-}
 
 func TestGetCreditHistory_Pagination(t *testing.T) {
 	// Setup
-	mockRepo := new(MockCreditHistoryRepository)
-	mockUserRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockCreditHistoryRepository)
+	mockUserRepo := new(mocks.MockUserRepository)
 	service := NewCreditHistoryService(mockRepo, mockUserRepo)
 	ctx := context.Background()
 
@@ -114,8 +49,8 @@ func TestGetCreditHistory_Pagination(t *testing.T) {
 }
 
 func TestGetCreditHistory_PaginationDefaults(t *testing.T) {
-	mockRepo := new(MockCreditHistoryRepository)
-	mockUserRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockCreditHistoryRepository)
+	mockUserRepo := new(mocks.MockUserRepository)
 	service := NewCreditHistoryService(mockRepo, mockUserRepo)
 	ctx := context.Background()
 

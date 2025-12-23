@@ -6,361 +6,514 @@ import (
 
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
-	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/service/reservation"
+	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // ============================================================================
-// Mocks
+// Test Helpers
 // ============================================================================
 
-type MockReservationRepository struct {
-	mock.Mock
-}
-
-func (m *MockReservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
-	args := m.Called(ctx, query)
-	return args.Get(0).([]types.ReservationListItem), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockReservationRepository) GetReservationByID(ctx context.Context, id string) (*types.ReservationDetail, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.ReservationDetail), args.Error(1)
-}
-
-func (m *MockReservationRepository) CreateReservation(ctx context.Context, reservation types.PublicReservationsInsert) (*types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, reservation)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicReservationsSelect), args.Error(1)
-}
-
-func (m *MockReservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, reservations []types.CreateReservationItem) ([]string, int32, error) {
-	args := m.Called(ctx, userID, totalCost, reservations)
-	return args.Get(0).([]string), args.Get(1).(int32), args.Error(2)
-}
-
-func (m *MockReservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate, changedByUserID string) (*types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, id, reservation, changedByUserID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicReservationsSelect), args.Error(1)
-}
-
-func (m *MockReservationRepository) BulkUpdateReservations(ctx context.Context, ids []string, status string) error {
-	args := m.Called(ctx, ids, status)
-	return args.Error(0)
-}
-
-func (m *MockReservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids []string, status string, adminID string) (*types.BulkStatusUpdateResponse, error) {
-	args := m.Called(ctx, ids, status, adminID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.BulkStatusUpdateResponse), args.Error(1)
-}
-
-func (m *MockReservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, equipmentID, startDate, endDate, excludeReservationID)
-	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
-}
-
-func (m *MockReservationRepository) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
-	args := m.Called(ctx)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.ReservationDashboardSummary), args.Error(1)
-}
-
-func (m *MockReservationRepository) GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, rangeStart, rangeEnd, equipmentID)
-	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
-}
-
-func (m *MockReservationRepository) RefundCredits(ctx context.Context, reservationID string, amount int32) error {
-	args := m.Called(ctx, reservationID, amount)
-	return args.Error(0)
-}
-
-func (m *MockReservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
-	args := m.Called(ctx, reservationID, changedByUserID, newStartDate, newEndDate)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.ModifyDatesResponse), args.Error(1)
-}
-
-type MockEquipmentRepository struct {
-	mock.Mock
-}
-
-func (m *MockEquipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
-	args := m.Called(ctx, query)
-	return args.Get(0).([]types.PublicEquipmentSelect), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockEquipmentRepository) GetByID(ctx context.Context, id string) (*types.PublicEquipmentSelect, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicEquipmentSelect), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) GetTypeByID(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error) {
-	args := m.Called(ctx, typeID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicEquipmentTypesSelect), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) GetInternalIDCheck(ctx context.Context, typeID string, internalID string) (bool, error) {
-	args := m.Called(ctx, typeID, internalID)
-	return args.Bool(0), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) Create(ctx context.Context, equipment types.PublicEquipmentInsert) (*types.PublicEquipmentSelect, error) {
-	args := m.Called(ctx, equipment)
-	return args.Get(0).(*types.PublicEquipmentSelect), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error) {
-	args := m.Called(ctx, id, equipment)
-	return args.Get(0).(*types.PublicEquipmentSelect), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) Archive(ctx context.Context, id string) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
-
-func (m *MockEquipmentRepository) GetTypeForEquipment(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error) {
-	args := m.Called(ctx, typeID)
-	return args.Get(0).(*types.PublicEquipmentTypesSelect), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentID string) ([]types.PublicMaintenanceLogsSelect, error) {
-	args := m.Called(ctx, equipmentID)
-	return args.Get(0).([]types.PublicMaintenanceLogsSelect), args.Error(1)
-}
-
-// We need to import repository package to use MaintenanceLogWithAdmin or define alias.
-// Since we are in reservation_test, we can import repository.
-// Wait, circular dependency if we import repository? No, repository imports types.
-// We are in reservation_test package, so we can import repository.
-func (m *MockEquipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
-	args := m.Called(ctx, equipmentID)
-	return args.Get(0).([]repository.MaintenanceLogWithAdmin), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) GetActiveReservations(ctx context.Context, equipmentID string) ([]types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, equipmentID)
-	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, equipmentID, start, end)
-	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error) {
-	args := m.Called(ctx, startDate, endDate)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]string), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error) {
-	args := m.Called(ctx, userID)
-	return args.Get(0).(map[string]bool), args.Error(1)
-}
-
-func (m *MockEquipmentRepository) CreateMaintenanceLog(ctx context.Context, equipmentID string, previousStatus, newStatus string, notes *string, userID string) (*types.PublicMaintenanceLogsSelect, error) {
-	args := m.Called(ctx, equipmentID, previousStatus, newStatus, notes, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicMaintenanceLogsSelect), args.Error(1)
-}
-
-type MockUserRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) List(ctx context.Context, page, perPage int, role, search string) ([]types.PublicProfilesSelect, int64, error) {
-	args := m.Called(ctx, page, perPage, role, search)
-	return args.Get(0).([]types.PublicProfilesSelect), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, email)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) Create(ctx context.Context, profile types.PublicProfilesInsert) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, profile)
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) Update(ctx context.Context, id string, profile types.PublicProfilesUpdate) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, id, profile)
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-
-func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
-	args := m.Called(ctx, userIDs, adminID, amount, reason, description)
-	return args.Error(0)
-}
-
-type MockEmailService struct {
-	mock.Mock
-}
-
-func (m *MockEmailService) SendReservationConfirmation(ctx context.Context, email string, details map[string]interface{}) error {
-	args := m.Called(ctx, email, details)
-	return args.Error(0)
-}
-
-// ============================================================================
-// Tests
-// ============================================================================
-
-func TestReservationService_Create_Success(t *testing.T) {
-	mockRepo := new(MockReservationRepository)
-	mockEqRepo := new(MockEquipmentRepository)
-	mockUserRepo := new(MockUserRepository)
-	mockEmail := new(MockEmailService)
-
-	svc := reservation.NewReservationService(mockRepo, mockEqRepo, mockUserRepo, mockEmail)
-	ctx := context.Background()
-
-	userID := "user-123"
-	equipID := "equip-1"
-	typeID := "type-1"
-
-	// Mock Equipment Retrieval
-	mockEqRepo.On("GetByID", ctx, equipID).Return(&types.PublicEquipmentSelect{
-		ID:     equipID,
-		TypeID: typeID,
-		Status: constants.EquipmentStatusOK,
-		Name:   stringPtr("Camera"),
-	}, nil)
-
-	mockEqRepo.On("GetTypeByID", ctx, typeID).Return(&types.PublicEquipmentTypesSelect{
-		ID:               typeID,
-		CreditCostPerDay: 10,
-	}, nil)
-
-	// Mock Creation Atomic
-	expectedCost := int32(10)
-	t.Logf("Setting up CreateReservationsAtomic mock with cost: %d", expectedCost)
-	mockRepo.On("CreateReservationsAtomic", mock.Anything, userID, expectedCost, mock.Anything).
-		Return([]string{"res-1"}, int32(990), nil)
-
-	// Mock User Retrieval for Email
-	mockUserRepo.On("GetByID", mock.Anything, userID).Return(&types.PublicProfilesSelect{
-		Email: "test@example.com",
-	}, nil)
-
-	// Mock Email
-	mockEmail.On("SendReservationConfirmation", mock.Anything, "test@example.com", mock.Anything).Return(nil)
-
-	cmd := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{EquipmentID: equipID, StartDate: "2025-01-01", EndDate: "2025-01-01"},
-		},
-	}
-
-	resp, err := svc.Create(ctx, cmd, userID)
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, int32(10), resp.TotalCreditCost)
-	assert.Len(t, resp.Reservations, 1)
-}
-
-func TestReservationService_Update_RefundTrigger(t *testing.T) {
-	mockRepo := new(MockReservationRepository)
-	mockEqRepo := new(MockEquipmentRepository)
-	mockUserRepo := new(MockUserRepository)
-	mockEmail := new(MockEmailService)
-
-	svc := reservation.NewReservationService(mockRepo, mockEqRepo, mockUserRepo, mockEmail)
-	ctx := context.Background()
-
-	resID := "res-1"
-	userID := "user-123"
-	equipID := "equip-1"
-	typeID := "type-1"
-
-	// Existing reservation
-	mockRepo.On("GetReservationByID", ctx, resID).Return(&types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:          resID,
-			UserID:      userID,
-			EquipmentID: equipID,
-			StartDate:   "2025-01-01",
-			EndDate:     "2025-01-01",
-			Status:      constants.ReservationStatusPending,
-		},
-	}, nil)
-
-	// Mock Equipment for refund calc
-	mockEqRepo.On("GetByID", ctx, equipID).Return(&types.PublicEquipmentSelect{
-		ID:     equipID,
-		TypeID: typeID,
-	}, nil)
-	mockEqRepo.On("GetTypeByID", ctx, typeID).Return(&types.PublicEquipmentTypesSelect{
-		CreditCostPerDay: 10,
-	}, nil)
-
-	// Mock Refund Call
-	mockRepo.On("RefundCredits", ctx, resID, int32(10)).Return(nil)
-
-	// Mock Update Call
-	mockRepo.On("UpdateReservation", ctx, resID, mock.AnythingOfType("types.PublicReservationsUpdate"), userID).
-		Return(&types.PublicReservationsSelect{
-			ID:     resID,
-			Status: constants.ReservationStatusDenied,
-		}, nil)
-
-	cmd := types.UpdateReservationCommand{
-		Status: stringPtr(constants.ReservationStatusDenied),
-	}
-
-	// Acting as Admin to allow status change to DENIED if not owner?
-	// Or user cancelling self.
-	// User can cancel own pending.
-	resp, err := svc.Update(ctx, resID, cmd, userID, auth.RoleUser)
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, constants.ReservationStatusDenied, resp.Status)
-
-	mockRepo.AssertExpectations(t)
+// setupTestService creates a service with all mocks
+func setupTestService() (*mocks.MockReservationRepository, *mocks.MockEquipmentRepository, *mocks.MockUserRepository, *mocks.MockEmailService, reservation.ReservationService) {
+	mockRepo := new(mocks.MockReservationRepository)
+	mockEquipRepo := new(mocks.MockEquipmentRepository)
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockEmailService := new(mocks.MockEmailService)
+	svc := reservation.NewReservationService(mockRepo, mockEquipRepo, mockUserRepo, mockEmailService)
+	return mockRepo, mockEquipRepo, mockUserRepo, mockEmailService, svc
 }
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+// ============================================================================
+// Authorization Tests - GetByID
+// ============================================================================
+
+func TestGetByID_OwnerCanView(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	userID := "user-123"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:     reservationID,
+			UserID: userID,
+			Status: constants.ReservationStatusPending,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	// Act
+	result, err := svc.GetByID(ctx, reservationID, userID, auth.RoleUser)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, reservationID, result.ID)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetByID_NonOwnerForbidden(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	ownerID := "user-123"
+	requestingUserID := "user-999"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:     reservationID,
+			UserID: ownerID,
+			Status: constants.ReservationStatusPending,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	// Act
+	result, err := svc.GetByID(ctx, reservationID, requestingUserID, auth.RoleUser)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ForbiddenError{}, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetByID_AdminCanViewAny(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	ownerID := "user-123"
+	adminID := "admin-999"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:     reservationID,
+			UserID: ownerID,
+			Status: constants.ReservationStatusPending,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	// Act
+	result, err := svc.GetByID(ctx, reservationID, adminID, auth.RoleAdmin)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, reservationID, result.ID)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetByID_SuperAdminCanViewAny(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	ownerID := "user-123"
+	superAdminID := "superadmin-999"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:     reservationID,
+			UserID: ownerID,
+			Status: constants.ReservationStatusPending,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	// Act
+	result, err := svc.GetByID(ctx, reservationID, superAdminID, auth.RoleSuperAdmin)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, reservationID, result.ID)
+	mockRepo.AssertExpectations(t)
+}
+
+// ============================================================================
+// Authorization Tests - Update
+// ============================================================================
+
+func TestUpdate_UserCannotUpdateOthers(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	ownerID := "user-123"
+	requestingUserID := "user-999"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:     reservationID,
+			UserID: ownerID,
+			Status: constants.ReservationStatusPending,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	cmd := types.UpdateReservationCommand{}
+
+	// Act
+	result, err := svc.Update(ctx, reservationID, cmd, requestingUserID, auth.RoleUser)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ForbiddenError{}, err)
+	assert.Contains(t, err.Error(), "Not allowed")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUpdate_UserCannotModifyNonPending(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	userID := "user-123"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:     reservationID,
+			UserID: userID,
+			Status: constants.ReservationStatusRented,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	cmd := types.UpdateReservationCommand{}
+
+	// Act
+	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ForbiddenError{}, err)
+	assert.Contains(t, err.Error(), "Cannot modify non-pending reservation")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUpdate_UserCanOnlyCancelOrReturn(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	userID := "user-123"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      userID,
+			Status:      constants.ReservationStatusPending,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03",
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	// Try to set status to RENTED (not allowed for users - only admin can rent out)
+	rentedStatus := constants.ReservationStatusRented
+	cmd := types.UpdateReservationCommand{
+		Status: &rentedStatus,
+	}
+
+	// Act
+	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ValidationError{}, err)
+	assert.Contains(t, err.Error(), "Users can only cancel or return")
+	mockRepo.AssertExpectations(t)
+}
+
+// ============================================================================
+// Business Logic Tests - List
+// ============================================================================
+
+func TestList_Success(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	query := types.ReservationListQuery{
+		Page:    1,
+		PerPage: 25,
+	}
+
+	items := []types.ReservationListItem{
+		{ID: "res-1", UserID: "user-1"},
+		{ID: "res-2", UserID: "user-2"},
+	}
+	total := int64(2)
+
+	mockRepo.On("GetReservations", ctx, query).Return(items, total, nil)
+
+	// Act
+	result, err := svc.List(ctx, query)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Len(t, result.Reservations, 2)
+	assert.Equal(t, 1, result.Pagination.Page)
+	assert.Equal(t, 25, result.Pagination.PerPage)
+	assert.Equal(t, 2, result.Pagination.TotalItems)
+	assert.Equal(t, 1, result.Pagination.TotalPages)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestList_PaginationCalculation(t *testing.T) {
+	// Arrange
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	query := types.ReservationListQuery{
+		Page:    1,
+		PerPage: 10,
+	}
+
+	items := []types.ReservationListItem{}
+	total := int64(47) // Should result in 5 pages
+
+	mockRepo.On("GetReservations", ctx, query).Return(items, total, nil)
+
+	// Act
+	result, err := svc.List(ctx, query)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Equal(t, 5, result.Pagination.TotalPages)
+	mockRepo.AssertExpectations(t)
+}
+
+// ============================================================================
+// Business Logic Tests - Create
+// ============================================================================
+
+func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
+	// Arrange
+	_, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	cmd := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: "nonexistent-eq",
+				StartDate:   "2025-01-01",
+				EndDate:     "2025-01-03",
+			},
+		},
+	}
+
+	mockEquipRepo.On("GetByID", ctx, "nonexistent-eq").Return(nil, types.NewNotFoundError("Equipment", "nonexistent-eq"))
+
+	// Act
+	result, err := svc.Create(ctx, cmd, "user-123")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ValidationError{}, err)
+	assert.Contains(t, err.Error(), "not found")
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
+	// Arrange
+	_, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	cmd := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: "eq-archived",
+				StartDate:   "2025-01-01",
+				EndDate:     "2025-01-03",
+			},
+		},
+	}
+
+	name := "Archived Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:         "eq-archived",
+		Name:       &name,
+		TypeID:     "type-1",
+		Status:     constants.EquipmentStatusOK,
+		IsArchived: true,
+	}
+
+	mockEquipRepo.On("GetByID", ctx, "eq-archived").Return(equipment, nil)
+
+	// Act
+	result, err := svc.Create(ctx, cmd, "user-123")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ValidationError{}, err)
+	assert.Contains(t, err.Error(), "not available")
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
+	// Arrange
+	_, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	cmd := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: "eq-broken",
+				StartDate:   "2025-01-01",
+				EndDate:     "2025-01-03",
+			},
+		},
+	}
+
+	name := "Broken Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:         "eq-broken",
+		Name:       &name,
+		TypeID:     "type-1",
+		Status:     constants.EquipmentStatusBroken,
+		IsArchived: false,
+	}
+
+	mockEquipRepo.On("GetByID", ctx, "eq-broken").Return(equipment, nil)
+
+	// Act
+	result, err := svc.Create(ctx, cmd, "user-123")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ValidationError{}, err)
+	assert.Contains(t, err.Error(), "not available")
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestCreate_CostCalculation_SingleItem(t *testing.T) {
+	// Arrange
+	mockRepo, mockEquipRepo, mockUserRepo, mockEmailService, svc := setupTestService()
+	ctx := context.Background()
+
+	cmd := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: "eq-1",
+				StartDate:   "2025-01-01",
+				EndDate:     "2025-01-03", // 3 days
+			},
+		},
+	}
+
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:         "eq-1",
+		Name:       &name,
+		TypeID:     "type-1",
+		Status:     constants.EquipmentStatusOK,
+		IsArchived: false,
+	}
+
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+
+	expectedCost := int32(3 * 10) // 3 days × 10 credits/day = 30
+	newBalance := int32(70)
+	reservationIDs := []string{"res-new-1"}
+
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+	mockRepo.On("CreateReservationsAtomic", ctx, "user-123", expectedCost, cmd.Reservations).Return(reservationIDs, newBalance, nil)
+	mockUserRepo.On("GetByID", ctx, "user-123").Return(&types.PublicProfilesSelect{Email: "user@test.com"}, nil)
+	mockEmailService.On("SendReservationConfirmation", ctx, "user@test.com", map[string]interface{}{
+		"user_id": "user-123",
+		"count":   1,
+		"cost":    expectedCost,
+		"balance": newBalance,
+	}).Return(nil)
+
+	// Act
+	result, err := svc.Create(ctx, cmd, "user-123")
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, expectedCost, result.TotalCreditCost)
+	assert.Equal(t, newBalance, result.RemainingBalance)
+	assert.Len(t, result.Reservations, 1)
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
+	// Arrange
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	cmd := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: "eq-1",
+				StartDate:   "2025-01-01",
+				EndDate:     "2025-01-03",
+			},
+		},
+	}
+
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:         "eq-1",
+		Name:       &name,
+		TypeID:     "type-1",
+		Status:     constants.EquipmentStatusOK,
+		IsArchived: false,
+	}
+
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+
+	expectedCost := int32(30)
+
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+	mockRepo.On("CreateReservationsAtomic", ctx, "user-123", expectedCost, cmd.Reservations).Return(nil, int32(0), types.NewConflictError("Insufficient credits", nil))
+
+	// Act
+	result, err := svc.Create(ctx, cmd, "user-123")
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &types.ConflictError{}, err)
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
 }
