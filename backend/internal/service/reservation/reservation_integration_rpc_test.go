@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
@@ -104,7 +105,7 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 
 	// Act: Cancel reservation (status change to DENIED for user cancellation)
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr("DENIED"),
+		Status: stringPtr(constants.ReservationStatusDenied),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUserID, "user")
 	require.NoError(t, err)
@@ -144,7 +145,7 @@ func TestRefundCredits_DeniedReservation_RefundsCorrectly(t *testing.T) {
 
 	// Act: Admin denies reservation
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr("DENIED"),
+		Status: stringPtr(constants.ReservationStatusDenied),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
@@ -189,11 +190,11 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 
 	// Act: Update status to RENTED
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr("RENTED"),
+		Status: stringPtr(constants.ReservationStatusRented),
 	}
 	resp, err := fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
-	assert.Equal(t, "RENTED", resp.Status)
+	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
 
 	// Assert: Audit entry created
 	var auditAfter []auditEntry
@@ -210,7 +211,7 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 
 	// Verify the new entry contains the OLD status (audit records state before change)
 	latestEntry := auditAfter[len(auditAfter)-1]
-	assert.Equal(t, "PENDING", latestEntry.Status, "Audit entry should record old status")
+	assert.Equal(t, constants.ReservationStatusPending, latestEntry.Status, "Audit entry should record old status")
 	t.Logf("✓ Audit entry preserves old status: %s", latestEntry.Status)
 }
 
@@ -285,11 +286,11 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	// Act: Bulk deny both reservations
 	updateCmd := types.BulkUpdateReservationsCommand{
 		ReservationIDs: []string{res1ID, res2ID},
-		Status:         "DENIED",
+		Status:         constants.ReservationStatusDenied,
 	}
 	resp, err := fixture.svc.BulkUpdate(ctx, updateCmd, fixture.testUser2ID)
 	require.NoError(t, err)
-	assert.Equal(t, 2, resp.UpdatedCount)
+	assert.Equal(t, int32(2), resp.UpdatedCount)
 
 	// Assert: Both users refunded
 	balance1Final := fixture.getUserBalance(fixture.testUserID)

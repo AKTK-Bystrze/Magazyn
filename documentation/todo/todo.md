@@ -1,10 +1,8 @@
 In progress:
-- integration tests, review
 - deployment strategy
 
 ## Next
 - e2e tests for admin reservation flow
-- md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
 - basic e2e tests for equipment manager, credits history, user view
 - Remove service role key usage -remove-service-role-key.md
 - supabase migrations squash and duplicates
@@ -20,6 +18,7 @@ In progress:
 - Equipment details sheet: readOnly prop for users, editable for admins
 
 ## Code Quality
+- review logical flow of the tests
 - cleanup
 - API simplification
 - documentation
