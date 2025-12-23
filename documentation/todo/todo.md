@@ -1,6 +1,4 @@
 ## Deployment
-- credits hitory failure
-- sidebar
 3. test sharding for CI/CD
 4. deploy on server
 
@@ -8,8 +6,7 @@
 - integration tests for reservation flow reservation-integration-tests-plan.
 - e2e tests for admin reservation flow
 - md ( verify that e2e tests for admin case is needed. Is user case covering all the cases?)
-- e2e tests for equipment manager
-- e2e tests for superAdmin - user management
+- basic e2e tests for equipment manager, credits history, user view
 - Remove service role key usage -remove-service-role-key.md
 
 ## Equipment Views refactor
@@ -55,3 +52,4 @@
 13. Top bar credits invisible on mobile view
 14. Return dialog should show current reservation dates prefilled
 15. One test ID (reservation-success-message) will need to be added when you implement success state handling (currently redirects with ?success=true)
+17. admin is missing dates filter in the equipment browse view

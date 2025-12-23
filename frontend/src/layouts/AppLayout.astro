@@ -57,6 +57,7 @@ const isAdmin = sessionInfo?.role === 'admin' || sessionInfo?.role === 'super_ad
           user={user ? { email: user.email || '', id: user.id } : null}
           currentPath={currentPath}
           creditBalance={sessionInfo?.creditBalance}
+          isAdmin={isAdmin}
         />
       </QueryProvider>
       

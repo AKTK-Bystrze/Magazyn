@@ -23,6 +23,7 @@ import { Breadcrumbs } from '@/components/navigation/Breadcrumbs';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { ThemeToggle } from '@/components/navigation/ThemeToggle';
 import { UserSidebar } from './UserSidebar';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
 interface UserHeaderProps {
   /** User information object */
@@ -34,12 +35,14 @@ interface UserHeaderProps {
   currentPath: string;
   /** User credit balance to display */
   creditBalance?: number;
+  /** Whether the user is an admin (determines which sidebar to show in mobile view) */
+  isAdmin?: boolean;
 }
 
 /**
  * Responsive header for user pages
  */
-export function UserHeader({ user, currentPath, creditBalance }: UserHeaderProps) {
+export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -57,11 +60,19 @@ export function UserHeader({ user, currentPath, creditBalance }: UserHeaderProps
             <SheetTitle>Navigation Menu</SheetTitle>
             <SheetDescription>Main navigation items for the user area</SheetDescription>
           </SheetHeader>
-           <UserSidebar 
-             currentPath={currentPath} 
-             className="h-full border-r-0" 
-             onNavigate={() => setIsOpen(false)}
-           />
+          {isAdmin ? (
+            <AdminSidebar
+              currentPath={currentPath}
+              className="h-full border-r-0"
+              onNavigate={() => setIsOpen(false)}
+            />
+          ) : (
+              <UserSidebar
+                currentPath={currentPath}
+                className="h-full border-r-0"
+                onNavigate={() => setIsOpen(false)}
+              />
+          )}
         </SheetContent>
       </Sheet>
       

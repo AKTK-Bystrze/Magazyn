@@ -612,6 +612,103 @@ PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 ## Component Development
 
+### Mobile Sidebar Pattern for Role-Based Layouts
+
+**Problem**: When creating layouts that support both admin and user roles, the mobile sidebar must respect the user's role.
+
+**Context**: Desktop sidebars can be conditionally rendered in the layout based on `isAdmin` flag, but mobile sidebars are typically embedded inside header components that contain the hamburger menu trigger.
+
+**Solution**: Pass the `isAdmin` prop through to header components so they can conditionally render the appropriate sidebar in their mobile sheet.
+
+**Example Implementation**:
+
+```tsx
+// UserHeader.tsx
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { UserSidebar } from './UserSidebar';
+
+interface UserHeaderProps {
+  user: { email: string; id: string } | null;
+  currentPath: string;
+  creditBalance?: number;
+  isAdmin?: boolean;  // ✅ Add this prop
+}
+
+export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <header>
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button size="icon" variant="outline" className="lg:hidden">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-64">
+          {/* ✅ Conditionally render based on role */}
+          {isAdmin ? (
+            <AdminSidebar 
+              currentPath={currentPath} 
+              className="h-full border-r-0" 
+              onNavigate={() => setIsOpen(false)}
+            />
+          ) : (
+            <UserSidebar 
+              currentPath={currentPath} 
+              className="h-full border-r-0" 
+              onNavigate={() => setIsOpen(false)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+      {/* ... rest of header */}
+    </header>
+  );
+}
+```
+
+```astro
+---
+// AppLayout.astro
+const isAdmin = sessionInfo?.role === 'admin' || sessionInfo?.role === 'super_admin';
+---
+
+<div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+  {/* Desktop Sidebar */}
+  <div class="!hidden border-r bg-muted/40 lg:!block">
+    {isAdmin ? (
+      <AdminSidebar client:load currentPath={currentPath} />
+    ) : (
+      <UserSidebar client:load currentPath={currentPath} />
+    )}
+  </div>
+
+  {/* Main Content */}
+  <div class="flex flex-col">
+    {/* ✅ Pass isAdmin to header for mobile sidebar */}
+    <UserHeader 
+      client:load 
+      user={user ? { email: user.email || '', id: user.id } : null}
+      currentPath={currentPath}
+      creditBalance={sessionInfo?.creditBalance}
+      isAdmin={isAdmin}
+    />
+    <main>
+      <slot />
+    </main>
+  </div>
+</div>
+```
+
+**Key Rules**:
+1. ✅ **Always pass `isAdmin` prop** to header components in shared layouts
+2. ✅ **Conditionally render sidebars** in both desktop and mobile views
+3. ✅ **Test mobile view** when implementing role-based navigation
+4. ❌ **Don't hardcode** a single sidebar type in header components used by multiple roles
+
+---
+
 ### React Component Best Practices
 
 ```tsx
