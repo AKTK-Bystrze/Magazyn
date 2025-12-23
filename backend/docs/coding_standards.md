@@ -23,8 +23,8 @@ We follow a modular structure based on the Standard Go Project Layout, adapted f
     *   **`service/`**: Business logic. Grouped by domain (e.g., `service/auth/`, `service/equipment/`).
     *   **`repository/`**: Data access layer. Interfaces defined in `repository/`, concrete implementations in sub-packages (e.g., `repository/supabase/`).
     *   **`middleware/`**: HTTP middleware (e.g., `middleware/auth/`, `middleware/common/`).
-    *   **`middleware/`**: HTTP middleware (e.g., `middleware/auth/`, `middleware/common/`).
     *   **`types/`**: shared domain types, DTOs, and error definitions.
+    *   **`testutils/`**: Test utilities, fixtures, and shared mocks (`testutils/mocks/`).
     *   **Domain Packages**: Domain-specific constants or types that don't fit in `types` can live in the domain package itself (e.g., `internal/auth/roles.go`).
     *   **`config/`**: Configuration loading and management.
 *   **`pkg/`**: Library code that's ok to use by external applications (if any). Currently, most code resides in `internal`.
@@ -36,11 +36,115 @@ We follow a modular structure based on the Standard Go Project Layout, adapted f
 
 ## 3. Testing Rules
 
-*   **Placement**:
-    *   **Unit Tests**: Place in the same package as the code being tested. Use `package foo` or `package foo_test` (for black-box testing).
-    *   **Integration Tests**: Can be in the same package or a separate test package. If utilizing external resources (DB), ensure appropriate mocking or setup/teardown logic.
-*   **Naming**: Function names should be descriptive, starting with `Test`. Example: `TestAuthService_Login_Success`.
-*   **Mocks**: Use `testify/mock` for generating mocks. Place mocks in `internal/testutils/mocks` or within `_test.go` files if specific to a single package.
+### 3.1 Test Placement
+
+*   **Unit Tests**: Place in the same package as the code being tested. Use `package foo` or `package foo_test` (for black-box testing).
+*   **Integration Tests**: Use build tag `//go:build integration` and suffix `_integration_test.go`. Run with `go test -tags=integration`.
+
+### 3.2 Naming Convention
+
+Follow the pattern: `Test<Method>_<Scenario>_<ExpectedBehavior>`
+
+```go
+// Good examples:
+func TestCreate_InsufficientCredits_ReturnsConflictError(t *testing.T)
+func TestUpdate_UserCancelsOwnReservation_RefundsCredits(t *testing.T)
+func TestCalculateDays_SameDay_ReturnsOne(t *testing.T)
+
+// Avoid:
+func TestCreate(t *testing.T)           // Too vague
+func Test_create_works(t *testing.T)    // Wrong format
+```
+
+### 3.3 Table-Driven Tests
+
+Use table-driven tests for comprehensive coverage of similar scenarios:
+
+```go
+func TestCalculateDays(t *testing.T) {
+    tests := []struct {
+        name     string
+        start    string
+        end      string
+        expected int32
+    }{
+        {"same day", "2025-01-01", "2025-01-01", 1},
+        {"two days", "2025-01-01", "2025-01-02", 2},
+        {"week long", "2025-01-01", "2025-01-07", 7},
+        {"reversed dates", "2025-01-07", "2025-01-01", 0},
+    }
+
+    svc := NewReservationService(...)
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            result := svc.calculateDays(tt.start, tt.end)
+            assert.Equal(t, tt.expected, result)
+        })
+    }
+}
+```
+
+### 3.4 AAA Format
+
+Structure tests using Arrange-Act-Assert:
+
+```go
+t.Run("user cancels pending reservation", func(t *testing.T) {
+    // Arrange
+    mockRepo := new(mocks.MockReservationRepository)
+    svc := reservation.NewReservationService(mockRepo, ...)
+    mockRepo.On("GetReservationByID", ctx, "res-1").Return(&reservation, nil)
+
+    // Act
+    result, err := svc.Update(ctx, "res-1", cmd, userID, "user")
+
+    // Assert
+    assert.NoError(t, err)
+    mockRepo.AssertExpectations(t)
+})
+```
+
+### 3.5 Mock Organization
+
+*   **Centralized Mocks**: Place reusable mocks in `internal/testutils/mocks/`.
+*   **Interface Verification**: Always verify mocks implement interfaces:
+
+```go
+var _ repository.ReservationRepository = (*MockReservationRepository)(nil)
+```
+
+*   **Naming**: Prefix with `Mock`, e.g., `MockReservationRepository`, `MockEmailService`.
+*   **Package-Specific Mocks**: If a mock is only used in one test file, define it inline in that file.
+
+### 3.6 Integration Test Fixtures
+
+For integration tests requiring real database connections:
+
+```go
+type testFixture struct {
+    t       *testing.T
+    svc     Service
+    client  *supabase.Client
+    cleanup []func()
+}
+
+func setupTestFixture(t *testing.T) *testFixture {
+    // ... setup code
+}
+
+func (f *testFixture) teardown() {
+    // Execute cleanup in LIFO order
+    for i := len(f.cleanup) - 1; i >= 0; i-- {
+        f.cleanup[i]()
+    }
+}
+
+func TestIntegration_Example(t *testing.T) {
+    fixture := setupTestFixture(t)
+    defer fixture.teardown()
+    // ... test code
+}
+```
 
 ## 4. Code Style & Best Practices
 
