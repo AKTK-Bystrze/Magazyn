@@ -54,7 +54,7 @@ func setupDateTestFixture(t *testing.T) *dateTestFixture {
 func initializeFixture(t *testing.T, fixture *dateTestFixture, client *supa.Client) {
 	// Get equipment type cost
 	type EquipType struct {
-		ID              string `json:"id"`
+		ID               string `json:"id"`
 		CreditCostPerDay int32  `json:"credit_cost_per_day"`
 	}
 	var eqTypes []EquipType
@@ -62,7 +62,7 @@ func initializeFixture(t *testing.T, fixture *dateTestFixture, client *supa.Clie
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(data, &eqTypes))
 	require.NotEmpty(t, eqTypes)
-	
+
 	fixture.typeID = eqTypes[0].ID
 	fixture.costPerDay = eqTypes[0].CreditCostPerDay
 
@@ -106,7 +106,7 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(data, &profiles))
 	require.True(t, len(profiles) >= 2, "Need at least 2 test users")
-	
+
 	fixture.testUserID = profiles[0].ID
 	fixture.testUser2ID = profiles[1].ID
 
@@ -131,7 +131,7 @@ func (f *dateTestFixture) createTestReservation(
 	endDays int,
 ) (string, error) {
 	ctx := context.Background()
-	
+
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
 			{

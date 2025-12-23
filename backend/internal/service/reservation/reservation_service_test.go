@@ -28,10 +28,6 @@ func setupTestService() (*mocks.MockReservationRepository, *mocks.MockEquipmentR
 	return mockRepo, mockEquipRepo, mockUserRepo, mockEmailService, svc
 }
 
-func stringPtr(s string) *string {
-	return &s
-}
-
 // ============================================================================
 // Authorization Tests - GetByID
 // ============================================================================

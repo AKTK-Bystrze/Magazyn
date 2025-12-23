@@ -331,7 +331,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			days := s.calculateDays(start, end)
 			newCost := days * eqType.CreditCostPerDay
 
-			return  &types.UpdateReservationResponse{
+			return &types.UpdateReservationResponse{
 				ID:               result.ID,
 				EquipmentID:      current.EquipmentID,
 				StartDate:        result.StartDate,

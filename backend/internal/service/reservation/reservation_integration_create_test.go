@@ -134,7 +134,7 @@ func TestTodayReservation_SingleDay(t *testing.T) {
 	// Assert: Should succeed, cost = 1 day
 	require.NoError(t, err)
 	assert.NotEmpty(t, resp.Reservations)
-	
+
 	expectedCost := fixture.costPerDay
 	actualCost := balanceBefore - resp.RemainingBalance
 	assert.Equal(t, expectedCost, actualCost, "Cost should be 1 day")
@@ -254,7 +254,7 @@ func TestCostCalculation_Matrix(t *testing.T) {
 			// Assert
 			require.NoError(t, err)
 			assert.NotEmpty(t, resp.Reservations)
-			
+
 			expectedCost := tt.wantDays * fixture.costPerDay
 			actualCost := balanceBefore - resp.RemainingBalance
 			assert.Equal(t, expectedCost, actualCost)

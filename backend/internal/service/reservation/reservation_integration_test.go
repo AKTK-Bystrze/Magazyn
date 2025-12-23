@@ -4,10 +4,8 @@ package reservation_test
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"testing"
-	"time"
 
 	"magazyn/backend/internal/config"
 	"magazyn/backend/internal/repository/supabase"
@@ -82,105 +80,42 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	return svc, conf, client
 }
 
+// TestReservationIntegration_CreateAtomic verifies atomicity of reservation creation
+// including credit deduction and conflict detection using the database RPC function.
 func TestReservationIntegration_CreateAtomic(t *testing.T) {
-	svc, _, client := setupIntegrationTest(t)
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+
 	ctx := context.Background()
+	initialBalance := fixture.getUserBalance(fixture.testUserID)
 
-	// 1. Setup Test Data (User with credits, Equipment)
-	// Create a unique equipment for this test to avoid conflicts
-	uniqueSuffix := time.Now().Format("20060102150405")
-	typeID := "d496e5ce-a19f-4318-aff5-408a54d37013" // Use a known existing type ID or fetch one
-
-	// Fetch a valid type ID
-	// Fetch a valid type ID
-	type EquipType struct {
-		ID string `json:"id"`
-	}
-	var eqTypes []EquipType
-	data, _, err := client.From("equipment_types").Select("id", "exact", false).Limit(1, "").Execute()
-	require.NoError(t, err)
-	require.NoError(t, json.Unmarshal(data, &eqTypes))
-	require.NotEmpty(t, eqTypes)
-	typeID = eqTypes[0].ID
-
-	newEqName := "Test Equip " + uniqueSuffix
-	newEq := map[string]interface{}{
-		"name":        newEqName,
-		"type_id":     typeID,
-		"status":      "ok",
-		"internal_id": "TEST-" + uniqueSuffix,
-	}
-
-	var createdEq []struct {
-		ID string `json:"id"`
-	}
-	// Insert returning representation to get ID
-	data, _, err = client.From("equipment").Insert(newEq, false, "", "representation", "").Execute()
-	require.NoError(t, err)
-	require.NoError(t, json.Unmarshal(data, &createdEq))
-	require.NotEmpty(t, createdEq)
-	testEquipID := createdEq[0].ID
-	t.Logf("Created test equipment: %s", testEquipID)
-
-	defer func() {
-		// Cleanup equipment
-		client.From("equipment").Delete("", "").Eq("id", testEquipID).Execute()
-	}()
-
-	// Ensure User Balance
-	// ... (Existing user logic) ...
-	// User query
-	type profile struct {
-		ID string `json:"id"`
-	}
-	var profiles []profile
-	data, _, err = client.From("profiles").Select("id", "exact", false).Limit(1, "").Execute()
-	require.NoError(t, err)
-
-	if err := json.Unmarshal(data, &profiles); err != nil {
-		t.Fatalf("Failed to unmarshal profiles: %v", err)
-	}
-	require.NotEmpty(t, profiles)
-	testUserID := profiles[0].ID
-
-	initialBalance := int32(1000)
-	_, _, err = client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", testUserID).Execute()
-	require.NoError(t, err)
-
-	// 2. Perform Reservation
-	tomorrow := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
-	dayAfter := time.Now().AddDate(0, 0, 2).Format("2006-01-02")
-
+	// 1. Create reservation (tomorrow to day after)
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
 			{
-				EquipmentID: testEquipID,
-				StartDate:   tomorrow,
-				EndDate:     dayAfter,
+				EquipmentID: fixture.equipmentID,
+				StartDate:   dateOffset(1),
+				EndDate:     dateOffset(2),
 			},
 		},
 	}
 
-	resp, err := svc.Create(ctx, cmd, testUserID)
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 	require.NoError(t, err)
 	assert.NotEmpty(t, resp.Reservations)
-	assert.Equal(t, testEquipID, resp.Reservations[0].EquipmentID)
+	assert.Equal(t, fixture.equipmentID, resp.Reservations[0].EquipmentID)
+	t.Logf("Created reservation: %s", resp.Reservations[0].ID)
 
-	// 3. Verify Balance Deducted
-	// Cost calculation happens inside svc.
-	// Check remaining balance < 1000
-	assert.True(t, resp.RemainingBalance < initialBalance, "Balance should decrease")
+	// 2. Verify balance deducted (2 days × costPerDay)
+	expectedCost := 2 * fixture.costPerDay
+	actualCost := initialBalance - resp.RemainingBalance
+	assert.Equal(t, expectedCost, actualCost, "Balance should decrease by 2 days cost")
 
-	// 4. Verify Conflict (Try creating same again)
-	_, err = svc.Create(ctx, cmd, testUserID)
+	// 3. Verify conflict detection (try creating same reservation again)
+	_, err = fixture.svc.Create(ctx, cmd, fixture.testUserID)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Reservation failed") // Conflict detected
+	assert.Contains(t, err.Error(), "Reservation failed", "Should detect conflict")
+	t.Logf("Conflict detection working ✓")
 
-	// Cleanup?
-	// Delete the reservation created
-	for _, r := range resp.Reservations {
-		client.From("reservations").Delete("", "").Eq("id", r.ID).Execute()
-	}
-	// Restore balance
-	client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", testUserID).Execute()
+	// Cleanup happens via deferred fixture.teardown()
 }

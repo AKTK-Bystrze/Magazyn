@@ -116,34 +116,101 @@ var _ repository.ReservationRepository = (*MockReservationRepository)(nil)
 *   **Naming**: Prefix with `Mock`, e.g., `MockReservationRepository`, `MockEmailService`.
 *   **Package-Specific Mocks**: If a mock is only used in one test file, define it inline in that file.
 
-### 3.6 Integration Test Fixtures
+### 3.6 Test Utilities Package (`internal/testutils`)
 
-For integration tests requiring real database connections:
+The `testutils` package provides shared utilities for integration testing:
 
+*   **`config.go`**: Environment setup and Supabase client initialization
+    *  `SetupIntegrationTest()` — Loads `.env` and initializes `TestClient`
+    *  `CreateTestUser(email, password)` — Creates an auth user (requires service role key)
+    *  `DeleteTestUser(userID)` — Cleans up auth users
+
+*   **`mocks/`**: Centralized mock implementations for all repository interfaces
+
+**Usage in `TestMain`:**
 ```go
+func TestMain(m *testing.M) {
+    if _, err := testutils.SetupIntegrationTest(); err != nil {
+        fmt.Printf("Skipping integration tests: %v\n", err)
+        return
+    }
+    m.Run()
+}
+```
+
+### 3.7 Integration Test Fixtures
+
+For integration tests requiring real database connections, use the fixture pattern.
+Split fixture into a dedicated `*_fixture_test.go` file for reusability.
+
+**Fixture Structure:**
+```go
+// reservation_integration_fixture_test.go
 type testFixture struct {
-    t       *testing.T
-    svc     Service
-    client  *supabase.Client
-    cleanup []func()
+    t           *testing.T
+    svc         Service
+    client      *supabase.Client
+    testUserID  string
+    equipmentID string
+    cleanup     []func()
 }
 
 func setupTestFixture(t *testing.T) *testFixture {
-    // ... setup code
+    svc, _, client := setupIntegrationTest(t)
+    fixture := &testFixture{t: t, svc: svc, client: client, cleanup: []func(){}}
+    // Initialize test data...
+    return fixture
 }
 
 func (f *testFixture) teardown() {
-    // Execute cleanup in LIFO order
+    // Execute cleanup in LIFO order (newest first)
     for i := len(f.cleanup) - 1; i >= 0; i-- {
         f.cleanup[i]()
     }
 }
+```
 
-func TestIntegration_Example(t *testing.T) {
+**Usage Pattern:**
+```go
+func TestCreate_ValidInput_Succeeds(t *testing.T) {
     fixture := setupTestFixture(t)
     defer fixture.teardown()
-    // ... test code
+
+    // Use fixture helpers
+    reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
+    require.NoError(t, err)
+    // ...assertions
 }
+```
+
+**Fixture Helper Methods:**
+*   Encapsulate common operations (e.g., `createTestReservation`, `getUserBalance`)
+*   Automatically register cleanup callbacks
+*   Provide date utilities (`dateOffset(days)`, `todayStr()`)
+
+### 3.8 Anti-Patterns to Avoid
+
+| ❌ Don't | ✅ Do Instead |
+|----------|---------------|
+| Duplicate setup code in each test | Use shared fixtures with `setupTestFixture()` |
+| Manual cleanup at test end | Use `defer fixture.teardown()` with LIFO cleanup |
+| Hardcode test user/equipment IDs | Generate unique IDs with timestamps |
+| Use `time.Sleep()` for async waits | Use polling with timeout or event-based waits |
+| Define types inline (e.g., `type profile struct{}`) | Reuse types from fixture or `types` package |
+| Create repository instances per subtest | Create once in fixture, share across subtests |
+
+### 3.9 File Organization for Integration Tests
+
+For complex domains, split integration tests across multiple files:
+
+```
+service/reservation/
+├── reservation_service.go
+├── reservation_service_test.go          # Unit tests
+├── reservation_integration_fixture_test.go  # Shared fixture & helpers
+├── reservation_integration_create_test.go   # Creation scenarios
+├── reservation_integration_update_test.go   # Modification scenarios
+└── reservation_integration_test.go          # Basic/atomic tests
 ```
 
 ## 4. Code Style & Best Practices

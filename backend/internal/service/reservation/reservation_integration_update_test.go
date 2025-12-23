@@ -282,7 +282,7 @@ func TestModifyDates_AdjacentToOther(t *testing.T) {
 	// NOTE: In this system, dates are inclusive.
 	// If User 2 has 10-12, User 1 can safely extend up to day 9.
 	// 5-9 ends on day 9. Day 10 starts User 2. (Adjacent)
-	
+
 	_, err = fixture.createTestReservation(fixture.testUser2ID, 10, 12)
 	require.NoError(t, err)
 
