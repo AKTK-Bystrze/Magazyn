@@ -104,6 +104,7 @@ export function UserFilters({
           className="pl-10"
           aria-label="Szukaj użytkowników"
           maxLength={MAX_SEARCH_LENGTH}
+          data-testid="admin-search-input"
         />
       </div>
 

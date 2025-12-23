@@ -36,6 +36,16 @@ export const TEST_IDS = {
   // Reservation List
   RESERVATION_LIST_CONTAINER: 'reservation-list-container',
 
+  // Admin Users
+  ADMIN_USERS_TABLE: 'admin-users-table',
+  ADMIN_SEARCH_INPUT: 'admin-search-input',
+  ADMIN_EDIT_USER_MODAL: 'admin-edit-user-modal',
+  ADMIN_USER_ROLE_SELECT: 'admin-user-role-select',
+  ADMIN_USER_STATUS_ACTIVE: 'admin-user-status-active',
+  ADMIN_USER_STATUS_DISABLED: 'admin-user-status-disabled',
+  ADMIN_SAVE_USER_BTN: 'admin-save-user-btn',
+  ADMIN_SUCCESS_ALERT: 'admin-success-alert',
+
   // Dynamic IDs (functions)
   equipmentCard: (id: string) => `equipment-card-${id}`,
   equipmentAddToCart: (id: string) => `equipment-add-to-cart-${id}`,
@@ -45,4 +55,5 @@ export const TEST_IDS = {
   cartItemRemove: (id: string) => `cart-item-remove-${id}`,
   reservationRow: (id: string) => `reservation-row-${id}`,
   reservationStatus: (id: string) => `reservation-status-${id}`,
+  adminUserRowEdit: (email: string) => `admin-user-row-edit-${email.replace(/[@.]/g, '-')}`,
 } as const;

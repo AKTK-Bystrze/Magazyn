@@ -187,7 +187,7 @@ export function EditUserDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto" data-testid="admin-edit-user-modal">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
@@ -239,7 +239,7 @@ export function EditUserDialog({
                 onValueChange={handleRoleChange}
                 disabled={isSubmitting}
               >
-                <SelectTrigger id={roleId}>
+                <SelectTrigger id={roleId} data-testid="admin-user-role-select">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -297,11 +297,11 @@ export function EditUserDialog({
                 className="flex gap-4"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="active" id={`${statusId}-active`} />
+                  <RadioGroupItem value="active" id={`${statusId}-active`} data-testid="admin-user-status-active" />
                   <Label htmlFor={`${statusId}-active`}>Active</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="disabled" id={`${statusId}-disabled`} />
+                  <RadioGroupItem value="disabled" id={`${statusId}-disabled`} data-testid="admin-user-status-disabled" />
                   <Label htmlFor={`${statusId}-disabled`}>Disabled</Label>
                 </div>
               </RadioGroup>
@@ -325,7 +325,7 @@ export function EditUserDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} data-testid="admin-save-user-btn">
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>

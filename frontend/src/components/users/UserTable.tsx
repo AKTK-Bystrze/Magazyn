@@ -97,7 +97,7 @@ export function UserTable({
 
   return (
     <div className="rounded-md border overflow-x-auto">
-      <Table>
+      <Table data-testid="admin-users-table">
         <TableHeader>
           <TableRow>
             {isSuperAdmin && (
@@ -175,6 +175,7 @@ export function UserTable({
                       size="icon"
                       onClick={handleEdit(user)}
                       aria-label={`Edytuj ${user.username}`}
+                      data-testid={`admin-user-row-edit-${user.email.replace(/[@.]/g, '-')}`}
                     >
                       <Pencil className={ICON_SIZE_SM} />
                     </Button>

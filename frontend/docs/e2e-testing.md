@@ -34,7 +34,16 @@ E2E_BASE_URL=http://localhost:4321  # Optional
 > [!CAUTION]
 > Keep `SUPABASE_SERVICE_ROLE_KEY` secret! Never commit to git.
 
-### 2. Ensure Test User Profile
+### 2. Create Test Users
+
+Follow the instructions in [`e2e/setup/README.md`](../e2e/setup/README.md) to:
+1. Create test users in Supabase Auth
+2. Run the SQL setup script to configure profiles
+3. Verify all test users are ready
+
+> **Quick start**: Run [`e2e/setup/test-users.sql`](../e2e/setup/test-users.sql) in Supabase SQL Editor.
+
+### 3. Ensure Test User Profile
 
 Run in Supabase SQL Editor:
 
@@ -45,7 +54,7 @@ FROM auth.users WHERE email = '<E2E_TEST_EMAIL>'
 ON CONFLICT (id) DO UPDATE SET is_enabled = true;
 ```
 
-### 3. Run Tests
+### 4. Run Tests
 
 ```bash
 # Terminal 1: Backend

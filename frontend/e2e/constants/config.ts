@@ -19,6 +19,10 @@ export const E2E_CONFIG = {
       EMAIL: 'test.admin.g6@gmail.com',
       PASSWORD: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
     },
+    SUPER_ADMIN: {
+      EMAIL: 'test.superadmin.g6@gmail.com',
+      PASSWORD: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
+    },
     SECONDARY: {
       EMAIL: 'e2e-test-user2@example.com',
       PASSWORD: 'TestSecurePassword123!',

@@ -43,10 +43,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
       token = session?.access_token || null;
 
       if (token) {
+        console.log('🔑 Middleware: Access token obtained, fetching session info...');
         sessionInfo = await getUserSession(token);
+        console.log('📋 Middleware: Session info received:', sessionInfo);
+
         // Store sessionInfo and token in locals for pages and API routes to access
         context.locals.sessionInfo = sessionInfo;
         context.locals.accessToken = token;
+      } else {
+        console.warn('⚠️ Middleware: No access token available');
       }
     }
 

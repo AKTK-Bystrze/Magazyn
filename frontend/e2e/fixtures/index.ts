@@ -14,12 +14,16 @@ interface AuthFixtures {
   authenticatedPage: Page;
   /** Pre-authenticated page with ADMIN session */
   adminPage: Page;
+  /** Pre-authenticated page with SUPER ADMIN session */
+  superAdminPage: Page;
   /** Supabase admin client for test setup/teardown */
   supabaseAdmin: SupabaseClient;
   /** Test user information (id and email) */
   testUser: { id: string; email: string };
   /** Admin user information (id and email) */
   adminUser: { id: string; email: string };
+  /** Super Admin user information (id and email) */
+  superAdminUser: { id: string; email: string };
   /** Dedicated test equipment for this worker (created/cleaned per test) */
   testEquipment: { id: string; typeId: string }[];
 }
@@ -185,6 +189,73 @@ async function ensureAdminUserExists(supabaseAdmin: SupabaseClient): Promise<{ i
   return { id: userId, email: adminEmail };
 }
 
+/**
+ * Ensures the SUPER ADMIN test user exists.
+ */
+async function ensureSuperAdminUserExists(supabaseAdmin: SupabaseClient): Promise<{ id: string; email: string }> {
+  const adminEmail = E2E_CONFIG.USERS.SUPER_ADMIN.EMAIL;
+  console.log('[SETUP] Checking if SUPER ADMIN user exists:', adminEmail);
+
+  const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+
+  if (listError) {
+    throw new Error(`Failed to list users: ${listError.message}`);
+  }
+
+  const users = data?.users ?? [];
+  const existingUser = users.find(u => u.email === adminEmail);
+  let userId: string;
+
+  if (existingUser) {
+    userId = existingUser.id;
+    const isConfirmed = !!existingUser.email_confirmed_at;
+    const hasRole = existingUser.user_metadata?.role === 'super_admin';
+
+    if (isConfirmed && hasRole) {
+      console.log('[SETUP] Super Admin user already confirmed and configured.');
+    } else {
+      console.log('[SETUP] Updating super admin user password and confirmation...');
+      await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+        password: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
+        email_confirm: true,
+        user_metadata: { role: 'super_admin' }
+      });
+    }
+  } else {
+    console.log('[SETUP] Creating SUPER ADMIN user...');
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email: adminEmail,
+      password: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
+      email_confirm: true,
+      user_metadata: { name: 'E2E Super Admin User', role: 'super_admin' },
+    });
+
+    if (error) {
+      throw new Error(`Failed to create super admin user: ${error.message}`);
+    }
+    console.log('[SETUP] ✅ Super Admin user created:', data.user.id);
+    userId = data.user.id;
+  }
+
+  console.log('[SETUP] Upserting super admin profile...');
+  const { error: profileError } = await supabaseAdmin
+    .from('profiles')
+    .upsert({
+      id: userId,
+      email: adminEmail,
+      role: 'super_admin',
+      is_enabled: true,
+      username: 'e2e-superadmin',
+      credit_balance: E2E_CONFIG.DEFAULTS.INITIAL_CREDITS
+    }, { onConflict: 'id' });
+
+  if (profileError) {
+    throw new Error(`Failed to upsert super admin profile: ${profileError.message}`);
+  }
+
+  return { id: userId, email: adminEmail };
+}
+
 async function injectSupabaseSession(page: Page, email: string = TEST_USER_EMAIL): Promise<void> {
   console.log(`[AUTH] Getting real session tokens for ${email} via signInWithPassword...`);
 
@@ -200,6 +271,13 @@ async function injectSupabaseSession(page: Page, email: string = TEST_USER_EMAIL
   if (error || !data.session) {
     throw new Error(`Failed to sign in for tokens: ${error?.message}`);
   }
+
+  console.log('[AUTH] Session data received:', {
+    userId: data.user.id,
+    email: data.user.email,
+    userMetadata: data.user.user_metadata,
+    sessionExpiresAt: data.session.expires_at
+  });
 
   const { access_token, refresh_token } = data.session;
   const baseURL = process.env.E2E_BASE_URL || 'http://localhost:4321';
@@ -238,13 +316,27 @@ async function injectSupabaseSession(page: Page, email: string = TEST_USER_EMAIL
   })));
 
   console.log(`[AUTH] ✅ Supabase SSR cookies injected: ${cookies.map(c => c.name).join(', ')}`);
+  console.log('[AUTH] Cookies injected, reloading page...');
 
   await page.reload({ waitUntil: 'domcontentloaded' });
 
+  console.log('[AUTH] Page reloaded. Current URL:', page.url());
+
+  // Verify cookies are still present after reload
+  const contextCookies = await page.context().cookies();
+  const authCookies = contextCookies.filter(c => c.name.includes('auth-token'));
+  console.log('[AUTH] Auth cookies after reload:', authCookies.map(c => c.name));
+
   try {
     await page.getByTestId('topbar').waitFor({ state: 'visible', timeout: 5000 });
+    console.log('[AUTH] ✅ Topbar visible - authentication successful');
   } catch {
     console.warn('[AUTH] ⚠️ Topbar not visible after reload, continuing anyway');
+    console.warn('[AUTH] Current URL after topbar check:', page.url());
+
+    // Try to capture any error messages on the page
+    const bodyText = await page.locator('body').textContent().catch(() => 'Could not read body');
+    console.warn('[AUTH] Page body text:', bodyText?.substring(0, 500));
   }
 }
 
@@ -271,6 +363,11 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     await use(user);
   },
 
+  superAdminUser: async ({ supabaseAdmin }, use) => {
+    const user = await ensureSuperAdminUserExists(supabaseAdmin);
+    await use(user);
+  },
+
   testEquipment: async ({ supabaseAdmin, workerIndex }, use) => {
     const equipment = await createTestEquipment(supabaseAdmin, workerIndex, E2E_CONFIG.DEFAULTS.DEFAULT_EQUIPMENT_COUNT);
     await use(equipment);
@@ -292,6 +389,15 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     const context = await browser.newContext();
     const page = await context.newPage();
     await injectSupabaseSession(page, adminUser.email);
+    await use(page);
+    await context.close();
+  },
+
+  superAdminPage: async ({ browser, superAdminUser }, use) => {
+    console.log('[AUTH] Setting up SUPER ADMIN page...');
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await injectSupabaseSession(page, superAdminUser.email);
     await use(page);
     await context.close();
   },

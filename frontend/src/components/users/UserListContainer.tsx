@@ -212,7 +212,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
 
       {/* Success Message */}
       {successMessage && (
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+        <Alert className="border-green-500 bg-green-50 dark:bg-green-950" data-testid="admin-success-alert">
           <CheckCircle2 className={ICON_SIZE_SM + " text-green-600"} />
           <AlertDescription className="text-green-800 dark:text-green-200">
             {successMessage}
