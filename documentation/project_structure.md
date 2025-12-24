@@ -136,8 +136,9 @@ Magazyn/infra/
 ```
 Magazyn/supabase/
 ├── migrations/            # Versioned SQL migration files
-│   ├── 202401010000_init.sql
-│   └── 202401150930_add_rls.sql
+│   ├── 20251120194634_initial_schema.sql
+│   └── ...
+│   └── 20251224133000_fix_rls_recursion.sql
 ├── functions/             # Optional: SQL functions / triggers
 └── schema.sql             # Optional: current schema dump
 ```

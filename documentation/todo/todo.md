@@ -1,6 +1,5 @@
 ## In progress:
-- Remove service role key usage -remove-service-role-key.md
-- supabase migrations squash and duplicates
+- supabase migrations squash
 
 ## Deployment
 3. pipelines
