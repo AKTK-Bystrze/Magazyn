@@ -144,7 +144,7 @@ export function EquipmentTable({
 
   return (
     <div className="rounded-md border overflow-x-auto">
-      <Table>
+      <Table data-testid="admin-equipment-table">
         <TableHeader>
           <TableRow>
             <TableHead>{UI.INTERNAL_ID}</TableHead>
@@ -173,6 +173,7 @@ export function EquipmentTable({
                 key={item.id}
                 className="hover:bg-muted/50 cursor-pointer"
                 onClick={handleViewDetails(item)}
+                data-testid={`equipment-row-${item.id}`}
               >
                 <TableCell>
                   <div className="font-mono text-sm font-medium">
@@ -214,6 +215,7 @@ export function EquipmentTable({
                         size="icon"
                         onClick={(e) => e.stopPropagation()}
                         aria-label={`Actions for ${item.internalId}`}
+                        data-testid={`equipment-actions-menu-${item.id}`}
                       >
                         <MoreHorizontal className={ICON_SIZE_SM} />
                       </Button>
@@ -222,6 +224,7 @@ export function EquipmentTable({
                       <DropdownMenuItem
                         onSelect={handleViewDetails(item)}
                         onClick={(e) => e.stopPropagation()}
+                        data-testid={`equipment-view-details-btn-${item.id}`}
                       >
                         <Eye className={ICON_SIZE_SM + " mr-2"} />
                         {UI.VIEW_DETAILS}
@@ -229,6 +232,7 @@ export function EquipmentTable({
                       <DropdownMenuItem
                         onSelect={handleEdit(item)}
                         onClick={(e) => e.stopPropagation()}
+                        data-testid={`equipment-edit-btn-${item.id}`}
                       >
                         <Pencil className={ICON_SIZE_SM + " mr-2"} />
                         {UI.EDIT_EQUIPMENT}
@@ -237,6 +241,7 @@ export function EquipmentTable({
                         onSelect={handleArchive(item)}
                         onClick={(e) => e.stopPropagation()}
                         className="text-destructive focus:text-destructive"
+                        data-testid={`equipment-archive-btn-${item.id}`}
                       >
                         <Archive className={ICON_SIZE_SM + " mr-2"} />
                         {UI.ARCHIVE_EQUIPMENT}

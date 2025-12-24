@@ -183,7 +183,7 @@ export function AddEquipmentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto" data-testid="admin-add-equipment-dialog">
         <DialogHeader>
           <DialogTitle>{UI.ADD_DIALOG_TITLE}</DialogTitle>
           <DialogDescription>{UI.ADD_DIALOG_DESCRIPTION}</DialogDescription>
@@ -207,6 +207,7 @@ export function AddEquipmentDialog({
                   errors.internalId ? `${internalIdFieldId}-error` : undefined
                 }
                 disabled={isSubmitting}
+                data-testid="equipment-form-internal-id-input"
               />
               {errors.internalId && (
                 <p
@@ -231,6 +232,7 @@ export function AddEquipmentDialog({
                 <SelectTrigger
                   id={typeIdFieldId}
                   aria-invalid={!!errors.typeId}
+                  data-testid="equipment-form-type-select"
                 >
                   <SelectValue placeholder={UI.FORM_TYPE_PLACEHOLDER} />
                 </SelectTrigger>
@@ -267,6 +269,7 @@ export function AddEquipmentDialog({
                 }
                 disabled={isSubmitting}
                 maxLength={200}
+                data-testid="equipment-form-name-input"
               />
               {errors.name && (
                 <p id={`${nameFieldId}-error`} className="text-sm text-destructive">
@@ -285,6 +288,7 @@ export function AddEquipmentDialog({
                 value={formData.description}
                 onChange={handleInputChange("description")}
                 disabled={isSubmitting}
+                data-testid="equipment-form-description-input"
               />
             </div>
 
@@ -296,7 +300,7 @@ export function AddEquipmentDialog({
                 onValueChange={handleStatusChange}
                 disabled={isSubmitting}
               >
-                <SelectTrigger id={statusFieldId}>
+                <SelectTrigger id={statusFieldId} data-testid="equipment-form-status-select">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +321,7 @@ export function AddEquipmentDialog({
 
             {/* Form-level error */}
             {errors.form && (
-              <p className="text-sm text-destructive">{errors.form}</p>
+              <p className="text-sm text-destructive" data-testid="equipment-form-error">{errors.form}</p>
             )}
           </div>
 
@@ -327,10 +331,11 @@ export function AddEquipmentDialog({
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
+              data-testid="equipment-form-cancel-btn"
             >
               {UI.CANCEL_BUTTON}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} data-testid="equipment-form-submit-btn">
               {isSubmitting ? UI.SAVING : UI.CREATE_BUTTON}
             </Button>
           </DialogFooter>

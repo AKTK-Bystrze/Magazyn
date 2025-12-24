@@ -80,7 +80,7 @@ export function ConfirmArchiveDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[425px]">
+      <DialogContent className="w-[95vw] max-w-[425px]" data-testid="admin-archive-equipment-dialog">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className={`${ICON_SIZE_MD} text-destructive`} />
@@ -123,6 +123,7 @@ export function ConfirmArchiveDialog({
             variant="outline"
             onClick={onClose}
             disabled={isSubmitting}
+            data-testid="equipment-archive-cancel-btn"
           >
             {UI.CANCEL_BUTTON}
           </Button>
@@ -131,6 +132,7 @@ export function ConfirmArchiveDialog({
             variant="destructive"
             onClick={handleConfirm}
             disabled={isSubmitting}
+            data-testid="equipment-archive-confirm-btn"
           >
             {isSubmitting ? UI.LOADING : UI.ARCHIVE_BUTTON}
           </Button>

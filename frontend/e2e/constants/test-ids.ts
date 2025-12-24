@@ -46,6 +46,24 @@ export const TEST_IDS = {
   ADMIN_SAVE_USER_BTN: 'admin-save-user-btn',
   ADMIN_SUCCESS_ALERT: 'admin-success-alert',
 
+  // Admin Equipment Manager
+  ADMIN_ADD_EQUIPMENT_BTN: 'admin-add-equipment-btn',
+  ADMIN_EQUIPMENT_TABLE: 'admin-equipment-table',
+  ADMIN_ADD_EQUIPMENT_DIALOG: 'admin-add-equipment-dialog',
+  ADMIN_EDIT_EQUIPMENT_DIALOG: 'admin-edit-equipment-dialog',
+  ADMIN_ARCHIVE_EQUIPMENT_DIALOG: 'admin-archive-equipment-dialog',
+  ADMIN_ERROR_ALERT: 'admin-error-alert',
+  EQUIPMENT_FORM_INTERNAL_ID_INPUT: 'equipment-form-internal-id-input',
+  EQUIPMENT_FORM_TYPE_SELECT: 'equipment-form-type-select',
+  EQUIPMENT_FORM_NAME_INPUT: 'equipment-form-name-input',
+  EQUIPMENT_FORM_DESCRIPTION_INPUT: 'equipment-form-description-input',
+  EQUIPMENT_FORM_STATUS_SELECT: 'equipment-form-status-select',
+  EQUIPMENT_FORM_SUBMIT_BTN: 'equipment-form-submit-btn',
+  EQUIPMENT_FORM_CANCEL_BTN: 'equipment-form-cancel-btn',
+  EQUIPMENT_FORM_ERROR: 'equipment-form-error',
+  EQUIPMENT_ARCHIVE_CONFIRM_BTN: 'equipment-archive-confirm-btn',
+  EQUIPMENT_ARCHIVE_CANCEL_BTN: 'equipment-archive-cancel-btn',
+
   // Dynamic IDs (functions)
   equipmentCard: (id: string) => `equipment-card-${id}`,
   equipmentAddToCart: (id: string) => `equipment-add-to-cart-${id}`,
@@ -56,4 +74,9 @@ export const TEST_IDS = {
   reservationRow: (id: string) => `reservation-row-${id}`,
   reservationStatus: (id: string) => `reservation-status-${id}`,
   adminUserRowEdit: (email: string) => `admin-user-row-edit-${email.replace(/[@.]/g, '-')}`,
+  equipmentRow: (id: string) => `equipment-row-${id}`,
+  equipmentEditBtn: (id: string) => `equipment-edit-btn-${id}`,
+  equipmentArchiveBtn: (id: string) => `equipment-archive-btn-${id}`,
+  equipmentViewDetailsBtn: (id: string) => `equipment-view-details-btn-${id}`,
+  equipmentActionsMenu: (id: string) => `equipment-actions-menu-${id}`,
 } as const;

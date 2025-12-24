@@ -168,7 +168,7 @@ export function EditEquipmentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto" data-testid="admin-edit-equipment-dialog">
         <DialogHeader>
           <DialogTitle>{UI.EDIT_DIALOG_TITLE}</DialogTitle>
           <DialogDescription>{UI.EDIT_DIALOG_DESCRIPTION}</DialogDescription>
@@ -219,6 +219,7 @@ export function EditEquipmentDialog({
                 }
                 disabled={isSubmitting}
                 maxLength={200}
+                data-testid="equipment-form-name-input"
               />
               {errors.name && (
                 <p id={`${nameFieldId}-error`} className="text-sm text-destructive">
@@ -286,6 +287,7 @@ export function EditEquipmentDialog({
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
+              data-testid="equipment-form-submit-btn"
             >
               {isSubmitting ? UI.SAVING : UI.SAVE_BUTTON}
             </Button>

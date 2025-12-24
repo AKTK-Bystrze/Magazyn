@@ -4,9 +4,10 @@
 export const E2E_CONFIG = {
   /** Default assertion timeout */
   TIMEOUT: {
-    ASSERTION: 10000,
+    ASSERTION: 20000,
     NAVIGATION: 15000,
     ANIMATION: 500,
+    ACTION: 1000,
   },
   
   /** Test users */

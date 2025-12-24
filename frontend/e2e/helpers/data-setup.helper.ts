@@ -241,3 +241,61 @@ export async function cleanupOrphanedTestEquipment(
 
   return equipment.length;
 }
+
+/**
+ * Hard-deletes a single equipment item and all related data.
+ * Used for E2E test cleanup after equipment manager tests.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param equipmentId - The ID of the equipment to delete.
+ * @returns A promise that resolves when deletion is complete.
+ */
+export async function hardDeleteEquipment(
+  supabaseAdmin: SupabaseClient,
+  equipmentId: string
+): Promise<void> {
+  const { data: reservations } = await supabaseAdmin
+    .from('reservations')
+    .select('id')
+    .eq('equipment_id', equipmentId);
+
+  const reservationIds = reservations?.map(r => r.id) ?? [];
+
+  if (reservationIds.length > 0) {
+    const { error: historyError } = await supabaseAdmin
+      .from('reservation_history')
+      .delete()
+      .in('reservation_id', reservationIds);
+
+    if (historyError) {
+      console.error(`Failed to cleanup reservation history: ${historyError.message}`);
+    }
+
+    const { error: creditError } = await supabaseAdmin
+      .from('credit_history')
+      .delete()
+      .in('reservation_id', reservationIds);
+
+    if (creditError) {
+      console.error(`Failed to cleanup credit history: ${creditError.message}`);
+    }
+  }
+
+  const { error: resError } = await supabaseAdmin
+    .from('reservations')
+    .delete()
+    .eq('equipment_id', equipmentId);
+
+  if (resError) {
+    console.error(`Failed to cleanup reservations: ${resError.message}`);
+  }
+
+  const { error } = await supabaseAdmin
+    .from('equipment')
+    .delete()
+    .eq('id', equipmentId);
+
+  if (error) {
+    console.error(`Failed to cleanup equipment: ${error.message}`);
+  }
+}

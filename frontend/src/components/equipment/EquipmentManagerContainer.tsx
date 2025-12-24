@@ -194,7 +194,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
           <h1 className="text-2xl font-bold tracking-tight">{UI.PAGE_TITLE}</h1>
           <p className="text-muted-foreground">{UI.PAGE_DESCRIPTION}</p>
         </div>
-        <Button onClick={handleAddClick} className="self-start sm:self-auto">
+        <Button onClick={handleAddClick} className="self-start sm:self-auto" data-testid="admin-add-equipment-btn">
           <Plus className={ICON_SIZE_SM + " mr-2"} />
           {UI.ADD_EQUIPMENT}
         </Button>
@@ -202,7 +202,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
 
       {/* Success Message */}
       {successMessage && (
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+        <Alert className="border-green-500 bg-green-50 dark:bg-green-950" data-testid="admin-success-alert">
           <CheckCircle2 className={ICON_SIZE_SM + " text-green-600"} />
           <AlertDescription className="text-green-800 dark:text-green-200">
             {successMessage}
@@ -212,7 +212,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
 
       {/* Error Message */}
       {(error || errorMessage) && (
-        <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
+        <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive" data-testid="admin-error-alert">
           <AlertCircle className={ICON_SIZE_SM} />
           <AlertDescription>
             {errorMessage || error?.message || "An error occurred"}
