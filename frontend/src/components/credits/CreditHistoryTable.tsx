@@ -64,7 +64,7 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
 
   if (data.length === 0) {
     return (
-      <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+      <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground" data-testid="credit-history-empty-state">
         {CREDIT_HISTORY_UI_STRINGS.NO_HISTORY}
       </div>
     );
@@ -73,7 +73,7 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
   return (
     <TooltipProvider>
       <div className="rounded-md border overflow-x-auto">
-        <Table>
+        <Table data-testid="credit-history-table">
           <TableHeader>
             <TableRow>
               <TableHead className="whitespace-nowrap">{CREDIT_HISTORY_UI_STRINGS.TABLE_DATE}</TableHead>
@@ -84,8 +84,8 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((item) => (
-              <CreditHistoryRow key={item.id} item={item} />
+            {data.map((item, index) => (
+              <CreditHistoryRow key={item.id} item={item} index={index} />
             ))}
           </TableBody>
         </Table>
@@ -112,13 +112,13 @@ const getReasonDisplay = (reason: CreditHistoryItem["reason"]) => {
   }
 };
 
-function CreditHistoryRow({ item }: { item: CreditHistoryItem }) {
+function CreditHistoryRow({ item, index }: { item: CreditHistoryItem; index: number }) {
   const { text, variant } = getReasonDisplay(item.reason);
   const isNegative = item.amount < 0;
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <TableRow>
+    <TableRow data-testid={`credit-history-row-${index}`}>
       <TableCell className="whitespace-nowrap">
         {format(new Date(item.createdAt), "yyyy-MM-dd HH:mm")}
       </TableCell>

@@ -64,6 +64,10 @@ export const TEST_IDS = {
   EQUIPMENT_ARCHIVE_CONFIRM_BTN: 'equipment-archive-confirm-btn',
   EQUIPMENT_ARCHIVE_CANCEL_BTN: 'equipment-archive-cancel-btn',
 
+  // Credit History
+  CREDIT_HISTORY_TABLE: 'credit-history-table',
+  CREDIT_HISTORY_EMPTY_STATE: 'credit-history-empty-state',
+
   // Dynamic IDs (functions)
   equipmentCard: (id: string) => `equipment-card-${id}`,
   equipmentAddToCart: (id: string) => `equipment-add-to-cart-${id}`,
@@ -79,4 +83,5 @@ export const TEST_IDS = {
   equipmentArchiveBtn: (id: string) => `equipment-archive-btn-${id}`,
   equipmentViewDetailsBtn: (id: string) => `equipment-view-details-btn-${id}`,
   equipmentActionsMenu: (id: string) => `equipment-actions-menu-${id}`,
+  creditHistoryRow: (index: number) => `credit-history-row-${index}`,
 } as const;
