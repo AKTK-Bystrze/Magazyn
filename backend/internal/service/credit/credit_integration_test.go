@@ -103,7 +103,7 @@ func (f *creditTestFixture) teardown() {
 }
 
 func (f *creditTestFixture) createTestCreditEntry(userID string, amount int32, reason string) {
-	_, _, _ = f.client.From("credit_history").
+	_, _, err := f.client.From("credit_history").
 		Insert(map[string]interface{}{
 			"user_id": userID,
 			"amount":  amount,
@@ -111,6 +111,7 @@ func (f *creditTestFixture) createTestCreditEntry(userID string, amount int32, r
 			"description": fmt.Sprintf("Test entry %s", time.Now().Format("15:04:05")),
 		}, false, "", "representation", "").
 		Execute()
+	require.NoError(f.t, err, "Failed to create test credit entry")
 
 	f.cleanup = append(f.cleanup, func() {
 		f.client.From("credit_history").
@@ -133,9 +134,9 @@ func TestGetCreditHistory_OwnHistory_ReturnsPaginated(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange: Create some credit history entries for test user
-	fixture.createTestCreditEntry(fixture.testUserID, 100, "test_credit_1")
-	fixture.createTestCreditEntry(fixture.testUserID, -50, "test_debit_1")
-	fixture.createTestCreditEntry(fixture.testUserID, 75, "test_credit_2")
+	fixture.createTestCreditEntry(fixture.testUserID, 100, "work_credit")
+	fixture.createTestCreditEntry(fixture.testUserID, -50, "reservation_charge")
+	fixture.createTestCreditEntry(fixture.testUserID, 75, "admin_adjustment")
 
 	// Act: Fetch own history (page 1, 10 per page)
 	query := types.GetCreditHistoryQuery{
@@ -164,7 +165,7 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange: Create credit history for test user
-	fixture.createTestCreditEntry(fixture.testUserID, 200, "admin_view_test")
+	fixture.createTestCreditEntry(fixture.testUserID, 200, "admin_adjustment")
 
 	// Act: Admin fetches other user's history
 	targetUserID := fixture.testUserID
@@ -182,7 +183,7 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	// Verify at least one entry matches our test data
 	found := false
 	for _, entry := range resp.CreditHistory {
-		if entry.Reason == "admin_view_test" && entry.Amount == 200 {
+		if entry.Reason == "admin_adjustment" && entry.Amount == 200 {
 			found = true
 			break
 		}
@@ -212,7 +213,7 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 		fixture.createTestCreditEntry(
 			fixture.testUserID,
 			int32(10+i),
-			fmt.Sprintf("pagination_test_%d", i),
+			"work_credit",
 		)
 	}
 
