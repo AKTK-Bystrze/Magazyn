@@ -56,6 +56,89 @@ export async function clearPendingReservations(
 }
 
 /**
+ * Ensures that default equipment types exist in the database.
+ * Creates 'kayak' and 'paddle' types if they don't exist.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @returns A promise that resolves to an object with equipment type IDs.
+ * @throws An error if equipment types cannot be created or fetched.
+ */
+export async function ensureEquipmentTypesExist(
+  supabaseAdmin: SupabaseClient
+): Promise<{ kayakId: string; paddleId: string }> {
+  const defaultTypes = [
+    E2E_CONFIG.EQUIPMENT_TYPES.KAYAK,
+    E2E_CONFIG.EQUIPMENT_TYPES.PADDLE,
+  ];
+
+  for (const type of defaultTypes) {
+    const { error } = await supabaseAdmin
+      .from('equipment_types')
+      .upsert(type, { onConflict: 'name', ignoreDuplicates: true });
+
+    if (error) {
+      console.warn(`Failed to upsert equipment type ${type.name}: ${error.message}`);
+    }
+  }
+
+  const { data: types, error: fetchError } = await supabaseAdmin
+    .from('equipment_types')
+    .select('id, name')
+    .in('name', defaultTypes.map(t => t.name));
+
+  if (fetchError || !types || types.length === 0) {
+    throw new Error(`Failed to fetch equipment types after seeding: ${fetchError?.message}`);
+  }
+
+  const kayakType = types.find(t => t.name === 'kayak');
+  const paddleType = types.find(t => t.name === 'paddle');
+
+  if (!kayakType || !paddleType) {
+    throw new Error('Failed to find kayak or paddle equipment type');
+  }
+
+  return { kayakId: kayakType.id, paddleId: paddleType.id };
+}
+
+/**
+ * Ensures that sample equipment exists in the database for browsing tests.
+ * Creates a minimal set of equipment items if they don't exist.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @returns A promise that resolves when seed equipment is created.
+ */
+export async function ensureSeedEquipmentExists(
+  supabaseAdmin: SupabaseClient
+): Promise<void> {
+  const { data: existingSeed } = await supabaseAdmin
+    .from('equipment')
+    .select('id')
+    .like('internal_id', 'SEED-%')
+    .limit(1);
+
+  if (existingSeed && existingSeed.length > 0) {
+    return;
+  }
+
+  const { kayakId, paddleId } = await ensureEquipmentTypesExist(supabaseAdmin);
+
+  const seedEquipment = [
+    { internal_id: 'SEED-K1', type_id: kayakId, name: 'Test Kayak 1', description: 'For E2E tests', status: 'ok' },
+    { internal_id: 'SEED-K2', type_id: kayakId, name: 'Test Kayak 2', description: 'For E2E tests', status: 'ok' },
+    { internal_id: 'SEED-P1', type_id: paddleId, name: 'Test Paddle 1', description: 'For E2E tests', status: 'ok' },
+    { internal_id: 'SEED-P2', type_id: paddleId, name: 'Test Paddle 2', description: 'For E2E tests', status: 'ok' },
+  ];
+
+  const { error } = await supabaseAdmin
+    .from('equipment')
+    .upsert(seedEquipment, { onConflict: 'type_id, internal_id', ignoreDuplicates: true });
+
+  if (error) {
+    console.warn(`Failed to seed equipment: ${error.message}`);
+  }
+}
+
+/**
  * Creates test equipment items for a specific worker.
  *
  * @param supabaseAdmin - The Supabase admin client.
@@ -69,15 +152,7 @@ export async function createTestEquipment(
   workerIndex: number,
   count: number = E2E_CONFIG.DEFAULTS.DEFAULT_EQUIPMENT_COUNT
 ): Promise<{ id: string; typeId: string; name: string }[]> {
-  const { data: typeData, error: typeError } = await supabaseAdmin
-    .from('equipment_types')
-    .select('id')
-    .limit(1)
-    .single();
-
-  if (typeError || !typeData) {
-    throw new Error(`Failed to get equipment type: ${typeError?.message}`);
-  }
+  const { kayakId } = await ensureEquipmentTypesExist(supabaseAdmin);
 
   const equipmentItems: { id: string; typeId: string; name: string }[] = [];
   const timestamp = Date.now();
@@ -90,7 +165,7 @@ export async function createTestEquipment(
       .from('equipment')
       .insert({
         internal_id: uniqueId,
-        type_id: typeData.id,
+        type_id: kayakId,
         name: equipmentName,
         status: 'ok',
       })
@@ -101,7 +176,7 @@ export async function createTestEquipment(
       throw new Error(`Failed to create test equipment: ${error?.message}`);
     }
 
-    equipmentItems.push({ id: data.id, typeId: typeData.id, name: equipmentName });
+    equipmentItems.push({ id: data.id, typeId: kayakId, name: equipmentName });
   }
 
   return equipmentItems;

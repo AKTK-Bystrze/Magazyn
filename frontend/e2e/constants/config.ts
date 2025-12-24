@@ -42,6 +42,12 @@ export const E2E_CONFIG = {
     WORKER_DATE_OFFSET: 10,
   },
 
+  /** Default equipment types for test database seeding */
+  EQUIPMENT_TYPES: {
+    KAYAK: { name: 'kayak', credit_cost_per_day: 4 },
+    PADDLE: { name: 'paddle', credit_cost_per_day: 2 },
+  },
+
   /** Prefix for test equipment names (for cleanup identification) */
   TEST_EQUIPMENT_PREFIX: 'E2E-Test-',
 } as const;

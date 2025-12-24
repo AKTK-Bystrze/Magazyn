@@ -360,10 +360,25 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		return nil, err
 	}
 
+	// Calculate credit cost for the response
+	eq, _ := s.equipmentRepo.GetByID(ctx, updated.EquipmentID)
+	var creditCost int32
+	if eq != nil {
+		eqType, _ := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+		if eqType != nil {
+			days := s.calculateDays(updated.StartDate, updated.EndDate)
+			creditCost = days * eqType.CreditCostPerDay
+		}
+	}
+
 	return &types.UpdateReservationResponse{
-		ID:        updated.ID,
-		Status:    updated.Status,
-		UpdatedAt: safeString(updated.UpdatedAt),
+		ID:          updated.ID,
+		EquipmentID: updated.EquipmentID,
+		StartDate:   updated.StartDate,
+		EndDate:     updated.EndDate,
+		Status:      updated.Status,
+		CreditCost:  creditCost,
+		UpdatedAt:   safeString(updated.UpdatedAt),
 	}, nil
 }
 

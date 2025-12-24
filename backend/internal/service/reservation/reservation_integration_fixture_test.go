@@ -98,6 +98,7 @@ func createUniqueEquipment(t *testing.T, fixture *dateTestFixture) {
 }
 
 func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
+	//  Try to get existing users from the database
 	type profile struct {
 		ID string `json:"id"`
 	}
@@ -105,15 +106,20 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	data, _, err := fixture.client.From("profiles").Select("id", "exact", false).Limit(2, "").Execute()
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(data, &profiles))
-	require.True(t, len(profiles) >= 2, "Need at least 2 test users")
+	
+	if len(profiles) < 2 {
+		t.Skip("Skipping test: Need at least 2 users in the database. Run: npx supabase db seed (or create users manually)")
+	}
 
 	fixture.testUserID = profiles[0].ID
 	fixture.testUser2ID = profiles[1].ID
 
-	// Reset credits
+	// Reset credits to known state
 	initialBalance := int32(100000)
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUserID).Execute()
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUser2ID).Execute()
+	
+	t.Logf("Using test users: %s, %s", fixture.testUserID, fixture.testUser2ID)
 }
 
 // teardown executes all registered cleanup functions in LIFO order.

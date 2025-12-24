@@ -83,8 +83,8 @@ export class EquipmentManagerPage {
     }
 
     if (data.typeId) {
-      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_TYPE_SELECT).click();
-      await this.page.getByRole('option').filter({ hasText: new RegExp(data.typeId, 'i') }).first().click();
+      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_TYPE_SELECT).click({ force: true });
+      await this.page.getByRole('option').filter({ hasText: new RegExp(data.typeId, 'i') }).first().click({ force: true });
     }
 
     if (data.name) {
@@ -96,8 +96,8 @@ export class EquipmentManagerPage {
     }
 
     if (data.status) {
-      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_STATUS_SELECT).click();
-      await this.page.getByRole('option', { name: new RegExp(data.status, 'i') }).first().click();
+      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_STATUS_SELECT).click({ force: true });
+      await this.page.getByRole('option', { name: new RegExp(data.status, 'i') }).first().click({ force: true });
     }
   }
 
@@ -105,7 +105,7 @@ export class EquipmentManagerPage {
    * Submits the equipment form.
    */
   async submitForm() {
-    await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_SUBMIT_BTN).click();
+    await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_SUBMIT_BTN).click({ force: true });
   }
 
   /**

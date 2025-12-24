@@ -34,7 +34,7 @@ type creditTestFixture struct {
 }
 
 func setupCreditTestFixture(t *testing.T) *creditTestFixture {
-	// Load config
+	// Config loader will try .env first, then .env.test if .env not found
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	appState, err := config.LoadConfig()
 	require.NoError(t, err, "Failed to load config")

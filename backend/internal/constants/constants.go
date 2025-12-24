@@ -37,10 +37,9 @@ const (
 
 // Equipment status values that indicate the current condition and availability.
 const (
-	EquipmentStatusOK          = "ok"          // Equipment is in good condition and available
-	EquipmentStatusMaintenance = "maintenance" // Equipment undergoing maintenance, not available
-	EquipmentStatusDamaged     = "damaged"     // Equipment damaged, needs repair
-	EquipmentStatusBroken      = "broken"      // Equipment broken, not usable
+	EquipmentStatusOK     = "ok"      // Equipment is in good condition and available
+	EquipmentStatusBroken = "broken"  // Equipment broken, not usable
+	EquipmentStatusBlocked = "blocked" // Equipment blocked by admin (e.g. for maintenance)
 
 )
 

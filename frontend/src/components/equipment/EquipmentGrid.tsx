@@ -28,8 +28,12 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
   }
 
   if (error) {
+    console.error("EquipmentSearchContainer Error:", error);
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center text-destructive bg-destructive/10 rounded-lg">
+      <div
+        className="flex flex-col items-center justify-center p-12 text-center text-destructive bg-destructive/10 rounded-lg"
+        data-testid="equipment-grid-error"
+      >
         <h3 className="text-lg font-semibold">Error loading equipment</h3>
         <p className="text-sm text-muted-foreground">{error.message}</p>
       </div>

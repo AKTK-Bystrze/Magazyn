@@ -20,9 +20,10 @@ import (
 
 // setupIntegrationTest creates a real connection to Supabase and initializes services
 func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.Config, *supa.Client) {
-	// Load config from environment or .env
+	// Load config from environment, .env, or .env.test
 	// Tests run from inside the package directory. We need to point to the root .env
-	// Assumes .env is in project root (Magazyn/) which is 4 levels up: reservation -> service -> internal -> backend -> Magazyn
+	// Assumes .env or .env.test is in project root (Magazyn/) which is 4 levels up: reservation -> service -> internal -> backend -> Magazyn
+	// If .env is not found, config loader will automatically try .env.test
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	appState, err := config.LoadConfig()
 	if err != nil {

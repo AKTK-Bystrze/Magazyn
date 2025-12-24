@@ -23,18 +23,27 @@ func SetupIntegrationTest() (*config.AppState, error) {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(filename)
 	// Assuming this file is in backend/internal/testutils/
-	// .env is in project root (../../../../.env) relative to this file?
 	// Project structure:
 	// e:\bystrze\Magazyn\backend\internal\testutils\config.go
-	// e:\bystrze\Magazyn\.env
-	// relative path: ../../../.env
+	// e:\bystrze\Magazyn\.env.test
+	// relative path: ../../../.env.test (testutils -> internal -> backend -> Magazyn)
 
+	// Try loading .env.test first (for testing), then .env as fallback
+	// godotenv.Load does NOT override existing env vars
+	envTestPath := filepath.Join(dir, "../../../.env.test")
 	envPath := filepath.Join(dir, "../../../.env")
 
-	if err := godotenv.Load(envPath); err != nil {
-		log.Printf("Warning: Error loading .env file from %s: %v. Relying on process environment.", envPath, err)
-	} else {
+	loaded := false
+	if err := godotenv.Load(envTestPath); err == nil {
+		log.Printf("Loaded .env from %s", envTestPath)
+		loaded = true
+	} else if err := godotenv.Load(envPath); err == nil {
 		log.Printf("Loaded .env from %s", envPath)
+		loaded = true
+	}
+
+	if !loaded {
+		log.Printf("Warning: No .env file found at %s or %s. Relying on process environment.", envTestPath, envPath)
 	}
 
 	url := os.Getenv("PUBLIC_SUPABASE_URL")

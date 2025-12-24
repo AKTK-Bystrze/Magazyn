@@ -302,6 +302,12 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	expectedRefund1 := 3 * fixture.costPerDay
 	expectedRefund2 := 4 * fixture.costPerDay
 
+	// Debug logging
+	t.Logf("User1 - BalanceAfter: %d, BalanceFinal: %d, Refund: %d, Expected: %d, CostPerDay: %d",
+		balance1After, balance1Final, refund1, expectedRefund1, fixture.costPerDay)
+	t.Logf("User2 - BalanceAfter: %d, BalanceFinal: %d, Refund: %d, Expected: %d, CostPerDay: %d",
+		balance2After, balance2Final, refund2, expectedRefund2, fixture.costPerDay)
+
 	assert.Equal(t, expectedRefund1, refund1, "User1 refund mismatch")
 	assert.Equal(t, expectedRefund2, refund2, "User2 refund mismatch")
 	t.Logf("✓ Bulk denial refunded: User1=%d, User2=%d credits", refund1, refund2)

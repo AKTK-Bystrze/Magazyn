@@ -52,7 +52,7 @@ func main() {
 
 	// Initialize Repositories
 	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey, appState.Config.AppURL)
-	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient, appState.Config.SupabaseURL)
+	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)

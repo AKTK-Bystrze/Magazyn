@@ -42,8 +42,17 @@ func LoadConfig() (*AppState, error) {
 			log.Printf("No .env file found, relying on existing environment variables")
 		}
 	} else {
+		// Try loading the specified path first
 		if err := godotenv.Load(envPath); err != nil {
-			log.Printf("No .env file found at %s, relying on existing environment variables", envPath)
+			// If the specified file doesn't exist, try .env.test fallback
+			testEnvPath := strings.Replace(envPath, ".env", ".env.test", 1)
+			if err := godotenv.Load(testEnvPath); err != nil {
+				log.Printf("No .env file found at %s or %s, relying on existing environment variables", envPath, testEnvPath)
+			} else {
+				log.Printf("Loaded .env from %s", testEnvPath)
+			}
+		} else {
+			log.Printf("Loaded .env from %s", envPath)
 		}
 	}
 

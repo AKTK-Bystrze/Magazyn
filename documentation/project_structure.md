@@ -34,11 +34,11 @@ Magazyn/frontend/
 ├── src/
 │   ├── components/        # Reusable React UI components
 │   ├── layouts/           # Astro layout files
+│   ├── lib/               # Services and helpers
+│   │   ├── api/           # API clients and logic
+│   │   ├── auth/          # Authentication utilities
 │   ├── pages/             # Astro routed pages
-│   ├── services/
-│   │   ├── api/           # TanStack Query logic calling Go Backend
-│   │   └── auth/          # Supabase JS client setup
-│   └── shared/            # Shared TypeScript types from the backend
+│   └── types/             # Shared TypeScript types
 ├── public/                # Static assets (served as-is)
 │   ├── favicon.png        # Site favicon
 │   ├── logo-bystrze-kolor.png           # Brand logo (light theme)

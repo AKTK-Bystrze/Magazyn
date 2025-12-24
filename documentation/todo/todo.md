@@ -1,5 +1,5 @@
 ## In progress:
-- supabase migrations squash
+supabase warnings, db review
 
 ## Deployment
 3. pipelines

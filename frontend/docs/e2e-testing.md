@@ -103,6 +103,7 @@ We use a **Hybrid Strategy** to balance performance and reliability:
 *   **Why**: Prevents race conditions in parallel execution.
 *   **Implementation**: Use the `testEquipment` fixture. It creates 2 unique items for the worker and deletes them afterwards.
 *   **Guidance**: **Never** hardcode equipment IDs in tests. Always use the IDs provided by the `testEquipment` fixture.
+*   **Auto-Seeding**: The `testEquipment` fixture automatically creates default equipment types (`kayak`, `paddle`) if they don't exist, making tests fully self-contained.
 
 ### 3. Database State
 *   **Strategy**: Use `supabaseAdmin` (Admin API) for setup/teardown, NOT the UI.

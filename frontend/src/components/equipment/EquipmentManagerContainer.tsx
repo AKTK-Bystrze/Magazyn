@@ -61,6 +61,12 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
   const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(null);
 
   // Feedback states
+  React.useEffect(() => {
+    if (error) {
+      console.error("EquipmentManagerContainer Error:", error);
+    }
+  }, [error]);
+
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [archiveError, setArchiveError] = React.useState<string | null>(null);

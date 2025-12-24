@@ -37,6 +37,7 @@ type calendarTestFixture struct {
 }
 
 func setupCalendarTestFixture(t *testing.T) *calendarTestFixture {
+	// Config loader will try .env first, then .env.test if .env not found
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	_, err := config.LoadConfig()
 	require.NoError(t, err)

@@ -1,6 +1,6 @@
 import { test as base, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { createTestEquipment, cleanupTestEquipment } from '../helpers/data-setup.helper';
+import { createTestEquipment, cleanupTestEquipment, ensureSeedEquipmentExists } from '../helpers/data-setup.helper';
 import { E2E_CONFIG } from '../constants';
 
 /**
@@ -375,8 +375,9 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     await cleanupTestEquipment(supabaseAdmin, equipmentIds);
   },
 
-  authenticatedPage: async ({ browser, testUser }, use) => {
+  authenticatedPage: async ({ browser, testUser, supabaseAdmin }, use) => {
     console.log('[AUTH] Setting up authenticated page...');
+    await ensureSeedEquipmentExists(supabaseAdmin);
     const context = await browser.newContext();
     const page = await context.newPage();
     await injectSupabaseSession(page, testUser.email);

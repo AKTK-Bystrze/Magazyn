@@ -17,20 +17,27 @@ import (
 type equipmentRepository struct {
 	client      *supabase.Client
 	supabaseURL string
+	supabaseKey string
 }
 
 // NewEquipmentRepository creates a new Supabase implementation of EquipmentRepository.
-func NewEquipmentRepository(client *supabase.Client, supabaseURL string) repository.EquipmentRepository {
+func NewEquipmentRepository(client *supabase.Client, supabaseURL, supabaseKey string) repository.EquipmentRepository {
 	return &equipmentRepository{
 		client:      client,
 		supabaseURL: supabaseURL,
+		supabaseKey: supabaseKey,
 	}
 }
 
 // List retrieves a paginated list of equipment based on filters.
 func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
+	// Use authenticated client to ensure RLS policies allow access
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+
 	// Build base query with all filters
-	baseQuery := r.client.From("equipment").Select("*", "exact", false)
+	baseQuery := client.From("equipment").
+		Select("*", "exact", false).
+		Order("created_at", &postgrest.OrderOpts{Ascending: false})
 
 	if !query.IncludeArchived {
 		baseQuery = baseQuery.Eq("is_archived", "false")
@@ -96,6 +103,13 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	// Apply pagination to filtered results
 	offset := (query.Page - 1) * query.PerPage
 	endIndex := offset + query.PerPage
+	// Debug log first and last item dates
+	if len(filteredItems) > 0 {
+		fmt.Printf("[DEBUG] List result: %d items. First: %v (%s), Last: %v (%s)\n", 
+			len(filteredItems), filteredItems[0].Name, filteredItems[0].CreatedAt, 
+			filteredItems[len(filteredItems)-1].Name, filteredItems[len(filteredItems)-1].CreatedAt)
+	}
+
 	if endIndex > len(filteredItems) {
 		endIndex = len(filteredItems)
 	}
@@ -110,7 +124,8 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 
 // GetByID retrieves a single equipment by ID
 func (r *equipmentRepository) GetByID(ctx context.Context, id string) (*types.PublicEquipmentSelect, error) {
-	data, _, err := r.client.From("equipment").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	data, _, err := client.From("equipment").
 		Select("*", "exact", false).
 		Eq("id", id).
 		Single().
@@ -171,7 +186,7 @@ func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID str
 func (r *equipmentRepository) Create(ctx context.Context, equipment types.PublicEquipmentInsert) (*types.PublicEquipmentSelect, error) {
 	// Use admin client (via auth context)
 	// RLS policies now handle permission checks
-	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	data, _, err := adminClient.From("equipment").
 		Insert(equipment, false, "", "representation", "").
@@ -196,7 +211,7 @@ func (r *equipmentRepository) Create(ctx context.Context, equipment types.Public
 // Update updates an existing equipment record
 func (r *equipmentRepository) Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error) {
 	// Use admin client (via auth context)
-	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	data, _, err := adminClient.From("equipment").
 		Update(equipment, "", "representation").
@@ -232,7 +247,7 @@ func (r *equipmentRepository) Update(ctx context.Context, id string, equipment t
 // Archive sets the is_archived flag to true
 func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
 	// Use admin client (via auth context)
-	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	archived := true
 	updateData := types.PublicEquipmentUpdate{
@@ -274,7 +289,7 @@ func (r *equipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentI
 // GetMaintenanceLogsWithAdmin retrieves logs joined with admin profile
 func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
 	// Use admin client (via auth context)
-	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	desc := true
 	data, _, err := adminClient.From("maintenance_logs").
@@ -311,7 +326,8 @@ func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, e
 
 // GetActiveReservations checks for active reservations for equipment
 func (r *equipmentRepository) GetActiveReservations(ctx context.Context, equipmentID string) ([]types.PublicReservationsSelect, error) {
-	data, _, err := r.client.From("reservations").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	data, _, err := client.From("reservations").
 		Select("*", "exact", false).
 		Eq("equipment_id", equipmentID).
 		In("status", []string{constants.ReservationStatusPending, constants.ReservationStatusRented}).
@@ -329,8 +345,10 @@ func (r *equipmentRepository) GetActiveReservations(ctx context.Context, equipme
 }
 
 // GetConflictingReservations checks for reservations overlapping a date range
+// GetConflictingReservations checks for reservations overlapping a date range
 func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.PublicReservationsSelect, error) {
-	data, _, err := r.client.From("reservations").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	data, _, err := client.From("reservations").
 		Select("id, start_date, end_date, status", "exact", false).
 		Eq("equipment_id", equipmentID).
 		Lte("start_date", end).
@@ -356,7 +374,7 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 
 	// Use admin client to bypass RLS - we need to see ALL reservations, not just the user's
 	// RLS policies now allow seeing all reservations
-	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	data, _, err := adminClient.From("reservations").
 		Select("equipment_id, start_date, end_date, status", "exact", false).
@@ -399,7 +417,8 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 
 // GetUserFavorites retrieves IDs of equipment that are user's favorites
 func (r *equipmentRepository) GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error) {
-	data, _, err := r.client.From("reservations").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	data, _, err := client.From("reservations").
 		Select("equipment_id", "exact", false).
 		Eq("user_id", userID).
 		In("status", []string{constants.ReservationStatusRented, constants.ReservationStatusReturned}).
@@ -442,7 +461,7 @@ func (r *equipmentRepository) GetUserFavorites(ctx context.Context, userID strin
 
 // CreateMaintenanceLog creates a new maintenance log entry
 func (r *equipmentRepository) CreateMaintenanceLog(ctx context.Context, equipmentID string, previousStatus, newStatus string, notes *string, userID string) (*types.PublicMaintenanceLogsSelect, error) {
-	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	insert := types.PublicMaintenanceLogsInsert{
 		EquipmentID:    equipmentID,
