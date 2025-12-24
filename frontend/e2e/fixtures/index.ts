@@ -25,7 +25,7 @@ interface AuthFixtures {
   /** Super Admin user information (id and email) */
   superAdminUser: { id: string; email: string };
   /** Dedicated test equipment for this worker (created/cleaned per test) */
-  testEquipment: { id: string; typeId: string }[];
+  testEquipment: { id: string; typeId: string; name: string }[];
 }
 
 /** Worker-scoped fixtures (shared across tests in same worker) */

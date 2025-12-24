@@ -6,6 +6,7 @@ import {
   addToCart,
   goToCart,
   restoreCredits,
+  calculateWorkerDates,
 } from "../helpers/reservation.helper";
 
 /**
@@ -59,6 +60,7 @@ test.describe("Reservation Creation", () => {
   test("Happy Path: Complete reservation flow", async ({
     authenticatedPage,
     testEquipment,
+    workerIndex,
   }) => {
     const [equip1, equip2] = testEquipment;
     const cart = new ReservationCartPOM(authenticatedPage);
@@ -89,7 +91,9 @@ test.describe("Reservation Creation", () => {
     await expect(cart.getCartItem(equip1.id)).toBeVisible();
     await expect(cart.getCartItem(equip2.id)).toBeVisible();
 
-    await cart.setDatesFromNow(E2E_CONFIG.DEFAULTS.RESERVATION_DAYS_AHEAD, E2E_CONFIG.DEFAULTS.RESERVATION_DAYS_AHEAD + E2E_CONFIG.DEFAULTS.RESERVATION_DURATION_DAYS);
+    // Use worker-specific date offset to prevent reservations from being grouped across parallel tests
+    const { startDays, endDays } = calculateWorkerDates(workerIndex);
+    await cart.setDatesFromNow(startDays, endDays);
 
     const totalCost = await cart.getTotalCost();
     expect(totalCost).toBeGreaterThan(0);

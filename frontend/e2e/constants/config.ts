@@ -37,6 +37,8 @@ export const E2E_CONFIG = {
     INITIAL_CREDITS: 100,
     AUTH_TOKEN_EXPIRY: 3600,
     DEFAULT_EQUIPMENT_COUNT: 2,
+    /** Days to offset start date per worker index to avoid reservation grouping */
+    WORKER_DATE_OFFSET: 10,
   },
 
   /** Prefix for test equipment names (for cleanup identification) */

@@ -361,6 +361,7 @@ Tests run fully parallel with worker isolation:
 - **Each worker** gets its own `testEquipment` (2 equipment items)
 - **Equipment is created** before each test, **deleted** after each test
 - **Shared test user** is reused across all workers (no conflicts)
+- **Valid reservations** must use `calculateWorkerDates(workerIndex)` to avoid data grouping collisions
 
 ```bash
 # Run with 4 parallel workers

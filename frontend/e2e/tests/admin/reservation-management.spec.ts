@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures';
 import { ReservationCartPOM } from '../../page-objects/reservation-cart.pom';
 import { E2E_CONFIG } from '../../constants';
-import { addToCart, goToCart, restoreCredits, getLastReservationId } from '../../helpers/reservation.helper';
+import { addToCart, goToCart, restoreCredits, getLastReservationId, calculateWorkerDates } from '../../helpers/reservation.helper';
 
 /**
  * Admin Reservation Management E2E tests.
@@ -51,13 +51,13 @@ test.describe('Admin Reservation Management', () => {
     adminPage,
     testUser,
     testEquipment,
+    workerIndex,
   }) => {
     test.setTimeout(60000);
     const [equip1] = testEquipment;
     const cart = new ReservationCartPOM(adminPage);
 
     // 1. Add equipment to cart as Admin
-    // Note: addToCart helper uses page.goto('/equipment') internally
     await addToCart(adminPage, equip1.id);
 
     // 2. Go to Cart
@@ -68,11 +68,9 @@ test.describe('Admin Reservation Management', () => {
     await cart.selectUser(testUser.email);
 
     // 4. Configure Dates and Checkout
-    // Dates: 7 days from now, 3 days duration (default from config)
-    await cart.setDatesFromNow(
-      E2E_CONFIG.DEFAULTS.RESERVATION_DAYS_AHEAD, 
-      E2E_CONFIG.DEFAULTS.RESERVATION_DAYS_AHEAD + E2E_CONFIG.DEFAULTS.RESERVATION_DURATION_DAYS
-    );
+    // Use worker-specific date offset to prevent reservations from being grouped across parallel tests
+    const { startDays, endDays } = calculateWorkerDates(workerIndex);
+    await cart.setDatesFromNow(startDays, endDays);
 
     // Verify credits are displayed (sanity check)
     // Note: This might show the selected user's credits if the UI updates correctly
@@ -86,22 +84,24 @@ test.describe('Admin Reservation Management', () => {
     // 5. Navigate to "All Reservations" to Manage it
     await adminPage.goto('/admin/reservations');
     
-    // Find the reservation
-    // We assume the new reservation is the most recent one (first row)
+    // Find the reservation by equipment name (worker-isolated, unique per test)
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
-    const firstRow = adminPage.locator('[data-testid^="reservation-row-"]').first();
-    const testId = await firstRow.getAttribute('data-testid');
+
+    // Find the row containing our equipment name (unique per test via timestamp)
+    const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
+    await expect(row.first()).toBeVisible({ timeout: 10000 });
+
+    // Get the reservation ID from the row
+    const testId = await row.first().getAttribute('data-testid');
     const reservationId = testId!.replace('reservation-row-', '');
-    const row = adminPage.getByTestId(`reservation-row-${reservationId}`);
-    
-    await expect(row).toBeVisible();
 
     // 6. Deny the Reservation
     // Clicking "Change Status" button/menu
     // Note: Assuming a UI specific implementation here based on typical Shadcn patterns in this project
     // If exact IDs are missing, we use role based locators.
     
-    const statusButton = row.getByTestId('cancel-reservation-button');
+    const statusButton = row.first().getByTestId('cancel-reservation-button');
+    await expect(statusButton).toBeVisible({ timeout: 10000 });
     await statusButton.click();
     
     // Confirm action in dialog
@@ -111,7 +111,7 @@ test.describe('Admin Reservation Management', () => {
 
     // 7. Verify Status
     // Wait for the status badge to update
-    const statusBadge = row.getByTestId(`reservation-status-${reservationId}`);
+    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
     await expect(statusBadge).toContainText(/Anulowana|Denied/i);
     // double check color/class if possible, but text is good enough for now
   });

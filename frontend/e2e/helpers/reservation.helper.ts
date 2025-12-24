@@ -2,10 +2,27 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { E2E_CONFIG } from "../constants";
+
 /**
  * Helper functions for reservation E2E tests
  * Provides setup, teardown, and common actions
  */
+
+/**
+ * Calculates start and end days relative to today, offset by worker index.
+ * This prevents reservation grouping collisions when running tests in parallel.
+ *
+ * @param workerIndex - The Playwright worker index.
+ * @returns Object containing startDays and endDays.
+ */
+export function calculateWorkerDates(workerIndex: number): { startDays: number; endDays: number } {
+  const workerOffset = workerIndex * E2E_CONFIG.DEFAULTS.WORKER_DATE_OFFSET;
+  const startDays = E2E_CONFIG.DEFAULTS.RESERVATION_DAYS_AHEAD + workerOffset;
+  const endDays = startDays + E2E_CONFIG.DEFAULTS.RESERVATION_DURATION_DAYS;
+
+  return { startDays, endDays };
+}
 
 /**
  * Clears the cart by removing the item from localStorage and navigating to the equipment page.

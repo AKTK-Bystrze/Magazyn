@@ -61,14 +61,14 @@ export async function clearPendingReservations(
  * @param supabaseAdmin - The Supabase admin client.
  * @param workerIndex - The index of the worker executing the test.
  * @param count - The number of equipment items to create (default: defined in config).
- * @returns A promise that resolves to an array of created equipment objects (id, typeId).
+ * @returns A promise that resolves to an array of created equipment objects (id, typeId, name).
  * @throws An error if equipment types cannot be fetched or creation fails.
  */
 export async function createTestEquipment(
   supabaseAdmin: SupabaseClient,
   workerIndex: number,
   count: number = E2E_CONFIG.DEFAULTS.DEFAULT_EQUIPMENT_COUNT
-): Promise<{ id: string; typeId: string }[]> {
+): Promise<{ id: string; typeId: string; name: string }[]> {
   const { data: typeData, error: typeError } = await supabaseAdmin
     .from('equipment_types')
     .select('id')
@@ -79,17 +79,19 @@ export async function createTestEquipment(
     throw new Error(`Failed to get equipment type: ${typeError?.message}`);
   }
 
-  const equipmentItems: { id: string; typeId: string }[] = [];
+  const equipmentItems: { id: string; typeId: string; name: string }[] = [];
+  const timestamp = Date.now();
 
   for (let i = 0; i < count; i++) {
-    const uniqueId = `${E2E_CONFIG.TEST_EQUIPMENT_PREFIX}W${workerIndex}-${i}-${Date.now()}`;
+    const uniqueId = `${E2E_CONFIG.TEST_EQUIPMENT_PREFIX}W${workerIndex}-${i}-${timestamp}`;
+    const equipmentName = `E2E-W${workerIndex}-${timestamp.toString().slice(-6)}-${i}`;
 
     const { data, error } = await supabaseAdmin
       .from('equipment')
       .insert({
         internal_id: uniqueId,
         type_id: typeData.id,
-        name: `Test Equipment W${workerIndex}-${i}`,
+        name: equipmentName,
         status: 'ok',
       })
       .select('id')
@@ -99,7 +101,7 @@ export async function createTestEquipment(
       throw new Error(`Failed to create test equipment: ${error?.message}`);
     }
 
-    equipmentItems.push({ id: data.id, typeId: typeData.id });
+    equipmentItems.push({ id: data.id, typeId: typeData.id, name: equipmentName });
   }
 
   return equipmentItems;
