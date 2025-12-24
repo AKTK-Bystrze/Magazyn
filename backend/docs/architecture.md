@@ -67,9 +67,9 @@ We follow a **Layered Architecture** with elements of **Hexagonal Architecture (
 ### Authentication Contexts: User Token vs Service Role Key
 *   **User Token (RLS)**: For standard operations, we use the user's JWT (forwarded from the frontend) with the public/anon key. This adheres to Supabase's Row-Level Security (RLS) policies, ensuring users only access their own data.
     *   **Usage**: Most Repository methods (e.g., `GetProfile`, `CreateReservation`).
-*   **Service Role Key (Admin)**: For privileged operations that must bypass RLS or interact with the Supabase Admin API (e.g., creating users programmatically, managing global settings), we use the `SUPABASE_SERVICE_ROLE_KEY`.
-    *   **Usage**: `AuthRepository.CreateUser` (Admin User Creation), System background jobs.
-    *   **Security**: This key is kept secret on the backend and never exposed to the client. It bypasses all RLS policies.
+*   **Service Role Key (Auth Admin Only)**: For privileged Supabase Auth API operations that cannot use RLS.
+    *   **Usage**: `AuthRepository.CreateUser` (Admin User Creation via Supabase Auth Admin API), Test infrastructure.
+    *   **Security**: This key is kept secret on the backend and never exposed to the client. Used only for operations that have no RLS-based alternative.
 
 ## 3. Error Handling Design
 

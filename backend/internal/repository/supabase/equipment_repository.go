@@ -17,16 +17,13 @@ import (
 type equipmentRepository struct {
 	client      *supabase.Client
 	supabaseURL string
-	serviceKey  string
 }
 
 // NewEquipmentRepository creates a new Supabase implementation of EquipmentRepository.
-// The serviceKey is used to bypass RLS for availability checks that need to see ALL reservations.
-func NewEquipmentRepository(client *supabase.Client, supabaseURL, serviceKey string) repository.EquipmentRepository {
+func NewEquipmentRepository(client *supabase.Client, supabaseURL string) repository.EquipmentRepository {
 	return &equipmentRepository{
 		client:      client,
 		supabaseURL: supabaseURL,
-		serviceKey:  serviceKey,
 	}
 }
 
@@ -172,11 +169,9 @@ func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID str
 
 // Create creates a new equipment record
 func (r *equipmentRepository) Create(ctx context.Context, equipment types.PublicEquipmentInsert) (*types.PublicEquipmentSelect, error) {
-	// Use admin client to bypass RLS for equipment management
-	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create admin client: %w", err)
-	}
+	// Use admin client (via auth context)
+	// RLS policies now handle permission checks
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
 
 	data, _, err := adminClient.From("equipment").
 		Insert(equipment, false, "", "representation", "").
@@ -200,11 +195,8 @@ func (r *equipmentRepository) Create(ctx context.Context, equipment types.Public
 
 // Update updates an existing equipment record
 func (r *equipmentRepository) Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error) {
-	// Use admin client to bypass RLS for equipment management
-	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create admin client: %w", err)
-	}
+	// Use admin client (via auth context)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
 
 	data, _, err := adminClient.From("equipment").
 		Update(equipment, "", "representation").
@@ -239,18 +231,15 @@ func (r *equipmentRepository) Update(ctx context.Context, id string, equipment t
 
 // Archive sets the is_archived flag to true
 func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
-	// Use admin client to bypass RLS for equipment management
-	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create admin client: %w", err)
-	}
+	// Use admin client (via auth context)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
 
 	archived := true
 	updateData := types.PublicEquipmentUpdate{
 		IsArchived: &archived,
 	}
 
-	_, _, err = adminClient.From("equipment").
+	_, _, err := adminClient.From("equipment").
 		Update(updateData, "", "").
 		Eq("id", id).
 		Execute()
@@ -284,11 +273,8 @@ func (r *equipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentI
 
 // GetMaintenanceLogsWithAdmin retrieves logs joined with admin profile
 func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
-	// Use admin client to bypass RLS - maintenance logs don't have user-specific RLS
-	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create admin client: %w", err)
-	}
+	// Use admin client (via auth context)
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
 
 	desc := true
 	data, _, err := adminClient.From("maintenance_logs").
@@ -369,35 +355,8 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 	fmt.Printf("[DEBUG] GetEquipmentIDsWithConflicts called with: startDate=%s, endDate=%s\n", startDate, endDate)
 
 	// Use admin client to bypass RLS - we need to see ALL reservations, not just the user's
-	if r.serviceKey == "" {
-		fmt.Printf("[DEBUG] WARNING: No service key configured, using regular client (RLS will apply)\n")
-	}
-
-	// Create admin client to bypass RLS
-	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
-	if err != nil {
-		fmt.Printf("[DEBUG] Error creating admin client: %v, falling back to regular client\n", err)
-		adminClient = r.client
-	}
-
-	// Debug: First fetch all active reservations to see what's in the database
-	allData, _, allErr := adminClient.From("reservations").
-		Select("equipment_id, start_date, end_date, status", "exact", false).
-		In("status", []string{constants.ReservationStatusPending, constants.ReservationStatusRented}).
-		Execute()
-	if allErr == nil {
-		var allRes []struct {
-			EquipmentID string `json:"equipment_id"`
-			StartDate   string `json:"start_date"`
-			EndDate     string `json:"end_date"`
-			Status      string `json:"status"`
-		}
-		if json.Unmarshal(allData, &allRes) == nil {
-			fmt.Printf("[DEBUG] ALL active reservations in database (via admin client): %+v\n", allRes)
-		}
-	} else {
-		fmt.Printf("[DEBUG] Error fetching all reservations: %v\n", allErr)
-	}
+	// RLS policies now allow seeing all reservations
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
 
 	data, _, err := adminClient.From("reservations").
 		Select("equipment_id, start_date, end_date, status", "exact", false).
@@ -483,10 +442,7 @@ func (r *equipmentRepository) GetUserFavorites(ctx context.Context, userID strin
 
 // CreateMaintenanceLog creates a new maintenance log entry
 func (r *equipmentRepository) CreateMaintenanceLog(ctx context.Context, equipmentID string, previousStatus, newStatus string, notes *string, userID string) (*types.PublicMaintenanceLogsSelect, error) {
-	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create admin client: %w", err)
-	}
+	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseURL)
 
 	insert := types.PublicMaintenanceLogsInsert{
 		EquipmentID:    equipmentID,

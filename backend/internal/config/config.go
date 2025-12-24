@@ -15,7 +15,7 @@ import (
 type Config struct {
 	SupabaseURL        string   // URL of the Supabase project
 	SupabaseKey        string   // Supabase anon/public key for client operations
-	SupabaseServiceKey string   // Supabase service role key for admin operations
+	SupabaseServiceKey string   // Supabase service role key - used ONLY for Auth Admin API and tests
 	Port               string   // HTTP server port
 	LogLevel           string   // Logging verbosity: DEBUG, INFO, WARN, or ERROR
 	CORSAllowedOrigins []string // List of allowed CORS origins for cross-origin requests

@@ -173,10 +173,9 @@ func (r *userRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []
 	logger.Debugf(ctx, "BulkAdjustCredits RPC params: user_ids=%v, admin_id=%s, amount=%d, reason=%s, description=%s",
 		userIDs, adminID, amount, reason, description)
 
-	// Use service role key since this is a protected operation typically called by Admin/System
-	// or ensure the RPC itself is protected. In our case, the service role bypasses RLS.
-	// We want to use the service role key to ensure the adjustment succeeds regardless of user RLS.
-	jsonStr := r.client.Rpc("bulk_adjust_user_credits", "", params)
+	// Use authenticated client - RLS policies map permissions
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	jsonStr := client.Rpc("bulk_adjust_user_credits", "", params)
 
 	// Log the raw RPC response
 	logger.Debugf(ctx, "BulkAdjustCredits RPC response: %q", jsonStr)

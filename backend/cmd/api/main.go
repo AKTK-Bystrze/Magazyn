@@ -43,17 +43,19 @@ func main() {
 	logger.Infof(ctx, "Log level set to: %s", appState.Config.LogLevel)
 
 	if appState.Config.SupabaseServiceKey == "" {
-		logger.Warn(ctx, "⚠️ SUPABASE_SERVICE_ROLE_KEY is not set. Admin user creation will fail.")
+		logger.Warn(ctx, "⚠️ SUPABASE_SERVICE_ROLE_KEY is not set. Admin user creation via API will fail.")
 	} else {
-		logger.Info(ctx, "✅ SUPABASE_SERVICE_ROLE_KEY loaded.")
+		logger.Info(ctx, "✅ SUPABASE_SERVICE_ROLE_KEY loaded for auth operations only.")
 	}
 
+	logger.Infof(ctx, "🌐 App URL for Magic Links: %s", appState.Config.AppURL)
+
 	// Initialize Repositories
-	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey)
-	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseServiceKey)
+	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey, appState.Config.AppURL)
+	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient, appState.Config.SupabaseURL)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient)
 	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
-	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey)
+	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	calendarRepo := supabaserepo.NewCalendarRepository(appState.SupabaseClient)
 	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
 	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)

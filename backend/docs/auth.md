@@ -220,14 +220,14 @@ func (r *AuthRepository) GetProfile(ctx context.Context, userID, token string) (
 profile, err := repo.GetProfile(ctx, userID, userToken)
 ```
 
-### Service Role Key (Admin)
-- Bypasses all RLS
-- Used for admin operations
+### Service Role Key (Auth Admin Only)
+- Used **only** for Supabase Auth Admin API
+- Bypasses all RLS (use with extreme caution)
 - **Never expose to client**
 
 ```go
 // Admin user creation with service key
-user, err := repo.CreateUser(ctx, email, password, role) // Uses service key internally
+user, err := repo.CreateUser(ctx, email, password, role) // Uses service key internally for Auth API
 ```
 
 ---

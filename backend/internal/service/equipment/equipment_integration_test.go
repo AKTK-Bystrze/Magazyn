@@ -49,7 +49,7 @@ func setupEquipmentTestFixture(t *testing.T) *equipmentTestFixture {
 	client, err := supa.NewClient(supabaseURL, supabaseKey, nil)
 	require.NoError(t, err)
 
-	equipmentRepo := supabase.NewEquipmentRepository(client, supabaseURL, supabaseKey)
+	equipmentRepo := supabase.NewEquipmentRepository(client, supabaseURL)
 	typeRepo := supabase.NewEquipmentTypeRepository(client)
 	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey)
 

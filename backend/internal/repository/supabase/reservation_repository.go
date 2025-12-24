@@ -18,34 +18,22 @@ type reservationRepository struct {
 	client         *supabase.Client
 	supabaseURL    string
 	supabaseKey    string
-	serviceRoleKey string
 }
 
 // NewReservationRepository creates a new Supabase implementation of ReservationRepository
-func NewReservationRepository(client *supabase.Client, url string, key string, serviceRoleKey string) repository.ReservationRepository {
+func NewReservationRepository(client *supabase.Client, url string, key string) repository.ReservationRepository {
 	return &reservationRepository{
-		client:         client,
-		supabaseURL:    url,
-		supabaseKey:    key,
-		serviceRoleKey: serviceRoleKey,
+		client:      client,
+		supabaseURL: url,
+		supabaseKey: key,
 	}
 }
 
 // GetReservations retrieves a paginated list of reservations based on filters
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
-	// Use authenticated client for RLS enforcement, unless BypassRLS is set
-	var client *supabase.Client
-	var err error
-	if query.BypassRLS && r.serviceRoleKey != "" {
-		// Use service role client to bypass RLS for viewing all reservations
-		client, err = supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
-		if err != nil {
-			logger.Warnf(ctx, "Failed to create service role client, falling back to auth client: %v", err)
-			client = getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-		}
-	} else {
-		client = getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	}
+	// Use authenticated client for RLS enforcement
+	// Admin access is now handled by RLS policies
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	// Select basics + joined data including credit_cost_per_day for calculation
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
@@ -334,11 +322,8 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 
 // UpdateReservation updates an existing reservation using RPC for proper audit trail
 func (r *reservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate, changedByUserID string) (*types.PublicReservationsSelect, error) {
-	// Use Service Role to bypass restrictive RLS on non-Pending statuses
-	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
-	if err != nil {
-		return nil, types.NewInternalError("Failed to create service client", err)
-	}
+	// Use auth client - RLS policies map permissions
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	// Build RPC params
 	params := map[string]interface{}{
@@ -395,11 +380,8 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 
 // BulkUpdateStatusAtomic updates the status of multiple reservations and handles refunds atomically via RPC
 func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids []string, status string, adminID string) (*types.BulkStatusUpdateResponse, error) {
-	// Use Service Role to bypass RLS and perform credit adjustments
-	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
-	if err != nil {
-		return nil, types.NewInternalError("Failed to create service client", err)
-	}
+	// Use auth client - RLS policies map permissions
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	params := map[string]interface{}{
 		"p_reservation_ids": ids,
@@ -433,16 +415,13 @@ func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids 
 
 // BulkUpdateReservations updates the status of multiple reservations
 func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids []string, status string) error {
-	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
-	if err != nil {
-		return types.NewInternalError("Failed to create service client", err)
-	}
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	updateData := types.PublicReservationsUpdate{
 		Status: &status,
 	}
 
-	_, _, err = client.From("reservations").
+	_, _, err := client.From("reservations").
 		Update(updateData, "", "").
 		In("id", ids).
 		Execute()
@@ -452,11 +431,8 @@ func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids 
 
 // GetOverlappingReservations checks if there are any approved/pending reservations for the given equipment in the date range.
 func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
-	// Use Service Role to ensure we see ALL reservations regardless of RLS
-	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
-	if err != nil {
-		return nil, types.NewInternalError("Failed to create service client", err)
-	}
+	// Use auth client - RLS policies map permissions
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	qb := client.From("reservations").
 		Select("*", "exact", false).
@@ -486,11 +462,8 @@ func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, 
 // GetDashboardStats retrieves summary statistics for the admin dashboard
 func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
 	// Admin only, should have auth
-	// Use Service Role to ensure complete data visibility
-	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
-	if err != nil {
-		return nil, types.NewInternalError("Failed to create service client", err)
-	}
+	// RLS policies now ensure complete data visibility for admin role
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	// Pending
 	_, pCount, err := client.From("reservations").Select("*", "exact", true).Eq("status", constants.ReservationStatusPending).Execute()
@@ -571,11 +544,8 @@ func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID
 
 // ModifyReservationDatesWithCredits modifies reservation dates and adjusts credits atom ically
 func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
-	// Use Service Role since this might be an admin modifying another user's reservation
-	client, err := supabase.NewClient(r.supabaseURL, r.serviceRoleKey, nil)
-	if err != nil {
-		return nil, types.NewInternalError("Failed to create service client", err)
-	}
+	// Use auth client
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	params := map[string]interface{}{
 		"p_reservation_id":     reservationID,

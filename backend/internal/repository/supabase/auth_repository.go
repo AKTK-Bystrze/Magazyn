@@ -17,15 +17,17 @@ type authRepository struct {
 	supabaseURL string
 	supabaseKey string
 	serviceKey  string
+	appURL      string
 }
 
 // NewAuthRepository creates a new Supabase implementation of AuthRepository
-func NewAuthRepository(client *supabase.Client, url string, key string, serviceKey string) repository.AuthRepository {
+func NewAuthRepository(client *supabase.Client, url string, key string, serviceKey string, appURL string) repository.AuthRepository {
 	return &authRepository{
 		client:      client,
 		supabaseURL: url,
 		supabaseKey: key,
 		serviceKey:  serviceKey,
+		appURL:      appURL,
 	}
 }
 
@@ -34,6 +36,9 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 	err := r.client.Auth.OTP(gotruetypes.OTPRequest{
 		Email:      email,
 		CreateUser: true,
+		Data: map[string]interface{}{
+			"redirect_to": r.appURL,
+		},
 	})
 	if err != nil {
 		// Log the actual error from Supabase for debugging
