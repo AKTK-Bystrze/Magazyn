@@ -97,10 +97,22 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
     });
 
     if (error) {
-      throw new Error(`Failed to create test user: ${error.message}`);
+      // Fallback: If user was created by another worker in the meantime
+      if (error.message.includes('already been registered')) {
+        console.log('[SETUP] User already exists (race condition), fetching ID...');
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const retryUser = listData?.users.find(u => u.email === TEST_USER_EMAIL);
+        if (!retryUser) {
+          throw new Error(`Failed to create test user AND failed to find it after race condition: ${error.message}`);
+        }
+        userId = retryUser.id;
+      } else {
+        throw new Error(`Failed to create test user: ${error.message}`);
+      }
+    } else {
+      console.log('[SETUP] ✅ Test user created:', data.user.id);
+      userId = data.user.id;
     }
-    console.log('[SETUP] ✅ Test user created:', data.user.id);
-    userId = data.user.id;
   }
 
   console.log('[SETUP] Upserting public profile...');
@@ -164,10 +176,21 @@ async function ensureAdminUserExists(supabaseAdmin: SupabaseClient): Promise<{ i
     });
 
     if (error) {
-      throw new Error(`Failed to create admin user: ${error.message}`);
+      if (error.message.includes('already been registered')) {
+        console.log('[SETUP] Admin user already exists (race condition), fetching ID...');
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const retryUser = listData?.users.find(u => u.email === adminEmail);
+        if (!retryUser) {
+          throw new Error(`Failed to create admin user AND failed to find it after race condition: ${error.message}`);
+        }
+        userId = retryUser.id;
+      } else {
+        throw new Error(`Failed to create admin user: ${error.message}`);
+      }
+    } else {
+      console.log('[SETUP] ✅ Admin user created:', data.user.id);
+      userId = data.user.id;
     }
-    console.log('[SETUP] ✅ Admin user created:', data.user.id);
-    userId = data.user.id;
   }
 
   console.log('[SETUP] Upserting admin profile...');
@@ -231,10 +254,21 @@ async function ensureSuperAdminUserExists(supabaseAdmin: SupabaseClient): Promis
     });
 
     if (error) {
-      throw new Error(`Failed to create super admin user: ${error.message}`);
+      if (error.message.includes('already been registered')) {
+        console.log('[SETUP] Super Admin user already exists (race condition), fetching ID...');
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const retryUser = listData?.users.find(u => u.email === adminEmail);
+        if (!retryUser) {
+          throw new Error(`Failed to create super admin user AND failed to find it after race condition: ${error.message}`);
+        }
+        userId = retryUser.id;
+      } else {
+        throw new Error(`Failed to create super admin user: ${error.message}`);
+      }
+    } else {
+      console.log('[SETUP] ✅ Super Admin user created:', data.user.id);
+      userId = data.user.id;
     }
-    console.log('[SETUP] ✅ Super Admin user created:', data.user.id);
-    userId = data.user.id;
   }
 
   console.log('[SETUP] Upserting super admin profile...');

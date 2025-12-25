@@ -73,10 +73,10 @@ export class AdminUsersPage {
    */
   async setUserStatus(isActive: boolean) {
     if (isActive) {
-      await this.statusActive.click();
+      await this.statusActive.click({ force: true });
       await expect(this.statusActive).toHaveAttribute('data-state', 'checked');
     } else {
-      await this.statusDisabled.click();
+      await this.statusDisabled.click({ force: true });
       await expect(this.statusDisabled).toHaveAttribute('data-state', 'checked');
     }
   }
