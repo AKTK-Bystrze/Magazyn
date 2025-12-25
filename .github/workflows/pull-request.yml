@@ -200,7 +200,7 @@ jobs:
         working-directory: ./frontend
         run: |
           set -e  # Exit immediately if any command fails
-          npx playwright test --workers=4
+          npx playwright test --workers=4 --retries=0
           E2E_EXIT_CODE=$?
           echo "E2E tests completed with exit code: $E2E_EXIT_CODE"
           exit $E2E_EXIT_CODE
