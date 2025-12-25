@@ -1,0 +1,38 @@
+{{ define "credits_history_table" }} {{ $DATE_FORMAT_OUT := "02/01/06 15:04" }} {{ if
+.CreditsHistory }} {{/* style because of: https://github.com/DataTables/Responsive/issues/40 */}}
+<table class="table" id="{{ .TableId }}" style="width: 100%">
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Autor</th>
+      <th>Zmiana</th>
+      <th>Bilans</th>
+      <th>Opis</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range .CreditsHistory }}
+    <tr>
+      <td>{{.ChangeDate.Format $DATE_FORMAT_OUT }}</td>
+      <td>{{.AuthorName}}</td>
+      <td>{{.Value}}</td>
+      <td>{{.Balance}}</td>
+      <td>{{.Description}}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+<script type="text/javascript">
+  $(document).ready(() => {
+    new DataTable('#{{ .TableId }}', {
+      order: [[2, 'asc']],
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.3/i18n/pl.json'
+      },
+      responsive: true
+    });
+  });
+</script>
+{{ else }}
+<p>Brak historii zmiany godzinek.</p>
+{{ end }} {{ end }}

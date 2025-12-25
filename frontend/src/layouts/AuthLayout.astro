@@ -1,0 +1,27 @@
+---
+/**
+ * AuthLayout - Clean slate layout for authentication pages
+ * 
+ * Minimal layout without navigation for login, registration,
+ * and other authentication-related pages.
+ * 
+ * @example
+ * <AuthLayout title="Login">
+ *   <LoginForm client:load />
+ * </AuthLayout>
+ */
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  /** Page title displayed in browser tab */
+  title: string;
+  /** Optional meta description */
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <slot />
+</BaseLayout>

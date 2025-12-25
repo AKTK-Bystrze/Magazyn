@@ -1,0 +1,236 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [ main ]
+
+# Local Supabase credentials (standard for supabase start)
+env:
+  PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+  SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+  PORT: 8080
+  E2E_TEST_EMAIL: test@example.com
+  E2E_BASE_URL: http://localhost:4321
+  CORS_ALLOWED_ORIGINS: http://localhost:4321
+
+jobs:
+  # ------------------------------------------------------------------
+  # Stage 1: Linting (parallel)
+  # ------------------------------------------------------------------
+  lint-backend:
+    name: Lint Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'backend/go.mod'
+          cache-dependency-path: backend/go.sum
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
+      - name: Lint
+        working-directory: ./backend
+        run: make lint
+
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Dependencies
+        working-directory: ./frontend
+        run: npm ci
+      - name: Lint
+        working-directory: ./frontend
+        run: npm run lint
+
+  # ------------------------------------------------------------------
+  # Stage 2: Unit & Integration Tests (parallel, with local Supabase)
+  # ------------------------------------------------------------------
+  test-backend:
+    name: Unit & Integration Test Backend
+    needs: [lint-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'backend/go.mod'
+          cache-dependency-path: backend/go.sum
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Start Supabase
+        run: |
+          supabase start
+          supabase status
+      
+      - name: Verify Supabase Health
+        run: |
+          echo "Verifying Supabase is healthy..."
+          curl -sf http://127.0.0.1:54321/rest/v1/ \
+            -H "apikey: $PUBLIC_SUPABASE_ANON_KEY" || exit 1
+          echo "Supabase is healthy"
+      
+      - name: Unit Tests
+        working-directory: ./backend
+        run: go test ./internal/... -v -short -coverprofile=coverage.out
+      
+      - name: Integration Tests
+        working-directory: ./backend
+        run: go test ./internal/... -v -tags=integration
+      
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.out
+
+  test-frontend:
+    name: Unit Test Frontend
+    needs: [lint-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Dependencies
+        working-directory: ./frontend
+        run: npm ci
+      - name: Test (with coverage)
+        working-directory: ./frontend
+        run: npm run test:coverage
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+
+  # ------------------------------------------------------------------
+  # Stage 3: E2E Tests (after unit+integration pass, 4 parallel workers)
+  # ------------------------------------------------------------------
+  e2e-test:
+    name: E2E Test
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'backend/go.mod'
+          cache-dependency-path: backend/go.sum
+          
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: |
+          supabase start
+          supabase status
+
+      - name: Verify Supabase Health
+        run: |
+          echo "Verifying Supabase is healthy..."
+          curl -sf http://127.0.0.1:54321/rest/v1/ \
+            -H "apikey: $PUBLIC_SUPABASE_ANON_KEY" || exit 1
+          echo "Supabase is healthy"
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Start Backend
+        working-directory: ./backend
+        run: |
+          go run cmd/api/main.go &
+          BACKEND_PID=$!
+          echo "Backend started (pid $BACKEND_PID)"
+          
+          # Wait for backend to be healthy (max 30 seconds)
+          echo "Waiting for backend health check..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+              echo "Backend is healthy after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          
+          echo "ERROR: Backend failed to start within 30 seconds"
+          exit 1
+
+      - name: Run E2E Tests (4 parallel workers)
+        working-directory: ./frontend
+        run: |
+          set -e  # Exit immediately if any command fails
+          npx playwright test --workers=4 --retries=0
+          E2E_EXIT_CODE=$?
+          echo "E2E tests completed with exit code: $E2E_EXIT_CODE"
+          exit $E2E_EXIT_CODE
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+  # ------------------------------------------------------------------
+  # Stage 4: Status Comment
+  # ------------------------------------------------------------------
+  status-comment:
+    name: Status Comment
+    needs: [test-backend, test-frontend, e2e-test]
+    runs-on: ubuntu-latest
+    if: success()
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '### ✅ Verification Successful\n\nAll checks passed:\n- **Backend**: Lint, Unit & Integration Tests\n- **Frontend**: Lint & Unit Tests\n- **E2E**: Parallel (4 workers)'
+            })

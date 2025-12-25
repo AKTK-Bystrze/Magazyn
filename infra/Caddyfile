@@ -1,0 +1,23 @@
+{
+	# Disable auto-HTTPS for local development if no domain is configured
+	# Remove this block for production with a real domain
+	auto_https off
+}
+
+http://localhost {
+	# Proxy /api requests to the Go backend container
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy backend:8080
+	}
+
+	# Proxy all other requests to the Astro frontend container
+	handle /* {
+		reverse_proxy frontend:4321
+	}
+
+	# Enable logging
+	log {
+		output stdout
+	}
+}

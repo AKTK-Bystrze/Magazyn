@@ -1,0 +1,35 @@
+---
+export const prerender = false;
+
+import AppLayout from "@/layouts/AppLayout.astro";
+import { ReservationCartView } from "@/components/reservations/ReservationCartView";
+import { ROUTES } from "@/lib/config/routes";
+
+const { user, sessionInfo } = Astro.locals;
+
+if (!user || !sessionInfo) {
+  return Astro.redirect(`${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.RESERVATIONS_CREATE)}`);
+}
+
+// Use credit balance from sessionInfo (already fetched by middleware)
+const initialCreditBalance = sessionInfo.creditBalance || 0;
+const error = null;
+---
+
+<AppLayout title="Finish Reservation | Magazyn">
+  <div class="min-h-screen bg-background">
+    {error ? (
+      <div class="container mx-auto py-12 px-4 text-center">
+        <h1 class="text-2xl font-bold text-destructive mb-4">Error</h1>
+        <p class="text-muted-foreground mb-6">{error}</p>
+        <a href="/" class="text-primary hover:underline">Return Home</a>
+      </div>
+    ) : (
+      <ReservationCartView
+        client:only="react"
+        initialCreditBalance={initialCreditBalance}
+        isAdmin={sessionInfo.role === 'admin'}
+      />
+    )}
+  </div>
+</AppLayout>

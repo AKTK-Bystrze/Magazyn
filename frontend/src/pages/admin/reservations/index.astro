@@ -1,0 +1,42 @@
+---
+export const prerender = false;
+
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { ReservationListContainer } from '@/components/reservations/ReservationListContainer';
+import { ROUTES } from '@/lib/config/routes';
+
+const { user, sessionInfo } = Astro.locals;
+
+// Redirect if not authenticated
+if (!user || !sessionInfo) {
+  return Astro.redirect(`${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.ADMIN_RESERVATIONS)}`);
+}
+
+// Check for admin role
+const isAdmin = sessionInfo.role === 'admin' || sessionInfo.role === 'super_admin';
+if (!isAdmin) {
+  return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
+}
+---
+
+<AdminLayout title="Reservations Manager | Magazyn Admin">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Reservations Manager</h1>
+      <p class="text-muted-foreground mt-1">
+        View and manage all reservations across the system
+      </p>
+    </div>
+
+    <!-- Reservation List (Admin Mode) -->
+    <ReservationListContainer 
+      mode="admin" 
+      currentUserId={user.id}
+      currentUserBalance={sessionInfo.creditBalance}
+      initialFilters={{ scope: 'all' }}
+      client:load 
+    />
+  </div>
+</AdminLayout>
+

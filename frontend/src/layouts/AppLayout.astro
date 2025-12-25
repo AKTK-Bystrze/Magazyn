@@ -1,0 +1,69 @@
+---
+/**
+ * AppLayout - Standard user application layout
+ * 
+ * Includes navigation bar configured for regular users with:
+ * - Dashboard, Equipment, Reservations, Credits links
+ * - User menu with logout
+ * - Breadcrumbs for nested pages
+ * 
+ * @example
+ * <AppLayout title="My Reservations">
+ *   <ReservationsContainer client:load />
+ * </AppLayout>
+ */
+import BaseLayout from './BaseLayout.astro';
+import { UserSidebar } from '@/components/navigation/UserSidebar';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { UserHeader } from '@/components/navigation/UserHeader';
+import { QueryProvider } from '@/components/providers/QueryProvider';
+
+interface Props {
+  /** Page title displayed in browser tab */
+  title: string;
+  /** Optional meta description */
+  description?: string;
+  /** Whether to show breadcrumbs (deprecated, handled by header) */
+  showBreadcrumbs?: boolean;
+}
+
+const { title, description } = Astro.props;
+
+const user = Astro.locals.user;
+const sessionInfo = Astro.locals.sessionInfo;
+const currentPath = Astro.url.pathname;
+
+// Determine if user is admin
+const isAdmin = sessionInfo?.role === 'admin' || sessionInfo?.role === 'super_admin';
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+    <div class="!hidden border-r bg-muted/40 lg:!block">
+      <div class="flex h-full max-h-screen flex-col gap-2">
+        {isAdmin ? (
+          <AdminSidebar client:load currentPath={currentPath} />
+        ) : (
+          <UserSidebar client:load currentPath={currentPath} />
+        )}
+      </div>
+    </div>
+
+    {/* Main Content Area */}
+    <div class="flex flex-col">
+      <QueryProvider client:load>
+        <UserHeader 
+          client:load 
+          user={user ? { email: user.email || '', id: user.id } : null}
+          currentPath={currentPath}
+          creditBalance={sessionInfo?.creditBalance}
+          isAdmin={isAdmin}
+        />
+      </QueryProvider>
+      
+      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <slot />
+      </main>
+    </div>
+  </div>
+</BaseLayout>

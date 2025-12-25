@@ -1,0 +1,210 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Button } from '../components/ui/button';
+
+
+export const prerender = false;
+
+// Check if user is authenticated
+const user = Astro.locals.user;
+
+---
+
+<Layout title="Zaloguj się | Wynajem Sprzętu">
+  <main class="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+    <div class="max-w-md w-full space-y-8 text-center">
+      <!-- Icon -->
+      <div class="flex justify-center">
+        <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/20 p-6">
+          <svg 
+            class="w-16 h-16 text-yellow-600 dark:text-yellow-500" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="space-y-2">
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">
+          Witaj
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          Wpisz swój e‑mail, aby zalogować się do swojego konta
+        </p>
+      </div>
+
+      <!-- Message -->
+      <div class="bg-card border border-border rounded-lg p-6 space-y-4 text-left">
+        <div class="space-y-2">
+          <h2 class="font-semibold text-lg text-foreground">Co się dzieje?</h2>
+          <p class="text-sm text-muted-foreground">
+            Twoje konto jest obecnie wyłączone i czeka na zatwierdzenie przez Super‑Admina. 
+            Nie będziesz mógł uzyskać dostępu do aplikacji, dopóki konto nie zostanie włączone.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="font-semibold text-lg text-foreground">Co powinieneś zrobić?</h2>
+          <ul class="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Poczekaj, aż Super‑Admin zweryfikuje i włączy Twoje konto</li>
+            <li>Skontaktuj się z administratorem, jeśli potrzebujesz natychmiastowego dostępu</li>
+            <li>Sprawdź ponownie później lub kliknij przycisk odświeżania poniżej</li>
+          </ul>
+        </div>
+
+        <div class="pt-2 border-t border-border">
+          <p class="text-xs text-muted-foreground">
+            <strong>Account:</strong> {user?.email || 'Unknown'}
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col gap-3">
+        <button
+          id="refresh-status-btn"
+          class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+        >
+          Sprawdź status konta
+        </button>
+
+        <Button variant="ghost" id="logout-btn" className="mt-4">
+          Powrót do logowania
+        </Button>
+      </div>
+
+      <!-- Status message -->
+      <div id="status-message" class="hidden">
+        <p class="text-sm text-muted-foreground"></p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Constants - synchronized with lib/config
+    const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const AUTH_COOKIE_NAME = 'magazyn-auth-token';
+    const SUCCESS_REDIRECT_DELAY_MS = 1500;
+    const LOGIN_ROUTE = '/login';
+    
+    // Get access token from cookie
+    const accessToken = document.cookie.match(new RegExp(`${AUTH_COOKIE_NAME}=([^;]+)`))?.[1];
+    
+    /**
+     * Helper function to update status message
+     * Eliminates repeated querySelector calls
+     * @param {Element} element
+     * @param {string} text
+     * @param {string} className
+     */
+    // @ts-ignore
+    function setStatusMessage(element, text, className) {
+      const p = element.querySelector('p');
+      if (p) {
+        p.textContent = text;
+        p.className = className;
+      }
+      element.classList.remove('hidden');
+    }
+
+    // Refresh status button
+    document.getElementById('refresh-status-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('refresh-status-btn');
+      const statusMsg = document.getElementById('status-message');
+      
+      if (!btn || !statusMsg) return;
+
+      // Show loading state
+      btn.textContent = 'Sprawdzanie…';
+      btn.setAttribute('disabled', 'true');
+      statusMsg.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/auth/session`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.isEnabled) {
+            // Account is now enabled! Redirect to appropriate page
+            setStatusMessage(
+              statusMsg,
+              'Konto włączone! Przekierowuję…',
+              'text-sm text-green-600 dark:text-green-500'
+            );
+            
+            setTimeout(() => {
+              window.location.href = '/';
+            }, SUCCESS_REDIRECT_DELAY_MS);
+          } else {
+            // Still disabled
+            setStatusMessage(
+              statusMsg,
+              'Konto nadal oczekuje na zatwierdzenie.',
+              'text-sm text-yellow-600 dark:text-yellow-500'
+            );
+            
+            btn.textContent = 'Check Account Status';
+            btn.removeAttribute('disabled');
+          }
+        } else {
+          throw new Error('Failed to check status');
+        }
+      } catch (error) {
+        console.error('Error checking account status:', error);
+        setStatusMessage(
+          statusMsg,
+          'Nie udało się sprawdzić statusu. Spróbuj ponownie.',
+          'text-sm text-red-600 dark:text-red-500'
+        );
+        
+        btn.textContent = 'Check Account Status';
+        btn.removeAttribute('disabled');
+      }
+    });
+
+    // Logout button
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('logout-btn');
+      if (!btn) return;
+
+      btn.textContent = 'Wylogowywanie…';
+      btn.setAttribute('disabled', 'true');
+
+      try {
+        // Clear the auth cookie
+        document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+        
+        // Clear Supabase local storage
+        localStorage.removeItem(AUTH_COOKIE_NAME);
+        
+        // Fallback for default key
+        localStorage.removeItem('sb-gwamxxqarkcpvgzvpanc-auth-token');
+        
+        // Optional: Dispatch a storage event or similar if we need to notify other tabs/components immediately
+        // But the redirect to /login should handle it as AuthListener checks cookies/storage on mount
+        
+        window.location.href = LOGIN_ROUTE;
+      } catch (error) {
+        console.error('Błąd przy wylogowywaniu:', error);
+        btn.textContent = 'Wyloguj się';
+        btn.removeAttribute('disabled');
+      }
+    });
+  </script>
+</Layout>

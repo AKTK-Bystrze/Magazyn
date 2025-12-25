@@ -1,195 +1,334 @@
-# Magazyn
-Repozytorium aplikacji klubowego magazynu. Składa się z 2 projektów go:
-1. bystrze, w /src - klubowa aplikacja
-2. boxTest, w /boxTest - aplikacja testująca
+# Equipment Rental System (Magazyn)
 
-Zapraszam do dyskusji w [Issues](https://github.com/AKTK-Bystrze/Magazyn/issues)
+> A modern, mobile-first web application for managing equipment rentals and member credits for a kayaking club.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![Astro](https://img.shields.io/badge/Astro-5.16-orange.svg)](https://astro.build/)
+[![React](https://img.shields.io/badge/React-19.0-blue.svg)](https://reactjs.org/)
 
-- [Magazyn](#magazyn)
-- [Jak uruchomić](#jak-uruchomić)
-  - [Zmienne środowiskowe](#zmienne-środowiskowe)
-    - [Konfiguracja](#konfiguracja)
-      - [Windows VS Code (GO)](#windows-vs-code-go)
-  - [Passwordless authentication](#passwordless-authentication)
-    - [Konfiguracja](#konfiguracja-1)
-- [Budowa](#budowa)
-  - [Apps](#apps)
-  - [API](#api)
-  - [Uprawnienia uzytkownika](#uprawnienia-uzytkownika)
-- [Release](#release)
-- [Testy](#testy)
-  - [Unit testy](#unit-testy)
-  - [BoxTest](#boxtest)
-    - [Budowa](#budowa-1)
-    - [Run](#run)
-    - [Uwagi](#uwagi)
+## 📋 Table of Contents
 
-# Jak uruchomić
-1. Za pomocą docker compose
-```bash
-docker compose up --build -d
+- [About](#about)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Available Scripts](#available-scripts)
+- [Project Scope](#project-scope)
+- [Project Status](#project-status)
+- [License](#license)
+
+## 📖 About
+
+The Equipment Rental System replaces an inconvenient Google Form-based rental process with a modern, mobile-accessible web application. The system enables club members to:
+
+- 🚣 Rent kayaking equipment using a credit system called "godzinki"
+- 📅 View real-time equipment availability with calendar views
+- 💳 Manage credit balance and request credits for club work
+- 📱 Access the system from any mobile or desktop device
+- 📊 Track rental and credit history
+
+**For Administrators:**
+
+- 🛠️ Manage equipment inventory and maintenance
+- ✅ Process and approve reservations
+- 👥 Manage user accounts and credit allocations
+- 📈 View analytics and reports
+
+**Key Features:**
+
+- Passwordless email-based authentication via Supabase
+- Automated credit deduction and refund system
+- Multi-item reservation support
+- Real-time availability checking
+- Comprehensive audit trail for all changes
+- Mobile-optimized responsive design
+
+## 🛠 Tech Stack
+
+### Frontend
+
+- **[Astro 5](https://astro.build/)** - SSR-configured static site generator
+- **[React 19](https://reactjs.org/)** - Interactive UI components (Calendar, Cart, Checkout)
+- **[TypeScript 5](https://www.typescriptlang.org/)** - Type-safe development
+- **[TanStack Query](https://tanstack.com/query)** - API response caching and state management
+
+### Backend
+
+- **[Go (Golang)](https://golang.org/)** - Stateless business logic and REST API
+- **Gmail SMTP** - Transactional email notifications
+
+### Infrastructure & Data
+
+- **[Supabase Cloud](https://supabase.com/)** - Managed backend services (Free Tier)
+  - **PostgreSQL** - Database with Row Level Security (RLS)
+  - **Supabase Auth** - Passwordless magic link authentication
+  - **Supabase Storage** - Equipment image storage (1GB limit)
+
+### Deployment
+
+- **DigitalOcean VPS** - Application hosting
+- **Docker Compose** - Container orchestration
+  - Container 1: Go API (port 8080)
+  - Container 2: Astro SSR (port 3000)
+  - Container 3: Caddy reverse proxy (HTTPS/443)
+
+### Architecture
+
+This project follows a **Hybrid "Light" Architecture**, maximizing performance by hosting application logic on a VPS while offloading state management to Supabase Cloud:
+
+- **Caddy** acts as reverse proxy with automatic HTTPS (Let's Encrypt)
+- Routes `/api/*` → Go Backend
+- Routes `/*` → Astro Frontend
+- Frontend directly accesses Supabase for auth and admin uploads
+- Backend verifies Supabase JWTs and handles business logic
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js**: Version specified in project (check `package.json`)
+- **Go**: Latest stable version
+- **Docker & Docker Compose**: For deployment
+- **Supabase Account**: Free tier account
+
+### Local Development Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd Magazyn
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**
+
+   Create a `.env` file in the root directory with:
+
+   ```env
+   # Supabase Configuration
+   PUBLIC_SUPABASE_URL=your_supabase_url
+   PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+   # Go Backend Configuration
+   GO_API_URL=http://localhost:8080
+
+   # Gmail SMTP (for notifications)
+   GMAIL_SMTP_USER=your_email@gmail.com
+   GMAIL_SMTP_PASSWORD=your_app_password
+   ```
+
+4. **Start local Supabase**
+
+   Start the local Supabase services (database, auth, storage) using Docker:
+
+   ```bash
+   npx supabase start
+
+   npx supabase status -o env
 ```
-2. Uruchomić bazę danych postgres i aplikację lokalnie
-   1. Kontener postgres
-      ```bash
-      docker build -t postgres -f db-dockerfile .
-      ```
-   2. Aplikację uruchomić zgodnie z dalszą instrukcją
+   Copy the API URL and Anon Key from the output to your `.env` file.
 
-## Zmienne środowiskowe
+5. **Start development server**
 
-Zmienne środowiskowe pobierane przez aplikację:
+   ```bash
+   npm run dev
+   ```
 
-**wymagane**
-1. IP - aplikacji np "127.0.0.1"
-2. Port - aplikacji np "8080"
-3. Server - adres serwera potrzebny do zbudowania linku logowania np: "http://localhost:8080"
-   
-**opcjonalne**
-- COOKIE_KEY - klucz ciasteczka. W przypadku braku generowana jest losowa wartość.
-- MAGAZYN_BYSTRZE_EMAIL_ADDR - adres konta email wykorzystywanego do wysyłania emaili przez aplikację.
-- MAGAZYN_BYSTRZE_EMAIL_PASS - hasło do wyżej wspomnianego konta.
-- SMTP_HOST np: smtp.gmail.com
-- SMTP_PORT np: 587
-- DEBUG - tryb debugowania true lub false. True, link logowania pojawia się w terminalu. False, korzysta z poczty email
-### Konfiguracja
+   The application will be available at `http://localhost:3000`
 
-* Ustaw zmienną środowiskową
-``` bash
-set cgo_enabled=1
-```
-#### Windows VS Code (GO)
-* [tutorial](https://learn.microsoft.com/en-us/azure/developer/go/configure-visual-studio-code) konfiguracji GO na VS Code
+6. **Start Go backend** (in separate terminal)
 
-* launch.json
+   ```bash
+   cd backend
+   go run main.go
+   ```
 
-```json
-{
-    "version": "0.2.0",
-    "configurations": [        
-        {
-            "program": "../${workspaceRoot}",
-            "name": "Launch file",
-            "type": "go",
-            "showLog": true,
-            "env": {
-                "GO111MODULE": "on",
-            },
-            "args": []
-        }
-    ]
-}
-```
+   The API will be available at `http://localhost:8080`
 
-* GCC 
-  tutorial : https://code.visualstudio.com/docs/cpp/config-mingw
+### Production Deployment
 
-## Passwordless authentication
+1. **Build the application**
 
-Autentykacja jest realizowana za pomocą pakietu https://github.com/johnsto/go-passwordless. Token autentykacyjny jest przesyłany
-za pomocą emaila zdefiniowanego w **MAGAZYN_BYSTRZE_EMAIL_ADDR**.
+   ```bash
+   npm run build
+   ```
 
- Parametr **DEBUG** (SEND_COOKIE_TO_STDOUT) po ustawieniu na:
-- **true** 
+2. **Deploy using Docker Compose**
 
-pozwala na authentykację z pominięciem email. Link authentykacyjny jest podawany w terminalu. Na stronie należy podać "u_username" występujący w bazie
+   ```bash
+   docker-compose up -d
+   ```
 
-- **false**
+3. **Configure Caddy**
+   - Update Caddyfile with your domain
+   - Caddy will automatically provision SSL certificates via Let's Encrypt
 
-pozwala na authentykację poprzez email. Na stronie należy podać adres email występujący w bazie.
+## 📜 Available Scripts
 
-### Konfiguracja 
+| Script            | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `npm run dev`     | Start Astro development server on port 3000 |
+| `npm start`       | Alias for `npm run dev`                     |
+| `npm run build`   | Build production-ready application          |
+| `npm run preview` | Preview production build locally            |
+| `npm run astro`   | Run Astro CLI commands                      |
+| `npm run prepare` | Set up Husky git hooks (runs automatically) |
 
-Należy ustawić zmienne środowiskowe dla **MAGAZYN_BYSTRZE_EMAIL_ADDR**, **SMTP_HOST**, **SMTP_PORT**. Ponadto w przypadku **gmail** należy ustawić "hasło dla aplikacji" zgodnie z tą instrukcją https://support.google.com/accounts/answer/185833?hl=pl i w ustawieniach skrzynki pocztowej włączyć Dostęp IMAP w ustawienia/przekazywanie i POP/IMAP
+### Git Hooks
 
-# Budowa
-Dwie główne lokalizacje:
-- main - server, baza danych, templates
-- apps - aplikacje serwisu Bystrze
-   
-Bystrze (/apps) składa się z czterech głównych aplikacji :
-- userManager - autentykacja, autoryzacja, users CRUD
-- pages - strony dostępne publicznie
-- warehouse - magazyn; wypożyczenia, inwentarz
-- common - modele i serwisy współdzielone przez pozostałe aplikacje
+This project uses **Husky** and **lint-staged** for pre-commit code formatting:
 
-## Apps
-Są to odrębne serwisy pełniące konretną rolę np. warehouse odpowiada za magazyn. Funkcje aplikacji:
-- podział logiki na podrzędne serwisy zbudowane wokół pojedynczych modeli common/models
-- zdefiniowanie i obsługa API (router)
+- Automatically formats `.js`, `.jsx`, `.ts`, `.tsx`, `.json`, and `.md` files
+- Uses Prettier for consistent code style
+- Runs on every commit
 
-Każda aplikacja powstaje w oparciu o struct App w apps.go. Budowa aplikacji:
-- konstruktor - np warehouse.go definiuje sposób stworzenia aplikacji, API
-- appState - zmienne dostępne dla serwisów wewnątrz aplikacji. Jest to conajmniej struct App.
-- serwisy - np. w warehouse: inventory, items, rental odpowiedzialne za operacje CRUD swoich modeli.
-- controllers - kontrollery/handlery obsługujące API.
+## 🎯 Project Scope
 
-## API
-Zdefiniowane w konstruktorze każdej z aplikacji. Budowa według schematu:
-```bash
-\applikacja\uprawnienia\serwis\operacja\...
-```
-np:
-```bash
-\warehouse\admin\reservation\show
-```
-## Uprawnienia uzytkownika
-w `authorization.go` jest logika uprawnień. Istniejące uprawnienia są zdefiniowane w `var ROLES`:
-1. User - wypożyczenie sprzętu
-2. Ninja - uprawnienia aplikacji pages, zarządzanie newsami
-3. Admin - zarządzanie wypożyczeniami, zatwierdzanie, anulowanie itd. Zarządzenie sprzętem, opis i stan.
-4. SuperAdmin - zarządzanie użytkownikami, zmiana uprawnień, godzinek itd.
+### MVP Features (In Scope)
 
-# Release
+**User Management**
 
-Wersja produkcyjna jest oznaczona poprzez git tag w historii commitów:
-```cmd
-git tag -a <tag-name> -m "<message>"
-git tag -a v1.0.0 -m "First release"
-```
-Sprawdź poprzednie tagi
-```cmd
-git tag -n
-```
-Obraz budownay z flagą `"--target production"` i `DEBUG=false`
-```cmd
-docker build --target production -t magazyn_bystrze . --build-arg EMAIL=EMAIL --build-arg EMAIL_PASS="PASS" DEBUG=false
-```
-# Testy
+- ✅ Admin-created user accounts (no self-registration)
+- ✅ Three user roles: User, Admin, SuperAdmin
+- ✅ Passwordless email authentication via Supabase
 
-## Unit testy
-Konwencja nazewnictwa : Test_metodaTestowana_testowanyStan_oczekiwanyRezultat
+**Credit System**
 
-Przykład Test_isAdult_ageLessThan18_false
+- ✅ Per-day credit rates (Kayak: 4, Paddle: 2, Other: 1 credit/day)
+- ✅ Automatic credit deduction on reservation creation
+- ✅ Credit refunds on reservation denial/cancellation
+- ✅ Credit request workflow with SuperAdmin approval
+- ✅ Complete credit change history with audit trail
 
-## BoxTest
-### Budowa
-- env - operacje na środowisku testowym. Budowa bazy testowej, aplikacji itd.
-- handlers - podzielone na /app i /db. Metody do wykonywania operacji takich jak rezerwacja, zmiana statusu rezerwacji itp a w przypadku /db wykonywania operacji na bazie
-- tests - podzielone na testy dotyczące konkretnej aplikacji (apps)
-- testUtils - współdzielone metody wykorzystywane w testach
-### Run
-Box testy. Uruchamiane za pomocą docker-compose. Obraz do testów jest z flagą `"--target test"` i ` DEBUG=true`
-```cmd
-docker build --target test --build-arg DEBUG=true -t app -f app-dockerfile .
-```
-Stworzenie nowego środowiska testowego. Uruchamiane z lokalizacji /boxTest
-```cmd
-go run main.go --env
-```
-serwer aplikacji jest dostępny na "http://localhost:8080"
-Uruchomienie wszystkich testów z listy. 
-```cmd
-go run main.go --tests 
-```
-Wyczyszczenie cache. Testy które przeszły nie zostaną wykonane ponownie.
-```cmd
-go clean -testcache
-```
+**Equipment Management**
 
-### Uwagi
-1. Testy applikacji warehouse wymagają wydłużenia domyślnego timeout do 1min (trzeba ustawić jeżeli testy są uruchamiane pojedynczo. W main.go --tests timeout jest ustawiony)
-```cmd
-go.exe test -timeout 60s -run ^Test_reservationMadeAndStartedSameTime$ boxTest/tests/warehouse
-```
+- ✅ Multi-filter search (type, name, description, availability)
+- ✅ Equipment status tracking (ok/broken)
+- ✅ Image uploads (2MB limit, JPEG/PNG)
+- ✅ Maintenance logs with status history
+- ✅ Favorites algorithm (top 3 per type based on rental history)
+
+**Reservation System**
+
+- ✅ Multi-item reservation as single transaction
+- ✅ Flexible date selection (start/end dates)
+- ✅ Real-time availability checking
+- ✅ User self-service date modification (PENDING only)
+- ✅ User cancellation capability (PENDING only)
+- ✅ Admin bulk operations
+- ✅ Complete audit trail for all reservation changes
+
+**Calendar & Visualization**
+
+- ✅ 30-day calendar view (current + 29 days)
+- ✅ Two modes: All reservations & Item-specific
+- ✅ Color-coded availability indicators
+- ✅ Clickable dates for quick search
+
+**Admin Dashboard**
+
+- ✅ Summary view (pending, overdue, today's rentals)
+- ✅ Quick filters (PENDING, Today, Overdue, All)
+- ✅ Overdue items panel with user contact info
+- ✅ Create reservations on behalf of users
+- ✅ Bulk status changes with preview
+
+**Analytics & Reporting**
+
+- ✅ Year/month filtering
+- ✅ Individual item statistics
+- ✅ Most rented items tracking
+- ✅ User activity analytics
+
+**Notifications**
+
+- ✅ Email confirmation on reservation creation
+- ✅ Single email per session listing all items
+- ✅ Rate-limited admin notifications
+
+### Out of Scope (Not in MVP)
+
+- ❌ Backend service logic changes (uses existing Go backend)
+- ❌ Database schema modifications (uses existing schema)
+- ❌ Native mobile applications (web-only)
+- ❌ User self-registration
+- ❌ User profile self-editing
+- ❌ Advanced analytics with data visualizations/exports
+- ❌ Multi-language support
+- ❌ WCAG accessibility compliance
+- ❌ Performance optimization beyond basic functionality
+- ❌ Data migration tools from Google Forms
+- ❌ "Remember me" persistent login
+- ❌ Social features (reviews, ratings)
+- ❌ AI-powered equipment recommendations
+
+### Technical Constraints
+
+- Must work with existing Go backend API without modifications
+- Must work with existing PostgreSQL database schema
+- Must use Supabase passwordless authentication
+- Must integrate with existing email notification system
+- Frontend-only implementation scope
+
+### Browser Support
+
+- **Chrome only** (primary target for MVP)
+
+## 📊 Project Status
+
+**Current Status:** 🟡 In Development (MVP Phase)
+
+### Completed
+
+- ✅ Product Requirements Document (PRD)
+- ✅ Technology stack definition
+- ✅ Database schema design
+- ✅ Initial database migration
+- ✅ Reservation audit table design
+- ✅ Development environment setup
+
+### In Progress
+
+- 🔄 Frontend implementation (Astro + React)
+- 🔄 Supabase integration (Auth, Storage, Database)
+- 🔄 Go backend API development
+
+### Upcoming
+
+- ⏳ User authentication flow
+- ⏳ Equipment browsing and search
+- ⏳ Reservation creation workflow
+- ⏳ Admin dashboard
+- ⏳ Credit management system
+- ⏳ Analytics and reporting
+- ⏳ Email notifications
+- ⏳ Production deployment
+
+### Known Limitations
+
+- **Supabase Free Tier**: 1-week pause after inactivity is acceptable for low-traffic club usage
+- **Database**: 500MB storage limit
+- **Storage**: 1GB file storage limit
+- **Authentication**: 50,000 MAU limit
+- **Uploads**: Restricted to Admin users only
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Documentation:**
+
+- [Product Requirements Document](documentation/prd.md)
+- [Technology Stack & Architecture](documentation/techstack.md)
+- [Database Schema Plan](documentation/db-plan.md)
+
+**Contact:** For questions or support, please contact the project administrator.

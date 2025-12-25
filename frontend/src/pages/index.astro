@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// This page should not be reached by authenticated users
+// The middleware will redirect them to their role-based landing page
+// If you see this page, you are either:
+// 1. Not authenticated (will be redirected to /login)
+// 2. There's an issue with the middleware
+---
+
+<Layout title="Welcome | Equipment Rental">
+	<main class="flex min-h-screen flex-col items-center justify-center p-24">
+		<h1 class="text-4xl font-bold">Welcome to Equipment Rental</h1>
+		<p class="mt-4 text-xl">Redirecting...</p>
+	</main>
+</Layout>

@@ -1,0 +1,33 @@
+---
+/**
+ * Admin Users Page - User Management
+ * SuperAdmin: Can view, create, and edit users
+ * Admin: Can view users only
+ */
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { UserListContainer } from '../../components/users/UserListContainer';
+import { ROUTES } from '../../lib/config/routes';
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../../lib/auth/roles';
+
+const user = Astro.locals.user;
+const sessionInfo = Astro.locals.sessionInfo;
+
+// Redirect to login if not authenticated
+if (!user) {
+  return Astro.redirect(ROUTES.PUBLIC.LOGIN);
+}
+
+// Redirect to dashboard if not admin or super_admin
+if (!sessionInfo || (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUPER_ADMIN_ROLE)) {
+  return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
+}
+
+// Determine if current user is super admin (can create/edit)
+const isSuperAdmin = sessionInfo.role === SUPER_ADMIN_ROLE;
+---
+
+<AdminLayout title="Manage Users | Magazyn">
+  <div class="space-y-6">
+    <UserListContainer client:load isSuperAdmin={isSuperAdmin} />
+  </div>
+</AdminLayout>

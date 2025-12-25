@@ -1,0 +1,59 @@
+---
+/**
+ * Dashboard Page - User home page
+ * Displays user dashboard with quick actions.
+ */
+import AppLayout from '../layouts/AppLayout.astro';
+import { ROUTES } from '../lib/config/routes';
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../lib/auth/roles';
+
+const user = Astro.locals.user;
+const sessionInfo = Astro.locals.sessionInfo;
+
+if (!user) {
+  return Astro.redirect(ROUTES.PUBLIC.LOGIN);
+}
+
+if (!sessionInfo || !sessionInfo.role) {
+  return Astro.redirect(ROUTES.PUBLIC.LOGIN);
+}
+
+if (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) {
+  return Astro.redirect(ROUTES.PROTECTED.ADMIN);
+}
+---
+
+<AppLayout title="Panel | Magazyn" showBreadcrumbs={false}>
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+    <h1 class="text-4xl font-bold mb-4">Witaj ponownie!</h1>
+    <p class="text-xl text-muted-foreground mb-2">{user.email}</p>
+    <p class="text-muted-foreground mb-8">
+      Godzinki: <span class="font-semibold">{sessionInfo.creditBalance ?? 0}</span>
+    </p>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
+      <a 
+        href={ROUTES.PUBLIC.EQUIPMENT}
+        class="flex flex-col items-center p-6 rounded-lg border bg-card hover:bg-accent transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-muted-foreground">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span class="font-medium">Przeglądaj Sprzęt</span>
+      </a>
+      <a 
+        href={ROUTES.PROTECTED.RESERVATIONS}
+        class="flex flex-col items-center p-6 rounded-lg border bg-card hover:bg-accent transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-muted-foreground">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span class="font-medium">Moje Rezerwacje</span>
+      </a>
+    </div>
+  </div>
+</AppLayout>

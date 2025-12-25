@@ -1,0 +1,29 @@
+---
+export const prerender = false;
+
+import AppLayout from '@/layouts/AppLayout.astro';
+import { CreditHistoryContainer } from '@/components/credits/CreditHistoryContainer';
+import { ROUTES } from '@/lib/config/routes';
+import { CREDIT_HISTORY_UI_STRINGS } from '@/lib/config/constants';
+
+const { user, sessionInfo } = Astro.locals;
+
+if (!user || !sessionInfo) {
+  return Astro.redirect(`${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.CREDITS_HISTORY)}`);
+}
+---
+
+<AppLayout title={`${CREDIT_HISTORY_UI_STRINGS.PAGE_TITLE} | Magazyn`}>
+  <div class="container mx-auto py-4 sm:py-8 px-4 max-w-7xl">
+    <!-- Header -->
+    <div class="flex flex-col gap-2 mb-4 sm:mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">{CREDIT_HISTORY_UI_STRINGS.PAGE_TITLE}</h1>
+      <p class="text-sm sm:text-base text-muted-foreground">
+        {CREDIT_HISTORY_UI_STRINGS.PAGE_DESCRIPTION}
+      </p>
+    </div>
+
+    <!-- Credit History View -->
+    <CreditHistoryContainer client:load />
+  </div>
+</AppLayout>

@@ -1,0 +1,53 @@
+---
+export const prerender = false;
+
+import AppLayout from '@/layouts/AppLayout.astro';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ReservationListContainer } from '@/components/reservations/ReservationListContainer';
+import { CheckCircle2 } from 'lucide-react';
+import { ROUTES } from '@/lib/config/routes';
+import { Button } from '@/components/ui/button';
+
+const { user, sessionInfo } = Astro.locals;
+
+if (!user || !sessionInfo) {
+  return Astro.redirect(`${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.RESERVATIONS)}`);
+}
+
+const success = Astro.url.searchParams.get('success') === 'true';
+const scopeParam = Astro.url.searchParams.get('scope');
+const initialScope = scopeParam === 'all' ? 'all' : 'my';
+---
+
+<AppLayout title="Rezerwacje | Magazyn">
+  <div class="container mx-auto py-8 px-4 max-w-7xl">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <h1 class="text-3xl font-bold tracking-tight">Rezerwacje</h1>
+      <a href={ROUTES.PUBLIC.EQUIPMENT}>
+        <Button variant="outline">
+          Przeglądaj Sprzęt
+        </Button>
+      </a>
+    </div>
+
+    <!-- Success Message from Redirect -->
+    {success && (
+      <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <AlertDescription className="text-green-800 dark:text-green-200">
+          <strong>Sukces!</strong> Twoja rezerwacja została pomyślnie utworzona.
+        </AlertDescription>
+      </Alert>
+    )}
+
+    <!-- Reservation List -->
+    <ReservationListContainer 
+      mode="user" 
+      currentUserId={user.id}
+      currentUserBalance={sessionInfo.creditBalance}
+      initialFilters={{ scope: initialScope }}
+      client:load 
+    />
+  </div>
+</AppLayout>

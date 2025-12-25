@@ -1,0 +1,14 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import EquipmentSearchContainer from '@/components/equipment/EquipmentSearchContainer';
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '@/lib/auth/roles';
+
+const sessionInfo = Astro.locals.sessionInfo;
+const isAdmin = sessionInfo ? (sessionInfo.role === ADMIN_ROLE || sessionInfo.role === SUPER_ADMIN_ROLE) : false;
+---
+
+<AppLayout title="Wyszukiwanie Sprzętu | Bystrze Magazyn">
+  <div class="container mx-auto">
+    <EquipmentSearchContainer client:only="react" isAdmin={isAdmin} />
+  </div>
+</AppLayout>
