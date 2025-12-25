@@ -145,7 +145,8 @@ func (r *equipmentRepository) GetByID(ctx context.Context, id string) (*types.Pu
 
 // GetTypeByID retrieves equipment type details
 func (r *equipmentRepository) GetTypeByID(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error) {
-	data, _, err := r.client.From("equipment_types").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	data, _, err := client.From("equipment_types").
 		Select("*", "exact", false).
 		Eq("id", typeID).
 		Single().

@@ -11,18 +11,23 @@ import (
 )
 
 type equipmentTypeRepository struct {
-	client *supabase.Client
+	client      *supabase.Client
+	supabaseURL string
+	supabaseKey string
 }
 
 // NewEquipmentTypeRepository creates a new Supabase implementation of EquipmentTypeRepository
-func NewEquipmentTypeRepository(client *supabase.Client) repository.EquipmentTypeRepository {
+func NewEquipmentTypeRepository(client *supabase.Client, supabaseURL, supabaseKey string) repository.EquipmentTypeRepository {
 	return &equipmentTypeRepository{
-		client: client,
+		client:      client,
+		supabaseURL: supabaseURL,
+		supabaseKey: supabaseKey,
 	}
 }
 
 func (r *equipmentTypeRepository) ListAll(ctx context.Context) ([]types.PublicEquipmentTypesSelect, error) {
-	data, _, err := r.client.From("equipment_types").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	data, _, err := client.From("equipment_types").
 		Select("*", "exact", false).
 		Order("name", nil).
 		Execute()
@@ -77,7 +82,8 @@ func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []strin
 	// Looking at previous usages like `In("status", []string{...})`, it seems supported.
 
 	// We'll use In filter.
-	data, _, err := r.client.From("equipment_types").
+	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	data, _, err := client.From("equipment_types").
 		Select("*", "exact", false).
 		In("id", uniqueIDs).
 		Execute()

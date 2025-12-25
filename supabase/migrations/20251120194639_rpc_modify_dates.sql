@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION modify_reservation_dates_with_credits(p_reservation_id UUID, p_changed_by_user_id UUID, p_new_start_date DATE, p_new_end_date DATE) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $body$
+CREATE OR REPLACE FUNCTION modify_reservation_dates_with_credits(p_reservation_id UUID, p_changed_by_user_id UUID, p_new_start_date DATE, p_new_end_date DATE) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
 DECLARE v_reservation reservations%ROWTYPE; v_user_id UUID; v_equipment_id UUID; v_old_start_date DATE; v_old_end_date DATE; v_old_days INTEGER; v_new_days INTEGER; v_credit_per_day INTEGER; v_old_cost INTEGER; v_new_cost INTEGER; v_credit_adjustment INTEGER; v_user_balance INTEGER; v_new_balance INTEGER; v_equipment_type_id UUID;
 BEGIN
     PERFORM set_config('app.changed_by_user_id', p_changed_by_user_id::TEXT, true);

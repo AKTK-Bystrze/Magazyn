@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION bulk_adjust_user_credits(p_user_ids UUID[], p_admin_id UUID, p_amount INT, p_reason TEXT, p_description TEXT) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $body$
+CREATE OR REPLACE FUNCTION bulk_adjust_user_credits(p_user_ids UUID[], p_admin_id UUID, p_amount INT, p_reason TEXT, p_description TEXT) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
 DECLARE v_user_id UUID;
 BEGIN
     FOREACH v_user_id IN ARRAY p_user_ids LOOP

@@ -61,7 +61,7 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	// supa.NewEquipmentTypeRepository is used here.
 	// Check reservation_service.go later. For now, to fix "unused var", just use it or remove it.
 	// supa.NewEquipmentTypeRepository is used here.
-	_ = supabase.NewEquipmentTypeRepository(client) // Fake usage to pass lint until confirmed
+	_ = supabase.NewEquipmentTypeRepository(client, supabaseURL, supabaseKey) // Fake usage to pass lint until confirmed
 
 	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey)
 	emailService := email.NewNoopEmailService()

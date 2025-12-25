@@ -1,7 +1,9 @@
 -- Migration: Base Schema
--- Description: Extensions, Enums, Tables, and Indexes
+-- Description: Extensions, Enums, Tables, Indexes, and Helper Functions
 
-CREATE EXTENSION IF NOT EXISTS "btree_gist";
+-- EXTENSIONS (in dedicated schema to avoid public schema pollution)
+CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE EXTENSION IF NOT EXISTS "btree_gist" WITH SCHEMA extensions;
 
 -- ENUMS
 CREATE TYPE user_role AS ENUM ('user', 'admin', 'super_admin');
@@ -126,3 +128,34 @@ CREATE INDEX profiles_email_idx ON profiles (email);
 CREATE INDEX profiles_is_enabled_idx ON profiles (is_enabled);
 CREATE INDEX reservations_user_equipment_idx ON reservations (user_id, equipment_id);
 CREATE INDEX reservation_history_reservation_id_created_at_idx ON reservation_history (reservation_id, created_at);
+CREATE INDEX credit_history_user_id_idx ON credit_history (user_id);
+CREATE INDEX credit_history_reservation_id_idx ON credit_history (reservation_id);
+CREATE INDEX maintenance_logs_equipment_id_idx ON maintenance_logs (equipment_id);
+
+-- HELPER FUNCTIONS (for RLS policies - must be after tables are created)
+-- Check if current user is enabled
+CREATE OR REPLACE FUNCTION public.is_enabled()
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT COALESCE((SELECT is_enabled FROM profiles WHERE id = auth.uid()), false);
+$$;
+
+-- Check if current user is admin or super_admin
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin'));
+$$;
+
+-- Check if current user is super_admin
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin');
+$$;
+
+-- Get current user's role
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS user_role LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public AS $body$
+DECLARE user_role_value user_role;
+BEGIN
+  SELECT role INTO user_role_value FROM profiles WHERE id = auth.uid();
+  RETURN user_role_value;
+END; $body$;

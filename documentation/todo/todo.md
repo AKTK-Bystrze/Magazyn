@@ -1,9 +1,8 @@
 ## In progress:
-supabase warnings, db review
+pipelines
+db injection
 
 ## Deployment
-3. pipelines
-    test sharding for CI/CD
 4. deploy on server
 
 ## Equipment Views refactor
@@ -53,3 +52,4 @@ supabase warnings, db review
 15. One test ID (reservation-success-message) will need to be added when you implement success state handling (currently redirects with ?success=true)
 17. admin is missing dates filter in the equipment browse view
 18. currently one reservations can be made on the same day.
+19. cant change credits for your own or cant change credtis for firts user in the table

@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION create_reservation_atomic(p_user_id UUID, p_total_cost INTEGER, p_reservations JSONB) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $body$
+CREATE OR REPLACE FUNCTION create_reservation_atomic(p_user_id UUID, p_total_cost INTEGER, p_reservations JSONB) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
 DECLARE v_user_balance INTEGER; v_new_balance INTEGER; v_created_ids UUID[] := '{}'; v_conflict_count INTEGER; v_res_item JSONB; v_reservation_id UUID; v_equipment_id UUID; v_start_date DATE; v_end_date DATE;
 BEGIN
     PERFORM set_config('app.changed_by_user_id', p_user_id::TEXT, true);

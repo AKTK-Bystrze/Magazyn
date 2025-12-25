@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION refund_reservation_credits(p_reservation_id UUID, p_amount INT) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $body$
+CREATE OR REPLACE FUNCTION refund_reservation_credits(p_reservation_id UUID, p_amount INT) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
 DECLARE v_user_id UUID;
 BEGIN
   SELECT user_id INTO v_user_id FROM reservations WHERE id = p_reservation_id;

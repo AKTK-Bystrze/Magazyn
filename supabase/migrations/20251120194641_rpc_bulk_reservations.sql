@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION bulk_update_reservations_status(p_reservation_ids UUID[], p_status TEXT, p_admin_id UUID) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $body$
+CREATE OR REPLACE FUNCTION bulk_update_reservations_status(p_reservation_ids UUID[], p_status TEXT, p_admin_id UUID) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
 DECLARE v_res_id UUID; v_reservation reservations%ROWTYPE; v_updated_count INTEGER := 0; v_refund_count INTEGER := 0; v_refund_amount INTEGER; v_credit_per_day INTEGER; v_days INTEGER; v_skipped_ids UUID[] := '{}';
 BEGIN
     PERFORM set_config('app.changed_by_user_id', p_admin_id::TEXT, true);

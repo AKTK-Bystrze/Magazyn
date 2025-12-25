@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION update_reservation_with_audit(p_reservation_id UUID, p_changed_by_user_id UUID, p_status TEXT DEFAULT NULL, p_start_date DATE DEFAULT NULL, p_end_date DATE DEFAULT NULL) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $body$
+CREATE OR REPLACE FUNCTION update_reservation_with_audit(p_reservation_id UUID, p_changed_by_user_id UUID, p_status TEXT DEFAULT NULL, p_start_date DATE DEFAULT NULL, p_end_date DATE DEFAULT NULL) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
 DECLARE v_updated_reservation reservations%ROWTYPE;
 BEGIN
     PERFORM set_config('app.changed_by_user_id', p_changed_by_user_id::TEXT, true);

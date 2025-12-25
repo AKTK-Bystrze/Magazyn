@@ -1,9 +1,14 @@
 -- Migration: Views and Sample Data
 -- Description: Analytical views, Realtime configuration, and Sample Data
 
--- VIEWS
-CREATE OR REPLACE VIEW analytics_equipment_stats AS SELECT e.id AS equipment_id, e.name AS equipment_name, COUNT(r.id) AS total_reservations, COALESCE(SUM(r.end_date - r.start_date), 0) AS total_days_rented, CASE WHEN COUNT(r.id) > 0 THEN (CAST(SUM(r.end_date - r.start_date) AS float) / GREATEST(1, (CURRENT_DATE - DATE(e.created_at)))) ELSE 0 END AS utilization_rate FROM equipment e LEFT JOIN reservations r ON e.id = r.equipment_id AND r.status = 'RETURNED' GROUP BY e.id, e.name;
-CREATE OR REPLACE VIEW analytics_user_stats AS SELECT p.id AS user_id, p.username, COUNT(r.id) AS total_reservations, COALESCE(SUM(CASE WHEN ch.amount < 0 THEN ABS(ch.amount) ELSE 0 END), 0) AS total_credits_spent, MAX(r.created_at) AS last_reservation_date FROM profiles p LEFT JOIN reservations r ON p.id = r.user_id LEFT JOIN credit_history ch ON p.id = ch.user_id GROUP BY p.id, p.username;
+-- VIEWS (with SECURITY INVOKER to respect RLS policies)
+CREATE OR REPLACE VIEW analytics_equipment_stats 
+WITH (security_invoker = on) AS 
+SELECT e.id AS equipment_id, e.name AS equipment_name, COUNT(r.id) AS total_reservations, COALESCE(SUM(r.end_date - r.start_date), 0) AS total_days_rented, CASE WHEN COUNT(r.id) > 0 THEN (CAST(SUM(r.end_date - r.start_date) AS float) / GREATEST(1, (CURRENT_DATE - DATE(e.created_at)))) ELSE 0 END AS utilization_rate FROM equipment e LEFT JOIN reservations r ON e.id = r.equipment_id AND r.status = 'RETURNED' GROUP BY e.id, e.name;
+
+CREATE OR REPLACE VIEW analytics_user_stats 
+WITH (security_invoker = on) AS 
+SELECT p.id AS user_id, p.username, COUNT(r.id) AS total_reservations, COALESCE(SUM(CASE WHEN ch.amount < 0 THEN ABS(ch.amount) ELSE 0 END), 0) AS total_credits_spent, MAX(r.created_at) AS last_reservation_date FROM profiles p LEFT JOIN reservations r ON p.id = r.user_id LEFT JOIN credit_history ch ON p.id = ch.user_id GROUP BY p.id, p.username;
 
 -- REALTIME
 ALTER PUBLICATION supabase_realtime ADD TABLE reservations;
