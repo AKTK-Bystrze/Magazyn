@@ -196,7 +196,7 @@ export function EditUserDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 pb-8">
             {/* Username (read-only) */}
             <div className="grid gap-2">
               <Label className="text-muted-foreground">Username</Label>
@@ -316,7 +316,7 @@ export function EditUserDialog({
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-8">
             <Button
               type="button"
               variant="outline"
