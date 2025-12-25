@@ -5,7 +5,7 @@ import { CreditHistoryTable } from "./CreditHistoryTable";
 import { Pagination } from "@/components/ui/pagination";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Wallet } from "lucide-react";
-import { CREDIT_HISTORY_UI_STRINGS, ICON_SIZE_LG, ICON_SIZE_SM } from "@/lib/config/constants";
+import { CREDIT_HISTORY_UI_STRINGS, ICON_SIZE_SM } from "@/lib/config/constants";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 /**

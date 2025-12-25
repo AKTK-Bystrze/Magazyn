@@ -107,8 +107,8 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	endIndex := offset + query.PerPage
 	// Debug log first and last item dates
 	if len(filteredItems) > 0 {
-		fmt.Printf("[DEBUG] List result: %d items. First: %v (%s), Last: %v (%s)\n", 
-			len(filteredItems), filteredItems[0].Name, filteredItems[0].CreatedAt, 
+		fmt.Printf("[DEBUG] List result: %d items. First: %v (%s), Last: %v (%s)\n",
+			len(filteredItems), filteredItems[0].Name, filteredItems[0].CreatedAt,
 			filteredItems[len(filteredItems)-1].Name, filteredItems[len(filteredItems)-1].CreatedAt)
 	}
 

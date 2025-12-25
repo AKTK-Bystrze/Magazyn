@@ -178,7 +178,7 @@ func TestCalendarAvailability_MultipleEquipment_CorrectGrid(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
-	
+
 	// Should have at least 3 equipment × 7 days = 21 entries (our test equipment)
 	// But there might be more equipment in the database
 	assert.GreaterOrEqual(t, len(resp.Calendar), 21, "Should have at least 21 entries (3 equipment × 7 days)")
@@ -234,7 +234,7 @@ func TestCalendarAvailability_WithReservations_ShowsBlocked(t *testing.T) {
 	// At least 3 days should be blocked (days 2, 3, 4)
 	assert.GreaterOrEqual(t, blockedCount, 3, "Should have at least 3 blocked days")
 	assert.GreaterOrEqual(t, availableCount, 1, "Should have at least some available days")
-	
+
 	t.Logf("✓ Calendar shows %d blocked, %d available days", blockedCount, availableCount)
 }
 

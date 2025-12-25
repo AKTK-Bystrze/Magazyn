@@ -214,7 +214,7 @@ function ReservationListContainerInner({
         setErrorMessage(message);
       }
     },
-    [selectedReservation, batchReservations, updateReservation]
+    [selectedReservation, batchReservations, updateReservation, bulkUpdateStatus]
   );
 
   // Handle cancel action
@@ -265,7 +265,7 @@ function ReservationListContainerInner({
         err instanceof Error ? err.message : "Nie udało się anulować rezerwacji";
       setErrorMessage(message);
     }
-  }, [selectedReservation, batchReservations, cancelReservation]);
+  }, [selectedReservation, batchReservations, cancelReservation, bulkUpdateStatus]);
 
   // Handle cancel dialog close
   const handleCancelDialogClose = React.useCallback(() => {

@@ -55,7 +55,7 @@ func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 	}
 
 	status := http.StatusInternalServerError
-	message := "Internal Server Error"
+	var message string
 	var details interface{}
 	code := "INTERNAL_ERROR"
 

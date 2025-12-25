@@ -6,7 +6,6 @@ import { AlertCircle, CreditCard } from "lucide-react";
 import { calculateCost } from "@/lib/utils/cart-validation";
 import { ROUTES } from "@/lib/config/routes";
 import { ICON_SIZE_SM, ICON_SIZE_MD } from "@/lib/config/constants";
-import { pluralize } from "@/lib/utils/text-utils";
 
 interface CostEstimatorProps {
   items: CartItem[];

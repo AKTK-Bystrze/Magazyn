@@ -1,6 +1,5 @@
 import { test, expect } from '../../fixtures';
 import { CreditHistoryPage } from '../../page-objects/credit-history.pom';
-import { TEST_IDS } from '../../constants/test-ids';
 // Using relative path to ensure resolution without relying on potentially unconfigured aliases in E2E
 import { CREDIT_HISTORY_UI_STRINGS } from '../../../src/lib/config/constants/credit/ui-strings';
 

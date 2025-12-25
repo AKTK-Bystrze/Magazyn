@@ -52,7 +52,7 @@ func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 	// Setup repositories
 	creditRepo := supabase.NewCreditHistoryRepository(client, supabaseURL, supabaseKey)
 	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey)
-	
+
 	// Create service
 	svc := credit.NewCreditHistoryService(creditRepo, userRepo)
 
@@ -105,9 +105,9 @@ func (f *creditTestFixture) teardown() {
 func (f *creditTestFixture) createTestCreditEntry(userID string, amount int32, reason string) {
 	_, _, err := f.client.From("credit_history").
 		Insert(map[string]interface{}{
-			"user_id": userID,
-			"amount":  amount,
-			"reason":  reason,
+			"user_id":     userID,
+			"amount":      amount,
+			"reason":      reason,
 			"description": fmt.Sprintf("Test entry %s", time.Now().Format("15:04:05")),
 		}, false, "", "representation", "").
 		Execute()
@@ -153,7 +153,7 @@ func TestGetCreditHistory_OwnHistory_ReturnsPaginated(t *testing.T) {
 	assert.Equal(t, 10, resp.Pagination.PerPage)
 	assert.GreaterOrEqual(t, resp.Pagination.TotalItems, 3)
 	assert.GreaterOrEqual(t, resp.CurrentBalance, int32(0), "Balance should be non-negative")
-	
+
 	t.Logf("✓ User fetched own history: %d entries, balance: %d", len(resp.CreditHistory), resp.CurrentBalance)
 }
 
@@ -179,7 +179,7 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
-	
+
 	// Verify at least one entry matches our test data
 	found := false
 	for _, entry := range resp.CreditHistory {
@@ -188,7 +188,7 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if !found {
 		// This might indicate RLS (Row Level Security) is blocking admin access to other users' history
 		// This is actually a valuable finding from integration testing

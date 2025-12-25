@@ -1,7 +1,5 @@
 import { type Page, type Locator } from '@playwright/test';
-import { expect } from '../fixtures';
 import { TEST_IDS } from '../constants/test-ids';
-import { E2E_CONFIG } from '../constants/config';
 
 /**
  * Page Object Model for Credit History page.

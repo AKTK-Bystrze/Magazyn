@@ -106,7 +106,7 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	data, _, err := fixture.client.From("profiles").Select("id", "exact", false).Limit(2, "").Execute()
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(data, &profiles))
-	
+
 	if len(profiles) < 2 {
 		t.Skip("Skipping test: Need at least 2 users in the database. Run: npx supabase db seed (or create users manually)")
 	}
@@ -118,7 +118,7 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	initialBalance := int32(100000)
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUserID).Execute()
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUser2ID).Execute()
-	
+
 	t.Logf("Using test users: %s, %s", fixture.testUserID, fixture.testUser2ID)
 }
 

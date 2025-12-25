@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowRight } from "lucide-react";
 import { loadCartFromStorage, saveFilterDatesToStorage } from "@/lib/utils/cart-storage";
 import { ROUTES } from "@/lib/config/routes";
-import { pluralize } from "@/lib/utils/text-utils";
 
 /**
  * Props for CartIndicator component

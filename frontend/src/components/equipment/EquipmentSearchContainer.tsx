@@ -13,7 +13,7 @@ import {
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
-import { Filter, Search } from "lucide-react";
+import { Filter } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import type { EquipmentSearchItem } from "@/types";
 

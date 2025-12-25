@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures';
 import { ReservationCartPOM } from '../../page-objects/reservation-cart.pom';
 import { E2E_CONFIG } from '../../constants';
-import { addToCart, goToCart, restoreCredits, getLastReservationId, calculateWorkerDates } from '../../helpers/reservation.helper';
+import { addToCart, goToCart, restoreCredits, calculateWorkerDates } from '../../helpers/reservation.helper';
 
 /**
  * Admin Reservation Management E2E tests.

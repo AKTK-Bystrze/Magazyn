@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RedirectManager, hasRole, type RedirectContext } from '../redirect-manager';
 import type { User } from '@supabase/supabase-js';
 import type { SessionInfo } from '../../../types';

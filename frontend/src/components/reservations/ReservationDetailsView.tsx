@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { useReservationDetail } from "@/hooks/useReservationDetail";
 import { formatDate, calculateDays, formatDateLocalized } from "@/lib/utils/date-utils";
-import { pluralize } from "@/lib/utils/text-utils";
 import {
   ICON_SIZE_SM,
   RESERVATION_STATUS_VIEW_UI_STRINGS as UI,

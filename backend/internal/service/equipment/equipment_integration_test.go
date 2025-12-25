@@ -196,13 +196,13 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 	// Check if our test equipment appears in the list
 	foundTestEquipment := false
 	favoriteCount := 0
-	
+
 	for _, eq := range resp.Equipment {
 		// Count how many are marked as favorites
 		if eq.IsFavorite != nil && *eq.IsFavorite {
 			favoriteCount++
 		}
-		
+
 		// Check if our test equipment is in the results
 		if eq.ID == fixture.equipmentID {
 			foundTestEquipment = true
@@ -223,7 +223,7 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 	} else {
 		t.Logf("✓ Found test equipment in list with %d total favorites", favoriteCount)
 	}
-	
+
 	// Test passes as long as the API returns successfully and favorites logic runs
 	// (even if the specific test equipment isn't in the filtered results)
 	t.Logf("✓ Equipment list test completed successfully")
@@ -242,7 +242,7 @@ func TestCheckAvailability_BookedDates_ReturnsUnavailable(t *testing.T) {
 	// Act: Check availability for overlapping range (days 6-8)
 	startDate := time.Now().AddDate(0, 0, 6).Format("2006-01-02")
 	endDate := time.Now().AddDate(0, 0, 8).Format("2006-01-02")
-	
+
 	query := types.AvailabilityQuery{
 		StartDate: startDate,
 		EndDate:   endDate,
@@ -269,7 +269,7 @@ func TestCheckAvailability_FreeDates_ReturnsAvailable(t *testing.T) {
 	// Act: Check availability for non-overlapping range (days 10-12)
 	startDate := time.Now().AddDate(0, 0, 10).Format("2006-01-02")
 	endDate := time.Now().AddDate(0, 0, 12).Format("2006-01-02")
-	
+
 	query := types.AvailabilityQuery{
 		StartDate: startDate,
 		EndDate:   endDate,

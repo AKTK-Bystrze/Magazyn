@@ -23,7 +23,6 @@ import {
   EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_MANAGER_UI_STRINGS,
 } from "@/lib/config/constants";
-import { formatDateLocalized } from "@/lib/utils/date-utils";
 import type { EquipmentSearchItem } from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;

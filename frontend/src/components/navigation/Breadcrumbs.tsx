@@ -43,8 +43,8 @@ export function Breadcrumbs({ currentPath, isAdmin = false }: BreadcrumbsProps) 
       setDynamicLabels(prev => ({ ...prev, [path]: label }));
     };
 
-    window.addEventListener('magazyn:breadcrumb-label' as any, handleUpdate);
-    return () => window.removeEventListener('magazyn:breadcrumb-label' as any, handleUpdate);
+    window.addEventListener('magazyn:breadcrumb-label', handleUpdate as EventListener);
+    return () => window.removeEventListener('magazyn:breadcrumb-label', handleUpdate as EventListener);
   }, []);
 
   if (BREADCRUMB_HIDDEN_PATHS.includes(currentPath)) {

@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures';
 import { EquipmentManagerPage } from '../../page-objects/equipment-manager.pom';
-import { TEST_IDS, E2E_CONFIG } from '../../constants';
+import { E2E_CONFIG } from '../../constants';
 import { hardDeleteEquipment } from '../../helpers/data-setup.helper';
 
 /**
@@ -33,7 +33,6 @@ test.describe('Admin Equipment Manager', () => {
     const timestamp = Date.now();
     const uniqueInternalId = `E2E-W${workerIndex}-${timestamp}`;
     const uniqueName = `E2E Equipment W${workerIndex} ${timestamp}`;
-    const updatedName = `Updated ${uniqueName}`;
 
     console.log(`[Worker ${workerIndex}] Starting equipment lifecycle test`);
 

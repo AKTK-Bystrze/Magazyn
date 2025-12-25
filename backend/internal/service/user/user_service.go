@@ -63,7 +63,7 @@ func (s *userService) BulkAdjustCredits(ctx context.Context, adminID string, req
 
 	return nil
 }
- 
+
 // GetProfile retrieves the profile of a user by ID.
 func (s *userService) GetProfile(ctx context.Context, id string) (*types.UserResponse, error) {
 	logger.Infof(ctx, "Fetching user profile for ID: %s", id)

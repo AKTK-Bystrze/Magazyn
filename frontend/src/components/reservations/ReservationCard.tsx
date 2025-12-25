@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Calendar, CreditCard, Edit2, User, X } from "lucide-react";
 import { formatDate, calculateDays } from "@/lib/utils/date-utils";
-import { pluralize } from "@/lib/utils/text-utils";
 import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
 import { cn } from "@/lib/utils";
 import { canChangeStatus } from "@/lib/utils/status-utils";

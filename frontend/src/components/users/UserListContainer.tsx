@@ -166,7 +166,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   }, []);
 
   const handleAdjustCreditsSubmit = React.useCallback(
-    async (command: any) => {
+    async (command: { userIds: string[]; amount: number; reason: string; description?: string }) => {
       await bulkAdjustCredits(command);
       setSuccessMessage(`Godzinki dostosowane dla ${selectedIds.length} użytkowników.`);
       setAdjustCreditsOpen(false);

@@ -6,7 +6,6 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { calculateDays, getTodayAsString } from "@/lib/utils/date-utils";
-import { pluralize } from "@/lib/utils/text-utils";
 import {
   ICON_SIZE_SM,
   EQUIPMENT_FILTER_UI_STRINGS,

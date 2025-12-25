@@ -1,5 +1,4 @@
 import { test, expect } from '../../fixtures';
-import { TEST_IDS } from '../../constants';
 
 /**
  * Authentication flow e2e tests.

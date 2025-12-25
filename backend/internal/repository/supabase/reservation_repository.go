@@ -15,9 +15,9 @@ import (
 )
 
 type reservationRepository struct {
-	client         *supabase.Client
-	supabaseURL    string
-	supabaseKey    string
+	client      *supabase.Client
+	supabaseURL string
+	supabaseKey string
 }
 
 // NewReservationRepository creates a new Supabase implementation of ReservationRepository
