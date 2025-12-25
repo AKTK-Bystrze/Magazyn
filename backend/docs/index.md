@@ -10,6 +10,7 @@ This document provides an overview of the backend project structure and key dire
 - **`docs/`**: Project documentation.
   - [Coding Standards](./coding_standards.md)
   - [Architecture & Design Patterns](./architecture.md)
+  - [Input Validation & Security](./validation_security.md)
 
 ### Internal Packages (`backend/internal/`)
 The `internal` directory contains the core application code, strictly separated by concern.
@@ -38,6 +39,9 @@ The `internal` directory contains the core application code, strictly separated 
   - `equipment.types.go`: specific equipment structs.
   - `errors.go`: Custom error types (`NotFoundError`, `ConflictError`).
   - `database.types.go`: Generated Supabase DB types.
+- **`validation/`**: Input validation and sanitization utilities.
+  - `postgrest.go`: PostgREST-specific sanitization, UUID/date/enum validation.
+  - `postgrest_test.go`: Comprehensive unit tests for validation functions.
 - **`testutils/`**: Utilities for testing.
 
 ## Key Architectural Patterns
