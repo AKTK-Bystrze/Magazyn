@@ -87,7 +87,9 @@ func main() {
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			logger.Errorf(r.Context(), "Failed to write health check response: %v", err)
+		}
 	})
 
 	mux.HandleFunc("POST /auth/login", authHandler.HandleLogin)
