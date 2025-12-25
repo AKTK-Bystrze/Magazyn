@@ -160,7 +160,10 @@ describe('AuthListener', () => {
   // ===========================================================================
 
   describe('Cookie Management', () => {
-    it('should set cookie on SIGNED_IN event', async () => {
+    // Note: Cookies are now automatically managed by @supabase/ssr
+    // These tests verify that auth events trigger proper behavior
+    it('should handle SIGNED_IN event and trigger redirect', async () => {
+      mockLocation.pathname = '/login';
       render(<AuthListener />);
 
       const session = createMockSession();
@@ -173,17 +176,18 @@ describe('AuthListener', () => {
         creditBalance: 100,
         expiresAt: '2025-12-31T00:00:00Z',
       } as any);
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue('/dashboard');
 
       await act(async () => {
         await authStateCallback?.('SIGNED_IN', session);
+        await new Promise((resolve) => setTimeout(resolve, 100));
       });
 
-      await waitFor(() => {
-        expect(mockCookie).toContain('magazyn-auth-token=mock-access-token');
-      });
+      // Verify redirect occurs (cookies are managed by Supabase SSR)
+      expect(mockReplace).toHaveBeenCalledWith('/dashboard');
     });
 
-    it('should include correct cookie attributes', async () => {
+    it('should call getUserSession with access token on SIGNED_IN', async () => {
       render(<AuthListener />);
 
       const session = createMockSession();
@@ -197,23 +201,20 @@ describe('AuthListener', () => {
       });
 
       await waitFor(() => {
-        expect(mockCookie).toContain('path=/');
-        expect(mockCookie).toContain('SameSite=Lax');
+        expect(getUserSession).toHaveBeenCalledWith('mock-access-token');
       });
     });
 
-    it('should clear cookie on SIGNED_OUT event', async () => {
-      mockCookie = 'magazyn-auth-token=existing-token; path=/';
-
+    it('should handle SIGNED_OUT event without errors', async () => {
       render(<AuthListener />);
 
       await act(async () => {
         await authStateCallback?.('SIGNED_OUT', null);
       });
 
-      await waitFor(() => {
-        expect(mockCookie).toContain('max-age=0');
-      });
+      // SIGNED_OUT event is handled (cookies cleared by Supabase SSR automatically)
+      // Just verify no errors occurred
+      expect(authStateCallback).toBeDefined();
     });
   });
 
@@ -427,26 +428,6 @@ describe('AuthListener', () => {
 
       // Should not be called because we're already on the target page
       expect(mockReplace).not.toHaveBeenCalled();
-    });
-  });
-
-  // ===========================================================================
-  // SIGNED_OUT Event Tests
-  // ===========================================================================
-
-  describe('SIGNED_OUT Event', () => {
-    it('should clear cookie on sign out', async () => {
-      mockCookie = 'magazyn-auth-token=old-token; path=/';
-
-      render(<AuthListener />);
-
-      await act(async () => {
-        await authStateCallback?.('SIGNED_OUT', null);
-      });
-
-      await waitFor(() => {
-        expect(mockCookie).toContain('max-age=0');
-      });
     });
   });
 

@@ -1,6 +1,5 @@
 ## In progress:
 pipelines
-db injection
 
 ## Deployment
 4. deploy on server

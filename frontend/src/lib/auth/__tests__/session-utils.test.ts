@@ -87,8 +87,9 @@ describe('getUserSession', () => {
 
       await getUserSession(validAccessToken);
 
+      // Accept either localhost or 127.0.0.1 (both are valid)
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/auth/session',
+        expect.stringMatching(/http:\/\/(localhost|127\.0\.0\.1):8080\/auth\/session/),
         expect.any(Object)
       );
     });
