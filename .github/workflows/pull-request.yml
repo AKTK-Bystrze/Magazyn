@@ -27,6 +27,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: 'backend/go.mod'
+          cache-dependency-path: backend/go.sum
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
@@ -66,6 +67,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: 'backend/go.mod'
+          cache-dependency-path: backend/go.sum
       
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -76,6 +78,13 @@ jobs:
         run: |
           supabase start
           supabase status
+      
+      - name: Verify Supabase Health
+        run: |
+          echo "Verifying Supabase is healthy..."
+          curl -sf http://127.0.0.1:54321/rest/v1/ \
+            -H "apikey: $PUBLIC_SUPABASE_ANON_KEY" || exit 1
+          echo "Supabase is healthy"
       
       - name: Unit Tests
         working-directory: ./backend
@@ -129,6 +138,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: 'backend/go.mod'
+          cache-dependency-path: backend/go.sum
           
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -147,6 +157,13 @@ jobs:
           supabase start
           supabase status
 
+      - name: Verify Supabase Health
+        run: |
+          echo "Verifying Supabase is healthy..."
+          curl -sf http://127.0.0.1:54321/rest/v1/ \
+            -H "apikey: $PUBLIC_SUPABASE_ANON_KEY" || exit 1
+          echo "Supabase is healthy"
+
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
@@ -155,16 +172,38 @@ jobs:
         working-directory: ./frontend
         run: npx playwright install --with-deps
 
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+
       - name: Start Backend
         working-directory: ./backend
         run: |
-          go run cmd/api/main.go & 
-          echo "Backend started (pid $!)"
-          sleep 5
+          go run cmd/api/main.go &
+          BACKEND_PID=$!
+          echo "Backend started (pid $BACKEND_PID)"
+          
+          # Wait for backend to be healthy (max 30 seconds)
+          echo "Waiting for backend health check..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+              echo "Backend is healthy after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          
+          echo "ERROR: Backend failed to start within 30 seconds"
+          exit 1
 
       - name: Run E2E Tests (4 parallel workers)
         working-directory: ./frontend
-        run: npm run e2e -- --workers=4
+        run: |
+          set -e  # Exit immediately if any command fails
+          npx playwright test --workers=4
+          E2E_EXIT_CODE=$?
+          echo "E2E tests completed with exit code: $E2E_EXIT_CODE"
+          exit $E2E_EXIT_CODE
 
       - name: Upload Playwright Report
         if: always()
