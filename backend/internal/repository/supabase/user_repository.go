@@ -9,6 +9,7 @@ import (
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 
 	"github.com/supabase-community/supabase-go"
 )
@@ -43,8 +44,10 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 	}
 
 	if search != "" {
+		// Sanitize search term to prevent PostgREST operator injection
 		// Use ILIKE for case-insensitive search on username or email
-		filter := fmt.Sprintf("username.ilike.%%%s%%,email.ilike.%%%s%%", search, search)
+		searchTerm := validation.SanitizeSearchTerm(search)
+		filter := fmt.Sprintf("username.ilike.%%%s%%,email.ilike.%%%s%%", searchTerm, searchTerm)
 		query = query.Or(filter, "")
 	}
 

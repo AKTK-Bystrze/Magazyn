@@ -9,6 +9,7 @@ import (
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 
 	"github.com/supabase-community/postgrest-go"
 	"github.com/supabase-community/supabase-go"
@@ -49,7 +50,8 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 		baseQuery = baseQuery.Eq("status", *query.Status)
 	}
 	if query.Search != nil && *query.Search != "" {
-		searchTerm := *query.Search
+		// Sanitize search term to prevent PostgREST operator injection
+		searchTerm := validation.SanitizeSearchTerm(*query.Search)
 		baseQuery = baseQuery.Or(fmt.Sprintf("name.ilike.%%%s%%,description.ilike.%%%s%%", searchTerm, searchTerm), "")
 	}
 

@@ -12,6 +12,7 @@ import (
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service/user"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 // UserHandler handles HTTP requests for user management.
@@ -57,6 +58,14 @@ func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 
 	role := r.URL.Query().Get("role")
 	search := r.URL.Query().Get("search")
+
+	// Validate search length
+	if search != "" {
+		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
+			return
+		}
+	}
 
 	resp, err := h.service.ListUsers(ctx, page, perPage, role, search)
 	if err != nil {

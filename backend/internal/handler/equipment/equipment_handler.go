@@ -10,6 +10,7 @@ import (
 	"magazyn/backend/internal/logger"
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 type EquipmentHandler struct {
@@ -35,12 +36,27 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 
 	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
+		// Validate type_id is a valid UUID
+		if err := validation.ValidateUUID(typeID); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid type_id format")
+			return
+		}
 		query.TypeID = &typeID
 	}
 	if status := r.URL.Query().Get("status"); status != "" {
+		// Validate status is a valid equipment status
+		if err := validation.ValidateEnum(status, constants.ValidEquipmentStatuses); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment status")
+			return
+		}
 		query.Status = &status
 	}
 	if search := r.URL.Query().Get("search"); search != "" {
+		// Validate search length to prevent abuse
+		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
+			return
+		}
 		query.Search = &search
 	}
 	if inc := r.URL.Query().Get("include_archived"); inc == "true" {
@@ -103,6 +119,11 @@ func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request)
 	id := r.PathValue("id") // Go 1.22+
 	if id == "" {
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
+		return
+	}
+	// Validate ID is a valid UUID
+	if err := validation.ValidateUUID(id); err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment ID format")
 		return
 	}
 

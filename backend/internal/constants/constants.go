@@ -103,3 +103,26 @@ const (
 	MinMonth      = 1  // Minimum month value
 	MaxMonth      = 12 // Maximum month value
 )
+
+// ============================================================================
+// Input Validation Constants
+// ============================================================================
+
+// ValidEquipmentStatuses lists all valid equipment status values for validation.
+var ValidEquipmentStatuses = []string{EquipmentStatusOK, EquipmentStatusBroken, EquipmentStatusBlocked}
+
+// ValidReservationStatuses lists all valid reservation status values for validation.
+var ValidReservationStatuses = []string{
+	ReservationStatusPending,
+	ReservationStatusRented,
+	ReservationStatusReturned,
+	ReservationStatusDenied,
+	ReservationStatusCancelled,
+}
+
+// Input length constraints
+const (
+	MaxSearchLength     = 100 // Maximum length for search queries
+	MaxInternalIDLength = 50  // Maximum length for equipment internal IDs
+	MinPasswordLength   = 8   // Minimum password length for user accounts
+)
