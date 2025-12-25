@@ -74,8 +74,10 @@ export class AdminUsersPage {
   async setUserStatus(isActive: boolean) {
     if (isActive) {
       await this.statusActive.click();
+      await expect(this.statusActive).toHaveAttribute('data-state', 'checked');
     } else {
       await this.statusDisabled.click();
+      await expect(this.statusDisabled).toHaveAttribute('data-state', 'checked');
     }
   }
 
@@ -83,7 +85,9 @@ export class AdminUsersPage {
    * Saves the changes in the edit modal.
    */
   async saveChanges() {
-    await this.saveButton.click({ force: true });
+    await this.saveButton.click();
+    // Check if error message appears before assuming success
+    // Wait for modal to disappear
     await expect(this.editModal).not.toBeVisible();
   }
 
