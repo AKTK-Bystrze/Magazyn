@@ -4,9 +4,19 @@ on:
   pull_request:
     branches: [ main ]
 
+# Local Supabase credentials (standard for supabase start)
+env:
+  PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+  SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+  PORT: 8080
+  E2E_TEST_EMAIL: test@example.com
+  E2E_BASE_URL: http://localhost:4321
+  CORS_ALLOWED_ORIGINS: http://localhost:4321
+
 jobs:
   # ------------------------------------------------------------------
-  # Stage 1: Linting
+  # Stage 1: Linting (parallel)
   # ------------------------------------------------------------------
   lint-backend:
     name: Lint Backend
@@ -43,21 +53,38 @@ jobs:
         run: npm run lint
 
   # ------------------------------------------------------------------
-  # Stage 2: Testing (Parallel)
+  # Stage 2: Unit & Integration Tests (parallel, with local Supabase)
   # ------------------------------------------------------------------
   test-backend:
-    name: Unit Test Backend
+    name: Unit & Integration Test Backend
     needs: [lint-backend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version-file: 'backend/go.mod'
-      - name: Test (with coverage)
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Start Supabase
+        run: |
+          supabase start
+          supabase status
+      
+      - name: Unit Tests
         working-directory: ./backend
         run: go test ./internal/... -v -short -coverprofile=coverage.out
+      
+      - name: Integration Tests
+        working-directory: ./backend
+        run: go test ./internal/... -v -tags=integration
+      
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
         with:
@@ -88,11 +115,12 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/
 
+  # ------------------------------------------------------------------
+  # Stage 3: E2E Tests (after unit+integration pass, 4 parallel workers)
+  # ------------------------------------------------------------------
   e2e-test:
     name: E2E Test
-    needs: [lint-backend, lint-frontend]
-    # "in the e2e job set the "integration" environment"
-    environment: integration
+    needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,6 +137,16 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: |
+          supabase start
+          supabase status
+
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
@@ -119,26 +157,14 @@ jobs:
 
       - name: Start Backend
         working-directory: ./backend
-        env:
-          PORT: 8080
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           go run cmd/api/main.go & 
           echo "Backend started (pid $!)"
           sleep 5
 
-      - name: Run E2E Tests
+      - name: Run E2E Tests (4 parallel workers)
         working-directory: ./frontend
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-          E2E_BASE_URL: http://localhost:4321
-        run: npm run e2e
+        run: npm run e2e -- --workers=4
 
       - name: Upload Playwright Report
         if: always()
@@ -149,7 +175,7 @@ jobs:
           retention-days: 30
 
   # ------------------------------------------------------------------
-  # Stage 3: Status
+  # Stage 4: Status Comment
   # ------------------------------------------------------------------
   status-comment:
     name: Status Comment
@@ -167,5 +193,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '### ✅ Verification Successful\n\nAll checks passed:\n- **Backend**: Lint & Unit Tests\n- **Frontend**: Lint & Unit Tests\n- **E2E**: Integrated Flows'
+              body: '### ✅ Verification Successful\n\nAll checks passed:\n- **Backend**: Lint, Unit & Integration Tests\n- **Frontend**: Lint & Unit Tests\n- **E2E**: Parallel (4 workers)'
             })
