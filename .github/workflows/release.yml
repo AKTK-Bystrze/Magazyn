@@ -1,0 +1,206 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# Environment from GitHub Repository Secrets/Variables
+env:
+  PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+  PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+  E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+  E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+  PORT: 8080
+  E2E_BASE_URL: http://localhost:4321
+  CORS_ALLOWED_ORIGINS: http://localhost:4321
+  # Supabase CLI needs the DB password for migrations
+  SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+
+jobs:
+  release:
+    name: Build, Test & Tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # For creating tags
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for tag creation
+
+      # ------------------------------------------------------------------
+      # Setup Tools
+      # ------------------------------------------------------------------
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'backend/go.mod'
+          cache-dependency-path: backend/go.sum
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # ------------------------------------------------------------------
+      # Push Migrations to Remote Test DB
+      # ------------------------------------------------------------------
+      - name: Link to Test Supabase Project
+        run: |
+          # Extract project ref from URL (e.g., https://xyz.supabase.co -> xyz)
+          PROJECT_REF=$(echo "$PUBLIC_SUPABASE_URL" | sed -E 's|https://([^.]+)\.supabase\.co.*|\1|')
+          echo "Linking to project: $PROJECT_REF"
+          supabase link --project-ref "$PROJECT_REF"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Push Migrations to Test DB
+        run: |
+          echo "Pushing migrations to remote test database..."
+          supabase db push --include-all
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # ------------------------------------------------------------------
+      # Build & Start Services
+      # ------------------------------------------------------------------
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        env:
+          PUBLIC_BACKEND_URL: http://localhost:8080
+          PUBLIC_APP_URL: http://localhost:4321
+        run: npm run build
+
+      - name: Start Backend
+        working-directory: ./backend
+        run: |
+          go run cmd/api/main.go &
+          BACKEND_PID=$!
+          echo "Backend started (pid $BACKEND_PID)"
+          
+          echo "Waiting for backend health check..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+              echo "Backend is healthy after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          
+          echo "ERROR: Backend failed to start within 30 seconds"
+          exit 1
+
+      - name: Start Frontend
+        working-directory: ./frontend
+        run: |
+          npm run preview &
+          FRONTEND_PID=$!
+          echo "Frontend started (pid $FRONTEND_PID)"
+          
+          echo "Waiting for frontend..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:4321 > /dev/null 2>&1; then
+              echo "Frontend is ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          
+          echo "ERROR: Frontend failed to start within 30 seconds"
+          exit 1
+        env:
+          HOST: 0.0.0.0
+          PORT: 4321
+
+      # ------------------------------------------------------------------
+      # Run E2E Tests
+      # ------------------------------------------------------------------
+      - name: Run E2E Tests
+        working-directory: ./frontend
+        run: |
+          set -e
+          npx playwright test --workers=4 --retries=1
+          E2E_EXIT_CODE=$?
+          echo "E2E tests completed with exit code: $E2E_EXIT_CODE"
+          exit $E2E_EXIT_CODE
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+      # ------------------------------------------------------------------
+      # Create Version Tag (only on success)
+      # ------------------------------------------------------------------
+      - name: Determine Next Version
+        id: version
+        run: |
+          # Get latest tag
+          LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          
+          if [ -z "$LATEST_TAG" ]; then
+            # No tags exist, start at v1.0.0
+            NEW_VERSION="v1.0.0"
+          else
+            # Parse semantic version and increment patch
+            # e.g., v1.2.3 -> major=1, minor=2, patch=3
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            
+            # Increment patch version
+            NEW_PATCH=$((PATCH + 1))
+            NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+          fi
+          
+          echo "Latest tag: $LATEST_TAG"
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git tag -a "${{ steps.version.outputs.version }}" \
+            -m "Release ${{ steps.version.outputs.version }}"
+          
+          git push origin "${{ steps.version.outputs.version }}"
+          
+          echo "✅ Created and pushed tag: ${{ steps.version.outputs.version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## Release ${{ steps.version.outputs.version }}
+            
+            **Commit**: ${{ github.sha }}
+            **Build**: ${{ github.run_number }}
+            
+            ### Verified
+            - ✅ Migrations pushed to test database
+            - ✅ E2E tests passed
+          draft: false
+          prerelease: false

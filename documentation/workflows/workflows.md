@@ -9,10 +9,7 @@
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | [pull-request.yml](#pull-request) | PR to main | Full test suite (lint, unit, integration, E2E) |
-| [deploy.yml](#deploy) | Version tags (`v*`) | Build Docker images and deploy to VPS |
-| [build.yaml](#build) | Push/PR to main | Go backend build verification |
-| [lint.yaml](#lint) | Push/PR to main | Go backend linting |
-| [test.yaml](#test) | Push/PR to main | Go backend unit tests |
+| [release.yml](#release) | Push to main | Build, E2E on test DB, create version tag |
 
 ---
 
@@ -47,82 +44,82 @@ flowchart LR
     E2E --> SC
 ```
 
-### Jobs
-
-| Job | Description | Dependencies |
-|-----|-------------|--------------|
-| `lint-backend` | golangci-lint on `./backend` | None |
-| `lint-frontend` | ESLint on `./frontend` | None |
-| `test-backend` | Unit + Integration tests with local Supabase | `lint-backend` |
-| `test-frontend` | Vitest unit tests | `lint-frontend` |
-| `e2e-test` | Playwright E2E (4 parallel workers) | `test-backend`, `test-frontend` |
-| `status-comment` | PR success comment | All tests |
-
-### Environment
-
-Uses **local Supabase** (`supabase start`) with standard demo credentials - no GitHub secrets required.
+Uses **local Supabase** (`supabase start`) - no secrets required.
 
 ---
 
-## Deploy
+## Release
 
-**File**: [deploy.yml](file:///e:/bystrze/Magazyn/.github/workflows/deploy.yml)
+**File**: [release.yml](file:///e:/bystrze/Magazyn/.github/workflows/release.yml)
 
-**Trigger**: Version tags (e.g., `v1.0.0`)
+**Trigger**: Push to `main` branch (after PR merge)
 
 ### Pipeline Stages
 
 ```mermaid
 flowchart LR
-    BP[build-and-push] --> D[deploy]
+    Migrate["Push Migrations<br/>to Test DB"] --> Build["Build Services"]
+    Build --> E2E["E2E Tests"]
+    E2E -->|Pass| Tag["Create Version Tag<br/>(vX.Y.Z)"]
+    E2E -->|Fail| Stop["Stop - No Tag"]
 ```
-
-### Jobs
-
-| Job | Description |
-|-----|-------------|
-| `build-and-push` | Build backend/frontend Docker images, push to GHCR |
-| `deploy` | SSH to VPS, pull images, restart containers |
 
 ### Required Secrets
 
 | Secret | Description |
 |--------|-------------|
-| `PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `VPS_HOST` | VPS hostname/IP |
-| `VPS_USER` | SSH username |
-| `VPS_SSH_KEY` | SSH private key |
+| `TEST_SUPABASE_URL` | Remote test Supabase project URL |
+| `TEST_SUPABASE_ANON_KEY` | Test project anon key |
+| `TEST_SUPABASE_SERVICE_ROLE_KEY` | Test project service role key |
+| `TEST_SUPABASE_DB_PASSWORD` | Test project DB password |
+| `SUPABASE_ACCESS_TOKEN` | Supabase CLI access token |
+| `E2E_TEST_EMAIL` | Test user email |
+| `E2E_TEST_PASSWORD` | Test user password |
 
 ---
 
-## Additional Workflows
+## Manual VPS Deployment
 
-These workflows run on push/PR to main alongside the main pull-request workflow:
+Scripts for production deployment on VPS.
 
-### Build
+### Deploy
 
-**File**: [build.yaml](file:///e:/bystrze/Magazyn/.github/workflows/build.yaml)
+**File**: [deploy.sh](file:///e:/bystrze/Magazyn/infra/scripts/deploy.sh)
 
-Builds Go backend from `./backend/cmd/api`.
+```bash
+# Deploy latest main
+./infra/scripts/deploy.sh
 
-### Lint
+# Deploy specific version
+./infra/scripts/deploy.sh v1.2.3
+```
 
-**File**: [lint.yaml](file:///e:/bystrze/Magazyn/.github/workflows/lint.yaml)
+**What it does**:
+1. Backs up current containers (`docker commit`)
+2. Pulls code from git
+3. Builds new Docker images
+4. Stops old → Starts new containers
+5. Health checks
+6. Auto-rollback on failure
 
-Runs golangci-lint on `./backend`.
+### Rollback
 
-### Test
+**File**: [rollback.sh](file:///e:/bystrze/Magazyn/infra/scripts/rollback.sh)
 
-**File**: [test.yaml](file:///e:/bystrze/Magazyn/.github/workflows/test.yaml)
+```bash
+# Rollback to last backup
+./infra/scripts/rollback.sh
 
-Runs unit tests on `./backend` (short mode, no integration tests).
+# Rollback to specific backup
+./infra/scripts/rollback.sh backup-20251226-143000
+```
+
+> [!WARNING]
+> Rollback does NOT revert database migrations. Manual DB restore required if needed.
 
 ---
 
 ## Local Testing
-
-Before pushing, run tests locally:
 
 ```bash
 # Backend
@@ -131,3 +128,4 @@ cd backend && make lint && make test-unit && make test-integration
 # Frontend
 cd frontend && npm run lint && npm run test && npm run e2e
 ```
+

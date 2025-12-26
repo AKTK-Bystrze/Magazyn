@@ -1,8 +1,5 @@
 ## In progress:
-pipelines
-
-## Deployment
-4. deploy on server
+deploy, review docker-compose.prod.yml
 
 ## Equipment Views refactor
 - Equipment manager + viewer component reuse improved
