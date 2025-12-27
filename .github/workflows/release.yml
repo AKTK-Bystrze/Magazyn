@@ -95,7 +95,7 @@ jobs:
           echo "Pushing migrations to project: $PROJECT_REF"
           
           ENCODED_PASSWORD=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${SUPABASE_DB_PASSWORD}', safe=''))")
-          DB_URL="postgresql://postgres.${PROJECT_REF}:${ENCODED_PASSWORD}@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+          DB_URL="postgresql://postgres:${ENCODED_PASSWORD}@db.${PROJECT_REF}.supabase.co:5432/postgres"
           
           echo "Pushing migrations to remote test database..."
           supabase db push --db-url "$DB_URL" --include-all
