@@ -77,7 +77,7 @@ jobs:
         with:
           version: latest
 
-      - name: Link to Supabase Project
+      - name: Configure Supabase Project
         run: |
           if [ -z "$PUBLIC_SUPABASE_URL" ]; then
             echo "ERROR: PUBLIC_SUPABASE_URL is empty. Make sure TEST_SUPABASE_URL secret is configured."
@@ -92,15 +92,27 @@ jobs:
             exit 1
           fi
           
-          echo "Linking to project: $PROJECT_REF"
-          supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+          echo "Configuring project: $PROJECT_REF"
+          
+          mkdir -p supabase/.temp
+          cat > supabase/.temp/project-ref <<EOF
+          $PROJECT_REF
+          EOF
+          
+          ENCODED_PASSWORD=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${SUPABASE_DB_PASSWORD}', safe=''))")
+          DB_URL="postgresql://postgres:${ENCODED_PASSWORD}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+          
+          echo "DB_URL=$DB_URL" >> supabase/.temp/db-url
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
       - name: Push Migrations to Test DB
         run: |
-          echo "Pushing migrations to remote test database..."
-          supabase db push --include-all
+          PROJECT_REF=$(cat supabase/.temp/project-ref)
+          DB_URL=$(cat supabase/.temp/db-url | cut -d'=' -f2-)
+          
+          echo "Pushing migrations to project: $PROJECT_REF"
+          supabase db push --db-url "$DB_URL" --include-all
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
