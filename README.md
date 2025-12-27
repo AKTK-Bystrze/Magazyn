@@ -1,11 +1,13 @@
 # Equipment Rental System (Magazyn)
 
-> A modern, mobile-first web application for managing equipment rentals and member credits for a kayaking club.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Astro](https://img.shields.io/badge/Astro-5.16-orange.svg)](https://astro.build/)
 [![React](https://img.shields.io/badge/React-19.0-blue.svg)](https://reactjs.org/)
+[![Go](https://img.shields.io/badge/Go-1.22-blue.svg)](https://golang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-1.22-blue.svg)](https://supabase.com/)
+[![Docker](https://img.shields.io/badge/Docker-24.0-blue.svg)](https://www.docker.com/)
+[![Caddy](https://img.shields.io/badge/Caddy-2.6-blue.svg)](https://caddyserver.com/)
+
 
 ## 📋 Table of Contents
 
@@ -19,9 +21,9 @@
 
 ## 📖 About
 
-The Equipment Rental System replaces an inconvenient Google Form-based rental process with a modern, mobile-accessible web application. The system enables club members to:
+The Equipment Rental System replaces an inconvenient Google Form-based rental process with a mobile-accessible web application. The system enables club members to:
 
-- 🚣 Rent kayaking equipment using a credit system called "godzinki"
+- 🚣 Rent kayaking equipment using a credit system
 - 📅 View real-time equipment availability with calendar views
 - 💳 Manage credit balance and request credits for club work
 - 📱 Access the system from any mobile or desktop device
@@ -43,44 +45,44 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 - Comprehensive audit trail for all changes
 - Mobile-optimized responsive design
 
-## 🛠 Tech Stack
+## 🛠 Tech Stack & Architecture
 
-### Frontend
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Astro 5 (SSR) + React 19 + TypeScript 5 + TanStack Query |
+| **Backend** | Go (Gin) + Gmail SMTP |
+| **Database** | Supabase (PostgreSQL + Auth + Storage) |
+| **Deploy** | Docker Compose + Caddy |
 
-- **[Astro 5](https://astro.build/)** - SSR-configured static site generator
-- **[React 19](https://reactjs.org/)** - Interactive UI components (Calendar, Cart, Checkout)
-- **[TypeScript 5](https://www.typescriptlang.org/)** - Type-safe development
-- **[TanStack Query](https://tanstack.com/query)** - API response caching and state management
+```
+┌──────────────────────────────────────────────────────────┐
+│                    Browser (Client)                      │
+├──────────────────────────────────────────────────────────┤
+│  Caddy Reverse Proxy (HTTPS/443)                         │
+│  ├─ /api/* → Go Backend (:8080)                          │
+│  └─ /*     → Astro Frontend (:3000)                      │
+├──────────────────────────────────────────────────────────┤
+│  Go Backend            │  Astro + React                  │
+│  ├─ Business Logic     │  ├─ SSR Pages                   │
+│  ├─ JWT Validation     │  ├─ API Proxies                 │
+│  └─ Supabase Client    │  └─ Supabase Auth               │
+├──────────────────────────────────────────────────────────┤
+│              Supabase Cloud (PostgreSQL + RLS)           │
+└──────────────────────────────────────────────────────────┘
+```
 
-### Backend
+## 📁 Project Structure
 
-- **[Go (Golang)](https://golang.org/)** - Stateless business logic and REST API
-- **Gmail SMTP** - Transactional email notifications
+```
+Magazyn/
+├── frontend/          # Astro + React (src/, public/, e2e/)
+├── backend/           # Go API (cmd/, internal/handler, service, types)
+├── supabase/          # Migrations, seed.sql, SQL functions
+├── infra/             # Docker, Caddyfile, deployment config
+└── documentation/     # PRD, techstack, db-plan
+```
 
-### Infrastructure & Data
-
-- **[Supabase Cloud](https://supabase.com/)** - Managed backend services (Free Tier)
-  - **PostgreSQL** - Database with Row Level Security (RLS)
-  - **Supabase Auth** - Passwordless magic link authentication
-  - **Supabase Storage** - Equipment image storage (1GB limit)
-
-### Deployment
-
-- **DigitalOcean VPS** - Application hosting
-- **Docker Compose** - Container orchestration
-  - Container 1: Go API (port 8080)
-  - Container 2: Astro SSR (port 3000)
-  - Container 3: Caddy reverse proxy (HTTPS/443)
-
-### Architecture
-
-This project follows a **Hybrid "Light" Architecture**, maximizing performance by hosting application logic on a VPS while offloading state management to Supabase Cloud:
-
-- **Caddy** acts as reverse proxy with automatic HTTPS (Let's Encrypt)
-- Routes `/api/*` → Go Backend
-- Routes `/*` → Astro Frontend
-- Frontend directly accesses Supabase for auth and admin uploads
-- Backend verifies Supabase JWTs and handles business logic
+> See [frontend/docs/architecture.md](frontend/docs/architecture.md) and [backend/docs/architecture.md](backend/docs/architecture.md) for detailed architecture documentation.
 
 ## 🚀 Getting Started
 
@@ -95,36 +97,13 @@ This project follows a **Hybrid "Light" Architecture**, maximizing performance b
 
 1. **Clone the repository**
 
-   ```bash
-   git clone <repository-url>
-   cd Magazyn
-   ```
-
 2. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-3. **Configure environment variables**
-
-   Create a `.env` file in the root directory with:
-
-   ```env
-   # Supabase Configuration
-   PUBLIC_SUPABASE_URL=your_supabase_url
-   PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-   # Go Backend Configuration
-   GO_API_URL=http://localhost:8080
-
-   # Gmail SMTP (for notifications)
-   GMAIL_SMTP_USER=your_email@gmail.com
-   GMAIL_SMTP_PASSWORD=your_app_password
-   ```
-
-4. **Start local Supabase**
+3. **Start local Supabase**
 
    Start the local Supabase services (database, auth, storage) using Docker:
 
@@ -132,8 +111,31 @@ This project follows a **Hybrid "Light" Architecture**, maximizing performance b
    npx supabase start
 
    npx supabase status -o env
-```
+   ```
+
    Copy the API URL and Anon Key from the output to your `.env` file.
+
+
+4. **Configure environment variables**
+
+   Copy `.env.example` to `.env` and fill in your values:
+
+   ```env
+   # Supabase (Frontend & Backend)
+   PUBLIC_SUPABASE_URL=<your-supabase-url>
+   PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+   SUPABASE_SERVICE_ROLE_KEY=<service-role-key>  # Backend only - keep secret!
+
+   # Backend API
+   PUBLIC_BACKEND_URL=http://localhost:8080
+   PORT=8080
+   LOG_LEVEL=DEBUG
+   CORS_ALLOWED_ORIGINS=http://localhost:4321,http://localhost:3000
+
+   # App URL (for redirects and magic links)
+   PUBLIC_APP_URL=localhost:3000
+   ```
+
 
 5. **Start development server**
 
@@ -151,6 +153,64 @@ This project follows a **Hybrid "Light" Architecture**, maximizing performance b
    ```
 
    The API will be available at `http://localhost:8080`
+
+### Database Setup for Development
+
+Populate your local Supabase database with test users and sample data:
+
+#### 1. Seed Test Users and Data
+
+Run the seed file to create test users and profiles:
+
+```bash
+npx supabase db seed
+```
+
+This creates two test users from [`supabase/seed.sql`](supabase/seed.sql):
+
+| Email                 | Role  | Credit Balance | User ID                              |
+|-----------------------|-------|----------------|--------------------------------------|
+| testuser1@example.com | user  | 100,000        | 11111111-1111-1111-1111-111111111111 |
+| testuser2@example.com | admin | 100,000        | 22222222-2222-2222-2222-222222222222 |
+
+> [!NOTE]
+> These users are primarily for backend integration tests, which require at least 2 users in the database.
+
+#### 2. E2E Test Users (Optional)
+
+For running E2E tests, you need additional users with password-based authentication:
+
+1. **Create users in Supabase Auth** (Dashboard → Authentication → Users):
+   - `test.dev.g6@gmail.com` (user role)
+   - `test.admin.g6@gmail.com` (admin role)
+   - `test.superadmin.g6@gmail.com` (super_admin role)
+   - Password: `TestSecurePassword123!`
+   - Enable "Auto Confirm User" when creating
+
+2. **Configure profiles** by running [`frontend/e2e/setup/test-users.sql`](frontend/e2e/setup/test-users.sql) in Supabase SQL Editor
+
+3. **Set environment variables** in `.env`:
+   ```env
+   SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+   E2E_TEST_EMAIL=test.dev.g6@gmail.com
+   E2E_TEST_PASSWORD=TestSecurePassword123!
+   ```
+
+> [!TIP]
+> See [`frontend/docs/e2e-testing.md`](frontend/docs/e2e-testing.md) for complete E2E testing documentation.
+
+#### 3. Running Integration Tests
+
+Backend integration tests connect to the local Supabase instance and require:
+
+- Local Supabase running (`npx supabase start`)
+- At least 2 users in the database (created by `npx supabase db seed`)
+- Environment variables set (`PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`)
+
+```bash
+cd backend
+go test -tags=integration ./...
+```
 
 ### Production Deployment
 
@@ -188,147 +248,12 @@ This project uses **Husky** and **lint-staged** for pre-commit code formatting:
 - Automatically formats `.js`, `.jsx`, `.ts`, `.tsx`, `.json`, and `.md` files
 - Uses Prettier for consistent code style
 - Runs on every commit
-
-## 🎯 Project Scope
-
-### MVP Features (In Scope)
-
-**User Management**
-
-- ✅ Admin-created user accounts (no self-registration)
-- ✅ Three user roles: User, Admin, SuperAdmin
-- ✅ Passwordless email authentication via Supabase
-
-**Credit System**
-
-- ✅ Per-day credit rates (Kayak: 4, Paddle: 2, Other: 1 credit/day)
-- ✅ Automatic credit deduction on reservation creation
-- ✅ Credit refunds on reservation denial/cancellation
-- ✅ Credit request workflow with SuperAdmin approval
-- ✅ Complete credit change history with audit trail
-
-**Equipment Management**
-
-- ✅ Multi-filter search (type, name, description, availability)
-- ✅ Equipment status tracking (ok/broken)
-- ✅ Image uploads (2MB limit, JPEG/PNG)
-- ✅ Maintenance logs with status history
-- ✅ Favorites algorithm (top 3 per type based on rental history)
-
-**Reservation System**
-
-- ✅ Multi-item reservation as single transaction
-- ✅ Flexible date selection (start/end dates)
-- ✅ Real-time availability checking
-- ✅ User self-service date modification (PENDING only)
-- ✅ User cancellation capability (PENDING only)
-- ✅ Admin bulk operations
-- ✅ Complete audit trail for all reservation changes
-
-**Calendar & Visualization**
-
-- ✅ 30-day calendar view (current + 29 days)
-- ✅ Two modes: All reservations & Item-specific
-- ✅ Color-coded availability indicators
-- ✅ Clickable dates for quick search
-
-**Admin Dashboard**
-
-- ✅ Summary view (pending, overdue, today's rentals)
-- ✅ Quick filters (PENDING, Today, Overdue, All)
-- ✅ Overdue items panel with user contact info
-- ✅ Create reservations on behalf of users
-- ✅ Bulk status changes with preview
-
-**Analytics & Reporting**
-
-- ✅ Year/month filtering
-- ✅ Individual item statistics
-- ✅ Most rented items tracking
-- ✅ User activity analytics
-
-**Notifications**
-
-- ✅ Email confirmation on reservation creation
-- ✅ Single email per session listing all items
-- ✅ Rate-limited admin notifications
-
-### Out of Scope (Not in MVP)
-
-- ❌ Backend service logic changes (uses existing Go backend)
-- ❌ Database schema modifications (uses existing schema)
-- ❌ Native mobile applications (web-only)
-- ❌ User self-registration
-- ❌ User profile self-editing
-- ❌ Advanced analytics with data visualizations/exports
-- ❌ Multi-language support
-- ❌ WCAG accessibility compliance
-- ❌ Performance optimization beyond basic functionality
-- ❌ Data migration tools from Google Forms
-- ❌ "Remember me" persistent login
-- ❌ Social features (reviews, ratings)
+reviews, ratings)
 - ❌ AI-powered equipment recommendations
 
-### Technical Constraints
-
-- Must work with existing Go backend API without modifications
-- Must work with existing PostgreSQL database schema
-- Must use Supabase passwordless authentication
-- Must integrate with existing email notification system
-- Frontend-only implementation scope
-
-### Browser Support
-
-- **Chrome only** (primary target for MVP)
-
-## 📊 Project Status
-
-**Current Status:** 🟡 In Development (MVP Phase)
-
-### Completed
-
-- ✅ Product Requirements Document (PRD)
-- ✅ Technology stack definition
-- ✅ Database schema design
-- ✅ Initial database migration
-- ✅ Reservation audit table design
-- ✅ Development environment setup
-
-### In Progress
-
-- 🔄 Frontend implementation (Astro + React)
-- 🔄 Supabase integration (Auth, Storage, Database)
-- 🔄 Go backend API development
-
-### Upcoming
-
-- ⏳ User authentication flow
-- ⏳ Equipment browsing and search
-- ⏳ Reservation creation workflow
-- ⏳ Admin dashboard
-- ⏳ Credit management system
-- ⏳ Analytics and reporting
-- ⏳ Email notifications
-- ⏳ Production deployment
-
-### Known Limitations
-
-- **Supabase Free Tier**: 1-week pause after inactivity is acceptable for low-traffic club usage
-- **Database**: 500MB storage limit
-- **Storage**: 1GB file storage limit
-- **Authentication**: 50,000 MAU limit
-- **Uploads**: Restricted to Admin users only
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
 
 **Documentation:**
 
-- [Product Requirements Document](documentation/prd.md)
+- [Product Requirements Document](documentation/prd/index.md)
 - [Technology Stack & Architecture](documentation/techstack.md)
 - [Database Schema Plan](documentation/db-plan.md)
-
-**Contact:** For questions or support, please contact the project administrator.
