@@ -4,7 +4,10 @@ on:
   pull_request:
     branches: [ main ]
 
-# Local Supabase credentials (standard for supabase start)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 env:
   PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
   PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
@@ -15,12 +18,10 @@ env:
   CORS_ALLOWED_ORIGINS: http://localhost:4321
 
 jobs:
-  # ------------------------------------------------------------------
-  # Stage 1: Linting (parallel)
-  # ------------------------------------------------------------------
   lint-backend:
     name: Lint Backend
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -38,6 +39,7 @@ jobs:
   lint-frontend:
     name: Lint Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -53,13 +55,11 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
-  # ------------------------------------------------------------------
-  # Stage 2: Unit & Integration Tests (parallel, with local Supabase)
-  # ------------------------------------------------------------------
   test-backend:
     name: Unit & Integration Test Backend
     needs: [lint-backend]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       
@@ -104,6 +104,7 @@ jobs:
     name: Unit Test Frontend
     needs: [lint-frontend]
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -124,13 +125,11 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/
 
-  # ------------------------------------------------------------------
-  # Stage 3: E2E Tests (after unit+integration pass, 4 parallel workers)
-  # ------------------------------------------------------------------
   e2e-test:
     name: E2E Test
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       
@@ -213,13 +212,11 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 30
 
-  # ------------------------------------------------------------------
-  # Stage 4: Status Comment
-  # ------------------------------------------------------------------
   status-comment:
     name: Status Comment
     needs: [test-backend, test-frontend, e2e-test]
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     if: success()
     permissions:
       pull-requests: write
