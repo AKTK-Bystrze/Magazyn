@@ -100,7 +100,7 @@ jobs:
           EOF
           
           ENCODED_PASSWORD=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${SUPABASE_DB_PASSWORD}', safe=''))")
-          DB_URL="postgresql://postgres.${PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-eu-central-1.pooler.supabase.com:5432/postgres"
+          DB_URL="postgresql://postgres.${PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-eu-central-1.pooler.supabase.com:6543/postgres"
           
           echo "DB_URL=$DB_URL" >> supabase/.temp/db-url
         env:
