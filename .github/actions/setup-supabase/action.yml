@@ -1,0 +1,51 @@
+name: Setup Supabase
+description: Setup Supabase CLI and optionally start local instance
+
+inputs:
+  mode:
+    description: "Mode: 'local' to start local instance, 'remote' to link to remote project"
+    required: false
+    default: 'local'
+  project-ref:
+    description: Remote project reference (required for remote mode)
+    required: false
+  access-token:
+    description: Supabase access token (required for remote mode)
+    required: false
+  anon-key:
+    description: Supabase anon key for health check
+    required: false
+    default: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Supabase CLI
+      uses: supabase/setup-cli@v1
+      with:
+        version: latest
+
+    - name: Start Local Supabase
+      if: inputs.mode == 'local'
+      shell: bash
+      run: |
+        supabase start
+        supabase status
+
+    - name: Link Remote Supabase
+      if: inputs.mode == 'remote'
+      shell: bash
+      run: |
+        echo "Linking to project: ${{ inputs.project-ref }}"
+        supabase link --project-ref "${{ inputs.project-ref }}"
+      env:
+        SUPABASE_ACCESS_TOKEN: ${{ inputs.access-token }}
+
+    - name: Verify Supabase Health
+      if: inputs.mode == 'local'
+      shell: bash
+      run: |
+        echo "Verifying Supabase is healthy..."
+        curl -sf http://127.0.0.1:54321/rest/v1/ \
+          -H "apikey: ${{ inputs.anon-key }}" || exit 1
+        echo "Supabase is healthy"

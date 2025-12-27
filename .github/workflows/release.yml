@@ -68,28 +68,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'backend/go.mod'
-          cache-dependency-path: backend/go.sum
-
-      - name: Cache Go Build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: go-build-${{ runner.os }}-${{ hashFiles('backend/go.sum') }}
-          restore-keys: |
-            go-build-${{ runner.os }}-
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -115,21 +95,8 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Cache Playwright Browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
-
-      - name: Install Playwright Browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: ./frontend
-        run: npx playwright install --with-deps
-
-      - name: Install Playwright Dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
 
       - name: Build Frontend
         working-directory: ./frontend

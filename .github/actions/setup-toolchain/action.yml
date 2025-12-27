@@ -1,0 +1,46 @@
+name: Setup Toolchain
+description: Setup Go and Node.js with caching
+
+inputs:
+  go-mod-path:
+    description: Path to go.mod file
+    required: false
+    default: 'backend/go.mod'
+  go-sum-path:
+    description: Path to go.sum file
+    required: false
+    default: 'backend/go.sum'
+  node-version:
+    description: Node.js version
+    required: false
+    default: '20'
+  package-lock-path:
+    description: Path to package-lock.json
+    required: false
+    default: 'frontend/package-lock.json'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ${{ inputs.go-mod-path }}
+        cache-dependency-path: ${{ inputs.go-sum-path }}
+
+    - name: Cache Go Build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: go-build-${{ runner.os }}-${{ hashFiles(inputs.go-sum-path) }}
+        restore-keys: |
+          go-build-${{ runner.os }}-
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.package-lock-path }}
