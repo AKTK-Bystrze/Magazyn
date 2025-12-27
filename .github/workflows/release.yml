@@ -1,8 +1,37 @@
+# =============================================================================
+# Release Workflow
+# =============================================================================
+#
+# DESCRIPTION:
+#   Builds, tests, and creates a new version tag for the application.
+#   Runs E2E tests against a remote Supabase test database before tagging.
+#
+# TRIGGERS:
+#   - Push to main branch (production releases)
+#   - Push to magazyn_2_0 branch (testing - remove after verification)
+#   - Manual trigger via workflow_dispatch with optional tag version
+#
+# VERSIONING:
+#   - If tag_version input is provided: uses that exact version
+#   - If tag_version is empty: auto-increments patch version (v1.0.0 -> v1.0.1)
+#   - Tags are prefixed with 'v' automatically if missing
+#
+# REQUIRED SECRETS:
+#   - TEST_SUPABASE_URL: Supabase project URL for testing
+#   - TEST_SUPABASE_ANON_KEY: Supabase anonymous key
+#   - TEST_SUPABASE_SERVICE_ROLE_KEY: Supabase service role key
+#   - TEST_SUPABASE_DB_PASSWORD: Database password for migrations
+#   - SUPABASE_ACCESS_TOKEN: CLI access token for migrations
+#   - E2E_TEST_EMAIL: Test user email
+#   - E2E_TEST_PASSWORD: Test user password
+#
+# =============================================================================
+
 name: Release new version
 
 on:
   push:
-    branches: [main]
+    branches: [main, magazyn_2_0]
   workflow_dispatch:
     inputs:
       tag_version:
@@ -10,7 +39,6 @@ on:
         required: false
         type: string
 
-# Environment from GitHub Repository Secrets/Variables
 env:
   PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
   PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
@@ -20,7 +48,6 @@ env:
   PORT: 8080
   E2E_BASE_URL: http://localhost:4321
   CORS_ALLOWED_ORIGINS: http://localhost:4321
-  # Supabase CLI needs the DB password for migrations
   SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
 
 jobs:
@@ -28,17 +55,14 @@ jobs:
     name: Build, Test & Tag
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # For creating tags
-    
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for tag creation
+          fetch-depth: 0
 
-      # ------------------------------------------------------------------
-      # Setup Tools
-      # ------------------------------------------------------------------
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -57,12 +81,8 @@ jobs:
         with:
           version: latest
 
-      # ------------------------------------------------------------------
-      # Push Migrations to Remote Test DB
-      # ------------------------------------------------------------------
       - name: Link to Test Supabase Project
         run: |
-          # Extract project ref from URL (e.g., https://xyz.supabase.co -> xyz)
           PROJECT_REF=$(echo "$PUBLIC_SUPABASE_URL" | sed -E 's|https://([^.]+)\.supabase\.co.*|\1|')
           echo "Linking to project: $PROJECT_REF"
           supabase link --project-ref "$PROJECT_REF"
@@ -76,9 +96,6 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
-      # ------------------------------------------------------------------
-      # Build & Start Services
-      # ------------------------------------------------------------------
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
@@ -135,9 +152,6 @@ jobs:
           HOST: 0.0.0.0
           PORT: 4321
 
-      # ------------------------------------------------------------------
-      # Run E2E Tests
-      # ------------------------------------------------------------------
       - name: Run E2E Tests
         working-directory: ./frontend
         run: |
@@ -155,17 +169,12 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 14
 
-      # ------------------------------------------------------------------
-      # Create Version Tag (only on success)
-      # ------------------------------------------------------------------
       - name: Determine Next Version
         id: version
         run: |
           INPUT_TAG="${{ inputs.tag_version }}"
           
           if [ -n "$INPUT_TAG" ]; then
-            # Use provided tag version
-            # Ensure it starts with 'v'
             if [[ "$INPUT_TAG" != v* ]]; then
               NEW_VERSION="v${INPUT_TAG}"
             else
@@ -173,19 +182,13 @@ jobs:
             fi
             echo "Using provided tag: $NEW_VERSION"
           else
-            # Auto-increment: get latest tag
             LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
             
             if [ -z "$LATEST_TAG" ]; then
-              # No tags exist, start at v1.0.0
               NEW_VERSION="v1.0.0"
             else
-              # Parse semantic version and increment patch
-              # e.g., v1.2.3 -> major=1, minor=2, patch=3
               VERSION=${LATEST_TAG#v}
               IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-              
-              # Increment patch version
               NEW_PATCH=$((PATCH + 1))
               NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
             fi
