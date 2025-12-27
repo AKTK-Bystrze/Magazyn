@@ -59,6 +59,7 @@ jobs:
     name: Build, Test & Tag
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment: integration
     permissions:
       contents: write
 
@@ -78,7 +79,20 @@ jobs:
 
       - name: Link to Test Supabase Project
         run: |
+          if [ -z "$PUBLIC_SUPABASE_URL" ]; then
+            echo "ERROR: PUBLIC_SUPABASE_URL is empty. Make sure TEST_SUPABASE_URL secret is configured."
+            exit 1
+          fi
+          
+          echo "Supabase URL format check: $PUBLIC_SUPABASE_URL"
           PROJECT_REF=$(echo "$PUBLIC_SUPABASE_URL" | sed -E 's|https://([^.]+)\.supabase\.co.*|\1|')
+          
+          if [ -z "$PROJECT_REF" ] || [ "$PROJECT_REF" = "$PUBLIC_SUPABASE_URL" ]; then
+            echo "ERROR: Could not extract project ref from URL: $PUBLIC_SUPABASE_URL"
+            echo "Expected format: https://<project-ref>.supabase.co"
+            exit 1
+          fi
+          
           echo "Linking to project: $PROJECT_REF"
           supabase link --project-ref "$PROJECT_REF"
         env:
