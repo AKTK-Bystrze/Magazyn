@@ -9,7 +9,6 @@
 #
 # TRIGGERS:
 #   - Push to main branch (production releases)
-#   - Push to magazyn_2_0 branch (testing - remove after verification)
 #   - Manual trigger via workflow_dispatch with optional tag version
 #
 # VERSIONING:
