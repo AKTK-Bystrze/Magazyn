@@ -4,7 +4,8 @@
 #
 # DESCRIPTION:
 #   Builds, tests, and creates a new version tag for the application.
-#   Runs E2E tests against a remote Supabase test database before tagging.
+#   Runs E2E tests against the full stack (backend, frontend, Caddy) using
+#   Docker Compose and a remote Supabase test database before tagging.
 #
 # TRIGGERS:
 #   - Push to main branch (production releases)
@@ -17,9 +18,9 @@
 #   - Tags are prefixed with 'v' automatically if missing
 #
 # REQUIRED SECRETS:
-#   - TEST_SUPABASE_URL: Supabase project URL for testing
-#   - TEST_SUPABASE_ANON_KEY: Supabase anonymous key
-#   - TEST_SUPABASE_SERVICE_ROLE_KEY: Supabase service role key
+#   - PUBLIC_SUPABASE_URL: Supabase project URL
+#   - PUBLIC_SUPABASE_ANON_KEY: Supabase anonymous key
+#   - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key
 #   - TEST_SUPABASE_DB_PASSWORD: Database password for migrations
 #   - SUPABASE_ACCESS_TOKEN: CLI access token for migrations
 #   - E2E_TEST_EMAIL: Test user email
@@ -44,14 +45,14 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
-  PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
-  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+  PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+  PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
   E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
   E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
   PORT: 8080
-  E2E_BASE_URL: http://localhost:4321
-  CORS_ALLOWED_ORIGINS: http://localhost:4321
+  E2E_BASE_URL: http://localhost
+  CORS_ALLOWED_ORIGINS: http://localhost
   SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
 
 jobs:
@@ -123,62 +124,86 @@ jobs:
       - name: Setup Playwright
         uses: ./.github/actions/setup-playwright
 
-      - name: Build Frontend
-        working-directory: ./frontend
-        env:
-          PUBLIC_BACKEND_URL: http://localhost:8080
-          PUBLIC_APP_URL: http://localhost:4321
-        run: npm run build
-
-      - name: Start Backend
-        working-directory: ./backend
+      - name: Prepare Test Caddyfile
+        working-directory: ./infra
         run: |
-          go run cmd/api/main.go &
-          BACKEND_PID=$!
-          echo "Backend started (pid $BACKEND_PID)"
+          echo "Copying test Caddyfile for E2E testing..."
+          cp Caddyfile.test Caddyfile
+          echo "✅ Caddyfile configured for localhost testing"
+
+      - name: Build Docker Images
+        working-directory: ./infra
+        run: |
+          echo "Building containers for full stack..."
+          docker compose --env-file ../.env build --progress=plain
+          echo "✅ Build complete"
+
+      - name: Start Services
+        working-directory: ./infra
+        run: |
+          echo "Starting full stack (backend, frontend, Caddy)..."
+          docker compose --env-file ../.env up -d
           
-          echo "Waiting for backend health check..."
-          for i in {1..30}; do
-            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
-              echo "Backend is healthy after ${i}s"
+          echo "Waiting for all services to be healthy..."
+          TIMEOUT=120
+          ELAPSED=0
+          
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            HEALTH_STATUS=$(docker compose ps --format json | jq -r '.[].Health' | grep -v "healthy" | wc -l)
+            
+            if [ "$HEALTH_STATUS" -eq 0 ]; then
+              echo "✅ All services are healthy after ${ELAPSED}s"
+              docker compose ps
               exit 0
             fi
-            sleep 1
+            
+            echo "Waiting for services... (${ELAPSED}s/${TIMEOUT}s)"
+            docker compose ps
+            sleep 5
+            ELAPSED=$((ELAPSED + 5))
           done
           
-          echo "ERROR: Backend failed to start within 30 seconds"
+          echo "❌ Services failed to become healthy within ${TIMEOUT}s"
+          docker compose ps
+          docker compose logs
           exit 1
-
-      - name: Start Frontend
-        working-directory: ./frontend
-        run: |
-          npm run preview &
-          FRONTEND_PID=$!
-          echo "Frontend started (pid $FRONTEND_PID)"
-          
-          echo "Waiting for frontend..."
-          for i in {1..30}; do
-            if curl -sf http://localhost:4321 > /dev/null 2>&1; then
-              echo "Frontend is ready after ${i}s"
-              exit 0
-            fi
-            sleep 1
-          done
-          
-          echo "ERROR: Frontend failed to start within 30 seconds"
-          exit 1
-        env:
-          HOST: 0.0.0.0
-          PORT: 4321
 
       - name: Run E2E Tests
         working-directory: ./frontend
         run: |
           set -e
+          echo "Running E2E tests against full stack at http://localhost"
           npx playwright test --workers=4 --retries=1
           E2E_EXIT_CODE=$?
           echo "E2E tests completed with exit code: $E2E_EXIT_CODE"
           exit $E2E_EXIT_CODE
+
+      - name: Capture Service Logs on Failure
+        if: failure()
+        working-directory: ./infra
+        run: |
+          echo "=================================================="
+          echo "SERVICE LOGS - E2E Test Failure Debug Information"
+          echo "=================================================="
+          
+          echo ""
+          echo "=== Container Status ==="
+          docker compose ps
+          
+          echo ""
+          echo "=== Backend Logs ==="
+          docker compose logs backend
+          
+          echo ""
+          echo "=== Frontend Logs ==="
+          docker compose logs frontend
+          
+          echo ""
+          echo "=== Caddy Logs ==="
+          docker compose logs caddy
+          
+          echo ""
+          echo "=================================================="
 
       - name: Upload Playwright Report
         if: always()
@@ -187,6 +212,14 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
           retention-days: 14
+
+      - name: Cleanup Services
+        if: always()
+        working-directory: ./infra
+        run: |
+          echo "Stopping and removing containers..."
+          docker compose down -v --remove-orphans
+          echo "✅ Cleanup complete"
 
       - name: Determine Next Version
         id: version

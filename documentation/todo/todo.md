@@ -30,6 +30,7 @@ deploy, review docker-compose.prod.yml
 - Overdue reservations status and logic
 
 ## Refactoring Needed
+0. SMTP service setup
 1. Credit recalculation on date modification in Update
 2. Token expiration handling - valid on frontend but not backend
 3. maintenance loging - in case of failure just create a report file with context

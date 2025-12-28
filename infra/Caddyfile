@@ -1,10 +1,7 @@
-{
-	# Disable auto-HTTPS for local development if no domain is configured
-	# Remove this block for production with a real domain
-	auto_https off
-}
+# Production Caddyfile
+# Replace "yourdomain.com" with your actual domain
 
-http://localhost {
+yourdomain.com {
 	# Proxy /api requests to the Go backend container
 	handle /api/* {
 		uri strip_prefix /api
