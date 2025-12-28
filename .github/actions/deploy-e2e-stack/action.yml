@@ -76,7 +76,7 @@ runs:
 
         echo "Waiting for services to be healthy..."
         for i in {1..60}; do
-          UNHEALTHY=$(docker compose --env-file ../.env ps --format json | jq -r '.[].Health' | grep -v "healthy" | wc -l)
+          UNHEALTHY=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | .Health' | grep -v "healthy" | wc -l)
           if [ "$UNHEALTHY" -eq 0 ]; then
             echo "✅ All services healthy"
             docker compose --env-file ../.env ps
