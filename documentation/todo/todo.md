@@ -1,5 +1,6 @@
 ## In progress:
-deploy, review docker-compose.prod.yml
+unify workflows
+update documentation
 
 ## Equipment Views refactor
 - Equipment manager + viewer component reuse improved

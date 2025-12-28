@@ -14,7 +14,7 @@ env:
   SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
   PORT: 8080
   E2E_TEST_EMAIL: test@example.com
-  E2E_BASE_URL: http://localhost:4321
+  E2E_BASE_URL: http://localhost:80
   CORS_ALLOWED_ORIGINS: http://localhost:4321
 
 jobs:
@@ -136,37 +136,38 @@ jobs:
       - name: Setup Playwright
         uses: ./.github/actions/setup-playwright
 
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
+      - name: Prepare Test Caddyfile
+        working-directory: ./infra
+        run: cp Caddyfile.test Caddyfile
 
-      - name: Start Backend
-        working-directory: ./backend
+      - name: Build Docker Images
+        working-directory: ./infra
+        run: docker compose --env-file ../.env build
+
+      - name: Start Services
+        working-directory: ./infra
         run: |
-          go run cmd/api/main.go &
-          BACKEND_PID=$!
-          echo "Backend started (pid $BACKEND_PID)"
+          docker compose --env-file ../.env up -d
           
-          echo "Waiting for backend health check..."
-          for i in {1..30}; do
-            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
-              echo "Backend is healthy after ${i}s"
+          echo "Waiting for services..."
+          for i in {1..60}; do
+            UNHEALTHY=$(docker compose ps --format json | jq -r '.[].Health' | grep -v "healthy" | wc -l)
+            if [ "$UNHEALTHY" -eq 0 ]; then
+              echo "✅ All services healthy"
+              docker compose ps
               exit 0
             fi
-            sleep 1
+            sleep 2
           done
           
-          echo "ERROR: Backend failed to start within 30 seconds"
+          echo "❌ Services failed to start"
+          docker compose ps
+          docker compose logs
           exit 1
 
-      - name: Run E2E Tests (4 parallel workers)
+      - name: Run E2E Tests
         working-directory: ./frontend
-        run: |
-          set -e
-          npx playwright test --workers=4 --retries=0
-          E2E_EXIT_CODE=$?
-          echo "E2E tests completed with exit code: $E2E_EXIT_CODE"
-          exit $E2E_EXIT_CODE
+        run: npx playwright test --workers=4 --retries=0
 
       - name: Upload Playwright Report
         if: always()
@@ -175,6 +176,11 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
           retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        working-directory: ./infra
+        run: docker compose down -v
 
   status-comment:
     name: Status Comment
