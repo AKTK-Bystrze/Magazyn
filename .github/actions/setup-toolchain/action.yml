@@ -1,3 +1,19 @@
+# =============================================================================
+# Setup Toolchain Action
+# =============================================================================
+#
+# DESCRIPTION:
+#   Sets up the Go and Node.js environments with caching for fast CI builds.
+#   It handles go.mod/go.sum hashing for Go cache and package-lock.json for npm cache.
+#
+# INPUTS:
+#   - go-mod-path: Path to go.mod (default: backend/go.mod)
+#   - go-sum-path: Path to go.sum (default: backend/go.sum)
+#   - node-version: Node.js version (default: 20)
+#   - package-lock-path: Path to package-lock.json (default: frontend/package-lock.json)
+#
+# =============================================================================
+
 name: Setup Toolchain
 description: Setup Go and Node.js with caching
 

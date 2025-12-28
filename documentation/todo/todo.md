@@ -1,6 +1,8 @@
 ## In progress:
-unify workflows
-update documentation
+documentation
+production database
+deploy script (push migrations, build and start latest containers, run sanity test)
+
 
 ## Equipment Views refactor
 - Equipment manager + viewer component reuse improved

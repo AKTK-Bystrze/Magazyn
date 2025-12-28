@@ -1,3 +1,20 @@
+# =============================================================================
+# Setup Supabase Action
+# =============================================================================
+#
+# DESCRIPTION:
+#   Configures the Supabase CLI. It supports two modes:
+#   1. 'local': Starts a local Supabase instance (docker containers).
+#   2. 'remote': Links to a remote Supabase project for migrations.
+#
+# INPUTS:
+#   - mode: 'local' (default) or 'remote'
+#   - project-ref: Remote project ID (required for remote)
+#   - access-token: CLI access token (required for remote)
+#   - anon-key: Key used for health check in local mode
+#
+# =============================================================================
+
 name: Setup Supabase
 description: Setup Supabase CLI and optionally start local instance
 

@@ -1,3 +1,17 @@
+# =============================================================================
+# Setup Playwright Action
+# =============================================================================
+#
+# DESCRIPTION:
+#   Sets up the Playwright environment, handling binary caching to speed up runs.
+#   It conditionally installs browsers or dependencies based on cache hits.
+#
+# INPUTS:
+#   - working-directory: Path to frontend directory (default: ./frontend)
+#   - package-lock-path: Path to package-lock.json for cache key
+#
+# =============================================================================
+
 name: Setup Playwright
 description: Setup Playwright with browser caching
 
