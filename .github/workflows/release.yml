@@ -131,6 +131,16 @@ jobs:
           cp Caddyfile.test Caddyfile
           echo "✅ Caddyfile configured for localhost testing"
 
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL}
+          PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY}
+          SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+          PUBLIC_BACKEND_URL=http://localhost:8080
+          PUBLIC_APP_URL=http://localhost:4321
+          EOF
+
       - name: Build Docker Images
         working-directory: ./infra
         run: |
