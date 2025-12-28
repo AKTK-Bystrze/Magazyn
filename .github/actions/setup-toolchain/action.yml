@@ -44,15 +44,6 @@ runs:
         go-version-file: ${{ inputs.go-mod-path }}
         cache-dependency-path: ${{ inputs.go-sum-path }}
 
-    - name: Cache Go Build
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: go-build-${{ runner.os }}-${{ hashFiles(inputs.go-sum-path) }}
-        restore-keys: |
-          go-build-${{ runner.os }}-
 
     - name: Setup Node
       uses: actions/setup-node@v4

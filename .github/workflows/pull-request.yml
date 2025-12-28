@@ -46,11 +46,11 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          go-version-file: 'backend/go.mod'
-          cache-dependency-path: backend/go.sum
+          go-mod-path: 'backend/go.mod'
+          go-sum-path: 'backend/go.sum'
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
@@ -64,12 +64,10 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          package-lock-path: 'frontend/package-lock.json'
       - name: Install Dependencies
         working-directory: ./frontend
         run: npm ci
@@ -85,11 +83,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
+
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          go-version-file: 'backend/go.mod'
-          cache-dependency-path: backend/go.sum
+          go-mod-path: 'backend/go.mod'
+          go-sum-path: 'backend/go.sum'
 
       - name: Setup Supabase
         uses: ./.github/actions/setup-supabase
@@ -117,12 +116,10 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          package-lock-path: 'frontend/package-lock.json'
       - name: Install Dependencies
         working-directory: ./frontend
         run: npm ci
