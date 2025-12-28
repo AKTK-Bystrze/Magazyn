@@ -1,0 +1,22 @@
+# Testing/Development Caddyfile
+# For localhost testing and E2E tests
+
+{
+# Disable auto-HTTPS for local development
+auto_https off
+}
+
+http://localhost {
+# Proxy /api requests to the Go backend container
+
+
+# Proxy all other requests to the Astro frontend container
+handle /* {
+reverse_proxy frontend:4321
+}
+
+# Enable logging
+log {
+output stdout
+}
+}

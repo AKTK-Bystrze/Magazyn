@@ -45,34 +45,7 @@ magazynbystrze.pl, www.magazynbystrze.pl {
 		}
 	}
 
-	# Proxy /api requests to the Go backend
-	handle /api/* {
-		# Apply rate limiting to API
-		rate_limit api
-		
-		# Strip /api prefix before forwarding
-		uri strip_prefix /api
-		
-		# Forward to backend with proper headers
-		reverse_proxy backend:8080 {
-			# Health check
-			health_uri /health
-			health_interval 10s
-			health_timeout 5s
-			
-			# Timeouts
-			transport http {
-				dial_timeout 5s
-				response_header_timeout 30s
-			}
-			
-			# Preserve headers
-			header_up Host {upstream_hostport}
-			header_up X-Real-IP {remote_host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-		}
-	}
+
 
 	# Proxy all other requests to frontend
 	handle /* {
