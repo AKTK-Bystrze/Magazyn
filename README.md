@@ -93,6 +93,17 @@ Magazyn/
 - **Docker & Docker Compose**: For deployment
 - **Supabase Account**: Free tier account
 
+### Quick Start (Docker)
+
+```bash
+npx supabase start              # Start local DB
+cd infra && docker compose up -d # Start full stack
+# App available at http://localhost:80
+```
+
+> [!TIP]
+> See [frontend/e2e/README.md](frontend/e2e/README.md) for detailed Docker setup and testing.
+
 ### Local Development Setup
 
 1. **Clone the repository**
