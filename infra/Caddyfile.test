@@ -7,16 +7,18 @@ auto_https off
 }
 
 http://localhost {
-# Proxy /api requests to the Go backend container
+	# Proxy /api requests to the Go backend container
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
 
+	# Proxy all other requests to the Astro frontend container
+	handle /* {
+		reverse_proxy frontend:4321
+	}
 
-# Proxy all other requests to the Astro frontend container
-handle /* {
-reverse_proxy frontend:4321
-}
-
-# Enable logging
-log {
-output stdout
-}
+	# Enable logging
+	log {
+		output stdout
+	}
 }
