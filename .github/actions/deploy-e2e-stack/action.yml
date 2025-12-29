@@ -75,9 +75,11 @@ runs:
         docker compose --env-file ../.env up -d
 
         echo "Waiting for services to be healthy..."
+        EXPECTED_SERVICES=3
         for i in {1..60}; do
-          UNHEALTHY=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | .Health' | grep -v "healthy" | wc -l)
-          if [ "$UNHEALTHY" -eq 0 ]; then
+          HEALTHY_COUNT=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | .Health // empty' | grep -cE "^healthy$" || echo "0")
+          echo "Health check iteration $i: $HEALTHY_COUNT/$EXPECTED_SERVICES healthy"
+          if [ "$HEALTHY_COUNT" -eq "$EXPECTED_SERVICES" ]; then
             echo "✅ All services healthy"
             docker compose --env-file ../.env ps
             exit 0
