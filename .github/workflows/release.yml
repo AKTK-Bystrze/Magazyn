@@ -31,7 +31,7 @@ name: Release new version
 
 on:
   push:
-    branches: [main, magazyn_2_0]  # Added magazyn_2_0 for testing
+    branches: [main]
   workflow_dispatch:
     inputs:
       tag_version:
