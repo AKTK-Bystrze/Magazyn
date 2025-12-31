@@ -6,11 +6,19 @@ services:
       context: ../backend
       dockerfile: ../infra/backend/Dockerfile
     container_name: magazyn-backend
-    restart: unless-stopped
+    restart: always
     expose:
       - "8080"
     env_file:
       - ../.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 60s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
     networks:
       - magazyn-network
 
@@ -21,11 +29,10 @@ services:
       args:
         PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL}
         PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY}
-        # Using Caddy proxy paths for client-side access
-        PUBLIC_BACKEND_URL: http://localhost/api
-        PUBLIC_APP_URL: http://localhost
+        PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL}
+        PUBLIC_APP_URL: ${PUBLIC_APP_URL}
     container_name: magazyn-frontend
-    restart: unless-stopped
+    restart: always
     expose:
       - "4321"
     env_file:
@@ -33,27 +40,45 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=4321
-      # Internal URL for SSR to talk to backend directly
       - INTERNAL_BACKEND_URL=http://backend:8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4321"]
+      interval: 60s
+      timeout: 3s
+      retries: 15
+      start_period: 15s
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - magazyn-network
 
   caddy:
     image: caddy:alpine
     container_name: magazyn-caddy
-    restart: unless-stopped
+    restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./${CADDY_FILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 60s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
     networks:
       - magazyn-network
-    depends_on:
-      - backend
-      - frontend
 
 volumes:
   caddy_data:

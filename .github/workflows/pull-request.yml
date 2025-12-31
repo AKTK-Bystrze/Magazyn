@@ -1,33 +1,59 @@
+# =============================================================================
+# Pull Request Workflow
+# =============================================================================
+#
+# DESCRIPTION:
+#   Runs comprehensive checks on pull requests.
+#   It includes linting, unit/integration testing for backend and frontend,
+#   and E2E verification using a simplified local stack.
+#
+# TRIGGERS:
+#   - Pull Request to main branch
+#
+# JOBS:
+#   - lint-backend: GolangCI-Lint
+#   - lint-frontend: ESLint
+#   - test-backend: Unit & Integration tests (Go)
+#   - test-frontend: Unit tests (Vitest)
+#   - e2e-test: Full stack Playwright tests with local Supabase and Docker
+#   - status-comment: Posts a summary comment on the PR on success
+#
+# =============================================================================
+
 name: Pull Request
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [ main ]
 
-# Local Supabase credentials (standard for supabase start)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 env:
-  PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  # Docker containers use host.docker.internal to reach local Supabase on host
+  PUBLIC_SUPABASE_URL: http://host.docker.internal:54321
   PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
   SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
   PORT: 8080
-  E2E_TEST_EMAIL: test@example.com
-  E2E_BASE_URL: http://localhost:4321
-  CORS_ALLOWED_ORIGINS: http://localhost:4321
+  E2E_TEST_EMAIL: test.dev.g6@gmail.com
+  E2E_TEST_PASSWORD: TestSecurePassword123!
+  E2E_BASE_URL: http://localhost
+  CORS_ALLOWED_ORIGINS: http://localhost
 
 jobs:
-  # ------------------------------------------------------------------
-  # Stage 1: Linting (parallel)
-  # ------------------------------------------------------------------
   lint-backend:
     name: Lint Backend
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          go-version-file: 'backend/go.mod'
-          cache-dependency-path: backend/go.sum
+          go-mod-path: 'backend/go.mod'
+          go-sum-path: 'backend/go.sum'
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
@@ -38,14 +64,13 @@ jobs:
   lint-frontend:
     name: Lint Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          package-lock-path: 'frontend/package-lock.json'
       - name: Install Dependencies
         working-directory: ./frontend
         run: npm ci
@@ -53,47 +78,37 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
-  # ------------------------------------------------------------------
-  # Stage 2: Unit & Integration Tests (parallel, with local Supabase)
-  # ------------------------------------------------------------------
   test-backend:
     name: Unit & Integration Test Backend
     needs: [lint-backend]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Override Supabase URL for backend tests - they run on host, not in Docker
+    env:
+      PUBLIC_SUPABASE_URL: http://localhost:54321
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Go
-        uses: actions/setup-go@v5
+
+
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          go-version-file: 'backend/go.mod'
-          cache-dependency-path: backend/go.sum
-      
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+          go-mod-path: 'backend/go.mod'
+          go-sum-path: 'backend/go.sum'
+
+      - name: Setup Supabase
+        uses: ./.github/actions/setup-supabase
         with:
-          version: latest
-      
-      - name: Start Supabase
-        run: |
-          supabase start
-          supabase status
-      
-      - name: Verify Supabase Health
-        run: |
-          echo "Verifying Supabase is healthy..."
-          curl -sf http://127.0.0.1:54321/rest/v1/ \
-            -H "apikey: $PUBLIC_SUPABASE_ANON_KEY" || exit 1
-          echo "Supabase is healthy"
-      
+          mode: local
+
       - name: Unit Tests
         working-directory: ./backend
         run: go test ./internal/... -v -short -coverprofile=coverage.out
-      
+
       - name: Integration Tests
         working-directory: ./backend
         run: go test ./internal/... -v -tags=integration
-      
+
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
         with:
@@ -104,14 +119,13 @@ jobs:
     name: Unit Test Frontend
     needs: [lint-frontend]
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          package-lock-path: 'frontend/package-lock.json'
       - name: Install Dependencies
         working-directory: ./frontend
         run: npm ci
@@ -124,86 +138,51 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/
 
-  # ------------------------------------------------------------------
-  # Stage 3: E2E Tests (after unit+integration pass, 4 parallel workers)
-  # ------------------------------------------------------------------
   e2e-test:
     name: E2E Test
-    needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'backend/go.mod'
-          cache-dependency-path: backend/go.sum
-          
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
+
+      - name: Setup Supabase
+        uses: ./.github/actions/setup-supabase
         with:
-          version: latest
-
-      - name: Start Supabase
-        run: |
-          supabase start
-          supabase status
-
-      - name: Verify Supabase Health
-        run: |
-          echo "Verifying Supabase is healthy..."
-          curl -sf http://127.0.0.1:54321/rest/v1/ \
-            -H "apikey: $PUBLIC_SUPABASE_ANON_KEY" || exit 1
-          echo "Supabase is healthy"
+          mode: local
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
 
-      - name: Install Playwright Browsers
-        working-directory: ./frontend
-        run: npx playwright install --with-deps
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
 
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Start Backend
-        working-directory: ./backend
+      - name: Configure host.docker.internal
         run: |
-          go run cmd/api/main.go &
-          BACKEND_PID=$!
-          echo "Backend started (pid $BACKEND_PID)"
-          
-          # Wait for backend to be healthy (max 30 seconds)
-          echo "Waiting for backend health check..."
-          for i in {1..30}; do
-            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
-              echo "Backend is healthy after ${i}s"
-              exit 0
-            fi
-            sleep 1
-          done
-          
-          echo "ERROR: Backend failed to start within 30 seconds"
-          exit 1
+          # Add host.docker.internal to /etc/hosts so browser can resolve it
+          # This is needed because frontend is built with PUBLIC_SUPABASE_URL=http://host.docker.internal:54321
+          # and Playwright browser runs on the host, not inside Docker
+          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
 
-      - name: Run E2E Tests (4 parallel workers)
+      - name: Deploy E2E Stack
+        uses: ./.github/actions/deploy-e2e-stack
+        with:
+          supabase-url: ${{ env.PUBLIC_SUPABASE_URL }}
+          supabase-anon-key: ${{ env.PUBLIC_SUPABASE_ANON_KEY }}
+          supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+
+
+
+
+
+
+
+      - name: Run E2E Tests
         working-directory: ./frontend
-        run: |
-          set -e  # Exit immediately if any command fails
-          npx playwright test --workers=4 --retries=0
-          E2E_EXIT_CODE=$?
-          echo "E2E tests completed with exit code: $E2E_EXIT_CODE"
-          exit $E2E_EXIT_CODE
+        run: npx playwright test --workers=4 --retries=0
 
       - name: Upload Playwright Report
         if: always()
@@ -213,13 +192,16 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 30
 
-  # ------------------------------------------------------------------
-  # Stage 4: Status Comment
-  # ------------------------------------------------------------------
+      - name: Cleanup
+        if: always()
+        working-directory: ./infra
+        run: docker compose down -v
+
   status-comment:
     name: Status Comment
     needs: [test-backend, test-frontend, e2e-test]
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     if: success()
     permissions:
       pull-requests: write

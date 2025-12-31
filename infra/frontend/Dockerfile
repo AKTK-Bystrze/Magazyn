@@ -31,6 +31,9 @@ RUN npm run build
 # --- Runtime Stage ---
 FROM node:22-alpine AS runtime
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Set working directory
 WORKDIR /app
 

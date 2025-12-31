@@ -1,3 +1,0 @@
-currently in the tests Happy Path: Complete reservation flow and Cart Management: Remove items from cart
-
-both are stuck in cart, with equipment in it, 2 and 1 item accordingly

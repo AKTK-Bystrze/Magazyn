@@ -1,0 +1,47 @@
+# =============================================================================
+# Setup Playwright Action
+# =============================================================================
+#
+# DESCRIPTION:
+#   Sets up the Playwright environment, handling binary caching to speed up runs.
+#   It conditionally installs browsers or dependencies based on cache hits.
+#
+# INPUTS:
+#   - working-directory: Path to frontend directory (default: ./frontend)
+#   - package-lock-path: Path to package-lock.json for cache key
+#
+# =============================================================================
+
+name: Setup Playwright
+description: Setup Playwright with browser caching
+
+inputs:
+  working-directory:
+    description: Working directory for npm commands
+    required: false
+    default: './frontend'
+  package-lock-path:
+    description: Path to package-lock.json for cache key
+    required: false
+    default: 'frontend/package-lock.json'
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Playwright Browsers
+      uses: actions/cache@v4
+      id: playwright-cache
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles(inputs.package-lock-path) }}
+
+    - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+      run: npx playwright install --with-deps
+
+    - name: Install Playwright Dependencies Only
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: npx playwright install-deps

@@ -1,0 +1,55 @@
+# =============================================================================
+# Dependabot Configuration
+# =============================================================================
+#
+# DESCRIPTION:
+#   Automated dependency updates for npm, Go modules, and GitHub Actions.
+#   Dependabot will create PRs for security and version updates.
+#
+# ECOSYSTEMS:
+#   - npm: Frontend dependencies (/frontend)
+#   - gomod: Backend dependencies (/backend)
+#   - github-actions: GitHub Actions versions (/)
+#
+# SCHEDULE:
+#   Weekly updates to balance security with PR noise.
+#
+# =============================================================================
+
+version: 2
+updates:
+  # Frontend (npm)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  # Backend (Go modules)
+  - package-ecosystem: "gomod"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"

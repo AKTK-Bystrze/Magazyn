@@ -1,0 +1,87 @@
+# =============================================================================
+# Deploy E2E Stack Action
+# =============================================================================
+#
+# DESCRIPTION:
+#   Orchestrates the deployment of the full application stack for E2E testing.
+#   It prepares configuration files (.env, Caddyfile), builds Docker images,
+#   starts services (`docker compose up`), and performs health checks.
+#
+# INPUTS:
+#   - supabase-url: Database URL
+#   - supabase-anon-key: Anonymous API Key
+#   - supabase-service-role-key: Service Role Key
+#   - backend-url: Override backend URL (default: http://localhost:8080)
+#   - app-url: Override app URL (default: http://localhost:4321)
+#
+# =============================================================================
+
+name: Deploy E2E Stack
+description: Prepare environment, build Docker images, and start services for E2E testing
+
+inputs:
+  supabase-url:
+    description: Supabase URL
+    required: true
+  supabase-anon-key:
+    description: Supabase Anon Key
+    required: true
+  supabase-service-role-key:
+    description: Supabase Service Role Key
+    required: true
+  backend-url:
+    description: Public Backend URL
+    required: false
+    default: 'http://localhost:8080'
+  app-url:
+    description: Public App URL
+    required: false
+    default: 'http://localhost:4321'
+
+runs:
+  using: composite
+  steps:
+    - name: Create .env file
+      shell: bash
+      run: |
+        echo "Creating .env file..."
+        cat > .env <<EOF
+        PUBLIC_SUPABASE_URL=${{ inputs.supabase-url }}
+        PUBLIC_SUPABASE_ANON_KEY=${{ inputs.supabase-anon-key }}
+        SUPABASE_SERVICE_ROLE_KEY=${{ inputs.supabase-service-role-key }}
+        PUBLIC_BACKEND_URL=${{ inputs.backend-url }}
+        PUBLIC_APP_URL=${{ inputs.app-url }}
+        CADDY_FILE=Caddyfile.test
+        EOF
+
+    - name: Build Docker Images
+      working-directory: ./infra
+      shell: bash
+      run: |
+        echo "Building Docker images..."
+        docker compose --env-file ../.env build
+
+    - name: Start Services
+      working-directory: ./infra
+      shell: bash
+      run: |
+        echo "Starting services..."
+        docker compose --env-file ../.env up -d
+
+        echo "Waiting for services to be healthy..."
+        EXPECTED_SERVICES=3
+        for i in {1..60}; do
+          HEALTHY_COUNT=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | .Health // empty' | grep -cE "^healthy$" || echo "0")
+          echo "Health check iteration $i: $HEALTHY_COUNT/$EXPECTED_SERVICES healthy"
+          if [ "$HEALTHY_COUNT" -eq "$EXPECTED_SERVICES" ]; then
+            echo "✅ All services healthy"
+            docker compose --env-file ../.env ps
+            exit 0
+          fi
+          sleep 2
+        done
+
+        echo "❌ Services failed to start"
+        docker compose --env-file ../.env ps
+        docker compose --env-file ../.env logs
+        exit 1

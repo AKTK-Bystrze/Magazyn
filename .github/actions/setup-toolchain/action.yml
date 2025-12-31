@@ -1,0 +1,53 @@
+# =============================================================================
+# Setup Toolchain Action
+# =============================================================================
+#
+# DESCRIPTION:
+#   Sets up the Go and Node.js environments with caching for fast CI builds.
+#   It handles go.mod/go.sum hashing for Go cache and package-lock.json for npm cache.
+#
+# INPUTS:
+#   - go-mod-path: Path to go.mod (default: backend/go.mod)
+#   - go-sum-path: Path to go.sum (default: backend/go.sum)
+#   - node-version: Node.js version (default: 20)
+#   - package-lock-path: Path to package-lock.json (default: frontend/package-lock.json)
+#
+# =============================================================================
+
+name: Setup Toolchain
+description: Setup Go and Node.js with caching
+
+inputs:
+  go-mod-path:
+    description: Path to go.mod file
+    required: false
+    default: 'backend/go.mod'
+  go-sum-path:
+    description: Path to go.sum file
+    required: false
+    default: 'backend/go.sum'
+  node-version:
+    description: Node.js version
+    required: false
+    default: '20'
+  package-lock-path:
+    description: Path to package-lock.json
+    required: false
+    default: 'frontend/package-lock.json'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ${{ inputs.go-mod-path }}
+        cache-dependency-path: ${{ inputs.go-sum-path }}
+
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.package-lock-path }}

@@ -9,6 +9,7 @@ import {
 } from "@/lib/config/constants";
 import { transformEquipmentAvailabilityDTO } from "@/lib/transformers/availability.transformer";
 import { debug } from "@/lib/utils/debug";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Custom hook for checking equipment availability for cart items
@@ -37,6 +38,17 @@ export function useAvailabilityCheck(
     setIsChecking(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const params = new URLSearchParams({
         start_date: startDate,
         end_date: endDate,
@@ -45,10 +57,13 @@ export function useAvailabilityCheck(
       const availabilityChecks = items.map(async (item) => {
         try {
           const response = await fetch(
-            `/api/equipment/${item.equipmentId}/availability?${params}`
+            `/api/equipment/${item.equipmentId}/availability?${params}`,
+            { headers }
           );
 
           if (!response.ok) {
+            // Log the status text for debugging
+            debug.error('Availability', `Check failed for ${item.name}: ${response.status} ${response.statusText}`);
             throw new Error(ERROR_AVAILABILITY_CHECK_FAILED);
           }
 

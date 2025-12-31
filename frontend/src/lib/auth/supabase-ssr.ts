@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import type { AstroCookies } from 'astro';
 
 /**
@@ -25,16 +25,30 @@ export function createSupabaseServerClient(
     import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        get(key: string) {
-          return cookies.get(key)?.value;
+        getAll() {
+          return parseCookieHeader(request.headers.get('Cookie') ?? '');
         },
-        set(key: string, value: string, options: CookieOptions) {
-          cookies.set(key, value, options);
-        },
-        remove(key: string, options: CookieOptions) {
-          cookies.delete(key, options);
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookies.set(name, value, options);
+          });
         },
       },
     }
   );
+}
+
+// Helper to parse cookie string into array of objects for Supabase
+function parseCookieHeader(cookieHeader: string) {
+  if (!cookieHeader) return [];
+  const list: { name: string; value: string }[] = [];
+  cookieHeader.split(';').forEach((cookie) => {
+    const [rawName, ...rest] = cookie.split('=');
+    const name = rawName?.trim();
+    if (!name) return;
+    const value = rest.join('=').trim();
+    if (!value) return;
+    list.push({ name, value });
+  });
+  return list;
 }

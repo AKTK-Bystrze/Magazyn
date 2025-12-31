@@ -1,4 +1,5 @@
 import * as React from "react";
+import { supabase } from "@/lib/supabase";
 import { useReservationCart } from "@/hooks/useReservationCart";
 import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck";
 import { validateCart } from "@/lib/utils/cart-validation";
@@ -166,6 +167,17 @@ export function ReservationCartView({
     setSubmissionError(null);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const command: CreateReservationsCommand = {
         reservations: cartState.items.map((item) => ({
           equipmentId: item.equipmentId,
@@ -181,9 +193,7 @@ export function ReservationCartView({
 
       const response = await fetch("/api/reservations", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(backendCommand),
       });
 
@@ -349,7 +359,7 @@ export function ReservationCartView({
 
             <Button 
               size="lg" 
-              className="w-full text-lg font-semibold" 
+              className="w-full text-lg font-semibold relative z-20" 
               onClick={handleProceed}
               disabled={!validation.isValid || isChecking || (isAdmin && !selectedUserId)}
               data-testid="checkout-button"

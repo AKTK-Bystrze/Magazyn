@@ -123,7 +123,7 @@ async function ensureTestUserExists(supabaseAdmin: SupabaseClient): Promise<{ id
       email: TEST_USER_EMAIL,
       role: 'user',
       is_enabled: true,
-      username: 'e2e-tester',
+      username: `e2e-tester-${userId.slice(0, 8)}`,
       credit_balance: E2E_CONFIG.DEFAULTS.INITIAL_CREDITS
     }, { onConflict: 'id' });
 
@@ -201,7 +201,7 @@ async function ensureAdminUserExists(supabaseAdmin: SupabaseClient): Promise<{ i
       email: adminEmail,
       role: 'admin',
       is_enabled: true,
-      username: 'e2e-admin',
+      username: `e2e-admin-${userId.slice(0, 8)}`,
       credit_balance: E2E_CONFIG.DEFAULTS.INITIAL_CREDITS
     }, { onConflict: 'id' });
 
@@ -279,7 +279,7 @@ async function ensureSuperAdminUserExists(supabaseAdmin: SupabaseClient): Promis
       email: adminEmail,
       role: 'super_admin',
       is_enabled: true,
-      username: 'e2e-superadmin',
+      username: `e2e-superadmin-${userId.slice(0, 8)}`,
       credit_balance: E2E_CONFIG.DEFAULTS.INITIAL_CREDITS
     }, { onConflict: 'id' });
 
@@ -326,6 +326,14 @@ async function injectSupabaseSession(page: Page, email: string = TEST_USER_EMAIL
     token_type: 'bearer',
     user: data.user,
   };
+
+  // Pipe browser console logs to terminal for debugging
+  page.on('console', msg => {
+    // Filter out noisy logs if needed, but for now capture everything relevant
+    if (msg.text().includes('[Availability]') || msg.text().includes('[API]') || msg.text().includes('[Component]') || msg.type() === 'error') {
+      console.log(`[BROWSER] ${msg.type()}: ${msg.text()}`);
+    }
+  });
 
   const sessionJson = JSON.stringify(sessionData);
 

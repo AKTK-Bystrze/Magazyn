@@ -25,7 +25,6 @@ dist/
 *.dll
 *.so
 *.dylib
-*.test
 *.out
 go.work
 go.work.sum
@@ -60,3 +59,6 @@ playwright/.cache/
 # E2E Testing
 **/e2e-config.local
 **/supabase_env.txt
+
+# Testing
+frontend/coverage/

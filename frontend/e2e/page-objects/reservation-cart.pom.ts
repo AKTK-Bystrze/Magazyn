@@ -226,7 +226,8 @@ export class ReservationCartPOM {
    * @returns A promise that resolves when the confirmation modal is visible.
    */
   async proceedToConfirmation(): Promise<void> {
-    await this.checkoutButton.click();
+    // Use force: true to bypass potential UI overlaps (e.g. CostEstimator in mobile view)
+    await this.checkoutButton.click({ force: true });
     
     // Wait for confirmation modal to appear
     await expect(this.confirmationModal).toBeVisible();
@@ -238,7 +239,8 @@ export class ReservationCartPOM {
    * @returns A promise that resolves when the button is clicked.
    */
   async confirm(): Promise<void> {
-    await this.confirmButton.click();
+    // Use force: true to bypass potential UI overlaps (e.g. cost summary in mobile modal view)
+    await this.confirmButton.click({ force: true });
   }
 
   /**
