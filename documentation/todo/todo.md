@@ -1,10 +1,6 @@
 ## In progress:
-running tests locally 
- - remote db
-running pullrequest workflow
-running release workflow
-env file, locally running tests
 caddyfile overwrite
+env example
 documentation
 production database
 deploy script (push migrations, build and start latest containers, run sanity test)
@@ -60,4 +56,6 @@ healthcheck is too often
 17. admin is missing dates filter in the equipment browse view
 18. currently one reservations can be made on the same day.
 19. cant change credits for your own or cant change credtis for firts user in the table
-20 duplicated email in profiles and auth tables
+20. duplicated email in profiles and auth tables
+21. exceptions during e2e tests run
+

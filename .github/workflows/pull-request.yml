@@ -83,6 +83,9 @@ jobs:
     needs: [lint-backend]
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Override Supabase URL for backend tests - they run on host, not in Docker
+    env:
+      PUBLIC_SUPABASE_URL: http://localhost:54321
     steps:
       - uses: actions/checkout@v4
 
