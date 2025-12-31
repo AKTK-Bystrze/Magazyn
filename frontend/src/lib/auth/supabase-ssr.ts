@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import type { AstroCookies } from 'astro';
 
 /**
@@ -43,8 +43,8 @@ function parseCookieHeader(cookieHeader: string) {
   if (!cookieHeader) return [];
   const list: { name: string; value: string }[] = [];
   cookieHeader.split(';').forEach((cookie) => {
-    let [name, ...rest] = cookie.split('=');
-    name = name?.trim();
+    const [rawName, ...rest] = cookie.split('=');
+    const name = rawName?.trim();
     if (!name) return;
     const value = rest.join('=').trim();
     if (!value) return;
