@@ -41,13 +41,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Prepare Test Caddyfile
-      working-directory: ./infra
-      shell: bash
-      run: |
-        echo "Copying test Caddyfile..."
-        cp Caddyfile.test Caddyfile
-
     - name: Create .env file
       shell: bash
       run: |
@@ -58,6 +51,7 @@ runs:
         SUPABASE_SERVICE_ROLE_KEY=${{ inputs.supabase-service-role-key }}
         PUBLIC_BACKEND_URL=${{ inputs.backend-url }}
         PUBLIC_APP_URL=${{ inputs.app-url }}
+        CADDY_FILE=Caddyfile.test
         EOF
 
     - name: Build Docker Images

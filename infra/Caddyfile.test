@@ -9,6 +9,7 @@ auto_https off
 http://localhost {
 	# Proxy /api requests to the Go backend container
 	handle /api/* {
+		uri strip_prefix /api
 		reverse_proxy backend:8080
 	}
 

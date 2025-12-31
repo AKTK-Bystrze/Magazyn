@@ -97,7 +97,7 @@ Magazyn/
 
 ```bash
 npx supabase start              # Start local DB
-cd infra && docker compose up -d # Start full stack
+cd infra && docker compose --env-file ../.env up -d # Start full stack
 # App available at http://localhost:80
 ```
 

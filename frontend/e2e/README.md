@@ -39,6 +39,9 @@ E2E_TEST_EMAIL=test.dev.g6@gmail.com  # Optional, default: test.dev.g6@gmail.com
 E2E_TEST_PASSWORD=TestSecurePassword123!  # Optional, default: TestSecurePassword123!
 E2E_BASE_URL=http://localhost:80
 
+# Caddy Configuration
+CADDY_FILE=Caddyfile.test
+
 # Backend
 PORT=8080
 CORS_ALLOWED_ORIGINS=http://localhost:80
@@ -50,8 +53,11 @@ CORS_ALLOWED_ORIGINS=http://localhost:80
 > - `test.admin.g6@gmail.com` (admin)  
 > - `test.superadmin.g6@gmail.com` (super admin)
 
-**For local Supabase**: Use `PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`. Get the `anon key` and `service_role key` by running `supabase status`.
-**For remote Supabase**: Use your project URL and keys from Supabase dashboard
+**For local Supabase**: 
+- Dev Server: `PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`
+- Docker Compose: `PUBLIC_SUPABASE_URL=http://host.docker.internal:54321` (Required for backend container to reach host)
+    - *Note*: Ensure `host.docker.internal` resolves in your browser/hosts file.
+**For remote Supabase**: Use your project URL and keys from Supabase dashboard.
 
 ### 2. Setup Test Users (Optional)
 
@@ -62,9 +68,9 @@ Test users are **auto-created** by Playwright fixtures. For manual setup or veri
 **Option A: Docker Compose (Recommended)**
 ```bash
 supabase start  # If using local DB
-cd infra && docker compose up -d
+cd infra && docker compose --env-file ../.env up -d --build
 cd ../frontend && npm run e2e
-cd ../infra && docker compose down -v
+cd ../infra && docker compose --env-file ../.env down -v
 ```
 
 **Option B: Dev Server (Faster iteration)**

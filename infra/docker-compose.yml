@@ -13,7 +13,7 @@ services:
       - ../.env
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 5s
+      interval: 60s
       timeout: 3s
       retries: 12
       start_period: 10s
@@ -41,7 +41,7 @@ services:
       - INTERNAL_BACKEND_URL=http://backend:8080
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4321"]
-      interval: 5s
+      interval: 60s
       timeout: 3s
       retries: 15
       start_period: 15s
@@ -59,15 +59,15 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./${CADDY_FILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
-      interval: 5s
+      interval: 60s
       timeout: 3s
       retries: 10
-      start_period: 5s
+      start_period: 10s
     depends_on:
       backend:
         condition: service_healthy
