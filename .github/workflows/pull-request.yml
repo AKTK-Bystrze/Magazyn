@@ -31,14 +31,15 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  # Docker containers use host.docker.internal to reach local Supabase on host
+  PUBLIC_SUPABASE_URL: http://host.docker.internal:54321
   PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
   SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
   PORT: 8080
-  E2E_TEST_EMAIL: test@example.com
+  E2E_TEST_EMAIL: test.dev.g6@gmail.com
   E2E_TEST_PASSWORD: TestSecurePassword123!
-  E2E_BASE_URL: http://localhost:80
-  CORS_ALLOWED_ORIGINS: http://localhost:4321
+  E2E_BASE_URL: http://localhost
+  CORS_ALLOWED_ORIGINS: http://localhost
 
 jobs:
   lint-backend:
@@ -158,6 +159,13 @@ jobs:
 
       - name: Setup Playwright
         uses: ./.github/actions/setup-playwright
+
+      - name: Configure host.docker.internal
+        run: |
+          # Add host.docker.internal to /etc/hosts so browser can resolve it
+          # This is needed because frontend is built with PUBLIC_SUPABASE_URL=http://host.docker.internal:54321
+          # and Playwright browser runs on the host, not inside Docker
+          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
 
       - name: Deploy E2E Stack
         uses: ./.github/actions/deploy-e2e-stack
