@@ -85,6 +85,7 @@ export default defineConfig({
   },
 
   /* Run local dev server before starting the tests */
+  /* Note: In CI with Docker Compose, reuseExistingServer=false but server fails to start - that's OK since we use Caddy */
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:4321',

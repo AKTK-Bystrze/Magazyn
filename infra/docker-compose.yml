@@ -11,6 +11,8 @@ services:
       - "8080"
     env_file:
       - ../.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 60s
@@ -39,6 +41,8 @@ services:
       - HOST=0.0.0.0
       - PORT=4321
       - INTERNAL_BACKEND_URL=http://backend:8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4321"]
       interval: 60s
