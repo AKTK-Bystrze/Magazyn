@@ -263,23 +263,3 @@ jobs:
               pull_number: context.issue.number,
               body: userContent + automatedSection
             });
-
-  post-preview-summary:
-    name: Post Preview Summary
-    needs: [update-pr-description]
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    if: always() && (github.event_name == 'pull_request' || inputs.run_changelog_preview == true) && needs.update-pr-description.result == 'success'
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Post Summary Comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: '✅ **Changelog preview** has been added to the PR description.'
-            });
