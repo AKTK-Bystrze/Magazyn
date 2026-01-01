@@ -203,7 +203,7 @@ jobs:
 
   generate-changelog-preview:
     name: Changelog Preview
-    if: inputs.run_changelog_preview == true
+    if: github.event_name == 'pull_request' || inputs.run_changelog_preview == true
     uses: ./.github/workflows/semantic-preview.yml
     permissions:
       contents: read
@@ -213,7 +213,7 @@ jobs:
     needs: [generate-changelog-preview]
     runs-on: ubuntu-latest
     timeout-minutes: 1
-    if: always() && inputs.run_changelog_preview == true && needs.generate-changelog-preview.result == 'success'
+    if: always() && (github.event_name == 'pull_request' || inputs.run_changelog_preview == true) && needs.generate-changelog-preview.result == 'success'
     permissions:
       pull-requests: write
     steps:
@@ -269,7 +269,7 @@ jobs:
     needs: [update-pr-description]
     runs-on: ubuntu-latest
     timeout-minutes: 1
-    if: always() && inputs.run_changelog_preview == true && needs.update-pr-description.result == 'success'
+    if: always() && (github.event_name == 'pull_request' || inputs.run_changelog_preview == true) && needs.update-pr-description.result == 'success'
     permissions:
       pull-requests: write
     steps:
