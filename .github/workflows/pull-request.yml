@@ -93,7 +93,13 @@ jobs:
             revert
           requireScope: false
           subjectPattern: ^.+$
-          subjectPatternError: 'The subject must not be empty'
+          subjectPatternError: |
+            The PR subject is invalid.
+            
+            Common types: feat | fix | docs | refactor | test | chore | ci | perf | style | build | revert
+            Example: feat(auth): add OAuth support
+            
+            Full guide: https://www.conventionalcommits.org/
 
   lint-backend:
     name: Lint Backend
