@@ -24,6 +24,47 @@ name: Pull Request
 
 on:
   workflow_dispatch:
+    inputs:
+      run_pr_title_validation:
+        description: 'Validate PR Title'
+        required: false
+        type: boolean
+        default: true
+      run_lint_backend:
+        description: 'Lint Backend'
+        required: false
+        type: boolean
+        default: true
+      run_lint_frontend:
+        description: 'Lint Frontend'
+        required: false
+        type: boolean
+        default: true
+      run_test_backend:
+        description: 'Test Backend (Unit & Integration)'
+        required: false
+        type: boolean
+        default: true
+      run_test_frontend:
+        description: 'Test Frontend (Unit)'
+        required: false
+        type: boolean
+        default: true
+      run_e2e_tests:
+        description: 'E2E Tests'
+        required: false
+        type: boolean
+        default: true
+      run_changelog_preview:
+        description: 'Generate Changelog Preview'
+        required: false
+        type: boolean
+        default: false
+      run_status_comment:
+        description: 'Post Status Comment'
+        required: false
+        type: boolean
+        default: true
   pull_request:
     branches: [ main ]
 
@@ -47,6 +88,7 @@ jobs:
     name: Validate PR Title
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    if: github.event_name == 'pull_request' || inputs.run_pr_title_validation
     steps:
       - uses: amannn/action-semantic-pull-request@v5
         env:
@@ -72,6 +114,7 @@ jobs:
     name: Lint Backend
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    if: github.event_name == 'pull_request' || inputs.run_lint_backend
     steps:
       - uses: actions/checkout@v4
       - name: Setup Toolchain
@@ -90,6 +133,7 @@ jobs:
     name: Lint Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    if: github.event_name == 'pull_request' || inputs.run_lint_frontend
     steps:
       - uses: actions/checkout@v4
       - name: Setup Toolchain
@@ -108,6 +152,7 @@ jobs:
     needs: [lint-backend]
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: (github.event_name == 'pull_request' || inputs.run_test_backend) && !cancelled()
     # Override Supabase URL for backend tests - they run on host, not in Docker
     env:
       PUBLIC_SUPABASE_URL: http://localhost:54321
@@ -145,6 +190,7 @@ jobs:
     needs: [lint-frontend]
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    if: (github.event_name == 'pull_request' || inputs.run_test_frontend) && !cancelled()
     steps:
       - uses: actions/checkout@v4
       - name: Setup Toolchain
@@ -167,6 +213,7 @@ jobs:
     name: E2E Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: github.event_name == 'pull_request' || inputs.run_e2e_tests
     steps:
       - uses: actions/checkout@v4
 
@@ -224,6 +271,7 @@ jobs:
 
   generate-changelog-preview:
     name: Changelog Preview
+    if: github.event_name == 'pull_request' || inputs.run_changelog_preview
     uses: ./.github/workflows/semantic-preview.yml
     permissions:
       contents: read
@@ -233,7 +281,7 @@ jobs:
     needs: [generate-changelog-preview]
     runs-on: ubuntu-latest
     timeout-minutes: 1
-    if: always()
+    if: always() && (github.event_name == 'pull_request' || inputs.run_changelog_preview) && needs.generate-changelog-preview.result != 'skipped'
     permissions:
       pull-requests: write
     steps:
@@ -294,7 +342,7 @@ jobs:
     needs: [test-backend, test-frontend, e2e-test]
     runs-on: ubuntu-latest
     timeout-minutes: 1
-    if: success()
+    if: success() && (github.event_name == 'pull_request' || inputs.run_status_comment)
     permissions:
       pull-requests: write
     steps:
