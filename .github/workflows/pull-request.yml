@@ -16,7 +16,6 @@
 #   - test-backend: Unit & Integration tests (Go)
 #   - test-frontend: Unit tests (Vitest)
 #   - e2e-test: Full stack Playwright tests with local Supabase and Docker
-#   - status-comment: Posts a summary comment on the PR on success
 #
 # =============================================================================
 
@@ -158,8 +157,6 @@ jobs:
       PUBLIC_SUPABASE_URL: http://localhost:54321
     steps:
       - uses: actions/checkout@v4
-
-
       - name: Setup Toolchain
         uses: ./.github/actions/setup-toolchain
         with:
@@ -211,9 +208,10 @@ jobs:
 
   e2e-test:
     name: E2E Test
+    needs: [lint-backend, lint-frontend]
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event_name == 'pull_request' || inputs.run_e2e_tests
+    if: (github.event_name == 'pull_request' || inputs.run_e2e_tests) && !cancelled()
     steps:
       - uses: actions/checkout@v4
 
@@ -245,12 +243,6 @@ jobs:
           supabase-url: ${{ env.PUBLIC_SUPABASE_URL }}
           supabase-anon-key: ${{ env.PUBLIC_SUPABASE_ANON_KEY }}
           supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
-
-
-
-
-
-
 
       - name: Run E2E Tests
         working-directory: ./frontend
