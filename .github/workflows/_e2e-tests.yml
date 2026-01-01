@@ -1,0 +1,108 @@
+# =============================================================================
+# E2E Tests Workflow (Reusable)
+# =============================================================================
+#
+# DESCRIPTION:
+#   Runs E2E tests using Playwright against a full stack deployment.
+#   Supports both local Supabase (for PRs) and remote Supabase (for releases).
+#
+# USAGE:
+#   jobs:
+#     e2e:
+#       uses: ./.github/workflows/_e2e-tests.yml
+#       with:
+#         supabase-mode: local  # or 'remote'
+#
+# =============================================================================
+
+name: E2E Tests
+
+on:
+  workflow_call:
+    inputs:
+      supabase-mode:
+        description: 'Supabase mode: local or remote'
+        type: string
+        default: 'local'
+      retries:
+        description: 'Playwright retry count'
+        type: number
+        default: 0
+      supabase-url:
+        description: 'Supabase URL (required for remote mode)'
+        type: string
+        required: false
+      supabase-anon-key:
+        description: 'Supabase anon key (required for remote mode)'
+        type: string
+        required: false
+    secrets:
+      SUPABASE_SERVICE_ROLE_KEY:
+        description: 'Supabase service role key (required for remote mode)'
+        required: false
+
+jobs:
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-toolchain
+
+      - name: Setup Local Environment
+        if: inputs.supabase-mode == 'local'
+        uses: ./.github/actions/setup-local-env
+
+      - name: Setup Supabase (Local)
+        if: inputs.supabase-mode == 'local'
+        uses: ./.github/actions/setup-supabase
+        with:
+          mode: local
+
+      - name: Configure host.docker.internal
+        if: inputs.supabase-mode == 'local'
+        run: |
+          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
+
+      - name: Deploy E2E Stack (Local)
+        if: inputs.supabase-mode == 'local'
+        uses: ./.github/actions/deploy-e2e-stack
+        with:
+          supabase-url: ${{ env.PUBLIC_SUPABASE_URL }}
+          supabase-anon-key: ${{ env.PUBLIC_SUPABASE_ANON_KEY }}
+          supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Deploy E2E Stack (Remote)
+        if: inputs.supabase-mode == 'remote'
+        uses: ./.github/actions/deploy-e2e-stack
+        with:
+          supabase-url: ${{ inputs.supabase-url }}
+          supabase-anon-key: ${{ inputs.supabase-anon-key }}
+          supabase-service-role-key: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Run E2E Tests
+        working-directory: ./frontend
+        run: npx playwright test --workers=4 --retries=${{ inputs.retries }}
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        working-directory: ./infra
+        run: docker compose down -v

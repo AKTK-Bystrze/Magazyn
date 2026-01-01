@@ -1,0 +1,64 @@
+# =============================================================================
+# Setup Local Environment Action
+# =============================================================================
+#
+# DESCRIPTION:
+#   Exports local Supabase demo instance environment variables.
+#   These are standard Supabase local development keys (safe to commit).
+#   Supports both Docker and host contexts for different test scenarios.
+#
+# INPUTS:
+#   context: 'docker' (default) or 'host'
+#     - docker: Uses host.docker.internal (for E2E tests in Docker)
+#     - host: Uses localhost (for backend integration tests on host)
+#
+# USAGE:
+#   # For Docker-based tests (default)
+#   - uses: ./.github/actions/setup-local-env
+#
+#   # For host-based tests
+#   - uses: ./.github/actions/setup-local-env
+#     with:
+#       context: host
+#
+# =============================================================================
+
+name: Setup Local Environment
+description: Exports local Supabase demo instance environment variables
+
+inputs:
+  context:
+    description: 'Execution context: docker or host'
+    required: false
+    default: 'docker'
+
+runs:
+  using: composite
+  steps:
+    - name: Export Local Supabase Config
+      shell: bash
+      run: |
+        # Local Supabase demo instance keys (safe to commit, not production secrets)
+        # These are standard keys from supabase/supabase docker-compose
+        
+        # Set Supabase URL based on context
+        if [ "${{ inputs.context }}" = "host" ]; then
+          # Backend tests run on host, use localhost
+          echo "PUBLIC_SUPABASE_URL=http://localhost:54321" >> $GITHUB_ENV
+        else
+          # E2E tests run in Docker, use host.docker.internal
+          echo "PUBLIC_SUPABASE_URL=http://host.docker.internal:54321" >> $GITHUB_ENV
+        fi
+        
+        # Supabase keys (same for both contexts)
+        echo "PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0" >> $GITHUB_ENV
+        echo "SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU" >> $GITHUB_ENV
+        
+        # E2E test credentials
+        echo "E2E_TEST_EMAIL=test.dev.g6@gmail.com" >> $GITHUB_ENV
+        echo "E2E_TEST_PASSWORD=TestSecurePassword123!" >> $GITHUB_ENV
+        
+        # Application configuration
+        echo "PORT=8080" >> $GITHUB_ENV
+        echo "E2E_BASE_URL=http://localhost" >> $GITHUB_ENV
+        echo "CORS_ALLOWED_ORIGINS=http://localhost" >> $GITHUB_ENV

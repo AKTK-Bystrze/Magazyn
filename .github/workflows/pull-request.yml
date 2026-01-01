@@ -16,14 +16,49 @@
 #   - test-backend: Unit & Integration tests (Go)
 #   - test-frontend: Unit tests (Vitest)
 #   - e2e-test: Full stack Playwright tests with local Supabase and Docker
-#   - status-comment: Posts a summary comment on the PR on success
 #
 # =============================================================================
 
-name: Pull Request
+name: PR
 
 on:
   workflow_dispatch:
+    inputs:
+      run_pr_title_validation:
+        description: 'Validate PR Title'
+        required: false
+        type: boolean
+        default: true
+      run_lint_backend:
+        description: 'Lint Backend'
+        required: false
+        type: boolean
+        default: true
+      run_lint_frontend:
+        description: 'Lint Frontend'
+        required: false
+        type: boolean
+        default: true
+      run_test_backend:
+        description: 'Test Backend (Unit & Integration)'
+        required: false
+        type: boolean
+        default: true
+      run_test_frontend:
+        description: 'Test Frontend (Unit)'
+        required: false
+        type: boolean
+        default: true
+      run_e2e_tests:
+        description: 'E2E Tests'
+        required: false
+        type: boolean
+        default: true
+      run_changelog_preview:
+        description: 'Generate Changelog Preview'
+        required: false
+        type: boolean
+        default: true
   pull_request:
     branches: [ main ]
 
@@ -31,22 +66,38 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
-env:
-  # Docker containers use host.docker.internal to reach local Supabase on host
-  PUBLIC_SUPABASE_URL: http://host.docker.internal:54321
-  PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-  SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
-  PORT: 8080
-  E2E_TEST_EMAIL: test.dev.g6@gmail.com
-  E2E_TEST_PASSWORD: TestSecurePassword123!
-  E2E_BASE_URL: http://localhost
-  CORS_ALLOWED_ORIGINS: http://localhost
-
 jobs:
+  validate-pr-title:
+    name: PR Title
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    if: github.event_name == 'pull_request' || inputs.run_pr_title_validation
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+
   lint-backend:
     name: Lint Backend
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    if: github.event_name == 'pull_request' || inputs.run_lint_backend
     steps:
       - uses: actions/checkout@v4
       - name: Setup Toolchain
@@ -65,6 +116,7 @@ jobs:
     name: Lint Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    if: github.event_name == 'pull_request' || inputs.run_lint_frontend
     steps:
       - uses: actions/checkout@v4
       - name: Setup Toolchain
@@ -83,18 +135,19 @@ jobs:
     needs: [lint-backend]
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Override Supabase URL for backend tests - they run on host, not in Docker
-    env:
-      PUBLIC_SUPABASE_URL: http://localhost:54321
+    if: (github.event_name == 'pull_request' || inputs.run_test_backend) && !cancelled()
     steps:
       - uses: actions/checkout@v4
-
-
       - name: Setup Toolchain
         uses: ./.github/actions/setup-toolchain
         with:
           go-mod-path: 'backend/go.mod'
           go-sum-path: 'backend/go.sum'
+
+      - name: Setup Local Environment
+        uses: ./.github/actions/setup-local-env
+        with:
+          context: host
 
       - name: Setup Supabase
         uses: ./.github/actions/setup-supabase
@@ -120,6 +173,7 @@ jobs:
     needs: [lint-frontend]
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    if: (github.event_name == 'pull_request' || inputs.run_test_frontend) && !cancelled()
     steps:
       - uses: actions/checkout@v4
       - name: Setup Toolchain
@@ -140,79 +194,72 @@ jobs:
 
   e2e-test:
     name: E2E Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
+    needs: [lint-backend, lint-frontend]
+    if: (github.event_name == 'pull_request' || inputs.run_e2e_tests) && !cancelled()
+    uses: ./.github/workflows/_e2e-tests.yml
+    with:
+      supabase-mode: local
+      retries: 0
 
-      - name: Setup Toolchain
-        uses: ./.github/actions/setup-toolchain
+  generate-changelog-preview:
+    name: Changelog Preview
+    if: github.event_name == 'pull_request' || inputs.run_changelog_preview == true
+    uses: ./.github/workflows/semantic-preview.yml
+    permissions:
+      contents: read
 
-      - name: Setup Supabase
-        uses: ./.github/actions/setup-supabase
-        with:
-          mode: local
-
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Setup Playwright
-        uses: ./.github/actions/setup-playwright
-
-      - name: Configure host.docker.internal
-        run: |
-          # Add host.docker.internal to /etc/hosts so browser can resolve it
-          # This is needed because frontend is built with PUBLIC_SUPABASE_URL=http://host.docker.internal:54321
-          # and Playwright browser runs on the host, not inside Docker
-          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
-
-      - name: Deploy E2E Stack
-        uses: ./.github/actions/deploy-e2e-stack
-        with:
-          supabase-url: ${{ env.PUBLIC_SUPABASE_URL }}
-          supabase-anon-key: ${{ env.PUBLIC_SUPABASE_ANON_KEY }}
-          supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
-
-
-
-
-
-
-
-      - name: Run E2E Tests
-        working-directory: ./frontend
-        run: npx playwright test --workers=4 --retries=0
-
-      - name: Upload Playwright Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
-          retention-days: 30
-
-      - name: Cleanup
-        if: always()
-        working-directory: ./infra
-        run: docker compose down -v
-
-  status-comment:
-    name: Status Comment
-    needs: [test-backend, test-frontend, e2e-test]
+  update-pr-description:
+    name: Update PR Description
+    needs: [generate-changelog-preview]
     runs-on: ubuntu-latest
     timeout-minutes: 1
-    if: success()
+    if: always() && (github.event_name == 'pull_request' || inputs.run_changelog_preview == true) && needs.generate-changelog-preview.result == 'success'
     permissions:
       pull-requests: write
     steps:
-      - name: Comment on PR
+      - name: Update Automated Section
         uses: actions/github-script@v7
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            const changelog = `${{ needs.generate-changelog-preview.outputs.changelog }}`;
+            const nextVersion = '${{ needs.generate-changelog-preview.outputs.next_version }}';
+            const releaseType = '${{ needs.generate-changelog-preview.outputs.release_type }}';
+            const hasChanges = '${{ needs.generate-changelog-preview.outputs.has_changes }}' === 'true';
+            
+            // Determine emoji
+            const emojiMap = { major: '🚨', minor: '✨', patch: '🐛' };
+            const emoji = emojiMap[releaseType] || '📝';
+            
+            // Get current PR
+            const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '### ✅ Verification Successful\n\nAll checks passed:\n- **Backend**: Lint, Unit & Integration Tests\n- **Frontend**: Lint & Unit Tests\n- **E2E**: Parallel (4 workers)'
-            })
+              pull_number: context.issue.number
+            });
+            
+            let userContent = pr.body || '';
+            
+            // Remove old automated section if exists
+            userContent = userContent.replace(/<!--\s*automatic-pr-description\s*-->[\s\S]*<!--\s*\/automatic-pr-description\s*-->/g, '').trim();
+            
+            // Build automated section
+            let automatedSection = '\n\n<!-- automatic-pr-description -->\n';
+            automatedSection += '## 📋 Changelog Preview\n\n';
+            
+            if (hasChanges) {
+              automatedSection += `**${emoji} Release Impact:** \`${releaseType}\` → **${nextVersion}**\n\n`;
+              automatedSection += changelog;
+            } else {
+              automatedSection += '**No release** (docs/chore only)\n';
+            }
+            
+            automatedSection += '\n\n---\n*Auto-generated by semantic-release*\n';
+            automatedSection += '<!-- /automatic-pr-description -->';
+            
+            // Update PR
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: userContent + automatedSection
+            });

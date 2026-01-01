@@ -26,6 +26,10 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
     labels:
       - "dependencies"
       - "frontend"
@@ -38,6 +42,10 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
     labels:
       - "dependencies"
       - "backend"
@@ -50,6 +58,10 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
     labels:
       - "dependencies"
       - "ci"
