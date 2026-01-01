@@ -1,0 +1,114 @@
+# =============================================================================
+# Semantic Release Preview Workflow (Reusable)
+# =============================================================================
+#
+# DESCRIPTION:
+#   Generates a preview of what semantic-release would do, including:
+#   - Next version number
+#   - Release type (major/minor/patch/no-release)
+#   - Formatted changelog from conventional commits
+#
+# USAGE:
+#   Called by other workflows to preview releases on PRs
+#
+# =============================================================================
+
+name: Semantic Release Preview
+
+on:
+  workflow_call:
+    outputs:
+      next_version:
+        description: "Next version number (or 'No release')"
+        value: ${{ jobs.preview.outputs.next_version }}
+      release_type:
+        description: "Release type: major, minor, patch, or no-release"
+        value: ${{ jobs.preview.outputs.release_type }}
+      changelog:
+        description: "Formatted changelog preview"
+        value: ${{ jobs.preview.outputs.changelog }}
+      has_changes:
+        description: "Whether any releasable changes were found"
+        value: ${{ jobs.preview.outputs.has_changes }}
+
+jobs:
+  preview:
+    name: Generate Release Preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      next_version: ${{ steps.semantic.outputs.next_version }}
+      release_type: ${{ steps.semantic.outputs.release_type }}
+      changelog: ${{ steps.semantic.outputs.changelog }}
+      has_changes: ${{ steps.semantic.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for semantic-release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: ./frontend
+        run: npm ci --prefer-offline
+
+      - name: Run Semantic Release (Dry Run)
+        id: semantic
+        working-directory: ./frontend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Run semantic-release in dry-run mode
+          set +e  # Don't exit on error
+          OUTPUT=$(npx semantic-release --dry-run --no-ci 2>&1)
+          EXIT_CODE=$?
+          set -e
+          
+          echo "=== Semantic Release Output ==="
+          echo "$OUTPUT"
+          echo "==============================="
+          
+          # Extract next version
+          NEXT_VERSION=$(echo "$OUTPUT" | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+          
+          # Extract release type
+          RELEASE_TYPE=$(echo "$OUTPUT" | grep -oP 'Analysis of \d+ commits complete: \K\w+' || echo "no-release")
+          
+          # Extract release notes (changelog)
+          CHANGELOG=$(echo "$OUTPUT" | sed -n '/Release note for version/,/^$/p' | tail -n +2 || echo "")
+          
+          # Determine if we have changes
+          HAS_CHANGES=false
+          if [ -n "$NEXT_VERSION" ] && [ "$RELEASE_TYPE" != "no-release" ]; then
+            HAS_CHANGES=true
+          fi
+          
+          # Default values if nothing found
+          if [ -z "$NEXT_VERSION" ]; then
+            NEXT_VERSION="No release"
+          fi
+          
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="No conventional commits found that would trigger a release."
+          fi
+          
+          # Output for next jobs
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          echo "has_changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
+          
+          # Save changelog (multiline output)
+          {
+            echo 'changelog<<EOF'
+            echo "$CHANGELOG"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+          
+          echo "✅ Preview generated: $RELEASE_TYPE → $NEXT_VERSION"
