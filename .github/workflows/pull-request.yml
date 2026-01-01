@@ -58,7 +58,7 @@ on:
         description: 'Generate Changelog Preview'
         required: false
         type: boolean
-        default: false
+        default: true
   pull_request:
     branches: [ main ]
 
