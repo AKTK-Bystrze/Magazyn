@@ -126,12 +126,6 @@ jobs:
           supabase-anon-key: ${{ env.PUBLIC_SUPABASE_ANON_KEY }}
           supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
 
-
-
-
-
-
-
       - name: Run E2E Tests
         working-directory: ./frontend
         run: |

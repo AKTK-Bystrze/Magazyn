@@ -1,10 +1,10 @@
 ## In progress:
+default db test users passwords reused in remote test db
 caddyfile overwrite
 env example
 documentation
 production database
 deploy script (push migrations, build and start latest containers, run sanity test)
-healthcheck is too often
 
 
 ## Equipment Views refactor
@@ -57,5 +57,5 @@ healthcheck is too often
 18. currently one reservations can be made on the same day.
 19. cant change credits for your own or cant change credtis for firts user in the table
 20. duplicated email in profiles and auth tables
-21. exceptions during e2e tests run
+21. exceptions during e2e tests run, review them. They make noise. IDK if they are valid.
 
