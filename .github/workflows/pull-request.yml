@@ -337,22 +337,3 @@ jobs:
               body: newBody
             });
 
-  status-comment:
-    name: Status Comment
-    needs: [test-backend, test-frontend, e2e-test]
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    if: success() && (github.event_name == 'pull_request' || inputs.run_status_comment)
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Comment on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '### ✅ Verification Successful\n\nAll checks passed:\n- **Backend**: Lint, Unit & Integration Tests\n- **Frontend**: Lint & Unit Tests\n- **E2E**: Parallel (4 workers)'
-            })
