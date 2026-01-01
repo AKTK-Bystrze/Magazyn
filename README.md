@@ -259,8 +259,29 @@ This project uses **Husky** and **lint-staged** for pre-commit code formatting:
 - Automatically formats `.js`, `.jsx`, `.ts`, `.tsx`, `.json`, and `.md` files
 - Uses Prettier for consistent code style
 - Runs on every commit
-reviews, ratings)
-- ❌ AI-powered equipment recommendations
+
+### Conventional Commits
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and changelog generation.
+
+**Format**: `<type>(<scope>): <description>`
+
+**Common types:**
+- `feat:` - New feature (minor version bump)
+- `fix:` - Bug fix (patch version bump)
+- `docs:` - Documentation changes (no release)
+- `refactor:` - Code restructuring (no release)
+- `test:` - Test changes (no release)
+- `chore:` - Maintenance tasks (no release)
+
+
+📚 **[See detailed commit type guide →](documentation/conventional-commits.md)**
+
+**Enforcement:**
+- **CI**: PR titles validated automatically on every PR
+- **Local**: Commits validated via commitlint with husky hooks
+
+
 
 
 **Documentation:**
@@ -268,3 +289,5 @@ reviews, ratings)
 - [Product Requirements Document](documentation/prd/index.md)
 - [Technology Stack & Architecture](documentation/techstack.md)
 - [Database Schema Plan](documentation/db-plan.md)
+- [Conventional Commits Guide](documentation/conventional-commits.md)
+

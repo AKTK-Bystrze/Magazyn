@@ -3,18 +3,19 @@
 # =============================================================================
 #
 # DESCRIPTION:
-#   Builds, tests, and creates a new version tag for the application.
+#   Builds, tests, and creates a new version release using semantic-release.
 #   Runs E2E tests against the full stack (backend, frontend, Caddy) using
-#   Docker Compose and a remote Supabase test database before tagging.
+#   Docker Compose and a remote Supabase test database before releasing.
 #
 # TRIGGERS:
 #   - Push to main branch (production releases)
-#   - Manual trigger via workflow_dispatch with optional tag version
+#   - Manual trigger via workflow_dispatch
 #
 # VERSIONING:
-#   - If tag_version input is provided: uses that exact version
-#   - If tag_version is empty: auto-increments patch version (v1.0.0 -> v1.0.1)
-#   - Tags are prefixed with 'v' automatically if missing
+#   Uses semantic-release to determine version based on commit messages:
+#   - fix: → Patch bump (v1.0.0 → v1.0.1)
+#   - feat: → Minor bump (v1.0.0 → v1.1.0)
+#   - feat!: or BREAKING CHANGE: → Major bump (v1.0.0 → v2.0.0)
 #
 # REQUIRED SECRETS:
 #   - PUBLIC_SUPABASE_URL: Supabase project URL
@@ -33,11 +34,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      tag_version:
-        description: 'Tag version (e.g., v1.2.3). Leave empty to auto-increment.'
-        required: false
-        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -189,61 +185,9 @@ jobs:
           docker compose down -v --remove-orphans
           echo "✅ Cleanup complete"
 
-      - name: Determine Next Version
-        id: version
-        run: |
-          INPUT_TAG="${{ inputs.tag_version }}"
-          
-          if [ -n "$INPUT_TAG" ]; then
-            if [[ "$INPUT_TAG" != v* ]]; then
-              NEW_VERSION="v${INPUT_TAG}"
-            else
-              NEW_VERSION="$INPUT_TAG"
-            fi
-            echo "Using provided tag: $NEW_VERSION"
-          else
-            LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
-            
-            if [ -z "$LATEST_TAG" ]; then
-              NEW_VERSION="v1.0.0"
-            else
-              VERSION=${LATEST_TAG#v}
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-              NEW_PATCH=$((PATCH + 1))
-              NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-            fi
-            
-            echo "Latest tag: $LATEST_TAG"
-          fi
-          
-          echo "New version: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      - name: Semantic Release
+        working-directory: ./frontend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
 
-      - name: Create Release Tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git tag -a "${{ steps.version.outputs.version }}" \
-            -m "Release ${{ steps.version.outputs.version }}"
-          
-          git push origin "${{ steps.version.outputs.version }}"
-          
-          echo "✅ Created and pushed tag: ${{ steps.version.outputs.version }}"
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: Release ${{ steps.version.outputs.version }}
-          body: |
-            ## Release ${{ steps.version.outputs.version }}
-            
-            **Commit**: ${{ github.sha }}
-            **Build**: ${{ github.run_number }}
-            
-            ### Verified
-            - ✅ Migrations pushed to test database
-            - ✅ E2E tests passed
-          draft: false
-          prerelease: false
