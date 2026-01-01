@@ -92,14 +92,6 @@ jobs:
             chore
             revert
           requireScope: false
-          subjectPattern: ^.+$
-          subjectPatternError: |
-            The PR subject is invalid.
-            
-            Common types: feat | fix | docs | refactor | test | chore | ci | perf | style | build | revert
-            Example: feat(auth): add OAuth support
-            
-            Full guide: https://www.conventionalcommits.org/
 
   lint-backend:
     name: Lint Backend
@@ -144,9 +136,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: (github.event_name == 'pull_request' || inputs.run_test_backend) && !cancelled()
-    # Override Supabase URL for backend tests - they run on host, not in Docker
-    env:
-      PUBLIC_SUPABASE_URL: http://localhost:54321
     steps:
       - uses: actions/checkout@v4
       - name: Setup Toolchain
@@ -154,6 +143,11 @@ jobs:
         with:
           go-mod-path: 'backend/go.mod'
           go-sum-path: 'backend/go.sum'
+
+      - name: Setup Local Environment
+        uses: ./.github/actions/setup-local-env
+        with:
+          context: host
 
       - name: Setup Supabase
         uses: ./.github/actions/setup-supabase
