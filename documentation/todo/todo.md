@@ -1,3 +1,11 @@
+## In progress
+- Supabase Schema: Don't just rely on the SQL file. Maintain a schema.md that explains why tables exist and complex RLS policies.
+Example: Supabase Auth Schema (Conceptual docs). https://supabase.com/docs/guides/auth/managing-user-data
+- guidance files in documentation folder. 
+- OpenAPI/Swagger. 
+   Backend (Go): Use swaggo/swag
+   Frontend (React): Use openapi-typescript-codegen (or @tanstack/react-query generators).
+
 ## high priority
 - default db test users passwords are reused in remote test db. By checking the code there is of unauthorized access to the remote db 
 - when running docker compose locally it overwrites the production file with test file. There is a risk of pushing it. Change it to resolve this issue. Running locally shouldn't overwrite production file.
