@@ -412,6 +412,6 @@ import { RESERVATION_STATUS } from '@/lib/config/constants/reservation';
 
 - [Coding Standards](./coding_standards.md)
 - [Redirect Flow](./redirect-flow.md)
-- [Astro Guidelines](../.agent/rules/astro.md)
-- [React Guidelines](../.agent/rules/react.md)
+- [Astro Guidelines](./standards/astro.md)
+- [React Guidelines](./standards/react.md)
 

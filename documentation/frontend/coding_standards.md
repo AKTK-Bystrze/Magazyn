@@ -1073,8 +1073,8 @@ When adding a new feature:
 ## Related Documentation
 
 - [Architecture](./architecture.md)
-- [React Guidelines](./rules/react.md)
-- [Astro Guidelines](./rules/astro.md)
-- [Shared Coding Standards](./rules/shared.md)
-- [Vitest Testing](./rules/vitest-unit-testing.md)
-- [Shadcn/ui Components](./rules/ui-shadcn-helper.md)
+- [React Guidelines](./standards/react.md)
+- [Astro Guidelines](./standards/astro.md)
+- [Shared Coding Standards](./standards/shared.md)
+- [Vitest Testing](./standards/vitest-unit-testing.md)
+- [Shadcn/ui Components](./standards/ui-shadcn-helper.md)
