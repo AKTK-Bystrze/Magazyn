@@ -180,24 +180,27 @@ Run the seed file to create test users and profiles:
 npx supabase db seed
 ```
 
-This creates two test users from [`supabase/seed.sql`](supabase/seed.sql):
-
-| Email                 | Role  | Credit Balance | User ID                              |
-|-----------------------|-------|----------------|--------------------------------------|
-| testuser1@example.com | user  | 100,000        | 11111111-1111-1111-1111-111111111111 |
-| testuser2@example.com | admin | 100,000        | 22222222-2222-2222-2222-222222222222 |
-
 > [!NOTE]
 > These users are primarily for backend integration tests, which require at least 2 users in the database.
 
-#### 2. E2E Test Users (Optional)
+#### 2. E2E Test
 
-For running E2E tests, you need additional users with password-based authentication:
+End-to-end tests use **Playwright** and support both Docker and local environments.
 
-<!-- UPDATE -->
+**Quick Start (Docker):**
+```bash
+cd infra && docker compose --env-file ../.env up -d --build
+cd ../frontend && npm run e2e
+# Run in browser: npm run e2e:headed
+```
+
+**Key Features:**
+- **Auto-created users**: Test users are automatically managed by fixtures.
+- **Hybrid Strategy**: Uses shared users for performance and isolated resources for reliability.
+- **Visuals**: Runs on mobile viewport (Pixel 5).
 
 > [!TIP]
-> See [`frontend/docs/e2e-testing.md`](frontend/docs/e2e-testing.md) for complete E2E testing documentation.
+> See [`frontend/e2e/README.md`](frontend/e2e/README.md) for full documentation, authentication flows, and debugging guide.
 
 #### 3. Running Integration Tests
 
