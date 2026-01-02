@@ -1,6 +1,7 @@
 ## In progress
 - Supabase Schema: Don't just rely on the SQL file. Maintain a schema.md that explains why tables exist and complex RLS policies.
 Example: Supabase Auth Schema (Conceptual docs). https://supabase.com/docs/guides/auth/managing-user-data
+- add supabase logic documentation. 
 - guidance files in documentation folder. 
 - OpenAPI/Swagger. 
    Backend (Go): Use swaggo/swag
