@@ -1,8 +1,8 @@
 ## In progress:
+documentation (.ai, prd)
+
 default db test users passwords reused in remote test db
 caddyfile overwrite
-env example
-documentation (.ai, prd)
 production database
 deploy script (push migrations, build and start latest containers, run sanity test)
 

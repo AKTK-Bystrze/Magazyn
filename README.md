@@ -70,7 +70,7 @@ Magazyn/
 └── documentation/     # PRD, techstack, db-plan, diagrams
 ```
 
-> See [frontend/docs/architecture.md](frontend/docs/architecture.md) and [backend/docs/architecture.md](backend/docs/architecture.md) for detailed architecture documentation.
+> See [frontend/docs/](frontend/docs/) and [backend/docs/](backend/docs/) for detailed architecture and implementation documentation.
 
 ## 🚀 Getting Started
 
@@ -86,23 +86,33 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
 ### Quick Start (Docker)
 
-<!-- Creata initial envs with test user -->
+1. **Start Supabase** (local or remote)
 
-```bash
-npx supabase start              # Start local DB
-cd infra && docker compose --env-file ../.env up -d # Start full stack
-# App available at http://localhost:80
-```
+   ```bash
+   npx supabase start
+   ```
 
-<!-- copy envs -->
+2. **Configure Environment**
 
-<!-- start compose -->
-<!-- use test caddy -->
+   create .env file based on .env.example
 
-<!-- initail users -->
+   Update in `.env`:
+   - `PUBLIC_SUPABASE_URL`
+   - `PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
 
-<!-- you can run e2e tests for check -->
-<!-- DO I HAVE MY EMAIL USER? -->
+3. **Start Application**
+
+   ```bash
+   cd infra && docker compose --env-file ../.env up -d
+   ```
+
+   **App available at:** http://localhost:80
+
+4. **Create Super Admin User**
+
+   reuse seed.sql from supabase/seed.sql to create super admin user. Just replace email and role. Email is used to send magic link
+
 
 > [!TIP]
 > See [frontend/e2e/README.md](frontend/e2e/README.md) for detailed Docker setup and testing.
