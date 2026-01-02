@@ -54,7 +54,10 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 | **Database** | Supabase (PostgreSQL + Auth + Storage) |
 | **Deploy** | Docker Compose + Caddy |
 
-<!-- Project Architecture diagram link to documentation dir-->
+### 📐 Architecture Diagrams
+
+- **[High-Level Architecture](documentation/diagrams/high-level-architecture.md)**: Overview of main components and data flows.
+- **[Detailed Architecture](documentation/diagrams/detailed-architecture.md)**: Technical breakdown of all layers, middleware, and patterns.
 
 ## 📁 Project Structure
 
