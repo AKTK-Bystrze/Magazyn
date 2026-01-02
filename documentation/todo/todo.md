@@ -2,10 +2,8 @@
 - Supabase Schema: Don't just rely on the SQL file. Maintain a schema.md that explains why tables exist and complex RLS policies.
 Example: Supabase Auth Schema (Conceptual docs). https://supabase.com/docs/guides/auth/managing-user-data
 - add supabase logic documentation. 
-- guidance files in documentation folder. 
-- OpenAPI/Swagger. 
-   Backend (Go): Use swaggo/swag
-   Frontend (React): Use openapi-typescript-codegen (or @tanstack/react-query generators).
+- guidance files in documentation folder. A docs that will guide through the development and maintenance of the app.
+
 
 ## high priority
 - default db test users passwords are reused in remote test db. By checking the code there is of unauthorized access to the remote db 
@@ -19,6 +17,9 @@ Example: Supabase Auth Schema (Conceptual docs). https://supabase.com/docs/guide
 - API simplification. Analyze backend API and remove unused endpoints, parameters, etc. create a suggestion of API changes, improvements
 - documentation. In readme create a list of content of existing documenation md files in the repo they are spread currently in /frontend /backend /documentation. Update links in the documents, remove duplication. Move all docs into docuemntation and create a logical structure
 - remove magazyn v1
+- OpenAPI/Swagger. 
+   Backend (Go): Use swaggo/swag
+   Frontend (React): Use openapi-typescript-codegen (or @tanstack/react-query generators).
 
 ## Future Work
 - metrics, components resources limitation, recovery system. All of it is missing
