@@ -54,22 +54,7 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 | **Database** | Supabase (PostgreSQL + Auth + Storage) |
 | **Deploy** | Docker Compose + Caddy |
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                    Browser (Client)                      │
-├──────────────────────────────────────────────────────────┤
-│  Caddy Reverse Proxy (HTTPS/443)                         │
-│  ├─ /api/* → Go Backend (:8080)                          │
-│  └─ /*     → Astro Frontend (:3000)                      │
-├──────────────────────────────────────────────────────────┤
-│  Go Backend            │  Astro + React                  │
-│  ├─ Business Logic     │  ├─ SSR Pages                   │
-│  ├─ JWT Validation     │  ├─ API Proxies                 │
-│  └─ Supabase Client    │  └─ Supabase Auth               │
-├──────────────────────────────────────────────────────────┤
-│              Supabase Cloud (PostgreSQL + RLS)           │
-└──────────────────────────────────────────────────────────┘
-```
+<!-- Project Architecture diagram link to documentation dir-->
 
 ## 📁 Project Structure
 
@@ -79,7 +64,7 @@ Magazyn/
 ├── backend/           # Go API (cmd/, internal/handler, service, types)
 ├── supabase/          # Migrations, seed.sql, SQL functions
 ├── infra/             # Docker, Caddyfile, deployment config
-└── documentation/     # PRD, techstack, db-plan
+└── documentation/     # PRD, techstack, db-plan, diagrams
 ```
 
 > See [frontend/docs/architecture.md](frontend/docs/architecture.md) and [backend/docs/architecture.md](backend/docs/architecture.md) for detailed architecture documentation.
@@ -93,7 +78,12 @@ Magazyn/
 - **Docker & Docker Compose**: For deployment
 - **Supabase Account**: Free tier account
 
+[Note]
+Database instance is created on Supabase. It can be started locally or remotely on [text](https://supabase.com/)
+
 ### Quick Start (Docker)
+
+<!-- Creata initial envs with test user -->
 
 ```bash
 npx supabase start              # Start local DB
@@ -101,22 +91,30 @@ cd infra && docker compose --env-file ../.env up -d # Start full stack
 # App available at http://localhost:80
 ```
 
+<!-- copy envs -->
+
+<!-- start compose -->
+<!-- use test caddy -->
+
+<!-- initail users -->
+
+<!-- you can run e2e tests for check -->
+<!-- DO I HAVE MY EMAIL USER? -->
+
 > [!TIP]
 > See [frontend/e2e/README.md](frontend/e2e/README.md) for detailed Docker setup and testing.
 
 ### Local Development Setup
 
-1. **Clone the repository**
-
-2. **Install dependencies**
+1. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-3. **Start local Supabase**
+2. **Start local Supabase**
 
-   Start the local Supabase services (database, auth, storage) using Docker:
+   Start the local Supabase services (database, auth, storage) using Docker or create a remote instance on [Supabase](https://supabase.com/):
 
    ```bash
    npx supabase start
@@ -127,28 +125,20 @@ cd infra && docker compose --env-file ../.env up -d # Start full stack
    Copy the API URL and Anon Key from the output to your `.env` file.
 
 
-4. **Configure environment variables**
+3. **Configure environment variables**
 
-   Copy `.env.example` to `.env` and fill in your values:
+   Copy `.env.example` to `.env`:
 
-   ```env
-   # Supabase (Frontend & Backend)
-   PUBLIC_SUPABASE_URL=<your-supabase-url>
-   PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-   SUPABASE_SERVICE_ROLE_KEY=<service-role-key>  # Backend only - keep secret!
+   Update in `.env`:
+   - `PUBLIC_SUPABASE_URL`
+   - `PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
 
-   # Backend API
-   PUBLIC_BACKEND_URL=http://localhost:8080
-   PORT=8080
-   LOG_LEVEL=DEBUG
-   CORS_ALLOWED_ORIGINS=http://localhost:4321,http://localhost:3000
-
-   # App URL (for redirects and magic links)
-   PUBLIC_APP_URL=localhost:3000
-   ```
+   See [`.env.example`](.env.example) for all configuration options.
 
 
-5. **Start development server**
+
+4. **Start development server**
 
    ```bash
    npm run dev
@@ -156,7 +146,7 @@ cd infra && docker compose --env-file ../.env up -d # Start full stack
 
    The application will be available at `http://localhost:3000`
 
-6. **Start Go backend** (in separate terminal)
+4. **Start Go backend** (in separate terminal)
 
    ```bash
    cd backend
@@ -191,21 +181,7 @@ This creates two test users from [`supabase/seed.sql`](supabase/seed.sql):
 
 For running E2E tests, you need additional users with password-based authentication:
 
-1. **Create users in Supabase Auth** (Dashboard → Authentication → Users):
-   - `test.dev.g6@gmail.com` (user role)
-   - `test.admin.g6@gmail.com` (admin role)
-   - `test.superadmin.g6@gmail.com` (super_admin role)
-   - Password: `TestSecurePassword123!`
-   - Enable "Auto Confirm User" when creating
-
-2. **Configure profiles** by running [`frontend/e2e/setup/test-users.sql`](frontend/e2e/setup/test-users.sql) in Supabase SQL Editor
-
-3. **Set environment variables** in `.env`:
-   ```env
-   SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
-   E2E_TEST_EMAIL=test.dev.g6@gmail.com
-   E2E_TEST_PASSWORD=TestSecurePassword123!
-   ```
+<!-- UPDATE -->
 
 > [!TIP]
 > See [`frontend/docs/e2e-testing.md`](frontend/docs/e2e-testing.md) for complete E2E testing documentation.
@@ -215,31 +191,13 @@ For running E2E tests, you need additional users with password-based authenticat
 Backend integration tests connect to the local Supabase instance and require:
 
 - Local Supabase running (`npx supabase start`)
-- At least 2 users in the database (created by `npx supabase db seed`)
+- At least 2 users in the database (created by automatically on tests start `npx supabase db seed`)
 - Environment variables set (`PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`)
 
 ```bash
 cd backend
 go test -tags=integration ./...
 ```
-
-### Production Deployment
-
-1. **Build the application**
-
-   ```bash
-   npm run build
-   ```
-
-2. **Deploy using Docker Compose**
-
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Configure Caddy**
-   - Update Caddyfile with your domain
-   - Caddy will automatically provision SSL certificates via Let's Encrypt
 
 ## 📜 Available Scripts
 
@@ -280,9 +238,6 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 **Enforcement:**
 - **CI**: PR titles validated automatically on every PR
 - **Local**: Commits validated via commitlint with husky hooks
-
-
-
 
 **Documentation:**
 
