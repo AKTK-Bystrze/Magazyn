@@ -1,5 +1,3 @@
-
-
 ## high priority
 - default db test users passwords are reused in remote test db. By checking the code there is of unauthorized access to the remote db 
 - when running docker compose locally it overwrites the production file with test file. There is a risk of pushing it. Change it to resolve this issue. Running locally shouldn't overwrite production file.
@@ -15,7 +13,6 @@
 
 ## Future Work
 - metrics, components resources limitation, recovery system. All of it is missing
-
 - credits request feature. Create new feature, find prd stories
 - users credits history view for admin. Allow superAdmins see all users credits history. 
 - equipment pictures. feature to upload and remove images of equipment by admins. 
@@ -30,7 +27,7 @@
 - Overdue reservations status and logic. Admin should be able to fitler quickly reservation which are overdue. User should be automatically notified about the overdue reservation.
 
 
-## Refactoring Needed
+## Refactoring
 0. SMTP service setup - part of the notification system. 
 1. Credit recalculation on date modification in Update - VERIFY
 2. Token expiration handling - valid on frontend but not backend - VERIFY
