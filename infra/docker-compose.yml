@@ -63,6 +63,7 @@ services:
       - "${CADDY_PORT:-20164}:80"
     volumes:
       - ./${CADDY_FILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
       - caddy_data:/data
       - caddy_config:/config
     healthcheck:

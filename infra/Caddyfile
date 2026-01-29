@@ -1,12 +1,15 @@
-# Mikrus VPS Caddyfile
-# For wykr.es subdomain (SSL handled by Mikrus proxy)
+# Cloudflare Origin Certificate Caddyfile
+# Full (strict) SSL: Cloudflare <-> Caddy with Origin Certificate
 
 {
-    # Disable auto-HTTPS - Mikrus proxy handles SSL
+    # Disable auto-HTTPS - Cloudflare Origin Certificate
     auto_https off
 }
 
 :80 {
+    # Use Cloudflare Origin Certificate
+    tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
+
     # Proxy /api requests to the Go backend container
     handle /api/* {
         uri strip_prefix /api
