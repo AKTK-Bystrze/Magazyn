@@ -18,14 +18,16 @@ type userRepository struct {
 	client      *supabase.Client
 	supabaseURL string
 	supabaseKey string
+	serviceKey  string
 }
 
 // NewUserRepository creates a new Supabase implementation of UserRepository.
-func NewUserRepository(client *supabase.Client, url string, key string) repository.UserRepository {
+func NewUserRepository(client *supabase.Client, url string, key string, serviceKey string) repository.UserRepository {
 	return &userRepository{
 		client:      client,
 		supabaseURL: url,
 		supabaseKey: key,
+		serviceKey:  serviceKey,
 	}
 }
 
@@ -74,6 +76,7 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 
 // GetByID retrieves a single user profile by ID.
 func (r *userRepository) GetByID(ctx context.Context, id string) (*types.PublicProfilesSelect, error) {
+	logger.Debugf(ctx, "Repo GetByID: Attempting to fetch profile for ID %s", id)
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	data, _, err := client.From(constants.TableProfiles).
@@ -83,6 +86,7 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*types.PublicP
 		Execute()
 
 	if err != nil {
+		logger.Errorf(ctx, "Repo GetByID: Supabase Query Failed for ID %s: %v", id, err)
 		return nil, err
 	}
 
@@ -118,10 +122,27 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*types.P
 
 // Create creates a new user profile record in the database.
 func (r *userRepository) Create(ctx context.Context, profile types.PublicProfilesInsert) (*types.PublicProfilesSelect, error) {
-	// DEBUG LOGGING
-	logger.Debugf(ctx, "Repo Create: Attempting to create profile for %s", profile.Email)
+	// Use service key to bypass RLS for profile creation (admin operation)
+	// Normal users can't create profiles for others
+	var client *supabase.Client
+	var err error
 
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	if r.serviceKey != "" {
+		client, err = supabase.NewClient(r.supabaseURL, r.serviceKey, &supabase.ClientOptions{
+			Headers: map[string]string{
+				"Authorization": "Bearer " + r.serviceKey,
+				"apikey":        r.serviceKey,
+			},
+		})
+		if err != nil {
+			logger.Errorf(ctx, "Failed to create admin client for profile creation: %v", err)
+			return nil, err
+		}
+	} else {
+		// Fallback to user context if service key is missing (though this will likely fail RLS)
+		logger.Warn(ctx, "Service key missing for profile creation, falling back to user context")
+		client = getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
+	}
 
 	data, _, err := client.From(constants.TableProfiles).
 		Insert(profile, false, "", "", "representation").

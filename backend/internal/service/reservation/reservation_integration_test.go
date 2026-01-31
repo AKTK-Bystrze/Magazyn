@@ -63,7 +63,7 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	// supa.NewEquipmentTypeRepository is used here.
 	_ = supabase.NewEquipmentTypeRepository(client, supabaseURL, supabaseKey) // Fake usage to pass lint until confirmed
 
-	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey)
+	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey, supabaseKey)
 	emailService := email.NewNoopEmailService()
 	svc := reservation.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
 
