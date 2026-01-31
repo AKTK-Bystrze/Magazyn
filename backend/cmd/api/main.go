@@ -128,7 +128,7 @@ func main() {
 	mux.Handle("GET /calendar/availability", authMiddleware(http.HandlerFunc(calendarHandler.HandleGetAvailability)))
 
 	// Credit History Routes
-	mux.Handle("GET /credit-history", authMiddleware(http.HandlerFunc(creditHandler.HandleGetCreditHistory)))
+	mux.Handle("GET /credits/history", authMiddleware(http.HandlerFunc(creditHandler.HandleGetCreditHistory)))
 
 	// Analytics Routes (Admin only)
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))
