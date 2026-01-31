@@ -70,7 +70,8 @@ func (r *authRepository) CreateUser(ctx context.Context, email, password string)
 		EmailConfirm: true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create auth user: %w", err)
+		// Forward the Supabase error message directly to the client
+		return nil, types.NewValidationError(err.Error(), map[string]string{"email": email})
 	}
 
 	return &types.User{

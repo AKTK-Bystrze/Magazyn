@@ -158,6 +158,10 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 
 	if err != nil {
 		logger.Errorf(ctx, "AuthRepo.CreateUser failed: %v", err)
+		// Propagate specific error types from auth repo (ValidationError contains Supabase message)
+		if _, ok := err.(*types.ValidationError); ok {
+			return nil, err
+		}
 		return nil, types.NewInternalError("Failed to create auth user", err)
 	}
 

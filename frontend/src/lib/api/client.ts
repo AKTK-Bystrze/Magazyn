@@ -1,16 +1,18 @@
-import { DEFAULT_HEADERS } from '@/lib/config/api';
-import { supabase } from '@/lib/supabase';
+import { DEFAULT_HEADERS } from "@/lib/config/api";
+import { supabase } from "@/lib/supabase";
 
 /**
  * Builds headers for API requests with optional authentication
  * Eliminates duplicated header building logic
  */
 async function buildHeaders(): Promise<Record<string, string>> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const headers: Record<string, string> = { ...DEFAULT_HEADERS };
 
   if (session?.access_token) {
-    headers['Authorization'] = `Bearer ${session.access_token}`;
+    headers["Authorization"] = `Bearer ${session.access_token}`;
   }
 
   return headers;
@@ -31,15 +33,19 @@ export const api = {
     const headers = await buildHeaders();
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify(data),
-      credentials: 'include',
+      credentials: "include",
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-      throw errorData;
+      const errorData = await response.json().catch(() => ({ error: "Network error" }));
+      // Extract message from API error response and throw as Error
+      const message = errorData.message || errorData.error || "An error occurred";
+      const error = new Error(message);
+      (error as Error & { details?: unknown }).details = errorData.details;
+      throw error;
     }
 
     const resData = await response.json();
@@ -52,13 +58,16 @@ export const api = {
    * @param params - Optional query parameters
    * @returns Response data wrapped in an object
    */
-  get: async <T>(url: string, params?: Record<string, string | number | boolean | undefined | null>): Promise<{ data: T }> => {
+  get: async <T>(
+    url: string,
+    params?: Record<string, string | number | boolean | undefined | null>
+  ): Promise<{ data: T }> => {
     const headers = await buildHeaders();
 
     const queryParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (value !== undefined && value !== null && value !== "") {
           queryParams.append(key, String(value));
         }
       });
@@ -68,14 +77,17 @@ export const api = {
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
     const response = await fetch(fullUrl, {
-      method: 'GET',
+      method: "GET",
       headers,
-      credentials: 'include',
+      credentials: "include",
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-      throw errorData;
+      const errorData = await response.json().catch(() => ({ error: "Network error" }));
+      const message = errorData.message || errorData.error || "An error occurred";
+      const error = new Error(message);
+      (error as Error & { details?: unknown }).details = errorData.details;
+      throw error;
     }
 
     const resData = await response.json();
@@ -96,14 +108,15 @@ export const api = {
       method: "PATCH",
       headers,
       body: JSON.stringify(data),
-      credentials: 'include',
+      credentials: "include",
     });
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Network error" }));
-      throw errorData;
+      const errorData = await response.json().catch(() => ({ error: "Network error" }));
+      const message = errorData.message || errorData.error || "An error occurred";
+      const error = new Error(message);
+      (error as Error & { details?: unknown }).details = errorData.details;
+      throw error;
     }
 
     const resData = await response.json();
@@ -122,14 +135,15 @@ export const api = {
     const response = await fetch(url, {
       method: "DELETE",
       headers,
-      credentials: 'include',
+      credentials: "include",
     });
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Network error" }));
-      throw errorData;
+      const errorData = await response.json().catch(() => ({ error: "Network error" }));
+      const message = errorData.message || errorData.error || "An error occurred";
+      const error = new Error(message);
+      (error as Error & { details?: unknown }).details = errorData.details;
+      throw error;
     }
 
     // Some DELETE endpoints return empty responses
