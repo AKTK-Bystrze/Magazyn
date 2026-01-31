@@ -41,10 +41,10 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 		},
 	})
 	if err != nil {
-		// Log the actual error from Supabase for debugging
-		fmt.Printf("Supabase OTP error for %s: %v\n", email, err)
+		// Forward the Supabase error message directly to the client
+		return types.NewValidationError(err.Error(), map[string]string{"email": email})
 	}
-	return err
+	return nil
 }
 
 // CreateUser creates a new user in Supabase Auth using the service key (Admin only)

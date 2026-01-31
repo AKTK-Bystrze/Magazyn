@@ -44,7 +44,8 @@ export const api = {
       // Extract message from API error response and throw as Error
       const message = errorData.message || errorData.error || "An error occurred";
       const error = new Error(message);
-      (error as Error & { details?: unknown }).details = errorData.details;
+      (error as Error & { status?: number; details?: unknown }).status = response.status;
+      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
       throw error;
     }
 
@@ -86,7 +87,8 @@ export const api = {
       const errorData = await response.json().catch(() => ({ error: "Network error" }));
       const message = errorData.message || errorData.error || "An error occurred";
       const error = new Error(message);
-      (error as Error & { details?: unknown }).details = errorData.details;
+      (error as Error & { status?: number; details?: unknown }).status = response.status;
+      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
       throw error;
     }
 
@@ -115,7 +117,8 @@ export const api = {
       const errorData = await response.json().catch(() => ({ error: "Network error" }));
       const message = errorData.message || errorData.error || "An error occurred";
       const error = new Error(message);
-      (error as Error & { details?: unknown }).details = errorData.details;
+      (error as Error & { status?: number; details?: unknown }).status = response.status;
+      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
       throw error;
     }
 
@@ -142,7 +145,8 @@ export const api = {
       const errorData = await response.json().catch(() => ({ error: "Network error" }));
       const message = errorData.message || errorData.error || "An error occurred";
       const error = new Error(message);
-      (error as Error & { details?: unknown }).details = errorData.details;
+      (error as Error & { status?: number; details?: unknown }).status = response.status;
+      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
       throw error;
     }
 

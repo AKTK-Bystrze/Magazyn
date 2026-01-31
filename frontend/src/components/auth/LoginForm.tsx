@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { login } from '@/lib/api/auth';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { login } from "@/lib/api/auth";
+import { USER_VALIDATION_MESSAGES } from "@/lib/config/constants";
 
 interface LoginFormProps {
   onSuccess: (email: string) => void;
@@ -14,7 +15,7 @@ interface LoginFormProps {
  * Uses shared UI components and handles validation/error states
  */
 export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,12 +28,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setError(null);
 
     if (!email) {
-      setError('E-mail jest wymagany');
+      setError(USER_VALIDATION_MESSAGES.LOGIN_EMAIL_REQUIRED);
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('Wprowadź poprawny adres e-mail');
+      setError(USER_VALIDATION_MESSAGES.LOGIN_EMAIL_INVALID);
       return;
     }
 
@@ -40,16 +41,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     try {
       await login({ email });
       onSuccess(email);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error(err);
-      // Fallback for error message structure
-      const errorMessage =
-        err.error ||
-        err.response?.data?.error ||
-        err.message ||
-        'Coś poszło nie tak. Spróbuj ponownie.';
-      setError(errorMessage);
+    } catch (err: unknown) {
+      console.error("Login error:", err);
+      // API client throws Error objects with message from backend
+      const rawMessage = err instanceof Error ? err.message : "";
+
+      // Handle specific error: signups disabled (422) - show user-friendly Polish message only
+      // Handle specific error: signups disabled (422) - show user-friendly Polish message only
+      const status = (err as Error & { status?: number }).status;
+
+      if (status === 422) {
+        setError(USER_VALIDATION_MESSAGES.LOGIN_SIGNUP_DISABLED);
+      } else if (rawMessage) {
+        setError(rawMessage);
+      } else {
+        setError(USER_VALIDATION_MESSAGES.LOGIN_GENERIC_ERROR);
+      }
     } finally {
       setIsLoading(false);
     }
