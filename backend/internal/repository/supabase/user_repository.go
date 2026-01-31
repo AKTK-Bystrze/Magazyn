@@ -118,6 +118,9 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*types.P
 
 // Create creates a new user profile record in the database.
 func (r *userRepository) Create(ctx context.Context, profile types.PublicProfilesInsert) (*types.PublicProfilesSelect, error) {
+	// DEBUG LOGGING
+	logger.Debugf(ctx, "Repo Create: Attempting to create profile for %s", profile.Email)
+
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	data, _, err := client.From(constants.TableProfiles).
