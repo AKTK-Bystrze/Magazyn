@@ -1,11 +1,17 @@
 -- E2E Test Users Setup Script
--- Run this in Supabase SQL Editor to ensure all test users are properly configured
--- This script is idempotent and safe to run multiple times
+--
+-- PREREQUISITES: Create users in Supabase Auth (Auto Confirm enabled, pwd: TestSecurePassword123!):
+-- - test.dev.g6@gmail.com
+-- - test.admin.g6@gmail.com
+-- - test.superadmin.g6@gmail.com
+--
+-- USAGE: Run in Supabase SQL Editor. Script is idempotent.
+-- DESCRIPTION: Creates/updates profiles with correct roles and credits.
+-- See ../docs/e2e-testing.md for details.
 
 -- =====================================================================
 -- 1. PRIMARY TEST USER (test.dev.g6@gmail.com)
 -- =====================================================================
--- Ensure primary test user has correct profile
 INSERT INTO profiles (id, email, role, is_enabled, username, credit_balance)
 SELECT 
     id, 
@@ -24,7 +30,6 @@ ON CONFLICT (id) DO UPDATE SET
 -- =====================================================================
 -- 2. ADMIN TEST USER (test.admin.g6@gmail.com)
 -- =====================================================================
--- Ensure admin test user has correct profile
 INSERT INTO profiles (id, email, role, is_enabled, username, credit_balance)
 SELECT 
     id, 
@@ -42,8 +47,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- =====================================================================
 -- 3. SUPER ADMIN TEST USER (test.superadmin.g6@gmail.com) - REQUIRED
 -- =====================================================================
--- Ensure super admin test user has correct profile
--- This user is REQUIRED for admin panel E2E tests
+
 INSERT INTO profiles (id, email, role, is_enabled, username, credit_balance)
 SELECT 
     id, 
@@ -61,7 +65,6 @@ ON CONFLICT (id) DO UPDATE SET
 -- =====================================================================
 -- VERIFICATION QUERIES
 -- =====================================================================
--- Run these to verify all test users are set up correctly
 
 -- Check if all test users exist and have correct roles
 SELECT 
@@ -84,13 +87,3 @@ ORDER BY
         WHEN 'user' THEN 3
     END;
 
--- =====================================================================
--- IMPORTANT NOTES
--- =====================================================================
--- 1. These users MUST exist in auth.users FIRST (create via Supabase Auth)
--- 2. All users must have email_confirmed = true
--- 3. Password for all users (from E2E_CONFIG): TestSecurePassword123!
--- 4. If any user is missing from the verification query results:
---    a. Create the user in Supabase Auth UI or via admin API
---    b. Confirm their email
---    c. Re-run this script

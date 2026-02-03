@@ -56,21 +56,24 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 
 ### 📐 Architecture Diagrams
 
-- **[High-Level Architecture](documentation/diagrams/high-level-architecture.md)**: Overview of main components and data flows.
-- **[Detailed Architecture](documentation/diagrams/detailed-architecture.md)**: Technical breakdown of all layers, middleware, and patterns.
+- **[High-Level Architecture](documentation/overview/high-level-architecture.md)**: Overview of main components and data flows.
+- **[Detailed Architecture](documentation/overview/detailed-architecture.md)**: Technical breakdown of all layers, middleware, and patterns.
 
 ## 📁 Project Structure
 
-```
-Magazyn/
-├── frontend/          # Astro + React (src/, public/, e2e/)
-├── backend/           # Go API (cmd/, internal/handler, service, types)
-├── supabase/          # Migrations, seed.sql, SQL functions
-├── infra/             # Docker, Caddyfile, deployment config
-└── documentation/     # PRD, techstack, db-plan, diagrams
-```
+> See **[Project Structure](documentation/overview/project_structure.md)** for the complete monorepo layout and directory organization.
+>
+> For detailed documentation, see the **[Documentation Index](documentation/README.md)**.
 
-> See [frontend/docs/](frontend/docs/) and [backend/docs/](backend/docs/) for detailed architecture and implementation documentation.
+### 🤖 AI Tooling Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| `.agent/` | AI coding assistant configuration (rules, commands, workflows) |
+| `.ai/` | AI-generated content (issue drafts, prompts, context files) |
+
+> These directories are used by AI coding assistants (Cursor, Windsurf, etc.) and are not part of the application runtime.
+
 
 ## 🚀 Getting Started
 
@@ -257,8 +260,9 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 
 **Documentation:**
 
-- [Product Requirements Document](documentation/prd/index.md)
-- [Technology Stack & Architecture](documentation/techstack.md)
-- [Database Schema Plan](documentation/db-plan.md)
-- [Conventional Commits Guide](documentation/conventional-commits.md)
+- [Documentation Index](documentation/README.md)
+- [Product Requirements Document](documentation/design-docs/prd/index.md)
+- [Technology Stack & Architecture](documentation/overview/techstack.md)
+- [Database Schema Plan](documentation/design-docs/db-plan.md)
+- [Conventional Commits Guide](documentation/overview/conventional-commits.md)
 
