@@ -73,7 +73,17 @@ runs:
         EXPECTED_SERVICES=3
         for i in {1..60}; do
           HEALTHY_COUNT=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | .Health // empty' | grep -cE "^healthy$" || echo "0")
+          
+          # Get status of each service
+          BACKEND_STATUS=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | select(.Service=="backend") | .Health // "no-health"')
+          FRONTEND_STATUS=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | select(.Service=="frontend") | .Health // "no-health"')
+          CADDY_STATUS=$(docker compose --env-file ../.env ps --format json | jq -r 'if type=="array" then .[] else . end | select(.Service=="caddy") | .Health // "no-health"')
+          
           echo "Health check iteration $i: $HEALTHY_COUNT/$EXPECTED_SERVICES healthy"
+          echo "  - backend: $BACKEND_STATUS"
+          echo "  - frontend: $FRONTEND_STATUS"
+          echo "  - caddy: $CADDY_STATUS"
+          
           if [ "$HEALTHY_COUNT" -eq "$EXPECTED_SERVICES" ]; then
             echo "✅ All services healthy"
             docker compose --env-file ../.env ps
