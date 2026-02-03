@@ -32,11 +32,11 @@ inputs:
   backend-url:
     description: Public Backend URL
     required: false
-    default: 'http://localhost:8080'
+    default: 'http://localhost/api'
   app-url:
     description: Public App URL
     required: false
-    default: 'http://localhost:4321'
+    default: 'http://localhost'
 
 runs:
   using: composite
@@ -52,6 +52,7 @@ runs:
         PUBLIC_BACKEND_URL=${{ inputs.backend-url }}
         PUBLIC_APP_URL=${{ inputs.app-url }}
         CADDY_FILE=Caddyfile.test
+        CADDY_PORT=80
         EOF
 
     - name: Build Docker Images

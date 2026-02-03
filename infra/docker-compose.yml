@@ -7,8 +7,8 @@ services:
       dockerfile: ../infra/backend/Dockerfile
     container_name: magazyn-backend
     restart: always
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     env_file:
       - ../.env
     extra_hosts:
