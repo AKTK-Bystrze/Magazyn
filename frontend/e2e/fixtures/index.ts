@@ -434,8 +434,8 @@ async function injectSupabaseSession(page: Page, email: string = TEST_USER_EMAIL
 
 /* eslint-disable react-hooks/rules-of-hooks */
 export const test = base.extend<AuthFixtures, WorkerFixtures>({
-  // eslint-disable-next-line no-empty-pattern
   workerIndex: [
+    // eslint-disable-next-line no-empty-pattern
     async ({}, use, workerInfo) => {
       await use(workerInfo.workerIndex);
     },
