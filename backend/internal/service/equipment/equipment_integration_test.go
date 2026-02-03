@@ -51,7 +51,7 @@ func setupEquipmentTestFixture(t *testing.T) *equipmentTestFixture {
 
 	equipmentRepo := supabase.NewEquipmentRepository(client, supabaseURL, supabaseKey)
 	typeRepo := supabase.NewEquipmentTypeRepository(client, supabaseURL, supabaseKey)
-	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey)
+	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey, supabaseKey)
 
 	svc := equipment.NewEquipmentService(equipmentRepo, typeRepo, userRepo, supabaseURL)
 

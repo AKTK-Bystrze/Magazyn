@@ -51,7 +51,7 @@ func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 
 	// Setup repositories
 	creditRepo := supabase.NewCreditHistoryRepository(client, supabaseURL, supabaseKey)
-	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey)
+	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey, supabaseKey)
 
 	// Create service
 	svc := credit.NewCreditHistoryService(creditRepo, userRepo)
