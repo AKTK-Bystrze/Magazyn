@@ -19,7 +19,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
 
   try {
     const url = new URL(request.url);
-    const backendUrl = new URL(`${BACKEND_URL}/credit-history`);
+    const backendUrl = new URL(`${BACKEND_URL}/credits/history`);
 
     // Forward all query parameters (page, per_page)
     backendUrl.search = url.search;
@@ -37,11 +37,11 @@ export const GET: APIRoute = async ({ locals, request }) => {
     });
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        return new Response(JSON.stringify(errorData), {
-            status: response.status,
-            headers: { "Content-Type": "application/json" },
-        });
+      const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+      return new Response(JSON.stringify(errorData), {
+        status: response.status,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const data = await response.json();
@@ -53,12 +53,9 @@ export const GET: APIRoute = async ({ locals, request }) => {
     });
   } catch (error) {
     debug.error("Credits History API", "GET Proxy error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal Server Error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };
