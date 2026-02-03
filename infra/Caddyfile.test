@@ -6,7 +6,7 @@
 auto_https off
 }
 
-http://localhost {
+:443 {
 	# Proxy /api requests to the Go backend container
 	handle /api/* {
 		uri strip_prefix /api

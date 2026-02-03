@@ -44,6 +44,17 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := h.service.Login(r.Context(), req.Email); err != nil {
 		logger.Errorf(r.Context(), "Failed to initiate login for %s: %v", req.Email, err)
+		// Check for ValidationError (from Supabase) and return with original message
+		var validationErr *types.ValidationError
+		if errors.As(err, &validationErr) {
+			msg := strings.ToLower(validationErr.Message)
+			if strings.Contains(msg, "signup") || strings.Contains(msg, "signups not allowed") {
+				common.RespondError(r.Context(), w, http.StatusUnprocessableEntity, validationErr.Message)
+				return
+			}
+			common.RespondError(r.Context(), w, http.StatusBadRequest, validationErr.Message)
+			return
+		}
 		common.RespondError(r.Context(), w, http.StatusInternalServerError, "Failed to initiate login")
 		return
 	}

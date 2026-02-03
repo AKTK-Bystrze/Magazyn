@@ -176,38 +176,26 @@ func TestCreateUser_Success(t *testing.T) {
 	// 2. Check Username via List - expect empty list or list without our username
 	mockRepo.On("List", ctx, 1, 1, "", username).Return([]types.PublicProfilesSelect{}, int64(0), nil)
 
-	// Expect AuthRepository.CreateUser call
+	// 3. Expect AuthRepository.CreateUser call
 	mockAuthRepo.On("CreateUser", ctx, email, mock.AnythingOfType("string")).
 		Return(&types.User{ID: "auth-id-123", Email: email}, nil)
 
-	// Expect GetByID after creation
-	mockRepo.On("GetByID", ctx, "auth-id-123").
+	// 4. Expect repo.Create to insert the profile directly (no DB trigger)
+	mockRepo.On("Create", ctx, mock.AnythingOfType("types.PublicProfilesInsert")).
 		Return(&types.PublicProfilesSelect{
-			ID:       "generated-id",
-			Email:    email,
-			Username: username,
-			Role:     string(role),
-		}, nil)
-
-	// Expect Update causing final map
-	// NOTE: Implementation of CreateUser changed to Update after Create.
-	// We need to adjust expectations to match implementation.
-	// Impl: Check Email -> Check Username -> Auth.CreateUser -> UserRepo.GetByID -> UserRepo.Update
-
-	mockRepo.On("Update", ctx, "auth-id-123", mock.AnythingOfType("types.PublicProfilesUpdate")).
-		Return(&types.PublicProfilesSelect{
-			ID:            "generated-id",
+			ID:            "auth-id-123",
 			Email:         email,
 			Username:      username,
 			Role:          string(role),
 			CreditBalance: credit,
+			IsEnabled:     isEnabled,
 		}, nil)
 
 	resp, err := service.CreateUser(ctx, req)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
-	assert.Equal(t, "generated-id", resp.ID)
+	assert.Equal(t, "auth-id-123", resp.ID)
 	assert.Equal(t, email, resp.Email)
 	assert.Equal(t, credit, resp.CreditBalance)
 	mockRepo.AssertExpectations(t)

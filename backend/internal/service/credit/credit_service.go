@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 )
@@ -75,13 +76,16 @@ func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types
 
 	// 4. Fetch Current Balance (from User Profile)
 	// We fetch the profile of the target user to show their current balance.
+	logger.Debugf(ctx, "CreditService: Fetching profile for balance check. TargetUserID: %s", targetUserID)
 	userProfile, err := s.userRepo.GetByID(ctx, targetUserID)
 	if err != nil {
+		logger.Errorf(ctx, "CreditService: Failed to fetch profile for %s: %v", targetUserID, err)
 		// If the user doesn't exist, GetByID returns error.
 		// Use standard NotFound handling if appropriate, or wrap it.
 		// Since user_id comes from either context (exists) or filter (might not exist), this handles both.
 		return nil, types.NewNotFoundError("User", targetUserID)
 	}
+	logger.Debugf(ctx, "CreditService: Profile found. Balance: %d", userProfile.CreditBalance)
 
 	// 5. Build Response
 	totalPages := 0

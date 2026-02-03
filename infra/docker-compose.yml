@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   backend:
@@ -60,14 +60,14 @@ services:
     container_name: magazyn-caddy
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "${CADDY_PORT:-20164}:443"
     volumes:
       - ./${CADDY_FILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
       - caddy_data:/data
       - caddy_config:/config
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:443"]
       interval: 60s
       timeout: 3s
       retries: 10

@@ -54,7 +54,7 @@ func main() {
 	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey, appState.Config.AppURL)
 	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
-	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
+	userRepo := supabaserepo.NewUserRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey)
 	reservationRepo := supabaserepo.NewReservationRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	calendarRepo := supabaserepo.NewCalendarRepository(appState.SupabaseClient)
 	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
@@ -128,7 +128,7 @@ func main() {
 	mux.Handle("GET /calendar/availability", authMiddleware(http.HandlerFunc(calendarHandler.HandleGetAvailability)))
 
 	// Credit History Routes
-	mux.Handle("GET /credit-history", authMiddleware(http.HandlerFunc(creditHandler.HandleGetCreditHistory)))
+	mux.Handle("GET /credits/history", authMiddleware(http.HandlerFunc(creditHandler.HandleGetCreditHistory)))
 
 	// Analytics Routes (Admin only)
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))

@@ -24,6 +24,7 @@ func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.H
 				http.Error(w, "Authorization header required", http.StatusUnauthorized)
 				return
 			}
+			logger.Debugf(r.Context(), "Auth Middleware: Received Header len=%d", len(authHeader))
 
 			parts := strings.Split(authHeader, " ")
 			if len(parts) != 2 || parts[0] != "Bearer" {

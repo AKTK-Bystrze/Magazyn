@@ -1,98 +1,70 @@
-import { defineConfig, devices } from '@playwright/test';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import { defineConfig, devices } from "@playwright/test";
+import * as dotenv from "dotenv";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load test environment first (if exists), then fallback to .env
-dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, "../.env.test") });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 export default defineConfig({
-  testDir: './e2e/tests',
-  
+  testDir: "./e2e/tests",
+
   /* Run tests in files in parallel */
   fullyParallel: true,
-  
+
   /* Fail the build on CI if you accidentally left test.only in the source code */
   forbidOnly: !!process.env.CI,
-  
+
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  
+
   /* Worker count controlled by CLI (--workers=N) or defaults to auto */
   workers: undefined,
-  
+
   /* Reporter to use */
-  reporter: [
-    ['html', { open: 'never' }],
-    ['list'],
-  ],
+  reporter: [["html", { open: "never" }], ["list"]],
 
   /* Global teardown to cleanup orphaned test equipment */
-  globalTeardown: './e2e/global-teardown.ts',
+  globalTeardown: "./e2e/global-teardown.ts",
 
   /* Shared settings for all the projects below */
   use: {
     /* Base URL from environment variable */
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:4321',
-    
+    baseURL: process.env.E2E_BASE_URL || "http://localhost",
+
     /* Collect trace when retrying the failed test */
-    trace: 'on-first-retry',
-    
+    trace: "on-first-retry",
+
     /* Capture screenshot on failure */
-    screenshot: 'only-on-failure',
-    
+    screenshot: "only-on-failure",
+
     /* Record video on first retry */
-    video: 'on-first-retry',
+    video: "on-first-retry",
   },
 
   /* Configure projects for major browsers */
   projects: [
     /* Setup project for authentication */
     {
-      name: 'setup',
+      name: "setup",
       testMatch: /.*\.setup\.ts/,
     },
-    
+
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-      dependencies: ['setup'],
+      name: "Mobile Chrome",
+      use: { ...devices["Pixel 5"] },
+      dependencies: ["setup"],
     },
-    
-    /* Uncomment to add more browsers
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-      dependencies: ['setup'],
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-      dependencies: ['setup'],
-    },
-    */
   ],
 
   /* Timeout settings */
   timeout: 30000,
   expect: {
     timeout: 10000,
-  },
-
-  /* Run local dev server before starting the tests */
-  /* Note: In CI with Docker Compose, reuseExistingServer=false but server fails to start - that's OK since we use Caddy */
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:4321',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-    env: {
-      E2E_TESTING: 'true',
-    },
   },
 });

@@ -151,56 +151,38 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 		creditBalance = *req.CreditBalance
 	}
 
-	// 1. Create user in Supabase Auth (this triggers profile creation via DB trigger)
-	// We use a temporary password since we can't set it directly without sending magic link
-	// or we generate a random one if not provided. Since this is admin creation, we might want to
-	// allow user to set password or send reset link.
-	// For this MVP, let's assume we set a default or random password, or better yet,
-	// if the requirement is just "Admin creates user", we can generate a random password.
-	// However, the previous logic didn't take a password.
-	// Let's generate a secure random password as placeholder.
-	// NOTE: Real implementation should probably send an invite or use a specific flow.
-	// For now using a hardcoded placeholder or UUID as password to satisfy the requirement.
-	// Ideally we would trigger a password reset email.
-
-	// Create user in Supabase Auth
-	tempPassword := "TempPass123!@" // In prod, generate this
-	// Create user in Supabase Auth
+	// 1. Create user in Supabase Auth
+	// NOTE: Uses service role key internally for Auth Admin API
+	tempPassword := "TempPass123!@" // TODO: Application is not using password
 	authUser, err := s.authRepo.CreateUser(ctx, req.Email, tempPassword)
 
 	if err != nil {
 		logger.Errorf(ctx, "AuthRepo.CreateUser failed: %v", err)
+		// Propagate specific error types from auth repo (ValidationError contains Supabase message)
+		if _, ok := err.(*types.ValidationError); ok {
+			return nil, err
+		}
 		return nil, types.NewInternalError("Failed to create auth user", err)
 	}
 
-	// 2. Wait for profile to be created by trigger
-	// We can try to fetch it immediately or wait a bit.
-	// DB Triggers are usually fast but not strictly synchronous with API return in all cases?
-	// Actually in Supabase (Postgres) it is synchronous within the transaction.
-	// So fetching immediately should work.
-
-	// Retry loop for eventual consistency if needed, but usually immediate fetch works
-	// We explicitly ignore the result as we just want to ensure it exists before updating
-	_, err = s.repo.GetByID(ctx, authUser.ID)
-	if err != nil {
-		return nil, types.NewInternalError("Failed to retrieve created profile", err)
-	}
-
-	// 3. Update the profile with additional details
-	update := types.PublicProfilesUpdate{
-		Username:      &req.Username,
+	// 2. Create profile in database
+	// Note: There's no auto-trigger for profile creation - profiles are created via API only (invite-only system)
+	profileInsert := types.PublicProfilesInsert{
+		ID:            authUser.ID,
+		Email:         req.Email,
+		Username:      req.Username,
 		Role:          &req.Role,
 		CreditBalance: &creditBalance,
 		IsEnabled:     req.IsEnabled,
 	}
 
-	updated, err := s.repo.Update(ctx, authUser.ID, update)
+	created, err := s.repo.Create(ctx, profileInsert)
 	if err != nil {
-		logger.Errorf(ctx, "Failed to update created profile: %v", err)
-		return nil, types.NewInternalError("Failed to update created profile", err)
+		logger.Errorf(ctx, "Failed to create profile: %v", err)
+		return nil, types.NewInternalError("Failed to create profile", err)
 	}
 
-	return s.mapToUserResponse(updated), nil
+	return s.mapToUserResponse(created), nil
 }
 
 // UpdateUser updates an existing user profile with the given inputs.
