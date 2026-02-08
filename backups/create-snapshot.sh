@@ -10,23 +10,31 @@ DIR="${SCRIPT_DIR}/snapshots/${VERSION}/$(date +%Y%m%d-%H%M%S)"
 
 # Create version directory if it does not exist
 mkdir -p "${DIR}"
-touch "${DIR}/roles.sql"
-touch "${DIR}/schema.sql"
-touch "${DIR}/data.sql"
 
-# Access connection string - this isn't top-tier security, but supabase requries it
 source ../.env
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
-# See https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
-pwd
-echo "${DIR}/roles.sql"
-supabase db dump --db-url "${DB_CONNECTION_STRING}" -f "${DIR}/roles.sql" --role-only
-supabase db dump --db-url "${DB_CONNECTION_STRING}" -f "${DIR}/schema.sql"
-supabase db dump --db-url "${DB_CONNECTION_STRING}" -f "${DIR}/data.sql" --use-copy --data-only
+# Note: we only dump public and auth schemas - I understand the rest as internal to supabase
 
-# Remove first line from schema.sql as it modifies supabase roles for some reason 
-tail -n +2 "${DIR}/data.sql" > "${DIR}/data.tmp" && mv "${DIR}/data.tmp" "${DIR}/data.sql"
+# Dump schema public for rollbacks
+# - We cannot simply drop whole schema since we are not allowed to modify permissions (supabase policy)
+# - "--clean" does not cascade so we need to add cascade manually
+# - as said eariler no priv modification, so '--no-privilages' required
+pg_dump \
+  --dbname "${DB_CONNECTION_STRING}" \
+  -n "public" \
+  --clean \
+  --if-exists \
+  --no-privileges \
+  | sed '/CREATE SCHEMA/d' \
+  | sed '/DROP SCHEMA/d' \
+  | sed -E 's/^DROP(.*);$/DROP\1 CASCADE;/' \
+  > "${DIR}/public-rollback.sql"
+
+pg_dump \
+  --dbname "${DB_CONNECTION_STRING}" \
+  -n "public" \
+  > "${DIR}/public-full.sql"
 
 echo "Created snapshot: ${DIR} ($(du -h "${DIR}" | cut -f1))"
 

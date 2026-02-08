@@ -33,9 +33,8 @@ echo ""
 
 # Test snapshot directory structure
 [ -d "${SNAPSHOT_PATH}" ] && \
-[ -f "${SNAPSHOT_PATH}/roles.sql" ] && \
-[ -f "${SNAPSHOT_PATH}/schema.sql" ] && \
-[ -f "${SNAPSHOT_PATH}/data.sql" ] && \
+[ -f "${SNAPSHOT_PATH}/public-rollback.sql" ] && \
+[ -f "${SNAPSHOT_PATH}/public-full.sql" ] && \
 [[ ${SNAPSHOT_SIZE} -gt 50000 ]] || \
 { echo "Malformed snapshot structure"; exit 1; }
 
@@ -47,23 +46,11 @@ echo
 source ../.env
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
-# See https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
 psql \
   --single-transaction \
   --variable ON_ERROR_STOP=1 \
-  --command "DROP SCHEMA public CASCADE" \
-  --command "CREATE SCHEMA public" \
-  --file "${SNAPSHOT_PATH}/schema.sql" \
-  --file "${SNAPSHOT_PATH}/data.sql" \
+  --file "${SNAPSHOT_PATH}/public-rollback.sql" \
   --dbname "${DB_CONNECTION_STRING}"
-  
-  # Don't restore supabase roles - both not possible and should be hard to mess up.
-  # But we store them in case we need to recreate the whole instance.
-  #
-  # So this flags are set in tutorial, but not used by us
-  # --file "${SNAPSHOT_PATH}/roles.sql" \
-  # ...
-  # --command 'SET session_replication_role = replica' \
 
-echo "Restored to version $version"
+echo "Restored to version ${VERSION}"
 
