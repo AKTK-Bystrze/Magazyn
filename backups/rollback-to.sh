@@ -4,6 +4,7 @@ set -euo pipefail
 
 SNAPSHOT_PATH=""
 DB_ONLY=false
+SCRIPT_PATH="$(dirname $(realpath ${0}))"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -51,6 +52,17 @@ psql \
   --variable ON_ERROR_STOP=1 \
   --file "${SNAPSHOT_PATH}/public-rollback.sql" \
   --dbname "${DB_CONNECTION_STRING}"
+
+if ! ${DB_ONLY}; then
+  cd "${SCRIPT_PATH}/.."
+  set -a
+  source .env
+  set +a
+  cd ./infra/
+  docker compose down
+  git checkout "${VERSION}"
+  docker compose up --build -d
+fi
 
 echo "Restored to version ${VERSION}"
 
