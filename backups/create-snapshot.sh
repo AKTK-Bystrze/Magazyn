@@ -14,7 +14,8 @@ mkdir -p "${DIR}"
 source ../.env
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
-# Note: we only dump public and auth schemas - I understand the rest as internal to supabase
+# For the automatic rollback we only include `public` and `supabase_migrations` because migrations
+# We add `auth` in case we need data for manual recovery.
 
 # Dump schema public for rollbacks
 # - We cannot simply drop whole schema since we are not allowed to modify permissions (supabase policy)
@@ -23,6 +24,7 @@ DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in 
 pg_dump \
   --dbname "${DB_CONNECTION_STRING}" \
   -n "public" \
+  -n "supabase_migrations" \
   --clean \
   --if-exists \
   --no-privileges \
@@ -34,7 +36,8 @@ pg_dump \
 pg_dump \
   --dbname "${DB_CONNECTION_STRING}" \
   -n "public" \
-  > "${DIR}/public-full.sql"
+  -n "auth" \
+  > "${DIR}/public-auth.sql"
 
 echo "Created snapshot: ${DIR} ($(du -h "${DIR}" | cut -f1))"
 

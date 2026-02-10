@@ -32,10 +32,12 @@ echo "  Timestamp: ${TIMESTAMP}"
 echo "  Size: ${SNAPSHOT_SIZE}"
 echo ""
 
+cd "${SCRIPT_PATH}"
+
 # Test snapshot directory structure
 [ -d "${SNAPSHOT_PATH}" ] && \
 [ -f "${SNAPSHOT_PATH}/public-rollback.sql" ] && \
-[ -f "${SNAPSHOT_PATH}/public-full.sql" ] && \
+[ -f "${SNAPSHOT_PATH}/public-auth.sql" ] && \
 [[ ${SNAPSHOT_SIZE} -gt 50000 ]] || \
 { echo "Malformed snapshot structure"; exit 1; }
 
@@ -44,7 +46,9 @@ read -p "Continue? [y/N] " -n 1 -r
 echo
 [[ $REPLY =~ ^[Yy]$ ]] || { echo "Cancelled"; exit 0; }
 
+set -a
 source ../.env
+set +a
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
 psql \
@@ -55,9 +59,6 @@ psql \
 
 if ! ${DB_ONLY}; then
   cd "${SCRIPT_PATH}/.."
-  set -a
-  source .env
-  set +a
   cd ./infra/
   docker compose down
   git checkout "${VERSION}"
