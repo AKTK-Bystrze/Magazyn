@@ -19,18 +19,15 @@ DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in 
 
 # Dump schema public for rollbacks
 # - We cannot simply drop whole schema since we are not allowed to modify permissions (supabase policy)
-# - "--clean" does not cascade so we need to add cascade manually
 # - as said eariler no priv modification, so '--no-privilages' required
+# - if there are per-table privs then everything breaks
+# - if `auth` is corrupted then we need manual action
 pg_dump \
   --dbname "${DB_CONNECTION_STRING}" \
   -n "public" \
   -n "supabase_migrations" \
-  --clean \
-  --if-exists \
   --no-privileges \
   | sed '/CREATE SCHEMA/d' \
-  | sed '/DROP SCHEMA/d' \
-  | sed -E 's/^DROP(.*);$/DROP\1 CASCADE;/' \
   > "${DIR}/public-rollback.sql"
 
 pg_dump \
