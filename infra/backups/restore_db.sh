@@ -5,6 +5,7 @@ set -euo pipefail
 SNAPSHOT_PATH=""
 DB_ONLY=false
 SCRIPT_PATH="$(dirname $(realpath ${0}))"
+cd "${SCRIPT_PATH}"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -47,7 +48,7 @@ echo
 [[ $REPLY =~ ^[Yy]$ ]] || { echo "Cancelled"; exit 0; }
 
 set -a
-source ../.env
+source ../../.env
 set +a
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
@@ -61,7 +62,6 @@ psql \
 if ! ${DB_ONLY}; then
   cd "${SCRIPT_PATH}/.."
   cd ./infra/
-  docker compose down
   git checkout "${VERSION}"
   docker compose up --build -d
 fi
