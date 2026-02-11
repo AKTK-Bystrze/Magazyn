@@ -15,7 +15,9 @@ mkdir -p "${DIR}"
 source ../../.env
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
-# For the automatic rollback we only include `public` and `supabase_migrations` because migrations
+# For the automatic rollback we only include `public` and `supabase_migrations`
+# because migrations need to be reset so new ones can be performed as usual.
+#
 # We add `auth` in case we need data for manual recovery.
 
 # Dump schema public for rollbacks
@@ -46,7 +48,7 @@ RETAIN_NUM=10
 for VERSION_DIR in "${SCRIPT_DIR}/snapshots"/*/; do
     [ -d "${VERSION_DIR}" ] || continue
 
-    DIRS_TO_REMOVE=$(ls -1dt "${VERSION_DIR}"/*/ 2>/dev/null | tail -n +"$((${RETAIN_NUM} + 1))")
+    DIRS_TO_REMOVE=$(ls -1dt "${VERSION_DIR}"*/ 2>/dev/null | tail -n +"$((${RETAIN_NUM} + 1))")
 
     if [[ ${DIRS_TO_REMOVE} =~ [^[:space:]] ]]; then
       echo "Removing following old snapshots:"

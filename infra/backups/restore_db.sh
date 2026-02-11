@@ -2,27 +2,11 @@
 set -euo pipefail
 
 
-SNAPSHOT_PATH=""
-DB_ONLY=false
+SNAPSHOT_PATH="$1"
+SNAPSHOT_PATH="$(realpath ${SNAPSHOT_PATH})"
 SCRIPT_PATH="$(dirname $(realpath ${0}))"
 cd "${SCRIPT_PATH}"
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --db-only)
-      DB_ONLY=true
-      shift
-      ;;
-    *)
-      SNAPSHOT_PATH="$1"
-      shift
-      ;;
-  esac
-done
-[[ -n "$SNAPSHOT_PATH" ]] || { echo "Usage: $0 <snapshot.sql> [--db-only]"; exit 1; }
-
-
-SNAPSHOT_PATH="$(realpath ${SNAPSHOT_PATH})"
 TIMESTAMP="$(basename ${SNAPSHOT_PATH})"
 VERSION="$(basename $(dirname ${SNAPSHOT_PATH}))"
 SNAPSHOT_SIZE=$(du -sB 1 ${SNAPSHOT_PATH} | cut -f1)
@@ -59,12 +43,9 @@ psql \
   --file "${SNAPSHOT_PATH}/public-rollback.sql" \
   --dbname "${DB_CONNECTION_STRING}"
 
-if ! ${DB_ONLY}; then
-  cd "${SCRIPT_PATH}/.."
-  cd ./infra/
-  git checkout "${VERSION}"
-  docker compose up --build -d
-fi
+cd "${SCRIPT_PATH}/.."
+git checkout "${VERSION}"
+docker compose up --build -d
 
 echo "Restored to version ${VERSION}"
 
