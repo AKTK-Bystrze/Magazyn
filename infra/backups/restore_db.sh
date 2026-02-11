@@ -36,12 +36,11 @@ source ../../.env
 set +a
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
-psql \
+docker run --rm -i --network host postgres:17.6 psql \
   --single-transaction \
   --variable ON_ERROR_STOP=1 \
-  --file "${SNAPSHOT_PATH}/../../../clear_schemas.sql" \
-  --file "${SNAPSHOT_PATH}/public-rollback.sql" \
-  --dbname "${DB_CONNECTION_STRING}"
+  --dbname "${DB_CONNECTION_STRING}" \
+  < <(cat "${SNAPSHOT_PATH}/../../../clear_schemas.sql" "${SNAPSHOT_PATH}/public-rollback.sql")
 
 cd "${SCRIPT_PATH}/.."
 git checkout "${VERSION}"

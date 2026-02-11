@@ -25,7 +25,7 @@ DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in 
 # - as said eariler no priv modification, so '--no-privilages' required
 # - if there are per-table privs then everything breaks
 # - if `auth` is corrupted then we need manual action
-pg_dump \
+docker run --rm -i --network host postgres:17.6 pg_dump \
   --dbname "${DB_CONNECTION_STRING}" \
   -n "public" \
   -n "supabase_migrations" \
@@ -33,7 +33,7 @@ pg_dump \
   | sed '/CREATE SCHEMA/d' \
   > "${DIR}/public-rollback.sql"
 
-pg_dump \
+docker run --rm -i --network host postgres:17.6 pg_dump \
   --dbname "${DB_CONNECTION_STRING}" \
   -n "public" \
   -n "auth" \
