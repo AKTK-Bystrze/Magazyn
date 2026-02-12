@@ -4,9 +4,25 @@ set -euo pipefail
 SCRIPT_DIR="$(dirname $(realpath ${0}))"
 cd "${SCRIPT_DIR}"
 
-# Take version from current git tag
-VERSION="$(git describe --tags --abbrev=0 2>/dev/null)"
-[ -n "${VERSION}" ] || { echo "Not on a tagged commit. Return to the commit of last release."; exit 1; }
+get_docker_image_tag() {
+    local service_name="$1"
+    docker ps --filter "name=$service_name" --format "{{.Image}}" | head -n 1 | cut -d: -sf2
+}
+
+# Take version from argument (1st priority)
+VERSION="${1:-""}"
+
+if [ -z "${VERSION}" ]; then
+    # Attempt to get version from running Docker container (2nd priority)
+    VERSION=$(get_docker_image_tag "magazyn-backend")
+fi
+
+if [ -z "${VERSION}" ]; then
+    # Fallback to current git tag (3rd priority)
+    VERSION="$(git describe --tags --abbrev=0 2>/dev/null)"
+fi
+
+[ -n "${VERSION}" ] || { echo "No version provided, no running Docker container found, and not on a tagged commit."; exit 1; }
 DIR="${SCRIPT_DIR}/snapshots/${VERSION}/$(date +%Y%m%d-%H%M%S)"
 
 # Create version directory if it does not exist

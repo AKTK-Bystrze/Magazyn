@@ -20,12 +20,14 @@ git checkout "${TARGET_TAG}" || { echo "No target tag in git"; exit 1;}
 git checkout "${CURRENT_TAG}"
 
 # Create snapshot
-bash ./infra/backups/backup_db.sh
+bash ./infra/backups/backup_db.sh "${TARGET_TAG}"
 
 # Checkout target tag
 git checkout "${TARGET_TAG}"
 npx supabase db push
 cd ./infra/
-docker compose up --build -d
+export MAGAZYN_VERSION="${TARGET_TAG}"
+docker compose build
+docker compose up -d
 
 echo "Deployed to version ${TARGET_TAG}"
