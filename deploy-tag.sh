@@ -24,6 +24,11 @@ bash ./infra/backups/backup_db.sh "${TARGET_TAG}"
 
 # Checkout target tag
 git checkout "${TARGET_TAG}"
+
+set -a
+source .env
+set +a
+
 npx supabase db push
 cd ./infra/
 export MAGAZYN_VERSION="${TARGET_TAG}"
