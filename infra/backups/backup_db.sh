@@ -25,16 +25,14 @@ fi
 [ -n "${VERSION}" ] || { echo "No version provided, no running Docker container found, and not on a tagged commit."; exit 1; }
 DIR="${SCRIPT_DIR}/snapshots/${VERSION}/$(date +%Y%m%d-%H%M%S)"
 
-# Create version directory if it does not exist
-mkdir -p "${DIR}"
+# Temp files for storing SQL dumps
+TEMP_PUBLIC_ROLLBACK_SQL=$(mktemp)
+TEMP_PUBLIC_AUTH_SQL=$(mktemp)
 
 source ../../.env
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
-# For the automatic rollback we only include `public` and `supabase_migrations`
-# because migrations need to be reset so new ones can be performed as usual.
-#
-# We add `auth` in case we need data for manual recovery.
+trap 'rm -f "$TEMP_PUBLIC_ROLLBACK_SQL" "$TEMP_PUBLIC_AUTH_SQL"' EXIT
 
 # Dump schema public for rollbacks
 # - We cannot simply drop whole schema since we are not allowed to modify permissions (supabase policy)
@@ -48,13 +46,30 @@ docker run --rm -i --network host postgres:17.6 pg_dump \
   --no-privileges \
   | sed '/^CREATE SCHEMA public;$/d' \
   | sed '/^CREATE SCHEMA supabase_migrations;$/d' \
-  > "${DIR}/public-rollback.sql"
+  > "${TEMP_PUBLIC_ROLLBACK_SQL}"
+STATUS_PUBLIC_ROLLBACK=$?
+if [ $STATUS_PUBLIC_ROLLBACK -ne 0 ]; then
+    echo "Error: public-rollback.sql dump failed with status $STATUS_PUBLIC_ROLLBACK"
+    exit $STATUS_PUBLIC_ROLLBACK
+fi
 
 docker run --rm -i --network host postgres:17.6 pg_dump \
   --dbname "${DB_CONNECTION_STRING}" \
   -n "public" \
   -n "auth" \
-  > "${DIR}/public-auth.sql"
+  > "${TEMP_PUBLIC_AUTH_SQL}"
+STATUS_PUBLIC_AUTH=$?
+if [ $STATUS_PUBLIC_AUTH -ne 0 ]; then
+    echo "Error: public-auth.sql dump failed with status $STATUS_PUBLIC_AUTH"
+    exit $STATUS_PUBLIC_AUTH
+fi
+
+# Create version directory if it does not exist
+mkdir -p "${DIR}"
+
+# Move temp files to final destination
+mv "${TEMP_PUBLIC_ROLLBACK_SQL}" "${DIR}/public-rollback.sql"
+mv "${TEMP_PUBLIC_AUTH_SQL}" "${DIR}/public-auth.sql"
 
 echo "Created snapshot: ${DIR} ($(du -h "${DIR}" | cut -f1))"
 echo ""
