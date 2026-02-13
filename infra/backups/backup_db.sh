@@ -66,10 +66,16 @@ fi
 
 # Create version directory if it does not exist
 mkdir -p "${DIR}"
+chown :users "${DIR}"
+chmod g+rwx "${DIR}"
 
 # Move temp files to final destination
 mv "${TEMP_PUBLIC_ROLLBACK_SQL}" "${DIR}/public-rollback.sql"
+chown :users "${DIR}/public-rollback.sql"
+chmod g+rw "${DIR}/public-rollback.sql"
 mv "${TEMP_PUBLIC_AUTH_SQL}" "${DIR}/public-auth.sql"
+chown :users "${DIR}/public-auth.sql"
+chmod g+rw "${DIR}/public-auth.sql"
 
 echo "Created snapshot: ${DIR} ($(du -h "${DIR}" | cut -f1))"
 echo ""
