@@ -46,7 +46,8 @@ docker run --rm -i --network host postgres:17.6 pg_dump \
   -n "public" \
   -n "supabase_migrations" \
   --no-privileges \
-  | sed '/CREATE SCHEMA/d' \
+  | sed '/^CREATE SCHEMA public;$/d' \
+  | sed '/^CREATE SCHEMA supabase_migrations;$/d' \
   > "${DIR}/public-rollback.sql"
 
 docker run --rm -i --network host postgres:17.6 pg_dump \
