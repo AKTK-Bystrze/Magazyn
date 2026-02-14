@@ -2,6 +2,7 @@
 
 services:
   backend:
+    image: magazyn-backend:${MAGAZYN_VERSION:-latest}
     build:
       context: ../backend
       dockerfile: ../infra/backend/Dockerfile
@@ -23,6 +24,7 @@ services:
       - magazyn-network
 
   frontend:
+    image: magazyn-frontend:${MAGAZYN_VERSION:-latest}
     build:
       context: ../frontend
       dockerfile: ../infra/frontend/Dockerfile
