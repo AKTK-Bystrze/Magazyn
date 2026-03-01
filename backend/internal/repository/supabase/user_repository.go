@@ -39,7 +39,7 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
-	query := client.From(constants.TableProfiles).Select("*", "", false)
+	query := client.From(constants.TableProfiles).Select("*", "exact", true)
 
 	if role != "" {
 		query = query.Eq("role", role)
