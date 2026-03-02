@@ -107,7 +107,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start gap-2">
           <div>
-            <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
+            <h3 className="font-semibold text-lg">{item.name}</h3>
             <p className="text-sm text-muted-foreground">{item.type.name}</p>
           </div>
           {/* Placeholder for US-008 Favorite Button */}
@@ -120,12 +120,12 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
         </p>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex justify-between items-center border-t bg-muted/20 mt-auto gap-2">
+      <CardFooter className="p-4 pt-0 flex flex-col sm:flex-row justify-between items-center border-t bg-muted/20 mt-auto gap-2">
         <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
           <span className="text-primary">{item.type.creditCostPerDay}</span>
           <span className="text-xs text-muted-foreground">godzinki/dzień</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           {isAvailable && (
             <Button
               size="sm"
