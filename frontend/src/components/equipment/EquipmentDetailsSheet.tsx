@@ -96,7 +96,7 @@ export function EquipmentDetailsSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 px-4">
           {/* Hero Section */}
           <div className="space-y-4">
             {/* Equipment Image */}
