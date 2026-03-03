@@ -74,7 +74,7 @@ export function EquipmentDetailsSheet({
   if (!equipment) {
     return (
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto overflow-x-hidden max-w-[95%]">
           <SheetHeader>
             <SheetTitle>{UI.DETAILS_TITLE}</SheetTitle>
           </SheetHeader>
@@ -88,7 +88,7 @@ export function EquipmentDetailsSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto" data-testid="equipment-details-sheet">
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto overflow-x-hidden max-w-[95%]" data-testid="equipment-details-sheet">
         <SheetHeader className="border-b pb-4">
           <SheetTitle>{UI.DETAILS_TITLE}</SheetTitle>
           <SheetDescription>
@@ -96,7 +96,7 @@ export function EquipmentDetailsSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 px-4">
           {/* Hero Section */}
           <div className="space-y-4">
             {/* Equipment Image */}
