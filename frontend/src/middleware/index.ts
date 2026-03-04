@@ -74,18 +74,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
         redirectContext
       );
 
-      if (redirectTo) {
-        // Check for redirect loops before redirecting
-        if (!RedirectManager.canRedirect(url.pathname, redirectTo, redirectContext)) {
-          console.error('🚨 Redirect loop prevented:', { from: url.pathname, to: redirectTo });
-          // Return error page instead of looping
-          return new Response('Redirect loop detected', { status: 500 });
-        }
+        if (redirectTo) {
+          // Check for redirect loops before redirecting
+          if (!RedirectManager.canRedirect(url.pathname, redirectTo, redirectContext)) {
+            console.error('🚨 Redirect loop prevented:', { from: url.pathname, to: redirectTo });
+            return new Response('Redirect loop detected', { status: 500 });
+          }
 
-        RedirectManager.recordRedirect(url.pathname, redirectTo, redirectContext);
-        console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
-        return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
-      }
+          RedirectManager.recordRedirect(url.pathname, redirectTo, redirectContext);
+          console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
+          return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
+        }
     }
 
     // 4. Protect API Routes

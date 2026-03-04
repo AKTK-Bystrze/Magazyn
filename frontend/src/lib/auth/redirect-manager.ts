@@ -14,10 +14,6 @@ export interface RedirectContext {
 
 /**
  * Manages redirects with loop prevention and centralized logic
- * 
- * This class eliminates the 38% code duplication across middleware,
- * AuthListener, and page components by providing a single source of
- * truth for all redirect decisions.
  */
 export class RedirectManager {
   private static readonly MAX_REDIRECTS = 3;
@@ -168,8 +164,9 @@ export class RedirectManager {
     // =========================================================================
     // ROOT PATH
     // =========================================================================
+    // Skip middleware redirect for "/" - handle in page component to avoid Response object immutability issues
     if (currentPath === '/') {
-      return getDefaultRouteForUser(user, sessionInfo);
+      return null;
     }
 
     // =========================================================================

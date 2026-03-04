@@ -1,11 +1,19 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getDefaultRouteForUser } from '../lib/auth/redirect-manager';
+import { ROUTES } from '../lib/config/routes';
 
-// This page should not be reached by authenticated users
-// The middleware will redirect them to their role-based landing page
-// If you see this page, you are either:
-// 1. Not authenticated (will be redirected to /login)
-// 2. There's an issue with the middleware
+const user = Astro.locals.user;
+const sessionInfo = Astro.locals.sessionInfo;
+
+if (!user) {
+  return Astro.redirect(ROUTES.PUBLIC.LOGIN);
+}
+
+if (sessionInfo && sessionInfo.isEnabled) {
+  const defaultRoute = getDefaultRouteForUser(user, sessionInfo);
+  return Astro.redirect(defaultRoute);
+}
 ---
 
 <Layout title="Welcome | Equipment Rental">
