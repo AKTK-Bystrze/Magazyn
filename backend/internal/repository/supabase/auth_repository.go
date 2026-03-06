@@ -35,7 +35,7 @@ func NewAuthRepository(client *supabase.Client, url string, key string, serviceK
 func (r *authRepository) SendMagicLink(ctx context.Context, email string) error {
 	err := r.client.Auth.OTP(gotruetypes.OTPRequest{
 		Email:      email,
-		CreateUser: true,
+		CreateUser: false,
 		Data: map[string]interface{}{
 			"redirect_to": r.appURL,
 		},
