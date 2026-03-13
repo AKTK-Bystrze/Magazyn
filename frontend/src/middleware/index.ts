@@ -2,7 +2,7 @@ import { defineMiddleware } from "astro:middleware";
 import { createSupabaseServerClient } from "../lib/auth/supabase-ssr";
 import { ApiErrors, handleApiError } from "../lib/errors/api-error";
 import { getUserSession } from "../lib/auth/session-utils";
-import { RedirectManager, type RedirectContext } from "../lib/auth/redirect-manager";
+import { RedirectManager } from "../lib/auth/redirect-manager";
 import type { SessionInfo } from "../types";
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -61,28 +61,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const isStaticAsset = /\.(css|js|mjs|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp4|webm)$/i.test(url.pathname);
 
     if (!url.pathname.startsWith("/api/") && !isStaticAsset) {
-      // Request-scoped redirect tracking to prevent SSR state leakage
-      const redirectContext: RedirectContext = { history: [] };
-
       const redirectParam = url.searchParams.get("redirect");
       const redirectTo = RedirectManager.getRedirectForAuthState(
         context.locals.user,
         sessionInfo,
         url.pathname,
         redirectParam,
-        url.origin,
-        redirectContext
+        url.origin
       );
 
       if (redirectTo) {
-        // Check for redirect loops before redirecting
-        if (!RedirectManager.canRedirect(url.pathname, redirectTo, redirectContext)) {
-          console.error('🚨 Redirect loop prevented:', { from: url.pathname, to: redirectTo });
-          // Return error page instead of looping
-          return new Response('Redirect loop detected', { status: 500 });
-        }
-
-        RedirectManager.recordRedirect(url.pathname, redirectTo, redirectContext);
         console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
         return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
       }

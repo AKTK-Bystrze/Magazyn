@@ -26,8 +26,6 @@ describe('Auth Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCookie = '';
-    const ctx = { history: [] };
-    RedirectManager.reset(ctx);
 
     // Mock document.cookie
     Object.defineProperty(document, 'cookie', {
@@ -77,7 +75,6 @@ describe('Auth Integration Tests', () => {
 
       // 4. Determine redirect
       const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
@@ -117,7 +114,6 @@ describe('Auth Integration Tests', () => {
 
       // 3. Determine redirect
       const mockUser = { id: 'user-456', email: 'disabled@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
@@ -159,7 +155,6 @@ describe('Auth Integration Tests', () => {
 
       // 4. Determine redirect
       const mockUser = { id: 'admin-789', email: 'admin@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
@@ -196,7 +191,6 @@ describe('Auth Integration Tests', () => {
       
       // RedirectManager should sanitize it
       const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         validSession,

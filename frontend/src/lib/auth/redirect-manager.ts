@@ -5,87 +5,17 @@ import { validateRedirectUrl } from './url-utils';
 import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from './roles';
 
 /**
- * Request-scoped context for redirect tracking
- * Prevents SSR state leakage across concurrent requests
- */
-export interface RedirectContext {
-  history: Array<{ from: string; to: string; timestamp: number }>;
-}
-
-/**
- * Manages redirects with loop prevention and centralized logic
+ * Manages redirects with centralized logic
  * 
- * This class eliminates the 38% code duplication across middleware,
+ * This class eliminates 38% code duplication across middleware,
  * AuthListener, and page components by providing a single source of
  * truth for all redirect decisions.
+ * 
+ * Note: Redirect loop detection is unnecessary as the redirect structure
+ * creates a DAG - each redirect destination never redirects back unless
+ * auth state changes (which requires a page load).
  */
 export class RedirectManager {
-  private static readonly MAX_REDIRECTS = 3;
-  private static readonly HISTORY_TIMEOUT = 5000; // 5 seconds
-
-  /**
-   * Clears redirect history older than timeout
-   * Prevents false positives from old navigation
-   */
-  private static cleanHistory(ctx: RedirectContext): void {
-    const now = Date.now();
-    ctx.history = ctx.history.filter(
-      entry => now - entry.timestamp < this.HISTORY_TIMEOUT
-    );
-  }
-
-  /**
-   * Checks if a redirect would create a loop
-   * 
-   * @param from - Current path
-   * @param to - Target path
-   * @param ctx - Request-scoped redirect context
-   * @returns false if loop detected, true if safe to redirect
-   */
-  static canRedirect(from: string, to: string, ctx: RedirectContext): boolean {
-    this.cleanHistory(ctx);
-
-    // Check redirect count
-    if (ctx.history.length >= this.MAX_REDIRECTS) {
-      console.error('🚨 Redirect loop detected - too many redirects:', ctx.history);
-      return false;
-    }
-
-    // Check for circular redirect (A → B → A)
-    if (ctx.history.some(entry => entry.from === to && entry.to === from)) {
-      console.error('🚨 Circular redirect detected:', { from, to });
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Records a redirect for loop detection
-   * Call this before performing actual redirect
-   * 
-   * @param from - Current path
-   * @param to - Target path
-   * @param ctx - Request-scoped redirect context
-   */
-  static recordRedirect(from: string, to: string, ctx: RedirectContext): void {
-    ctx.history.push({
-      from,
-      to,
-      timestamp: Date.now(),
-    });
-  }
-
-  /**
-   * Resets redirect history
-   * Used in tests and after successful navigation
-   * 
-   * @param ctx - Request-scoped redirect context
-   */
-  static reset(ctx: RedirectContext): void {
-    ctx.history = [];
-  }
-
   /**
    * Main redirect logic - determines where to redirect based on auth state
    * 
@@ -94,7 +24,6 @@ export class RedirectManager {
    * @param currentPath - Current URL pathname
    * @param redirectParam - Optional redirect parameter from query string
    * @param origin - Application origin (e.g., 'http://localhost:4321')
-   * @param ctx - Request-scoped redirect context
    * @returns URL to redirect to, or null if no redirect needed
    */
   static getRedirectForAuthState(
@@ -102,9 +31,7 @@ export class RedirectManager {
     sessionInfo: SessionInfo | null,
     currentPath: string,
     redirectParam: string | null,
-    origin: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ctx: RedirectContext // used by callers for loop detection
+    origin: string
   ): string | null {
     // Unauthenticated user -> login page
     if (!user) {

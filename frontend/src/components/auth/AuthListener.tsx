@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getUserSession } from '@/lib/auth/session-utils';
 import { ROUTES } from '@/lib/config/routes';
-import { RedirectManager, type RedirectContext } from '@/lib/auth/redirect-manager';
+import { RedirectManager } from '@/lib/auth/redirect-manager';
 import { normalizePath } from '@/lib/auth/url-utils';
 
 /**
@@ -13,8 +13,6 @@ import { normalizePath } from '@/lib/auth/url-utils';
 export const AuthListener: React.FC = () => {
   // Use React state instead of global variable for redirect tracking
   const [isRedirectInProgress, setIsRedirectInProgress] = useState(false);
-  // Component-scoped redirect context to prevent cross-component contamination
-  const redirectContextRef = useRef<RedirectContext>({ history: [] });
 
   useEffect(() => {
     const checkHashForToken = async () => {
@@ -63,20 +61,11 @@ export const AuthListener: React.FC = () => {
                 sessionInfo,
                 window.location.pathname,
                 redirectParam,
-                window.location.origin,
-                redirectContextRef.current
+                window.location.origin
               );
 
               if (redirectTo) {
                 if (normalizePath(window.location.pathname) !== normalizePath(redirectTo)) {
-                  // Check for redirect loops
-                  if (!RedirectManager.canRedirect(window.location.pathname, redirectTo, redirectContextRef.current)) {
-                    console.error('🚨 Redirect loop detected', { from: window.location.pathname, to: redirectTo });
-                    setIsRedirectInProgress(false);
-                    return;
-                  }
-
-                  RedirectManager.recordRedirect(window.location.pathname, redirectTo, redirectContextRef.current);
                   console.log(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
                   // Cookies are automatically managed by @supabase/ssr
                   window.location.replace(redirectTo);
@@ -136,8 +125,7 @@ export const AuthListener: React.FC = () => {
           sessionInfo,
           window.location.pathname,
           redirectParam,
-          window.location.origin,
-          redirectContextRef.current
+          window.location.origin
         );
 
         if (redirectTo) {
@@ -145,13 +133,6 @@ export const AuthListener: React.FC = () => {
           const targetPath = redirectTo.replace(/\/$/, '') || '/';
 
           if (currentPath !== targetPath) {
-            // Check for redirect loops
-            if (!RedirectManager.canRedirect(currentPath, redirectTo, redirectContextRef.current)) {
-              console.error('🚨 Redirect loop detected', { from: currentPath, to: redirectTo });
-              return;
-            }
-
-            RedirectManager.recordRedirect(currentPath, redirectTo, redirectContextRef.current);
             console.log(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
             // Cookies automatically managed by @supabase/ssr
             window.location.replace(redirectTo);

@@ -147,7 +147,6 @@ describe('AuthListener', () => {
 
     // Default RedirectManager mock returns
     vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue(null);
-    vi.mocked(RedirectManager.canRedirect).mockReturnValue(true);
   });
 
   afterEach(() => {
