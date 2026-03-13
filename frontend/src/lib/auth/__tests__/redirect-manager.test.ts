@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { RedirectManager, hasRole, getDefaultRouteForUser } from '../redirect-manager';
+import { RedirectManager, getDefaultRouteForUser } from '../redirect-manager';
 import type { User } from '@supabase/supabase-js';
 import type { SessionInfo } from '../../../types';
 
@@ -404,32 +404,6 @@ describe('redirect-manager', () => {
         );
         expect(result).toBe('/login');
       });
-    });
-  });
-
-  describe('hasRole', () => {
-    it('returns true for admin role', () => {
-      expect(hasRole('admin', ['admin', 'super_admin'])).toBe(true);
-    });
-
-    it('returns true for super_admin role', () => {
-      expect(hasRole('super_admin', ['admin', 'super_admin'])).toBe(true);
-    });
-
-    it('returns false for user role', () => {
-      expect(hasRole('user', ['admin', 'super_admin'])).toBe(false);
-    });
-
-    it('returns false for null role', () => {
-      expect(hasRole(null as any, ['admin', 'super_admin'])).toBe(false);
-    });
-
-    it('returns false for undefined role', () => {
-      expect(hasRole(undefined, ['admin', 'super_admin'])).toBe(false);
-    });
-
-    it('returns true when role is in allowed list', () => {
-      expect(hasRole('user', ['user', 'admin'])).toBe(true);
     });
   });
 

@@ -38,11 +38,11 @@ export class RedirectManager {
       if (currentPath === ROUTES.PUBLIC.LOGIN) {
         return null;
       }
-      
+
       if (currentPath === '/') {
         return ROUTES.PUBLIC.LOGIN;
       }
-      
+
       return `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(currentPath)}`;
     }
 
@@ -78,46 +78,28 @@ export class RedirectManager {
   }
 }
 
-/**
- * Checks if a redirect path is allowed for a given user role
- * 
- * SECURITY: Prevents users from accessing admin routes via redirect parameter
- * 
- * @param path - The redirect target path
- * @param role - The user's role from sessionInfo
- * @returns true if the redirect is allowed for the user's role
- */
+/// Checks if a redirect path is allowed for a given user role
 function isRedirectAllowedForRole(path: string, role: string | undefined): boolean {
-  // Admin routes are restricted to admin and super_admin roles
-  if (path.startsWith(ROUTES.PROTECTED.ADMIN)) {
-    return role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE;
-  }
-
-  // All other routes are allowed for any authenticated user
-  return true;
+  return !path.startsWith(ROUTES.PROTECTED.ADMIN)
+    || role === ADMIN_ROLE
+    || role === SUPER_ADMIN_ROLE;
 }
 
 /**
  * Gets the default route for a user based on their role
  * 
- * SECURITY: Uses ONLY sessionInfo.role (from backend database with RLS)
- * Never falls back to user_metadata.role (can be stale)
- * 
  * @param user - Supabase user object (can be null)
  * @param sessionInfo - Session info from backend (authoritative source)
- * @returns Default route path for the user
  */
 export function getDefaultRouteForUser(
   user: User | null,
   sessionInfo: SessionInfo | null
 ): string {
-  // If no user or sessionInfo, redirect to login (fail-safe)
   if (!user || !sessionInfo) {
-    console.warn('⚠️ No user or sessionInfo available, redirecting to login');
+    console.info('No user or sessionInfo available, redirecting to login');
     return ROUTES.PUBLIC.LOGIN;
   }
 
-  // Check if account is disabled
   if (!sessionInfo.isEnabled) {
     return ROUTES.PROTECTED.ACCOUNT_DISABLED;
   }
@@ -126,7 +108,6 @@ export function getDefaultRouteForUser(
   // Never use user_metadata.role (can be stale)
   const role = sessionInfo.role;
 
-  // Route based on role
   switch (role) {
     case SUPER_ADMIN_ROLE:
     case ADMIN_ROLE:
@@ -134,28 +115,7 @@ export function getDefaultRouteForUser(
     case USER_ROLE:
       return ROUTES.PROTECTED.DASHBOARD;
     default:
-      // Fallback for unknown roles
       console.warn(`⚠️ Unknown role: ${role}, defaulting to dashboard`);
       return ROUTES.PROTECTED.DASHBOARD;
   }
-}
-
-/**
- * Checks if a user has one of the specified roles
- * 
- * SECURITY: Uses ONLY sessionInfo.role
- * 
- * @param role - Role from sessionInfo
- * @param allowedRoles - Array of allowed roles
- * @returns true if user has one of the allowed roles
- * 
- * @example
- * hasRole(sessionInfo.role, ['admin', 'super_admin'])
- */
-export function hasRole(
-  role: string | undefined,
-  allowedRoles: string[]
-): boolean {
-  if (!role) return false;
-  return allowedRoles.includes(role);
 }
