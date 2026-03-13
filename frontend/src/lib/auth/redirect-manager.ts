@@ -89,9 +89,6 @@ export class RedirectManager {
   /**
    * Main redirect logic - determines where to redirect based on auth state
    * 
-   * This is the single source of truth for ALL redirect decisions.
-   * Replaces duplicated logic in middleware and AuthListener.
-   * 
    * @param user - Supabase user object (null if not authenticated)
    * @param sessionInfo - Session info from backend (null if not fetched)
    * @param currentPath - Current URL pathname
@@ -107,18 +104,14 @@ export class RedirectManager {
     redirectParam: string | null,
     origin: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ctx: RedirectContext // Available for future use, used by callers for loop detection
+    ctx: RedirectContext // used by callers for loop detection
   ): string | null {
-    // =========================================================================
-    // UNAUTHENTICATED USERS
-    // =========================================================================
+    // Unauthenticated user -> login page
     if (!user) {
-      // Already on login page - no redirect needed
       if (currentPath === ROUTES.PUBLIC.LOGIN) {
         return null;
       }
       
-      // Redirect to login with return URL
       if (currentPath === '/') {
         return ROUTES.PUBLIC.LOGIN;
       }
@@ -126,55 +119,34 @@ export class RedirectManager {
       return `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(currentPath)}`;
     }
 
-    // =========================================================================
-    // DISABLED USERS
-    // =========================================================================
+    // Disabled user -> account disabled page
     if (sessionInfo && !sessionInfo.isEnabled) {
-      // Already on account-disabled page - no redirect needed
       if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED) {
         return null;
       }
-      
-      // Redirect to account-disabled
       return ROUTES.PROTECTED.ACCOUNT_DISABLED;
     }
 
-    // =========================================================================
-    // ENABLED USERS ON ACCOUNT-DISABLED PAGE
-    // =========================================================================
     if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED && sessionInfo?.isEnabled) {
       return getDefaultRouteForUser(user, sessionInfo);
     }
 
-    // =========================================================================
-    // AUTHENTICATED USERS ON LOGIN PAGE
-    // =========================================================================
     if (currentPath === ROUTES.PUBLIC.LOGIN) {
-      // Check for safe redirect parameter
       if (redirectParam) {
         const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
-        // SECURITY: Validate redirect target against user's role
+        // Validate redirect target against user's role
         if (safeRedirect !== ROUTES.PUBLIC.LOGIN &&
           isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)) {
           return safeRedirect;
         }
         // Fall through to default route if redirect is not allowed
       }
-      
-      // Redirect to default route based on role
       return getDefaultRouteForUser(user, sessionInfo);
     }
 
-    // =========================================================================
-    // ROOT PATH
-    // =========================================================================
     if (currentPath === '/') {
       return getDefaultRouteForUser(user, sessionInfo);
     }
-
-    // =========================================================================
-    // NO REDIRECT NEEDED
-    // =========================================================================
     return null;
   }
 }

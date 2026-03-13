@@ -38,13 +38,11 @@ export function isSafeRedirect(url: string, origin: string): boolean {
     // Parse the URL - if relative, it will be resolved against origin
     const parsed = new URL(url, origin);
     
-    // Must be same origin (prevents external redirects)
     if (parsed.origin !== origin) {
       console.warn(`🚨 Blocked external redirect attempt: ${url}`);
       return false;
     }
     
-    // Must be in allowed paths
     const isAllowed = isAllowedPath(parsed.pathname);
     if (!isAllowed) {
       console.warn(`🚨 Blocked redirect to non-whitelisted path: ${parsed.pathname}`);
@@ -57,12 +55,7 @@ export function isSafeRedirect(url: string, origin: string): boolean {
   }
 }
 
-/**
- * Checks if a path is in the whitelist of allowed redirect targets
- * 
- * @param path - The pathname to check (e.g., '/admin')
- * @returns true if the path is whitelisted, false otherwise
- */
+/// Checks if a path is in the whitelist of allowed redirect targets
 function isAllowedPath(path: string): boolean {
   const allowedPaths = getAllRoutes();
   return allowedPaths.includes(path as AppRoute);
@@ -94,11 +87,9 @@ export function validateRedirectUrl(
   origin: string,
   fallback: string = '/login'
 ): string {
-  // Null, empty, or root path -> use fallback
   if (!url || url === '/' || url === '/login') {
     return fallback;
   }
-  
-  // Validate the URL
+
   return isSafeRedirect(url, origin) ? url : fallback;
 }
