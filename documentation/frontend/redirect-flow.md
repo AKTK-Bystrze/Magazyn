@@ -2,13 +2,12 @@
 
 **Last Updated**: 2025-12-22  
 **Version**: 2.0  
-**Status**: Production Ready
 
 ---
 
 ## Overview
 
-This document describes the centralized redirect architecture implemented to fix critical security vulnerabilities and eliminate code duplication across the application. The system uses a single source of truth (`RedirectManager`) for all redirect decisions.
+This document describes the centralized redirect architecture. The system uses `RedirectManager` for all redirect decisions.
 
 ---
 
@@ -393,22 +392,6 @@ export const ROUTES = {
   },
 } as const;
 ```
-
-**Benefits**:
-- Type-safe route references
-- Single source of truth
-- Easy to add new routes
-- Prevents typos
-
-**Usage**:
-```typescript
-// ✅ Type-safe
-return ROUTES.PROTECTED.ADMIN;
-
-// ❌ Old way - prone to typos
-return '/admin';
-```
-
 ---
 
 ## Error Handling
@@ -464,23 +447,5 @@ return '/admin';
 ✅ Edge cases (null, empty, malformed)
 
 ---
-
-## Migration Notes
-
-### Before Refactoring
-
-- 38% code duplication
-- 42 hardcoded route strings
-- 27 magic numbers
-- Open redirect vulnerability
-- Inconsistent authorization
-
-### After Refactoring
-
-- <5% code duplication (87% reduction)
-- 4 hardcoded routes (90% reduction)
-- 0 magic numbers (100% elimination)
-- OWASP-compliant security
-- Single source of truth for auth
 
 **Next**: See [Frontend Architecture](./architecture.md) and [Coding Standards](./coding_standards.md) for implementation details.
