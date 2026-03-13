@@ -80,8 +80,7 @@ describe('Auth Integration Tests', () => {
         session,
         '/login',
         null,
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
 
       // 5. Verify redirect is safe
@@ -119,8 +118,7 @@ describe('Auth Integration Tests', () => {
         session,
         '/dashboard',
         null,
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
 
       // 4. Verify disabled user redirects correctly
@@ -160,8 +158,7 @@ describe('Auth Integration Tests', () => {
         session,
         '/login',
         null,
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
 
       // 5. Verify admin redirects to admin page
@@ -196,10 +193,9 @@ describe('Auth Integration Tests', () => {
         validSession,
         '/login',
         maliciousRedirect, // Malicious redirect param
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
-      
+
       // Should fall back to safe default, not use malicious URL
       expect(redirect).toBe('/dashboard');
     });
