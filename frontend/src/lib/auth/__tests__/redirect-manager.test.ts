@@ -350,7 +350,7 @@ describe('redirect-manager', () => {
           null,
           origin
         );
-        expect(result).toBe('/login');
+        expect(result).toBe('/login?redirect=%2Fdashboard');
       });
 
       it('handles user with null sessionInfo', () => {
