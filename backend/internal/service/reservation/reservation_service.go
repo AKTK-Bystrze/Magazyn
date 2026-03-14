@@ -124,38 +124,48 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		targetUserID = *cmd.UserID
 	}
 
+	// Check if free reservation requested
+	isFreeReservation := cmd.FreeReservation != nil && *cmd.FreeReservation
+
 	// 1. Validation & Cost Calculation (Read-Only)
 	totalCost := int32(0)
 	costMap := make(map[int]int32)
 
-	// Pre-validate equipment existence and status
-	for i, req := range cmd.Reservations {
-		eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
-		if err != nil {
-			return nil, types.NewValidationError(fmt.Sprintf("Equipment %s not found", req.EquipmentID), nil)
-		}
-		if eq.IsArchived || eq.Status == constants.EquipmentStatusBroken {
-			return nil, types.NewValidationError(fmt.Sprintf("Equipment %s is not available", safeString(eq.Name)), nil)
-		}
+	if !isFreeReservation {
+		// Only calculate cost if not free
+		for i, req := range cmd.Reservations {
+			eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
+			if err != nil {
+				return nil, types.NewValidationError(fmt.Sprintf("Equipment %s not found", req.EquipmentID), nil)
+			}
+			if eq.IsArchived || eq.Status == constants.EquipmentStatusBroken {
+				return nil, types.NewValidationError(fmt.Sprintf("Equipment %s is not available", safeString(eq.Name)), nil)
+			}
 
-		// Calculate Cost
-		eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-		if err != nil {
-			return nil, types.NewInternalError("failed to fetch equipment type", err)
+			eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+			if err != nil {
+				return nil, types.NewInternalError("failed to fetch equipment type", err)
+			}
+
+			days := s.calculateDays(req.StartDate, req.EndDate)
+			cost := days * eqType.CreditCostPerDay
+			totalCost += cost
+			costMap[i] = cost
+
+			logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d",
+				req.EquipmentID, eq.TypeID, days, eqType.CreditCostPerDay, cost)
 		}
-
-		days := s.calculateDays(req.StartDate, req.EndDate)
-		cost := days * eqType.CreditCostPerDay
-		totalCost += cost
-		costMap[i] = cost
-
-		logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d",
-			req.EquipmentID, eq.TypeID, days, eqType.CreditCostPerDay, cost)
+	} else {
+		// For free reservations, set all costs to 0
+		for i := range cmd.Reservations {
+			costMap[i] = 0
+		}
+		logger.Infof(ctx, "Creating free reservation for user %s", targetUserID)
 	}
 
 	// 2. Execute Atomic Transaction (RPC)
 	// This handles balance check, deduction, concurrency check, and creation.
-	reservationIDs, newBalance, err := s.repo.CreateReservationsAtomic(ctx, targetUserID, totalCost, cmd.Reservations)
+	reservationIDs, newBalance, err := s.repo.CreateReservationsAtomic(ctx, targetUserID, totalCost, isFreeReservation, cmd.Reservations)
 	if err != nil {
 		// Map RPC errors if possible, or return internal.
 		// If RPC returns "Insufficient credits", we could map it.

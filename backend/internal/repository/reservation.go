@@ -20,7 +20,7 @@ type ReservationRepository interface {
 	CreateReservation(ctx context.Context, reservation types.PublicReservationsInsert) (*types.PublicReservationsSelect, error)
 
 	// CreateReservationsAtomic creates multiple reservations and deducts credits atomically using DB RPC
-	CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, reservations []types.CreateReservationItem) ([]string, int32, error)
+	CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, reservations []types.CreateReservationItem) ([]string, int32, error)
 
 	// UpdateReservation updates an existing reservation
 	// changedByUserID is used for audit trail - tracks who made the change

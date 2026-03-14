@@ -97,8 +97,9 @@ type CreateReservationItem struct {
 
 // CreateReservationsCommand represents the request body to create reservations
 type CreateReservationsCommand struct {
-	Reservations []CreateReservationItem `json:"reservations" validate:"required,min=1,dive"`
-	UserID       *string                 `json:"user_id,omitempty" validate:"omitempty,uuid"` // Admin only
+	Reservations    []CreateReservationItem `json:"reservations" validate:"required,min=1,dive"`
+	UserID          *string                 `json:"user_id,omitempty" validate:"omitempty,uuid"`     // Admin only
+	FreeReservation *bool                   `json:"free_reservation,omitempty" validate:"omitempty"` // Admin+ only
 }
 
 // UpdateReservationCommand represents the request body to update a reservation

@@ -90,10 +90,15 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	// Map to ListItem
 	result := make([]types.ReservationListItem, len(rawItems))
 	for i, item := range rawItems {
-		// Calculate credit cost: days * cost_per_day
-		days := calculateDays(item.StartDate, item.EndDate)
-		// days is always a small positive integer (1-365 range), safe to cast to int32
-		creditCost := int32(days) * item.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
+		// Calculate credit cost: 0 if free, otherwise days * cost_per_day
+		var creditCost int32
+		if item.IsFree {
+			creditCost = 0
+		} else {
+			days := calculateDays(item.StartDate, item.EndDate)
+			// days is always a small positive integer (1-365 range), safe to cast to int32
+			creditCost = int32(days) * item.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
+		}
 
 		result[i] = types.ReservationListItem{
 			ID:            item.ID,
@@ -141,9 +146,14 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 		return nil, err
 	}
 
-	// Calculate credit cost: days * cost_per_day (same logic as list view)
-	days := calculateDays(raw.StartDate, raw.EndDate)
-	creditCost := int32(days) * raw.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
+	// Calculate credit cost: 0 if free, otherwise days * cost_per_day (same logic as list view)
+	var creditCost int32
+	if raw.IsFree {
+		creditCost = 0
+	} else {
+		days := calculateDays(raw.StartDate, raw.EndDate)
+		creditCost = int32(days) * raw.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
+	}
 
 	detail := &types.ReservationDetail{
 		ReservationListItem: types.ReservationListItem{
@@ -266,12 +276,13 @@ func (r *reservationRepository) CreateReservation(ctx context.Context, reservati
 }
 
 // CreateReservationsAtomic creates multiple reservations and deducts credits atomically
-func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, reservations []types.CreateReservationItem) ([]string, int32, error) {
+func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, reservations []types.CreateReservationItem) ([]string, int32, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	params := map[string]interface{}{
 		"p_user_id":      userID,
 		"p_total_cost":   totalCost,
+		"p_is_free":      isFree,
 		"p_reservations": reservations,
 	}
 
