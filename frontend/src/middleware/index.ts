@@ -24,14 +24,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     context.locals.user = user || null;
-
     if (user) {
       console.log('✅ Middleware: User authenticated:', user.id);
     } else {
       console.log('❌ Middleware: No authenticated user');
     }
-
-    const isAuthApiRoute = url.pathname.startsWith("/api/auth");
 
     // 2. Fetch user session info if authenticated (to check isEnabled status)
     let sessionInfo: SessionInfo | null = null;
@@ -55,7 +52,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
 
-    // 3. Unified Redirect Logic - Single Source of Truth
+    // 3. Unified Redirect Logic
     // SKIP redirects for API routes - they should handle auth state via 401/403 or pass through
     // SKIP redirects for static assets (CSS, JS, images, fonts, etc.)
     const isStaticAsset = /\.(css|js|mjs|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp4|webm)$/i.test(url.pathname);
@@ -78,14 +75,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // 4. Protect API Routes
     // Require authentication for all /api endpoints except auth initialization and logger
-
+    const isAuthApiRoute = url.pathname.startsWith("/api/auth");
     if (url.pathname.startsWith("/api/") && !isAuthApiRoute) {
       if (!context.locals.user) {
         console.log('🔒 Middleware: Access denied to API route:', url.pathname);
         throw ApiErrors.unauthorized("Authentication required");
       }
 
-      // Block disabled users from API access
       if (sessionInfo && !sessionInfo.isEnabled) {
         throw ApiErrors.forbidden("Account is disabled. Please contact an administrator.");
       }
