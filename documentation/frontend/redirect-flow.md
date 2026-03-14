@@ -1,6 +1,6 @@
 # Redirect Flow Architecture
 
-**Last Updated**: 2025-12-22  
+**Last Updated**: 2025-03-14
 **Version**: 2.0  
 
 ---
