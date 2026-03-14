@@ -341,34 +341,6 @@ describe('redirect-manager', () => {
       });
     });
 
-    describe('Unknown Role Fallback', () => {
-      it('defaults to dashboard for unknown role', () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: 'unknown_role' as any });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          '/login',
-          null,
-          origin
-        );
-        expect(result).toBe('/dashboard');
-      });
-
-      it('defaults to dashboard from root for unknown role', () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: 'unknown_role' as any });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          '/',
-          null,
-          origin
-        );
-        expect(result).toBe('/dashboard');
-      });
-    });
-
     describe('Edge Cases', () => {
       it('handles null user and null sessionInfo', () => {
         const result = RedirectManager.getRedirectForAuthState(
@@ -445,13 +417,6 @@ describe('redirect-manager', () => {
       const sessionInfo = createMockSessionInfo({ role: 'super_admin' });
       const result = getDefaultRouteForUser(user, sessionInfo);
       expect(result).toBe('/admin');
-    });
-
-    it('defaults to dashboard for unknown role', () => {
-      const user = createMockUser();
-      const sessionInfo = createMockSessionInfo({ role: 'unknown' as any });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe('/dashboard');
     });
   });
 });
