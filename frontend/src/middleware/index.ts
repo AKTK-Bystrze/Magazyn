@@ -15,15 +15,37 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.supabase = supabase;
 
   try {
+    // Diagnostics: Log cookie header before auth calls
+    const cookieHeader = context.request.headers.get('Cookie');
+    console.log('🍪 Cookie header length:', cookieHeader?.length || 0);
+    const sbCookies = cookieHeader?.split('; ').filter(c => c.includes('sb-')) || [];
+    console.log('🍪 Supabase cookies found:', sbCookies.length);
+
     // 1. Get user from Supabase using getUser() (recommended for SSR)
     // This validates the session server-side instead of relying on client-provided session
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error) {
-      console.log('⚠️ Auth error:', error.message);
+      console.error('❌ Supabase getUser() error:', {
+        code: error.code,
+        message: error.message,
+        status: error.status,
+        name: error.name
+      });
     }
 
     context.locals.user = user || null;
+
+    // Handle invalid refresh token error - clear cookies and redirect gracefully
+    if (error && (error.code === 'refresh_token_not_found' || error.message?.includes('refresh'))) {
+      console.error('🧹 Invalid refresh token detected, clearing auth cookies');
+      context.cookies.delete('sb-access-token', { path: '/' });
+      context.cookies.delete('sb-refresh-token', { path: '/' });
+      context.cookies.delete('sb-session-token', { path: '/' });
+      
+      return Response.redirect(new URL('/login', url.origin).toString(), 302);
+    }
+
     if (user) {
       console.log('✅ Middleware: User authenticated:', user.id);
     } else {
@@ -69,6 +91,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
       if (redirectTo) {
         console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
+        console.log('📊 Request state:', {
+          hasUser: !!user,
+          hasSessionInfo: !!sessionInfo,
+          hasToken: !!token,
+          pathname: url.pathname
+        });
         return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
       }
     }
