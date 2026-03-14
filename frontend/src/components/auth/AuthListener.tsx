@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getUserSession } from '@/lib/auth/session-utils';
 import { ROUTES } from '@/lib/config/routes';
