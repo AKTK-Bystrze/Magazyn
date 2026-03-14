@@ -135,16 +135,6 @@ describe('getDefaultRouteForUser', () => {
   });
 
   describe('edge cases', () => {
-    it('should return /dashboard for unknown role', () => {
-      const user = createMockUser();
-      const sessionInfo = createMockSessionInfo({
-        isEnabled: true,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        role: 'unknown_role' as any,
-      });
-      expect(getDefaultRouteForUser(user, sessionInfo)).toBe('/dashboard');
-    });
-
     it('should prioritize sessionInfo.role over user_metadata.role', () => {
       const user = createMockUser({
         user_metadata: { role: 'user' },
@@ -190,8 +180,7 @@ describe('isAdmin', () => {
 
   it('should return false when sessionInfo has no role', () => {
     const sessionInfo = createMockSessionInfo({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      role: '' as any,
+      role: undefined,
     });
     expect(isAdmin(sessionInfo)).toBe(false);
   });

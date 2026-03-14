@@ -5,99 +5,25 @@ import { validateRedirectUrl } from './url-utils';
 import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from './roles';
 
 /**
- * Request-scoped context for redirect tracking
- * Prevents SSR state leakage across concurrent requests
- */
-export interface RedirectContext {
-  history: Array<{ from: string; to: string; timestamp: number }>;
-}
-
-/**
- * Manages redirects with loop prevention and centralized logic
+ * Manages redirects with centralized logic
  * 
- * This class eliminates the 38% code duplication across middleware,
+ * This class eliminates 38% code duplication across middleware,
  * AuthListener, and page components by providing a single source of
  * truth for all redirect decisions.
+ * 
+ * Note: Redirect loop detection is unnecessary as the redirect structure
+ * creates a DAG - each redirect destination never redirects back unless
+ * auth state changes (which requires a page load).
  */
 export class RedirectManager {
-  private static readonly MAX_REDIRECTS = 3;
-  private static readonly HISTORY_TIMEOUT = 5000; // 5 seconds
-
-  /**
-   * Clears redirect history older than timeout
-   * Prevents false positives from old navigation
-   */
-  private static cleanHistory(ctx: RedirectContext): void {
-    const now = Date.now();
-    ctx.history = ctx.history.filter(
-      entry => now - entry.timestamp < this.HISTORY_TIMEOUT
-    );
-  }
-
-  /**
-   * Checks if a redirect would create a loop
-   * 
-   * @param from - Current path
-   * @param to - Target path
-   * @param ctx - Request-scoped redirect context
-   * @returns false if loop detected, true if safe to redirect
-   */
-  static canRedirect(from: string, to: string, ctx: RedirectContext): boolean {
-    this.cleanHistory(ctx);
-
-    // Check redirect count
-    if (ctx.history.length >= this.MAX_REDIRECTS) {
-      console.error('🚨 Redirect loop detected - too many redirects:', ctx.history);
-      return false;
-    }
-
-    // Check for circular redirect (A → B → A)
-    if (ctx.history.some(entry => entry.from === to && entry.to === from)) {
-      console.error('🚨 Circular redirect detected:', { from, to });
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Records a redirect for loop detection
-   * Call this before performing actual redirect
-   * 
-   * @param from - Current path
-   * @param to - Target path
-   * @param ctx - Request-scoped redirect context
-   */
-  static recordRedirect(from: string, to: string, ctx: RedirectContext): void {
-    ctx.history.push({
-      from,
-      to,
-      timestamp: Date.now(),
-    });
-  }
-
-  /**
-   * Resets redirect history
-   * Used in tests and after successful navigation
-   * 
-   * @param ctx - Request-scoped redirect context
-   */
-  static reset(ctx: RedirectContext): void {
-    ctx.history = [];
-  }
-
   /**
    * Main redirect logic - determines where to redirect based on auth state
-   * 
-   * This is the single source of truth for ALL redirect decisions.
-   * Replaces duplicated logic in middleware and AuthListener.
    * 
    * @param user - Supabase user object (null if not authenticated)
    * @param sessionInfo - Session info from backend (null if not fetched)
    * @param currentPath - Current URL pathname
    * @param redirectParam - Optional redirect parameter from query string
    * @param origin - Application origin (e.g., 'http://localhost:4321')
-   * @param ctx - Request-scoped redirect context
    * @returns URL to redirect to, or null if no redirect needed
    */
   static getRedirectForAuthState(
@@ -105,120 +31,75 @@ export class RedirectManager {
     sessionInfo: SessionInfo | null,
     currentPath: string,
     redirectParam: string | null,
-    origin: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ctx: RedirectContext // Available for future use, used by callers for loop detection
+    origin: string
   ): string | null {
-    // =========================================================================
-    // UNAUTHENTICATED USERS
-    // =========================================================================
+    // Unauthenticated user -> login page
     if (!user) {
-      // Already on login page - no redirect needed
       if (currentPath === ROUTES.PUBLIC.LOGIN) {
         return null;
       }
-      
-      // Redirect to login with return URL
+
       if (currentPath === '/') {
         return ROUTES.PUBLIC.LOGIN;
       }
-      
+
       return `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(currentPath)}`;
     }
 
-    // =========================================================================
-    // DISABLED USERS
-    // =========================================================================
+    // Disabled user -> account disabled page
     if (sessionInfo && !sessionInfo.isEnabled) {
-      // Already on account-disabled page - no redirect needed
       if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED) {
         return null;
       }
-      
-      // Redirect to account-disabled
       return ROUTES.PROTECTED.ACCOUNT_DISABLED;
     }
 
-    // =========================================================================
-    // ENABLED USERS ON ACCOUNT-DISABLED PAGE
-    // =========================================================================
     if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED && sessionInfo?.isEnabled) {
       return getDefaultRouteForUser(user, sessionInfo);
     }
 
-    // =========================================================================
-    // AUTHENTICATED USERS ON LOGIN PAGE
-    // =========================================================================
     if (currentPath === ROUTES.PUBLIC.LOGIN) {
-      // Check for safe redirect parameter
       if (redirectParam) {
         const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
-        // SECURITY: Validate redirect target against user's role
+        // Validate redirect target against user's role
         if (safeRedirect !== ROUTES.PUBLIC.LOGIN &&
           isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)) {
           return safeRedirect;
         }
         // Fall through to default route if redirect is not allowed
       }
-      
-      // Redirect to default route based on role
       return getDefaultRouteForUser(user, sessionInfo);
     }
 
-    // =========================================================================
-    // ROOT PATH
-    // =========================================================================
     if (currentPath === '/') {
       return getDefaultRouteForUser(user, sessionInfo);
     }
-
-    // =========================================================================
-    // NO REDIRECT NEEDED
-    // =========================================================================
     return null;
   }
 }
 
-/**
- * Checks if a redirect path is allowed for a given user role
- * 
- * SECURITY: Prevents users from accessing admin routes via redirect parameter
- * 
- * @param path - The redirect target path
- * @param role - The user's role from sessionInfo
- * @returns true if the redirect is allowed for the user's role
- */
+/// Checks if a redirect path is allowed for a given user role
 function isRedirectAllowedForRole(path: string, role: string | undefined): boolean {
-  // Admin routes are restricted to admin and super_admin roles
-  if (path.startsWith(ROUTES.PROTECTED.ADMIN)) {
-    return role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE;
-  }
-
-  // All other routes are allowed for any authenticated user
-  return true;
+  return !path.startsWith(ROUTES.PROTECTED.ADMIN)
+    || role === ADMIN_ROLE
+    || role === SUPER_ADMIN_ROLE;
 }
 
 /**
  * Gets the default route for a user based on their role
  * 
- * SECURITY: Uses ONLY sessionInfo.role (from backend database with RLS)
- * Never falls back to user_metadata.role (can be stale)
- * 
  * @param user - Supabase user object (can be null)
  * @param sessionInfo - Session info from backend (authoritative source)
- * @returns Default route path for the user
  */
 export function getDefaultRouteForUser(
   user: User | null,
   sessionInfo: SessionInfo | null
 ): string {
-  // If no user or sessionInfo, redirect to login (fail-safe)
   if (!user || !sessionInfo) {
-    console.warn('⚠️ No user or sessionInfo available, redirecting to login');
+    console.info('No user or sessionInfo available, redirecting to login');
     return ROUTES.PUBLIC.LOGIN;
   }
 
-  // Check if account is disabled
   if (!sessionInfo.isEnabled) {
     return ROUTES.PROTECTED.ACCOUNT_DISABLED;
   }
@@ -227,7 +108,6 @@ export function getDefaultRouteForUser(
   // Never use user_metadata.role (can be stale)
   const role = sessionInfo.role;
 
-  // Route based on role
   switch (role) {
     case SUPER_ADMIN_ROLE:
     case ADMIN_ROLE:
@@ -235,28 +115,7 @@ export function getDefaultRouteForUser(
     case USER_ROLE:
       return ROUTES.PROTECTED.DASHBOARD;
     default:
-      // Fallback for unknown roles
       console.warn(`⚠️ Unknown role: ${role}, defaulting to dashboard`);
       return ROUTES.PROTECTED.DASHBOARD;
   }
-}
-
-/**
- * Checks if a user has one of the specified roles
- * 
- * SECURITY: Uses ONLY sessionInfo.role
- * 
- * @param role - Role from sessionInfo
- * @param allowedRoles - Array of allowed roles
- * @returns true if user has one of the allowed roles
- * 
- * @example
- * hasRole(sessionInfo.role, ['admin', 'super_admin'])
- */
-export function hasRole(
-  role: string | undefined,
-  allowedRoles: string[]
-): boolean {
-  if (!role) return false;
-  return allowedRoles.includes(role);
 }

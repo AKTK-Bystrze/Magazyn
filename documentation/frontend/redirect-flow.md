@@ -1,14 +1,13 @@
 # Redirect Flow Architecture
 
-**Last Updated**: 2025-12-22  
+**Last Updated**: 2025-03-14
 **Version**: 2.0  
-**Status**: Production Ready
 
 ---
 
 ## Overview
 
-This document describes the centralized redirect architecture implemented to fix critical security vulnerabilities and eliminate code duplication across the application. The system uses a single source of truth (`RedirectManager`) for all redirect decisions.
+This document describes the centralized redirect architecture. The system uses `RedirectManager` for all redirect decisions.
 
 ---
 
@@ -137,42 +136,17 @@ stateDiagram-v2
 ### Class Structure
 
 ```typescript
-interface RedirectContext {
-  history: Array<{ from: string; to: string; timestamp: number }>;
-}
-
 class RedirectManager {
-  // Static properties
-  private static readonly MAX_REDIRECTS = 3;
-  private static readonly HISTORY_TIMEOUT = 5000; // 5 seconds
-  
   // Public API
-  static canRedirect(from: string, to: string, ctx: RedirectContext): boolean
-  static recordRedirect(from: string, to: string, ctx: RedirectContext): void
-  static reset(ctx: RedirectContext): void
   static getRedirectForAuthState(
     user: User | null,
     sessionInfo: SessionInfo | null,
     currentPath: string,
     redirectParam: string | null,
-    origin: string,
-    ctx: RedirectContext
+    origin: string
   ): string | null
 }
 ```
-
-### Request-Scoped Context
-
-**Problem Solved**: Static `redirectHistory` leaked state across concurrent SSR requests.
-
-**Solution**: Each request/component gets its own `RedirectContext`:
-- **Server-Side (Middleware)**: Creates `{ history: [] }` per request
-- **Client-Side (AuthListener)**: Uses `useRef<RedirectContext>({ history: [] })` per component instance
-
-**Benefits**:
-- ✅ No state contamination between users
-- ✅ Thread-safe for concurrent requests
-- ✅ Proper SSR isolation
 
 ### Key Methods
 
@@ -195,38 +169,6 @@ class RedirectManager {
 4. If on `/login` → Default route or safe redirect param
 5. If on `/` → Default route
 6. Else → `null` (no redirect)
-
----
-
-#### `canRedirect()`
-**Purpose**: Loop prevention with request-scoped tracking
-
-**Parameters**: 
-- `from`: Current path
-- `to`: Target path 
-- `ctx`: Request-scoped redirect context
-
-**Checks**:
-1. **Max Redirects**: Blocks after 3 redirects in 5 seconds
-2. **Circular Detection**: Detects A → B → A patterns
-3. **History Cleanup**: Removes old entries after timeout
-
-**Example**:
-```typescript
-const ctx: RedirectContext = { history: [] };
-
-// First 3 are allowed
-RedirectManager.canRedirect('/a', '/b', ctx); // true
-RedirectManager.canRedirect('/b', '/c', ctx); // true
-RedirectManager.canRedirect('/c', '/d', ctx); // true
-
-// 4th is blocked
-RedirectManager.canRedirect('/d', '/e', ctx); // false (too many)
-
-// Circular is blocked
-RedirectManager.recordRedirect('/login', '/dashboard', ctx);
-RedirectManager.canRedirect('/dashboard', '/login', ctx); // false (circular)
-```
 
 ---
 
@@ -388,24 +330,15 @@ sequenceDiagram
 
 **Key Code**:
 ```typescript
-// Request-scoped redirect tracking
-const redirectContext: RedirectContext = { history: [] };
-
 const redirectTo = RedirectManager.getRedirectForAuthState(
   user,
   sessionInfo,
   pathname,
   redirectParam,
-  url.origin,
-  redirectContext  // 🆕 Pass context
+  url.origin
 );
 
 if (redirectTo) {
-  if (!RedirectManager.canRedirect(pathname, redirectTo, redirectContext)) {
-    return new Response('Redirect loop detected', { status: 500 });
-  }
-  
-  RedirectManager.recordRedirect(pathname, redirectTo, redirect Context);
   return Response.redirect(new URL(redirectTo, url.origin), 302);
 }
 ```
@@ -426,25 +359,15 @@ if (redirectTo) {
 
 **Key Code**:
 ```typescript
-// Component-scoped redirect context
-const redirectContextRef = useRef<RedirectContext>({ history: [] });
-
 const redirectTo = RedirectManager.getRedirectForAuthState(
   user,
   sessionInfo,
   pathname,
   redirectParam,
-  origin,
-  redirectContextRef.current  // 🆕 Pass ref
+  origin
 );
 
 if (redirectTo && pathname !== redirectTo) {
-  if (!RedirectManager.canRedirect(pathname, redirectTo, redirectContextRef.current)) {
-    console.error('Redirect loop detected');
-    return;
-  }
-  
-  RedirectManager.recordRedirect(pathname, redirectTo, redirectContextRef.current);
   await waitForCookieAndRedirect(accessToken, redirectTo);
 }
 ```
@@ -469,52 +392,9 @@ export const ROUTES = {
   },
 } as const;
 ```
-
-**Benefits**:
-- Type-safe route references
-- Single source of truth
-- Easy to add new routes
-- Prevents typos
-
-**Usage**:
-```typescript
-// ✅ Type-safe
-return ROUTES.PROTECTED.ADMIN;
-
-// ❌ Old way - prone to typos
-return '/admin';
-```
-
 ---
 
 ## Error Handling
-
-### Loop Detection
-
-```mermaid
-graph TD
-    A[Redirect Attempt] --> B[canRedirect Check]
-    B --> C{History Count}
-    C -->|< 3| D{Circular?}
-    C -->|>= 3| E[Log Error: Too Many Redirects]
-    D -->|No| F[Allow Redirect]
-    D -->|Yes| G[Log Error: Circular Redirect]
-    
-    E --> H[Block Redirect]
-    G --> H
-    F --> I[Record Redirect]
-    I --> J[Execute Redirect]
-```
-
-**Error Messages**:
-- `🚨 Redirect loop detected - too many redirects: [history]`
-- `🚨 Circular redirect detected: { from, to }`
-
-**Recovery**:
-- History auto-clears after 5 seconds
-- User can manually refresh to reset
-
----
 
 ### Fallback Behavior
 
@@ -553,40 +433,19 @@ graph TD
 
 ### Coverage
 
-- **Unit Tests**: ~111 test cases
+- **Unit Tests**: ~80 test cases
 - **Security Tests**: All OWASP attack vectors
 - **Integration Tests**: End-to-end flows
 - **Coverage**: >80% for all redirect logic
 
 ### Key Test Scenarios
 
-✅ Unauthenticated access  
-✅ Disabled user handling  
-✅ Role-based redirects  
-✅ Loop prevention  
-✅ Security validation  
+✅ Unauthenticated access
+✅ Disabled user handling
+✅ Role-based redirects
+✅ Security validation
 ✅ Edge cases (null, empty, malformed)
 
 ---
-
-## Migration Notes
-
-### Before Refactoring
-
-- 38% code duplication
-- 42 hardcoded route strings
-- 27 magic numbers
-- No loop prevention
-- Open redirect vulnerability
-- Inconsistent authorization
-
-### After Refactoring
-
-- <5% code duplication (87% reduction)
-- 4 hardcoded routes (90% reduction)
-- 0 magic numbers (100% elimination)
-- Systematic loop prevention
-- OWASP-compliant security
-- Single source of truth for auth
 
 **Next**: See [Frontend Architecture](./architecture.md) and [Coding Standards](./coding_standards.md) for implementation details.

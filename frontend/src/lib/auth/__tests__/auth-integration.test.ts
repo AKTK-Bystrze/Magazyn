@@ -26,8 +26,6 @@ describe('Auth Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCookie = '';
-    const ctx = { history: [] };
-    RedirectManager.reset(ctx);
 
     // Mock document.cookie
     Object.defineProperty(document, 'cookie', {
@@ -77,14 +75,12 @@ describe('Auth Integration Tests', () => {
 
       // 4. Determine redirect
       const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
         '/login',
         null,
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
 
       // 5. Verify redirect is safe
@@ -117,14 +113,12 @@ describe('Auth Integration Tests', () => {
 
       // 3. Determine redirect
       const mockUser = { id: 'user-456', email: 'disabled@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
         '/dashboard',
         null,
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
 
       // 4. Verify disabled user redirects correctly
@@ -159,14 +153,12 @@ describe('Auth Integration Tests', () => {
 
       // 4. Determine redirect
       const mockUser = { id: 'admin-789', email: 'admin@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         session,
         '/login',
         null,
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
 
       // 5. Verify admin redirects to admin page
@@ -196,16 +188,14 @@ describe('Auth Integration Tests', () => {
       
       // RedirectManager should sanitize it
       const mockUser = { id: 'user-123', email: 'test@example.com' } as unknown as User;
-      const ctx = { history: [] };
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
         validSession,
         '/login',
         maliciousRedirect, // Malicious redirect param
-        'http://localhost:4321',
-        ctx
+        'http://localhost:4321'
       );
-      
+
       // Should fall back to safe default, not use malicious URL
       expect(redirect).toBe('/dashboard');
     });
