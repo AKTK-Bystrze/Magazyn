@@ -90,7 +90,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
           hasToken: !!token,
           pathname: url.pathname
         });
-        return Response.redirect(new URL(redirectTo, url.origin).toString(), 302);
+        return context.redirect(redirectTo);
       }
     }
 
