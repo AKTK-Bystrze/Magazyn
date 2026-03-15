@@ -4,6 +4,7 @@ package reservation_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"magazyn/backend/internal/types"
@@ -404,6 +405,7 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 		Eq("id", resp.Reservations[0].ID).
 		Execute()
 	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(data, &reservation))
 	assert.True(t, reservation.IsFree, "Reservation should be marked as free")
 
 	// Verify balance was NOT deducted
