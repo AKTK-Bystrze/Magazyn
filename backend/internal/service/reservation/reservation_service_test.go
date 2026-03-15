@@ -446,7 +446,15 @@ func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 
 	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
 	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
-	mockRepo.On("CreateReservationsAtomic", ctx, "user-123", expectedCost, cmd.Reservations).Return(reservationIDs, newBalance, nil)
+	mockRepo.On(
+		"CreateReservationsAtomic",
+		ctx,
+		"user-123",
+		expectedCost,
+		false,
+		"user-123",
+		cmd.Reservations,
+	).Return(reservationIDs, newBalance, nil)
 	mockUserRepo.On("GetByID", ctx, "user-123").Return(&types.PublicProfilesSelect{Email: "user@test.com"}, nil)
 	mockEmailService.On("SendReservationConfirmation", ctx, "user@test.com", map[string]interface{}{
 		"user_id": "user-123",
@@ -501,7 +509,15 @@ func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
 
 	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
 	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
-	mockRepo.On("CreateReservationsAtomic", ctx, "user-123", expectedCost, cmd.Reservations).Return(nil, int32(0), types.NewConflictError("Insufficient credits", nil))
+	mockRepo.On(
+		"CreateReservationsAtomic",
+		ctx,
+		"user-123",
+		expectedCost,
+		false,
+		"user-123",
+		cmd.Reservations,
+	).Return(nil, int32(0), types.NewConflictError("Insufficient credits", nil))
 
 	// Act
 	result, err := svc.Create(ctx, cmd, "user-123")

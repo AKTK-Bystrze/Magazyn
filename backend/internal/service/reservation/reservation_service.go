@@ -132,7 +132,6 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	costMap := make(map[int]int32)
 
 	if !isFreeReservation {
-		// Only calculate cost if not free
 		for i, req := range cmd.Reservations {
 			eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
 			if err != nil {
@@ -156,7 +155,6 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 				req.EquipmentID, eq.TypeID, days, eqType.CreditCostPerDay, cost)
 		}
 	} else {
-		// For free reservations, set all costs to 0
 		for i := range cmd.Reservations {
 			costMap[i] = 0
 		}
