@@ -456,20 +456,29 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     await use(client);
   },
 
-  testUser: async ({ supabaseAdmin }, use) => {
-    const user = await ensureTestUserExists(supabaseAdmin);
-    await use(user);
-  }, { scope: "worker" },
+  testUser: [
+    async ({ supabaseAdmin }, use) => {
+      const user = await ensureTestUserExists(supabaseAdmin);
+      await use(user);
+    },
+    { scope: "worker" },
+  ],
 
-  adminUser: async ({ supabaseAdmin }, use) => {
-    const user = await ensureAdminUserExists(supabaseAdmin);
-    await use(user);
-  }, { scope: "worker" },
+  adminUser: [
+    async ({ supabaseAdmin }, use) => {
+      const user = await ensureAdminUserExists(supabaseAdmin);
+      await use(user);
+    },
+    { scope: "worker" },
+  ],
 
-  superAdminUser: async ({ supabaseAdmin }, use) => {
-    const user = await ensureSuperAdminUserExists(supabaseAdmin);
-    await use(user);
-  }, { scope: "worker" },
+  superAdminUser: [
+    async ({ supabaseAdmin }, use) => {
+      const user = await ensureSuperAdminUserExists(supabaseAdmin);
+      await use(user);
+    },
+    { scope: "worker" },
+  ],
 
   // Worker-scoped cleanup: Clear pending reservations for all test users
   // This prevents test state pollution across tests in the same worker
