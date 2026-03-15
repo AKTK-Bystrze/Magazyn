@@ -4,6 +4,7 @@ import {
   createTestEquipment,
   cleanupTestEquipment,
   ensureSeedEquipmentExists,
+  clearPendingReservations,
 } from "../helpers/data-setup.helper";
 import { E2E_CONFIG } from "../constants";
 
@@ -30,6 +31,8 @@ interface AuthFixtures {
   superAdminUser: { id: string; email: string };
   /** Dedicated test equipment for this worker (created/cleaned per test) */
   testEquipment: { id: string; typeId: string; name: string }[];
+  /** Worker-scoped cleanup fixture (no return value) */
+  userCleanup: void;
 }
 
 /** Worker-scoped fixtures (shared across tests in same worker) */
@@ -456,16 +459,26 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
   testUser: async ({ supabaseAdmin }, use) => {
     const user = await ensureTestUserExists(supabaseAdmin);
     await use(user);
-  },
+  }, { scope: "worker" },
 
   adminUser: async ({ supabaseAdmin }, use) => {
     const user = await ensureAdminUserExists(supabaseAdmin);
     await use(user);
-  },
+  }, { scope: "worker" },
 
   superAdminUser: async ({ supabaseAdmin }, use) => {
     const user = await ensureSuperAdminUserExists(supabaseAdmin);
     await use(user);
+  }, { scope: "worker" },
+
+  // Worker-scoped cleanup: Clear pending reservations for all test users
+  // This prevents test state pollution across tests in the same worker
+  userCleanup: async ({ supabaseAdmin, testUser, adminUser, superAdminUser }, use) => {
+    await use();
+    console.log("[CLEANUP] Clearing pending reservations for test users...");
+    await clearPendingReservations(supabaseAdmin, testUser.id);
+    await clearPendingReservations(supabaseAdmin, adminUser.id);
+    await clearPendingReservations(supabaseAdmin, superAdminUser.id);
   },
 
   testEquipment: async ({ supabaseAdmin, workerIndex }, use) => {
