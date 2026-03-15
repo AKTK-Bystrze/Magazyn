@@ -41,8 +41,8 @@ func (m *MockReservationRepository) CreateReservation(ctx context.Context, reser
 	return args.Get(0).(*types.PublicReservationsSelect), args.Error(1)
 }
 
-func (m *MockReservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, reservations []types.CreateReservationItem) ([]string, int32, error) {
-	args := m.Called(ctx, userID, totalCost, isFree, reservations)
+func (m *MockReservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, createdByUserID string, reservations []types.CreateReservationItem) ([]string, int32, error) {
+	args := m.Called(ctx, userID, totalCost, isFree, createdByUserID, reservations)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int32), args.Error(2)
 	}

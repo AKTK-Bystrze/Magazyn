@@ -241,6 +241,7 @@ export function ReservationCartView({
       
       // Clear cart
       clearCart();
+      setIsFreeReservation(false);
       setIsConfirmationOpen(false);
       
       // Redirect to reservations page with success indicator

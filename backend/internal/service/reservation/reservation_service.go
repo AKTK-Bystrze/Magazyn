@@ -165,7 +165,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 
 	// 2. Execute Atomic Transaction (RPC)
 	// This handles balance check, deduction, concurrency check, and creation.
-	reservationIDs, newBalance, err := s.repo.CreateReservationsAtomic(ctx, targetUserID, totalCost, isFreeReservation, cmd.Reservations)
+	reservationIDs, newBalance, err := s.repo.CreateReservationsAtomic(ctx, targetUserID, totalCost, isFreeReservation, userID, cmd.Reservations)
 	if err != nil {
 		// Map RPC errors if possible, or return internal.
 		// If RPC returns "Insufficient credits", we could map it.

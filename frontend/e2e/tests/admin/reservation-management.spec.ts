@@ -155,11 +155,16 @@ test.describe('Admin Reservation Management', () => {
     await freeReservationCheckbox.check();
     await expect(freeReservationCheckbox).toBeChecked();
 
-    // 5. Configure Dates
+    // 5. Get user's initial balance before creating free reservation
+    const { data: userProfileBefore } = await adminPage.request.get(`/api/admin/users/${testUser.id}`);
+    const balanceBefore = userProfileBefore.credit_balance;
+    t.log(`Test user balance before free reservation: ${balanceBefore} credits`);
+
+    // 6. Configure Dates
     const { startDays, endDays } = calculateWorkerDates(workerIndex);
     await cart.setDatesFromNow(startDays, endDays);
 
-    // 6. Verify cost is 0 for free reservation
+    // 7. Verify cost is 0 for free reservation
     const totalCost = await cart.getTotalCost();
     expect(totalCost).toBe(0);
 
@@ -167,16 +172,13 @@ test.describe('Admin Reservation Management', () => {
     await cart.confirm();
     await cart.waitForSuccess();
 
-    // 7. Verify user's balance is unchanged
-    const { data: userProfile } = await adminPage.request.get('/api/user/profile', {
-      headers: {
-        'Authorization': `Bearer ${(await adminPage.context().storageState()).cookies[0]?.value}`
-      }
-    });
-    // Note: In a real implementation, we'd fetch the test user's profile directly
-    // For now, we'll rely on the backend logic to ensure no credits were deducted
+    // 8. Verify user's balance is unchanged
+    const { data: userProfileAfter } = await adminPage.request.get(`/api/admin/users/${testUser.id}`);
+    const balanceAfter = userProfileAfter.credit_balance;
+    t.log(`Test user balance after free reservation: ${balanceAfter} credits`);
+    expect(balanceAfter).toBe(balanceBefore, "Balance should remain unchanged for free reservation");
 
-    // 8. Navigate to "All Reservations" to verify the reservation
+    // 9. Navigate to "All Reservations" to verify the reservation
     await adminPage.goto('/admin/reservations');
     
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
@@ -184,11 +186,14 @@ test.describe('Admin Reservation Management', () => {
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
     await expect(row.first()).toBeVisible({ timeout: 10000 });
 
-    // Verify the reservation was created successfully
+    // Verify the reservation was created successfully and check for free indicator
     const testId = await row.first().getAttribute('data-testid');
     const reservationId = testId!.replace('reservation-row-', '');
     
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
     await expect(statusBadge).toContainText(/Pending|Oczekuje/i);
+
+    // Note: The UI doesn't currently display a visual indicator for free reservations.
+    // This could be enhanced in the future to show a badge or label for free reservations.
   });
 });

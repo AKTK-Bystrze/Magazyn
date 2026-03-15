@@ -276,14 +276,15 @@ func (r *reservationRepository) CreateReservation(ctx context.Context, reservati
 }
 
 // CreateReservationsAtomic creates multiple reservations and deducts credits atomically
-func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, reservations []types.CreateReservationItem) ([]string, int32, error) {
+func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, createdByUserID string, reservations []types.CreateReservationItem) ([]string, int32, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 
 	params := map[string]interface{}{
-		"p_user_id":      userID,
-		"p_total_cost":   totalCost,
-		"p_is_free":      isFree,
-		"p_reservations": reservations,
+		"p_user_id":            userID,
+		"p_total_cost":         totalCost,
+		"p_is_free":            isFree,
+		"p_created_by_user_id": createdByUserID,
+		"p_reservations":       reservations,
 	}
 
 	// Debug params

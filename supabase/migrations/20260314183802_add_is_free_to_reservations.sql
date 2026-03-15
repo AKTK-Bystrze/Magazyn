@@ -11,6 +11,7 @@ CREATE OR REPLACE FUNCTION create_reservation_atomic(
   p_user_id UUID, 
   p_total_cost INTEGER, 
   p_is_free BOOLEAN,
+  p_created_by_user_id UUID,
   p_reservations JSONB
 ) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
 DECLARE 
@@ -24,7 +25,7 @@ DECLARE
   v_start_date DATE; 
   v_end_date DATE;
 BEGIN
-  PERFORM set_config('app.changed_by_user_id', p_user_id::TEXT, true);
+  PERFORM set_config('app.changed_by_user_id', p_created_by_user_id::TEXT, true);
   SELECT credit_balance INTO v_user_balance FROM profiles WHERE id = p_user_id FOR UPDATE;
   IF v_user_balance IS NULL THEN RAISE EXCEPTION 'User not found'; END IF;
   
@@ -37,9 +38,9 @@ BEGIN
   UPDATE profiles SET credit_balance = v_new_balance, updated_at = NOW() WHERE id = p_user_id;
   
   INSERT INTO credit_history (user_id, amount, reason, description, author_id) 
-  VALUES (p_user_id, -p_total_cost, 'reservation_charge', 
+  VALUES (p_user_id, CASE WHEN p_is_free THEN 0 ELSE -p_total_cost END, 'reservation_charge', 
           CASE WHEN p_is_free THEN 'Free reservation' ELSE 'For equipment reservation' END, 
-          p_user_id);
+          p_created_by_user_id);
   
   FOR v_res_item IN SELECT * FROM jsonb_array_elements(p_reservations) LOOP
     IF NOT (v_res_item ? 'equipment_id' AND v_res_item ? 'start_date' AND v_res_item ? 'end_date') THEN
