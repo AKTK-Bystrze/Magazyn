@@ -396,7 +396,7 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 	assert.Len(t, resp.Reservations, 1)
 
 	// Verify reservation was created with is_free = true
-	var reservation struct {
+	var reservations []struct {
 		ID     string `json:"id"`
 		IsFree bool   `json:"is_free"`
 	}
@@ -405,8 +405,9 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 		Eq("id", resp.Reservations[0].ID).
 		Execute()
 	require.NoError(t, err)
-	require.NoError(t, json.Unmarshal(data, &reservation))
-	assert.True(t, reservation.IsFree, "Reservation should be marked as free")
+	require.NoError(t, json.Unmarshal(data, &reservations))
+	require.Len(t, reservations, 1)
+	assert.True(t, reservations[0].IsFree, "Reservation should be marked as free")
 
 	// Verify balance was NOT deducted
 	balanceAfter := fixture.getUserBalance(fixture.testUserID)
