@@ -194,10 +194,20 @@ test.describe("Reservation Creation", () => {
       free_reservation: true, // Non-admin trying to create free reservation
     };
 
+    // Extract auth token from storage for API request
+    const storageState = await authenticatedPage.context().storageState();
+    const authToken = storageState.cookies.find(c => c.name.includes('auth-token'))?.value;
+    let accessToken = '';
+    if (authToken) {
+      const sessionData = JSON.parse(authToken);
+      accessToken = sessionData.access_token;
+    }
+
     const response = await authenticatedPage.request.post('/api/reservations', {
       data: payload,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
       },
     });
 
