@@ -162,4 +162,48 @@ test.describe("Reservation Creation", () => {
     await expect(cart.getCartItem(equip1.id)).not.toBeVisible();
     await expect(cart.cartItems).toHaveCount(0);
   });
+
+  /**
+   * Scenario: Non-admin cannot create free reservations
+   * 
+   * Steps:
+   * 1. Login as regular user.
+   * 2. Attempt to create reservation with free_reservation=true via API.
+   * 3. Verify request is rejected with 403 Forbidden.
+   */
+  test("Authorization: Non-admin cannot create free reservations", async ({
+    authenticatedPage,
+    testEquipment,
+    workerIndex,
+  }) => {
+    const [equip1] = testEquipment;
+    
+    const { startDays, endDays } = calculateWorkerDates(workerIndex);
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + startDays);
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + endDays);
+
+    const payload = {
+      reservations: [{
+        equipment_id: equip1.id,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+      }],
+      free_reservation: true, // Non-admin trying to create free reservation
+    };
+
+    const response = await authenticatedPage.request.post('/api/reservations', {
+      data: payload,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    expect(response.status()).toBe(403);
+    
+    const body = await response.json();
+    expect(body.error || body.message).toContain('Only admins can create free reservations');
+  });
 });

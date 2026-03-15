@@ -18,6 +18,8 @@ import { ROUTES } from "@/lib/config/routes";
 import { UserSelector } from "@/components/admin/UserSelector";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { calculateCost as calculateCartCost } from "@/lib/utils/cart-validation";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 /**
  * Props for ReservationCartView component
@@ -94,6 +96,7 @@ export function ReservationCartView({
   const [selectedUserCreditBalance, setSelectedUserCreditBalance] = React.useState<number>(
     initialSelectedUserCreditBalance
   );
+  const [isFreeReservation, setIsFreeReservation] = React.useState(false);
 
   /**
    * Handler for admin user selection.
@@ -105,7 +108,10 @@ export function ReservationCartView({
   }, []);
 
   // Use selected user's credit balance in admin mode, otherwise use initial (logged-in user's)
-  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : initialCreditBalance;
+  // For free reservations, use a very high balance to skip validation
+  const effectiveCreditBalance = isAdmin && isFreeReservation 
+    ? 999999999 
+    : (isAdmin ? selectedUserCreditBalance : initialCreditBalance);
 
   // Calculate cost breakdown with the effective credit balance
   // This ensures admin mode uses selected user's balance, not the admin's
@@ -113,13 +119,25 @@ export function ReservationCartView({
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
       return null;
     }
-    return calculateCartCost(
+    const breakdown = calculateCartCost(
       cartState.items,
       cartState.startDate,
       cartState.endDate,
       effectiveCreditBalance
     );
-  }, [cartState.items, cartState.startDate, cartState.endDate, effectiveCreditBalance]);
+    
+    // For free reservations, override costs to 0
+    if (isAdmin && isFreeReservation && breakdown) {
+      return {
+        ...breakdown,
+        itemCosts: breakdown.itemCosts.map(item => ({ ...item, cost: 0 })),
+        totalCreditCost: 0,
+        remainingBalance: breakdown.currentBalance, // No deduction for free
+      };
+    }
+    
+    return breakdown;
+  }, [cartState.items, cartState.startDate, cartState.endDate, effectiveCreditBalance, isAdmin, isFreeReservation]);
   
   // Create a default safe breakdown if null (e.g. missing dates)
   const safeCostBreakdown = costBreakdown || {
@@ -186,6 +204,8 @@ export function ReservationCartView({
         })),
         // Admin mode: include selected user ID
         ...(isAdmin && selectedUserId && { userId: selectedUserId }),
+        // Admin mode: include free reservation flag if set
+        ...(isAdmin && isFreeReservation && { freeReservation: true }),
       };
 
       // Transform to backend format (snake_case)
@@ -280,6 +300,26 @@ export function ReservationCartView({
           {!selectedUserId && (
             <p className="text-sm text-muted-foreground mt-2">
               You must select a user before completing the reservation.
+            </p>
+          )}
+          
+          <div className="mt-6 flex items-center space-x-2 border-t pt-4">
+            <Checkbox
+              id="free-reservation"
+              checked={isFreeReservation}
+              onCheckedChange={(checked) => setIsFreeReservation(checked === true)}
+              data-testid="free-reservation-checkbox"
+            />
+            <Label 
+              htmlFor="free-reservation" 
+              className="cursor-pointer font-medium"
+            >
+              Create as Free Reservation
+            </Label>
+          </div>
+          {isFreeReservation && (
+            <p className="text-sm text-muted-foreground mt-2">
+              This reservation will not charge the user any credits.
             </p>
           )}
         </section>

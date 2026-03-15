@@ -363,3 +363,118 @@ func TestMultiReservation_TotalCostCalculation(t *testing.T) {
 	t.Logf("Multi-reservation total: 9 days × %d/day = %d credits ✓", fixture.costPerDay, totalCost)
 	t.Logf("Reservation IDs: %s, %s, %s", res1ID, res2ID, res3ID)
 }
+
+// TestFreeReservation_AdminCanCreateWithoutDeductingCredits verifies that an admin
+// can create a free reservation that doesn't charge the user's credit balance.
+func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+
+	ctx := context.Background()
+
+	// Get initial balance
+	balanceBefore := fixture.getUserBalance(fixture.testUserID)
+	t.Logf("Initial balance: %d credits", balanceBefore)
+
+	// Create free reservation
+	isFree := true
+	cmd := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: fixture.equipmentID,
+				StartDate:   dateOffset(5),
+				EndDate:     dateOffset(7), // 3 days
+			},
+		},
+		FreeReservation: &isFree,
+	}
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
+
+	// Assert: Should succeed
+	require.NoError(t, err)
+	assert.Len(t, resp.Reservations, 1)
+
+	// Verify reservation was created with is_free = true
+	var reservation struct {
+		ID     string `json:"id"`
+		IsFree bool   `json:"is_free"`
+	}
+	data, _, err := fixture.client.From("reservations").
+		Select("id,is_free", "", false).
+		Eq("id", resp.Reservations[0].ID).
+		Execute()
+	require.NoError(t, err)
+	require.NoError(json.Unmarshal(data, []interface{}{&reservation}))
+	assert.True(t, reservation.IsFree, "Reservation should be marked as free")
+
+	// Verify balance was NOT deducted
+	balanceAfter := fixture.getUserBalance(fixture.testUserID)
+	assert.Equal(t, balanceBefore, balanceAfter, "Balance should remain unchanged for free reservation")
+	t.Logf("Balance after free reservation: %d credits (unchanged) ✓", balanceAfter)
+
+	fixture.cleanup = append(fixture.cleanup, func() {
+		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
+	})
+}
+
+// TestFreeReservation_CostComparison verifies that free reservations have 0 cost
+// compared to regular reservations of the same duration.
+func TestFreeReservation_CostComparison(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+
+	ctx := context.Background()
+
+	days := 5 // 5-day reservation
+	expectedCost := int32(days) * fixture.costPerDay
+
+	// Test 1: Regular reservation (should deduct credits)
+	balanceBeforeRegular := fixture.getUserBalance(fixture.testUserID)
+
+	cmdRegular := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: fixture.equipmentID,
+				StartDate:   dateOffset(5),
+				EndDate:     dateOffset(5 + days - 1), // 5 days
+			},
+		},
+	}
+	respRegular, err := fixture.svc.Create(ctx, cmdRegular, fixture.testUserID)
+	require.NoError(t, err)
+
+	balanceAfterRegular := fixture.getUserBalance(fixture.testUserID)
+	costRegular := balanceBeforeRegular - balanceAfterRegular
+	assert.Equal(t, expectedCost, costRegular, "Regular reservation should deduct correct amount")
+	t.Logf("Regular reservation: %d days, cost %d credits ✓", days, costRegular)
+
+	fixture.cleanup = append(fixture.cleanup, func() {
+		fixture.client.From("reservations").Delete("", "").Eq("id", respRegular.Reservations[0].ID).Execute()
+	})
+
+	// Test 2: Free reservation (should NOT deduct credits)
+	balanceBeforeFree := fixture.getUserBalance(fixture.testUserID)
+
+	isFree := true
+	cmdFree := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: fixture.equipmentID,
+				StartDate:   dateOffset(15),            // Different date range
+				EndDate:     dateOffset(15 + days - 1), // Same 5-day duration
+			},
+		},
+		FreeReservation: &isFree,
+	}
+	respFree, err := fixture.svc.Create(ctx, cmdFree, fixture.testUserID)
+	require.NoError(t, err)
+
+	balanceAfterFree := fixture.getUserBalance(fixture.testUserID)
+	costFree := balanceBeforeFree - balanceAfterFree
+	assert.Equal(t, int32(0), costFree, "Free reservation should cost 0 credits")
+	t.Logf("Free reservation: %d days, cost %d credits ✓", days, costFree)
+
+	fixture.cleanup = append(fixture.cleanup, func() {
+		fixture.client.From("reservations").Delete("", "").Eq("id", respFree.Reservations[0].ID).Execute()
+	})
+}
