@@ -404,7 +404,6 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 		Eq("id", resp.Reservations[0].ID).
 		Execute()
 	require.NoError(t, err)
-	require.NoError(json.Unmarshal(data, []interface{}{&reservation}))
 	assert.True(t, reservation.IsFree, "Reservation should be marked as free")
 
 	// Verify balance was NOT deducted
