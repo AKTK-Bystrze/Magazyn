@@ -451,10 +451,13 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
   ],
 
   // eslint-disable-next-line no-empty-pattern
-  supabaseAdmin: async ({}, use) => {
-    const client = createSupabaseAdmin();
-    await use(client);
-  },
+  supabaseAdmin: [
+    async ({}, use) => {
+      const client = createSupabaseAdmin();
+      await use(client);
+    },
+    { scope: "worker" },
+  ],
 
   testUser: [
     async ({ supabaseAdmin }, use) => {
