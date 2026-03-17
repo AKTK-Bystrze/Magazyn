@@ -156,7 +156,7 @@ test.describe('Admin Reservation Management', () => {
     await expect(freeReservationCheckbox).toBeChecked();
 
     // 5. Get user's initial balance before creating free reservation
-    const { data: userProfileBefore } = await adminPage.request.get(`/api/admin/users/${testUser.id}`);
+    const { data: userProfileBefore } = await adminPage.request.get(`/api/users/${testUser.id}`);
     const balanceBefore = userProfileBefore.credit_balance;
     t.log(`Test user balance before free reservation: ${balanceBefore} credits`);
 
@@ -173,7 +173,7 @@ test.describe('Admin Reservation Management', () => {
     await cart.waitForSuccess();
 
     // 8. Verify user's balance is unchanged
-    const { data: userProfileAfter } = await adminPage.request.get(`/api/admin/users/${testUser.id}`);
+    const { data: userProfileAfter } = await adminPage.request.get(`/api/users/${testUser.id}`);
     const balanceAfter = userProfileAfter.credit_balance;
     t.log(`Test user balance after free reservation: ${balanceAfter} credits`);
     expect(balanceAfter).toBe(balanceBefore, "Balance should remain unchanged for free reservation");
