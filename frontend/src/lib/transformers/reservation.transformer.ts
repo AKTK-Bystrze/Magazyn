@@ -30,6 +30,7 @@ export function transformCreateReservationsCommand(
       end_date: item.endDate,
     })),
     ...(command.userId && { user_id: command.userId }),
+    ...(command.freeReservation !== undefined && { free_reservation: command.freeReservation }),
   };
 }
 

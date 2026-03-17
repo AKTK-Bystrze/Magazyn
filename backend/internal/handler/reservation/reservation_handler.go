@@ -124,6 +124,7 @@ func (h *ReservationHandler) HandleGetByID(w http.ResponseWriter, r *http.Reques
 func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
+	role := common.GetUserRoleFromContext(r)
 
 	if userID == "" {
 		common.RespondUnauthorized(ctx, w)
@@ -140,6 +141,14 @@ func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request
 	if len(cmd.Reservations) == 0 {
 		common.RespondError(ctx, w, http.StatusBadRequest, "No reservations provided")
 		return
+	}
+
+	// Only admins can create free reservations
+	if cmd.FreeReservation != nil && *cmd.FreeReservation {
+		if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
+			common.RespondError(ctx, w, http.StatusForbidden, "Only admins can create free reservations")
+			return
+		}
 	}
 
 	response, err := h.service.Create(ctx, cmd, userID)

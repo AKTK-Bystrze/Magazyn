@@ -115,4 +115,85 @@ test.describe('Admin Reservation Management', () => {
     await expect(statusBadge).toContainText(/Anulowana|Denied/i);
     // double check color/class if possible, but text is good enough for now
   });
+
+  /**
+   * Scenario: Admin creates free reservation for user
+   * 
+   * Steps:
+   * 1. Login as Admin.
+   * 2. Add item to Admin's cart.
+   * 3. In Cart, select the Standard Test User as the target.
+   * 4. Enable "Free Reservation" checkbox.
+   * 5. Verify cost shows 0.
+   * 6. Checkout.
+   * 7. Verify user's balance is unchanged.
+   * 8. Verify reservation was created with 0 cost.
+   */
+  test('Happy Path: Admin creates free reservation for user', async ({
+    adminPage,
+    testUser,
+    testEquipment,
+    workerIndex,
+  }) => {
+    test.setTimeout(60000);
+    const [equip1] = testEquipment;
+    const cart = new ReservationCartPOM(adminPage);
+
+    // 1. Add equipment to cart as Admin
+    await addToCart(adminPage, equip1.id);
+
+    // 2. Go to Cart
+    await goToCart(adminPage);
+    await cart.waitForCartView();
+
+    // 3. Select Target User (Standard Test User)
+    await cart.selectUser(testUser.email);
+
+    // 4. Enable Free Reservation checkbox
+    const freeReservationCheckbox = adminPage.getByTestId('free-reservation-checkbox');
+    await expect(freeReservationCheckbox).toBeVisible();
+    await freeReservationCheckbox.check();
+    await expect(freeReservationCheckbox).toBeChecked();
+
+    // 5. Get user's initial balance before creating free reservation
+    const { data: userProfileBefore } = await adminPage.request.get(`/api/users/${testUser.id}`);
+    const balanceBefore = userProfileBefore.credit_balance;
+    t.log(`Test user balance before free reservation: ${balanceBefore} credits`);
+
+    // 6. Configure Dates
+    const { startDays, endDays } = calculateWorkerDates(workerIndex);
+    await cart.setDatesFromNow(startDays, endDays);
+
+    // 7. Verify cost is 0 for free reservation
+    const totalCost = await cart.getTotalCost();
+    expect(totalCost).toBe(0);
+
+    await cart.proceedToConfirmation();
+    await cart.confirm();
+    await cart.waitForSuccess();
+
+    // 8. Verify user's balance is unchanged
+    const { data: userProfileAfter } = await adminPage.request.get(`/api/users/${testUser.id}`);
+    const balanceAfter = userProfileAfter.credit_balance;
+    t.log(`Test user balance after free reservation: ${balanceAfter} credits`);
+    expect(balanceAfter).toBe(balanceBefore, "Balance should remain unchanged for free reservation");
+
+    // 9. Navigate to "All Reservations" to verify the reservation
+    await adminPage.goto('/admin/reservations');
+    
+    await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
+
+    const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
+    await expect(row.first()).toBeVisible({ timeout: 10000 });
+
+    // Verify the reservation was created successfully and check for free indicator
+    const testId = await row.first().getAttribute('data-testid');
+    const reservationId = testId!.replace('reservation-row-', '');
+    
+    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
+    await expect(statusBadge).toContainText(/Pending|Oczekuje/i);
+
+    // Note: The UI doesn't currently display a visual indicator for free reservations.
+    // This could be enhanced in the future to show a badge or label for free reservations.
+  });
 });

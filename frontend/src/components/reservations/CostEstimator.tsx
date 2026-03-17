@@ -12,6 +12,7 @@ interface CostEstimatorProps {
   startDate: string | null;
   endDate: string | null;
   currentCreditBalance: number;
+  isFreeReservation?: boolean;
 }
 
 /**
@@ -23,13 +24,27 @@ export function CostEstimator({
   startDate,
   endDate,
   currentCreditBalance,
+  isFreeReservation = false,
 }: CostEstimatorProps) {
   const costBreakdown = React.useMemo<CostBreakdown | null>(() => {
     if (!startDate || !endDate || items.length === 0) {
       return null;
     }
-    return calculateCost(items, startDate, endDate, currentCreditBalance);
-  }, [items, startDate, endDate, currentCreditBalance]);
+    const breakdown = calculateCost(items, startDate, endDate, currentCreditBalance);
+    
+    // For free reservations, override costs to 0
+    if (isFreeReservation && breakdown) {
+      return {
+        ...breakdown,
+        itemCosts: breakdown.itemCosts.map(item => ({ ...item, totalCost: 0 })),
+        totalCreditCost: 0,
+        remainingBalance: breakdown.currentBalance, // No deduction for free
+        isFreeReservation: true,
+      };
+    }
+    
+    return breakdown;
+  }, [items, startDate, endDate, currentCreditBalance, isFreeReservation]);
 
   if (!costBreakdown) {
     return (
@@ -49,7 +64,7 @@ export function CostEstimator({
     );
   }
 
-  const hasInsufficientCredits = costBreakdown.remainingBalance < 0;
+  const hasInsufficientCredits = !costBreakdown.isFreeReservation && costBreakdown.remainingBalance < 0;
 
   return (
     <Card data-testid="cost-estimator">
@@ -77,13 +92,20 @@ export function CostEstimator({
                     {item.days === 1 ? "dzień" : "dni"})
                   </span>
                 </span>
-                <span className="font-medium">{item.totalCost} godzinki</span>
+                <span className={costBreakdown.isFreeReservation ? "font-medium text-green-600 dark:text-green-400" : "font-medium"}>
+                  {costBreakdown.isFreeReservation ? "0" : item.totalCost} godzinki
+                </span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="border-t pt-4 space-y-2">
+          {costBreakdown.isFreeReservation && (
+            <div className="flex justify-center py-2">
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">Darmowa Rezerwacja</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Aktualne Saldo</span>
             <span className="font-medium" data-testid="current-credit-balance">
@@ -92,8 +114,8 @@ export function CostEstimator({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Całkowity Koszt</span>
-            <span className="font-medium" data-testid="reservation-total-cost">
-              -{costBreakdown.totalCreditCost} godzinki
+            <span className={costBreakdown.isFreeReservation ? "font-medium text-green-600 dark:text-green-400" : "font-medium"} data-testid="reservation-total-cost">
+              {costBreakdown.isFreeReservation ? "0" : `-${costBreakdown.totalCreditCost}`} godzinki
             </span>
           </div>
           <div className="border-t pt-2 flex justify-between font-semibold">
@@ -104,7 +126,7 @@ export function CostEstimator({
               }
               data-testid="remaining-credit-balance"
             >
-              {costBreakdown.remainingBalance} godzinki
+              {costBreakdown.isFreeReservation ? costBreakdown.currentBalance : costBreakdown.remainingBalance} godzinki
             </span>
           </div>
         </div>

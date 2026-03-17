@@ -98,6 +98,7 @@ type PublicReservationsSelect struct {
 	EndDate     string  `json:"end_date"`
 	EquipmentID string  `json:"equipment_id"`
 	ID          string  `json:"id"`
+	IsFree      bool    `json:"is_free"`
 	StartDate   string  `json:"start_date"`
 	Status      string  `json:"status"`
 	UpdatedAt   *string `json:"updated_at"`
@@ -109,6 +110,7 @@ type PublicReservationsInsert struct {
 	EndDate     string  `json:"end_date"`
 	EquipmentID string  `json:"equipment_id"`
 	ID          *string `json:"id,omitempty"`
+	IsFree      bool    `json:"is_free"`
 	StartDate   string  `json:"start_date"`
 	Status      *string `json:"status,omitempty"`
 	UpdatedAt   *string `json:"updated_at,omitempty"`

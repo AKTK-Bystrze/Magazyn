@@ -44,6 +44,7 @@ export interface CostBreakdown {
   totalCreditCost: number;
   currentBalance: number;
   remainingBalance: number;
+  isFreeReservation?: boolean;
 }
 
 /**

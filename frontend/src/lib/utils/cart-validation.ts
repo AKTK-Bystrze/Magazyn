@@ -99,17 +99,21 @@ export function calculateCost(
  * @param cartState - The current cart state
  * @param availabilityResult - Result of availability check for all items
  * @param costBreakdown - Cost breakdown for the cart
+ * @param isFreeReservation - Whether this is a free reservation (skips credit check)
  * @returns Overall cart validation state
  */
 export function validateCart(
   cartState: CartState,
   availabilityResult: AvailabilityCheckResult,
-  costBreakdown: CostBreakdown
+  costBreakdown: CostBreakdown,
+  isFreeReservation?: boolean
 ): CartValidation {
   const dateRangeErrors = validateDateRange(
     cartState.startDate,
     cartState.endDate
   );
+
+  const hasSufficientCredits = isFreeReservation || costBreakdown.remainingBalance >= 0;
 
   return {
     isValid:
@@ -119,16 +123,16 @@ export function validateCart(
       dateRangeErrors.startDate === null &&
       dateRangeErrors.endDate === null &&
       availabilityResult.isAllAvailable &&
-      costBreakdown.remainingBalance >= 0,
+      hasSufficientCredits,
     errors: {
       dateRange: dateRangeErrors,
       availability: availabilityResult.isAllAvailable
         ? null
         : ERROR_ITEMS_UNAVAILABLE(availabilityResult.unavailableItems.length),
       creditBalance:
-        costBreakdown.remainingBalance < 0
-          ? ERROR_INSUFFICIENT_CREDITS(Math.abs(costBreakdown.remainingBalance))
-          : null,
+        isFreeReservation || costBreakdown.remainingBalance >= 0
+          ? null
+          : ERROR_INSUFFICIENT_CREDITS(Math.abs(costBreakdown.remainingBalance)),
       general: null,
     },
   };

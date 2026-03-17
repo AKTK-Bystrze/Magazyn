@@ -64,6 +64,7 @@ export type CreateReservationItem = {
 export type CreateReservationsCommand = {
   reservations: CreateReservationItem[];
   userId?: string; // optional, admin only (for creating on behalf of others)
+  freeReservation?: boolean; // optional, admin only (for creating free reservations)
 };
 
 /**
