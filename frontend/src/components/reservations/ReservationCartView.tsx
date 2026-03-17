@@ -108,9 +108,9 @@ export function ReservationCartView({
   }, []);
 
   // Use selected user's credit balance in admin mode, otherwise use initial (logged-in user's)
-  // For free reservations, use a very high balance to skip validation
-  const effectiveCreditBalance = isAdmin && isFreeReservation 
-    ? 0 : (isAdmin ? selectedUserCreditBalance : initialCreditBalance);
+  const effectiveCreditBalance = isAdmin 
+    ? selectedUserCreditBalance 
+    : initialCreditBalance;
 
   // Calculate cost breakdown with the effective credit balance
   // This ensures admin mode uses selected user's balance, not the admin's
@@ -397,6 +397,7 @@ export function ReservationCartView({
               startDate={cartState.startDate}
               endDate={cartState.endDate}
               currentCreditBalance={effectiveCreditBalance}
+              isFreeReservation={isAdmin && isFreeReservation}
             />
 
             <Button 

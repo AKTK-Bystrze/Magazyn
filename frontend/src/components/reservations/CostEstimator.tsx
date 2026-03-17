@@ -12,6 +12,7 @@ interface CostEstimatorProps {
   startDate: string | null;
   endDate: string | null;
   currentCreditBalance: number;
+  isFreeReservation?: boolean;
 }
 
 /**
@@ -23,13 +24,27 @@ export function CostEstimator({
   startDate,
   endDate,
   currentCreditBalance,
+  isFreeReservation = false,
 }: CostEstimatorProps) {
   const costBreakdown = React.useMemo<CostBreakdown | null>(() => {
     if (!startDate || !endDate || items.length === 0) {
       return null;
     }
-    return calculateCost(items, startDate, endDate, currentCreditBalance);
-  }, [items, startDate, endDate, currentCreditBalance]);
+    const breakdown = calculateCost(items, startDate, endDate, currentCreditBalance);
+    
+    // For free reservations, override costs to 0
+    if (isFreeReservation && breakdown) {
+      return {
+        ...breakdown,
+        itemCosts: breakdown.itemCosts.map(item => ({ ...item, totalCost: 0 })),
+        totalCreditCost: 0,
+        remainingBalance: breakdown.currentBalance, // No deduction for free
+        isFreeReservation: true,
+      };
+    }
+    
+    return breakdown;
+  }, [items, startDate, endDate, currentCreditBalance, isFreeReservation]);
 
   if (!costBreakdown) {
     return (
