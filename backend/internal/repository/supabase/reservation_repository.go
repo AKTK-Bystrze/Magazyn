@@ -113,6 +113,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 			CreditCost:    creditCost,
 			CreatedAt:     item.CreatedAt,
 			UpdatedAt:     item.UpdatedAt,
+			IsFree:        item.IsFree,
 		}
 	}
 
@@ -169,6 +170,7 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 			CreditCost:    creditCost,
 			CreatedAt:     raw.CreatedAt,
 			UpdatedAt:     raw.UpdatedAt,
+			IsFree:        raw.IsFree,
 		},
 		UserEmail:           raw.Profile.Email,
 		EquipmentInternalID: raw.Equipment.InternalID,

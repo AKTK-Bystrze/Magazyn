@@ -18,6 +18,7 @@ type ReservationListItem struct {
 	CreditCost    int32   `json:"credit_cost"`
 	CreatedAt     string  `json:"created_at"`
 	UpdatedAt     *string `json:"updated_at"`
+	IsFree        bool    `json:"is_free"`
 }
 
 // ReservationDetail represents detailed reservation info including audit trail

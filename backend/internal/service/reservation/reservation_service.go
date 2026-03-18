@@ -269,26 +269,31 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 
 		// If cancelling (DENIED), refund credits?
 		if *cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled {
-			// Refund logic: Calculate cost and refund
-			eq, errEq := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
-			if errEq != nil {
-				logger.Errorf(ctx, "Refund failed: equipment %s not found", current.EquipmentID)
-			} else {
-				eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-				if errType != nil {
-					logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeID)
+			// Skip refund for free reservations
+			if !current.IsFree {
+				// Refund logic: Calculate cost and refund
+				eq, errEq := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
+				if errEq != nil {
+					logger.Errorf(ctx, "Refund failed: equipment %s not found", current.EquipmentID)
 				} else {
-					days := s.calculateDays(current.StartDate, current.EndDate)
-					refundAmount := days * eqType.CreditCostPerDay
+					eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+					if errType != nil {
+						logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeID)
+					} else {
+						days := s.calculateDays(current.StartDate, current.EndDate)
+						refundAmount := days * eqType.CreditCostPerDay
 
-					if refundAmount > 0 {
-						if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
-							logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
-						} else {
-							logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
+						if refundAmount > 0 {
+							if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
+								logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
+							} else {
+								logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
+							}
 						}
 					}
 				}
+			} else {
+				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
 			}
 		}
 	}
