@@ -41,7 +41,6 @@ export const AuthListener: React.FC = () => {
 
             if (error) {
               console.error("❌ Session error:", error.message);
-              alert("Błąd logowania: " + error.message);
               setIsRedirectInProgress(false);
               window.location.href = ROUTES.PUBLIC.LOGIN;
               return;
@@ -52,7 +51,6 @@ export const AuthListener: React.FC = () => {
 
               if (!sessionInfo) {
                 console.error("❌ Failed to fetch session info");
-                alert("Błąd pobierania danych sesji. Spróbuj ponownie.");
                 setIsRedirectInProgress(false);
                 window.location.href = ROUTES.PUBLIC.LOGIN;
                 return;

@@ -2,7 +2,6 @@ import { test, expect } from "../../fixtures";
 import { submitLoginEmail, waitForMagicLinkSent } from "../../helpers/auth.helper";
 import { getMagicLinkFromEmail, clearMailbox } from "../../helpers/inbucket.helper";
 
-
 /**
  * Authentication flow e2e tests.
  * Tests login UI, validation, and authenticated user access.
@@ -42,7 +41,7 @@ test.describe("Login Page", () => {
     await submitLoginEmail(page, testEmail);
     await waitForMagicLinkSent(page);
 
-    // Act: Retrieve magic link from Inbucket
+    // Act: Retrieve magic link from Mailpit
     const magicLink = await getMagicLinkFromEmail(testEmail);
 
     // Act: Navigate to magic link
