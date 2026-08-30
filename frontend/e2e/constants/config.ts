@@ -9,27 +9,27 @@ export const E2E_CONFIG = {
     ANIMATION: 500,
     ACTION: 1000,
   },
-  
+
   /** Test users */
   USERS: {
     PRIMARY: {
-      EMAIL: process.env.E2E_TEST_EMAIL || 'test.dev.g6@gmail.com',
-      PASSWORD: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
+      EMAIL: process.env.E2E_TEST_EMAIL || "test.user@example.com",
+      PASSWORD: process.env.E2E_TEST_PASSWORD || "TestSecurePassword123!",
     },
     ADMIN: {
-      EMAIL: 'test.admin.g6@gmail.com',
-      PASSWORD: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
+      EMAIL: "test.admin@example.com",
+      PASSWORD: process.env.E2E_TEST_PASSWORD || "TestSecurePassword123!",
     },
     SUPER_ADMIN: {
-      EMAIL: 'test.superadmin.g6@gmail.com',
-      PASSWORD: process.env.E2E_TEST_PASSWORD || 'TestSecurePassword123!',
+      EMAIL: "test.superadmin@example.com",
+      PASSWORD: process.env.E2E_TEST_PASSWORD || "TestSecurePassword123!",
     },
     SECONDARY: {
-      EMAIL: 'e2e-test-user2@example.com',
-      PASSWORD: 'TestSecurePassword123!',
+      EMAIL: "e2e-test-user2@example.com",
+      PASSWORD: "TestSecurePassword123!",
     },
   },
-  
+
   /** Default test data */
   DEFAULTS: {
     CREDIT_BALANCE: 100,
@@ -44,10 +44,10 @@ export const E2E_CONFIG = {
 
   /** Default equipment types for test database seeding */
   EQUIPMENT_TYPES: {
-    KAYAK: { name: 'kayak', credit_cost_per_day: 4 },
-    PADDLE: { name: 'paddle', credit_cost_per_day: 2 },
+    KAYAK: { name: "kayak", credit_cost_per_day: 4 },
+    PADDLE: { name: "paddle", credit_cost_per_day: 2 },
   },
 
   /** Prefix for test equipment names (for cleanup identification) */
-  TEST_EQUIPMENT_PREFIX: 'E2E-Test-',
+  TEST_EQUIPMENT_PREFIX: "E2E-Test-",
 } as const;

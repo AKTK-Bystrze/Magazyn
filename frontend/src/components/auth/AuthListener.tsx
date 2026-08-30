@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { getUserSession } from '@/lib/auth/session-utils';
-import { ROUTES } from '@/lib/config/routes';
-import { RedirectManager } from '@/lib/auth/redirect-manager';
-import { normalizePath } from '@/lib/auth/url-utils';
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { getUserSession } from "@/lib/auth/session-utils";
+import { ROUTES } from "@/lib/config/routes";
+import { RedirectManager } from "@/lib/auth/redirect-manager";
+import { normalizePath } from "@/lib/auth/url-utils";
 
 /**
  * Component that listens for Supabase auth state changes
@@ -17,18 +17,22 @@ export const AuthListener: React.FC = () => {
   useEffect(() => {
     const checkHashForToken = async () => {
       const hash = window.location.hash;
-      if (hash && hash.includes('access_token')) {
+      if (hash && hash.includes("access_token")) {
         // CRITICAL: Set redirect flag IMMEDIATELY to prevent auth event handler from racing
         setIsRedirectInProgress(true);
 
         const hashParams = new URLSearchParams(hash.substring(1));
-        const access_token = hashParams.get('access_token');
-        const refresh_token = hashParams.get('refresh_token');
+        const access_token = hashParams.get("access_token");
+        const refresh_token = hashParams.get("refresh_token");
 
         if (access_token && refresh_token) {
           try {
             // Clean hash FIRST to prevent re-processing
-            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            window.history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search
+            );
 
             const { data, error } = await supabase.auth.setSession({
               access_token,
@@ -36,7 +40,7 @@ export const AuthListener: React.FC = () => {
             });
 
             if (error) {
-              console.error('❌ Session error:', error.message);
+              console.error("❌ Session error:", error.message);
               setIsRedirectInProgress(false);
               window.location.href = ROUTES.PUBLIC.LOGIN;
               return;
@@ -46,7 +50,7 @@ export const AuthListener: React.FC = () => {
               const sessionInfo = await getUserSession(data.session.access_token);
 
               if (!sessionInfo) {
-                console.error('❌ Failed to fetch session info');
+                console.error("❌ Failed to fetch session info");
                 setIsRedirectInProgress(false);
                 window.location.href = ROUTES.PUBLIC.LOGIN;
                 return;
@@ -54,7 +58,7 @@ export const AuthListener: React.FC = () => {
 
               // Use RedirectManager for consistent redirect logic
               const urlParams = new URLSearchParams(window.location.search);
-              const redirectParam = urlParams.get('redirect');
+              const redirectParam = urlParams.get("redirect");
 
               const redirectTo = RedirectManager.getRedirectForAuthState(
                 data.session.user,
@@ -73,7 +77,7 @@ export const AuthListener: React.FC = () => {
               }
             }
           } catch (err) {
-            console.error('❌ Exception:', err);
+            console.error("❌ Exception:", err);
             setIsRedirectInProgress(false);
             window.location.href = ROUTES.PUBLIC.LOGIN;
           }
@@ -86,38 +90,40 @@ export const AuthListener: React.FC = () => {
 
     checkHashForToken();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       // @supabase/ssr automatically manages cookies - no manual sync needed
 
       // Handle token refresh
-      if (event === 'TOKEN_REFRESHED' && session) {
-        console.log('🔄 Token refreshed (cookies auto-updated)');
+      if (event === "TOKEN_REFRESHED" && session) {
+        console.log("🔄 Token refreshed (cookies auto-updated)");
       }
 
       // Handle token refresh failures (network issues, expired refresh token)
       // Note: Supabase may not always emit this event - verify in production
-      if (event === 'TOKEN_REFRESHED' && !session) {
-        console.error('❌ Token refresh failed, logging out');
+      if (event === "TOKEN_REFRESHED" && !session) {
+        console.error("❌ Token refresh failed, logging out");
         await supabase.auth.signOut();
         window.location.href = ROUTES.PUBLIC.LOGIN;
         return;
       }
 
-      if (event === 'SIGNED_IN' && session) {
+      if (event === "SIGNED_IN" && session) {
         // Skip if hash present (hash handler processes) or redirect in progress
-        if (window.location.hash.includes('access_token')) {
-          console.log('⏸️ Skipping - hash handler will process');
+        if (window.location.hash.includes("access_token")) {
+          console.log("⏸️ Skipping - hash handler will process");
           return;
         }
 
         if (isRedirectInProgress) {
-          console.log('⏸️ Skipping - redirect in progress');
+          console.log("⏸️ Skipping - redirect in progress");
           return;
         }
 
         const sessionInfo = await getUserSession(session.access_token);
         const urlParams = new URLSearchParams(window.location.search);
-        const redirectParam = urlParams.get('redirect');
+        const redirectParam = urlParams.get("redirect");
 
         // Use RedirectManager for consistent redirect logic
         const redirectTo = RedirectManager.getRedirectForAuthState(
@@ -129,8 +135,8 @@ export const AuthListener: React.FC = () => {
         );
 
         if (redirectTo) {
-          const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-          const targetPath = redirectTo.replace(/\/$/, '') || '/';
+          const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
+          const targetPath = redirectTo.replace(/\/$/, "") || "/";
 
           if (currentPath !== targetPath) {
             console.log(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
@@ -138,8 +144,8 @@ export const AuthListener: React.FC = () => {
             window.location.replace(redirectTo);
           }
         }
-      } else if (session && window.location.hash.includes('access_token')) {
-        window.history.replaceState(null, '', window.location.pathname);
+      } else if (session && window.location.hash.includes("access_token")) {
+        window.history.replaceState(null, "", window.location.pathname);
       }
     });
 

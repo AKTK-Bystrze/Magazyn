@@ -8,7 +8,7 @@
 INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 VALUES (
   '11111111-1111-1111-1111-111111111111',
-  'testuser1@example.com',
+  'user@example.com',
   '$2a$10$abcdefghijklmnopqrstuvwxyz1234567890', -- dummy hash
   NOW(),
   NOW(),
@@ -19,7 +19,7 @@ VALUES (
 INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 VALUES (
   '22222222-2222-2222-2222-222222222222',
-  'testuser2@example.com',
+  'admin@example.com',
   '$2a$10$abcdefghijklmnopqrstuvwxyz1234567890', -- dummy hash
   NOW(),
   NOW(),
@@ -30,8 +30,8 @@ VALUES (
 INSERT INTO profiles (id, email, username, role, credit_balance, is_enabled)
 VALUES (
   '11111111-1111-1111-1111-111111111111',
-  'testuser1@example.com',
-  'testuser1',
+  'user@example.com',
+  'user',
   'user',
   100000,
   true
@@ -40,8 +40,8 @@ VALUES (
 INSERT INTO profiles (id, email, username, role, credit_balance, is_enabled)
 VALUES (
   '22222222-2222-2222-2222-222222222222',
-  'testuser2@example.com',
-  'testuser2',
+  'admin@example.com',
+  'admin',
   'admin',
   100000,
   true

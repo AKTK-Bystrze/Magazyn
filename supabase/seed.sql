@@ -26,7 +26,7 @@ INSERT INTO auth.users (
   '11111111-1111-1111-1111-111111111111',
   'authenticated',
   'authenticated',
-  'testuser1@example.com',
+  'user@example.com',
   '$2a$10$abcdefghijklmnopqrstuvwxyz123456789012345678901234567890',
   NOW(),
   NOW(),
@@ -44,8 +44,8 @@ INSERT INTO auth.users (
 INSERT INTO public.profiles (id, email, username, role, credit_balance, is_enabled)
 VALUES (
   '11111111-1111-1111-1111-111111111111',
-  'testuser1@example.com',
-  'testuser1',
+  'user@example.com',
+  'user',
   'user',
   100000,
   true
@@ -75,7 +75,7 @@ INSERT INTO auth.users (
   '22222222-2222-2222-2222-222222222222',
   'authenticated',
   'authenticated',
-  'testuser2@example.com',
+  'admin@example.com',
   '$2a$10$abcdefghijklmnopqrstuvwxyz123456789012345678901234567890',
   NOW(),
   NOW(),
@@ -93,8 +93,8 @@ INSERT INTO auth.users (
 INSERT INTO public.profiles (id, email, username, role, credit_balance, is_enabled)
 VALUES (
   '22222222-2222-2222-2222-222222222222',
-  'testuser2@example.com',
-  'testuser2',
+  'admin@example.com',
+  'admin',
   'admin',
   100000,
   true
