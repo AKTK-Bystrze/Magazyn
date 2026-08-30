@@ -12,6 +12,8 @@ services:
       - "8080"
     env_file:
       - ../.env
+    environment:
+      - PUBLIC_SUPABASE_URL=http://host.docker.internal:54321
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -43,6 +45,7 @@ services:
       - HOST=0.0.0.0
       - PORT=4321
       - INTERNAL_BACKEND_URL=http://backend:8080
+      - INTERNAL_SUPABASE_URL=http://host.docker.internal:54321
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
