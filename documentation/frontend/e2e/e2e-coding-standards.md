@@ -8,11 +8,11 @@ Technical guidance for implementing E2E tests in the Magazyn application.
 
 We use a **Hybrid Strategy** to balance performance and reliability:
 
-### 1. Shared User (Performance)
-*   **Strategy**: Reuse a single test user (`test.dev.g6@gmail.com`) across all tests.
-*   **Why**: Creating a new user for every test is too slow (Auth API rate limits + latency).
-*   **Management**: The generic `testUser` fixture ensures this user exists.
-*   **Risk**: Potential for shared state (e.g., credit balance changes).
+### 1. Worker-Isolated Users (Performance & Reliability)
+*   **Strategy**: Create and reuse a unique test user per worker thread (e.g., `test.user.0@example.com`, `test.user.1@example.com`).
+*   **Why**: Completely isolates user state (like credit balances) between concurrent tests, preventing flakiness without the extreme overhead of creating a new user for *every single test*.
+*   **Management**: The generic `testUser`, `adminUser`, and `superAdminUser` fixtures ensure these users exist for each worker.
+*   **Risk**: Still shares state across sequential tests running on the *same* worker.
 *   **Mitigation**: Tests must explicitly **reset relevant user state** (like credits) in `beforeEach` or `afterEach` if they modify it.
 
 ### 2. Isolated Resources (Reliability)

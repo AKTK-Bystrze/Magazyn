@@ -74,15 +74,17 @@ test.describe("Reservation Creation", () => {
 
     await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
 
-    await expect(authenticatedPage.getByTestId(TEST_IDS.equipmentStatusBadge(equip1.id))).toBeVisible();
-    await expect(authenticatedPage.getByTestId(TEST_IDS.equipmentDetailsButton(equip1.id))).toBeVisible();
+    await expect(
+      authenticatedPage.getByTestId(TEST_IDS.equipmentStatusBadge(equip1.id))
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByTestId(TEST_IDS.equipmentDetailsButton(equip1.id))
+    ).toBeVisible();
 
     await addToCart(authenticatedPage, equip1.id);
     await addToCart(authenticatedPage, equip2.id);
 
-    await expect(authenticatedPage.getByTestId(TEST_IDS.CART_ITEM_COUNT)).toHaveText(
-      "2"
-    );
+    await expect(authenticatedPage.getByTestId(TEST_IDS.CART_ITEM_COUNT)).toHaveText("2");
 
     await goToCart(authenticatedPage);
     await cart.waitForCartView();
@@ -123,9 +125,7 @@ test.describe("Reservation Creation", () => {
     expect(authenticatedPage.url()).toContain("/reservations");
     expect(authenticatedPage.url()).toContain("success=true");
 
-    await expect(
-      authenticatedPage.getByTestId(TEST_IDS.RESERVATION_LIST_CONTAINER)
-    ).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.RESERVATION_LIST_CONTAINER)).toBeVisible();
 
     await expect(
       authenticatedPage.locator('[data-testid^="reservation-row-"]').first()
@@ -133,9 +133,7 @@ test.describe("Reservation Creation", () => {
 
     await authenticatedPage.goto("/equipment");
 
-    await expect(
-      authenticatedPage.getByTestId(TEST_IDS.CART_INDICATOR)
-    ).not.toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.CART_INDICATOR)).not.toBeVisible();
   });
 
   /**
@@ -145,10 +143,7 @@ test.describe("Reservation Creation", () => {
    * - Removes item
    * - Verifies item is gone and cart count is updated
    */
-  test("Cart Management: Remove items from cart", async ({
-    authenticatedPage,
-    testEquipment,
-  }) => {
+  test("Cart Management: Remove items from cart", async ({ authenticatedPage, testEquipment }) => {
     const [equip1] = testEquipment;
     const cart = new ReservationCartPOM(authenticatedPage);
 
@@ -165,7 +160,7 @@ test.describe("Reservation Creation", () => {
 
   /**
    * Scenario: Non-admin cannot create free reservations
-   * 
+   *
    * Steps:
    * 1. Login as regular user.
    * 2. Attempt to create reservation with free_reservation=true via API.
@@ -177,7 +172,7 @@ test.describe("Reservation Creation", () => {
     workerIndex,
   }) => {
     const [equip1] = testEquipment;
-    
+
     const { startDays, endDays } = calculateWorkerDates(workerIndex);
     const today = new Date();
     const startDate = new Date(today);
@@ -186,34 +181,58 @@ test.describe("Reservation Creation", () => {
     endDate.setDate(today.getDate() + endDays);
 
     const payload = {
-      reservations: [{
-        equipment_id: equip1.id,
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
-      }],
+      reservations: [
+        {
+          equipment_id: equip1.id,
+          start_date: startDate.toISOString().split("T")[0],
+          end_date: endDate.toISOString().split("T")[0],
+        },
+      ],
       free_reservation: true, // Non-admin trying to create free reservation
     };
 
     // Extract auth token from storage for API request
     const storageState = await authenticatedPage.context().storageState();
-    const authToken = storageState.cookies.find(c => c.name.includes('auth-token'))?.value;
-    let accessToken = '';
+    const authToken = storageState.cookies.find((c) => c.name.includes("auth-token"))?.value;
+    let accessToken = "";
     if (authToken) {
-      const sessionData = JSON.parse(authToken);
+      const sessionData = JSON.parse(decodeURIComponent(authToken));
       accessToken = sessionData.access_token;
     }
 
-    const response = await authenticatedPage.request.post('/api/reservations', {
+    const response = await authenticatedPage.request.post("/api/reservations", {
       data: payload,
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
     expect(response.status()).toBe(403);
-    
+
     const body = await response.json();
-    expect(body.error || body.message).toContain('Only admins can create free reservations');
+    expect(body.error || body.message).toContain("Only admins can create free reservations");
+  });
+
+  /**
+   * Scenario: Free reservation checkbox is not visible for non-admin users
+   *
+   * Steps:
+   * 1. Login as a regular user.
+   * 2. Add equipment to cart and navigate to cart.
+   * 3. Assert the free-reservation-checkbox is not rendered.
+   */
+  test("Authorization: Free reservation checkbox is not visible for non-admin users", async ({
+    authenticatedPage,
+    testEquipment,
+  }) => {
+    const [equip1] = testEquipment;
+
+    await addToCart(authenticatedPage, equip1.id);
+    await goToCart(authenticatedPage);
+
+    await expect(authenticatedPage.getByTestId("free-reservation-checkbox")).not.toBeVisible({
+      timeout: 3000,
+    });
   });
 });
