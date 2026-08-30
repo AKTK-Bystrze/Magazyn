@@ -119,6 +119,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
 > [!TIP]
 > See [frontend/e2e/README.md](frontend/e2e/README.md) for detailed Docker setup and testing.
+> See [`documentation/frontend/e2e/local-ci-simulation.md`](documentation/frontend/e2e/local-ci-simulation.md) for CI simulation setup and testing.
 
 ### Local Development Setup
 
@@ -171,6 +172,17 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
    The API will be available at `http://localhost:8080`
 
+### 🔐 Logging In (Local Development)
+
+The application uses passwordless authentication via Magic Links. During local development:
+
+1. Navigate to the login page: [http://localhost:4321/login](http://localhost:4321/login)
+2. Enter one of the pre-seeded test accounts:
+   * **Admin User**: `admin@example.com`
+   * **Standard User**: `user@example.com`
+3. Click **"Send Magic Link"**.
+4. Open the local email inbox (Mailpit/Inbucket): [http://127.0.0.1:54324](http://127.0.0.1:54324)
+5. Open the latest email and click the login link to authenticate.
 ### Database Setup for Development
 
 Populate your local Supabase database with test users and sample data:
@@ -190,12 +202,21 @@ npx supabase db seed
 
 End-to-end tests use **Playwright** and support both Docker and local environments.
 
-**Quick Start (Docker):**
+**A: Quick Start (Docker):**
 ```bash
 cd infra && docker compose --env-file ../.env up -d --build
 cd ../frontend && npm run e2e
 # Run in browser: npm run e2e:headed
 ```
+
+**B: Local CI Simulation (1-Click Script):**
+You can simulate the exact GitHub Actions CI environment locally using the provided bash script. This script automatically handles starting Supabase, building the Docker stack, and running the Playwright tests on your host OS.
+
+```bash
+# Run the complete E2E simulation
+./run-e2e.sh
+```
+*(On Windows, execute this script using Git Bash).*
 
 **Key Features:**
 - **Auto-created users**: Test users are automatically managed by fixtures.
@@ -204,6 +225,7 @@ cd ../frontend && npm run e2e
 
 > [!TIP]
 > See [`frontend/e2e/README.md`](frontend/e2e/README.md) for full documentation, authentication flows, and debugging guide.
+> See [`documentation/frontend/e2e/local-ci-simulation.md`](documentation/frontend/e2e/local-ci-simulation.md) for full documentation on how CI simulation works and how to debug it.
 
 #### 3. Running Integration Tests
 
