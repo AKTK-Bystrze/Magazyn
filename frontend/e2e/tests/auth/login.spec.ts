@@ -1,7 +1,7 @@
 import { test, expect } from "../../fixtures";
 import { submitLoginEmail, waitForMagicLinkSent } from "../../helpers/auth.helper";
 import { getMagicLinkFromEmail, clearMailbox } from "../../helpers/inbucket.helper";
-import { getTestUserEmail } from "../../fixtures/index";
+
 
 /**
  * Authentication flow e2e tests.
@@ -32,8 +32,8 @@ test.describe("Login Page", () => {
    * Scenario: Login Flow via Email Magic Link
    * Verifies the full user flow of requesting a magic link and successfully authenticating.
    */
-  test("should successfully log in via email magic link", async ({ page, workerIndex }) => {
-    const testEmail = getTestUserEmail(workerIndex);
+  test("should successfully log in via email magic link", async ({ page, testUser }) => {
+    const testEmail = testUser.email;
 
     // Clear the mailbox before testing to ensure we get the fresh magic link
     await clearMailbox(testEmail);
