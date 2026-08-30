@@ -32,6 +32,9 @@ export default defineConfig({
   /* Global teardown to cleanup orphaned test equipment */
   globalTeardown: "./e2e/global-teardown.ts",
 
+  /* Global setup to provision users before workers start */
+  globalSetup: "./e2e/global-setup.ts",
+
   /* Shared settings for all the projects below */
   use: {
     /* Base URL from environment variable */

@@ -41,9 +41,13 @@ interface WorkerFixtures {
   workerIndex: number;
 }
 
-const TEST_USER_EMAIL = process.env.E2E_TEST_EMAIL || "test.dev.g6@gmail.com";
+export function getTestUserEmail(workerIndex: number): string {
+  const baseEmail = process.env.E2E_TEST_EMAIL || "test.user@example.com";
+  const [, domain] = baseEmail.split("@");
+  return `test.user.${workerIndex}@${domain}`;
+}
 
-function createSupabaseAdmin(): SupabaseClient {
+export function createSupabaseAdmin(): SupabaseClient {
   const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -63,12 +67,14 @@ function createSupabaseAdmin(): SupabaseClient {
 }
 
 /**
- * Ensures the STANDARD test user exists.
+ * Ensures the STANDARD test user exists for a specific worker.
  */
-async function ensureTestUserExists(
-  supabaseAdmin: SupabaseClient
+export async function ensureTestUserExists(
+  supabaseAdmin: SupabaseClient,
+  workerIndex: number
 ): Promise<{ id: string; email: string }> {
-  console.log("[SETUP] Checking if test user exists:", TEST_USER_EMAIL);
+  const testUserEmail = getTestUserEmail(workerIndex);
+  console.log("[SETUP] Checking if test user exists:", testUserEmail);
 
   const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers({
     page: 1,
@@ -80,7 +86,7 @@ async function ensureTestUserExists(
   }
 
   const users = data?.users ?? [];
-  const existingUser = users.find((u) => u.email === TEST_USER_EMAIL);
+  const existingUser = users.find((u) => u.email === testUserEmail);
   let userId: string;
 
   if (existingUser) {
@@ -102,7 +108,7 @@ async function ensureTestUserExists(
   } else {
     console.log("[SETUP] Creating test user with email_confirm: true...");
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email: TEST_USER_EMAIL,
+      email: testUserEmail,
       password: process.env.E2E_TEST_PASSWORD || "TestSecurePassword123!",
       email_confirm: true,
       user_metadata: { name: "E2E Test User" },
@@ -118,7 +124,7 @@ async function ensureTestUserExists(
           page: 1,
           perPage: 1000,
         });
-        const retryUser = listData?.users.find((u) => u.email === TEST_USER_EMAIL);
+        const retryUser = listData?.users.find((u) => u.email === testUserEmail);
         if (!retryUser) {
           throw new Error(
             `Failed to create test user AND failed to find it after race condition: ${error.message}`
@@ -138,7 +144,7 @@ async function ensureTestUserExists(
   const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
     {
       id: userId,
-      email: TEST_USER_EMAIL,
+      email: testUserEmail,
       role: "user",
       is_enabled: true,
       username: `e2e-tester-${userId.slice(0, 8)}`,
@@ -151,16 +157,29 @@ async function ensureTestUserExists(
     throw new Error(`Failed to upsert profile: ${profileError.message}`);
   }
 
-  return { id: userId, email: TEST_USER_EMAIL };
+  return { id: userId, email: testUserEmail };
+}
+
+export function getAdminEmail(workerIndex: number): string {
+  const baseEmail = E2E_CONFIG.USERS.ADMIN.EMAIL || "test.admin@example.com";
+  const [, domain] = baseEmail.split("@");
+  return `test.admin.${workerIndex}@${domain}`;
+}
+
+export function getSuperAdminEmail(workerIndex: number): string {
+  const baseEmail = E2E_CONFIG.USERS.SUPER_ADMIN.EMAIL || "test.superadmin@example.com";
+  const [, domain] = baseEmail.split("@");
+  return `test.superadmin.${workerIndex}@${domain}`;
 }
 
 /**
- * Ensures the ADMIN test user exists.
+ * Ensures the ADMIN test user exists for a specific worker.
  */
-async function ensureAdminUserExists(
-  supabaseAdmin: SupabaseClient
+export async function ensureAdminUserExists(
+  supabaseAdmin: SupabaseClient,
+  workerIndex: number
 ): Promise<{ id: string; email: string }> {
-  const adminEmail = E2E_CONFIG.USERS.ADMIN.EMAIL;
+  const adminEmail = getAdminEmail(workerIndex);
   console.log("[SETUP] Checking if ADMIN user exists:", adminEmail);
 
   const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers({
@@ -201,7 +220,10 @@ async function ensureAdminUserExists(
     });
 
     if (error) {
-      if (error.message.includes("already been registered")) {
+      if (
+        error.message.includes("already been registered") ||
+        error.message.includes("Database error")
+      ) {
         console.log("[SETUP] Admin user already exists (race condition), fetching ID...");
         // Add delay to give Supabase Auth time to index the user
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -246,12 +268,13 @@ async function ensureAdminUserExists(
 }
 
 /**
- * Ensures the SUPER ADMIN test user exists.
+ * Ensures the SUPER ADMIN test user exists for a specific worker.
  */
-async function ensureSuperAdminUserExists(
-  supabaseAdmin: SupabaseClient
+export async function ensureSuperAdminUserExists(
+  supabaseAdmin: SupabaseClient,
+  workerIndex: number
 ): Promise<{ id: string; email: string }> {
-  const adminEmail = E2E_CONFIG.USERS.SUPER_ADMIN.EMAIL;
+  const adminEmail = getSuperAdminEmail(workerIndex);
   console.log("[SETUP] Checking if SUPER ADMIN user exists:", adminEmail);
 
   const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers({
@@ -335,7 +358,7 @@ async function ensureSuperAdminUserExists(
   return { id: userId, email: adminEmail };
 }
 
-async function injectSupabaseSession(page: Page, email: string = TEST_USER_EMAIL): Promise<void> {
+async function injectSupabaseSession(page: Page, email: string): Promise<void> {
   console.log(`[AUTH] Getting real session tokens for ${email} via signInWithPassword...`);
 
   const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
@@ -387,27 +410,21 @@ async function injectSupabaseSession(page: Page, email: string = TEST_USER_EMAIL
 
   const sessionJson = JSON.stringify(sessionData);
 
-  // Inject multiple cookie variations to handle local dev environment ambiguities
-  // 1. Derived from 127.0.0.1 (standard) -> sb-127-auth-token
-  // 2. Derived from localhost -> sb-localhost-auth-token
-  // 3. Fallback -> supabase-auth-token
   const projectRef = new URL(supabaseUrl!).hostname.split(".")[0];
+  const encodedSession = encodeURIComponent(sessionJson);
   const cookies = [
-    { name: `sb-${projectRef}-auth-token`, value: sessionJson },
-    { name: `sb-localhost-auth-token`, value: sessionJson },
-    { name: `supabase-auth-token`, value: sessionJson },
+    { name: `sb-${projectRef}-auth-token`, value: encodedSession },
+    { name: `sb-localhost-auth-token`, value: encodedSession },
+    { name: `sb-host-auth-token`, value: encodedSession },
+    { name: `supabase-auth-token`, value: encodedSession },
   ];
 
-  await page.context().addCookies(
-    cookies.map((c) => ({
-      ...c,
-      domain: "localhost",
-      path: "/",
-      httpOnly: false,
-      secure: false,
-      sameSite: "Lax",
-    }))
-  );
+  await page
+    .context()
+    .addCookies([
+      ...cookies.map((c) => ({ ...c, domain: "localhost", path: "/", sameSite: "Lax" as const })),
+      ...cookies.map((c) => ({ ...c, domain: "127.0.0.1", path: "/", sameSite: "Lax" as const })),
+    ]);
 
   console.log(`[AUTH] ✅ Supabase SSR cookies injected: ${cookies.map((c) => c.name).join(", ")}`);
   console.log("[AUTH] Cookies injected, reloading page...");
@@ -460,24 +477,24 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
   ],
 
   testUser: [
-    async ({ supabaseAdmin }, use) => {
-      const user = await ensureTestUserExists(supabaseAdmin);
+    async ({ supabaseAdmin, workerIndex }, use) => {
+      const user = await ensureTestUserExists(supabaseAdmin, workerIndex);
       await use(user);
     },
     { scope: "worker" },
   ],
 
   adminUser: [
-    async ({ supabaseAdmin }, use) => {
-      const user = await ensureAdminUserExists(supabaseAdmin);
+    async ({ supabaseAdmin, workerIndex }, use) => {
+      const user = await ensureAdminUserExists(supabaseAdmin, workerIndex);
       await use(user);
     },
     { scope: "worker" },
   ],
 
   superAdminUser: [
-    async ({ supabaseAdmin }, use) => {
-      const user = await ensureSuperAdminUserExists(supabaseAdmin);
+    async ({ supabaseAdmin, workerIndex }, use) => {
+      const user = await ensureSuperAdminUserExists(supabaseAdmin, workerIndex);
       await use(user);
     },
     { scope: "worker" },

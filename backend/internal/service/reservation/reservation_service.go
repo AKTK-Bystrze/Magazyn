@@ -131,16 +131,16 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	totalCost := int32(0)
 	costMap := make(map[int]int32)
 
-	if !isFreeReservation {
-		for i, req := range cmd.Reservations {
-			eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
-			if err != nil {
-				return nil, types.NewValidationError(fmt.Sprintf("Equipment %s not found", req.EquipmentID), nil)
-			}
-			if eq.IsArchived || eq.Status == constants.EquipmentStatusBroken {
-				return nil, types.NewValidationError(fmt.Sprintf("Equipment %s is not available", safeString(eq.Name)), nil)
-			}
+	for i, req := range cmd.Reservations {
+		eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
+		if err != nil {
+			return nil, types.NewValidationError(fmt.Sprintf("Equipment %s not found", req.EquipmentID), nil)
+		}
+		if eq.IsArchived || eq.Status == constants.EquipmentStatusBroken {
+			return nil, types.NewValidationError(fmt.Sprintf("Equipment %s is not available", safeString(eq.Name)), nil)
+		}
 
+		if !isFreeReservation {
 			eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
 			if err != nil {
 				return nil, types.NewInternalError("failed to fetch equipment type", err)
@@ -153,11 +153,12 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 
 			logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d",
 				req.EquipmentID, eq.TypeID, days, eqType.CreditCostPerDay, cost)
-		}
-	} else {
-		for i := range cmd.Reservations {
+		} else {
 			costMap[i] = 0
 		}
+	}
+
+	if isFreeReservation {
 		logger.Infof(ctx, "Creating free reservation for user %s", targetUserID)
 	}
 
@@ -296,6 +297,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
 			}
 		}
+
 	}
 
 	// Handle Date Change
