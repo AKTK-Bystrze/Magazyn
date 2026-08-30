@@ -1,16 +1,16 @@
-import type { User } from '@supabase/supabase-js';
-import type { SessionInfo } from '../../types';
-import { ROUTES } from '../config/routes';
-import { validateRedirectUrl } from './url-utils';
-import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from './roles';
+import type { User } from "@supabase/supabase-js";
+import type { SessionInfo } from "../../types";
+import { ROUTES } from "../config/routes";
+import { validateRedirectUrl } from "./url-utils";
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from "./roles";
 
 /**
  * Manages redirects with centralized logic
- * 
+ *
  * This class eliminates 38% code duplication across middleware,
  * AuthListener, and page components by providing a single source of
  * truth for all redirect decisions.
- * 
+ *
  * Note: Redirect loop detection is unnecessary as the redirect structure
  * creates a DAG - each redirect destination never redirects back unless
  * auth state changes (which requires a page load).
@@ -18,7 +18,7 @@ import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from './roles';
 export class RedirectManager {
   /**
    * Main redirect logic - determines where to redirect based on auth state
-   * 
+   *
    * @param user - Supabase user object (null if not authenticated)
    * @param sessionInfo - Session info from backend (null if not fetched)
    * @param currentPath - Current URL pathname
@@ -39,7 +39,7 @@ export class RedirectManager {
         return null;
       }
 
-      if (currentPath === '/') {
+      if (currentPath === "/") {
         return ROUTES.PUBLIC.LOGIN;
       }
 
@@ -62,8 +62,10 @@ export class RedirectManager {
       if (redirectParam) {
         const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
         // Validate redirect target against user's role
-        if (safeRedirect !== ROUTES.PUBLIC.LOGIN &&
-          isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)) {
+        if (
+          safeRedirect !== ROUTES.PUBLIC.LOGIN &&
+          isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)
+        ) {
           return safeRedirect;
         }
         // Fall through to default route if redirect is not allowed
@@ -71,7 +73,7 @@ export class RedirectManager {
       return getDefaultRouteForUser(user, sessionInfo);
     }
 
-    if (currentPath === '/') {
+    if (currentPath === "/") {
       return getDefaultRouteForUser(user, sessionInfo);
     }
     return null;
@@ -80,23 +82,20 @@ export class RedirectManager {
 
 /// Checks if a redirect path is allowed for a given user role
 function isRedirectAllowedForRole(path: string, role: string | undefined): boolean {
-  return !path.startsWith(ROUTES.PROTECTED.ADMIN)
-    || role === ADMIN_ROLE
-    || role === SUPER_ADMIN_ROLE;
+  return (
+    !path.startsWith(ROUTES.PROTECTED.ADMIN) || role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE
+  );
 }
 
 /**
  * Gets the default route for a user based on their role
- * 
+ *
  * @param user - Supabase user object (can be null)
  * @param sessionInfo - Session info from backend (authoritative source)
  */
-export function getDefaultRouteForUser(
-  user: User | null,
-  sessionInfo: SessionInfo | null
-): string {
+export function getDefaultRouteForUser(user: User | null, sessionInfo: SessionInfo | null): string {
   if (!user || !sessionInfo) {
-    console.info('No user or sessionInfo available, redirecting to login');
+    console.info("No user or sessionInfo available, redirecting to login");
     return ROUTES.PUBLIC.LOGIN;
   }
 
