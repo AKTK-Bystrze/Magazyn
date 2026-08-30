@@ -413,6 +413,7 @@ async function injectSupabaseSession(page: Page, email: string): Promise<void> {
   const projectRef = new URL(supabaseUrl!).hostname.split(".")[0];
   const encodedSession = encodeURIComponent(sessionJson);
   const cookies = [
+    { name: `sb-magazyn-auth-token`, value: encodedSession },
     { name: `sb-${projectRef}-auth-token`, value: encodedSession },
     { name: `sb-localhost-auth-token`, value: encodedSession },
     { name: `sb-host-auth-token`, value: encodedSession },
