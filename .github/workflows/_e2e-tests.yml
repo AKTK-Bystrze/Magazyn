@@ -82,8 +82,20 @@ jobs:
           supabase-anon-key: ${{ env.PUBLIC_SUPABASE_ANON_KEY }}
           supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
 
-      - name: Deploy E2E Stack (Remote)
+      - name: Check Remote Environment
+        id: check_remote
         if: inputs.supabase-mode == 'remote'
+        run: |
+          if curl -s -f -o /dev/null "${{ inputs.supabase-url }}/rest/v1/?apikey=${{ inputs.supabase-anon-key }}"; then
+            echo "available=true" >> $GITHUB_OUTPUT
+            echo "✅ Remote environment is available." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ **Remote environment is NOT available.** Skipping remote E2E tests." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Deploy E2E Stack (Remote)
+        if: inputs.supabase-mode == 'remote' && steps.check_remote.outputs.available == 'true'
         uses: ./.github/actions/deploy-e2e-stack
         with:
           supabase-url: ${{ inputs.supabase-url }}
@@ -92,6 +104,7 @@ jobs:
 
       - name: Run E2E Tests
         working-directory: ./frontend
+        if: inputs.supabase-mode == 'local' || (inputs.supabase-mode == 'remote' && steps.check_remote.outputs.available == 'true')
         run: npx playwright test --workers=4 --retries=${{ inputs.retries }}
 
       - name: Upload Playwright Report
