@@ -116,10 +116,7 @@ export async function ensureTestUserExists(
 
     if (error) {
       // Fallback: If user was created by another worker in the meantime
-      if (
-        error.message.includes("already been registered") ||
-        error.message.includes("Database error")
-      ) {
+      if (error.message.includes("already been registered")) {
         console.log("[SETUP] User already exists (race condition), fetching ID...");
         // Add delay to give Supabase Auth time to index the user
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -318,10 +315,7 @@ export async function ensureSuperAdminUserExists(
     });
 
     if (error) {
-      if (
-        error.message.includes("already been registered") ||
-        error.message.includes("Database error")
-      ) {
+      if (error.message.includes("already been registered")) {
         console.log("[SETUP] Super Admin user already exists (race condition), fetching ID...");
         await new Promise((resolve) => setTimeout(resolve, 1000));
         const { data: listData } = await supabaseAdmin.auth.admin.listUsers({

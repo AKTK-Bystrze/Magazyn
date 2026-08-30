@@ -206,9 +206,6 @@ test.describe.serial("Admin Reservation Management", () => {
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
     await expect(statusBadge).toContainText(/Pending|Oczekuje|Oczekuj[aą]ca/i);
-
-    // Note: The UI doesn't currently display a visual indicator for free reservations.
-    // This could be enhanced in the future to show a badge or label for free reservations.
   });
 
   /**
