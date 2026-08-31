@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getUserSession } from '../session-utils';
-import type { SessionInfo } from '../../../types';
+import { defaultLogger as logger } from "@/lib/utils/logger";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { getUserSession } from "../session-utils";
+import type { SessionInfo } from "../../../types";
 
 // =============================================================================
 // Mock Setup using vi.mock() factory pattern
@@ -8,33 +9,33 @@ import type { SessionInfo } from '../../../types';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-vi.stubGlobal('fetch', mockFetch);
+vi.stubGlobal("fetch", mockFetch);
 
 // Suppress console logs during tests
-vi.spyOn(console, 'log').mockImplementation(() => {});
-vi.spyOn(console, 'error').mockImplementation(() => {});
+vi.spyOn(logger, "info").mockImplementation(() => {});
+vi.spyOn(logger, "error").mockImplementation(() => {});
 
 // =============================================================================
 // Test Data
 // =============================================================================
 
 const mockSessionInfo: SessionInfo = {
-  userId: 'uuid-12345',
-  email: 'test@example.com',
-  username: 'testuser',
-  role: 'super_admin',
+  userId: "uuid-12345",
+  email: "test@example.com",
+  username: "testuser",
+  role: "super_admin",
   creditBalance: 500,
   isEnabled: true,
-  expiresAt: '2025-12-31T00:00:00Z',
+  expiresAt: "2025-12-31T00:00:00Z",
 };
 
-const validAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.validtoken';
+const validAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.validtoken";
 
 // =============================================================================
 // getUserSession Tests
 // =============================================================================
 
-describe('getUserSession', () => {
+describe("getUserSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -43,8 +44,8 @@ describe('getUserSession', () => {
     vi.resetAllMocks();
   });
 
-  describe('successful response', () => {
-    it('should return SessionInfo on 200 OK response', async () => {
+  describe("successful response", () => {
+    it("should return SessionInfo on 200 OK response", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -57,7 +58,7 @@ describe('getUserSession', () => {
       expect(result).toEqual(mockSessionInfo);
     });
 
-    it('should send correct Authorization header', async () => {
+    it("should send correct Authorization header", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -68,7 +69,7 @@ describe('getUserSession', () => {
       await getUserSession(validAccessToken);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/session'),
+        expect.stringContaining("/auth/session"),
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: `Bearer ${validAccessToken}`,
@@ -77,7 +78,7 @@ describe('getUserSession', () => {
       );
     });
 
-    it('should call correct backend endpoint', async () => {
+    it("should call correct backend endpoint", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -94,7 +95,7 @@ describe('getUserSession', () => {
       );
     });
 
-    it('should use no-store cache policy', async () => {
+    it("should use no-store cache policy", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -107,12 +108,12 @@ describe('getUserSession', () => {
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          cache: 'no-store',
+          cache: "no-store",
         })
       );
     });
 
-    it('should return SessionInfo with correct isEnabled value', async () => {
+    it("should return SessionInfo with correct isEnabled value", async () => {
       const disabledSession: SessionInfo = {
         ...mockSessionInfo,
         isEnabled: false,
@@ -131,13 +132,13 @@ describe('getUserSession', () => {
     });
   });
 
-  describe('error handling', () => {
-    it('should return null on 401 Unauthorized', async () => {
+  describe("error handling", () => {
+    it("should return null on 401 Unauthorized", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        statusText: 'Unauthorized',
-        text: () => Promise.resolve('Token expired'),
+        statusText: "Unauthorized",
+        text: () => Promise.resolve("Token expired"),
         headers: new Headers(),
       });
 
@@ -146,12 +147,12 @@ describe('getUserSession', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null on 403 Forbidden', async () => {
+    it("should return null on 403 Forbidden", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 403,
-        statusText: 'Forbidden',
-        text: () => Promise.resolve('Account disabled'),
+        statusText: "Forbidden",
+        text: () => Promise.resolve("Account disabled"),
         headers: new Headers(),
       });
 
@@ -160,12 +161,12 @@ describe('getUserSession', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null on 404 Not Found', async () => {
+    it("should return null on 404 Not Found", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found',
-        text: () => Promise.resolve('Profile not found'),
+        statusText: "Not Found",
+        text: () => Promise.resolve("Profile not found"),
         headers: new Headers(),
       });
 
@@ -174,12 +175,12 @@ describe('getUserSession', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null on 500 Internal Server Error', async () => {
+    it("should return null on 500 Internal Server Error", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: 'Internal Server Error',
-        text: () => Promise.resolve('Server error'),
+        statusText: "Internal Server Error",
+        text: () => Promise.resolve("Server error"),
         headers: new Headers(),
       });
 
@@ -188,16 +189,16 @@ describe('getUserSession', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+    it("should return null on network error", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const result = await getUserSession(validAccessToken);
 
       expect(result).toBeNull();
     });
 
-    it('should return null on fetch timeout', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('AbortError: The operation was aborted.'));
+    it("should return null on fetch timeout", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("AbortError: The operation was aborted."));
 
       const result = await getUserSession(validAccessToken);
 
@@ -205,17 +206,17 @@ describe('getUserSession', () => {
     });
   });
 
-  describe('input handling', () => {
-    it('should handle empty access token', async () => {
+  describe("input handling", () => {
+    it("should handle empty access token", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        statusText: 'Unauthorized',
-        text: () => Promise.resolve('Missing token'),
+        statusText: "Unauthorized",
+        text: () => Promise.resolve("Missing token"),
         headers: new Headers(),
       });
 
-      const result = await getUserSession('');
+      const result = await getUserSession("");
 
       expect(result).toBeNull();
     });
