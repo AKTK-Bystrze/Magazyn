@@ -4,11 +4,20 @@ import { ApiErrors, handleApiError } from "../lib/errors/api-error";
 import { getUserSession } from "../lib/auth/session-utils";
 import { RedirectManager } from "../lib/auth/redirect-manager";
 import type { SessionInfo } from "../types";
+import { StructuredLogger } from "../lib/utils/logger";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
 
-  console.log(`\n📍 [${url.pathname}] Request received`);
+  // Initialize trace_id
+  const traceId = context.request.headers.get("X-Trace-Id") || crypto.randomUUID();
+  context.locals.trace_id = traceId;
+  
+  // Initialize logger
+  let logger = new StructuredLogger({ trace_id: traceId });
+  context.locals.logger = logger;
+
+  logger.info(`Request received`, { path: url.pathname });
 
   // Create request-scoped Supabase client for proper SSR session isolation
   const supabase = createSupabaseServerClient(context.request, context.cookies);
@@ -16,14 +25,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   try {
     // 1. Get user from Supabase using getUser() (recommended for SSR)
-    // This validates the session server-side instead of relying on client-provided session
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
 
     if (error) {
-      console.error("❌ Supabase getUser() error:", {
+      logger.error("Supabase getUser() error", {
         code: error.code,
         message: error.message,
         status: error.status,
@@ -33,7 +41,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // Handle invalid refresh token error - clear cookies and redirect gracefully
     if (error && error.code === "refresh_token_not_found") {
-      console.error("Invalid refresh token detected");
+      logger.error("Invalid refresh token detected");
       context.cookies.delete("sb-access-token", { path: "/" });
       context.cookies.delete("sb-refresh-token", { path: "/" });
       context.cookies.delete("sb-session-token", { path: "/" });
@@ -43,9 +51,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     context.locals.user = user || null;
     if (user) {
-      console.log("✅ Middleware: User authenticated:", user.id);
+      // Update logger with username
+      logger = logger.with({ username: user.email || user.id });
+      context.locals.logger = logger;
+      logger.info("Middleware: User authenticated", { userId: user.id });
     } else {
-      console.log("❌ Middleware: No authenticated user");
+      logger.debug("Middleware: No authenticated user");
     }
 
     // 2. Fetch user session info if authenticated (to check isEnabled status)
@@ -60,21 +71,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
       token = session?.access_token || null;
 
       if (token) {
-        console.log("🔑 Middleware: Access token obtained, fetching session info...");
+        logger.debug("Middleware: Access token obtained, fetching session info...");
         sessionInfo = await getUserSession(token);
-        console.log("📋 Middleware: Session info received:", sessionInfo);
+        logger.debug("Middleware: Session info received", { sessionInfo });
 
         // Store sessionInfo and token in locals for pages and API routes to access
         context.locals.sessionInfo = sessionInfo;
         context.locals.accessToken = token;
       } else {
-        console.warn("⚠️ Middleware: No access token available");
+        logger.warn("Middleware: No access token available");
       }
     }
 
     // 3. Unified Redirect Logic
-    // SKIP redirects for API routes - they should handle auth state via 401/403 or pass through
-    // SKIP redirects for static assets (CSS, JS, images, fonts, etc.)
     const isStaticAsset =
       /\.(css|js|mjs|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp4|webm)$/i.test(
         url.pathname
@@ -91,8 +100,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       );
 
       if (redirectTo) {
-        console.log(`🔄 Redirecting: ${url.pathname} → ${redirectTo}`);
-        console.log("📊 Request state:", {
+        logger.info(`Redirecting request`, { from: url.pathname, to: redirectTo });
+        logger.debug("Request state", {
           hasUser: !!user,
           hasSessionInfo: !!sessionInfo,
           hasToken: !!token,
@@ -103,29 +112,28 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     // 4. Protect API Routes
-    // Require authentication for all /api endpoints except auth initialization and logger
     const isAuthApiRoute = url.pathname.startsWith("/api/auth");
     if (url.pathname.startsWith("/api/") && !isAuthApiRoute) {
       if (!context.locals.user) {
-        console.log("🔒 Middleware: Access denied to API route:", url.pathname);
+        logger.warn("Middleware: Access denied to API route", { path: url.pathname });
         throw ApiErrors.unauthorized("Authentication required");
       }
 
       if (sessionInfo && !sessionInfo.isEnabled) {
+        logger.warn("Middleware: Access denied for disabled account", { path: url.pathname });
         throw ApiErrors.forbidden("Account is disabled. Please contact an administrator.");
       }
     }
 
     return next();
-  } catch (error) {
+  } catch (error: any) {
     // Handle API errors specifically for API routes
     if (context.request.url.includes("/api/")) {
+      context.locals.logger?.error("API Route Error", { error: error.message });
       return handleApiError(error);
     }
-    // For page routes, we might want to redirect or let Astro handle it,
-    // but here we just rethrow or return error page if needed.
-    // Since we only throw inside the /api/ check above, this catch block mostly catches API errors.
-    console.error("Middleware error:", error);
+    
+    context.locals.logger?.error("Middleware error", { error: error.message, stack: error.stack });
     return new Response("Internal Server Error", { status: 500 });
   }
 });

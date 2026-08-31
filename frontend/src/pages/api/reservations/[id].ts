@@ -27,6 +27,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
     debug.log("Reservations API", `GET /reservations/${id}`);
 
     const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -81,6 +82,7 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     debug.log("Reservations API", `PATCH /reservations/${id}`, body);
 
     const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });

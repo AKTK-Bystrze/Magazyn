@@ -28,6 +28,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
     debug.log("Users API", "GET Request URL:", backendUrl.toString());
 
     const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -75,6 +76,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     debug.log("Users API", "POST Request body:", JSON.stringify(body, null, 2));
 
     const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });

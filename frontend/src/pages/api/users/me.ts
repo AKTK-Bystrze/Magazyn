@@ -13,6 +13,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
   try {
     const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });

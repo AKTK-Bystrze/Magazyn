@@ -17,6 +17,7 @@ export const GET: APIRoute = async ({ request, params, locals }) => {
   const token = locals.accessToken;
 
   const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
     'Content-Type': 'application/json',
   });
 
@@ -24,6 +25,7 @@ export const GET: APIRoute = async ({ request, params, locals }) => {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  locals.logger?.info("Proxying API request", { method: "GET", url: backendUrl.toString().toString() });
   const response = await fetch(backendUrl.toString(), {
     method: 'GET',
     headers,

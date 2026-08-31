@@ -37,6 +37,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const token = locals.accessToken;
 
   const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
     'Content-Type': 'application/json',
   });
 
@@ -44,6 +45,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  locals.logger?.info("Proxying API request", { method: "GET", url: backendUrl.toString().toString() });
   const response = await fetch(backendUrl.toString(), {
     method: 'GET',
     headers,
@@ -64,6 +66,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const token = locals.accessToken;
 
   const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
     'Content-Type': 'application/json',
   });
 
@@ -73,6 +76,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const body = await request.text();
 
+  locals.logger?.info("Proxying API request", { method: "POST", url: backendUrl.toString() });
   const response = await fetch(backendUrl, {
     method: 'POST',
     headers,

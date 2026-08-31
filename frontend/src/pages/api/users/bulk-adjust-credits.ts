@@ -23,6 +23,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     debug.log("Users API", "POST /users/bulk-adjust-credits", body);
 
     const headers = new Headers({
+    'X-Trace-Id': locals.trace_id || '',
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });

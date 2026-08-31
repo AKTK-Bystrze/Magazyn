@@ -11,7 +11,8 @@ export const POST: APIRoute = async ({ request }) => {
 
         console.log(`[Proxy] Forwarding login request to: ${backendUrl}`);
 
-        const response = await fetch(backendUrl, {
+        locals.logger?.info("Proxying API request", { method: "POST", url: backendUrl.toString() });
+  const response = await fetch(backendUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
