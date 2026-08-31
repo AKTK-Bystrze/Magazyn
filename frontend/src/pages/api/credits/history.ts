@@ -17,6 +17,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
   }
 
   try {
+    locals.logger?.info("Fetching credit history");
     const url = new URL(request.url);
     const backendUrl = new URL(`${BACKEND_URL}/credits/history`);
 

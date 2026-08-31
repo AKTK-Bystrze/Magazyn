@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { BACKEND_URL } from "@/lib/config/api";
 
 export const GET: APIRoute = async ({ locals }) => {
+  locals.logger?.info("Fetching current user profile");
   const token = locals.accessToken;
 
   if (!token) {

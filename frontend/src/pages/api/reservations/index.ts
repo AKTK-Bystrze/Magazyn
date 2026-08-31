@@ -5,6 +5,7 @@ import { BACKEND_URL } from "@/lib/config/api";
  * POST /api/reservations - Create new reservations
  */
 export const POST: APIRoute = async ({ locals, request }) => {
+  locals.logger?.info("Creating new reservation");
   const token = locals.accessToken;
 
   if (!token) {
@@ -52,6 +53,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
  * GET /api/reservations - List reservations with filtering and pagination
  */
 export const GET: APIRoute = async ({ locals, request }) => {
+  locals.logger?.info("Listing reservations");
   const token = locals.accessToken;
 
   if (!token) {
@@ -103,6 +105,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
  * This handles bulk updates at /api/reservations/bulk
  */
 export const PATCH: APIRoute = async ({ locals, request }) => {
+  locals.logger?.info("Bulk updating reservations");
   const token = locals.accessToken;
 
   if (!token) {

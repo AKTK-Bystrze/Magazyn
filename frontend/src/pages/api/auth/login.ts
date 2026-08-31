@@ -3,10 +3,11 @@ import { BACKEND_URL } from "@/lib/config/api";
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   const backendUrl = `${BACKEND_URL}/auth/login`;
 
   try {
+    locals.logger?.info("Initiating login");
     const body = await request.text();
 
     locals.logger?.info(`[Proxy] Forwarding login request to: ${backendUrl}`);

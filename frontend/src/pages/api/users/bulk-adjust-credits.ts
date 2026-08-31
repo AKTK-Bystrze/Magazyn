@@ -8,6 +8,7 @@ export const prerender = false;
  * SuperAdmin only
  */
 export const POST: APIRoute = async ({ locals, request }) => {
+  locals.logger?.info("Bulk adjusting credits");
   const token = locals.accessToken;
 
   if (!token) {

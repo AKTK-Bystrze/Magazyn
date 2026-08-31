@@ -8,6 +8,7 @@ export const prerender = false;
  * Admin/SuperAdmin only
  */
 export const GET: APIRoute = async ({ locals, request }) => {
+  locals.logger?.info("Listing users");
   const token = locals.accessToken;
 
   if (!token) {
@@ -58,6 +59,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
  * SuperAdmin only
  */
 export const POST: APIRoute = async ({ locals, request }) => {
+  locals.logger?.info("Creating new user");
   const token = locals.accessToken;
 
   if (!token) {
