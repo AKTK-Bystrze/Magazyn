@@ -99,7 +99,7 @@ jobs:
     timeout-minutes: 2
     if: github.event_name == 'pull_request' || inputs.run_lint_backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup Toolchain
         uses: ./.github/actions/setup-toolchain
         with:
@@ -118,7 +118,7 @@ jobs:
     timeout-minutes: 2
     if: github.event_name == 'pull_request' || inputs.run_lint_frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup Toolchain
         uses: ./.github/actions/setup-toolchain
         with:
@@ -137,7 +137,7 @@ jobs:
     timeout-minutes: 5
     if: (github.event_name == 'pull_request' || inputs.run_test_backend) && !cancelled()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup Toolchain
         uses: ./.github/actions/setup-toolchain
         with:
@@ -175,7 +175,7 @@ jobs:
     timeout-minutes: 2
     if: (github.event_name == 'pull_request' || inputs.run_test_frontend) && !cancelled()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup Toolchain
         uses: ./.github/actions/setup-toolchain
         with:
@@ -218,7 +218,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Update Automated Section
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const changelog = `${{ needs.generate-changelog-preview.outputs.changelog }}`;
