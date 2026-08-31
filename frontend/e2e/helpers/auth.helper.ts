@@ -1,5 +1,5 @@
-import { type Page } from '@playwright/test';
-import { E2E_CONFIG } from '../constants';
+import { type Page } from "@playwright/test";
+import { E2E_CONFIG } from "../constants";
 
 /**
  * Authentication helper functions for e2e tests.
@@ -14,9 +14,9 @@ import { E2E_CONFIG } from '../constants';
  * @returns A promise that resolves when the submit button has been clicked.
  */
 export async function submitLoginEmail(page: Page, email: string): Promise<void> {
-  await page.goto('/login');
-  await page.getByTestId('login-email-input').fill(email);
-  await page.getByTestId('login-submit-button').click();
+  await page.goto("/login", { waitUntil: "networkidle" });
+  await page.getByTestId("login-email-input").fill(email);
+  await page.getByTestId("login-submit-button").click();
 }
 
 /**
@@ -26,7 +26,7 @@ export async function submitLoginEmail(page: Page, email: string): Promise<void>
  * @returns A promise that resolves when the confirmation container is visible.
  */
 export async function waitForMagicLinkSent(page: Page): Promise<void> {
-  await page.getByTestId('magic-link-sent-container').waitFor({ state: 'visible' });
+  await page.getByTestId("magic-link-sent-container").waitFor({ state: "visible" });
 }
 
 /**
@@ -36,11 +36,11 @@ export async function waitForMagicLinkSent(page: Page): Promise<void> {
  * @returns A promise that resolves when the user is logged out and redirected to login.
  */
 export async function logout(page: Page): Promise<void> {
-  await page.getByTestId('user-menu-trigger').click();
-  await page.getByTestId('logout-button').click();
-  
+  await page.getByTestId("user-menu-trigger").click();
+  await page.getByTestId("logout-button").click();
+
   // Wait for redirect to login page
-  await page.waitForURL('**/login');
+  await page.waitForURL("**/login");
 }
 
 /**
@@ -51,7 +51,9 @@ export async function logout(page: Page): Promise<void> {
  */
 export async function verifyLoggedIn(page: Page): Promise<boolean> {
   try {
-    await page.getByTestId('user-menu-trigger').waitFor({ state: 'visible', timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
+    await page
+      .getByTestId("user-menu-trigger")
+      .waitFor({ state: "visible", timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
     return true;
   } catch {
     return false;

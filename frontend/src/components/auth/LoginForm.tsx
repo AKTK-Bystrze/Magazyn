@@ -89,7 +89,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <Button disabled={isLoading} className="w-full" data-testid="login-submit-button">
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isLoading}
+          className="w-full"
+          data-testid="login-submit-button"
+        >
           {isLoading && (
             <svg
               className="mr-2 h-4 w-4 animate-spin"
