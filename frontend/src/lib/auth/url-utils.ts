@@ -3,6 +3,7 @@
  * Prevents open redirect attacks (OWASP A1:2021)
  */
 import { getAllRoutes, type AppRoute } from "../config/routes";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Normalizes a path by removing trailing slash
@@ -39,18 +40,18 @@ export function isSafeRedirect(url: string, origin: string): boolean {
     const parsed = new URL(url, origin);
 
     if (parsed.origin !== origin) {
-      console.warn(`🚨 Blocked external redirect attempt: ${url}`);
+      logger.warn(`🚨 Blocked external redirect attempt: ${url}`);
       return false;
     }
 
     const isAllowed = isAllowedPath(parsed.pathname);
     if (!isAllowed) {
-      console.warn(`🚨 Blocked redirect to non-whitelisted path: ${parsed.pathname}`);
+      logger.warn(`🚨 Blocked redirect to non-whitelisted path: ${parsed.pathname}`);
     }
 
     return isAllowed;
   } catch (error) {
-    console.error(`🚨 Invalid URL in redirect validation: ${url}`, error);
+    logger.error(`🚨 Invalid URL in redirect validation: ${url}`, { error });
     return false;
   }
 }

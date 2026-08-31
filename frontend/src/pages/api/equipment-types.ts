@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
-import { BACKEND_URL } from '@/lib/config/api';
-import { equipmentTypesQuerySchema } from '@/lib/schemas/api-schemas';
+import type { APIRoute } from "astro";
+import { BACKEND_URL } from "@/lib/config/api";
+import { equipmentTypesQuerySchema } from "@/lib/schemas/api-schemas";
 
 export const prerender = false;
 
@@ -9,6 +9,7 @@ export const prerender = false;
  * GET /api/equipment-types -> Backend GET /equipment-types
  */
 export const GET: APIRoute = async ({ request, locals }) => {
+  locals.logger?.info("Listing equipment types");
   const url = new URL(request.url);
   const rawParams = Object.fromEntries(url.searchParams);
 
@@ -17,12 +18,12 @@ export const GET: APIRoute = async ({ request, locals }) => {
   if (!result.success) {
     return new Response(
       JSON.stringify({
-        error: 'Invalid query parameters',
+        error: "Invalid query parameters",
         details: result.error.format(),
       }),
       {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
@@ -40,24 +41,24 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const token = locals.accessToken;
 
   const headers = new Headers({
-    'X-Trace-Id': locals.trace_id || '',
-    'Content-Type': 'application/json',
+    "X-Trace-Id": locals.trace_id || "",
+    "Content-Type": "application/json",
   });
 
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   locals.logger?.info("Proxying API request", { method: "GET", url: backendUrl.toString() });
   const response = await fetch(backendUrl, {
-    method: 'GET',
+    method: "GET",
     headers,
   });
 
   return new Response(response.body, {
     status: response.status,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 };

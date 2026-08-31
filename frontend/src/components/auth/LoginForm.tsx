@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { login } from "@/lib/api/auth";
 import { USER_VALIDATION_MESSAGES } from "@/lib/config/constants";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 interface LoginFormProps {
   onSuccess: (email: string) => void;
@@ -42,7 +43,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       await login({ email });
       onSuccess(email);
     } catch (err: unknown) {
-      console.error("Login error:", err);
+      logger.error("Login error:", { error: err });
       // API client throws Error objects with message from backend
       const rawMessage = err instanceof Error ? err.message : "";
 
