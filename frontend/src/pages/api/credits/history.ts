@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { BACKEND_URL } from "@/lib/config/api";
-import { debug } from "@/lib/utils/debug";
 
 export const prerender = false;
 
@@ -24,10 +23,10 @@ export const GET: APIRoute = async ({ locals, request }) => {
     // Forward all query parameters (page, per_page)
     backendUrl.search = url.search;
 
-    debug.log("Credits History API", "GET Request URL:", backendUrl.toString());
+    locals.logger?.info(`[Credits History API] GET Request URL:`, { data: backendUrl.toString() });
 
     const headers = new Headers({
-    'X-Trace-Id': locals.trace_id || '',
+      "X-Trace-Id": locals.trace_id || "",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -46,14 +45,14 @@ export const GET: APIRoute = async ({ locals, request }) => {
     }
 
     const data = await response.json();
-    debug.log("Credits History API", "GET Response status:", response.status);
+    locals.logger?.info(`[Credits History API] GET Response status:`, { data: response.status });
 
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    debug.error("Credits History API", "GET Proxy error:", error);
+    locals.logger?.error(`[Credits History API] GET Proxy error:`, { error: error });
     return new Response(JSON.stringify({ message: "Internal Server Error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
