@@ -1,11 +1,12 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 
-import { BACKEND_URL } from '@/lib/config/api';
-import { equipmentQuerySchema } from '@/lib/schemas/api-schemas';
+import { BACKEND_URL } from "@/lib/config/api";
+import { equipmentQuerySchema } from "@/lib/schemas/api-schemas";
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request, locals }) => {
+  locals.logger?.info("Listing equipment");
   const url = new URL(request.url);
   const rawParams = Object.fromEntries(url.searchParams);
 
@@ -14,12 +15,12 @@ export const GET: APIRoute = async ({ request, locals }) => {
   if (!result.success) {
     return new Response(
       JSON.stringify({
-        error: 'Invalid query parameters',
+        error: "Invalid query parameters",
         details: result.error.format(),
       }),
       {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
@@ -37,48 +38,52 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const token = locals.accessToken;
 
   const headers = new Headers({
-    'X-Trace-Id': locals.trace_id || '',
-    'Content-Type': 'application/json',
+    "X-Trace-Id": locals.trace_id || "",
+    "Content-Type": "application/json",
   });
 
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
-  locals.logger?.info("Proxying API request", { method: "GET", url: backendUrl.toString().toString() });
+  locals.logger?.info("Proxying API request", {
+    method: "GET",
+    url: backendUrl.toString().toString(),
+  });
   const response = await fetch(backendUrl.toString(), {
-    method: 'GET',
+    method: "GET",
     headers,
   });
 
   return new Response(response.body, {
     status: response.status,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  locals.logger?.info("Creating new equipment");
   const backendUrl = `${BACKEND_URL}/equipment`;
 
   // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({
-    'X-Trace-Id': locals.trace_id || '',
-    'Content-Type': 'application/json',
+    "X-Trace-Id": locals.trace_id || "",
+    "Content-Type": "application/json",
   });
 
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const body = await request.text();
 
   locals.logger?.info("Proxying API request", { method: "POST", url: backendUrl.toString() });
   const response = await fetch(backendUrl, {
-    method: 'POST',
+    method: "POST",
     headers,
     body,
   });
@@ -86,7 +91,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   return new Response(response.body, {
     status: response.status,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 };

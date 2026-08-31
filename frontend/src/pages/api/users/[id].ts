@@ -8,6 +8,7 @@ export const prerender = false;
  * Admin/SuperAdmin only
  */
 export const GET: APIRoute = async ({ locals, params }) => {
+  locals.logger?.info(`Fetching user ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 
@@ -60,6 +61,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
  * SuperAdmin only
  */
 export const PATCH: APIRoute = async ({ locals, params, request }) => {
+  locals.logger?.info(`Updating user ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 

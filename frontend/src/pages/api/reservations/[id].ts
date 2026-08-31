@@ -5,6 +5,7 @@ import { BACKEND_URL } from "@/lib/config/api";
  * GET /api/reservations/[id] - Get reservation details with audit trail
  */
 export const GET: APIRoute = async ({ locals, params }) => {
+  locals.logger?.info(`Fetching reservation ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 
@@ -56,6 +57,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
  * PATCH /api/reservations/[id] - Update reservation (dates or status)
  */
 export const PATCH: APIRoute = async ({ locals, params, request }) => {
+  locals.logger?.info(`Updating reservation ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 
