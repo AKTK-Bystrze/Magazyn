@@ -19,6 +19,7 @@ import (
 	"magazyn/backend/internal/logger"
 	authmiddleware "magazyn/backend/internal/middleware/auth"
 	commonmiddleware "magazyn/backend/internal/middleware/common"
+	"magazyn/backend/internal/middleware/observability"
 	supabaserepo "magazyn/backend/internal/repository/supabase"
 	authservice "magazyn/backend/internal/service/auth"
 	calendarservice "magazyn/backend/internal/service/calendar"
@@ -27,6 +28,8 @@ import (
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -134,11 +137,14 @@ func main() {
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))
 	mux.Handle("GET /analytics/user-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetUserStats))))
 
+	mux.Handle("GET /metrics", promhttp.Handler())
+
 	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)
 	logger.Infof(ctx, "CORS allowed origins: %v", appState.Config.CORSAllowedOrigins)
 
 	httpHandler := commonmiddleware.CORSMiddleware(appState.Config.CORSAllowedOrigins)(mux)
+	httpHandler = observability.ObservabilityMiddleware(httpHandler)
 
 	server := &http.Server{
 		Addr:         port,
