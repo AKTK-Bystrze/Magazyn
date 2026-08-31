@@ -1,8 +1,9 @@
 package testutils
 
 import (
+	"context"
+	"magazyn/backend/internal/logger"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -35,15 +36,15 @@ func SetupIntegrationTest() (*config.AppState, error) {
 
 	loaded := false
 	if err := godotenv.Load(envTestPath); err == nil {
-		log.Printf("Loaded .env from %s", envTestPath)
+		logger.Infof(context.Background(), "Loaded .env from %s", envTestPath)
 		loaded = true
 	} else if err := godotenv.Load(envPath); err == nil {
-		log.Printf("Loaded .env from %s", envPath)
+		logger.Infof(context.Background(), "Loaded .env from %s", envPath)
 		loaded = true
 	}
 
 	if !loaded {
-		log.Printf("Warning: No .env file found at %s or %s. Relying on process environment.", envTestPath, envPath)
+		logger.Infof(context.Background(), "Warning: No .env file found at %s or %s. Relying on process environment.", envTestPath, envPath)
 	}
 
 	url := os.Getenv("PUBLIC_SUPABASE_URL")
@@ -51,7 +52,7 @@ func SetupIntegrationTest() (*config.AppState, error) {
 	// Prefer Service Role Key for tests to create/delete users
 	key := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if key == "" {
-		log.Println("⚠️ SUPABASE_SERVICE_ROLE_KEY not found. Using Anon Key. Admin operations may fail.")
+		logger.Info(context.Background(), "SUPABASE_SERVICE_ROLE_KEY not found. Using Anon Key. Admin operations may fail.")
 		key = os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 	}
 

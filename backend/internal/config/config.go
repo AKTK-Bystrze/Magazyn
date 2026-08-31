@@ -3,7 +3,8 @@
 package config
 
 import (
-	"log"
+	"magazyn/backend/internal/logger"
+	"context"
 	"os"
 	"strings"
 
@@ -39,7 +40,7 @@ func LoadConfig() (*AppState, error) {
 		// godotenv.Load does NOT override existing env vars, so order matters
 		_ = godotenv.Load("../.env.test") // Ignore error if not exists
 		if err := godotenv.Load("../.env"); err != nil {
-			log.Printf("No .env file found, relying on existing environment variables")
+			logger.Info(context.Background(), "No .env file found, relying on existing environment variables")
 		}
 	} else {
 		// Try loading the specified path first
@@ -47,12 +48,12 @@ func LoadConfig() (*AppState, error) {
 			// If the specified file doesn't exist, try .env.test fallback
 			testEnvPath := strings.Replace(envPath, ".env", ".env.test", 1)
 			if err := godotenv.Load(testEnvPath); err != nil {
-				log.Printf("No .env file found at %s or %s, relying on existing environment variables", envPath, testEnvPath)
+				logger.Infof(context.Background(), "No .env file found at %s or %s, relying on existing environment variables", envPath, testEnvPath)
 			} else {
-				log.Printf("Loaded .env from %s", testEnvPath)
+				logger.Infof(context.Background(), "Loaded .env from %s", testEnvPath)
 			}
 		} else {
-			log.Printf("Loaded .env from %s", envPath)
+			logger.Infof(context.Background(), "Loaded .env from %s", envPath)
 		}
 	}
 
@@ -83,14 +84,16 @@ func LoadConfig() (*AppState, error) {
 	}
 
 	if cfg.SupabaseURL == "" || cfg.SupabaseKey == "" {
-		log.Fatal("PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
+		logger.Error(context.Background(), "PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
+		os.Exit(1)
 	}
 
-	log.Println("🔑 Using Anon Key with JWT forwarding - RLS policies enforced per user")
+	logger.Info(context.Background(), "?? Using Anon Key with JWT forwarding - RLS policies enforced per user")
 
 	client, err := supabase.NewClient(cfg.SupabaseURL, cfg.SupabaseKey, nil)
 	if err != nil {
-		log.Fatalf("Failed to initialize Supabase client: %v", err)
+		logger.Errorf(context.Background(), "Failed to initialize Supabase client: %v", err)
+		os.Exit(1)
 		return nil, err
 	}
 
