@@ -51,6 +51,22 @@ const { title, description = 'Bystrzacki Magazyn' } = Astro.props;
         }
       })();
     </script>
+    
+    <!-- Sentry Initialization -->
+    <script>
+      import * as Sentry from '@sentry/react';
+      
+      Sentry.init({
+        dsn: import.meta.env.PUBLIC_SENTRY_DSN,
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration(),
+        ],
+        tracesSampleRate: 0.1, // Adjust for production
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
+      });
+    </script>
   </head>
   <body>
     <AuthListener client:load />
