@@ -28,7 +28,9 @@ import (
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
+	"magazyn/backend/internal/appcontext"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -136,6 +138,48 @@ func main() {
 	// Analytics Routes (Admin only)
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))
 	mux.Handle("GET /analytics/user-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetUserStats))))
+
+	// Initialize custom Prometheus metrics
+	pendingReservations := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "magazyn_reservations_pending",
+		Help: "Current number of pending reservations",
+	})
+	overdueReservations := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "magazyn_reservations_overdue",
+		Help: "Current number of overdue reservations",
+	})
+	activeTodayReservations := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "magazyn_reservations_active_today",
+		Help: "Current number of active reservations today",
+	})
+
+	prometheus.MustRegister(pendingReservations, overdueReservations, activeTodayReservations)
+
+	// Start a background goroutine to update the metrics
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		
+		bgCtx := context.WithValue(context.Background(), appcontext.AccessTokenContextKey, appState.Config.SupabaseServiceKey)
+		
+		updateMetrics := func() {
+			stats, err := reservationRepo.GetDashboardStats(bgCtx)
+			if err != nil {
+				logger.Errorf(bgCtx, "Failed to fetch dashboard stats for metrics: %v", err)
+			} else {
+				pendingReservations.Set(float64(stats.PendingReservations))
+				overdueReservations.Set(float64(stats.OverdueReservations))
+				activeTodayReservations.Set(float64(stats.ActiveToday))
+			}
+		}
+
+		updateMetrics() // Initial execution
+		
+		for {
+			<-ticker.C
+			updateMetrics()
+		}
+	}()
 
 	mux.Handle("GET /metrics", promhttp.Handler())
 

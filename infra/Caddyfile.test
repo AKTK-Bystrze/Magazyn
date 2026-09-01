@@ -4,9 +4,19 @@
 {
 # Disable auto-HTTPS for local development
 auto_https off
+
+	# Enable global Caddy metrics
+	servers {
+		metrics
+	}
 }
 
 :443 {
+	# Expose metrics to internal network only (Alloy will scrape this)
+	handle /metrics {
+		metrics
+	}
+
 	# Proxy /api requests to the Go backend container
 	handle /api/* {
 		uri strip_prefix /api

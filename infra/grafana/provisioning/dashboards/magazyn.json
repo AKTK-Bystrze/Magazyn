@@ -1,0 +1,177 @@
+{
+  "uid": "ff9b24cb-8945-4f9a-8fb2-3c02d3d92354",
+  "title": "Magazyn Observability",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests (Caddy)",
+      "description": "Shows the total rate of incoming HTTP requests and the percentage of those that succeed (HTTP 2xx and 3xx status codes).",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(caddy_http_response_duration_seconds_count[5m]))",
+          "legendFormat": "Request Rate"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(caddy_http_response_duration_seconds_count{code=~\"2..|3..\"}[5m])) / sum(rate(caddy_http_response_duration_seconds_count[5m])) * 100",
+          "legendFormat": "Success Rate (%)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Success Rate (%)"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Request Rate"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "unit",
+                "value": "reqps"
+              },
+              {
+                "id": "min",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Active Reservations",
+      "description": "Shows the current number of reservations based on their status.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "magazyn_reservations_pending{job=\"prometheus.scrape.magazyn_backend\"}",
+          "legendFormat": "Pending"
+        },
+        {
+          "expr": "magazyn_reservations_active_today{job=\"prometheus.scrape.magazyn_backend\"}",
+          "legendFormat": "Active Today"
+        },
+        {
+          "expr": "magazyn_reservations_overdue{job=\"prometheus.scrape.magazyn_backend\"}",
+          "legendFormat": "Overdue"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "axisPlacement": "left"
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Go Memory Allocation",
+      "description": "Shows the amount of heap memory currently allocated by the Go backend.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "go_memstats_alloc_bytes{job=\"prometheus.scrape.magazyn_backend\"}",
+          "legendFormat": "Backend Memory"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "axisPlacement": "left"
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Go Goroutines",
+      "description": "Shows the number of active goroutines in the Go backend.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "go_goroutines{job=\"prometheus.scrape.magazyn_backend\"}",
+          "legendFormat": "Backend Goroutines"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "axisPlacement": "left"
+          }
+        }
+      }
+    }
+  ]
+}
