@@ -1,6 +1,5 @@
 # Cloudflare Origin Certificate Caddyfile
 # Full (strict) SSL: Cloudflare <-> Caddy with Origin Certificate
-
 {
     # Disable auto-HTTPS - Cloudflare Origin Certificate
     auto_https off
@@ -15,17 +14,25 @@
     # Use Cloudflare Origin Certificate
     tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 
-
-
     # Proxy /api requests to the Go backend container
     handle /api/* {
         uri strip_prefix /api
-        reverse_proxy backend:8080
+        reverse_proxy backend:8080 {
+            transport http {
+                response_header_timeout 10s
+                dial_timeout 5s
+            }
+        }
     }
 
     # Proxy all other requests to the Astro frontend container
     handle /* {
-        reverse_proxy frontend:4321
+        reverse_proxy frontend:4321 {
+            transport http {
+                response_header_timeout 10s
+                dial_timeout 5s
+            }
+        }
     }
 
     # Enable logging
