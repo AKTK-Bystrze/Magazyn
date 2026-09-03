@@ -35,6 +35,7 @@ func SetupIntegrationTest() (*config.AppState, error) {
 	envPath := filepath.Join(dir, "../../../.env")
 
 	loaded := false
+	// No request context available during test setup, using background
 	if err := godotenv.Load(envTestPath); err == nil {
 		logger.Infof(context.Background(), "Loaded .env from %s", envTestPath)
 		loaded = true
@@ -44,6 +45,7 @@ func SetupIntegrationTest() (*config.AppState, error) {
 	}
 
 	if !loaded {
+		// No request context available during test setup, using background
 		logger.Infof(context.Background(), "Warning: No .env file found at %s or %s. Relying on process environment.", envTestPath, envPath)
 	}
 
@@ -52,6 +54,7 @@ func SetupIntegrationTest() (*config.AppState, error) {
 	// Prefer Service Role Key for tests to create/delete users
 	key := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if key == "" {
+		// No request context available during test setup, using background
 		logger.Info(context.Background(), "SUPABASE_SERVICE_ROLE_KEY not found. Using Anon Key. Admin operations may fail.")
 		key = os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 	}

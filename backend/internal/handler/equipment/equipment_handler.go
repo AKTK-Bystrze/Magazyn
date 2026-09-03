@@ -85,7 +85,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 
 	// Validate date format and logical ordering
 	if query.AvailableFrom != nil && query.AvailableTo != nil {
-		logger.Infof(ctx, "[DEBUG] HandleList - Availability filter active: from=%s, to=%s", *query.AvailableFrom, *query.AvailableTo)
+		logger.Infof(ctx, "HandleList - Availability filter active: from=%s, to=%s", *query.AvailableFrom, *query.AvailableTo)
 		if !isValidISODate(*query.AvailableFrom) {
 			common.RespondError(ctx, w, http.StatusBadRequest,
 				"Invalid available_from date format, expected YYYY-MM-DD")

@@ -7,6 +7,7 @@ import (
 
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"strings"
 )
 
 // AuthService provides authentication and session management operations.
@@ -33,7 +34,7 @@ func NewAuthService(repo repository.AuthRepository) AuthService {
 
 // Login initiates the magic link login flow for the given email
 func (s *authService) Login(ctx context.Context, email string) (*types.LoginResponse, error) {
-	logger.Infof(ctx, "Initiating magic link login for email: %s", email)
+	logger.Infof(ctx, "Initiating magic link login for email domain: %s", emailDomain(email))
 	err := s.repo.SendMagicLink(ctx, email)
 	if err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func (s *authService) Login(ctx context.Context, email string) (*types.LoginResp
 
 // VerifyOTP verifies the OTP and returns the session
 func (s *authService) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.SessionResponse, error) {
-	logger.Infof(ctx, "Verifying OTP for email: %s, type: %s", email, otpType)
+	logger.Infof(ctx, "Verifying OTP for email domain: %s, type: %s", emailDomain(email), otpType)
 	session, err := s.repo.VerifyOTP(ctx, email, token, otpType)
 	if err != nil {
 		return nil, err
@@ -105,4 +106,12 @@ func (s *authService) GetSession(ctx context.Context, userID string, userToken s
 	}
 
 	return response, nil
+}
+
+func emailDomain(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) == 2 {
+		return parts[1]
+	}
+	return "unknown"
 }

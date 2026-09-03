@@ -65,14 +65,17 @@ dashboard = {
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
+          "refId": "A",
           "expr": "magazyn_reservations_pending{job=\"prometheus.scrape.magazyn_backend\"}",
           "legendFormat": "Pending"
         },
         {
+          "refId": "B",
           "expr": "magazyn_reservations_active_today{job=\"prometheus.scrape.magazyn_backend\"}",
           "legendFormat": "Active Today"
         },
         {
+          "refId": "C",
           "expr": "magazyn_reservations_overdue{job=\"prometheus.scrape.magazyn_backend\"}",
           "legendFormat": "Overdue"
         }

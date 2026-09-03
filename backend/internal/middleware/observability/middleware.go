@@ -31,7 +31,7 @@ func ObservabilityMiddleware(next http.Handler) http.Handler {
 		// Create context with trace_id
 		ctx := context.WithValue(r.Context(), appcontext.TraceIDContextKey, traceID)
 		
-		// If using Sentry tracing, we could also attach it to the span here
+		// Attach trace_id to the active Sentry span if present
 		if span := sentry.SpanFromContext(ctx); span != nil {
 			span.SetTag("trace_id", traceID)
 		}

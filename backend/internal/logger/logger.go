@@ -162,34 +162,42 @@ func (l *Logger) Errorf(ctx context.Context, format string, args ...interface{})
 
 // Convenience functions for the default logger
 
+// Debug logs a debug message using the default logger
 func Debug(ctx context.Context, message string) {
 	defaultLogger.Debug(ctx, message)
 }
 
+// Debugf logs a formatted debug message using the default logger
 func Debugf(ctx context.Context, format string, args ...interface{}) {
 	defaultLogger.Debugf(ctx, format, args...)
 }
 
+// Info logs an info message using the default logger
 func Info(ctx context.Context, message string) {
 	defaultLogger.Info(ctx, message)
 }
 
+// Infof logs a formatted info message using the default logger
 func Infof(ctx context.Context, format string, args ...interface{}) {
 	defaultLogger.Infof(ctx, format, args...)
 }
 
+// Warn logs a warning message using the default logger
 func Warn(ctx context.Context, message string) {
 	defaultLogger.Warn(ctx, message)
 }
 
+// Warnf logs a formatted warning message using the default logger
 func Warnf(ctx context.Context, format string, args ...interface{}) {
 	defaultLogger.Warnf(ctx, format, args...)
 }
 
+// Error logs an error message using the default logger
 func Error(ctx context.Context, message string) {
 	defaultLogger.Error(ctx, message)
 }
 
+// Errorf logs a formatted error message using the default logger
 func Errorf(ctx context.Context, format string, args ...interface{}) {
 	defaultLogger.Errorf(ctx, format, args...)
 }

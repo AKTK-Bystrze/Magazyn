@@ -10,8 +10,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
     locals.logger?.info("Initiating login");
     const body = await request.text();
 
-    locals.logger?.info(`[Proxy] Forwarding login request to: ${backendUrl}`);
-
     locals.logger?.info("Proxying API request", { method: "POST", url: backendUrl.toString() });
     const response = await fetch(backendUrl, {
       method: "POST",

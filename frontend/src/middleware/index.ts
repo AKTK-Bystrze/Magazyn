@@ -12,7 +12,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Initialize trace_id
   const traceId = context.request.headers.get("X-Trace-Id") || crypto.randomUUID();
   context.locals.trace_id = traceId;
-  
+
   // Initialize logger
   let logger = new StructuredLogger({ trace_id: traceId });
   context.locals.logger = logger;
@@ -129,11 +129,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
   } catch (error: any) {
     // Handle API errors specifically for API routes
     if (context.request.url.includes("/api/")) {
-      context.locals.logger?.error("API Route Error", { error: error.message });
+      context.locals.logger?.error("API Route Error", { name: error.name, error: error.message });
       return handleApiError(error);
     }
-    
-    context.locals.logger?.error("Middleware error", { error: error.message, stack: error.stack });
+
+    context.locals.logger?.error("Middleware error", {
+      name: error.name,
+      error: error.message,
+      stack: error.stack,
+    });
     return new Response("Internal Server Error", { status: 500 });
   }
 });
