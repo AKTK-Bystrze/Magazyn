@@ -1,10 +1,11 @@
-import type { EquipmentSearchItem, EquipmentType, PaginationMeta } from '@/types';
+import type { EquipmentSearchItem, EquipmentType, PaginationMeta } from "@/types";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 import {
   equipmentDTOSchema,
   equipmentListResponseDTOSchema,
   equipmentTypeDTOSchema,
   equipmentTypesResponseDTOSchema,
-} from '@/lib/validators/equipment.validator';
+} from "@/lib/validators/equipment.validator";
 
 /**
  * Custom error class for transformation failures
@@ -16,7 +17,7 @@ export class EquipmentTransformError extends Error {
     public readonly validationErrors?: unknown
   ) {
     super(message);
-    this.name = 'EquipmentTransformError';
+    this.name = "EquipmentTransformError";
   }
 }
 
@@ -33,12 +34,12 @@ export function transformEquipmentDTO(dto: unknown): EquipmentSearchItem {
   const validated = equipmentDTOSchema.safeParse(dto);
 
   if (!validated.success) {
-    console.error('Equipment DTO validation failed', {
+    logger.error("Equipment DTO validation failed", {
       errors: validated.error.format(),
       receivedData: dto,
     });
     throw new EquipmentTransformError(
-      'Invalid equipment data received from API',
+      "Invalid equipment data received from API",
       dto,
       validated.error.format()
     );
@@ -48,7 +49,7 @@ export function transformEquipmentDTO(dto: unknown): EquipmentSearchItem {
 
   return {
     id: equipment.id,
-    name: equipment.name ?? 'Unnamed Equipment',
+    name: equipment.name ?? "Unnamed Equipment",
     description: equipment.description,
     typeId: equipment.type_id,
     type: {
@@ -56,7 +57,7 @@ export function transformEquipmentDTO(dto: unknown): EquipmentSearchItem {
       name: equipment.type_name,
       creditCostPerDay: equipment.credit_cost_per_day,
     },
-    status: equipment.status as 'ok' | 'broken' | 'blocked',
+    status: equipment.status as "ok" | "broken" | "blocked",
     imagePath: equipment.image_url,
     internalId: equipment.internal_id,
     isFavorite: equipment.is_favorite ?? false,
@@ -78,12 +79,12 @@ export function transformEquipmentListResponse(response: unknown): {
   const validated = equipmentListResponseDTOSchema.safeParse(response);
 
   if (!validated.success) {
-    console.error('Equipment list response validation failed', {
+    logger.error("Equipment list response validation failed", {
       errors: JSON.stringify(validated.error.format(), null, 2),
       receivedData: JSON.stringify(response, null, 2),
     });
     throw new EquipmentTransformError(
-      'Invalid equipment list data received from API',
+      "Invalid equipment list data received from API",
       response,
       validated.error.format()
     );
@@ -114,12 +115,12 @@ export function transformEquipmentTypeDTO(dto: unknown): EquipmentType {
   const validated = equipmentTypeDTOSchema.safeParse(dto);
 
   if (!validated.success) {
-    console.error('Equipment type DTO validation failed', {
+    logger.error("Equipment type DTO validation failed", {
       errors: validated.error.format(),
       receivedData: dto,
     });
     throw new EquipmentTransformError(
-      'Invalid equipment type data received from API',
+      "Invalid equipment type data received from API",
       dto,
       validated.error.format()
     );
@@ -147,12 +148,12 @@ export function transformEquipmentTypesResponse(response: unknown): EquipmentTyp
   const validated = equipmentTypesResponseDTOSchema.safeParse(response);
 
   if (!validated.success) {
-    console.error('Equipment types response validation failed', {
+    logger.error("Equipment types response validation failed", {
       errors: validated.error.format(),
       receivedData: response,
     });
     throw new EquipmentTransformError(
-      'Invalid equipment types data received from API',
+      "Invalid equipment types data received from API",
       response,
       validated.error.format()
     );

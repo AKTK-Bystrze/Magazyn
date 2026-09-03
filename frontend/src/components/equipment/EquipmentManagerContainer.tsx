@@ -17,11 +17,8 @@ import {
   DEFAULT_EQUIPMENT_STATUS_FILTER,
   EQUIPMENT_MANAGER_UI_STRINGS,
 } from "@/lib/config/constants";
-import type { 
-  EquipmentSearchItem, 
-  CreateEquipmentCommand, 
-  UpdateEquipmentCommand 
-} from "@/types";
+import { defaultLogger as logger } from "@/lib/utils/logger";
+import type { EquipmentSearchItem, CreateEquipmentCommand, UpdateEquipmentCommand } from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
 
@@ -58,12 +55,14 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isDetailsSheetOpen, setIsDetailsSheetOpen] = React.useState(false);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = React.useState(false);
-  const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(null);
+  const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(
+    null
+  );
 
   // Feedback states
   React.useEffect(() => {
     if (error) {
-      console.error("EquipmentManagerContainer Error:", error);
+      logger.error("EquipmentManagerContainer Error:", error);
     }
   }, [error]);
 
@@ -74,20 +73,14 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
   // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(
-        () => setSuccessMessage(null),
-        MESSAGE_AUTO_DISMISS_MS
-      );
+      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
 
   React.useEffect(() => {
     if (errorMessage) {
-      const timer = setTimeout(
-        () => setErrorMessage(null),
-        MESSAGE_AUTO_DISMISS_MS
-      );
+      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);
@@ -200,7 +193,11 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
           <h1 className="text-2xl font-bold tracking-tight">{UI.PAGE_TITLE}</h1>
           <p className="text-muted-foreground">{UI.PAGE_DESCRIPTION}</p>
         </div>
-        <Button onClick={handleAddClick} className="self-start sm:self-auto" data-testid="admin-add-equipment-btn">
+        <Button
+          onClick={handleAddClick}
+          className="self-start sm:self-auto"
+          data-testid="admin-add-equipment-btn"
+        >
           <Plus className={ICON_SIZE_SM + " mr-2"} />
           {UI.ADD_EQUIPMENT}
         </Button>
@@ -208,7 +205,10 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
 
       {/* Success Message */}
       {successMessage && (
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950" data-testid="admin-success-alert">
+        <Alert
+          className="border-green-500 bg-green-50 dark:bg-green-950"
+          data-testid="admin-success-alert"
+        >
           <CheckCircle2 className={ICON_SIZE_SM + " text-green-600"} />
           <AlertDescription className="text-green-800 dark:text-green-200">
             {successMessage}
@@ -218,7 +218,10 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
 
       {/* Error Message */}
       {(error || errorMessage) && (
-        <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive" data-testid="admin-error-alert">
+        <Alert
+          className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
+          data-testid="admin-error-alert"
+        >
           <AlertCircle className={ICON_SIZE_SM} />
           <AlertDescription>
             {errorMessage || error?.message || "An error occurred"}
@@ -299,4 +302,3 @@ export function EquipmentManagerContainer(props: EquipmentManagerContainerProps)
     </QueryProvider>
   );
 }
-

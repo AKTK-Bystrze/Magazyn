@@ -70,6 +70,7 @@ func NewReservationService(
 
 // List retrieves a paginated list of reservations
 func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error) {
+	logger.Infof(ctx, "Listing reservations - Page: %d, PerPage: %d", query.Page, query.PerPage)
 	// Security: If user is not admin, they should only see their own - handled by controller/calling layer usually,
 	// but here we can enforce it if userID is passed in query.
 	// The plan says "GET /reservations: ... user_id (admin), equipment_id...".
@@ -116,6 +117,7 @@ func (s *reservationService) GetByID(ctx context.Context, id string, userID stri
 
 // Create creates new reservations (transactional logic handled by DB RPC)
 func (s *reservationService) Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error) {
+	logger.Infof(ctx, "Creating reservation for %d items, UserID: %s", len(cmd.Reservations), userID)
 	// Target User: Admin can create for others, otherwise for self
 	targetUserID := userID
 	if cmd.UserID != nil && *cmd.UserID != "" {
@@ -225,6 +227,9 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 
 // Update updates a reservation
 func (s *reservationService) Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error) {
+	status := "unknown"
+	if cmd.Status != nil { status = string(*cmd.Status) }
+	logger.Infof(ctx, "Updating reservation %s to status %s", id, status)
 	current, err := s.repo.GetReservationByID(ctx, id)
 	if err != nil {
 		return nil, err

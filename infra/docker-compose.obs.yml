@@ -1,0 +1,47 @@
+services:
+  alloy:
+    image: grafana/alloy:latest
+    container_name: magazyn-alloy
+    restart: always
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+    command: [ "run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy" ]
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+    networks:
+      - magazyn-network
+    environment:
+      - GRAFANA_REMOTE_WRITE_URL=http://prometheus:9090/api/v1/write
+      - GRAFANA_REMOTE_WRITE_USERNAME=dummy
+      - GRAFANA_REMOTE_WRITE_PASSWORD=dummy
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: magazyn-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-remote-write-receiver'
+    ports:
+      - "9090:9090"
+    networks:
+      - magazyn-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: magazyn-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/magazyn.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - magazyn-network
+
+networks:
+  magazyn-network:
+    external: false

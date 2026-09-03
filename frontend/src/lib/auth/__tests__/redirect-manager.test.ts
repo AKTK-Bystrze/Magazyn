@@ -1,3 +1,4 @@
+import { defaultLogger as logger } from "@/lib/utils/logger";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { RedirectManager, getDefaultRouteForUser } from "../redirect-manager";
 import type { User } from "@supabase/supabase-js";
@@ -31,8 +32,8 @@ describe("redirect-manager", () => {
   });
 
   beforeEach(() => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(logger, "warn").mockImplementation(() => {});
+    vi.spyOn(logger, "error").mockImplementation(() => {});
   });
 
   describe("RedirectManager.getRedirectForAuthState", () => {

@@ -3,6 +3,7 @@ import type { SessionInfo } from "../../types";
 import { ROUTES } from "../config/routes";
 import { validateRedirectUrl } from "./url-utils";
 import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from "./roles";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Manages redirects with centralized logic
@@ -95,7 +96,7 @@ function isRedirectAllowedForRole(path: string, role: string | undefined): boole
  */
 export function getDefaultRouteForUser(user: User | null, sessionInfo: SessionInfo | null): string {
   if (!user || !sessionInfo) {
-    console.info("No user or sessionInfo available, redirecting to login");
+    logger.info("No user or sessionInfo available, redirecting to login");
     return ROUTES.PUBLIC.LOGIN;
   }
 
@@ -114,7 +115,7 @@ export function getDefaultRouteForUser(user: User | null, sessionInfo: SessionIn
     case USER_ROLE:
       return ROUTES.PROTECTED.DASHBOARD;
     default:
-      console.warn(`⚠️ Unknown role: ${role}, defaulting to dashboard`);
+      logger.warn(`⚠️ Unknown role: ${role}, defaulting to dashboard`);
       return ROUTES.PROTECTED.DASHBOARD;
   }
 }

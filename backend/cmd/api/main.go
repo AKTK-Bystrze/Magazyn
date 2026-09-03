@@ -4,8 +4,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"magazyn/backend/internal/auth"
@@ -19,6 +22,7 @@ import (
 	"magazyn/backend/internal/logger"
 	authmiddleware "magazyn/backend/internal/middleware/auth"
 	commonmiddleware "magazyn/backend/internal/middleware/common"
+	"magazyn/backend/internal/middleware/observability"
 	supabaserepo "magazyn/backend/internal/repository/supabase"
 	authservice "magazyn/backend/internal/service/auth"
 	calendarservice "magazyn/backend/internal/service/calendar"
@@ -27,10 +31,13 @@ import (
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
+
+	"magazyn/backend/internal/metrics"
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
 	logger.Info(ctx, "Starting Magazyn Backend API...")
 
 	appState, err := config.LoadConfig()
@@ -134,11 +141,15 @@ func main() {
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))
 	mux.Handle("GET /analytics/user-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetUserStats))))
 
+	// Initialize metrics server
+	metricsServer := metrics.StartMetricsServer(ctx, reservationRepo, appState.Config.SupabaseServiceKey)
+
 	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)
 	logger.Infof(ctx, "CORS allowed origins: %v", appState.Config.CORSAllowedOrigins)
 
 	httpHandler := commonmiddleware.CORSMiddleware(appState.Config.CORSAllowedOrigins)(mux)
+	httpHandler = observability.ObservabilityMiddleware(httpHandler)
 
 	server := &http.Server{
 		Addr:         port,
@@ -148,8 +159,25 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		logger.Errorf(ctx, "Server failed to start: %v", err)
-		os.Exit(1)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Errorf(ctx, "Server failed to start: %v", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-ctx.Done()
+	logger.Info(context.Background(), "Shutting down servers gracefully...")
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Errorf(context.Background(), "API Server shutdown error: %v", err)
 	}
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		logger.Errorf(context.Background(), "Metrics Server shutdown error: %v", err)
+	}
+	logger.Info(context.Background(), "Servers stopped.")
 }

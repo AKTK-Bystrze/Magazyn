@@ -2,6 +2,7 @@ import * as React from "react";
 import { type EquipmentSearchItem } from "@/types";
 import { EquipmentCard } from "./EquipmentCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 interface EquipmentGridProps {
   items: EquipmentSearchItem[];
@@ -28,7 +29,7 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
   }
 
   if (error) {
-    console.error("EquipmentSearchContainer Error:", error);
+    logger.error("EquipmentSearchContainer Error:", error);
     return (
       <div
         className="flex flex-col items-center justify-center p-12 text-center text-destructive bg-destructive/10 rounded-lg"
@@ -42,11 +43,25 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/20 rounded-lg" data-testid="equipment-grid-empty">
+      <div
+        className="flex flex-col items-center justify-center p-12 text-center bg-muted/20 rounded-lg"
+        data-testid="equipment-grid-empty"
+      >
         <div className="rounded-full bg-muted p-4 mb-4">
           {/* Icon placeholder */}
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-muted-foreground">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-8 h-8 text-muted-foreground"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            />
           </svg>
         </div>
         <h3 className="text-lg font-semibold">No equipment found</h3>
@@ -56,7 +71,10 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="equipment-grid">
+    <div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      data-testid="equipment-grid"
+    >
       {items.map((item) => (
         <EquipmentCard key={item.id} item={item} onViewDetail={onViewDetail} />
       ))}

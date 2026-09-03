@@ -11,6 +11,8 @@ declare global {
       user: User | null;
       sessionInfo: SessionInfo | null;
       accessToken?: string;
+      logger: import('./lib/utils/logger').StructuredLogger;
+      trace_id: string;
     }
   }
 }

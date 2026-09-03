@@ -32,6 +32,9 @@ test.describe("Login Page", () => {
    * Verifies the full user flow of requesting a magic link and successfully authenticating.
    */
   test("should successfully log in via email magic link", async ({ page, testUser }) => {
+    // Note: Requesting `testUser` fixture is necessary to ensure the user exists in DB before we request
+    // a magic link. Previously, missing this fixture caused backend errors, which manifested as
+    // e2e resource exhaustion and timeouts rather than clear test failures.
     const testEmail = testUser.email;
 
     // Clear the mailbox before testing to ensure we get the fresh magic link

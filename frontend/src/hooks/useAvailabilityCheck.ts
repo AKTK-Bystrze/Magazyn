@@ -1,14 +1,11 @@
 import { useState, useCallback } from "react";
-import type {
-  CartItem,
-  AvailabilityCheckResult,
-} from "@/types/reservation-cart.types";
+import type { CartItem, AvailabilityCheckResult } from "@/types/reservation-cart.types";
 import {
   ERROR_AVAILABILITY_CHECK_FAILED,
   ERROR_UNAVAILABLE_FOR_DATES,
 } from "@/lib/config/constants";
 import { transformEquipmentAvailabilityDTO } from "@/lib/transformers/availability.transformer";
-import { debug } from "@/lib/utils/debug";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -38,15 +35,17 @@ export function useAvailabilityCheck(
     setIsChecking(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const token = session?.access_token;
 
       const headers: HeadersInit = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       };
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
       const params = new URLSearchParams({
@@ -62,21 +61,25 @@ export function useAvailabilityCheck(
           );
 
           if (!response.ok) {
-            // Log the status text for debugging
-            debug.error('Availability', `Check failed for ${item.name}: ${response.status} ${response.statusText}`);
+            logger.error(
+              `Availability check failed`, { item: item.name, status: response.status, statusText: response.statusText }
+            );
             throw new Error(ERROR_AVAILABILITY_CHECK_FAILED);
           }
 
           const rawData = await response.json();
-          debug.log('Availability', `${item.name} (raw):`, rawData);
+          logger.info(`Availability check result (raw)`, { item: item.name, data: rawData });
 
           // Transform using availability transformer
           const data = transformEquipmentAvailabilityDTO(rawData);
-          debug.log('Availability', `${item.name} (transformed):`, data);
+          logger.info(`Availability check result (transformed)`, { item: item.name, data: data });
 
           return { item, availability: data };
         } catch (error) {
-          debug.error('Availability', `Failed to check availability for ${item.name}:`, error);
+          logger.error(`Failed to check availability`, {
+            item: item.name,
+            error: error,
+          });
           return {
             item,
             availability: {

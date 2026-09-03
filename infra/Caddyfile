@@ -4,11 +4,18 @@
 {
     # Disable auto-HTTPS - Cloudflare Origin Certificate
     auto_https off
+
+    # Enable global Caddy metrics
+    servers {
+        metrics
+    }
 }
 
 :443 {
     # Use Cloudflare Origin Certificate
     tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
+
+
 
     # Proxy /api requests to the Go backend container
     handle /api/* {
@@ -24,5 +31,13 @@
     # Enable logging
     log {
         output stdout
+        format json
+    }
+}
+
+:2019 {
+    # Expose metrics to internal network only (Alloy will scrape this)
+    handle /metrics {
+        metrics
     }
 }
