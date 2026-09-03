@@ -31,10 +31,8 @@ import (
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
-	"magazyn/backend/internal/appcontext"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"magazyn/backend/internal/metrics"
 )
 
 func main() {
@@ -143,65 +141,8 @@ func main() {
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))
 	mux.Handle("GET /analytics/user-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetUserStats))))
 
-	// Initialize custom Prometheus metrics
-	pendingReservations := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "magazyn_reservations_pending",
-		Help: "Current number of pending reservations",
-	})
-	overdueReservations := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "magazyn_reservations_overdue",
-		Help: "Current number of overdue reservations",
-	})
-	activeTodayReservations := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "magazyn_reservations_active_today",
-		Help: "Current number of active reservations today",
-	})
-
-	prometheus.MustRegister(pendingReservations, overdueReservations, activeTodayReservations)
-
-	// Start a background goroutine to update the metrics
-	go func(ctx context.Context) {
-		ticker := time.NewTicker(30 * time.Second)
-		defer ticker.Stop()
-		
-		bgCtx := context.WithValue(context.Background(), appcontext.AccessTokenContextKey, appState.Config.SupabaseServiceKey)
-		
-		updateMetrics := func() {
-			stats, err := reservationRepo.GetDashboardStats(bgCtx)
-			if err != nil {
-				logger.Errorf(bgCtx, "Failed to fetch dashboard stats for metrics: %v", err)
-			} else {
-				pendingReservations.Set(float64(stats.PendingReservations))
-				overdueReservations.Set(float64(stats.OverdueReservations))
-				activeTodayReservations.Set(float64(stats.ActiveToday))
-			}
-		}
-
-		updateMetrics() // Initial execution
-		
-		for {
-			select {
-			case <-ticker.C:
-				updateMetrics()
-			case <-ctx.Done():
-				return
-			}
-		}
-	}(ctx)
-
-	// Metrics Server on a separate internal port
-	metricsMux := http.NewServeMux()
-	metricsMux.Handle("/metrics", promhttp.Handler())
-	metricsServer := &http.Server{
-		Addr:    ":9091",
-		Handler: metricsMux,
-	}
-	go func() {
-		logger.Infof(ctx, "Metrics server listening on port :9091")
-		if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Errorf(ctx, "Metrics server failed: %v", err)
-		}
-	}()
+	// Initialize metrics server
+	metricsServer := metrics.StartMetricsServer(ctx, reservationRepo, appState.Config.SupabaseServiceKey)
 
 	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)
