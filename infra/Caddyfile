@@ -16,7 +16,6 @@
 			transport http {
 				response_header_timeout 10s
 				dial_timeout 5s
-				tls_timeout 5s
 			}
 		}
 	}
@@ -27,7 +26,6 @@
 			transport http {
 				response_header_timeout 10s
 				dial_timeout 5s
-				tls_timeout 5s
 			}
 		}
 	}
