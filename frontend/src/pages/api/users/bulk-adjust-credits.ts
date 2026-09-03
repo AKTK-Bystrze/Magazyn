@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { BACKEND_URL } from "@/lib/config/api";
-import { debug } from "@/lib/utils/debug";
 
 export const prerender = false;
 
@@ -9,6 +8,7 @@ export const prerender = false;
  * SuperAdmin only
  */
 export const POST: APIRoute = async ({ locals, request }) => {
+  locals.logger?.info("Bulk adjusting credits");
   const token = locals.accessToken;
 
   if (!token) {
@@ -20,9 +20,10 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
   try {
     const body = await request.json();
-    debug.log("Users API", "POST /users/bulk-adjust-credits", body);
+    locals.logger?.info(`[Users API] POST /users/bulk-adjust-credits`, { data: body });
 
     const headers = new Headers({
+      "X-Trace-Id": locals.trace_id || "",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -34,20 +35,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
     });
 
     const data = await response.json();
-    debug.log("Users API", "POST bulk-adjust Response status:", response.status);
+    locals.logger?.info(`[Users API] POST bulk-adjust Response status:`, { data: response.status });
 
     return new Response(JSON.stringify(data), {
       status: response.status,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    debug.error("Users API", "POST bulk-adjust Proxy error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal Server Error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    locals.logger?.error(`[Users API] POST bulk-adjust Proxy error:`, { error: error });
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };

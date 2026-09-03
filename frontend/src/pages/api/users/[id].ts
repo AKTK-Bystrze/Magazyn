@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { BACKEND_URL } from "@/lib/config/api";
-import { debug } from "@/lib/utils/debug";
 
 export const prerender = false;
 
@@ -9,6 +8,7 @@ export const prerender = false;
  * Admin/SuperAdmin only
  */
 export const GET: APIRoute = async ({ locals, params }) => {
+  locals.logger?.info(`Fetching user ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 
@@ -27,9 +27,10 @@ export const GET: APIRoute = async ({ locals, params }) => {
   }
 
   try {
-    debug.log("Users API", `GET /users/${id}`);
+    locals.logger?.info(`[Users API] GET /users/${id}`);
 
     const headers = new Headers({
+      "X-Trace-Id": locals.trace_id || "",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -40,21 +41,18 @@ export const GET: APIRoute = async ({ locals, params }) => {
     });
 
     const data = await response.json();
-    debug.log("Users API", "GET Response status:", response.status);
+    locals.logger?.info(`[Users API] GET Response status:`, { data: response.status });
 
     return new Response(JSON.stringify(data), {
       status: response.status,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    debug.error("Users API", "GET Proxy error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal Server Error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    locals.logger?.error(`[Users API] GET Proxy error:`, { error: error });
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };
 
@@ -63,6 +61,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
  * SuperAdmin only
  */
 export const PATCH: APIRoute = async ({ locals, params, request }) => {
+  locals.logger?.info(`Updating user ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 
@@ -82,9 +81,10 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
 
   try {
     const body = await request.json();
-    debug.log("Users API", `PATCH /users/${id}`, body);
+    locals.logger?.info(`[Users API] PATCH /users/${id}`, { data: body });
 
     const headers = new Headers({
+      "X-Trace-Id": locals.trace_id || "",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -96,20 +96,17 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     });
 
     const data = await response.json();
-    debug.log("Users API", "PATCH Response status:", response.status);
+    locals.logger?.info(`[Users API] PATCH Response status:`, { data: response.status });
 
     return new Response(JSON.stringify(data), {
       status: response.status,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    debug.error("Users API", "PATCH Proxy error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal Server Error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    locals.logger?.error(`[Users API] PATCH Proxy error:`, { error: error });
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };

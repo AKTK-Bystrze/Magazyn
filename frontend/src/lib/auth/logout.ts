@@ -11,6 +11,7 @@ import { removeAuthCookie } from "./cookie-utils";
 import { ROUTES } from "@/lib/config/routes";
 import { STORAGE_KEY_SUPABASE_AUTH } from "@/lib/config/constants";
 import { supabase } from "@/lib/supabase";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Performs complete user logout
@@ -31,15 +32,15 @@ export async function handleLogout(): Promise<void> {
     // Sign out from Supabase - this clears the session
     await supabase.auth.signOut();
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error("Logout error:", { error });
     // Continue with local cleanup even if server logout fails
   }
 
   // Call server-side logout to clear cookies reliably
   try {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await fetch("/api/auth/logout", { method: "POST" });
   } catch (e) {
-    console.error('Failed to call logout API', e);
+    logger.error("Failed to call logout API", { error: e });
   }
 
   // Remove auth cookie
@@ -51,4 +52,3 @@ export async function handleLogout(): Promise<void> {
   // Redirect to login page
   window.location.href = ROUTES.PUBLIC.LOGIN;
 }
-

@@ -1,5 +1,5 @@
-import type { APIRoute } from 'astro';
-import { BACKEND_URL } from '@/lib/config/api';
+import type { APIRoute } from "astro";
+import { BACKEND_URL } from "@/lib/config/api";
 
 export const prerender = false;
 
@@ -8,28 +8,31 @@ export const prerender = false;
  * Proxy to backend to fetch reservation history for equipment
  */
 export const GET: APIRoute = async ({ params, locals }) => {
+  locals.logger?.info(`Listing reservations for equipment ${params.id}`);
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}/reservations`;
 
   // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({
-    'Content-Type': 'application/json',
+    "X-Trace-Id": locals.trace_id || "",
+    "Content-Type": "application/json",
   });
 
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
+  locals.logger?.info("Proxying API request", { method: "GET", url: backendUrl.toString() });
   const response = await fetch(backendUrl, {
-    method: 'GET',
+    method: "GET",
     headers,
   });
 
   return new Response(response.body, {
     status: response.status,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 };

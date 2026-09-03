@@ -20,6 +20,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { calculateCost as calculateCartCost } from "@/lib/utils/cart-validation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Props for ReservationCartView component
@@ -64,13 +65,8 @@ export function ReservationCartView({
   initialSelectedUserCreditBalance = 0,
   equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
 }: ReservationCartViewProps) {
-  const {
-    cartState,
-    removeItem,
-    updateStartDate,
-    updateEndDate,
-    clearCart,
-  } = useReservationCart(initialCreditBalance);
+  const { cartState, removeItem, updateStartDate, updateEndDate, clearCart } =
+    useReservationCart(initialCreditBalance);
 
   const { checkAvailability, isChecking } = useAvailabilityCheck(
     cartState.items,
@@ -80,11 +76,11 @@ export function ReservationCartView({
 
   const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [availabilityResult, setAvailabilityResult] = React.useState<AvailabilityCheckResult>({ 
-    isAllAvailable: true, 
-    unavailableItems: [] 
+  const [availabilityResult, setAvailabilityResult] = React.useState<AvailabilityCheckResult>({
+    isAllAvailable: true,
+    unavailableItems: [],
   });
-  
+
   const [submissionError, setSubmissionError] = React.useState<string | null>(null);
   const [clearCartPending, setClearCartPending] = React.useState(false);
 
@@ -108,9 +104,7 @@ export function ReservationCartView({
   }, []);
 
   // Use selected user's credit balance in admin mode, otherwise use initial (logged-in user's)
-  const effectiveCreditBalance = isAdmin 
-    ? selectedUserCreditBalance 
-    : initialCreditBalance;
+  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : initialCreditBalance;
 
   // Calculate cost breakdown with the effective credit balance
   // This ensures admin mode uses selected user's balance, not the admin's
@@ -124,21 +118,28 @@ export function ReservationCartView({
       cartState.endDate,
       effectiveCreditBalance
     );
-    
+
     // For free reservations, override costs to 0
     if (isAdmin && isFreeReservation && breakdown) {
       return {
         ...breakdown,
-        itemCosts: breakdown.itemCosts.map(item => ({ ...item, totalCost: 0 })),
+        itemCosts: breakdown.itemCosts.map((item) => ({ ...item, totalCost: 0 })),
         totalCreditCost: 0,
         remainingBalance: breakdown.currentBalance, // No deduction for free
         isFreeReservation: true,
       };
     }
-    
+
     return breakdown;
-  }, [cartState.items, cartState.startDate, cartState.endDate, effectiveCreditBalance, isAdmin, isFreeReservation]);
-  
+  }, [
+    cartState.items,
+    cartState.startDate,
+    cartState.endDate,
+    effectiveCreditBalance,
+    isAdmin,
+    isFreeReservation,
+  ]);
+
   // Create a default safe breakdown if null (e.g. missing dates)
   const safeCostBreakdown = costBreakdown || {
     itemCosts: [],
@@ -186,7 +187,9 @@ export function ReservationCartView({
     setSubmissionError(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const token = session?.access_token;
 
       const headers: HeadersInit = {
@@ -194,7 +197,7 @@ export function ReservationCartView({
       };
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
       const command: CreateReservationsCommand = {
@@ -231,7 +234,10 @@ export function ReservationCartView({
 
         // Make conflict errors more user-friendly
         if (errorMessage.includes("Conflict detected")) {
-          errorMessage = errorMessage.replace("Conflict detected for equipment", "This equipment is already reserved:");
+          errorMessage = errorMessage.replace(
+            "Conflict detected for equipment",
+            "This equipment is already reserved:"
+          );
         }
 
         throw new Error(errorMessage);
@@ -239,16 +245,16 @@ export function ReservationCartView({
 
       // Success!
       await response.json();
-      
+
       // Clear cart
       clearCart();
       setIsFreeReservation(false);
       setIsConfirmationOpen(false);
-      
+
       // Redirect to reservations page with success indicator
       window.location.href = `${successRedirectPath}?success=true`;
     } catch (error) {
-      console.error("Reservation failed:", error);
+      logger.error("Reservation failed:", { error });
       setSubmissionError(error instanceof Error ? error.message : "An unexpected error occurred");
       setIsConfirmationOpen(false);
     } finally {
@@ -262,7 +268,7 @@ export function ReservationCartView({
       setClearCartPending(true);
       setTimeout(() => setClearCartPending(false), CLEAR_CART_CONFIRM_TIMEOUT_MS);
     } else {
-    // Second click - actually clear
+      // Second click - actually clear
       clearCart();
       setClearCartPending(false);
     }
@@ -304,7 +310,7 @@ export function ReservationCartView({
               You must select a user before completing the reservation.
             </p>
           )}
-          
+
           <div className="mt-6 flex items-center space-x-2 border-t pt-4">
             <Checkbox
               id="free-reservation"
@@ -312,10 +318,7 @@ export function ReservationCartView({
               onCheckedChange={(checked) => setIsFreeReservation(checked === true)}
               data-testid="free-reservation-checkbox"
             />
-            <Label 
-              htmlFor="free-reservation" 
-              className="cursor-pointer font-medium"
-            >
+            <Label htmlFor="free-reservation" className="cursor-pointer font-medium">
               Create as Free Reservation
             </Label>
           </div>
@@ -337,40 +340,45 @@ export function ReservationCartView({
 
       {/* Availability Errors Display */}
       {!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0 && (
-         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive" data-testid="error-reservation-conflict">
-           <AlertCircle className="h-4 w-4" />
-           <h5 className="mb-1 font-medium leading-none tracking-tight">Availability Issues Detected</h5>
-           <AlertDescription>
+        <Alert
+          className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
+          data-testid="error-reservation-conflict"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <h5 className="mb-1 font-medium leading-none tracking-tight">
+            Availability Issues Detected
+          </h5>
+          <AlertDescription>
             <ul className="list-disc pl-5 mt-2 space-y-2">
-               {availabilityResult.unavailableItems.map(item => (
-                 <li key={item.equipmentId}>
-                   <strong>{item.name}</strong>: {item.reason}
-                   {item.conflictingReservations && item.conflictingReservations.length > 0 && (
-                     <div className="mt-1 text-sm">
-                       <span className="font-medium">Conflicting reservations:</span>
-                       <ul className="list-none pl-4 mt-1 space-y-1">
-                         {item.conflictingReservations.map((conflict, idx) => (
-                           <li key={idx} className="text-xs">
-                             • {conflict.startDate} to {conflict.endDate}
-                           </li>
-                         ))}
-                       </ul>
-                     </div>
-                   )}
-                 </li>
-               ))}
-             </ul>
-             <p className="mt-2 text-sm">Please remove these items or change your dates.</p>
-           </AlertDescription>
-         </Alert>
+              {availabilityResult.unavailableItems.map((item) => (
+                <li key={item.equipmentId}>
+                  <strong>{item.name}</strong>: {item.reason}
+                  {item.conflictingReservations && item.conflictingReservations.length > 0 && (
+                    <div className="mt-1 text-sm">
+                      <span className="font-medium">Conflicting reservations:</span>
+                      <ul className="list-none pl-4 mt-1 space-y-1">
+                        {item.conflictingReservations.map((conflict, idx) => (
+                          <li key={idx} className="text-xs">
+                            • {conflict.startDate} to {conflict.endDate}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-sm">Please remove these items or change your dates.</p>
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Cart Items & Dates (2/3 width) */}
         <div className="lg:col-span-2 space-y-8">
           <section className="bg-card rounded-lg border shadow-sm p-6">
-            <CartItemList 
-              items={cartState.items} 
+            <CartItemList
+              items={cartState.items}
               onRemoveItem={removeItem}
               equipmentBrowsePath={equipmentBrowsePath}
             />
@@ -378,7 +386,7 @@ export function ReservationCartView({
 
           {!isEmpty && (
             <section className="bg-card rounded-lg border shadow-sm p-6">
-              <DateRangePicker 
+              <DateRangePicker
                 startDate={cartState.startDate}
                 endDate={cartState.endDate}
                 onStartDateChange={updateStartDate}
@@ -392,7 +400,7 @@ export function ReservationCartView({
         {/* Right Column: Cost & Actions (1/3 width) */}
         {!isEmpty && (
           <div className="space-y-6">
-            <CostEstimator 
+            <CostEstimator
               items={cartState.items}
               startDate={cartState.startDate}
               endDate={cartState.endDate}
@@ -400,9 +408,9 @@ export function ReservationCartView({
               isFreeReservation={isAdmin && isFreeReservation}
             />
 
-            <Button 
-              size="lg" 
-              className="w-full text-lg font-semibold relative z-20" 
+            <Button
+              size="lg"
+              className="w-full text-lg font-semibold relative z-20"
               onClick={handleProceed}
               disabled={!validation.isValid || isChecking || (isAdmin && !selectedUserId)}
               data-testid="checkout-button"
@@ -416,13 +424,13 @@ export function ReservationCartView({
                 </>
               )}
             </Button>
-            
+
             {validation.errors.creditBalance && (
-               <p className="text-sm text-destructive text-center font-medium">
-                 {validation.errors.creditBalance}
-               </p>
+              <p className="text-sm text-destructive text-center font-medium">
+                {validation.errors.creditBalance}
+              </p>
             )}
-            
+
             <p className="text-xs text-muted-foreground text-center">
               You will modify your reservation one last time before confirming.
             </p>
