@@ -121,11 +121,7 @@ func (l *Logger) logWithCtx(ctx context.Context, level slog.Level, msg string) {
 		return
 	}
 	attrs := getContextAttrs(ctx)
-	args := make([]any, len(attrs))
-	for i, attr := range attrs {
-		args[i] = attr
-	}
-	l.logger.Log(ctx, level, msg, args...)
+	l.logger.LogAttrs(ctx, level, msg, attrs...)
 }
 
 func (l *Logger) Debug(ctx context.Context, message string) {

@@ -12,10 +12,7 @@ auto_https off
 }
 
 :443 {
-	# Expose metrics to internal network only (Alloy will scrape this)
-	handle /metrics {
-		metrics
-	}
+
 
 	# Proxy /api requests to the Go backend container
 	handle /api/* {
@@ -31,5 +28,12 @@ auto_https off
 	# Enable logging
 	log {
 		output stdout
+	}
+}
+
+:2019 {
+	# Expose metrics to internal network only (Alloy will scrape this)
+	handle /metrics {
+		metrics
 	}
 }

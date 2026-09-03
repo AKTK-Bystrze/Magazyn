@@ -24,6 +24,7 @@ interface Props {
 }
 
 const { title, description = 'Bystrzacki Magazyn' } = Astro.props;
+const traceId = Astro.locals.trace_id || 'unknown';
 ---
 
 <!doctype html>
@@ -34,6 +35,7 @@ const { title, description = 'Bystrzacki Magazyn' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="generator" content={Astro.generator} />
+    <meta name="trace-id" content={traceId} />
     <title>{title}</title>
     
     <!-- Theme script - prevents Flash of Unstyled Content (FOUC) -->

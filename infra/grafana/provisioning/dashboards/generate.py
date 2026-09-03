@@ -132,5 +132,7 @@ dashboard = {
   ]
 }
 
-with open("E:/bystrze/Magazyn/infra/grafana/provisioning/dashboards/magazyn.json", "w", encoding="utf-8", newline="\n") as f:
+import os
+output_path = os.path.join(os.path.dirname(__file__), "magazyn.json")
+with open(output_path, "w", encoding="utf-8", newline="\n") as f:
     json.dump(dashboard, f, indent=2)

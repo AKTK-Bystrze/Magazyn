@@ -4,8 +4,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"magazyn/backend/internal/auth"
@@ -35,7 +38,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
 	logger.Info(ctx, "Starting Magazyn Backend API...")
 
 	appState, err := config.LoadConfig()
@@ -156,7 +160,7 @@ func main() {
 	prometheus.MustRegister(pendingReservations, overdueReservations, activeTodayReservations)
 
 	// Start a background goroutine to update the metrics
-	go func() {
+	go func(ctx context.Context) {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 		
@@ -176,12 +180,28 @@ func main() {
 		updateMetrics() // Initial execution
 		
 		for {
-			<-ticker.C
-			updateMetrics()
+			select {
+			case <-ticker.C:
+				updateMetrics()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}(ctx)
+
+	// Metrics Server on a separate internal port
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.Handler())
+	metricsServer := &http.Server{
+		Addr:    ":9091",
+		Handler: metricsMux,
+	}
+	go func() {
+		logger.Infof(ctx, "Metrics server listening on port :9091")
+		if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Errorf(ctx, "Metrics server failed: %v", err)
 		}
 	}()
-
-	mux.Handle("GET /metrics", promhttp.Handler())
 
 	port := ":" + appState.Config.Port
 	logger.Infof(ctx, "Server listening on port %s", port)
@@ -198,8 +218,25 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		logger.Errorf(ctx, "Server failed to start: %v", err)
-		os.Exit(1)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Errorf(ctx, "Server failed to start: %v", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-ctx.Done()
+	logger.Info(context.Background(), "Shutting down servers gracefully...")
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Errorf(context.Background(), "API Server shutdown error: %v", err)
 	}
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		logger.Errorf(context.Background(), "Metrics Server shutdown error: %v", err)
+	}
+	logger.Info(context.Background(), "Servers stopped.")
 }

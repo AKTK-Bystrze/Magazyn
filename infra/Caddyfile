@@ -15,10 +15,7 @@
     # Use Cloudflare Origin Certificate
     tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 
-    # Expose metrics to internal network only (Alloy will scrape this)
-    handle /metrics {
-        metrics
-    }
+
 
     # Proxy /api requests to the Go backend container
     handle /api/* {
@@ -35,5 +32,12 @@
     log {
         output stdout
         format json
+    }
+}
+
+:2019 {
+    # Expose metrics to internal network only (Alloy will scrape this)
+    handle /metrics {
+        metrics
     }
 }

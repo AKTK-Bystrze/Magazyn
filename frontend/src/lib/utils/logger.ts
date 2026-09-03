@@ -6,7 +6,7 @@ export interface LogEntry {
   msg: string;
   username?: string;
   trace_id?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export class StructuredLogger {
@@ -67,4 +67,14 @@ export class StructuredLogger {
   }
 }
 
-export const defaultLogger = new StructuredLogger();
+function getClientTraceId(): string | undefined {
+  if (typeof window !== "undefined") {
+    const meta = document.querySelector('meta[name="trace-id"]');
+    if (meta) {
+      return meta.getAttribute("content") || undefined;
+    }
+  }
+  return undefined;
+}
+
+export const defaultLogger = new StructuredLogger(getClientTraceId() ? { trace_id: getClientTraceId() } : {});

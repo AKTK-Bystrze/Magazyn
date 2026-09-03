@@ -94,7 +94,6 @@ func LoadConfig() (*AppState, error) {
 	if err != nil {
 		logger.Errorf(context.Background(), "Failed to initialize Supabase client: %v", err)
 		os.Exit(1)
-		return nil, err
 	}
 
 	return &AppState{

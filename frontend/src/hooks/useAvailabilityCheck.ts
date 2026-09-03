@@ -61,23 +61,23 @@ export function useAvailabilityCheck(
           );
 
           if (!response.ok) {
-            // Log the status text for debugging
             logger.error(
-              `[Availability] Check failed for ${item.name}: ${response.status} ${response.statusText}`
+              `Availability check failed`, { item: item.name, status: response.status, statusText: response.statusText }
             );
             throw new Error(ERROR_AVAILABILITY_CHECK_FAILED);
           }
 
           const rawData = await response.json();
-          logger.info(`[Availability] ${item.name} (raw):`, { data: rawData });
+          logger.info(`Availability check result (raw)`, { item: item.name, data: rawData });
 
           // Transform using availability transformer
           const data = transformEquipmentAvailabilityDTO(rawData);
-          logger.info(`[Availability] ${item.name} (transformed):`, { data: data });
+          logger.info(`Availability check result (transformed)`, { item: item.name, data: data });
 
           return { item, availability: data };
         } catch (error) {
-          logger.error(`[Availability] Failed to check availability for ${item.name}:`, {
+          logger.error(`Failed to check availability`, {
+            item: item.name,
             error: error,
           });
           return {
