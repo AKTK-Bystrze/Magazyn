@@ -5,9 +5,9 @@ package logger
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
-	"time"
+	"strings"
 
 	"magazyn/backend/internal/appcontext"
 	model "magazyn/backend/internal/types"
@@ -25,35 +25,26 @@ const (
 	ERROR LogLevel = "ERROR"
 )
 
-// logLevelValue returns numeric value for comparison
-func logLevelValue(level LogLevel) int {
-	switch level {
-	case DEBUG:
-		return 0
-	case INFO:
-		return 1
-	case WARN:
-		return 2
-	case ERROR:
-		return 3
-	default:
-		return 1 // Default to INFO
-	}
-}
-
 // Logger is a custom logger that includes user context and supports level-based filtering.
-// It wraps Go's standard logger and adds user context extraction for authenticated requests.
+// It wraps slog.Logger and adds user context extraction for authenticated requests.
 type Logger struct {
-	logger   *log.Logger
-	minLevel LogLevel
+	logger   *slog.Logger
+	levelVar *slog.LevelVar
 }
 
 var defaultLogger *Logger
 
 func init() {
+	lvl := new(slog.LevelVar)
+	lvl.Set(slog.LevelInfo)
+	
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: lvl,
+	})
+	
 	defaultLogger = &Logger{
-		logger:   log.New(os.Stdout, "", log.LstdFlags),
-		minLevel: INFO, // Default to INFO level
+		logger:   slog.New(handler),
+		levelVar: lvl,
 	}
 }
 
@@ -65,18 +56,19 @@ func GetLogger() *Logger {
 // SetMinLevel sets the minimum log level for the default logger.
 // Log messages below this level will be suppressed. Defaults to INFO if an invalid level is provided.
 func SetMinLevel(levelStr string) {
-	level := LogLevel(levelStr)
+	level := strings.ToUpper(levelStr)
 	switch level {
-	case DEBUG, INFO, WARN, ERROR:
-		defaultLogger.minLevel = level
+	case "DEBUG":
+		defaultLogger.levelVar.Set(slog.LevelDebug)
+	case "INFO":
+		defaultLogger.levelVar.Set(slog.LevelInfo)
+	case "WARN":
+		defaultLogger.levelVar.Set(slog.LevelWarn)
+	case "ERROR":
+		defaultLogger.levelVar.Set(slog.LevelError)
 	default:
-		defaultLogger.minLevel = INFO
+		defaultLogger.levelVar.Set(slog.LevelInfo)
 	}
-}
-
-// shouldLog checks if a message at the given level should be logged
-func (l *Logger) shouldLog(level LogLevel) bool {
-	return logLevelValue(level) >= logLevelValue(l.minLevel)
 }
 
 // getUsernameFromContext extracts the username from the context
@@ -105,71 +97,63 @@ func getUsernameFromContext(ctx context.Context) string {
 	return "[AUTHENTICATED]"
 }
 
-// formatMessage formats a log message with user context
-func (l *Logger) formatMessage(ctx context.Context, level LogLevel, message string) string {
+// getContextAttrs returns common attributes from context
+func getContextAttrs(ctx context.Context) []slog.Attr {
+	if ctx == nil {
+		return nil
+	}
+	attrs := []slog.Attr{}
+	
 	username := getUsernameFromContext(ctx)
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
-	return fmt.Sprintf("[%s] [%s] [%s] %s", timestamp, level, username, message)
+	if username != "[UNAUTHENTICATED]" {
+		attrs = append(attrs, slog.String("username", username))
+	}
+	
+	if traceID, ok := ctx.Value(appcontext.TraceIDContextKey).(string); ok && traceID != "" {
+		attrs = append(attrs, slog.String("trace_id", traceID))
+	}
+	
+	return attrs
 }
 
-// Debug logs a debug message with user context
+func (l *Logger) logWithCtx(ctx context.Context, level slog.Level, msg string) {
+	if !l.logger.Enabled(ctx, level) {
+		return
+	}
+	attrs := getContextAttrs(ctx)
+	l.logger.LogAttrs(ctx, level, msg, attrs...)
+}
+
 func (l *Logger) Debug(ctx context.Context, message string) {
-	if l.shouldLog(DEBUG) {
-		l.logger.Println(l.formatMessage(ctx, DEBUG, message))
-	}
+	l.logWithCtx(ctx, slog.LevelDebug, message)
 }
 
-// Debugf logs a formatted debug message with user context
 func (l *Logger) Debugf(ctx context.Context, format string, args ...interface{}) {
-	if l.shouldLog(DEBUG) {
-		message := fmt.Sprintf(format, args...)
-		l.Debug(ctx, message)
-	}
+	l.logWithCtx(ctx, slog.LevelDebug, fmt.Sprintf(format, args...))
 }
 
-// Info logs an info message with user context
 func (l *Logger) Info(ctx context.Context, message string) {
-	if l.shouldLog(INFO) {
-		l.logger.Println(l.formatMessage(ctx, INFO, message))
-	}
+	l.logWithCtx(ctx, slog.LevelInfo, message)
 }
 
-// Infof logs a formatted info message with user context
 func (l *Logger) Infof(ctx context.Context, format string, args ...interface{}) {
-	if l.shouldLog(INFO) {
-		message := fmt.Sprintf(format, args...)
-		l.Info(ctx, message)
-	}
+	l.logWithCtx(ctx, slog.LevelInfo, fmt.Sprintf(format, args...))
 }
 
-// Warn logs a warning message with user context
 func (l *Logger) Warn(ctx context.Context, message string) {
-	if l.shouldLog(WARN) {
-		l.logger.Println(l.formatMessage(ctx, WARN, message))
-	}
+	l.logWithCtx(ctx, slog.LevelWarn, message)
 }
 
-// Warnf logs a formatted warning message with user context
 func (l *Logger) Warnf(ctx context.Context, format string, args ...interface{}) {
-	if l.shouldLog(WARN) {
-		message := fmt.Sprintf(format, args...)
-		l.Warn(ctx, message)
-	}
+	l.logWithCtx(ctx, slog.LevelWarn, fmt.Sprintf(format, args...))
 }
 
-// Error logs an error message with user context
 func (l *Logger) Error(ctx context.Context, message string) {
-	if l.shouldLog(ERROR) {
-		l.logger.Println(l.formatMessage(ctx, ERROR, message))
-	}
+	l.logWithCtx(ctx, slog.LevelError, message)
 }
 
-// Errorf logs a formatted error message with user context
 func (l *Logger) Errorf(ctx context.Context, format string, args ...interface{}) {
-	if l.shouldLog(ERROR) {
-		message := fmt.Sprintf(format, args...)
-		l.Error(ctx, message)
-	}
+	l.logWithCtx(ctx, slog.LevelError, fmt.Sprintf(format, args...))
 }
 
 // Convenience functions for the default logger

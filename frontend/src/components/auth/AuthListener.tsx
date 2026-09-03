@@ -4,6 +4,7 @@ import { getUserSession } from "@/lib/auth/session-utils";
 import { ROUTES } from "@/lib/config/routes";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { normalizePath } from "@/lib/auth/url-utils";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Component that listens for Supabase auth state changes
@@ -40,7 +41,7 @@ export const AuthListener: React.FC = () => {
             });
 
             if (error) {
-              console.error("❌ Session error:", error.message);
+              logger.error("❌ Session error:", { error: error.message });
               setIsRedirectInProgress(false);
               window.location.href = ROUTES.PUBLIC.LOGIN;
               return;
@@ -50,7 +51,7 @@ export const AuthListener: React.FC = () => {
               const sessionInfo = await getUserSession(data.session.access_token);
 
               if (!sessionInfo) {
-                console.error("❌ Failed to fetch session info");
+                logger.error("❌ Failed to fetch session info");
                 setIsRedirectInProgress(false);
                 window.location.href = ROUTES.PUBLIC.LOGIN;
                 return;
@@ -70,14 +71,14 @@ export const AuthListener: React.FC = () => {
 
               if (redirectTo) {
                 if (normalizePath(window.location.pathname) !== normalizePath(redirectTo)) {
-                  console.log(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
+                  logger.info(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
                   // Cookies are automatically managed by @supabase/ssr
                   window.location.replace(redirectTo);
                 }
               }
             }
           } catch (err) {
-            console.error("❌ Exception:", err);
+            logger.error("❌ Exception:", { error: err });
             setIsRedirectInProgress(false);
             window.location.href = ROUTES.PUBLIC.LOGIN;
           }
@@ -97,13 +98,13 @@ export const AuthListener: React.FC = () => {
 
       // Handle token refresh
       if (event === "TOKEN_REFRESHED" && session) {
-        console.log("🔄 Token refreshed (cookies auto-updated)");
+        logger.info("🔄 Token refreshed (cookies auto-updated)");
       }
 
       // Handle token refresh failures (network issues, expired refresh token)
       // Note: Supabase may not always emit this event - verify in production
       if (event === "TOKEN_REFRESHED" && !session) {
-        console.error("❌ Token refresh failed, logging out");
+        logger.error("❌ Token refresh failed, logging out");
         await supabase.auth.signOut();
         window.location.href = ROUTES.PUBLIC.LOGIN;
         return;
@@ -112,12 +113,12 @@ export const AuthListener: React.FC = () => {
       if (event === "SIGNED_IN" && session) {
         // Skip if hash present (hash handler processes) or redirect in progress
         if (window.location.hash.includes("access_token")) {
-          console.log("⏸️ Skipping - hash handler will process");
+          logger.info("⏸️ Skipping - hash handler will process");
           return;
         }
 
         if (isRedirectInProgress) {
-          console.log("⏸️ Skipping - redirect in progress");
+          logger.info("⏸️ Skipping - redirect in progress");
           return;
         }
 
@@ -139,7 +140,7 @@ export const AuthListener: React.FC = () => {
           const targetPath = redirectTo.replace(/\/$/, "") || "/";
 
           if (currentPath !== targetPath) {
-            console.log(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
+            logger.info(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
             // Cookies automatically managed by @supabase/ssr
             window.location.replace(redirectTo);
           }

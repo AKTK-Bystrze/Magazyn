@@ -10,4 +10,5 @@ const (
 	UserContextKey        ContextKey = "user"         // Stores the authenticated user (*types.User)
 	UserProfileContextKey ContextKey = "user_profile" // Stores the user's profile (*types.PublicProfilesSelect)
 	AccessTokenContextKey ContextKey = "access_token" // Stores the JWT token for RLS enforcement
+	TraceIDContextKey     ContextKey = "trace_id"     // Stores the request trace ID
 )

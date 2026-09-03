@@ -1,6 +1,7 @@
 package supabase
 
 import (
+	"magazyn/backend/internal/logger"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -64,7 +65,7 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 		}
 		conflictIDs = ids
 		// Debug logging
-		fmt.Printf("[DEBUG] Availability filter: %s to %s, found %d conflicting equipment IDs: %v\n",
+		logger.Debugf(ctx, "Availability filter: %s to %s, found %d conflicting equipment IDs: %v",
 			*query.AvailableFrom, *query.AvailableTo, len(conflictIDs), conflictIDs)
 	}
 
@@ -96,7 +97,7 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	}
 
 	if len(conflictIDs) > 0 {
-		fmt.Printf("[DEBUG] Filtered out %d unavailable equipment, %d remaining\n",
+		logger.Debugf(ctx, "Filtered out %d unavailable equipment, %d remaining",
 			len(allItems)-len(filteredItems), len(filteredItems))
 	}
 
@@ -107,7 +108,7 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	endIndex := offset + query.PerPage
 	// Debug log first and last item dates
 	if len(filteredItems) > 0 {
-		fmt.Printf("[DEBUG] List result: %d items. First: %v (%s), Last: %v (%s)\n",
+		logger.Debugf(ctx, "List result: %d items. First: %v (%s), Last: %v (%s)",
 			len(filteredItems), filteredItems[0].Name, filteredItems[0].CreatedAt,
 			filteredItems[len(filteredItems)-1].Name, filteredItems[len(filteredItems)-1].CreatedAt)
 	}
@@ -373,7 +374,7 @@ func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, eq
 // GetEquipmentIDsWithConflicts finds all equipment IDs that have active reservations
 // overlapping with the given date range
 func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error) {
-	fmt.Printf("[DEBUG] GetEquipmentIDsWithConflicts called with: startDate=%s, endDate=%s\n", startDate, endDate)
+	logger.Debugf(ctx, "GetEquipmentIDsWithConflicts called with: startDate=%s, endDate=%s", startDate, endDate)
 
 	// Use admin client to bypass RLS - we need to see ALL reservations, not just the user's
 	// RLS policies now allow seeing all reservations
@@ -387,7 +388,7 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 		Execute()
 
 	if err != nil {
-		fmt.Printf("[DEBUG] Error querying reservations: %v\n", err)
+		logger.Debugf(ctx, "Error querying reservations: %v", err)
 		return nil, err
 	}
 
@@ -398,11 +399,11 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 		Status      string `json:"status"`
 	}
 	if err := json.Unmarshal(data, &reservations); err != nil {
-		fmt.Printf("[DEBUG] Error unmarshaling reservations: %v\n", err)
+		logger.Debugf(ctx, "Error unmarshaling reservations: %v", err)
 		return nil, err
 	}
 
-	fmt.Printf("[DEBUG] Found %d overlapping reservations: %+v\n", len(reservations), reservations)
+	logger.Debugf(ctx, "Found %d overlapping reservations: %+v", len(reservations), reservations)
 
 	// Deduplicate equipment IDs
 	seen := make(map[string]bool)
@@ -414,7 +415,7 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 		}
 	}
 
-	fmt.Printf("[DEBUG] Deduplicated to %d unique equipment IDs: %v\n", len(ids), ids)
+	logger.Debugf(ctx, "Deduplicated to %d unique equipment IDs: %v", len(ids), ids)
 	return ids, nil
 }
 

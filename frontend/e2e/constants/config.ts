@@ -10,6 +10,11 @@ export const E2E_CONFIG = {
     ACTION: 1000,
   },
 
+  /** API URLs */
+  API: {
+    INBUCKET_URL: process.env.INBUCKET_URL || "http://localhost:54324/api/v1",
+  },
+
   /** Test users */
   USERS: {
     PRIMARY: {

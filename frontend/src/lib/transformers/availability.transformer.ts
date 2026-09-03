@@ -1,5 +1,6 @@
-import type { EquipmentAvailability } from '@/types';
-import { equipmentAvailabilityDTOSchema } from '@/lib/validators/availability.validator';
+import type { EquipmentAvailability } from "@/types";
+import { equipmentAvailabilityDTOSchema } from "@/lib/validators/availability.validator";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Custom error class for availability transformation failures
@@ -11,14 +12,14 @@ export class AvailabilityTransformError extends Error {
     public readonly validationErrors?: unknown
   ) {
     super(message);
-    this.name = 'AvailabilityTransformError';
+    this.name = "AvailabilityTransformError";
   }
 }
 
 /**
  * Transforms backend equipment availability DTO to frontend type
  * Performs runtime validation and handles snake_case to camelCase conversion
- * 
+ *
  * @param dto - Backend availability DTO with snake_case fields
  * @returns Frontend equipment availability with camelCase fields
  * @throws AvailabilityTransformError if validation fails
@@ -26,14 +27,14 @@ export class AvailabilityTransformError extends Error {
 export function transformEquipmentAvailabilityDTO(dto: unknown): EquipmentAvailability {
   // Runtime validation
   const validated = equipmentAvailabilityDTOSchema.safeParse(dto);
-  
+
   if (!validated.success) {
-    console.error('Equipment availability DTO validation failed', {
+    logger.error("Equipment availability DTO validation failed", {
       errors: validated.error.format(),
       receivedData: dto,
     });
     throw new AvailabilityTransformError(
-      'Invalid availability data received from API',
+      "Invalid availability data received from API",
       dto,
       validated.error.format()
     );
@@ -45,12 +46,11 @@ export function transformEquipmentAvailabilityDTO(dto: unknown): EquipmentAvaila
   return {
     equipmentId: data.equipment_id,
     isAvailable: data.is_available,
-    conflictingReservations: data.conflicting_reservations.map(r => ({
+    conflictingReservations: data.conflicting_reservations.map((r) => ({
       id: r.id,
       startDate: r.start_date,
       endDate: r.end_date,
-      status: r.status as 'PENDING' | 'RENTED' | 'RETURNED' | 'DENIED',
+      status: r.status as "PENDING" | "RENTED" | "RETURNED" | "DENIED",
     })),
   };
 }
-

@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { BACKEND_URL } from "@/lib/config/api";
 
 export const GET: APIRoute = async ({ locals }) => {
+  locals.logger?.info("Fetching current user profile");
   const token = locals.accessToken;
 
   if (!token) {
@@ -13,6 +14,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
   try {
     const headers = new Headers({
+      "X-Trace-Id": locals.trace_id || "",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -31,13 +33,10 @@ export const GET: APIRoute = async ({ locals }) => {
       },
     });
   } catch (error) {
-    console.error("Proxy error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal Server Error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    locals.logger?.error("Proxy error:", { error: error });
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };

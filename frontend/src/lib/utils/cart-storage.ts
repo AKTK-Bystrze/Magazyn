@@ -1,6 +1,7 @@
 import type { CartState } from "@/types/reservation-cart.types";
 import { cartStateSchema } from "@/lib/validators/cart.validator";
 import { STORAGE_KEY_CART } from "@/lib/config/constants";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 const CART_STORAGE_KEY = STORAGE_KEY_CART;
 const FILTER_DATES_STORAGE_KEY = "reservation_filter_dates";
@@ -14,7 +15,7 @@ export function saveCartToStorage(cart: CartState): void {
   try {
     sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   } catch (error) {
-    console.error("Failed to save cart to sessionStorage:", error);
+    logger.error("Failed to save cart to sessionStorage:", { error });
   }
 }
 
@@ -33,13 +34,13 @@ export function loadCartFromStorage(): CartState | null {
     const validated = cartStateSchema.safeParse(parsed);
 
     if (!validated.success) {
-      console.error("Invalid cart data in sessionStorage:", validated.error.format());
+      logger.error("Invalid cart data in sessionStorage:", validated.error.format());
       return null;
     }
 
     return validated.data;
   } catch (error) {
-    console.error("Failed to load cart from sessionStorage:", error);
+    logger.error("Failed to load cart from sessionStorage:", { error });
     return null;
   }
 }
@@ -58,15 +59,21 @@ export function clearCartFromStorage(): void {
  * @param availableFrom - Start date filter (YYYY-MM-DD)
  * @param availableTo - End date filter (YYYY-MM-DD)
  */
-export function saveFilterDatesToStorage(availableFrom: string | undefined, availableTo: string | undefined): void {
+export function saveFilterDatesToStorage(
+  availableFrom: string | undefined,
+  availableTo: string | undefined
+): void {
   try {
     if (availableFrom && availableTo) {
-      sessionStorage.setItem(FILTER_DATES_STORAGE_KEY, JSON.stringify({ availableFrom, availableTo }));
+      sessionStorage.setItem(
+        FILTER_DATES_STORAGE_KEY,
+        JSON.stringify({ availableFrom, availableTo })
+      );
     } else {
       sessionStorage.removeItem(FILTER_DATES_STORAGE_KEY);
     }
   } catch (error) {
-    console.error("Failed to save filter dates to sessionStorage:", error);
+    logger.error("Failed to save filter dates to sessionStorage:", { error });
   }
 }
 
@@ -75,7 +82,10 @@ export function saveFilterDatesToStorage(availableFrom: string | undefined, avai
  *
  * @returns Filter dates or null if not found
  */
-export function loadFilterDatesFromStorage(): { availableFrom: string; availableTo: string } | null {
+export function loadFilterDatesFromStorage(): {
+  availableFrom: string;
+  availableTo: string;
+} | null {
   try {
     const data = sessionStorage.getItem(FILTER_DATES_STORAGE_KEY);
     if (!data) return null;
@@ -86,7 +96,7 @@ export function loadFilterDatesFromStorage(): { availableFrom: string; available
     }
     return null;
   } catch (error) {
-    console.error("Failed to load filter dates from sessionStorage:", error);
+    logger.error("Failed to load filter dates from sessionStorage:", { error });
     return null;
   }
 }

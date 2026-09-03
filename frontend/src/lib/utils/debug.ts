@@ -1,13 +1,13 @@
 /**
  * Debug logging utility - only logs in development mode
  * Uses import.meta.env.DEV to conditionally output logs
- * 
+ *
  * @example
  * ```typescript
  * import { debug } from '@/lib/utils/debug';
- * 
- * debug.log('Availability', 'Checking equipment:', equipmentId);
- * debug.error('API', 'Request failed:', error);
+ *
+ * logger.info(`[Availability] Checking equipment:`, { data: equipmentId });
+ * logger.error(`[API] Request failed:`, { error: error });
  * ```
  */
 

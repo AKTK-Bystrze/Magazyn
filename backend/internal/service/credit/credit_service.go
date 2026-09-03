@@ -30,6 +30,7 @@ func NewCreditHistoryService(creditRepo repository.CreditHistoryRepository, user
 
 // GetCreditHistory retrieves credit history based on the provided query and user context.
 func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string) (*types.CreditHistoryResponse, error) {
+	logger.Infof(ctx, "Fetching credit history (reqUser: %s) - Page: %d, PerPage: %d", requestingUserID, query.Page, query.PerPage)
 	// 1. Pagination Validation & Normalization
 	page := query.Page
 	if page < 1 {

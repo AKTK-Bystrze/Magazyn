@@ -1,11 +1,11 @@
 import type { APIRoute } from "astro";
 import { BACKEND_URL } from "@/lib/config/api";
-import { debug } from "@/lib/utils/debug";
 
 /**
  * GET /api/reservations/[id] - Get reservation details with audit trail
  */
 export const GET: APIRoute = async ({ locals, params }) => {
+  locals.logger?.info(`Fetching reservation ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 
@@ -24,9 +24,10 @@ export const GET: APIRoute = async ({ locals, params }) => {
   }
 
   try {
-    debug.log("Reservations API", `GET /reservations/${id}`);
+    locals.logger?.info(`[Reservations API] GET /reservations/${id}`);
 
     const headers = new Headers({
+      "X-Trace-Id": locals.trace_id || "",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -37,21 +38,18 @@ export const GET: APIRoute = async ({ locals, params }) => {
     });
 
     const data = await response.json();
-    debug.log("Reservations API", "GET Response status:", response.status);
+    locals.logger?.info(`[Reservations API] GET Response status:`, { data: response.status });
 
     return new Response(JSON.stringify(data), {
       status: response.status,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    debug.error("Reservations API", "GET Proxy error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal Server Error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    locals.logger?.error(`[Reservations API] GET Proxy error:`, { error: error });
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };
 
@@ -59,6 +57,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
  * PATCH /api/reservations/[id] - Update reservation (dates or status)
  */
 export const PATCH: APIRoute = async ({ locals, params, request }) => {
+  locals.logger?.info(`Updating reservation ${params.id}`);
   const token = locals.accessToken;
   const { id } = params;
 
@@ -78,9 +77,10 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
 
   try {
     const body = await request.json();
-    debug.log("Reservations API", `PATCH /reservations/${id}`, body);
+    locals.logger?.info(`[Reservations API] PATCH /reservations/${id}`, { data: body });
 
     const headers = new Headers({
+      "X-Trace-Id": locals.trace_id || "",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     });
@@ -92,10 +92,10 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     });
 
     const data = await response.json();
-    debug.log("Reservations API", "PATCH Response status:", response.status);
+    locals.logger?.info(`[Reservations API] PATCH Response status:`, { data: response.status });
 
     if (!response.ok) {
-      debug.error("Reservations API", "PATCH Backend Error:", data);
+      locals.logger?.error(`[Reservations API] PATCH Backend Error:`, { error: data });
     }
 
     return new Response(JSON.stringify(data), {
@@ -103,13 +103,10 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    debug.error("Reservations API", "PATCH Proxy error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal Server Error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    locals.logger?.error(`[Reservations API] PATCH Proxy error:`, { error: error });
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };

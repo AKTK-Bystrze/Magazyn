@@ -1,8 +1,8 @@
-import { type Page, type Locator } from '@playwright/test';
-import { expect } from '../fixtures';
-import { TEST_IDS } from '../constants/test-ids';
+import { type Page, type Locator } from "@playwright/test";
+import { expect } from "../fixtures";
+import { TEST_IDS } from "../constants/test-ids";
 
-export type UserRole = 'user' | 'admin' | 'moderator';
+export type UserRole = "user" | "admin" | "moderator";
 
 export class AdminUsersPage {
   readonly page: Page;
@@ -29,18 +29,16 @@ export class AdminUsersPage {
    * Navigates to the admin users page.
    */
   async goto() {
-    await this.page.goto('/admin/users', { waitUntil: 'domcontentloaded' });
+    await this.page.goto("/admin/users", { waitUntil: "networkidle" });
   }
 
-  /**
-   * Searches for a user by query (email, name, etc).
-   * @param query - The search string.
-   */
   async searchUser(query: string) {
+    const responsePromise = this.page.waitForResponse((response) => {
+      const url = response.url();
+      return url.includes("/api/users") && url.includes("search=") && response.status() === 200;
+    });
     await this.searchInput.fill(query);
-    // Wait for debounce or network request if necessary, 
-    // but usually assertions handle the waiting.
-    // Assuming the table updates automatically.
+    await responsePromise;
   }
 
   /**
@@ -59,12 +57,12 @@ export class AdminUsersPage {
   async updateUserRole(role: UserRole) {
     await this.roleSelect.click();
     const roleTextMap: Record<string, string> = {
-        'user': 'User',
-        'admin': 'Admin',
-        'super_admin': 'Super Admin'
+      user: "User",
+      admin: "Admin",
+      super_admin: "Super Admin",
     };
     const optionText = roleTextMap[role] || role;
-    await this.page.getByRole('option', { name: optionText, exact: true }).click();
+    await this.page.getByRole("option", { name: optionText, exact: true }).click();
   }
 
   /**
@@ -74,10 +72,10 @@ export class AdminUsersPage {
   async setUserStatus(isActive: boolean) {
     if (isActive) {
       await this.statusActive.click({ force: true });
-      await expect(this.statusActive).toHaveAttribute('data-state', 'checked');
+      await expect(this.statusActive).toHaveAttribute("data-state", "checked");
     } else {
       await this.statusDisabled.click({ force: true });
-      await expect(this.statusDisabled).toHaveAttribute('data-state', 'checked');
+      await expect(this.statusDisabled).toHaveAttribute("data-state", "checked");
     }
   }
 
