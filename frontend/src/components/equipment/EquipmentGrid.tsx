@@ -14,7 +14,10 @@ interface EquipmentGridProps {
 export function EquipmentGrid({ items, isLoading, error, onViewDetail }: EquipmentGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        className="grid gap-6"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))" }}
+      >
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex flex-col space-y-3">
             <Skeleton className="h-[200px] w-full rounded-xl" />
@@ -72,7 +75,8 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
 
   return (
     <div
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      className="grid gap-6"
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))" }}
       data-testid="equipment-grid"
     >
       {items.map((item) => (
