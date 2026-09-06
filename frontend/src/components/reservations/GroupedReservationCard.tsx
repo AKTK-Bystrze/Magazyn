@@ -48,9 +48,8 @@ export function GroupedReservationCard({
   const days = calculateDays(group.startDate, group.endDate);
   const canBulkModify = group.status === RESERVATION_STATUS.PENDING;
   const canBulkReturn =
-    group.status === RESERVATION_STATUS.PENDING ||
-    group.status === RESERVATION_STATUS.RENTED;
-  // Regular users: actions only in "My Reservations"  
+    group.status === RESERVATION_STATUS.PENDING || group.status === RESERVATION_STATUS.RENTED;
+  // Regular users: actions only in "My Reservations"
   // Admins: actions in both "My Reservations" and "All Reservations"
   const showActions = mode === "admin" || scope === "my";
   const isOwn = currentUserId ? group.userId === currentUserId : false;
@@ -133,7 +132,7 @@ export function GroupedReservationCard({
         <CardContent className="pt-6 space-y-4">
           {/* Bulk Actions */}
           {showActions && (canBulkModify || canBulkReturn) && (
-            <div className="flex gap-2 pb-4 border-b overflow-x-auto">
+            <div className="flex flex-wrap gap-2 pb-4 border-b">
               {canBulkModify && (
                 <Button
                   variant="outline"
@@ -187,11 +186,7 @@ export function GroupedReservationCard({
                   showActions={showActions}
                   onCancel={showActions ? () => onCancelSingle(item) : undefined}
                   onModify={showActions ? () => onModifySingle(item) : undefined}
-                  onReturn={
-                    showActions && onReturnSingle
-                      ? () => onReturnSingle(item)
-                      : undefined
-                  }
+                  onReturn={showActions && onReturnSingle ? () => onReturnSingle(item) : undefined}
                   mode={mode}
                 />
               );
