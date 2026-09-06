@@ -20,14 +20,20 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
   const [justAdded, setJustAdded] = React.useState(false);
 
   const isAvailable = item.status === "ok";
-  const statusColor = item.status === "ok" ? "bg-green-500" : item.status === "broken" ? "bg-destructive" : "bg-yellow-500";
-  const statusLabel = item.status === "ok" ? "Dostępne" : item.status === "broken" ? "Zepsute" : "Zablokowane";
+  const statusColor =
+    item.status === "ok"
+      ? "bg-green-500"
+      : item.status === "broken"
+        ? "bg-destructive"
+        : "bg-yellow-500";
+  const statusLabel =
+    item.status === "ok" ? "Dostępne" : item.status === "broken" ? "Zepsute" : "Zablokowane";
 
   // Check if item is in cart
   const checkCartStatus = React.useCallback(() => {
     const currentCart = loadCartFromStorage();
     if (currentCart) {
-      const exists = currentCart.items.some(i => i.equipmentId === item.id);
+      const exists = currentCart.items.some((i) => i.equipmentId === item.id);
       setIsInCart(exists);
     } else {
       setIsInCart(false);
@@ -39,10 +45,10 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
     checkCartStatus();
 
     const handleCartUpdate = () => checkCartStatus();
-    window.addEventListener('cart-updated', handleCartUpdate);
+    window.addEventListener("cart-updated", handleCartUpdate);
 
     return () => {
-      window.removeEventListener('cart-updated', handleCartUpdate);
+      window.removeEventListener("cart-updated", handleCartUpdate);
     };
   }, [checkCartStatus]);
 
@@ -51,7 +57,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
 
     if (isInCart) {
       // Remove from cart
-      currentCart.items = currentCart.items.filter(i => i.equipmentId !== item.id);
+      currentCart.items = currentCart.items.filter((i) => i.equipmentId !== item.id);
       saveCartToStorage(currentCart);
       setJustAdded(false);
     } else {
@@ -73,11 +79,14 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
     }
 
     // Dispatch event to update other components
-    window.dispatchEvent(new Event('cart-updated'));
+    window.dispatchEvent(new Event("cart-updated"));
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-md" data-testid={`equipment-card-${item.id}`}>
+    <Card
+      className="h-full flex flex-col overflow-hidden transition-all hover:shadow-md"
+      data-testid={`equipment-card-${item.id}`}
+    >
       <div className="relative">
         <AspectRatio ratio={4 / 3} className="bg-muted">
           {item.imagePath ? (
@@ -92,12 +101,15 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-                Brak obrazu
+              Brak obrazu
             </div>
           )}
         </AspectRatio>
         <Badge
-          className={cn("absolute top-2 right-2 text-white hover:bg-opacity-80 active:bg-opacity-80", statusColor)}
+          className={cn(
+            "absolute top-2 right-2 text-white hover:bg-opacity-80 active:bg-opacity-80",
+            statusColor
+          )}
           data-testid={`equipment-status-badge-${item.id}`}
         >
           {statusLabel}
@@ -113,14 +125,12 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
           {/* Placeholder for US-008 Favorite Button */}
         </div>
       </CardHeader>
-      
+
       <CardContent className="p-4 pt-2 flex-grow">
-        <p className="text-sm text-gray-600 line-clamp-2">
-          {item.description || "Brak opisu."}
-        </p>
+        <p className="text-sm text-gray-600 line-clamp-2">{item.description || "Brak opisu."}</p>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex flex-col sm:flex-row justify-between items-center border-t bg-muted/20 mt-auto gap-2">
+      <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-between items-center border-t bg-muted/20 mt-auto gap-2">
         <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
           <span className="text-primary">{item.type.creditCostPerDay}</span>
           <span className="text-xs text-muted-foreground">godzinki/dzień</span>
@@ -134,7 +144,9 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
               className={cn(
                 "transition-all duration-300 min-w-[110px]",
                 justAdded && "bg-green-600 hover:bg-green-600 text-white",
-                !justAdded && isInCart && "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
+                !justAdded &&
+                  isInCart &&
+                  "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
               )}
               data-testid={`equipment-add-to-cart-${item.id}`}
             >
@@ -145,19 +157,16 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
                 </>
               ) : isInCart ? (
                 <>
-                    <span className="group-hover:hidden flex items-center">
-                      <Check className="h-4 w-4 mr-1" />
-                      W Worku
-                    </span>
-                    <span className="hidden group-hover:flex items-center">
-                      Usuń
-                    </span>
+                  <span className="group-hover:hidden flex items-center">
+                    <Check className="h-4 w-4 mr-1" />W Worku
+                  </span>
+                  <span className="hidden group-hover:flex items-center">Usuń</span>
                 </>
               ) : (
-                    <>
-                      <ShoppingCart className="h-4 w-4 mr-1" />
-                      Dodaj
-                    </>
+                <>
+                  <ShoppingCart className="h-4 w-4 mr-1" />
+                  Dodaj
+                </>
               )}
             </Button>
           )}
@@ -165,6 +174,7 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
             variant="outline"
             size="sm"
             onClick={() => onViewDetail?.(item)}
+            className="shrink-0"
             data-testid={`equipment-details-button-${item.id}`}
           >
             Szczegóły
