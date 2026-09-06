@@ -77,6 +77,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -116,5 +117,16 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Fix WebKit shadow DOM layout bug that clips the calendar icon when input is flex */
+  input[type="date"] {
+    @apply block;
+  }
+
+  /* Hide native datepicker icon since the entire input is clickable */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
   }
 }
