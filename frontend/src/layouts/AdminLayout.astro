@@ -38,7 +38,7 @@ const currentPath = Astro.url.pathname;
       </div>
     </div>
 
-    <div class="flex flex-col">
+    <div class="flex flex-col min-w-0">
       <QueryProvider client:load>
         <AdminHeader
           client:load
@@ -47,7 +47,7 @@ const currentPath = Astro.url.pathname;
         />
       </QueryProvider>
 
-      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 min-w-0">
         <slot />
       </main>
     </div>

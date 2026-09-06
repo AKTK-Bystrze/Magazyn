@@ -63,7 +63,7 @@ const user = Astro.locals.user;
 
         <div class="pt-2 border-t border-border">
           <p class="text-xs text-muted-foreground">
-            <strong>Account:</strong> {user?.email || 'Unknown'}
+            <strong>Konto:</strong> {user?.email || 'Nieznane'}
           </p>
         </div>
       </div>
@@ -106,7 +106,7 @@ const user = Astro.locals.user;
      * @param {string} text
      * @param {string} className
      */
-    // @ts-ignore
+    // @ts-expect-error Type element any used because this is vanilla JS
     function setStatusMessage(element, text, className) {
       const p = element.querySelector('p');
       if (p) {
@@ -159,7 +159,7 @@ const user = Astro.locals.user;
               'text-sm text-yellow-600 dark:text-yellow-500'
             );
             
-            btn.textContent = 'Check Account Status';
+            btn.textContent = 'Sprawdź status konta';
             btn.removeAttribute('disabled');
           }
         } else {
@@ -173,7 +173,7 @@ const user = Astro.locals.user;
           'text-sm text-red-600 dark:text-red-500'
         );
         
-        btn.textContent = 'Check Account Status';
+        btn.textContent = 'Sprawdź status konta';
         btn.removeAttribute('disabled');
       }
     });

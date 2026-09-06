@@ -19,7 +19,7 @@ if (!sessionInfo || (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUP
 }
 ---
 
-<AdminLayout title="Analytics | Magazyn">
+<AdminLayout title="Analityka | Magazyn">
   <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
     <div class="rounded-full bg-muted p-6 mb-6">
       <svg
@@ -39,15 +39,15 @@ if (!sessionInfo || (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUP
         <line x1="6" y1="20" x2="6" y2="16"></line>
       </svg>
     </div>
-    <h1 class="text-3xl font-bold mb-2">Analytics</h1>
+    <h1 class="text-3xl font-bold mb-2">Analityka</h1>
     <p class="text-muted-foreground mb-6 max-w-md">
-      View usage statistics and reports. This feature is coming soon.
+      Przeglądaj statystyki użycia oraz raporty. Ta funkcja będzie wkrótce dostępna.
     </p>
     <a 
       href={ROUTES.PROTECTED.ADMIN}
       class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2 hover:bg-primary/90"
     >
-      Back to Admin Dashboard
+      Wróc do Panelu Administratora
     </a>
   </div>
 </AdminLayout>

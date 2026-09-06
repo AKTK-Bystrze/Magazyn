@@ -79,9 +79,12 @@
     "vitest": "^4.0.16"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,astro}": [
+    "*.{js,jsx,ts,tsx}": [
       "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --fix",
       "prettier --write"
+    ],
+    "*.astro": [
+      "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --fix"
     ],
     "*.{json,md}": [
       "prettier --write"

@@ -38,7 +38,7 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
         className="flex flex-col items-center justify-center p-12 text-center text-destructive bg-destructive/10 rounded-lg"
         data-testid="equipment-grid-error"
       >
-        <h3 className="text-lg font-semibold">Error loading equipment</h3>
+        <h3 className="text-lg font-semibold">Błąd ładowania sprzętu</h3>
         <p className="text-sm text-muted-foreground">{error.message}</p>
       </div>
     );
@@ -67,8 +67,10 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
             />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold">No equipment found</h3>
-        <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters.</p>
+        <h3 className="text-lg font-semibold">Nie znaleziono sprzętu</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Spróbuj dostosować wyszukiwanie lub filtry.
+        </p>
       </div>
     );
   }

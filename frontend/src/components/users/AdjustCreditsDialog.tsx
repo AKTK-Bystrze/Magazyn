@@ -66,11 +66,11 @@ export function AdjustCreditsDialog({
 
   const handleAdjust = async (isAddition: boolean) => {
     if (amount <= 0) {
-      setError("Amount must be greater than 0");
+      setError("Kwota musi być większa niż 0");
       return;
     }
     if (!reason.trim()) {
-      setError("Reason is required");
+      setError("Powód jest wymagany");
       return;
     }
 
@@ -85,7 +85,7 @@ export function AdjustCreditsDialog({
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to adjust credits");
+      setError(err instanceof Error ? err.message : "Nie udało się zaktualizować godzinek");
     }
   };
 
@@ -93,49 +93,53 @@ export function AdjustCreditsDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[95vw] max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adjust Credits</DialogTitle>
+          <DialogTitle>Dostosuj Godzinki</DialogTitle>
           <DialogDescription>
             {userIds.length === 1
-              ? "Adjust credit balance for the selected user."
-              : `Adjust credit balance for ${userIds.length} selected users.`}
+              ? "Dostosuj stan konta dla wybranego użytkownika."
+              : `Dostosuj stan konta dla ${userIds.length} wybranych użytkowników.`}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           {/* Amount Field */}
           <div className="grid gap-2">
-            <Label htmlFor={amountId}>Amount</Label>
+            <Label htmlFor={amountId}>Kwota</Label>
             <Input
               id={amountId}
               type="number"
               min="1"
               value={amount || ""}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(Math.max(0, parseInt(e.target.value) || 0))}
-              placeholder="e.g. 20"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setAmount(Math.max(0, parseInt(e.target.value) || 0))
+              }
+              placeholder="np. 20"
               disabled={isSubmitting}
             />
           </div>
 
           {/* Reason Field */}
           <div className="grid gap-2">
-            <Label htmlFor={reasonId}>Reason (required)</Label>
+            <Label htmlFor={reasonId}>Powód (wymagany)</Label>
             <Input
               id={reasonId}
               value={reason}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReason(e.target.value)}
-              placeholder="e.g. Volunteer work, Holiday bonus, Correction"
+              placeholder="np. Wolontariat, Premia świąteczna, Korekta"
               disabled={isSubmitting}
             />
           </div>
 
           {/* Description Field */}
           <div className="grid gap-2">
-            <Label htmlFor={descriptionId}>Additional Notes (optional)</Label>
+            <Label htmlFor={descriptionId}>Dodatkowe notatki (opcjonalnie)</Label>
             <Textarea
               id={descriptionId}
               value={description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
-              placeholder="Any extra details..."
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setDescription(e.target.value)
+              }
+              placeholder="Wszelkie dodatkowe szczegóły..."
               disabled={isSubmitting}
             />
           </div>
@@ -157,7 +161,7 @@ export function AdjustCreditsDialog({
             disabled={isSubmitting}
             className="sm:mr-auto"
           >
-            Cancel
+            Anuluj
           </Button>
           <Button
             type="button"
@@ -166,7 +170,7 @@ export function AdjustCreditsDialog({
             disabled={isSubmitting}
           >
             <Minus className={ICON_SIZE_SM + " mr-2"} />
-            Remove Credits
+            Odejmij Godzinki
           </Button>
           <Button
             type="button"
@@ -175,7 +179,7 @@ export function AdjustCreditsDialog({
             className="bg-green-600 hover:bg-green-700"
           >
             <Plus className={ICON_SIZE_SM + " mr-2"} />
-            Add Credits
+            Dodaj Godzinki
           </Button>
         </DialogFooter>
       </DialogContent>

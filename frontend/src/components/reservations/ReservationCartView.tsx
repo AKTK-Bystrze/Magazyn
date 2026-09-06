@@ -280,7 +280,7 @@ export function ReservationCartView({
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 max-w-7xl" data-testid="reservation-cart">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Complete Reservation</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Dokończ Rezerwację</h1>
         {!isEmpty && (
           <Button
             variant={clearCartPending ? "destructive" : "outline"}
@@ -289,7 +289,7 @@ export function ReservationCartView({
             className="transition-all duration-300"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            {clearCartPending ? "Click again to confirm" : "Clear Cart"}
+            {clearCartPending ? "Kliknij ponownie aby potwierdzić" : "Wyczyść Koszyk"}
           </Button>
         )}
       </div>
@@ -297,17 +297,17 @@ export function ReservationCartView({
       {/* Admin User Selector */}
       {isAdmin && !isEmpty && (
         <section className="bg-card rounded-lg border shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Create Reservation For</h2>
+          <h2 className="text-lg font-semibold mb-4">Utwórz Rezerwację Dla</h2>
           <QueryProvider>
             <UserSelector
               selectedUserId={selectedUserId}
               onSelect={handleUserSelect}
-              label="Select the user for this reservation"
+              label="Wybierz użytkownika dla tej rezerwacji"
             />
           </QueryProvider>
           {!selectedUserId && (
             <p className="text-sm text-muted-foreground mt-2">
-              You must select a user before completing the reservation.
+              Musisz wybrać użytkownika przed dokończeniem rezerwacji.
             </p>
           )}
 
@@ -319,12 +319,12 @@ export function ReservationCartView({
               data-testid="free-reservation-checkbox"
             />
             <Label htmlFor="free-reservation" className="cursor-pointer font-medium">
-              Create as Free Reservation
+              Utwórz jako Darmową Rezerwację
             </Label>
           </div>
           {isFreeReservation && (
             <p className="text-sm text-muted-foreground mt-2">
-              This reservation will not charge the user any credits.
+              Ta rezerwacja nie obciąży konta użytkownika godzinkami.
             </p>
           )}
         </section>
@@ -333,7 +333,9 @@ export function ReservationCartView({
       {submissionError && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className="h-4 w-4" />
-          <h5 className="mb-1 font-medium leading-none tracking-tight">Reservation Failed</h5>
+          <h5 className="mb-1 font-medium leading-none tracking-tight">
+            Rezerwacja Nie Powiodła Się
+          </h5>
           <AlertDescription>{submissionError}</AlertDescription>
         </Alert>
       )}
@@ -346,7 +348,7 @@ export function ReservationCartView({
         >
           <AlertCircle className="h-4 w-4" />
           <h5 className="mb-1 font-medium leading-none tracking-tight">
-            Availability Issues Detected
+            Wykryto Problemy z Dostępnością
           </h5>
           <AlertDescription>
             <ul className="list-disc pl-5 mt-2 space-y-2">
@@ -355,11 +357,11 @@ export function ReservationCartView({
                   <strong>{item.name}</strong>: {item.reason}
                   {item.conflictingReservations && item.conflictingReservations.length > 0 && (
                     <div className="mt-1 text-sm">
-                      <span className="font-medium">Conflicting reservations:</span>
+                      <span className="font-medium">Konfliktujące rezerwacje:</span>
                       <ul className="list-none pl-4 mt-1 space-y-1">
                         {item.conflictingReservations.map((conflict, idx) => (
                           <li key={idx} className="text-xs">
-                            • {conflict.startDate} to {conflict.endDate}
+                            • {conflict.startDate} do {conflict.endDate}
                           </li>
                         ))}
                       </ul>
@@ -368,7 +370,7 @@ export function ReservationCartView({
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-sm">Please remove these items or change your dates.</p>
+            <p className="mt-2 text-sm">Proszę usunąć te przedmioty lub zmienić daty.</p>
           </AlertDescription>
         </Alert>
       )}
@@ -416,11 +418,11 @@ export function ReservationCartView({
               data-testid="checkout-button"
             >
               {isChecking ? (
-                <>Checking Availability...</>
+                <>Sprawdzanie Dostępności...</>
               ) : (
                 <>
                   <CheckCircle2 className="mr-2 h-5 w-5" />
-                  Review & Confirm
+                  Przejrzyj i Potwierdź
                 </>
               )}
             </Button>
@@ -432,7 +434,7 @@ export function ReservationCartView({
             )}
 
             <p className="text-xs text-muted-foreground text-center">
-              You will modify your reservation one last time before confirming.
+              Zostaniesz poproszony o ostateczne potwierdzenie rezerwacji.
             </p>
           </div>
         )}

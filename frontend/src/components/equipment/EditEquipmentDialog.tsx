@@ -129,7 +129,7 @@ export function EditEquipmentDialog({
       try {
         // Only include fields that have changed
         const command: UpdateEquipmentCommand = {};
-        
+
         const trimmedName = formData.name.trim() || undefined;
         const trimmedDescription = formData.description.trim() || undefined;
 
@@ -151,7 +151,7 @@ export function EditEquipmentDialog({
 
         if (err instanceof Error) {
           errorMessage = err.message;
-        } else if (typeof err === 'object' && err !== null && 'error' in err) {
+        } else if (typeof err === "object" && err !== null && "error" in err) {
           errorMessage = String(err.error);
         }
 
@@ -168,7 +168,10 @@ export function EditEquipmentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto" data-testid="admin-edit-equipment-dialog">
+      <DialogContent
+        className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto"
+        data-testid="admin-edit-equipment-dialog"
+      >
         <DialogHeader>
           <DialogTitle>{UI.EDIT_DIALOG_TITLE}</DialogTitle>
           <DialogDescription>{UI.EDIT_DIALOG_DESCRIPTION}</DialogDescription>
@@ -179,14 +182,9 @@ export function EditEquipmentDialog({
             {/* Read-only Internal ID */}
             <div className="grid gap-2">
               <Label className="text-muted-foreground">{UI.FORM_INTERNAL_ID}</Label>
-              <Input
-                type="text"
-                value={equipment.internalId}
-                disabled
-                className="bg-muted"
-              />
+              <Input type="text" value={equipment.internalId} disabled className="bg-muted" />
               <p className="text-xs text-muted-foreground">
-                Internal ID cannot be changed after creation.
+                Wewnętrzne ID nie może być zmienione po utworzeniu.
               </p>
             </div>
 
@@ -195,12 +193,12 @@ export function EditEquipmentDialog({
               <Label className="text-muted-foreground">{UI.FORM_TYPE}</Label>
               <Input
                 type="text"
-                value={`${equipment.type.name} (${equipment.type.creditCostPerDay} credits/day)`}
+                value={`${equipment.type.name} (${equipment.type.creditCostPerDay} godzinek/dzień)`}
                 disabled
                 className="bg-muted"
               />
               <p className="text-xs text-muted-foreground">
-                Equipment type cannot be changed after creation.
+                Typ sprzętu nie może być zmieniony po utworzeniu.
               </p>
             </div>
 
@@ -214,9 +212,7 @@ export function EditEquipmentDialog({
                 value={formData.name}
                 onChange={handleInputChange("name")}
                 aria-invalid={!!errors.name}
-                aria-describedby={
-                  errors.name ? `${nameFieldId}-error` : undefined
-                }
+                aria-describedby={errors.name ? `${nameFieldId}-error` : undefined}
                 disabled={isSubmitting}
                 maxLength={200}
                 data-testid="equipment-form-name-input"
@@ -253,9 +249,7 @@ export function EditEquipmentDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={EQUIPMENT_STATUS.OK}>
-                    {EQUIPMENT_STATUS_LABELS.ok}
-                  </SelectItem>
+                  <SelectItem value={EQUIPMENT_STATUS.OK}>{EQUIPMENT_STATUS_LABELS.ok}</SelectItem>
                   <SelectItem value={EQUIPMENT_STATUS.BROKEN}>
                     {EQUIPMENT_STATUS_LABELS.broken}
                   </SelectItem>
@@ -269,18 +263,11 @@ export function EditEquipmentDialog({
             {/* TODO: Image Upload Field - Phase 5 */}
 
             {/* Form-level error */}
-            {errors.form && (
-              <p className="text-sm text-destructive">{errors.form}</p>
-            )}
+            {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               {UI.CANCEL_BUTTON}
             </Button>
             <Button
