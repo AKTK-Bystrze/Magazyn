@@ -99,3 +99,52 @@ VALUES (
   100000,
   true
 ) ON CONFLICT (id) DO NOTHING;
+
+-- Create test user 3  
+INSERT INTO auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  recovery_sent_at,
+  last_sign_in_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at,
+  confirmation_token,
+  email_change,
+  email_change_token_new,
+  recovery_token
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '33333333-3333-3333-3333-333333333333',
+  'authenticated',
+  'authenticated',
+  'superadmin@example.com',
+  '$2a$10$abcdefghijklmnopqrstuvwxyz123456789012345678901234567890',
+  NOW(),
+  NOW(),
+  NOW(),
+  '{"provider":"email","providers":["email"]}',
+  '{}',
+  NOW(),
+  NOW(),
+  '',
+  '',
+  '',
+  ''
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.profiles (id, email, username, role, credit_balance, is_enabled)
+VALUES (
+  '33333333-3333-3333-3333-333333333333',
+  'superadmin@example.com',
+  'superAdmin',
+  'superAdmin',
+  100000,
+  true
+) ON CONFLICT (id) DO NOTHING;
