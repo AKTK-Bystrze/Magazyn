@@ -14,12 +14,7 @@ import {
  */
 export function getTodayAtMidnight(): Date {
   const today = new Date();
-  today.setHours(
-    MIDNIGHT_HOURS,
-    MIDNIGHT_MINUTES,
-    MIDNIGHT_SECONDS,
-    MIDNIGHT_MILLISECONDS
-  );
+  today.setHours(MIDNIGHT_HOURS, MIDNIGHT_MINUTES, MIDNIGHT_SECONDS, MIDNIGHT_MILLISECONDS);
   return today;
 }
 
@@ -44,7 +39,8 @@ export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${day}.${month}`;
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 /**
@@ -69,16 +65,13 @@ export function calculateDays(startDate: string, endDate: string): number {
  * @param locale - Locale string (default: 'en-US')
  * @returns Formatted date string (e.g., "Jan 15, 2024")
  */
-export function formatDateLocalized(
-  dateString: string,
-  locale: string = "en-US"
-): string {
+export function formatDateLocalized(dateString: string): string {
   try {
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   } catch {
     return dateString;
   }

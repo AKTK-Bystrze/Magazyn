@@ -12,7 +12,7 @@ export const E2E_CONFIG = {
 
   /** API URLs */
   API: {
-    INBUCKET_URL: process.env.INBUCKET_URL || "http://localhost:54324/api/v1",
+    INBUCKET_URL: process.env.INBUCKET_URL || "http://localhost:54024/api/v1",
   },
 
   /** Test users */
