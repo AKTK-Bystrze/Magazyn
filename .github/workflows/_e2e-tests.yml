@@ -62,6 +62,15 @@ jobs:
         with:
           mode: local
 
+      - name: Run Backend Integration Tests
+        if: inputs.supabase-mode == 'local'
+        working-directory: ./backend
+        run: go test ./internal/... -v -tags=integration
+
+      - name: Reset Supabase Database
+        if: inputs.supabase-mode == 'local'
+        run: npx supabase db reset
+
       - name: Configure host.docker.internal
         if: inputs.supabase-mode == 'local'
         run: |

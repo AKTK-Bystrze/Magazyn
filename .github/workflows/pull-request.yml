@@ -144,23 +144,9 @@ jobs:
           go-mod-path: 'backend/go.mod'
           go-sum-path: 'backend/go.sum'
 
-      - name: Setup Local Environment
-        uses: ./.github/actions/setup-local-env
-        with:
-          context: host
-
-      - name: Setup Supabase
-        uses: ./.github/actions/setup-supabase
-        with:
-          mode: local
-
       - name: Unit Tests
         working-directory: ./backend
         run: go test ./internal/... -v -short -coverprofile=coverage.out
-
-      - name: Integration Tests
-        working-directory: ./backend
-        run: go test ./internal/... -v -tags=integration
 
       - name: Upload Coverage
         uses: actions/upload-artifact@v7
