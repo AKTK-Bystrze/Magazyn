@@ -40,12 +40,17 @@ test.describe("Login Page", () => {
     // Clear the mailbox before testing to ensure we get the fresh magic link
     await clearMailbox(testEmail);
 
-    // Act: Submit login
+    // Act: Request magic link
     await submitLoginEmail(page, testEmail);
     await waitForMagicLinkSent(page);
 
-    // Act: Retrieve magic link from Mailpit
+    // Assert: Verify success message
+    await expect(page.getByText(/Sprawdź swoją pocztę/i)).toBeVisible();
+
+    // Act: Get magic link from Mailpit
     const magicLink = await getMagicLinkFromEmail(testEmail);
+    console.log("MAGIC LINK IS:", magicLink);
+    page.on("console", (msg) => console.log("BROWSER CONSOLE:", msg.text()));
 
     // Act: Navigate to magic link
     await page.goto(magicLink);
