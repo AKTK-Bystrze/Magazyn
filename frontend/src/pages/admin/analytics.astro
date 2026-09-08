@@ -3,9 +3,9 @@
  * Admin Analytics Page - Mock implementation
  * Displays "Coming Soon" placeholder until feature is implemented.
  */
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { ROUTES } from '../../lib/config/routes';
-import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../../lib/auth/roles';
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { ROUTES } from "../../lib/config/routes";
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from "../../lib/auth/roles";
 
 const user = Astro.locals.user;
 const sessionInfo = Astro.locals.sessionInfo;
@@ -43,7 +43,7 @@ if (!sessionInfo || (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUP
     <p class="text-muted-foreground mb-6 max-w-md">
       Przeglądaj statystyki użycia oraz raporty. Ta funkcja będzie wkrótce dostępna.
     </p>
-    <a 
+    <a
       href={ROUTES.PROTECTED.ADMIN}
       class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2 hover:bg-primary/90"
     >

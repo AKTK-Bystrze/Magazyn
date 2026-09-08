@@ -25,9 +25,7 @@ interface UseReservationDetailReturn {
   /** Refetch reservation data */
   refetch: () => void;
   /** Update reservation status */
-  updateStatus: (
-    command: UpdateReservationCommand
-  ) => Promise<UpdateReservationResponse>;
+  updateStatus: (command: UpdateReservationCommand) => Promise<UpdateReservationResponse>;
   /** Whether mutation is in progress */
   isUpdating: boolean;
 }
@@ -39,9 +37,7 @@ interface UseReservationDetailReturn {
  * @param reservationId - ID of reservation to fetch
  * @returns Reservation data and update controls
  */
-export function useReservationDetail(
-  reservationId: string
-): UseReservationDetailReturn {
+export function useReservationDetail(reservationId: string): UseReservationDetailReturn {
   const queryClient = useQueryClient();
 
   // Fetch reservation details

@@ -11,12 +11,8 @@
  * pluralize(2, "day") // "days"
  * pluralize(1, "item", "items") // "item"
  */
-export function pluralize(
-  count: number,
-  singular: string,
-  plural?: string
-): string {
-  return count === 1 ? singular : (plural || `${singular}s`);
+export function pluralize(count: number, singular: string, plural?: string): string {
+  return count === 1 ? singular : plural || `${singular}s`;
 }
 
 /**
@@ -31,10 +27,6 @@ export function pluralize(
  * pluralizeWithCount(1, "day") // "1 day"
  * pluralizeWithCount(2, "day") // "2 days"
  */
-export function pluralizeWithCount(
-  count: number,
-  singular: string,
-  plural?: string
-): string {
+export function pluralizeWithCount(count: number, singular: string, plural?: string): string {
   return `${count} ${pluralize(count, singular, plural)}`;
 }

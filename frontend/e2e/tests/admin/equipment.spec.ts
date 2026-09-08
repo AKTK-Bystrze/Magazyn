@@ -1,7 +1,7 @@
-import { test, expect } from '../../fixtures';
-import { EquipmentManagerPage } from '../../page-objects/equipment-manager.pom';
-import { E2E_CONFIG } from '../../constants';
-import { hardDeleteEquipment } from '../../helpers/data-setup.helper';
+import { test, expect } from "../../fixtures";
+import { EquipmentManagerPage } from "../../page-objects/equipment-manager.pom";
+import { E2E_CONFIG } from "../../constants";
+import { hardDeleteEquipment } from "../../helpers/data-setup.helper";
 
 /**
  * Admin Equipment Manager E2E tests.
@@ -9,7 +9,7 @@ import { hardDeleteEquipment } from '../../helpers/data-setup.helper';
  *
  * Uses adminPage fixture for authenticated admin access.
  */
-test.describe('Admin Equipment Manager', () => {
+test.describe("Admin Equipment Manager", () => {
   let createdEquipmentId: string | null = null;
 
   /**
@@ -24,10 +24,10 @@ test.describe('Admin Equipment Manager', () => {
     }
   });
 
-  test('should create and list equipment (edit/archive skipped due to flakiness)', async ({ 
-    adminPage, 
+  test("should create and list equipment (edit/archive skipped due to flakiness)", async ({
+    adminPage,
     workerIndex,
-    supabaseAdmin
+    supabaseAdmin,
   }) => {
     const equipmentPage = new EquipmentManagerPage(adminPage);
     const timestamp = Date.now();
@@ -43,39 +43,39 @@ test.describe('Admin Equipment Manager', () => {
     await equipmentPage.clickAddEquipment();
 
     const { data: types } = await supabaseAdmin
-      .from('equipment_types')
-      .select('id, name')
+      .from("equipment_types")
+      .select("id, name")
       .limit(1)
       .single();
 
     if (!types) {
-      throw new Error('No equipment types found in database');
+      throw new Error("No equipment types found in database");
     }
 
     await equipmentPage.fillEquipmentForm({
       internalId: uniqueInternalId,
       typeId: types.name,
       name: uniqueName,
-      description: 'E2E Test Equipment',
-      status: 'OK',
+      description: "E2E Test Equipment",
+      status: "OK",
     });
 
     await equipmentPage.submitForm();
 
     await expect(equipmentPage.getSuccessAlert()).toBeVisible({
-      timeout: E2E_CONFIG.TIMEOUT.ASSERTION
+      timeout: E2E_CONFIG.TIMEOUT.ASSERTION,
     });
 
     console.log(`[Worker ${workerIndex}] 2. Verifying equipment appears in list`);
 
     const { data: createdEquipment } = await supabaseAdmin
-      .from('equipment')
-      .select('id')
-      .eq('internal_id', uniqueInternalId)
+      .from("equipment")
+      .select("id")
+      .eq("internal_id", uniqueInternalId)
       .single();
 
     if (!createdEquipment) {
-      throw new Error('Created equipment not found in database');
+      throw new Error("Created equipment not found in database");
     }
 
     createdEquipmentId = createdEquipment.id;

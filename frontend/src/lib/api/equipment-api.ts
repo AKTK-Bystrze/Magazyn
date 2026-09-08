@@ -1,9 +1,9 @@
-import { api } from './client';
+import { api } from "./client";
 import {
   transformEquipmentDTO,
   transformEquipmentListResponse,
   transformEquipmentTypesResponse,
-} from '@/lib/transformers/equipment.transformer';
+} from "@/lib/transformers/equipment.transformer";
 import type {
   EquipmentSearchItem,
   EquipmentType,
@@ -13,7 +13,7 @@ import type {
   UpdateEquipmentCommand,
   MaintenanceLog,
   CreateMaintenanceLogCommand,
-} from '@/types';
+} from "@/types";
 
 /**
  * Equipment API module with automatic DTO transformation
@@ -44,7 +44,10 @@ export const equipmentApi = {
       if (params.availableTo) queryParams.available_to = params.availableTo;
     }
 
-    const response = await api.get('/api/equipment', Object.keys(queryParams).length > 0 ? queryParams : undefined);
+    const response = await api.get(
+      "/api/equipment",
+      Object.keys(queryParams).length > 0 ? queryParams : undefined
+    );
 
     // Transform backend response to frontend format
     return transformEquipmentListResponse(response.data);
@@ -57,7 +60,7 @@ export const equipmentApi = {
    * @returns Promise with array of equipment types
    */
   async listTypes(): Promise<EquipmentType[]> {
-    const response = await api.get('/api/equipment-types');
+    const response = await api.get("/api/equipment-types");
 
     // Transform backend response to frontend format
     return transformEquipmentTypesResponse(response.data);
@@ -80,7 +83,7 @@ export const equipmentApi = {
       image_path: command.imagePath,
     };
 
-    const response = await api.post('/api/equipment', payload);
+    const response = await api.post("/api/equipment", payload);
 
     // Transform single equipment response
     return transformEquipmentDTO(response.data);
@@ -120,7 +123,7 @@ export const equipmentApi = {
    * Get equipment details with maintenance logs
    * Returns both equipment data and maintenance logs from a single API call
    * per the equipment-details-reuse-guide.md
-   * 
+   *
    * @param id - Equipment ID
    * @returns Promise with equipment details and maintenance logs
    */
@@ -142,7 +145,7 @@ export const equipmentApi = {
 
   /**
    * Get equipment details only (without maintenance logs)
-   * 
+   *
    * @param id - Equipment ID
    * @returns Promise with equipment details
    */
@@ -153,7 +156,7 @@ export const equipmentApi = {
 
   /**
    * Add maintenance log entry for equipment
-   * 
+   *
    * @param equipmentId - Equipment ID
    * @param command - Maintenance log creation data
    * @returns Promise with created maintenance log
@@ -173,14 +176,14 @@ export const equipmentApi = {
    * Get reservation history for equipment
    * Uses GET /reservations?equipment_id={id}&scope=all instead of separate endpoint
    * per the equipment-details-reuse-guide.md
-   * 
+   *
    * @param equipmentId - Equipment ID
    * @returns Promise with array of reservation history items
    */
   async getReservationHistory(equipmentId: string): Promise<EquipmentReservationHistoryItem[]> {
-    const response = await api.get('/api/reservations', {
+    const response = await api.get("/api/reservations", {
       equipment_id: equipmentId,
-      scope: 'all',
+      scope: "all",
       per_page: 50,
     });
 
@@ -234,7 +237,7 @@ interface ReservationHistoryDTO {
   created_at: string;
 }
 
-import type { EquipmentReservationHistoryItem } from '@/types';
+import type { EquipmentReservationHistoryItem } from "@/types";
 
 /**
  * Transforms reservation from reservations endpoint to equipment history format

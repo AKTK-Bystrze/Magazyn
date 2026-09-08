@@ -118,7 +118,7 @@
   body {
     @apply bg-background text-foreground;
   }
-  
+
   /* Fix WebKit shadow DOM layout bug that clips the calendar icon when input is flex */
   input[type="date"] {
     @apply block;

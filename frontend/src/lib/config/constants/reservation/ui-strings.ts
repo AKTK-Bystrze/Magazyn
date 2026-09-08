@@ -38,8 +38,7 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
 
   // Confirmation messages
   CONFIRM_CANCEL_TITLE: "Anulować Rezerwację?",
-  CONFIRM_CANCEL_MESSAGE:
-    "Ta akcja nie może być cofnięta. Sprzęt stanie się dostępny dla innych.",
+  CONFIRM_CANCEL_MESSAGE: "Ta akcja nie może być cofnięta. Sprzęt stanie się dostępny dla innych.",
   CONFIRM_REFUND_LABEL: "Kwota zwrotu:",
   CONFIRM_CANCEL_BUTTON: "Anuluj Rezerwację",
   KEEP_RESERVATION: "Zachowaj Rezerwację",
@@ -100,8 +99,7 @@ export const RESERVATION_DATE_MODIFICATION_UI_STRINGS = {
   MODIFY_DATES_CHECKBOX_HINT:
     "Zaznacz, jeśli sprzęt został zwrócony wcześniej lub później niż planowano",
   CONFIRM_RETURN: "Potwierdź Zwrot",
-  FINAL_STATUS_WARNING:
-    "⚠️ ZWRÓCONE to status końcowy i nie może być później zmieniony.",
+  FINAL_STATUS_WARNING: "⚠️ ZWRÓCONE to status końcowy i nie może być później zmieniony.",
 
   // Credit Adjustment
   CREDIT_ADJUSTMENT_TITLE: "Korekta Godzinek",
@@ -128,8 +126,7 @@ export const RESERVATION_DATE_MODIFICATION_UI_STRINGS = {
 
   // Success Messages
   DATES_MODIFIED_SUCCESS: "Daty rezerwacji zostały pomyślnie zmodyfikowane",
-  RETURNED_WITH_DATES_SUCCESS:
-    "Rezerwacja oznaczona jako zwrócona i daty zaktualizowane",
+  RETURNED_WITH_DATES_SUCCESS: "Rezerwacja oznaczona jako zwrócona i daty zaktualizowane",
   RETURNED_SUCCESS: "Rezerwacja oznaczona jako zwrócona",
 
   // Loading States

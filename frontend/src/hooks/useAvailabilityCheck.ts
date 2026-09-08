@@ -61,9 +61,11 @@ export function useAvailabilityCheck(
           );
 
           if (!response.ok) {
-            logger.error(
-              `Availability check failed`, { item: item.name, status: response.status, statusText: response.statusText }
-            );
+            logger.error(`Availability check failed`, {
+              item: item.name,
+              status: response.status,
+              statusText: response.statusText,
+            });
             throw new Error(ERROR_AVAILABILITY_CHECK_FAILED);
           }
 

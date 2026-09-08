@@ -19,6 +19,12 @@ export const cartItemSchema = z.object({
  */
 export const cartStateSchema = z.object({
   items: z.array(cartItemSchema),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable(),
 });

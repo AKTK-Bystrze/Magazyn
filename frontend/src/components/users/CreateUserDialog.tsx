@@ -83,18 +83,15 @@ export function CreateUserDialog({
 
   // Handle input change
   const handleInputChange = React.useCallback(
-    (field: keyof typeof formData) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value =
-          field === "creditBalance"
-            ? Math.max(0, parseInt(e.target.value) || 0)
-            : e.target.value;
-        setFormData((prev) => ({ ...prev, [field]: value }));
-        // Clear error when field is modified
-        if (errors[field]) {
-          setErrors((prev) => ({ ...prev, [field]: "" }));
-        }
-      },
+    (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        field === "creditBalance" ? Math.max(0, parseInt(e.target.value) || 0) : e.target.value;
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      // Clear error when field is modified
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: "" }));
+      }
+    },
     [errors]
   );
 
@@ -149,8 +146,7 @@ export function CreateUserDialog({
         onClose();
       } catch (err) {
         // Handle API errors (e.g., email already exists)
-        const message =
-          err instanceof Error ? err.message : USER_VALIDATION_MESSAGES.CREATE_FAILED;
+        const message = err instanceof Error ? err.message : USER_VALIDATION_MESSAGES.CREATE_FAILED;
         if (message.toLowerCase().includes("email")) {
           setErrors((prev) => ({ ...prev, email: message }));
         } else if (message.toLowerCase().includes("username")) {
@@ -169,8 +165,7 @@ export function CreateUserDialog({
         <DialogHeader>
           <DialogTitle>Utwórz Nowego Użytkownika</DialogTitle>
           <DialogDescription>
-            Utwórz nowe konto użytkownika. Użytkownik otrzyma instrukcje logowania
-            przez e-mail.
+            Utwórz nowe konto użytkownika. Użytkownik otrzyma instrukcje logowania przez e-mail.
           </DialogDescription>
         </DialogHeader>
 
@@ -210,16 +205,11 @@ export function CreateUserDialog({
                 value={formData.username}
                 onChange={handleInputChange("username")}
                 aria-invalid={!!errors.username}
-                aria-describedby={
-                  errors.username ? `${usernameId}-error` : undefined
-                }
+                aria-describedby={errors.username ? `${usernameId}-error` : undefined}
                 disabled={isSubmitting}
               />
               {errors.username && (
-                <p
-                  id={`${usernameId}-error`}
-                  className="text-sm text-destructive"
-                >
+                <p id={`${usernameId}-error`} className="text-sm text-destructive">
                   {errors.username}
                 </p>
               )}
@@ -241,9 +231,7 @@ export function CreateUserDialog({
                 <SelectContent>
                   <SelectItem value={USER_ROLE.USER}>Użytkownik</SelectItem>
                   <SelectItem value={USER_ROLE.ADMIN}>Administrator</SelectItem>
-                  <SelectItem value={USER_ROLE.SUPER_ADMIN}>
-                    Super Administrator
-                  </SelectItem>
+                  <SelectItem value={USER_ROLE.SUPER_ADMIN}>Super Administrator</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -259,34 +247,22 @@ export function CreateUserDialog({
                 value={formData.creditBalance}
                 onChange={handleInputChange("creditBalance")}
                 aria-invalid={!!errors.creditBalance}
-                aria-describedby={
-                  errors.creditBalance ? `${creditsId}-error` : undefined
-                }
+                aria-describedby={errors.creditBalance ? `${creditsId}-error` : undefined}
                 disabled={isSubmitting}
               />
               {errors.creditBalance && (
-                <p
-                  id={`${creditsId}-error`}
-                  className="text-sm text-destructive"
-                >
+                <p id={`${creditsId}-error`} className="text-sm text-destructive">
                   {errors.creditBalance}
                 </p>
               )}
             </div>
 
             {/* Form-level error */}
-            {errors.form && (
-              <p className="text-sm text-destructive">{errors.form}</p>
-            )}
+            {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Anuluj
             </Button>
             <Button type="submit" disabled={isSubmitting}>

@@ -51,9 +51,7 @@ interface UserListResponseDTO {
  * @param command - Frontend create user command with camelCase fields
  * @returns Backend-compatible object with snake_case fields
  */
-export function transformCreateUserCommand(
-  command: CreateUserCommand
-): Record<string, unknown> {
+export function transformCreateUserCommand(command: CreateUserCommand): Record<string, unknown> {
   return {
     email: command.email,
     username: command.username,
@@ -69,9 +67,7 @@ export function transformCreateUserCommand(
  * @param command - Frontend update command with optional camelCase fields
  * @returns Backend-compatible object with snake_case fields
  */
-export function transformUpdateUserCommand(
-  command: UpdateUserCommand
-): Record<string, unknown> {
+export function transformUpdateUserCommand(command: UpdateUserCommand): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   if (command.email !== undefined) {

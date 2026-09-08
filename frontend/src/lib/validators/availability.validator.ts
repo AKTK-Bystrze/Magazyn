@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Zod schema for conflicting reservation DTO from backend
@@ -14,7 +14,7 @@ const conflictingReservationDTOSchema = z.object({
 /**
  * Zod schema for equipment availability DTO from backend
  * Validates the response from GET /equipment/:id/availability
- * 
+ *
  * Backend structure (snake_case):
  * - equipment_id: UUID of the equipment
  * - is_available: boolean availability status

@@ -45,8 +45,7 @@ export const EQUIPMENT_VALIDATION_MESSAGES = {
   CREATE_FAILED: "Nie udało się utworzyć sprzętu",
   UPDATE_FAILED: "Nie udało się zaktualizować sprzętu",
   ARCHIVE_FAILED: "Nie udało się zarchiwizować sprzętu",
-  ARCHIVE_HAS_ACTIVE_RESERVATIONS:
-    "Nie można zarchiwizować sprzętu z aktywnymi rezerwacjami",
+  ARCHIVE_HAS_ACTIVE_RESERVATIONS: "Nie można zarchiwizować sprzętu z aktywnymi rezerwacjami",
   INTERNAL_ID_EXISTS: "ID wewnętrzne już istnieje dla tego typu",
 } as const;
 
@@ -60,8 +59,7 @@ export const EQUIPMENT_VALIDATION_MESSAGES = {
 export const EQUIPMENT_MANAGER_UI_STRINGS = {
   // Page title
   PAGE_TITLE: "Zarządzanie Sprzętem",
-  PAGE_DESCRIPTION:
-    "Zarządzaj inwentarzem sprzętu, dodawaj nowe przedmioty i śledź konserwację.",
+  PAGE_DESCRIPTION: "Zarządzaj inwentarzem sprzętu, dodawaj nowe przedmioty i śledź konserwację.",
 
   // Actions
   ADD_EQUIPMENT: "Dodaj Sprzęt",

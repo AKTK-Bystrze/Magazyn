@@ -44,8 +44,7 @@ export function canChangeStatus(
     return {
       canCancel: currentStatus === RESERVATION_STATUS.PENDING,
       canMarkReturned:
-        currentStatus === RESERVATION_STATUS.PENDING ||
-        currentStatus === RESERVATION_STATUS.RENTED,
+        currentStatus === RESERVATION_STATUS.PENDING || currentStatus === RESERVATION_STATUS.RENTED,
       canChangeStatus: false,
       availableStatuses: [],
     };
@@ -56,8 +55,7 @@ export function canChangeStatus(
     return {
       canCancel: currentStatus === RESERVATION_STATUS.PENDING,
       canMarkReturned:
-        currentStatus === RESERVATION_STATUS.PENDING ||
-        currentStatus === RESERVATION_STATUS.RENTED,
+        currentStatus === RESERVATION_STATUS.PENDING || currentStatus === RESERVATION_STATUS.RENTED,
       canChangeStatus: true,
       availableStatuses: getAvailableTransitions(currentStatus, isAdmin),
     };
@@ -91,11 +89,7 @@ export function getAvailableTransitions(
 
   switch (currentStatus) {
     case RESERVATION_STATUS.PENDING:
-      return [
-        RESERVATION_STATUS.RENTED,
-        RESERVATION_STATUS.RETURNED,
-        RESERVATION_STATUS.DENIED,
-      ];
+      return [RESERVATION_STATUS.RENTED, RESERVATION_STATUS.RETURNED, RESERVATION_STATUS.DENIED];
     case RESERVATION_STATUS.RENTED:
       return [RESERVATION_STATUS.RETURNED];
     case RESERVATION_STATUS.RETURNED:
@@ -112,11 +106,6 @@ export function getAvailableTransitions(
  * @param status - Reservation status to check
  * @returns True if status is final
  */
-export function isStatusFinal(
-  status: Enums<"reservation_status">
-): boolean {
-  return (
-    status === RESERVATION_STATUS.RETURNED ||
-    status === RESERVATION_STATUS.DENIED
-  );
+export function isStatusFinal(status: Enums<"reservation_status">): boolean {
+  return status === RESERVATION_STATUS.RETURNED || status === RESERVATION_STATUS.DENIED;
 }

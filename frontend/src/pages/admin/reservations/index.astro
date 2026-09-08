@@ -1,19 +1,21 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '@/layouts/AdminLayout.astro';
-import { ReservationListContainer } from '@/components/reservations/ReservationListContainer';
-import { ROUTES } from '@/lib/config/routes';
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import { ReservationListContainer } from "@/components/reservations/ReservationListContainer";
+import { ROUTES } from "@/lib/config/routes";
 
 const { user, sessionInfo } = Astro.locals;
 
 // Redirect if not authenticated
 if (!user || !sessionInfo) {
-  return Astro.redirect(`${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.ADMIN_RESERVATIONS)}`);
+  return Astro.redirect(
+    `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.ADMIN_RESERVATIONS)}`
+  );
 }
 
 // Check for admin role
-const isAdmin = sessionInfo.role === 'admin' || sessionInfo.role === 'super_admin';
+const isAdmin = sessionInfo.role === "admin" || sessionInfo.role === "super_admin";
 if (!isAdmin) {
   return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
 }
@@ -30,13 +32,12 @@ if (!isAdmin) {
     </div>
 
     <!-- Reservation List (Admin Mode) -->
-    <ReservationListContainer 
-      mode="admin" 
+    <ReservationListContainer
+      mode="admin"
       currentUserId={user.id}
       currentUserBalance={sessionInfo.creditBalance}
-      initialFilters={{ scope: 'all' }}
-      client:load 
+      initialFilters={{ scope: "all" }}
+      client:load
     />
   </div>
 </AdminLayout>
-

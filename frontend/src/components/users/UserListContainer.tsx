@@ -9,17 +9,8 @@ import { AdjustCreditsDialog } from "./AdjustCreditsDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
-import {
-  AlertCircle,
-  CheckCircle2,
-  UserPlus,
-  Coins,
-} from "lucide-react";
-import {
-  ICON_SIZE_SM,
-  MESSAGE_AUTO_DISMISS_MS,
-  DEFAULT_ROLE_FILTER,
-} from "@/lib/config/constants";
+import { AlertCircle, CheckCircle2, UserPlus, Coins } from "lucide-react";
+import { ICON_SIZE_SM, MESSAGE_AUTO_DISMISS_MS, DEFAULT_ROLE_FILTER } from "@/lib/config/constants";
 import type { UserListItem, CreateUserCommand, UpdateUserCommand } from "@/types";
 
 /**
@@ -52,9 +43,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [adjustCreditsOpen, setAdjustCreditsOpen] = React.useState(false);
-  const [selectedUser, setSelectedUser] = React.useState<UserListItem | null>(
-    null
-  );
+  const [selectedUser, setSelectedUser] = React.useState<UserListItem | null>(null);
 
   // Selection state
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
@@ -65,28 +54,20 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   }, [data?.users]);
 
   // Feedback states
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(
-    null
-  );
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(
-        () => setSuccessMessage(null),
-        MESSAGE_AUTO_DISMISS_MS
-      );
+      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
 
   React.useEffect(() => {
     if (errorMessage) {
-      const timer = setTimeout(
-        () => setErrorMessage(null),
-        MESSAGE_AUTO_DISMISS_MS
-      );
+      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);
@@ -105,9 +86,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   const handleCreateSubmit = React.useCallback(
     async (command: CreateUserCommand) => {
       const user = await createUser(command);
-      setSuccessMessage(
-        `Użytkownik "${user.username}" został pomyślnie utworzony.`
-      );
+      setSuccessMessage(`Użytkownik "${user.username}" został pomyślnie utworzony.`);
       setCreateDialogOpen(false);
     },
     [createUser]
@@ -129,9 +108,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   const handleEditSubmit = React.useCallback(
     async (userId: string, command: UpdateUserCommand) => {
       const user = await updateUser(userId, command);
-      setSuccessMessage(
-        `Użytkownik "${user.username}" został pomyślnie zaktualizowany.`
-      );
+      setSuccessMessage(`Użytkownik "${user.username}" został pomyślnie zaktualizowany.`);
       setEditDialogOpen(false);
       setSelectedUser(null);
     },
@@ -148,17 +125,12 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
 
   // Handlers for selection
   const handleToggleSelect = React.useCallback((id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   }, []);
 
-  const handleToggleSelectAll = React.useCallback(
-    (checked: boolean, ids: string[]) => {
-      setSelectedIds(checked ? ids : []);
-    },
-    []
-  );
+  const handleToggleSelectAll = React.useCallback((checked: boolean, ids: string[]) => {
+    setSelectedIds(checked ? ids : []);
+  }, []);
 
   // Handlers for adjust credits
   const handleAdjustCreditsClick = React.useCallback(() => {
@@ -166,7 +138,12 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   }, []);
 
   const handleAdjustCreditsSubmit = React.useCallback(
-    async (command: { userIds: string[]; amount: number; reason: string; description?: string }) => {
+    async (command: {
+      userIds: string[];
+      amount: number;
+      reason: string;
+      description?: string;
+    }) => {
       await bulkAdjustCredits(command);
       setSuccessMessage(`Godzinki dostosowane dla ${selectedIds.length} użytkowników.`);
       setAdjustCreditsOpen(false);
@@ -177,8 +154,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
 
   // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
-    filters.role !== DEFAULT_ROLE_FILTER ||
-    (filters.search && filters.search.length > 0);
+    filters.role !== DEFAULT_ROLE_FILTER || (filters.search && filters.search.length > 0);
 
   return (
     <div className="space-y-6" data-testid="user-list-container">
@@ -202,7 +178,10 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
                 Dostosuj Godzinki ({selectedIds.length})
               </Button>
             )}
-            <Button onClick={handleCreateClick} className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              onClick={handleCreateClick}
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
               <UserPlus className={ICON_SIZE_SM + " mr-2"} />
               Utwórz Użytkownika
             </Button>
@@ -212,7 +191,10 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
 
       {/* Success Message */}
       {successMessage && (
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950" data-testid="admin-success-alert">
+        <Alert
+          className="border-green-500 bg-green-50 dark:bg-green-950"
+          data-testid="admin-success-alert"
+        >
           <CheckCircle2 className={ICON_SIZE_SM + " text-green-600"} />
           <AlertDescription className="text-green-800 dark:text-green-200">
             {successMessage}
@@ -224,9 +206,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       {(error || errorMessage) && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
-          <AlertDescription>
-            {errorMessage || error?.message || "Wystąpił błąd"}
-          </AlertDescription>
+          <AlertDescription>{errorMessage || error?.message || "Wystąpił błąd"}</AlertDescription>
         </Alert>
       )}
 

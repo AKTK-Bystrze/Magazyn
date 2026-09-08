@@ -73,20 +73,19 @@ export function ReservationCard({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-lg truncate">
-                {reservation.equipmentName}
-              </h3>
+              <h3 className="font-semibold text-lg truncate">{reservation.equipmentName}</h3>
               {showOwnershipBadge && isOwn && (
                 <Badge variant="secondary" className="text-xs">
                   Twoja rezerwacja
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {reservation.equipmentType}
-            </p>
+            <p className="text-sm text-muted-foreground">{reservation.equipmentType}</p>
           </div>
-          <StatusBadge status={reservation.status} data-testid={`reservation-status-${reservation.id}`} />
+          <StatusBadge
+            status={reservation.status}
+            data-testid={`reservation-status-${reservation.id}`}
+          />
         </div>
       </CardHeader>
 
@@ -95,9 +94,7 @@ export function ReservationCard({
         {(mode === "admin" || !isOwn) && (
           <div className="flex items-center gap-2 text-sm">
             <User className={ICON_SIZE_SM + " text-muted-foreground"} />
-            <span className="font-medium text-foreground">
-              {reservation.username}
-            </span>
+            <span className="font-medium text-foreground">{reservation.username}</span>
           </div>
         )}
         {/* Date Range */}
@@ -160,7 +157,6 @@ export function ReservationCard({
                 Zwróć
               </Button>
             )}
-
 
             <a
               href={`/reservations/${reservation.id}`}

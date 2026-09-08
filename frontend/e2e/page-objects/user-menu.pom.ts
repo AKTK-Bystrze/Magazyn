@@ -1,12 +1,12 @@
-import type { Page, Locator } from '@playwright/test';
-import { E2E_CONFIG } from '../constants';
+import type { Page, Locator } from "@playwright/test";
+import { E2E_CONFIG } from "../constants";
 
 /**
  * Page Object Model for UserMenu component
- * 
+ *
  * Encapsulates user menu interactions with proper waiting strategies
  * for Radix UI portal-based dropdown menus.
- * 
+ *
  * @example
  * const userMenu = new UserMenuPOM(page);
  * await userMenu.open();
@@ -19,8 +19,8 @@ export class UserMenuPOM {
 
   constructor(page: Page) {
     this.page = page;
-    this.trigger = page.getByTestId('user-menu-trigger');
-    this.logoutButton = page.getByTestId('logout-button');
+    this.trigger = page.getByTestId("user-menu-trigger");
+    this.logoutButton = page.getByTestId("logout-button");
   }
 
   /**
@@ -31,7 +31,7 @@ export class UserMenuPOM {
    */
   async open(): Promise<void> {
     await this.trigger.click();
-    await this.logoutButton.waitFor({ state: 'visible', timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
+    await this.logoutButton.waitFor({ state: "visible", timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
   }
 
   /**
@@ -62,8 +62,10 @@ export class UserMenuPOM {
    */
   async logoutAndWaitForRedirect(): Promise<void> {
     await this.open();
-    
-    const navigationPromise = this.page.waitForURL(/\/login/, { timeout: E2E_CONFIG.TIMEOUT.NAVIGATION });
+
+    const navigationPromise = this.page.waitForURL(/\/login/, {
+      timeout: E2E_CONFIG.TIMEOUT.NAVIGATION,
+    });
     await this.clickLogout();
     await navigationPromise;
   }
@@ -90,7 +92,7 @@ export class UserMenuPOM {
    */
   async isVisible(): Promise<boolean> {
     try {
-      await this.trigger.waitFor({ state: 'visible', timeout: 1000 });
+      await this.trigger.waitFor({ state: "visible", timeout: 1000 });
       return true;
     } catch {
       return false;

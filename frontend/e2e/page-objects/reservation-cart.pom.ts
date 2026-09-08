@@ -7,30 +7,30 @@ import { expect } from "@playwright/test";
  */
 export class ReservationCartPOM {
   readonly page: Page;
-  
+
   // Main sections
   readonly cartView: Locator;
   readonly dateRangePicker: Locator;
   readonly costEstimator: Locator;
   readonly confirmationModal: Locator;
-  
+
   // Cart elements
   readonly cartItems: Locator;
   readonly checkoutButton: Locator;
-  
+
   // Date picker elements
   readonly startDateInput: Locator;
   readonly endDateInput: Locator;
-  
+
   // Cost displays
   readonly currentBalance: Locator;
   readonly totalCost: Locator;
   readonly remainingBalance: Locator;
-  
+
   // Confirmation elements
   readonly confirmButton: Locator;
   readonly cancelButton: Locator;
-  
+
   // Error elements
   readonly insufficientCreditsError: Locator;
   readonly conflictError: Locator;
@@ -40,30 +40,30 @@ export class ReservationCartPOM {
 
   constructor(page: Page) {
     this.page = page;
-    
+
     // Main sections
     this.cartView = page.getByTestId("reservation-cart");
     this.dateRangePicker = page.getByTestId("date-range-picker");
     this.costEstimator = page.getByTestId("cost-estimator");
     this.confirmationModal = page.getByTestId("reservation-confirmation-modal");
-    
+
     // Cart elements
     this.cartItems = page.locator('[data-testid^="cart-item-"]:not([data-testid*="-remove-"])');
     this.checkoutButton = page.getByTestId("checkout-button");
-    
+
     // Date picker
     this.startDateInput = page.getByTestId("start-date-input");
     this.endDateInput = page.getByTestId("end-date-input");
-    
+
     // Cost displays
     this.currentBalance = page.getByTestId("current-credit-balance");
     this.totalCost = page.getByTestId("reservation-total-cost");
     this.remainingBalance = page.getByTestId("remaining-credit-balance");
-    
+
     // Confirmation
     this.confirmButton = page.getByTestId("confirm-reservation-button");
     this.cancelButton = page.getByTestId("cancel-confirmation-button");
-    
+
     // Errors
     this.insufficientCreditsError = page.getByTestId("error-insufficient-credits");
     this.conflictError = page.getByTestId("error-reservation-conflict");
@@ -81,7 +81,7 @@ export class ReservationCartPOM {
   async selectUser(usernameOrEmail: string): Promise<void> {
     await this.userSelectorTrigger.click();
 
-    // In shadcn/ui select, options are usually in a role="listbox" 
+    // In shadcn/ui select, options are usually in a role="listbox"
     // We can select by text content
     const option = this.page.getByRole("option", { name: usernameOrEmail });
     await expect(option).toBeVisible();
@@ -141,7 +141,7 @@ export class ReservationCartPOM {
   async removeItem(equipmentId: string): Promise<void> {
     const removeButton = this.page.getByTestId(`cart-item-remove-${equipmentId}`);
     await removeButton.click();
-    
+
     // Wait for item to be removed
     await expect(this.getCartItem(equipmentId)).not.toBeVisible();
   }
@@ -170,13 +170,13 @@ export class ReservationCartPOM {
   async setDatesFromNow(startDaysFromNow: number, endDaysFromNow: number): Promise<void> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() + startDaysFromNow);
-    
+
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + endDaysFromNow);
-    
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
-    
+
+    const startDateStr = startDate.toISOString().split("T")[0];
+    const endDateStr = endDate.toISOString().split("T")[0];
+
     await this.setDates(startDateStr, endDateStr);
   }
 
@@ -188,7 +188,7 @@ export class ReservationCartPOM {
   async getTotalCost(): Promise<number> {
     const text = await this.totalCost.textContent();
     if (!text) return 0;
-    
+
     // Extract number from "-X credits" format
     const match = text.match(/-?(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
@@ -202,7 +202,7 @@ export class ReservationCartPOM {
   async getCurrentBalance(): Promise<number> {
     const text = await this.currentBalance.textContent();
     if (!text) return 0;
-    
+
     const match = text.match(/(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
   }
@@ -215,7 +215,7 @@ export class ReservationCartPOM {
   async getRemainingBalance(): Promise<number> {
     const text = await this.remainingBalance.textContent();
     if (!text) return 0;
-    
+
     const match = text.match(/-?(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
   }
@@ -228,7 +228,7 @@ export class ReservationCartPOM {
   async proceedToConfirmation(): Promise<void> {
     // Use force: true to bypass potential UI overlaps (e.g. CostEstimator in mobile view)
     await this.checkoutButton.click({ force: true });
-    
+
     // Wait for confirmation modal to appear
     await expect(this.confirmationModal).toBeVisible();
   }

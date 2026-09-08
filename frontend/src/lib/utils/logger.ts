@@ -77,4 +77,6 @@ function getClientTraceId(): string | undefined {
   return undefined;
 }
 
-export const defaultLogger = new StructuredLogger(getClientTraceId() ? { trace_id: getClientTraceId() } : {});
+export const defaultLogger = new StructuredLogger(
+  getClientTraceId() ? { trace_id: getClientTraceId() } : {}
+);
