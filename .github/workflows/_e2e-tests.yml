@@ -62,6 +62,11 @@ jobs:
         with:
           mode: local
 
+      - name: Configure host.docker.internal
+        if: inputs.supabase-mode == 'local'
+        run: |
+          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+
       - name: Run Backend Integration Tests
         if: inputs.supabase-mode == 'local'
         working-directory: ./backend
@@ -69,12 +74,7 @@ jobs:
 
       - name: Reset Supabase Database
         if: inputs.supabase-mode == 'local'
-        run: npx supabase db reset
-
-      - name: Configure host.docker.internal
-        if: inputs.supabase-mode == 'local'
-        run: |
-          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+        run: supabase db reset
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
