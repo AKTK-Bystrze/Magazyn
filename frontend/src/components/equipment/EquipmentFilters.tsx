@@ -63,13 +63,10 @@ export function EquipmentFilters({
   }, [searchValue, filters.search, onFilterChange]);
 
   // Handle search input change
-  const handleSearchChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
-      setSearchValue(value);
-    },
-    []
-  );
+  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
+    setSearchValue(value);
+  }, []);
 
   // Handle type filter change
   const handleTypeChange = React.useCallback(
@@ -120,10 +117,7 @@ export function EquipmentFilters({
       </div>
 
       {/* Type Filter */}
-      <Select
-        value={filters.typeId ?? "ALL"}
-        onValueChange={handleTypeChange}
-      >
+      <Select value={filters.typeId ?? "ALL"} onValueChange={handleTypeChange}>
         <SelectTrigger className="w-full sm:w-[180px]" aria-label={UI.FILTER_BY_TYPE}>
           <SelectValue placeholder={UI.ALL_TYPES} />
         </SelectTrigger>

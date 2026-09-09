@@ -31,18 +31,18 @@ export function CostEstimator({
       return null;
     }
     const breakdown = calculateCost(items, startDate, endDate, currentCreditBalance);
-    
+
     // For free reservations, override costs to 0
     if (isFreeReservation && breakdown) {
       return {
         ...breakdown,
-        itemCosts: breakdown.itemCosts.map(item => ({ ...item, totalCost: 0 })),
+        itemCosts: breakdown.itemCosts.map((item) => ({ ...item, totalCost: 0 })),
         totalCreditCost: 0,
         remainingBalance: breakdown.currentBalance, // No deduction for free
         isFreeReservation: true,
       };
     }
-    
+
     return breakdown;
   }, [items, startDate, endDate, currentCreditBalance, isFreeReservation]);
 
@@ -56,15 +56,14 @@ export function CostEstimator({
           </h3>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Wybierz daty, aby zobaczyć koszt
-          </p>
+          <p className="text-sm text-muted-foreground">Wybierz daty, aby zobaczyć koszt</p>
         </CardContent>
       </Card>
     );
   }
 
-  const hasInsufficientCredits = !costBreakdown.isFreeReservation && costBreakdown.remainingBalance < 0;
+  const hasInsufficientCredits =
+    !costBreakdown.isFreeReservation && costBreakdown.remainingBalance < 0;
 
   return (
     <Card data-testid="cost-estimator">
@@ -76,23 +75,23 @@ export function CostEstimator({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">
-            Podział według Sprzętu
-          </h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Podział według Sprzętu</h4>
           <div className="space-y-1">
             {costBreakdown.itemCosts.map((item) => (
-              <div
-                key={item.equipmentId}
-                className="flex justify-between text-sm"
-              >
+              <div key={item.equipmentId} className="flex justify-between text-sm">
                 <span className="text-foreground">
                   {item.name}{" "}
                   <span className="text-muted-foreground">
-                    ({item.creditCostPerDay} × {item.days}{" "}
-                    {item.days === 1 ? "dzień" : "dni"})
+                    ({item.creditCostPerDay} × {item.days} {item.days === 1 ? "dzień" : "dni"})
                   </span>
                 </span>
-                <span className={costBreakdown.isFreeReservation ? "font-medium text-green-600 dark:text-green-400" : "font-medium"}>
+                <span
+                  className={
+                    costBreakdown.isFreeReservation
+                      ? "font-medium text-green-600 dark:text-green-400"
+                      : "font-medium"
+                  }
+                >
                   {costBreakdown.isFreeReservation ? "0" : item.totalCost} godzinki
                 </span>
               </div>
@@ -103,7 +102,9 @@ export function CostEstimator({
         <div className="border-t pt-4 space-y-2">
           {costBreakdown.isFreeReservation && (
             <div className="flex justify-center py-2">
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">Darmowa Rezerwacja</span>
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                Darmowa Rezerwacja
+              </span>
             </div>
           )}
           <div className="flex justify-between text-sm">
@@ -114,37 +115,48 @@ export function CostEstimator({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Całkowity Koszt</span>
-            <span className={costBreakdown.isFreeReservation ? "font-medium text-green-600 dark:text-green-400" : "font-medium"} data-testid="reservation-total-cost">
+            <span
+              className={
+                costBreakdown.isFreeReservation
+                  ? "font-medium text-green-600 dark:text-green-400"
+                  : "font-medium"
+              }
+              data-testid="reservation-total-cost"
+            >
               {costBreakdown.isFreeReservation ? "0" : `-${costBreakdown.totalCreditCost}`} godzinki
             </span>
           </div>
           <div className="border-t pt-2 flex justify-between font-semibold">
             <span>Pozostałe Saldo</span>
             <span
-              className={
-                hasInsufficientCredits ? "text-destructive" : "text-primary"
-              }
+              className={hasInsufficientCredits ? "text-destructive" : "text-primary"}
               data-testid="remaining-credit-balance"
             >
-              {costBreakdown.isFreeReservation ? costBreakdown.currentBalance : costBreakdown.remainingBalance} godzinki
+              {costBreakdown.isFreeReservation
+                ? costBreakdown.currentBalance
+                : costBreakdown.remainingBalance}{" "}
+              godzinki
             </span>
           </div>
         </div>
 
         {hasInsufficientCredits && (
-          <Alert className="border-destructive bg-destructive/10" data-testid="error-insufficient-credits">
+          <Alert
+            className="border-destructive bg-destructive/10"
+            data-testid="error-insufficient-credits"
+          >
             <AlertCircle className={ICON_SIZE_SM} />
             <div className="ml-2">
               <p className="font-semibold">Niewystarczająca liczba godzinek</p>
               <p className="text-sm mt-1">
-                Potrzebujesz {Math.abs(costBreakdown.remainingBalance)} więcej godzinek,
-                aby dokończyć tę rezerwację.
+                Potrzebujesz {Math.abs(costBreakdown.remainingBalance)} więcej godzinek, aby
+                dokończyć tę rezerwację.
               </p>
               <a
                 href={ROUTES.PROTECTED.CREDIT_REQUESTS}
                 className="text-sm underline hover:no-underline mt-2 inline-block"
               >
-                Proś o więcej godzinek
+                Poproś o więcej godzinek
               </a>
             </div>
           </Alert>

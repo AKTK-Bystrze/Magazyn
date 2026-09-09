@@ -106,7 +106,8 @@ export function ConfirmationModal({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Czas trwania:</span>
                 <span className="font-medium">
-                  {costBreakdown.itemCosts[0]?.days || 0} {(costBreakdown.itemCosts[0]?.days || 0) === 1 ? 'dzień' : 'dni'}
+                  {costBreakdown.itemCosts[0]?.days || 0}{" "}
+                  {(costBreakdown.itemCosts[0]?.days || 0) === 1 ? "dzień" : "dni"}
                 </span>
               </div>
             </div>
@@ -114,7 +115,7 @@ export function ConfirmationModal({
 
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">
-              Sprzęt ({items.length} {items.length === 1 ? 'przedmiot' : 'przedmiotów'})
+              Sprzęt ({items.length} {items.length === 1 ? "przedmiot" : "przedmiotów"})
             </h3>
             <div className="space-y-1">
               {items.map((item) => (
@@ -124,9 +125,7 @@ export function ConfirmationModal({
                 >
                   <div>
                     <p className="font-medium">{item.name}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {item.typeName}
-                    </p>
+                    <p className="text-muted-foreground text-xs">{item.typeName}</p>
                   </div>
                   <span className="text-muted-foreground">
                     {item.creditCostPerDay} godzinki/dzień
@@ -142,8 +141,12 @@ export function ConfirmationModal({
               {costBreakdown.isFreeReservation ? (
                 <div className="space-y-2">
                   <div className="text-center py-4">
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">Darmowa Rezerwacja</p>
-                    <p className="text-sm text-muted-foreground mt-1">Ta rezerwacja nie będzie obciążała konta godzinkami</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      Darmowa Rezerwacja
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Ta rezerwacja nie będzie obciążała konta godzinkami
+                    </p>
                   </div>
                   {costBreakdown.itemCosts.map((item) => (
                     <div
@@ -156,12 +159,16 @@ export function ConfirmationModal({
                           ({item.creditCostPerDay} × {item.days})
                         </span>
                       </span>
-                      <span className="text-green-600 dark:text-green-400 font-medium">0 godzinek</span>
+                      <span className="text-green-600 dark:text-green-400 font-medium">
+                        0 godzinek
+                      </span>
                     </div>
                   ))}
                   <div className="border-t pt-2 mt-2 flex justify-between text-sm">
                     <span className="text-muted-foreground">Aktualne Saldo:</span>
-                    <span data-testid="confirmation-current-balance">{costBreakdown.currentBalance} godzinki</span>
+                    <span data-testid="confirmation-current-balance">
+                      {costBreakdown.currentBalance} godzinki
+                    </span>
                   </div>
                   <div className="flex justify-between font-semibold text-lg border-t pt-2">
                     <span>Pozostałe Saldo:</span>
@@ -173,10 +180,7 @@ export function ConfirmationModal({
               ) : (
                 <div className="space-y-2">
                   {costBreakdown.itemCosts.map((item) => (
-                    <div
-                      key={item.equipmentId}
-                      className="flex justify-between text-sm"
-                    >
+                    <div key={item.equipmentId} className="flex justify-between text-sm">
                       <span className="text-foreground">
                         {item.name}{" "}
                         <span className="text-muted-foreground">
@@ -194,7 +198,9 @@ export function ConfirmationModal({
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Aktualne Saldo:</span>
-                    <span data-testid="confirmation-current-balance">{costBreakdown.currentBalance} godzinki</span>
+                    <span data-testid="confirmation-current-balance">
+                      {costBreakdown.currentBalance} godzinki
+                    </span>
                   </div>
                   <div className="flex justify-between font-semibold text-lg border-t pt-2">
                     <span>Pozostałe Saldo:</span>
@@ -229,7 +235,7 @@ export function ConfirmationModal({
                   Tworzenie...
                 </>
               ) : (
-                  "Potwierdź Rezerwację"
+                "Potwierdź Rezerwację"
               )}
             </Button>
           </div>

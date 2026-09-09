@@ -31,8 +31,7 @@ const DEFAULT_FILTERS: UserFilterState = {
  */
 const QUERY_KEYS = {
   all: ["users"] as const,
-  list: (filters: Partial<UserFilterState>) =>
-    [...QUERY_KEYS.all, "list", filters] as const,
+  list: (filters: Partial<UserFilterState>) => [...QUERY_KEYS.all, "list", filters] as const,
   detail: (id: string) => [...QUERY_KEYS.all, "detail", id] as const,
 };
 
@@ -59,10 +58,7 @@ interface UseUsersReturn {
   /** Current filter state */
   filters: UserFilterState;
   /** Update a single filter value */
-  setFilter: <K extends keyof UserFilterState>(
-    key: K,
-    value: UserFilterState[K]
-  ) => void;
+  setFilter: <K extends keyof UserFilterState>(key: K, value: UserFilterState[K]) => void;
   /** Reset all filters to defaults */
   resetFilters: () => void;
   /** Refetch the list */
@@ -106,12 +102,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   });
 
   // Fetch users list
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: QUERY_KEYS.list(filters),
     queryFn: () => usersApi.list(filters),
     enabled,
@@ -139,8 +130,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
 
   // Bulk adjust credits mutation
   const bulkAdjustCreditsMutation = useMutation({
-    mutationFn: (command: BulkAdjustCreditsCommand) =>
-      usersApi.bulkAdjustCredits(command),
+    mutationFn: (command: BulkAdjustCreditsCommand) => usersApi.bulkAdjustCredits(command),
     onSuccess: () => {
       // Invalidate list and any cached details
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
@@ -203,8 +193,6 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     updateUser,
     bulkAdjustCredits,
     isMutating:
-      createMutation.isPending ||
-      updateMutation.isPending ||
-      bulkAdjustCreditsMutation.isPending,
+      createMutation.isPending || updateMutation.isPending || bulkAdjustCreditsMutation.isPending,
   };
 }

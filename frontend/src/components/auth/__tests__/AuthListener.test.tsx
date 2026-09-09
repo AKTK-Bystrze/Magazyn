@@ -87,8 +87,7 @@ let mockCookie = "";
 
 describe("AuthListener", () => {
   let authStateCallback:
-    | ((event: AuthChangeEvent, session: Session | null) => Promise<void>)
-    | null = null;
+    ((event: AuthChangeEvent, session: Session | null) => Promise<void>) | null = null;
   const mockReplace = vi.fn();
 
   beforeEach(() => {

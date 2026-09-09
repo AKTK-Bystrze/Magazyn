@@ -57,9 +57,9 @@ export class AdminUsersPage {
   async updateUserRole(role: UserRole) {
     await this.roleSelect.click();
     const roleTextMap: Record<string, string> = {
-      user: "User",
-      admin: "Admin",
-      super_admin: "Super Admin",
+      user: "Użytkownik",
+      admin: "Administrator",
+      super_admin: "Super Administrator",
     };
     const optionText = roleTextMap[role] || role;
     await this.page.getByRole("option", { name: optionText, exact: true }).click();

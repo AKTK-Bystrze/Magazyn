@@ -2,4 +2,4 @@
 // ANALYTICS DOMAIN TYPES - Barrel Export
 // =============================================================================
 
-export * from './analytics.types';
+export * from "./analytics.types";

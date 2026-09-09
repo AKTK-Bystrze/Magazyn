@@ -1,7 +1,7 @@
-import { type Page, type Locator } from '@playwright/test';
-import { expect } from '../fixtures';
-import { TEST_IDS } from '../constants/test-ids';
-import { E2E_CONFIG } from '../constants/config';
+import { type Page, type Locator } from "@playwright/test";
+import { expect } from "../fixtures";
+import { TEST_IDS } from "../constants/test-ids";
+import { E2E_CONFIG } from "../constants/config";
 
 /**
  * Equipment form data for create/edit operations.
@@ -57,8 +57,8 @@ export class EquipmentManagerPage {
    * Navigates to the equipment manager page.
    */
   async goto() {
-    await this.page.goto('/admin/equipment/manage', { waitUntil: 'networkidle' });
-    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.goto("/admin/equipment/manage", { waitUntil: "networkidle" });
+    await this.page.waitForLoadState("domcontentloaded");
     await this.page.waitForTimeout(E2E_CONFIG.TIMEOUT.ACTION);
   }
 
@@ -66,7 +66,7 @@ export class EquipmentManagerPage {
    * Clicks the "Add Equipment" button to open the creation dialog.
    */
   async clickAddEquipment() {
-    await this.addButton.waitFor({ state: 'visible' });
+    await this.addButton.waitFor({ state: "visible" });
     await expect(this.addButton).toBeEnabled({ timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
     await this.addButton.click();
     await expect(this.getAddDialog()).toBeVisible({ timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
@@ -84,7 +84,11 @@ export class EquipmentManagerPage {
 
     if (data.typeId) {
       await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_TYPE_SELECT).click({ force: true });
-      await this.page.getByRole('option').filter({ hasText: new RegExp(data.typeId, 'i') }).first().click({ force: true });
+      await this.page
+        .getByRole("option")
+        .filter({ hasText: new RegExp(data.typeId, "i") })
+        .first()
+        .click({ force: true });
     }
 
     if (data.name) {
@@ -97,7 +101,10 @@ export class EquipmentManagerPage {
 
     if (data.status) {
       await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_STATUS_SELECT).click({ force: true });
-      await this.page.getByRole('option', { name: new RegExp(data.status, 'i') }).first().click({ force: true });
+      await this.page
+        .getByRole("option", { name: new RegExp(data.status, "i") })
+        .first()
+        .click({ force: true });
     }
   }
 
@@ -138,7 +145,7 @@ export class EquipmentManagerPage {
     await actionsMenu.click({ force: true });
 
     // Wait for the menu to open (Radix UI portal) and animation to finish
-    await expect(this.page.getByRole('menu')).toBeVisible();
+    await expect(this.page.getByRole("menu")).toBeVisible();
     await this.page.waitForTimeout(E2E_CONFIG.TIMEOUT.ACTION);
   }
 
@@ -197,7 +204,7 @@ export class EquipmentManagerPage {
     await expect(this.page.getByTestId(TEST_IDS.equipmentArchiveBtn(id))).toBeVisible();
 
     // Close menu
-    await this.page.keyboard.press('Escape');
+    await this.page.keyboard.press("Escape");
   }
 
   /**

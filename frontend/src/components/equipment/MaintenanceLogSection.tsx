@@ -101,12 +101,12 @@ export function MaintenanceLogSection({
         <form onSubmit={handleSubmit} className="rounded-lg border p-4 space-y-3">
           <div className="space-y-2">
             <label htmlFor={notesInputId} className="text-sm font-medium">
-              Maintenance Notes
+              Notatki Serwisowe
             </label>
             <Input
               id={notesInputId}
               type="text"
-              placeholder="e.g., Replaced battery, cleaned lens..."
+              placeholder="np. Wymieniono baterię, wyczyszczono obiektyw..."
               value={notes}
               onChange={handleNotesChange}
               disabled={isSubmitting}
@@ -115,7 +115,7 @@ export function MaintenanceLogSection({
           </div>
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Note"}
+              {isSubmitting ? "Dodawanie..." : "Dodaj Notatkę"}
             </Button>
             <Button
               type="button"
@@ -124,7 +124,7 @@ export function MaintenanceLogSection({
               onClick={handleCancel}
               disabled={isSubmitting}
             >
-              Cancel
+              Anuluj
             </Button>
           </div>
         </form>
@@ -172,7 +172,7 @@ export function MaintenanceLogSection({
 
                 {/* Metadata */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{log.adminUsername ? `by ${log.adminUsername}` : "System"}</span>
+                  <span>{log.adminUsername ? `przez ${log.adminUsername}` : "System"}</span>
                   <span>{formatDateLocalized(log.createdAt)}</span>
                 </div>
               </div>

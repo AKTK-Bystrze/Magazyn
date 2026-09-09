@@ -1,8 +1,8 @@
-import { test, expect } from '../../fixtures';
-import { AdminUsersPage } from '../../page-objects/admin-users.pom';
-import { TEST_IDS } from '../../constants';
+import { test, expect } from "../../fixtures";
+import { AdminUsersPage } from "../../page-objects/admin-users.pom";
+import { TEST_IDS } from "../../constants";
 
-test.describe('Admin User Management', () => {
+test.describe("Admin User Management", () => {
   let targetUserEmail: string;
   let targetUserId: string;
 
@@ -13,27 +13,27 @@ test.describe('Admin User Management', () => {
   test.beforeEach(async ({ supabaseAdmin, workerIndex }) => {
     const timestamp = Date.now();
     targetUserEmail = `admin_test_target_${workerIndex}_${timestamp}@example.com`;
-    
+
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email: targetUserEmail,
-      password: 'TestSecurePassword123!',
+      password: "TestSecurePassword123!",
       email_confirm: true,
-      user_metadata: { name: 'Target User' }
+      user_metadata: { name: "Target User" },
     });
-    
+
     if (error || !data.user) {
       throw new Error(`Failed to create target user: ${error?.message}`);
     }
     targetUserId = data.user.id;
 
     // Ensure profile exists matching the auth user
-    const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
+    const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
       id: targetUserId,
       email: targetUserEmail,
       username: `target_user_${timestamp}`,
-      role: 'user',
+      role: "user",
       is_enabled: true,
-      credit_balance: 100
+      credit_balance: 100,
     });
 
     if (profileError) {
@@ -46,24 +46,26 @@ test.describe('Admin User Management', () => {
    */
   test.afterEach(async ({ supabaseAdmin }) => {
     if (targetUserId) {
-        await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+      await supabaseAdmin.auth.admin.deleteUser(targetUserId);
     }
   });
 
-  test('should list, search, and edit user details', async ({ superAdminPage }) => {
+  test("should list, search, and edit user details", async ({ superAdminPage }) => {
     const adminUsersPage = new AdminUsersPage(superAdminPage);
-    
+
     // 1. Navigate to admin users page
     await adminUsersPage.goto();
     await expect(adminUsersPage.getUsersTable()).toBeVisible();
 
     // 2. Verify table columns (mobile viewport shows: Nazwa użytkownika, Rola)
-    await expect(superAdminPage.getByRole('columnheader', { name: 'Nazwa użytkownika' })).toBeVisible();
-    await expect(superAdminPage.getByRole('columnheader', { name: 'Rola' })).toBeVisible();
+    await expect(
+      superAdminPage.getByRole("columnheader", { name: "Nazwa użytkownika" })
+    ).toBeVisible();
+    await expect(superAdminPage.getByRole("columnheader", { name: "Rola" })).toBeVisible();
 
     // 3. Search Interaction
     await adminUsersPage.searchUser(targetUserEmail);
-    
+
     // Verify the user row is visible
     // The edit button ID contains the email, confirming the row is for our user
     const editButton = superAdminPage.getByTestId(TEST_IDS.adminUserRowEdit(targetUserEmail));
@@ -71,10 +73,10 @@ test.describe('Admin User Management', () => {
 
     // 4. Edit Flow
     await adminUsersPage.openEditModal(targetUserEmail);
-    
+
     // Change Role: User -> Admin
-    await adminUsersPage.updateUserRole('admin');
-    
+    await adminUsersPage.updateUserRole("admin");
+
     // Toggle Status: Active -> Inactive (assuming it starts active)
     await adminUsersPage.setUserStatus(false);
 
@@ -85,8 +87,8 @@ test.describe('Admin User Management', () => {
     await expect(superAdminPage.getByTestId(TEST_IDS.ADMIN_SUCCESS_ALERT)).toBeVisible();
 
     // Verify updates in the user row
-    const userRow = superAdminPage.getByRole('row').filter({ hasText: targetUserEmail });
-    await expect(userRow).toContainText(/admin/i); 
-    await expect(userRow).toContainText(/Wyłączony/i); 
+    const userRow = superAdminPage.getByRole("row").filter({ hasText: targetUserEmail });
+    await expect(userRow).toContainText(/admin/i);
+    await expect(userRow).toContainText(/Wyłączony/i);
   });
 });

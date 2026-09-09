@@ -10,10 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import {
-  ICON_SIZE_MD,
-  EQUIPMENT_MANAGER_UI_STRINGS,
-} from "@/lib/config/constants";
+import { ICON_SIZE_MD, EQUIPMENT_MANAGER_UI_STRINGS } from "@/lib/config/constants";
 import type { EquipmentSearchItem } from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
@@ -66,7 +63,7 @@ export function ConfirmArchiveDialog({
       onClose();
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to archive equipment";
+        err instanceof Error ? err.message : "Nie udało się zarchiwizować sprzętu";
       setLocalError(errorMessage);
     }
   }, [equipment, onConfirm, onClose]);
@@ -80,7 +77,10 @@ export function ConfirmArchiveDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[425px]" data-testid="admin-archive-equipment-dialog">
+      <DialogContent
+        className="w-[95vw] max-w-[425px]"
+        data-testid="admin-archive-equipment-dialog"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className={`${ICON_SIZE_MD} text-destructive`} />

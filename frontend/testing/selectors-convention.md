@@ -6,11 +6,11 @@ This document defines the convention for adding stable `data-testid` selectors t
 
 ## Strategy: `data-testid` Attributes
 
-| Priority | Selector Type | Use Case |
-|----------|--------------|----------|
-| 1️⃣ Primary | `data-testid` | All interactive elements, containers, forms |
-| 2️⃣ Secondary | `getByRole()` | Semantic elements (buttons, links, inputs) |
-| 3️⃣ Fallback | `getByText()` | Static labels (avoid for critical flows) |
+| Priority     | Selector Type | Use Case                                    |
+| ------------ | ------------- | ------------------------------------------- |
+| 1️⃣ Primary   | `data-testid` | All interactive elements, containers, forms |
+| 2️⃣ Secondary | `getByRole()` | Semantic elements (buttons, links, inputs)  |
+| 3️⃣ Fallback  | `getByText()` | Static labels (avoid for critical flows)    |
 
 ## Naming Convention
 
@@ -22,15 +22,15 @@ Use **kebab-case** with semantic structure:
 
 ### Examples
 
-| Pattern | Example | Element |
-|---------|---------|---------|
-| Container | `equipment-list-container` | Main view wrapper |
-| Table | `reservations-table` | Data table |
-| Row | `equipment-row-{id}` | Dynamic row with ID |
-| Button | `login-submit-button` | Action button |
-| Dialog | `cancel-reservation-dialog` | Modal/dialog |
-| Input | `equipment-search-input` | Form input |
-| Filter | `status-filter-select` | Filter control |
+| Pattern   | Example                     | Element             |
+| --------- | --------------------------- | ------------------- |
+| Container | `equipment-list-container`  | Main view wrapper   |
+| Table     | `reservations-table`        | Data table          |
+| Row       | `equipment-row-{id}`        | Dynamic row with ID |
+| Button    | `login-submit-button`       | Action button       |
+| Dialog    | `cancel-reservation-dialog` | Modal/dialog        |
+| Input     | `equipment-search-input`    | Form input          |
+| Filter    | `status-filter-select`      | Filter control      |
 
 ## Implementation Rules
 
@@ -50,20 +50,20 @@ export function LoginForm() {
 // ❌ Bad: selector on parent that renders component
 <div data-testid="login-form">
   <LoginForm />
-</div>
+</div>;
 ```
 
 ### 2. Use consistent prefixes per feature
 
-| Feature | Prefix |
-|---------|--------|
-| Authentication | `auth-`, `login-` |
-| Equipment | `equipment-` |
-| Reservations | `reservation-` |
-| Users | `user-` |
-| Credits | `credits-` |
-| Navigation | `nav-`, `sidebar-` |
-| Admin | `admin-` |
+| Feature        | Prefix             |
+| -------------- | ------------------ |
+| Authentication | `auth-`, `login-`  |
+| Equipment      | `equipment-`       |
+| Reservations   | `reservation-`     |
+| Users          | `user-`            |
+| Credits        | `credits-`         |
+| Navigation     | `nav-`, `sidebar-` |
+| Admin          | `admin-`           |
 
 ### 3. Add IDs to dynamic elements
 
@@ -92,19 +92,17 @@ export function LoginForm() {
 
 ```typescript
 // Basic selectors
-await page.getByTestId('login-submit-button').click();
-await page.getByTestId('equipment-search-input').fill('Kayak');
+await page.getByTestId("login-submit-button").click();
+await page.getByTestId("equipment-search-input").fill("Kayak");
 
 // Dynamic selectors
 await page.getByTestId(`equipment-row-${equipmentId}`).click();
 
 // Combine with role for better semantics
-await page.getByTestId('reservation-form')
-  .getByRole('button', { name: 'Submit' })
-  .click();
+await page.getByTestId("reservation-form").getByRole("button", { name: "Submit" }).click();
 
 // Wait for elements
-await page.getByTestId('reservations-table').waitFor();
+await page.getByTestId("reservations-table").waitFor();
 ```
 
 ## Critical Elements Checklist
@@ -124,9 +122,9 @@ Elements that **MUST** have `data-testid`:
 
 ## Anti-patterns
 
-| ❌ Avoid | ✅ Instead |
-|----------|-----------|
-| `data-testid="btn1"` | `data-testid="login-submit-button"` |
-| `data-testid="div"` | `data-testid="equipment-card-container"` |
-| Using CSS classes for testing | Use `data-testid` |
-| Changing testids frequently | Treat as API contract |
+| ❌ Avoid                      | ✅ Instead                               |
+| ----------------------------- | ---------------------------------------- |
+| `data-testid="btn1"`          | `data-testid="login-submit-button"`      |
+| `data-testid="div"`           | `data-testid="equipment-card-container"` |
+| Using CSS classes for testing | Use `data-testid`                        |
+| Changing testids frequently   | Treat as API contract                    |

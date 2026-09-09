@@ -1,9 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type {
-  CartState,
-  CartItem,
-  CostBreakdown,
-} from "@/types/reservation-cart.types";
+import type { CartState, CartItem, CostBreakdown } from "@/types/reservation-cart.types";
 import {
   saveCartToStorage,
   loadCartFromStorage,
@@ -11,6 +7,7 @@ import {
   loadFilterDatesFromStorage,
 } from "@/lib/utils/cart-storage";
 import { calculateCost } from "@/lib/utils/cart-validation";
+import { getTodayAsString } from "@/lib/utils/date-utils";
 
 /**
  * Custom hook for reservation cart management
@@ -39,8 +36,8 @@ export function useReservationCart(initialCreditBalance: number) {
     // New cart - use filter dates if available
     return {
       items: [],
-      startDate: filterDates?.availableFrom || null,
-      endDate: filterDates?.availableTo || null,
+      startDate: filterDates?.availableFrom || getTodayAsString(),
+      endDate: filterDates?.availableTo || getTodayAsString(),
     };
   });
 
@@ -92,11 +89,7 @@ export function useReservationCart(initialCreditBalance: number) {
   }, []);
 
   const calculateCartCost = useCallback((): CostBreakdown | null => {
-    if (
-      !cartState.startDate ||
-      !cartState.endDate ||
-      cartState.items.length === 0
-    ) {
+    if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
       return null;
     }
     return calculateCost(

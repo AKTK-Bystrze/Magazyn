@@ -164,14 +164,16 @@ export function AddEquipmentDialog({
 
         if (err instanceof Error) {
           errorMessage = err.message;
-        } else if (typeof err === 'object' && err !== null && 'error' in err) {
+        } else if (typeof err === "object" && err !== null && "error" in err) {
           errorMessage = String(err.error);
         }
-        
+
         // Map API errors to form fields
-        if (errorMessage.toLowerCase().includes("internal id") ||
+        if (
+          errorMessage.toLowerCase().includes("internal id") ||
           errorMessage.toLowerCase().includes("already exists") ||
-          (typeof err === 'object' && err !== null && 'code' in err && err.code === 'CONFLICT')) {
+          (typeof err === "object" && err !== null && "code" in err && err.code === "CONFLICT")
+        ) {
           setErrors((prev) => ({ ...prev, internalId: VALIDATION.INTERNAL_ID_EXISTS }));
         } else {
           setErrors((prev) => ({ ...prev, form: errorMessage }));
@@ -183,7 +185,10 @@ export function AddEquipmentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto" data-testid="admin-add-equipment-dialog">
+      <DialogContent
+        className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto"
+        data-testid="admin-add-equipment-dialog"
+      >
         <DialogHeader>
           <DialogTitle>{UI.ADD_DIALOG_TITLE}</DialogTitle>
           <DialogDescription>{UI.ADD_DIALOG_DESCRIPTION}</DialogDescription>
@@ -203,17 +208,12 @@ export function AddEquipmentDialog({
                 value={formData.internalId}
                 onChange={handleInputChange("internalId")}
                 aria-invalid={!!errors.internalId}
-                aria-describedby={
-                  errors.internalId ? `${internalIdFieldId}-error` : undefined
-                }
+                aria-describedby={errors.internalId ? `${internalIdFieldId}-error` : undefined}
                 disabled={isSubmitting}
                 data-testid="equipment-form-internal-id-input"
               />
               {errors.internalId && (
-                <p
-                  id={`${internalIdFieldId}-error`}
-                  className="text-sm text-destructive"
-                >
+                <p id={`${internalIdFieldId}-error`} className="text-sm text-destructive">
                   {errors.internalId}
                 </p>
               )}
@@ -239,16 +239,13 @@ export function AddEquipmentDialog({
                 <SelectContent>
                   {equipmentTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
-                      {type.name} ({type.creditCostPerDay} credits/day)
+                      {type.name} ({type.creditCostPerDay} godzinek/dzień)
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.typeId && (
-                <p
-                  id={`${typeIdFieldId}-error`}
-                  className="text-sm text-destructive"
-                >
+                <p id={`${typeIdFieldId}-error`} className="text-sm text-destructive">
                   {errors.typeId}
                 </p>
               )}
@@ -264,9 +261,7 @@ export function AddEquipmentDialog({
                 value={formData.name}
                 onChange={handleInputChange("name")}
                 aria-invalid={!!errors.name}
-                aria-describedby={
-                  errors.name ? `${nameFieldId}-error` : undefined
-                }
+                aria-describedby={errors.name ? `${nameFieldId}-error` : undefined}
                 disabled={isSubmitting}
                 maxLength={200}
                 data-testid="equipment-form-name-input"
@@ -304,9 +299,7 @@ export function AddEquipmentDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={EQUIPMENT_STATUS.OK}>
-                    {EQUIPMENT_STATUS_LABELS.ok}
-                  </SelectItem>
+                  <SelectItem value={EQUIPMENT_STATUS.OK}>{EQUIPMENT_STATUS_LABELS.ok}</SelectItem>
                   <SelectItem value={EQUIPMENT_STATUS.BROKEN}>
                     {EQUIPMENT_STATUS_LABELS.broken}
                   </SelectItem>
@@ -321,7 +314,9 @@ export function AddEquipmentDialog({
 
             {/* Form-level error */}
             {errors.form && (
-              <p className="text-sm text-destructive" data-testid="equipment-form-error">{errors.form}</p>
+              <p className="text-sm text-destructive" data-testid="equipment-form-error">
+                {errors.form}
+              </p>
             )}
           </div>
 

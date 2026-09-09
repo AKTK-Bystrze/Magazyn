@@ -51,15 +51,10 @@ export function ReservationCardList({
   onViewDetails,
 }: ReservationCardListProps) {
   // Track expanded groups
-  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(
-    new Set()
-  );
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
 
   // Group reservations by date range
-  const groups = React.useMemo(
-    () => groupReservationsByDateRange(reservations),
-    [reservations]
-  );
+  const groups = React.useMemo(() => groupReservationsByDateRange(reservations), [reservations]);
 
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups((prev) => {
@@ -86,9 +81,7 @@ export function ReservationCardList({
 
   // Empty state
   if (reservations.length === 0) {
-    return (
-      <EmptyState hasFilters={hasFilters} />
-    );
+    return <EmptyState hasFilters={hasFilters} />;
   }
 
   return (
@@ -138,11 +131,7 @@ export function ReservationCardList({
       </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-      />
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
     </div>
   );
 }
@@ -181,9 +170,7 @@ interface EmptyStateProps {
  */
 function EmptyState({ hasFilters }: EmptyStateProps) {
   const Icon = hasFilters ? Package : Calendar;
-  const title = hasFilters
-    ? "No reservations match your filters"
-    : "No reservations yet";
+  const title = hasFilters ? "No reservations match your filters" : "No reservations yet";
   const description = hasFilters
     ? "Try adjusting your filters or clearing them to see all reservations."
     : "When you reserve equipment, it will appear here.";

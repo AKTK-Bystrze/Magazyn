@@ -26,9 +26,7 @@ export const reservationsApi = {
    * @param filters - Filter and pagination options
    * @returns Paginated reservation list
    */
-  list: async (
-    filters: Partial<ReservationFilterState>
-  ): Promise<ReservationListResponse> => {
+  list: async (filters: Partial<ReservationFilterState>): Promise<ReservationListResponse> => {
     const params: Record<string, string | number | undefined> = {
       page: filters.page,
       per_page: filters.perPage,
@@ -72,10 +70,7 @@ export const reservationsApi = {
     command: UpdateReservationCommand
   ): Promise<UpdateReservationResponse> => {
     const body = transformUpdateReservationCommand(command);
-    const { data } = await api.patch<UpdateReservationResponse>(
-      `/api/reservations/${id}`,
-      body
-    );
+    const { data } = await api.patch<UpdateReservationResponse>(`/api/reservations/${id}`, body);
     return data;
   },
 
@@ -96,17 +91,12 @@ export const reservationsApi = {
    * @param command - Bulk update command
    * @returns Summary of successful and failed updates
    */
-  bulkUpdate: async (
-    command: BulkUpdateReservationsCommand
-  ): Promise<BulkStatusUpdateResponse> => {
+  bulkUpdate: async (command: BulkUpdateReservationsCommand): Promise<BulkStatusUpdateResponse> => {
     const body = {
       reservation_ids: command.reservationIds,
       status: command.status,
     };
-    const { data } = await api.patch<BulkStatusUpdateResponse>(
-      "/api/reservations/bulk",
-      body
-    );
+    const { data } = await api.patch<BulkStatusUpdateResponse>("/api/reservations/bulk", body);
     return data;
   },
 };

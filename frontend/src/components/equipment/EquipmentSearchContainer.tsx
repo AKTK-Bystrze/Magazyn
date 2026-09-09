@@ -17,8 +17,6 @@ import type { EquipmentSearchItem } from "@/types";
 interface EquipmentSearchContainerProps {
   /** Custom checkout path for cart navigation. Defaults to user checkout route. */
   checkoutPath?: string;
-  /** Whether the user has admin permissions */
-  isAdmin?: boolean;
 }
 
 /**
@@ -28,10 +26,7 @@ interface EquipmentSearchContainerProps {
  * @param props - Component props
  * @returns Equipment search interface with filters, grid, and cart indicator
  */
-function EquipmentSearchContainer({
-  checkoutPath,
-  isAdmin = false,
-}: EquipmentSearchContainerProps) {
+function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProps) {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
@@ -92,7 +87,6 @@ function EquipmentSearchContainer({
               types={types}
               onFilterChange={updateFilter}
               onReset={handleReset}
-              showDates={!isAdmin}
             />
           </SheetContent>
         </Sheet>
@@ -107,7 +101,6 @@ function EquipmentSearchContainer({
             types={types}
             onFilterChange={updateFilter}
             onReset={handleReset}
-            showDates={!isAdmin}
           />
         </div>
       </aside>
@@ -181,8 +174,6 @@ function EquipmentSearchContainer({
 interface EquipmentSearchContainerWithProviderProps {
   /** Custom checkout path for cart navigation */
   checkoutPath?: string;
-  /** Whether the user has admin permissions */
-  isAdmin?: boolean;
 }
 
 /**
@@ -206,11 +197,10 @@ interface EquipmentSearchContainerWithProviderProps {
  */
 export default function EquipmentSearchContainerWithProvider({
   checkoutPath,
-  isAdmin,
 }: EquipmentSearchContainerWithProviderProps) {
   return (
     <QueryProvider>
-      <EquipmentSearchContainer checkoutPath={checkoutPath} isAdmin={isAdmin} />
+      <EquipmentSearchContainer checkoutPath={checkoutPath} />
     </QueryProvider>
   );
 }

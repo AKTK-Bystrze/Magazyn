@@ -42,14 +42,31 @@ interface UserTableProps {
 function SkeletonRow() {
   return (
     <TableRow>
-      <TableCell><Skeleton className="h-4 w-4" /></TableCell>
-      <TableCell><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-32 mt-1 md:hidden" /></TableCell>
-      <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-40" /></TableCell>
-      <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
-      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-      <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-16" /></TableCell>
-      <TableCell className="hidden xl:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
-      <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+      <TableCell>
+        <Skeleton className="h-4 w-4" />
+      </TableCell>
+      <TableCell>
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-3 w-32 mt-1 md:hidden" />
+      </TableCell>
+      <TableCell className="hidden md:table-cell">
+        <Skeleton className="h-4 w-40" />
+      </TableCell>
+      <TableCell className="hidden lg:table-cell">
+        <Skeleton className="h-4 w-16" />
+      </TableCell>
+      <TableCell>
+        <Skeleton className="h-6 w-20" />
+      </TableCell>
+      <TableCell className="hidden md:table-cell">
+        <Skeleton className="h-6 w-16" />
+      </TableCell>
+      <TableCell className="hidden xl:table-cell">
+        <Skeleton className="h-4 w-24" />
+      </TableCell>
+      <TableCell>
+        <Skeleton className="h-8 w-8" />
+      </TableCell>
     </TableRow>
   );
 }
@@ -131,8 +148,9 @@ export function UserTable({
             users.map((user) => (
               <TableRow
                 key={user.id}
-                className={`hover:bg-muted/50 ${!user.isEnabled ? "opacity-60 bg-muted/20" : ""
-                  } ${selectedIds.includes(user.id) ? "bg-muted/30" : ""}`}
+                className={`hover:bg-muted/50 ${
+                  !user.isEnabled ? "opacity-60 bg-muted/20" : ""
+                } ${selectedIds.includes(user.id) ? "bg-muted/30" : ""}`}
               >
                 {isSuperAdmin && (
                   <TableCell>
@@ -161,7 +179,7 @@ export function UserTable({
                     </div>
                   ) : (
                     <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive/15 text-destructive hover:bg-destructive/25">
-                        Wyłączony
+                      Wyłączony
                     </div>
                   )}
                 </TableCell>
@@ -175,7 +193,7 @@ export function UserTable({
                       size="icon"
                       onClick={handleEdit(user)}
                       aria-label={`Edytuj ${user.username}`}
-                      data-testid={`admin-user-row-edit-${user.email.replace(/[@.]/g, '-')}`}
+                      data-testid={`admin-user-row-edit-${user.email.replace(/[@.]/g, "-")}`}
                     >
                       <Pencil className={ICON_SIZE_SM} />
                     </Button>

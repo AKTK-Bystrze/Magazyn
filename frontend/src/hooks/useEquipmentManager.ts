@@ -233,9 +233,6 @@ export function useEquipmentManager(
     createEquipment,
     updateEquipment,
     archiveEquipment,
-    isMutating:
-      createMutation.isPending ||
-      updateMutation.isPending ||
-      archiveMutation.isPending,
+    isMutating: createMutation.isPending || updateMutation.isPending || archiveMutation.isPending,
   };
 }

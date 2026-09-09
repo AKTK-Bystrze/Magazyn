@@ -7,7 +7,6 @@ import { StatusBadge } from "./StatusBadge";
 import { ReservationCard } from "./ReservationCard";
 import { ChevronDown, ChevronRight, Calendar, CreditCard, User } from "lucide-react";
 import { formatDate, calculateDays } from "@/lib/utils/date-utils";
-import { pluralize } from "@/lib/utils/text-utils";
 
 /**
  * Props for GroupedReservationCard component
@@ -48,9 +47,8 @@ export function GroupedReservationCard({
   const days = calculateDays(group.startDate, group.endDate);
   const canBulkModify = group.status === RESERVATION_STATUS.PENDING;
   const canBulkReturn =
-    group.status === RESERVATION_STATUS.PENDING ||
-    group.status === RESERVATION_STATUS.RENTED;
-  // Regular users: actions only in "My Reservations"  
+    group.status === RESERVATION_STATUS.PENDING || group.status === RESERVATION_STATUS.RENTED;
+  // Regular users: actions only in "My Reservations"
   // Admins: actions in both "My Reservations" and "All Reservations"
   const showActions = mode === "admin" || scope === "my";
   const isOwn = currentUserId ? group.userId === currentUserId : false;
@@ -80,7 +78,7 @@ export function GroupedReservationCard({
                   <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="font-medium text-foreground text-sm">
                     {group.username}
-                    {scope === "all" && isOwn && " (You)"}
+                    {scope === "all" && isOwn && " (Ty)"}
                   </span>
                 </div>
               )}
@@ -93,7 +91,7 @@ export function GroupedReservationCard({
                       {formatDate(group.startDate)} → {formatDate(group.endDate)}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {days} {pluralize(days, "day")}
+                      {days} {days === 1 ? "dzień" : "dni"}
                     </div>
                   </div>
                 </div>
@@ -101,7 +99,14 @@ export function GroupedReservationCard({
                 <div className="flex items-center gap-3">
                   <StatusBadge status={group.status} />
                   <div className="text-sm text-muted-foreground">
-                    {group.items.length} {pluralize(group.items.length, "item")}
+                    {group.items.length}{" "}
+                    {group.items.length === 1
+                      ? "element"
+                      : group.items.length % 10 >= 2 &&
+                          group.items.length % 10 <= 4 &&
+                          (group.items.length % 100 < 10 || group.items.length % 100 >= 20)
+                        ? "elementy"
+                        : "elementów"}
                   </div>
                 </div>
               </div>
@@ -122,7 +127,7 @@ export function GroupedReservationCard({
             <div className="flex items-center gap-1.5 font-semibold">
               <CreditCard className="h-4 w-4 text-primary" />
               <span>{group.totalCreditCost}</span>
-              <span className="text-xs text-muted-foreground">credits</span>
+              <span className="text-xs text-muted-foreground">godzinek</span>
             </div>
           </div>
         </div>
@@ -133,7 +138,7 @@ export function GroupedReservationCard({
         <CardContent className="pt-6 space-y-4">
           {/* Bulk Actions */}
           {showActions && (canBulkModify || canBulkReturn) && (
-            <div className="flex gap-2 pb-4 border-b overflow-x-auto">
+            <div className="flex flex-wrap gap-2 pb-4 border-b">
               {canBulkModify && (
                 <Button
                   variant="outline"
@@ -143,7 +148,7 @@ export function GroupedReservationCard({
                     onModifyDatesAll();
                   }}
                 >
-                  Modify Dates for All
+                  Zmień Daty dla Wszystkich
                 </Button>
               )}
               {canBulkReturn && onReturnAll && (
@@ -156,7 +161,7 @@ export function GroupedReservationCard({
                   }}
                   className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
                 >
-                  Return All
+                  Zwróć Wszystkie
                 </Button>
               )}
               {canBulkModify && (
@@ -168,7 +173,7 @@ export function GroupedReservationCard({
                     onCancelAll();
                   }}
                 >
-                  Cancel All
+                  Anuluj Wszystkie
                 </Button>
               )}
             </div>
@@ -187,11 +192,7 @@ export function GroupedReservationCard({
                   showActions={showActions}
                   onCancel={showActions ? () => onCancelSingle(item) : undefined}
                   onModify={showActions ? () => onModifySingle(item) : undefined}
-                  onReturn={
-                    showActions && onReturnSingle
-                      ? () => onReturnSingle(item)
-                      : undefined
-                  }
+                  onReturn={showActions && onReturnSingle ? () => onReturnSingle(item) : undefined}
                   mode={mode}
                 />
               );

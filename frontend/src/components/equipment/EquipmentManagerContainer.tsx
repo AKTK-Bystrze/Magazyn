@@ -157,7 +157,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         setIsArchiveDialogOpen(false);
         setSelectedEquipment(null);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to archive";
+        const message = err instanceof Error ? err.message : "Nie udało się zarchiwizować";
         setArchiveError(message);
         throw err; // Re-throw so dialog can handle it
       }
@@ -223,9 +223,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
           data-testid="admin-error-alert"
         >
           <AlertCircle className={ICON_SIZE_SM} />
-          <AlertDescription>
-            {errorMessage || error?.message || "An error occurred"}
-          </AlertDescription>
+          <AlertDescription>{errorMessage || error?.message || "Wystąpił błąd"}</AlertDescription>
         </Alert>
       )}
 

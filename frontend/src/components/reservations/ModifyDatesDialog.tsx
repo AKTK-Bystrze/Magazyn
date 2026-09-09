@@ -146,7 +146,7 @@ export function ModifyDatesDialog({
       const errorMessage =
         error && typeof error === "object" && "message" in error
           ? String(error.message)
-          : "Failed to modify reservation dates";
+          : "Nie udało się zmienić dat rezerwacji";
       setApiError(errorMessage);
     }
   };
@@ -169,7 +169,10 @@ export function ModifyDatesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="modify-dates-dialog">
+      <DialogContent
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+        data-testid="modify-dates-dialog"
+      >
         <DialogHeader>
           <DialogTitle>{UI.MODIFY_DATES_TITLE}</DialogTitle>
           <DialogDescription>{UI.MODIFY_DATES_DESCRIPTION}</DialogDescription>

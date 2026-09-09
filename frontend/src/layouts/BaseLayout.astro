@@ -1,20 +1,20 @@
 ---
 /**
  * BaseLayout - Core HTML shell for the application
- * 
+ *
  * Provides the foundational HTML structure including:
  * - Meta tags and SEO basics
  * - Theme script for FOUC prevention
  * - Global styles
  * - AuthListener for session management
- * 
+ *
  * @example
  * <BaseLayout title="Dashboard" description="User dashboard page">
  *   <main>Page content</main>
  * </BaseLayout>
  */
-import { AuthListener } from '@/components/auth/AuthListener';
-import '../styles/global.css';
+import { AuthListener } from "@/components/auth/AuthListener";
+import "../styles/global.css";
 
 interface Props {
   /** Page title displayed in browser tab */
@@ -23,8 +23,8 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Bystrzacki Magazyn' } = Astro.props;
-const traceId = Astro.locals.trace_id || 'unknown';
+const { title, description = "Bystrzacki Magazyn" } = Astro.props;
+const traceId = Astro.locals.trace_id || "unknown";
 ---
 
 <!doctype html>
@@ -37,33 +37,30 @@ const traceId = Astro.locals.trace_id || 'unknown';
     <meta name="generator" content={Astro.generator} />
     <meta name="trace-id" content={traceId} />
     <title>{title}</title>
-    
+
     <!-- Theme script - prevents Flash of Unstyled Content (FOUC) -->
     {/* eslint-disable-next-line react/no-unknown-property */}
     <script is:inline>
-      (function() {
-        const STORAGE_KEY_THEME = 'theme';
+      (function () {
+        const STORAGE_KEY_THEME = "theme";
         const stored = localStorage.getItem(STORAGE_KEY_THEME);
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (stored === 'dark' || (!stored && prefersDark)) {
-          document.documentElement.classList.add('dark');
-        } else if (stored === 'light') {
-          document.documentElement.classList.remove('dark');
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        if (stored === "dark" || (!stored && prefersDark)) {
+          document.documentElement.classList.add("dark");
+        } else if (stored === "light") {
+          document.documentElement.classList.remove("dark");
         }
       })();
     </script>
-    
+
     <!-- Sentry Initialization -->
     <script>
-      import * as Sentry from '@sentry/react';
-      
+      import * as Sentry from "@sentry/react";
+
       Sentry.init({
         dsn: import.meta.env.PUBLIC_SENTRY_DSN,
-        integrations: [
-          Sentry.browserTracingIntegration(),
-          Sentry.replayIntegration(),
-        ],
+        integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
         tracesSampleRate: 0.1, // Adjust for production
         replaysSessionSampleRate: 0.1,
         replaysOnErrorSampleRate: 1.0,

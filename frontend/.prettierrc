@@ -6,5 +6,14 @@
   "tabWidth": 2,
   "useTabs": false,
   "arrowParens": "always",
-  "endOfLine": "auto"
+  "endOfLine": "auto",
+  "plugins": ["prettier-plugin-astro"],
+  "overrides": [
+    {
+      "files": "*.astro",
+      "options": {
+        "parser": "astro"
+      }
+    }
+  ]
 }

@@ -89,18 +89,15 @@ export function EditUserDialog({
 
   // Handle input change
   const handleInputChange = React.useCallback(
-    (field: keyof typeof formData) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value =
-          field === "creditBalance"
-            ? Math.max(0, parseInt(e.target.value) || 0)
-            : e.target.value;
-        setFormData((prev) => ({ ...prev, [field]: value }));
-        // Clear error when field is modified
-        if (errors[field]) {
-          setErrors((prev) => ({ ...prev, [field]: "" }));
-        }
-      },
+    (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        field === "creditBalance" ? Math.max(0, parseInt(e.target.value) || 0) : e.target.value;
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      // Clear error when field is modified
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: "" }));
+      }
+    },
     [errors]
   );
 
@@ -171,8 +168,7 @@ export function EditUserDialog({
         onClose();
       } catch (err) {
         // Handle API errors
-        const message =
-          err instanceof Error ? err.message : USER_VALIDATION_MESSAGES.UPDATE_FAILED;
+        const message = err instanceof Error ? err.message : USER_VALIDATION_MESSAGES.UPDATE_FAILED;
         if (message.toLowerCase().includes("email")) {
           setErrors((prev) => ({ ...prev, email: message }));
         } else {
@@ -187,11 +183,14 @@ export function EditUserDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto" data-testid="admin-edit-user-modal">
+      <DialogContent
+        className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto"
+        data-testid="admin-edit-user-modal"
+      >
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle>Edytuj Użytkownika</DialogTitle>
           <DialogDescription>
-            Update user profile for <strong>{user.username}</strong>
+            Aktualizuj profil użytkownika dla <strong>{user.username}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -199,15 +198,10 @@ export function EditUserDialog({
           <div className="grid gap-4 py-4 pb-8">
             {/* Username (read-only) */}
             <div className="grid gap-2">
-              <Label className="text-muted-foreground">Username</Label>
-              <Input
-                value={user.username}
-                disabled
-                className="bg-muted"
-                aria-readonly="true"
-              />
+              <Label className="text-muted-foreground">Nazwa użytkownika</Label>
+              <Input value={user.username} disabled className="bg-muted" aria-readonly="true" />
               <p className="text-xs text-muted-foreground">
-                Username cannot be changed after creation
+                Nazwa użytkownika nie może zostać zmieniona po utworzeniu
               </p>
             </div>
 
@@ -233,28 +227,26 @@ export function EditUserDialog({
 
             {/* Role Field */}
             <div className="grid gap-2">
-              <Label htmlFor={roleId}>Role</Label>
+              <Label htmlFor={roleId}>Rola</Label>
               <Select
                 value={formData.role}
                 onValueChange={handleRoleChange}
                 disabled={isSubmitting}
               >
                 <SelectTrigger id={roleId} data-testid="admin-user-role-select">
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder="Wybierz rolę" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={USER_ROLE.USER}>User</SelectItem>
-                  <SelectItem value={USER_ROLE.ADMIN}>Admin</SelectItem>
-                  <SelectItem value={USER_ROLE.SUPER_ADMIN}>
-                    Super Admin
-                  </SelectItem>
+                  <SelectItem value={USER_ROLE.USER}>Użytkownik</SelectItem>
+                  <SelectItem value={USER_ROLE.ADMIN}>Administrator</SelectItem>
+                  <SelectItem value={USER_ROLE.SUPER_ADMIN}>Super Administrator</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Credit Balance Field */}
             <div className="grid gap-2">
-              <Label htmlFor={creditsId}>Credit Balance</Label>
+              <Label htmlFor={creditsId}>Stan Konta (Kredyty)</Label>
               <Input
                 id={creditsId}
                 type="number"
@@ -263,28 +255,22 @@ export function EditUserDialog({
                 value={formData.creditBalance}
                 onChange={handleInputChange("creditBalance")}
                 aria-invalid={!!errors.creditBalance}
-                aria-describedby={
-                  errors.creditBalance ? `${creditsId}-error` : undefined
-                }
+                aria-describedby={errors.creditBalance ? `${creditsId}-error` : undefined}
                 disabled={isSubmitting}
               />
               {errors.creditBalance && (
-                <p
-                  id={`${creditsId}-error`}
-                  className="text-sm text-destructive"
-                >
+                <p id={`${creditsId}-error`} className="text-sm text-destructive">
                   {errors.creditBalance}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Changes to credit balance are logged in the user&apos;s credit
-                history
+                Zmiany stanu konta są logowane w historii kredytów użytkownika
               </p>
             </div>
 
             {/* Account Status Field */}
             <div className="grid gap-2">
-              <Label>Account Status</Label>
+              <Label>Status Konta</Label>
               <RadioGroup
                 value={formData.isEnabled ? "active" : "disabled"}
                 onValueChange={(value) =>
@@ -297,36 +283,37 @@ export function EditUserDialog({
                 className="flex gap-4"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="active" id={`${statusId}-active`} data-testid="admin-user-status-active" />
-                  <Label htmlFor={`${statusId}-active`}>Active</Label>
+                  <RadioGroupItem
+                    value="active"
+                    id={`${statusId}-active`}
+                    data-testid="admin-user-status-active"
+                  />
+                  <Label htmlFor={`${statusId}-active`}>Aktywne</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="disabled" id={`${statusId}-disabled`} data-testid="admin-user-status-disabled" />
-                  <Label htmlFor={`${statusId}-disabled`}>Disabled</Label>
+                  <RadioGroupItem
+                    value="disabled"
+                    id={`${statusId}-disabled`}
+                    data-testid="admin-user-status-disabled"
+                  />
+                  <Label htmlFor={`${statusId}-disabled`}>Zablokowane</Label>
                 </div>
               </RadioGroup>
               <p className="text-xs text-muted-foreground">
-                Disabled users cannot log in to the system
+                Zablokowani użytkownicy nie mogą logować się do systemu
               </p>
             </div>
 
             {/* Form-level error */}
-            {errors.form && (
-              <p className="text-sm text-destructive">{errors.form}</p>
-            )}
+            {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>
 
           <DialogFooter className="mt-8">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Cancel
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Anuluj
             </Button>
             <Button type="submit" disabled={isSubmitting} data-testid="admin-save-user-btn">
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Zapisywanie..." : "Zapisz Zmiany"}
             </Button>
           </DialogFooter>
         </form>

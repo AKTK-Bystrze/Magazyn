@@ -136,4 +136,3 @@ export type Theme = (typeof THEME)[keyof typeof THEME];
 
 // Re-export breadcrumb config from constants (for backward compatibility)
 export { BREADCRUMB_LABELS, BREADCRUMB_HIDDEN_PATHS };
-

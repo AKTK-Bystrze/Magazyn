@@ -110,7 +110,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await statusButton.click();
 
     // Confirm action in dialog
-    const confirmButton = adminPage.getByRole("button", { name: "Cancel Reservation" });
+    const confirmButton = adminPage.getByRole("button", { name: "Anuluj Rezerwację" });
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
 
@@ -271,7 +271,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await expect(cancelButton).toBeVisible({ timeout: 10000 });
     await cancelButton.click();
 
-    const confirmButton = adminPage.getByRole("button", { name: "Cancel Reservation" });
+    const confirmButton = adminPage.getByRole("button", { name: "Anuluj Rezerwację" });
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
 

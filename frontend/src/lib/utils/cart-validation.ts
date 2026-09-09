@@ -79,10 +79,7 @@ export function calculateCost(
     totalCost: item.creditCostPerDay * days,
   }));
 
-  const totalCreditCost = itemCosts.reduce(
-    (sum, item) => sum + item.totalCost,
-    0
-  );
+  const totalCreditCost = itemCosts.reduce((sum, item) => sum + item.totalCost, 0);
   const remainingBalance = currentBalance - totalCreditCost;
 
   return {
@@ -108,10 +105,7 @@ export function validateCart(
   costBreakdown: CostBreakdown,
   isFreeReservation?: boolean
 ): CartValidation {
-  const dateRangeErrors = validateDateRange(
-    cartState.startDate,
-    cartState.endDate
-  );
+  const dateRangeErrors = validateDateRange(cartState.startDate, cartState.endDate);
 
   const hasSufficientCredits = isFreeReservation || costBreakdown.remainingBalance >= 0;
 

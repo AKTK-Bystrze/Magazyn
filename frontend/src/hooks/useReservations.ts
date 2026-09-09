@@ -33,8 +33,7 @@ const DEFAULT_FILTERS: ReservationFilterState = {
  */
 const QUERY_KEYS = {
   all: ["reservations"] as const,
-  list: (filters: Partial<ReservationFilterState>) =>
-    [...QUERY_KEYS.all, "list", filters] as const,
+  list: (filters: Partial<ReservationFilterState>) => [...QUERY_KEYS.all, "list", filters] as const,
   detail: (id: string) => [...QUERY_KEYS.all, "detail", id] as const,
 };
 
@@ -74,9 +73,7 @@ interface UseReservationsReturn {
     command: UpdateReservationCommand
   ) => Promise<UpdateReservationResponse>;
   /** Bulk update reservation status */
-  bulkUpdateStatus: (
-    command: BulkUpdateReservationsCommand
-  ) => Promise<BulkStatusUpdateResponse>;
+  bulkUpdateStatus: (command: BulkUpdateReservationsCommand) => Promise<BulkStatusUpdateResponse>;
   /** Mutation loading state */
   isMutating: boolean;
 }
@@ -88,9 +85,7 @@ interface UseReservationsReturn {
  * @param options - Configuration options
  * @returns Reservation list data and controls
  */
-export function useReservations(
-  options: UseReservationsOptions = {}
-): UseReservationsReturn {
+export function useReservations(options: UseReservationsOptions = {}): UseReservationsReturn {
   const { initialFilters, enabled = true } = options;
   const queryClient = useQueryClient();
 
@@ -101,12 +96,7 @@ export function useReservations(
   });
 
   // Fetch reservations
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: QUERY_KEYS.list(filters),
     queryFn: () => reservationsApi.list(filters),
     enabled,
@@ -115,13 +105,8 @@ export function useReservations(
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      command,
-    }: {
-      id: string;
-      command: UpdateReservationCommand;
-    }) => reservationsApi.update(id, command),
+    mutationFn: ({ id, command }: { id: string; command: UpdateReservationCommand }) =>
+      reservationsApi.update(id, command),
     onSuccess: () => {
       // Invalidate list to refetch
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
@@ -138,8 +123,7 @@ export function useReservations(
 
   // Bulk update mutation
   const bulkUpdateMutation = useMutation({
-    mutationFn: (command: BulkUpdateReservationsCommand) =>
-      reservationsApi.bulkUpdate(command),
+    mutationFn: (command: BulkUpdateReservationsCommand) => reservationsApi.bulkUpdate(command),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
@@ -147,10 +131,7 @@ export function useReservations(
 
   // Update a single filter
   const setFilter = React.useCallback(
-    <K extends keyof ReservationFilterState>(
-      key: K,
-      value: ReservationFilterState[K]
-    ) => {
+    <K extends keyof ReservationFilterState>(key: K, value: ReservationFilterState[K]) => {
       setFilters((prev) => {
         const newFilters = { ...prev, [key]: value };
         // Reset to page 1 when filters change (except page itself)
@@ -202,8 +183,6 @@ export function useReservations(
     updateReservation,
     bulkUpdateStatus,
     isMutating:
-      updateMutation.isPending ||
-      cancelMutation.isPending ||
-      bulkUpdateMutation.isPending,
+      updateMutation.isPending || cancelMutation.isPending || bulkUpdateMutation.isPending,
   };
 }

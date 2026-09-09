@@ -17,7 +17,10 @@ interface CartItemProps {
  */
 export function CartItem({ item, onRemove }: CartItemProps) {
   return (
-    <Card className="h-full flex flex-col overflow-hidden" data-testid={`cart-item-${item.equipmentId}`}>
+    <Card
+      className="h-full flex flex-col overflow-hidden"
+      data-testid={`cart-item-${item.equipmentId}`}
+    >
       <div className="relative">
         <AspectRatio ratio={16 / 9} className="bg-muted">
           {item.imageUrl ? (
@@ -60,9 +63,7 @@ export function CartItem({ item, onRemove }: CartItemProps) {
           {item.description || "No description provided."}
         </p>
         <div className="flex items-center gap-1 font-medium bg-secondary px-3 py-1.5 rounded-md w-fit">
-          <span className="text-primary font-semibold">
-            {item.creditCostPerDay}
-          </span>
+          <span className="text-primary font-semibold">{item.creditCostPerDay}</span>
           <span className="text-xs text-muted-foreground">credits/day</span>
         </div>
       </CardContent>

@@ -163,7 +163,6 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
                 equipmentId={equipment.id}
                 onAddLog={addMaintenanceLog}
                 isSubmitting={isMutating}
-                readOnly={false}
               />
             )}
           </div>

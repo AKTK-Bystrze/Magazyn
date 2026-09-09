@@ -50,9 +50,7 @@ interface UseEquipmentDetailsReturn {
  * @param equipmentId - ID of equipment to fetch, or null to disable
  * @returns Equipment details, maintenance logs, reservation history, and mutation handlers
  */
-export function useEquipmentDetails(
-  equipmentId: string | null
-): UseEquipmentDetailsReturn {
+export function useEquipmentDetails(equipmentId: string | null): UseEquipmentDetailsReturn {
   const queryClient = useQueryClient();
 
   // Fetch equipment details with maintenance logs (single API call)
