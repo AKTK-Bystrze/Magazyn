@@ -25,8 +25,6 @@ interface MaintenanceLogSectionProps {
   onAddLog: (command: CreateMaintenanceLogCommand) => Promise<MaintenanceLog>;
   /** Whether add log is in progress */
   isSubmitting: boolean;
-  /** Whether the section is in read-only mode */
-  readOnly?: boolean;
 }
 
 /**
@@ -56,7 +54,6 @@ export function MaintenanceLogSection({
   equipmentId,
   onAddLog,
   isSubmitting,
-  readOnly = false,
 }: MaintenanceLogSectionProps) {
   const [isAddingLog, setIsAddingLog] = React.useState(false);
   const [notes, setNotes] = React.useState("");
@@ -100,44 +97,43 @@ export function MaintenanceLogSection({
   return (
     <div className="space-y-4">
       {/* Add Log Button / Form */}
-      {!readOnly &&
-        (isAddingLog ? (
-          <form onSubmit={handleSubmit} className="rounded-lg border p-4 space-y-3">
-            <div className="space-y-2">
-              <label htmlFor={notesInputId} className="text-sm font-medium">
-                Notatki Serwisowe
-              </label>
-              <Input
-                id={notesInputId}
-                type="text"
-                placeholder="np. Wymieniono baterię, wyczyszczono obiektyw..."
-                value={notes}
-                onChange={handleNotesChange}
-                disabled={isSubmitting}
-                maxLength={1000}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Dodawanie..." : "Dodaj Notatkę"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                Anuluj
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <Button variant="outline" size="sm" onClick={handleToggleAdd} className="w-full">
-            <Plus className={ICON_SIZE_SM + " mr-2"} />
-            {UI.ADD_MAINTENANCE_LOG}
-          </Button>
-        ))}
+      {isAddingLog ? (
+        <form onSubmit={handleSubmit} className="rounded-lg border p-4 space-y-3">
+          <div className="space-y-2">
+            <label htmlFor={notesInputId} className="text-sm font-medium">
+              Notatki Serwisowe
+            </label>
+            <Input
+              id={notesInputId}
+              type="text"
+              placeholder="np. Wymieniono baterię, wyczyszczono obiektyw..."
+              value={notes}
+              onChange={handleNotesChange}
+              disabled={isSubmitting}
+              maxLength={1000}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting ? "Dodawanie..." : "Dodaj Notatkę"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              Anuluj
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <Button variant="outline" size="sm" onClick={handleToggleAdd} className="w-full">
+          <Plus className={ICON_SIZE_SM + " mr-2"} />
+          {UI.ADD_MAINTENANCE_LOG}
+        </Button>
+      )}
 
       {/* Maintenance Timeline */}
       {logs.length === 0 ? (

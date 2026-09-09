@@ -30,8 +30,6 @@ interface EquipmentDetailsSheetProps {
   equipment: EquipmentSearchItem | null;
   /** Callback when sheet closes */
   onClose: () => void;
-  /** Whether the sheet is in read-only mode */
-  readOnly?: boolean;
 }
 
 /**
@@ -53,12 +51,7 @@ function getStatusVariant(status: string): "default" | "secondary" | "destructiv
 /**
  * Side sheet showing full equipment details including maintenance history
  */
-export function EquipmentDetailsSheet({
-  isOpen,
-  equipment,
-  onClose,
-  readOnly = false,
-}: EquipmentDetailsSheetProps) {
+export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentDetailsSheetProps) {
   const {
     maintenanceLogs,
     isLogsLoading,
@@ -170,7 +163,6 @@ export function EquipmentDetailsSheet({
                 equipmentId={equipment.id}
                 onAddLog={addMaintenanceLog}
                 isSubmitting={isMutating}
-                readOnly={readOnly}
               />
             )}
           </div>
