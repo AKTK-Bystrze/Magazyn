@@ -38,32 +38,49 @@ const isAdmin = sessionInfo?.role === 'admin' || sessionInfo?.role === 'super_ad
 ---
 
 <BaseLayout title={title} description={description}>
-  <div class="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
-    <div class="!hidden border-r bg-muted/40 lg:!block">
-      <div class="flex h-full max-h-screen flex-col gap-2">
-        {isAdmin ? (
-          <AdminSidebar client:load currentPath={currentPath} />
-        ) : (
-          <UserSidebar client:load currentPath={currentPath} />
-        )}
+  <div id="app-layout" class="flex min-h-screen w-full">
+    {/* Desktop Sidebar Container */}
+    <div 
+      id="desktop-sidebar-container" 
+      class="hidden lg:block w-[280px] shrink-0 border-r bg-muted/40 overflow-hidden transition-[width] duration-300 data-[collapsed=true]:w-0 data-[collapsed=true]:border-r-0"
+    >
+      <div class="w-[280px] h-full flex flex-col gap-2">
+        {
+          isAdmin ? (
+            <AdminSidebar client:load currentPath={currentPath} />
+          ) : (
+            <UserSidebar client:load currentPath={currentPath} />
+          )
+        }
       </div>
     </div>
 
     {/* Main Content Area */}
-    <div class="flex flex-col">
+    <div class="flex flex-col flex-1 min-w-0 transition-all duration-300">
       <QueryProvider client:load>
-        <UserHeader 
-          client:load 
-          user={user ? { email: user.email || '', id: user.id } : null}
+        <UserHeader
+          client:load
+          user={user ? { email: user.email || "", id: user.id } : null}
           currentPath={currentPath}
           creditBalance={sessionInfo?.creditBalance}
           isAdmin={isAdmin}
         />
       </QueryProvider>
-      
-      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+
+      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 min-w-0">
         <slot />
       </main>
     </div>
   </div>
+
+  <script is:inline>
+    // Apply initial sidebar state to prevent flicker
+    (function () {
+      const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+      const container = document.getElementById('desktop-sidebar-container');
+      if (container && isCollapsed) {
+        container.dataset.collapsed = 'true';
+      }
+    })();
+  </script>
 </BaseLayout>
