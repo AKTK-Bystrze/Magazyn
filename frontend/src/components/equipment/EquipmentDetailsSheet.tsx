@@ -30,16 +30,12 @@ interface EquipmentDetailsSheetProps {
   equipment: EquipmentSearchItem | null;
   /** Callback when sheet closes */
   onClose: () => void;
-  /** Whether the sheet is in read-only mode */
-  readOnly?: boolean;
 }
 
 /**
  * Returns badge variant based on equipment status
  */
-function getStatusVariant(
-  status: string
-): "default" | "secondary" | "destructive" | "outline" {
+function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case "ok":
       return "default";
@@ -55,32 +51,28 @@ function getStatusVariant(
 /**
  * Side sheet showing full equipment details including maintenance history
  */
-export function EquipmentDetailsSheet({
-  isOpen,
-  equipment,
-  onClose,
-  readOnly = false,
-}: EquipmentDetailsSheetProps) {
-  const { 
-    maintenanceLogs, 
-    isLogsLoading, 
+export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentDetailsSheetProps) {
+  const {
+    maintenanceLogs,
+    isLogsLoading,
     reservationHistory,
     isReservationsLoading,
-    addMaintenanceLog, 
-    isMutating 
+    addMaintenanceLog,
+    isMutating,
   } = useEquipmentDetails(equipment?.id ?? null);
 
   // Guard: don't render content if no equipment
   if (!equipment) {
     return (
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto overflow-x-hidden max-w-[95%]">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-lg overflow-y-auto overflow-x-hidden max-w-[95%]"
+        >
           <SheetHeader>
             <SheetTitle>{UI.DETAILS_TITLE}</SheetTitle>
           </SheetHeader>
-          <div className="py-8 text-center text-muted-foreground">
-            No equipment selected
-          </div>
+          <div className="py-8 text-center text-muted-foreground">No equipment selected</div>
         </SheetContent>
       </Sheet>
     );
@@ -88,7 +80,11 @@ export function EquipmentDetailsSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto overflow-x-hidden max-w-[95%]" data-testid="equipment-details-sheet">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-lg overflow-y-auto overflow-x-hidden max-w-[95%]"
+        data-testid="equipment-details-sheet"
+      >
         <SheetHeader className="border-b pb-4">
           <SheetTitle>{UI.DETAILS_TITLE}</SheetTitle>
           <SheetDescription>
@@ -111,9 +107,7 @@ export function EquipmentDetailsSheet({
             {/* Equipment Info */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">
-                  {equipment.name || equipment.type.name}
-                </h2>
+                <h2 className="text-xl font-semibold">{equipment.name || equipment.type.name}</h2>
                 <Badge variant={getStatusVariant(equipment.status)}>
                   {EQUIPMENT_STATUS_LABELS[equipment.status] || equipment.status}
                 </Badge>
@@ -132,9 +126,7 @@ export function EquipmentDetailsSheet({
                   <p className="font-mono font-medium">{equipment.internalId}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                    {UI.TYPE}
-                  </p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">{UI.TYPE}</p>
                   <p className="font-medium">{equipment.type.name}</p>
                 </div>
                 <div>
@@ -171,7 +163,7 @@ export function EquipmentDetailsSheet({
                 equipmentId={equipment.id}
                 onAddLog={addMaintenanceLog}
                 isSubmitting={isMutating}
-                  readOnly={readOnly}
+                readOnly={false}
               />
             )}
           </div>
