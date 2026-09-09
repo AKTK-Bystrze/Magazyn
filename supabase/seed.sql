@@ -143,8 +143,8 @@ INSERT INTO public.profiles (id, email, username, role, credit_balance, is_enabl
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   'superadmin@example.com',
-  'superAdmin',
-  'superAdmin',
+  'super_admin',
+  'super_admin',
   100000,
   true
 ) ON CONFLICT (id) DO NOTHING;
