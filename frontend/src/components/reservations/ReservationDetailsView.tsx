@@ -6,20 +6,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusBadge } from "./StatusBadge";
 import { ReservationStatusActions } from "./ReservationStatusActions";
 import { ReservationAuditTimeline } from "./ReservationAuditTimeline";
-import {
-  ArrowLeft,
-  Calendar,
-  CreditCard,
-  User,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, User, Clock, AlertTriangle } from "lucide-react";
 import { useReservationDetail } from "@/hooks/useReservationDetail";
 import { formatDate, calculateDays, formatDateLocalized } from "@/lib/utils/date-utils";
-import {
-  ICON_SIZE_SM,
-  RESERVATION_STATUS_VIEW_UI_STRINGS as UI,
-} from "@/lib/config/constants";
+import { ICON_SIZE_SM, RESERVATION_STATUS_VIEW_UI_STRINGS as UI } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
 import type { Enums } from "@/db/database.types";
 
@@ -61,9 +51,7 @@ export function ReservationDetailsView({
     }
   }, [reservation]);
 
-  const handleStatusChange = async (
-    newStatus: Enums<"reservation_status">
-  ) => {
+  const handleStatusChange = async (newStatus: Enums<"reservation_status">) => {
     await updateStatus({ status: newStatus });
   };
 
@@ -84,8 +72,8 @@ export function ReservationDetailsView({
       error?.message === "403"
         ? UI.UNAUTHORIZED
         : error?.message === "404"
-        ? UI.NOT_FOUND
-        : UI.NETWORK_ERROR;
+          ? UI.NOT_FOUND
+          : UI.NETWORK_ERROR;
 
     return (
       <div className="space-y-6">
@@ -98,9 +86,7 @@ export function ReservationDetailsView({
         </a>
         <Alert className="border-destructive bg-destructive/10">
           <AlertTriangle className={ICON_SIZE_SM + " text-destructive"} />
-          <AlertDescription className="text-destructive">
-            {errorMessage}
-          </AlertDescription>
+          <AlertDescription className="text-destructive">{errorMessage}</AlertDescription>
         </Alert>
       </div>
     );
@@ -125,9 +111,7 @@ export function ReservationDetailsView({
 
       {/* Equipment Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {reservation.equipmentName}
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">{reservation.equipmentName}</h1>
         <p className="text-muted-foreground text-lg mt-1">
           {reservation.equipmentType} • {reservation.equipmentInternalId}
         </p>
@@ -145,9 +129,7 @@ export function ReservationDetailsView({
               <User className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
               <div className="flex-1">
                 <p className="font-medium">{reservation.username}</p>
-                <p className="text-sm text-muted-foreground">
-                  {reservation.userEmail}
-                </p>
+                <p className="text-sm text-muted-foreground">{reservation.userEmail}</p>
               </div>
             </div>
           )}
@@ -158,8 +140,10 @@ export function ReservationDetailsView({
             <div className="flex-1">
               <p className="font-medium">{UI.DATES}</p>
               <p className="text-sm">
-                <span data-testid="reservation-start-date">{formatDate(reservation.startDate)}</span> —{" "}
-                <span data-testid="reservation-end-date">{formatDate(reservation.endDate)}</span>
+                <span data-testid="reservation-start-date">
+                  {formatDate(reservation.startDate)}
+                </span>{" "}
+                — <span data-testid="reservation-end-date">{formatDate(reservation.endDate)}</span>
               </p>
               <p className="text-xs text-muted-foreground">
                 {days} {days === 1 ? "dzień" : "dni"}
@@ -181,9 +165,7 @@ export function ReservationDetailsView({
             <Clock className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
             <div className="flex-1">
               <p className="font-medium">{UI.CREATED_AT}</p>
-              <p className="text-sm">
-                {formatDateLocalized(reservation.createdAt)}
-              </p>
+              <p className="text-sm">{formatDateLocalized(reservation.createdAt)}</p>
             </div>
           </div>
         </CardContent>

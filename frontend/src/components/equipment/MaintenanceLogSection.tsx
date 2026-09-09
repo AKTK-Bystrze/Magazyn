@@ -72,12 +72,9 @@ export function MaintenanceLogSection({
   }, []);
 
   // Handle notes input change
-  const handleNotesChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setNotes(e.target.value);
-    },
-    []
-  );
+  const handleNotesChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setNotes(e.target.value);
+  }, []);
 
   // Handle add log submit
   const handleSubmit = React.useCallback(
@@ -103,17 +100,17 @@ export function MaintenanceLogSection({
   return (
     <div className="space-y-4">
       {/* Add Log Button / Form */}
-      {!readOnly && (
-        isAddingLog ? (
+      {!readOnly &&
+        (isAddingLog ? (
           <form onSubmit={handleSubmit} className="rounded-lg border p-4 space-y-3">
             <div className="space-y-2">
               <label htmlFor={notesInputId} className="text-sm font-medium">
-                Maintenance Notes
+                Notatki Serwisowe
               </label>
               <Input
                 id={notesInputId}
                 type="text"
-                placeholder="e.g., Replaced battery, cleaned lens..."
+                placeholder="np. Wymieniono baterię, wyczyszczono obiektyw..."
                 value={notes}
                 onChange={handleNotesChange}
                 disabled={isSubmitting}
@@ -122,7 +119,7 @@ export function MaintenanceLogSection({
             </div>
             <div className="flex gap-2">
               <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Note"}
+                {isSubmitting ? "Dodawanie..." : "Dodaj Notatkę"}
               </Button>
               <Button
                 type="button"
@@ -131,22 +128,16 @@ export function MaintenanceLogSection({
                 onClick={handleCancel}
                 disabled={isSubmitting}
               >
-                Cancel
+                Anuluj
               </Button>
             </div>
           </form>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleToggleAdd}
-            className="w-full"
-          >
+          <Button variant="outline" size="sm" onClick={handleToggleAdd} className="w-full">
             <Plus className={ICON_SIZE_SM + " mr-2"} />
             {UI.ADD_MAINTENANCE_LOG}
           </Button>
-          )
-      )}
+        ))}
 
       {/* Maintenance Timeline */}
       {logs.length === 0 ? (
@@ -181,15 +172,11 @@ export function MaintenanceLogSection({
                 </div>
 
                 {/* Notes */}
-                {log.notes && (
-                  <p className="text-sm text-muted-foreground">{log.notes}</p>
-                )}
+                {log.notes && <p className="text-sm text-muted-foreground">{log.notes}</p>}
 
                 {/* Metadata */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    {log.adminUsername ? `by ${log.adminUsername}` : "System"}
-                  </span>
+                  <span>{log.adminUsername ? `przez ${log.adminUsername}` : "System"}</span>
                   <span>{formatDateLocalized(log.createdAt)}</span>
                 </div>
               </div>

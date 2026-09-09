@@ -4,7 +4,7 @@ import { MIXED_STATUS } from "@/lib/config/constants";
 /**
  * Groups reservations by user ID and date range.
  * Reservations with the same userId, startDate, and endDate are collapsed into a single group.
- * 
+ *
  * @param reservations - Flat list of reservation items
  * @returns Array of grouped reservations
  */
@@ -16,11 +16,11 @@ export function groupReservationsByDateRange(
 
   for (const reservation of reservations) {
     const groupKey = `${reservation.userId}-${reservation.startDate}-${reservation.endDate}`;
-    
+
     if (!groupMap.has(groupKey)) {
       groupMap.set(groupKey, []);
     }
-    
+
     groupMap.get(groupKey)!.push(reservation);
   }
 
@@ -36,9 +36,7 @@ export function groupReservationsByDateRange(
     const status = statuses.size === 1 ? items[0].status : MIXED_STATUS;
 
     // Find earliest createdAt
-    const createdAt = items
-      .map((item) => item.createdAt)
-      .sort()[0];
+    const createdAt = items.map((item) => item.createdAt).sort()[0];
 
     groups.push({
       groupKey,

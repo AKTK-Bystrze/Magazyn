@@ -1,28 +1,27 @@
 ---
 /**
  * AdminLayout - Admin panel layout
- * 
+ *
  * Includes navigation bar configured for admin users with:
  * - Overview, Reservations, Equipment, Users, Analytics links
  * - User menu with logout
  * - Breadcrumbs for nested pages
- * 
+ *
  * @example
  * <AdminLayout title="Manage Reservations">
  *   <AdminReservationsContainer client:load />
  * </AdminLayout>
  */
-import BaseLayout from './BaseLayout.astro';
-import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { AdminHeader } from '@/components/admin/AdminHeader';
-import { QueryProvider } from '@/components/providers/QueryProvider';
+import BaseLayout from "./BaseLayout.astro";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 interface Props {
   /** Page title displayed in browser tab */
   title: string;
   /** Optional meta description */
   description?: string;
-
 }
 
 const { title, description } = Astro.props;
@@ -38,16 +37,16 @@ const currentPath = Astro.url.pathname;
       </div>
     </div>
 
-    <div class="flex flex-col">
+    <div class="flex flex-col min-w-0">
       <QueryProvider client:load>
         <AdminHeader
           client:load
-          user={user ? { email: user.email || '', id: user.id } : null}
+          user={user ? { email: user.email || "", id: user.id } : null}
           currentPath={currentPath}
         />
       </QueryProvider>
 
-      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 min-w-0">
         <slot />
       </main>
     </div>

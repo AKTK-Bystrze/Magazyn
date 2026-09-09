@@ -22,8 +22,7 @@ export const RESERVATION_STATUS = {
   DENIED: "DENIED",
 } as const;
 
-export type ReservationStatus =
-  (typeof RESERVATION_STATUS)[keyof typeof RESERVATION_STATUS];
+export type ReservationStatus = (typeof RESERVATION_STATUS)[keyof typeof RESERVATION_STATUS];
 
 // =============================================================================
 // STATUS LABELS (Polish)

@@ -2,4 +2,4 @@
 // RESERVATIONS DOMAIN TYPES - Barrel Export
 // =============================================================================
 
-export * from './reservation.types';
+export * from "./reservation.types";

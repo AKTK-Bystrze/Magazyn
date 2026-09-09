@@ -25,10 +25,7 @@ interface UserFiltersProps {
   /** Current filter state */
   filters: UserFilterState;
   /** Callback when any filter changes */
-  onFilterChange: <K extends keyof UserFilterState>(
-    key: K,
-    value: UserFilterState[K]
-  ) => void;
+  onFilterChange: <K extends keyof UserFilterState>(key: K, value: UserFilterState[K]) => void;
   /** Optional callback to reset filters */
   onReset?: () => void;
 }
@@ -41,11 +38,7 @@ interface UserFiltersProps {
  * @param onFilterChange - Callback when filter changes
  * @param onReset - Optional callback to reset filters
  */
-export function UserFilters({
-  filters,
-  onFilterChange,
-  onReset,
-}: UserFiltersProps) {
+export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersProps) {
   const [searchValue, setSearchValue] = React.useState(filters.search ?? "");
   const searchInputId = React.useId();
 
@@ -61,13 +54,10 @@ export function UserFilters({
   }, [searchValue, filters.search, onFilterChange]);
 
   // Handle search input change
-  const handleSearchChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
-      setSearchValue(value);
-    },
-    []
-  );
+  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
+    setSearchValue(value);
+  }, []);
 
   // Handle role filter change
   const handleRoleChange = React.useCallback(

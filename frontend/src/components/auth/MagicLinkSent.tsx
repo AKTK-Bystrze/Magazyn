@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Button } from "@/components/ui/button";
 
 interface MagicLinkSentProps {
   onReset: () => void;
@@ -31,7 +31,11 @@ export const MagicLinkSent: React.FC<MagicLinkSentProps> = ({ onReset, email }) 
       </div>
       <h2 className="text-2xl font-bold tracking-tight">Sprawdź swoją pocztę</h2>
       <p className="text-muted-foreground text-sm max-w-xs">
-        Wysłaliśmy link logowania na <span className="font-medium text-foreground" data-testid="magic-link-sent-email">{email}</span>.
+        Wysłaliśmy link logowania na{" "}
+        <span className="font-medium text-foreground" data-testid="magic-link-sent-email">
+          {email}
+        </span>
+        .
         <br />
         Kliknij link, aby się zalogować.
       </p>

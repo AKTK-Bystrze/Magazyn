@@ -20,9 +20,7 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
  * @param command - Frontend reservation command with camelCase fields
  * @returns Backend-compatible object with snake_case fields
  */
-export function transformCreateReservationsCommand(
-  command: CreateReservationsCommand
-): unknown {
+export function transformCreateReservationsCommand(command: CreateReservationsCommand): unknown {
   return {
     reservations: command.reservations.map((item) => ({
       equipment_id: item.equipmentId,
@@ -40,9 +38,7 @@ export function transformCreateReservationsCommand(
  * @param item - Frontend reservation item with camelCase fields
  * @returns Backend-compatible object with snake_case fields
  */
-export function transformCreateReservationItem(
-  item: CreateReservationItem
-): unknown {
+export function transformCreateReservationItem(item: CreateReservationItem): unknown {
   return {
     equipment_id: item.equipmentId,
     start_date: item.startDate,
@@ -56,9 +52,7 @@ export function transformCreateReservationItem(
  * @param command - Frontend update command
  * @returns Backend-compatible object with snake_case fields
  */
-export function transformUpdateReservationCommand(
-  command: UpdateReservationCommand
-): unknown {
+export function transformUpdateReservationCommand(command: UpdateReservationCommand): unknown {
   const result: Record<string, unknown> = {};
 
   if (command.startDate !== undefined) {
@@ -154,9 +148,7 @@ export function transformReservationItem(dto: ReservationDTO): ReservationListIt
  * @param data - Backend response (unknown for safety)
  * @returns Transformed ReservationListResponse
  */
-export function transformReservationListResponse(
-  data: unknown
-): ReservationListResponse {
+export function transformReservationListResponse(data: unknown): ReservationListResponse {
   const dto = data as ReservationListResponseDTO;
 
   return {
@@ -214,4 +206,3 @@ export function transformReservationDetail(data: unknown): ReservationDetail {
     auditTrail: (dto.audit_trail || []).map(transformAuditEntry),
   };
 }
-

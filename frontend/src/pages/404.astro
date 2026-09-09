@@ -3,8 +3,8 @@
  * 404 Not Found Page
  * Displays a user-friendly error message for pages that don't exist.
  */
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { ROUTES } from '../lib/config/routes';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { ROUTES } from "../lib/config/routes";
 ---
 
 <BaseLayout title="Strona Nie Znaleziona | Magazyn">
@@ -33,13 +33,13 @@ import { ROUTES } from '../lib/config/routes';
       Strona, której szukasz, nie istnieje lub została przeniesiona.
     </p>
     <div class="flex gap-4">
-      <a 
+      <a
         href={ROUTES.PROTECTED.DASHBOARD}
         class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2 hover:bg-primary/90"
       >
         Przejdź do Panelu
       </a>
-      <a 
+      <a
         href={ROUTES.PUBLIC.LOGIN}
         class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
       >

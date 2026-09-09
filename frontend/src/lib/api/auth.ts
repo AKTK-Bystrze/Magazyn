@@ -1,5 +1,5 @@
-import { api } from './client';
-import type { LoginRequestDTO, LoginResponseDTO } from '@/types/auth';
+import { api } from "./client";
+import type { LoginRequestDTO, LoginResponseDTO } from "@/types/auth";
 
 /**
  * Initiates the login process using magic link
@@ -7,6 +7,6 @@ import type { LoginRequestDTO, LoginResponseDTO } from '@/types/auth';
  * @returns Response indicating success/failure
  */
 export const login = async (data: LoginRequestDTO): Promise<LoginResponseDTO> => {
-  const response = await api.post<LoginResponseDTO>('/api/auth/login', data);
+  const response = await api.post<LoginResponseDTO>("/api/auth/login", data);
   return response.data;
 };

@@ -1,7 +1,4 @@
-import type {
-  CreditHistoryItem,
-  CreditHistoryResponse,
-} from "@/types";
+import type { CreditHistoryItem, CreditHistoryResponse } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
 // =============================================================================

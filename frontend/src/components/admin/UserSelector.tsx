@@ -48,7 +48,7 @@ interface UserSelectorProps {
 export function UserSelector({
   selectedUserId,
   onSelect,
-  label = "Select User",
+  label = "Wybierz Użytkownika",
   disabled = false,
 }: UserSelectorProps) {
   const { data, isLoading, error } = useUsers({
@@ -73,7 +73,7 @@ export function UserSelector({
       <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
-          <span>Failed to load users</span>
+          <span>Nie udało się załadować użytkowników</span>
         </div>
       </div>
     );
@@ -85,7 +85,7 @@ export function UserSelector({
       <div className="rounded-md border border-muted bg-muted/50 p-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <User className="h-4 w-4" />
-          <span>No users available</span>
+          <span>Brak dostępnych użytkowników</span>
         </div>
       </div>
     );
@@ -103,20 +103,14 @@ export function UserSelector({
   return (
     <div className="space-y-2">
       <Label htmlFor="user-selector">{label}</Label>
-      <Select
-        value={selectedUserId ?? ""}
-        onValueChange={handleValueChange}
-        disabled={disabled}
-      >
+      <Select value={selectedUserId ?? ""} onValueChange={handleValueChange} disabled={disabled}>
         <SelectTrigger id="user-selector" className="w-full">
-          <SelectValue placeholder="Choose a user...">
+          <SelectValue placeholder="Wybierz użytkownika...">
             {selectedUser && (
               <span className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span>{selectedUser.username}</span>
-                <span className="text-muted-foreground">
-                  ({selectedUser.email})
-                </span>
+                <span className="text-muted-foreground">({selectedUser.email})</span>
               </span>
             )}
           </SelectValue>
@@ -129,12 +123,10 @@ export function UserSelector({
                   <span className="font-medium">{user.username}</span>
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <CreditCard className="h-3 w-3" />
-                    {user.creditBalance} credits
+                    {user.creditBalance} godzinek
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {user.email}
-                </span>
+                <span className="text-xs text-muted-foreground">{user.email}</span>
               </div>
             </SelectItem>
           ))}
@@ -145,10 +137,9 @@ export function UserSelector({
       {selectedUser && (
         <p className="text-sm text-muted-foreground flex items-center gap-1">
           <CreditCard className="h-4 w-4" />
-          Selected user has <strong>{selectedUser.creditBalance}</strong> credits available
+          Wybrany użytkownik ma <strong>{selectedUser.creditBalance}</strong> dostępnych godzinek
         </p>
       )}
     </div>
   );
 }
-

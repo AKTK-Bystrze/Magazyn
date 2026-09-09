@@ -11,7 +11,5 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   // This ensures SSR compatibility and prevents shared state issues
   const [queryClient] = useState(() => createQueryClient());
 
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

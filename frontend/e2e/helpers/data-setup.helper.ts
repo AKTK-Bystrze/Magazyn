@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { E2E_CONFIG } from '../constants';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { E2E_CONFIG } from "../constants";
 
 /**
  * Resets a user's credit balance to the default or specified amount.
@@ -14,10 +14,7 @@ export async function resetCredits(
   userId: string,
   balance = E2E_CONFIG.DEFAULTS.CREDIT_BALANCE
 ): Promise<void> {
-  await supabaseAdmin
-    .from('profiles')
-    .update({ credit_balance: balance })
-    .eq('id', userId);
+  await supabaseAdmin.from("profiles").update({ credit_balance: balance }).eq("id", userId);
 }
 
 /**
@@ -31,10 +28,7 @@ export async function cancelReservation(
   supabaseAdmin: SupabaseClient,
   reservationId: string
 ): Promise<void> {
-  await supabaseAdmin
-    .from('reservations')
-    .update({ status: 'DENIED' })
-    .eq('id', reservationId);
+  await supabaseAdmin.from("reservations").update({ status: "DENIED" }).eq("id", reservationId);
 }
 
 /**
@@ -49,10 +43,10 @@ export async function clearPendingReservations(
   userId: string
 ): Promise<void> {
   await supabaseAdmin
-    .from('reservations')
-    .update({ status: 'DENIED' })
-    .eq('user_id', userId)
-    .eq('status', 'PENDING');
+    .from("reservations")
+    .update({ status: "DENIED" })
+    .eq("user_id", userId)
+    .eq("status", "PENDING");
 }
 
 /**
@@ -66,15 +60,12 @@ export async function clearPendingReservations(
 export async function ensureEquipmentTypesExist(
   supabaseAdmin: SupabaseClient
 ): Promise<{ kayakId: string; paddleId: string }> {
-  const defaultTypes = [
-    E2E_CONFIG.EQUIPMENT_TYPES.KAYAK,
-    E2E_CONFIG.EQUIPMENT_TYPES.PADDLE,
-  ];
+  const defaultTypes = [E2E_CONFIG.EQUIPMENT_TYPES.KAYAK, E2E_CONFIG.EQUIPMENT_TYPES.PADDLE];
 
   for (const type of defaultTypes) {
     const { error } = await supabaseAdmin
-      .from('equipment_types')
-      .upsert(type, { onConflict: 'name', ignoreDuplicates: true });
+      .from("equipment_types")
+      .upsert(type, { onConflict: "name", ignoreDuplicates: true });
 
     if (error) {
       console.warn(`Failed to upsert equipment type ${type.name}: ${error.message}`);
@@ -82,19 +73,22 @@ export async function ensureEquipmentTypesExist(
   }
 
   const { data: types, error: fetchError } = await supabaseAdmin
-    .from('equipment_types')
-    .select('id, name')
-    .in('name', defaultTypes.map(t => t.name));
+    .from("equipment_types")
+    .select("id, name")
+    .in(
+      "name",
+      defaultTypes.map((t) => t.name)
+    );
 
   if (fetchError || !types || types.length === 0) {
     throw new Error(`Failed to fetch equipment types after seeding: ${fetchError?.message}`);
   }
 
-  const kayakType = types.find(t => t.name === 'kayak');
-  const paddleType = types.find(t => t.name === 'paddle');
+  const kayakType = types.find((t) => t.name === "kayak");
+  const paddleType = types.find((t) => t.name === "paddle");
 
   if (!kayakType || !paddleType) {
-    throw new Error('Failed to find kayak or paddle equipment type');
+    throw new Error("Failed to find kayak or paddle equipment type");
   }
 
   return { kayakId: kayakType.id, paddleId: paddleType.id };
@@ -107,13 +101,11 @@ export async function ensureEquipmentTypesExist(
  * @param supabaseAdmin - The Supabase admin client.
  * @returns A promise that resolves when seed equipment is created.
  */
-export async function ensureSeedEquipmentExists(
-  supabaseAdmin: SupabaseClient
-): Promise<void> {
+export async function ensureSeedEquipmentExists(supabaseAdmin: SupabaseClient): Promise<void> {
   const { data: existingSeed } = await supabaseAdmin
-    .from('equipment')
-    .select('id')
-    .like('internal_id', 'SEED-%')
+    .from("equipment")
+    .select("id")
+    .like("internal_id", "SEED-%")
     .limit(1);
 
   if (existingSeed && existingSeed.length > 0) {
@@ -123,15 +115,39 @@ export async function ensureSeedEquipmentExists(
   const { kayakId, paddleId } = await ensureEquipmentTypesExist(supabaseAdmin);
 
   const seedEquipment = [
-    { internal_id: 'SEED-K1', type_id: kayakId, name: 'Test Kayak 1', description: 'For E2E tests', status: 'ok' },
-    { internal_id: 'SEED-K2', type_id: kayakId, name: 'Test Kayak 2', description: 'For E2E tests', status: 'ok' },
-    { internal_id: 'SEED-P1', type_id: paddleId, name: 'Test Paddle 1', description: 'For E2E tests', status: 'ok' },
-    { internal_id: 'SEED-P2', type_id: paddleId, name: 'Test Paddle 2', description: 'For E2E tests', status: 'ok' },
+    {
+      internal_id: "SEED-K1",
+      type_id: kayakId,
+      name: "Test Kayak 1",
+      description: "For E2E tests",
+      status: "ok",
+    },
+    {
+      internal_id: "SEED-K2",
+      type_id: kayakId,
+      name: "Test Kayak 2",
+      description: "For E2E tests",
+      status: "ok",
+    },
+    {
+      internal_id: "SEED-P1",
+      type_id: paddleId,
+      name: "Test Paddle 1",
+      description: "For E2E tests",
+      status: "ok",
+    },
+    {
+      internal_id: "SEED-P2",
+      type_id: paddleId,
+      name: "Test Paddle 2",
+      description: "For E2E tests",
+      status: "ok",
+    },
   ];
 
   const { error } = await supabaseAdmin
-    .from('equipment')
-    .upsert(seedEquipment, { onConflict: 'type_id, internal_id', ignoreDuplicates: true });
+    .from("equipment")
+    .upsert(seedEquipment, { onConflict: "type_id, internal_id", ignoreDuplicates: true });
 
   if (error) {
     console.warn(`Failed to seed equipment: ${error.message}`);
@@ -162,14 +178,14 @@ export async function createTestEquipment(
     const equipmentName = `E2E-W${workerIndex}-${timestamp.toString().slice(-6)}-${i}`;
 
     const { data, error } = await supabaseAdmin
-      .from('equipment')
+      .from("equipment")
       .insert({
         internal_id: uniqueId,
         type_id: kayakId,
         name: equipmentName,
-        status: 'ok',
+        status: "ok",
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (error || !data) {
@@ -198,26 +214,26 @@ export async function cleanupTestEquipment(
   if (equipmentIds.length === 0) return;
 
   const { data: reservations } = await supabaseAdmin
-    .from('reservations')
-    .select('id')
-    .in('equipment_id', equipmentIds);
+    .from("reservations")
+    .select("id")
+    .in("equipment_id", equipmentIds);
 
-  const reservationIds = reservations?.map(r => r.id) ?? [];
+  const reservationIds = reservations?.map((r) => r.id) ?? [];
 
   if (reservationIds.length > 0) {
     const { error: historyError } = await supabaseAdmin
-      .from('reservation_history')
+      .from("reservation_history")
       .delete()
-      .in('reservation_id', reservationIds);
+      .in("reservation_id", reservationIds);
 
     if (historyError) {
       console.error(`Failed to cleanup reservation history: ${historyError.message}`);
     }
 
     const { error: creditError } = await supabaseAdmin
-      .from('credit_history')
+      .from("credit_history")
       .delete()
-      .in('reservation_id', reservationIds);
+      .in("reservation_id", reservationIds);
 
     if (creditError) {
       console.error(`Failed to cleanup credit history: ${creditError.message}`);
@@ -225,18 +241,15 @@ export async function cleanupTestEquipment(
   }
 
   const { error: resError } = await supabaseAdmin
-    .from('reservations')
+    .from("reservations")
     .delete()
-    .in('equipment_id', equipmentIds);
+    .in("equipment_id", equipmentIds);
 
   if (resError) {
     console.error(`Failed to cleanup reservations: ${resError.message}`);
   }
 
-  const { error } = await supabaseAdmin
-    .from('equipment')
-    .delete()
-    .in('id', equipmentIds);
+  const { error } = await supabaseAdmin.from("equipment").delete().in("id", equipmentIds);
 
   if (error) {
     console.error(`Failed to cleanup test equipment: ${error.message}`);
@@ -249,13 +262,11 @@ export async function cleanupTestEquipment(
  * @param supabaseAdmin - The Supabase admin client.
  * @returns A promise that resolves to the number of deleted equipment items.
  */
-export async function cleanupOrphanedTestEquipment(
-  supabaseAdmin: SupabaseClient
-): Promise<number> {
+export async function cleanupOrphanedTestEquipment(supabaseAdmin: SupabaseClient): Promise<number> {
   const { data: equipment, error: fetchError } = await supabaseAdmin
-    .from('equipment')
-    .select('id, internal_id')
-    .like('internal_id', `${E2E_CONFIG.TEST_EQUIPMENT_PREFIX}%`);
+    .from("equipment")
+    .select("id, internal_id")
+    .like("internal_id", `${E2E_CONFIG.TEST_EQUIPMENT_PREFIX}%`);
 
   if (fetchError) {
     console.error(`Failed to fetch orphaned equipment: ${fetchError.message}`);
@@ -266,29 +277,29 @@ export async function cleanupOrphanedTestEquipment(
     return 0;
   }
 
-  const equipmentIds = equipment.map(e => e.id);
+  const equipmentIds = equipment.map((e) => e.id);
 
   const { data: reservations } = await supabaseAdmin
-    .from('reservations')
-    .select('id')
-    .in('equipment_id', equipmentIds);
+    .from("reservations")
+    .select("id")
+    .in("equipment_id", equipmentIds);
 
-  const reservationIds = reservations?.map(r => r.id) ?? [];
+  const reservationIds = reservations?.map((r) => r.id) ?? [];
 
   if (reservationIds.length > 0) {
     const { error: historyError } = await supabaseAdmin
-      .from('reservation_history')
+      .from("reservation_history")
       .delete()
-      .in('reservation_id', reservationIds);
+      .in("reservation_id", reservationIds);
 
     if (historyError) {
       console.error(`Failed to delete orphaned reservation history: ${historyError.message}`);
     }
 
     const { error: creditError } = await supabaseAdmin
-      .from('credit_history')
+      .from("credit_history")
       .delete()
-      .in('reservation_id', reservationIds);
+      .in("reservation_id", reservationIds);
 
     if (creditError) {
       console.error(`Failed to delete orphaned credit history: ${creditError.message}`);
@@ -296,18 +307,18 @@ export async function cleanupOrphanedTestEquipment(
   }
 
   const { error: resError } = await supabaseAdmin
-    .from('reservations')
+    .from("reservations")
     .delete()
-    .in('equipment_id', equipmentIds);
+    .in("equipment_id", equipmentIds);
 
   if (resError) {
     console.error(`Failed to delete orphaned reservations: ${resError.message}`);
   }
 
   const { error: deleteError } = await supabaseAdmin
-    .from('equipment')
+    .from("equipment")
     .delete()
-    .in('id', equipmentIds);
+    .in("id", equipmentIds);
 
   if (deleteError) {
     console.error(`Failed to delete orphaned equipment: ${deleteError.message}`);
@@ -330,26 +341,26 @@ export async function hardDeleteEquipment(
   equipmentId: string
 ): Promise<void> {
   const { data: reservations } = await supabaseAdmin
-    .from('reservations')
-    .select('id')
-    .eq('equipment_id', equipmentId);
+    .from("reservations")
+    .select("id")
+    .eq("equipment_id", equipmentId);
 
-  const reservationIds = reservations?.map(r => r.id) ?? [];
+  const reservationIds = reservations?.map((r) => r.id) ?? [];
 
   if (reservationIds.length > 0) {
     const { error: historyError } = await supabaseAdmin
-      .from('reservation_history')
+      .from("reservation_history")
       .delete()
-      .in('reservation_id', reservationIds);
+      .in("reservation_id", reservationIds);
 
     if (historyError) {
       console.error(`Failed to cleanup reservation history: ${historyError.message}`);
     }
 
     const { error: creditError } = await supabaseAdmin
-      .from('credit_history')
+      .from("credit_history")
       .delete()
-      .in('reservation_id', reservationIds);
+      .in("reservation_id", reservationIds);
 
     if (creditError) {
       console.error(`Failed to cleanup credit history: ${creditError.message}`);
@@ -357,18 +368,15 @@ export async function hardDeleteEquipment(
   }
 
   const { error: resError } = await supabaseAdmin
-    .from('reservations')
+    .from("reservations")
     .delete()
-    .eq('equipment_id', equipmentId);
+    .eq("equipment_id", equipmentId);
 
   if (resError) {
     console.error(`Failed to cleanup reservations: ${resError.message}`);
   }
 
-  const { error } = await supabaseAdmin
-    .from('equipment')
-    .delete()
-    .eq('id', equipmentId);
+  const { error } = await supabaseAdmin.from("equipment").delete().eq("id", equipmentId);
 
   if (error) {
     console.error(`Failed to cleanup equipment: ${error.message}`);

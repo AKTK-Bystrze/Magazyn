@@ -2,5 +2,5 @@
 // CREDITS DOMAIN TYPES - Barrel Export
 // =============================================================================
 
-export * from './history.types';
-export * from './requests.types';
+export * from "./history.types";
+export * from "./requests.types";

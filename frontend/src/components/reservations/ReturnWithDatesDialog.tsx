@@ -54,17 +54,12 @@ export function ReturnWithDatesDialog({
   currentUserBalance,
 }: ReturnWithDatesDialogProps) {
   const [modifyDates, setModifyDates] = React.useState(false);
-  const [startDate, setStartDate] = React.useState<string | null>(
-    reservation.startDate
-  );
-  const [endDate, setEndDate] = React.useState<string | null>(
-    reservation.endDate
-  );
-  const [validationErrors, setValidationErrors] =
-    React.useState<DateRangeValidationErrors>({
-      startDate: null,
-      endDate: null,
-    });
+  const [startDate, setStartDate] = React.useState<string | null>(reservation.startDate);
+  const [endDate, setEndDate] = React.useState<string | null>(reservation.endDate);
+  const [validationErrors, setValidationErrors] = React.useState<DateRangeValidationErrors>({
+    startDate: null,
+    endDate: null,
+  });
   const [apiError, setApiError] = React.useState<string | null>(null);
 
   // Reset state when dialog opens
@@ -79,12 +74,8 @@ export function ReturnWithDatesDialog({
   }, [open, reservation]);
 
   // Calculations for credit adjustment
-  const originalDays = calculateDays(
-    reservation.startDate,
-    reservation.endDate
-  );
-  const newDays =
-    startDate && endDate ? calculateDays(startDate, endDate) : originalDays;
+  const originalDays = calculateDays(reservation.startDate, reservation.endDate);
+  const newDays = startDate && endDate ? calculateDays(startDate, endDate) : originalDays;
 
   // Handle bulk or single cost
   const totalCost = reservations?.length
@@ -101,8 +92,7 @@ export function ReturnWithDatesDialog({
   );
 
   // Check if dates have actually changed
-  const datesChanged =
-    startDate !== reservation.startDate || endDate !== reservation.endDate;
+  const datesChanged = startDate !== reservation.startDate || endDate !== reservation.endDate;
 
   // Validate dates
   const validate = (): boolean => {
@@ -155,7 +145,7 @@ export function ReturnWithDatesDialog({
       const errorMessage =
         error && typeof error === "object" && "message" in error
           ? String(error.message)
-          : "Failed to mark reservation as returned";
+          : "Nie udało się oznaczyć rezerwacji jako zwróconej";
       setApiError(errorMessage);
     }
   };
@@ -173,9 +163,7 @@ export function ReturnWithDatesDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{UI.RETURN_WITH_DATES_TITLE}</DialogTitle>
-          <DialogDescription>
-            {UI.RETURN_WITH_DATES_DESCRIPTION}
-          </DialogDescription>
+          <DialogDescription>{UI.RETURN_WITH_DATES_DESCRIPTION}</DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-6">
@@ -194,9 +182,7 @@ export function ReturnWithDatesDialog({
               >
                 {UI.MODIFY_DATES_BEFORE_RETURN}
               </Label>
-              <p className="text-sm text-muted-foreground">
-                {UI.MODIFY_DATES_CHECKBOX_HINT}
-              </p>
+              <p className="text-sm text-muted-foreground">{UI.MODIFY_DATES_CHECKBOX_HINT}</p>
             </div>
           </div>
 
@@ -227,9 +213,7 @@ export function ReturnWithDatesDialog({
                     currentBalance={currentUserBalance}
                   />
 
-                  <SignificantExtensionWarning
-                    creditAdjustment={adjustmentInfo.adjustment}
-                  />
+                  <SignificantExtensionWarning creditAdjustment={adjustmentInfo.adjustment} />
                 </>
               )}
             </div>
@@ -243,30 +227,21 @@ export function ReturnWithDatesDialog({
             </AlertDescription>
           </Alert>
 
-           {/* API Error */}
-           {apiError && (
+          {/* API Error */}
+          {apiError && (
             <Alert className="border-destructive bg-destructive/10">
-              <AlertDescription className="text-destructive">
-                {apiError}
-              </AlertDescription>
+              <AlertDescription className="text-destructive">{apiError}</AlertDescription>
             </Alert>
           )}
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             {UI.CANCEL_CHANGES}
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={
-              isSubmitting ||
-              (modifyDates && adjustmentInfo.newBalance < 0)
-            }
+            disabled={isSubmitting || (modifyDates && adjustmentInfo.newBalance < 0)}
           >
             {isSubmitting ? (
               <>

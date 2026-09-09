@@ -12,14 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
  * Inner component that uses the useCreditHistory hook
  */
 function CreditHistoryContainerInner() {
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    page,
-    setPage,
-  } = useCreditHistory();
+  const { data, isLoading, isError, error, page, setPage } = useCreditHistory();
 
   return (
     <div className="space-y-6">
@@ -40,9 +33,7 @@ function CreditHistoryContainerInner() {
                 `${data?.currentBalance ?? 0}`
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Available credits for reservations
-            </p>
+            <p className="text-xs text-muted-foreground">Available credits for reservations</p>
           </CardContent>
         </Card>
       </div>
@@ -59,10 +50,7 @@ function CreditHistoryContainerInner() {
 
       {/* Credit History Table */}
       <div className="space-y-4">
-        <CreditHistoryTable 
-          data={data?.creditHistory ?? []} 
-          isLoading={isLoading} 
-        />
+        <CreditHistoryTable data={data?.creditHistory ?? []} isLoading={isLoading} />
 
         {/* Pagination */}
         {(data?.pagination.totalPages ?? 0) > 1 && (

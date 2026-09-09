@@ -3,10 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
 import { Clock, User } from "lucide-react";
 import { formatDate, formatRelativeTime } from "@/lib/utils/date-utils";
-import {
-  ICON_SIZE_SM,
-  RESERVATION_STATUS_VIEW_UI_STRINGS as UI,
-} from "@/lib/config/constants";
+import { ICON_SIZE_SM, RESERVATION_STATUS_VIEW_UI_STRINGS as UI } from "@/lib/config/constants";
 import type { ReservationAuditEntry } from "@/types";
 
 interface ReservationAuditTimelineProps {
@@ -19,14 +16,15 @@ interface ReservationAuditTimelineProps {
  *
  * @param auditTrail - Array of audit entries from reservation
  */
-export function ReservationAuditTimeline({
-  auditTrail,
-}: ReservationAuditTimelineProps) {
+export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelineProps) {
   // Sort by createdAt descending (newest first for display)
   const sortedEntries = React.useMemo(
-    () => auditTrail ? [...auditTrail].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ) : [],
+    () =>
+      auditTrail
+        ? [...auditTrail].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        : [],
     [auditTrail]
   );
 
@@ -66,9 +64,7 @@ export function ReservationAuditTimeline({
                   <div className="flex items-center gap-2 flex-wrap">
                     <StatusBadge status={entry.status} />
                     {isInitial && (
-                      <span className="text-xs text-muted-foreground">
-                        {UI.INITIAL_CREATION}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{UI.INITIAL_CREATION}</span>
                     )}
                   </div>
 
@@ -94,8 +90,7 @@ export function ReservationAuditTimeline({
                   {/* Date range (if different from primary reservation) */}
                   {!isInitial && (
                     <div className="text-xs text-muted-foreground">
-                      {formatDate(entry.startDate)} —{" "}
-                      {formatDate(entry.endDate)}
+                      {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
                     </div>
                   )}
                 </div>

@@ -1,5 +1,5 @@
-import { type Page, type Locator } from '@playwright/test';
-import { TEST_IDS } from '../constants/test-ids';
+import { type Page, type Locator } from "@playwright/test";
+import { TEST_IDS } from "../constants/test-ids";
 
 /**
  * Page Object Model for Credit History page.
@@ -20,8 +20,8 @@ export class CreditHistoryPage {
    * Navigates to the credit history page.
    */
   async goto() {
-    await this.page.goto('/credits/history', { waitUntil: 'networkidle' });
-    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.goto("/credits/history", { waitUntil: "networkidle" });
+    await this.page.waitForLoadState("domcontentloaded");
   }
 
   /**
@@ -50,7 +50,7 @@ export class CreditHistoryPage {
    * @returns Locator for the header.
    */
   getColumnHeader(name: string): Locator {
-    return this.table.locator('th').filter({ hasText: name });
+    return this.table.locator("th").filter({ hasText: name });
   }
 
   /**
@@ -60,7 +60,7 @@ export class CreditHistoryPage {
    */
   async hoverReason(rowIndex: number) {
     const row = this.getHistoryRow(rowIndex);
-    const reasonCell = row.locator('td').nth(1);
+    const reasonCell = row.locator("td").nth(1);
 
     await reasonCell.locator('[data-slot="badge"]').click();
   }

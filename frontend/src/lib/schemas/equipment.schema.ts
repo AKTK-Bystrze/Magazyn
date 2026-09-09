@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // ============================================================================
 // Equipment Command Schemas
@@ -9,11 +9,11 @@ import { z } from 'zod';
  * Validates all required fields and constraints
  */
 export const createEquipmentSchema = z.object({
-  internal_id: z.string().min(1, 'Internal ID is required'),
-  type_id: z.string().uuid('Type ID must be a valid UUID'),
-  name: z.string().max(200, 'Name must not exceed 200 characters').optional().nullable(),
+  internal_id: z.string().min(1, "Internal ID is required"),
+  type_id: z.string().uuid("Type ID must be a valid UUID"),
+  name: z.string().max(200, "Name must not exceed 200 characters").optional().nullable(),
   description: z.string().optional().nullable(),
-  status: z.enum(['ok', 'broken']).optional().nullable().default('ok'),
+  status: z.enum(["ok", "broken"]).optional().nullable().default("ok"),
   image_path: z.string().optional().nullable(),
 });
 
@@ -25,13 +25,13 @@ export type CreateEquipmentCommand = z.infer<typeof createEquipmentSchema>;
  */
 export const updateEquipmentSchema = z
   .object({
-    name: z.string().max(200, 'Name must not exceed 200 characters').optional().nullable(),
+    name: z.string().max(200, "Name must not exceed 200 characters").optional().nullable(),
     description: z.string().optional().nullable(),
-    status: z.enum(['ok', 'broken']).optional().nullable(),
+    status: z.enum(["ok", "broken"]).optional().nullable(),
     image_path: z.string().optional().nullable(),
   })
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
-    message: 'At least one field must be provided',
+    message: "At least one field must be provided",
   });
 
 export type UpdateEquipmentCommand = z.infer<typeof updateEquipmentSchema>;
@@ -45,17 +45,17 @@ export type UpdateEquipmentCommand = z.infer<typeof updateEquipmentSchema>;
  * Handles pagination, filtering, and search
  */
 export const equipmentListQuerySchema = z.object({
-  page: z.coerce.number().int().min(1, 'Page must be at least 1').default(1),
+  page: z.coerce.number().int().min(1, "Page must be at least 1").default(1),
   per_page: z.coerce
     .number()
     .int()
     .refine((val) => [10, 25, 50, 100].includes(val), {
-      message: 'Per page must be one of: 10, 25, 50, 100',
+      message: "Per page must be one of: 10, 25, 50, 100",
     })
     .default(25),
-  type_id: z.string().uuid('Type ID must be a valid UUID').optional(),
+  type_id: z.string().uuid("Type ID must be a valid UUID").optional(),
   search: z.string().optional(),
-  status: z.enum(['ok', 'broken']).optional(),
+  status: z.enum(["ok", "broken"]).optional(),
   include_archived: z.coerce.boolean().default(false),
 });
 
@@ -67,8 +67,8 @@ export type EquipmentListQuery = z.infer<typeof equipmentListQuerySchema>;
  */
 export const availabilityQuerySchema = z
   .object({
-    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
-    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format'),
+    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format"),
+    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format"),
   })
   .refine(
     (data) => {
@@ -77,8 +77,8 @@ export const availabilityQuerySchema = z
       return end >= start;
     },
     {
-      message: 'End date must be greater than or equal to start date',
-      path: ['end_date'],
+      message: "End date must be greater than or equal to start date",
+      path: ["end_date"],
     }
   );
 
@@ -87,7 +87,7 @@ export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
 /**
  * Schema for UUID path parameter validation
  */
-export const uuidParamSchema = z.string().uuid('ID must be a valid UUID');
+export const uuidParamSchema = z.string().uuid("ID must be a valid UUID");
 
 // ============================================================================
 // Response Type Definitions
@@ -100,7 +100,7 @@ export interface EquipmentDTO {
   type_name: string;
   name: string | null;
   description: string | null;
-  status: 'ok' | 'broken';
+  status: "ok" | "broken";
   credit_cost_per_day: number;
   image_url: string | null;
   is_favorite?: boolean;
@@ -118,7 +118,7 @@ export interface MaintenanceLogDTO {
   created_at: string;
 }
 
-export interface EquipmentDetailDTO extends Omit<EquipmentDTO, 'is_favorite'> {
+export interface EquipmentDetailDTO extends Omit<EquipmentDTO, "is_favorite"> {
   maintenance_logs: MaintenanceLogDTO[];
 }
 

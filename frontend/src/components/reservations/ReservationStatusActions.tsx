@@ -101,10 +101,7 @@ export function ReservationStatusActions({
     }
   };
 
-  const handleModifyDatesConfirm = async (newDates: {
-    startDate: string;
-    endDate: string;
-  }) => {
+  const handleModifyDatesConfirm = async (newDates: { startDate: string; endDate: string }) => {
     const command: UpdateReservationCommand = {
       startDate: newDates.startDate,
       endDate: newDates.endDate,
@@ -120,11 +117,7 @@ export function ReservationStatusActions({
   };
 
   // No actions available
-  if (
-    !actions.canCancel &&
-    !actions.canMarkReturned &&
-    !actions.canChangeStatus
-  ) {
+  if (!actions.canCancel && !actions.canMarkReturned && !actions.canChangeStatus) {
     return null;
   }
 
@@ -132,11 +125,7 @@ export function ReservationStatusActions({
     <div className="flex flex-wrap gap-3">
       {/* Modify Dates Button (Pending only) */}
       {reservation.status === "PENDING" && (isOwner || isAdmin) && (
-        <Button
-          variant="outline"
-          onClick={handleModifyDatesClick}
-          disabled={isUpdating}
-        >
+        <Button variant="outline" onClick={handleModifyDatesClick} disabled={isUpdating}>
           <CalendarClock className={ICON_SIZE_SM + " mr-2"} />
           {DATE_UI.MODIFY_DATES_BUTTON}
         </Button>
@@ -157,11 +146,7 @@ export function ReservationStatusActions({
 
       {/* Mark Returned Button */}
       {actions.canMarkReturned && (
-        <Button
-          variant="outline"
-          onClick={handleMarkReturnedClick}
-          disabled={isUpdating}
-        >
+        <Button variant="outline" onClick={handleMarkReturnedClick} disabled={isUpdating}>
           <CheckCircle className={ICON_SIZE_SM + " mr-2"} />
           {UI.MARK_RETURNED}
         </Button>
