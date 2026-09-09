@@ -84,6 +84,31 @@ export function ReservationCartView({
   const [submissionError, setSubmissionError] = React.useState<string | null>(null);
   const [clearCartPending, setClearCartPending] = React.useState(false);
 
+  const errorContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Clear availability and submission errors when cart contents or dates change
+  React.useEffect(() => {
+    setAvailabilityResult({
+      isAllAvailable: true,
+      unavailableItems: [],
+    });
+    setSubmissionError(null);
+  }, [cartState.startDate, cartState.endDate, cartState.items]);
+
+  React.useEffect(() => {
+    const hasAvailabilityError =
+      !availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0;
+    if (hasAvailabilityError || submissionError) {
+      setTimeout(() => {
+        errorContainerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+    }
+  }, [
+    availabilityResult.isAllAvailable,
+    availabilityResult.unavailableItems.length,
+    submissionError,
+  ]);
+
   // Admin-only: selected user for creating reservations on their behalf
   // Initialize with admin's own ID if provided
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
@@ -330,48 +355,50 @@ export function ReservationCartView({
         </section>
       )}
 
-      {submissionError && (
-        <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
-          <AlertCircle className="h-4 w-4" />
-          <h5 className="mb-1 font-medium leading-none tracking-tight">Reservation Failed</h5>
-          <AlertDescription>{submissionError}</AlertDescription>
-        </Alert>
-      )}
+      <div ref={errorContainerRef} className="empty:hidden space-y-4">
+        {submissionError && (
+          <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            <h5 className="mb-1 font-medium leading-none tracking-tight">Reservation Failed</h5>
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Availability Errors Display */}
-      {!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0 && (
-        <Alert
-          className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
-          data-testid="error-reservation-conflict"
-        >
-          <AlertCircle className="h-4 w-4" />
-          <h5 className="mb-1 font-medium leading-none tracking-tight">
-            Availability Issues Detected
-          </h5>
-          <AlertDescription>
-            <ul className="list-disc pl-5 mt-2 space-y-2">
-              {availabilityResult.unavailableItems.map((item) => (
-                <li key={item.equipmentId}>
-                  <strong>{item.name}</strong>: {item.reason}
-                  {item.conflictingReservations && item.conflictingReservations.length > 0 && (
-                    <div className="mt-1 text-sm">
-                      <span className="font-medium">Conflicting reservations:</span>
-                      <ul className="list-none pl-4 mt-1 space-y-1">
-                        {item.conflictingReservations.map((conflict, idx) => (
-                          <li key={idx} className="text-xs">
-                            • {conflict.startDate} to {conflict.endDate}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-sm">Please remove these items or change your dates.</p>
-          </AlertDescription>
-        </Alert>
-      )}
+        {/* Availability Errors Display */}
+        {!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0 && (
+          <Alert
+            className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
+            data-testid="error-reservation-conflict"
+          >
+            <AlertCircle className="h-4 w-4" />
+            <h5 className="mb-1 font-medium leading-none tracking-tight">
+              Availability Issues Detected
+            </h5>
+            <AlertDescription>
+              <ul className="list-disc pl-5 mt-2 space-y-2">
+                {availabilityResult.unavailableItems.map((item) => (
+                  <li key={item.equipmentId}>
+                    <strong>{item.name}</strong>: {item.reason}
+                    {item.conflictingReservations && item.conflictingReservations.length > 0 && (
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium">Conflicting reservations:</span>
+                        <ul className="list-none pl-4 mt-1 space-y-1">
+                          {item.conflictingReservations.map((conflict, idx) => (
+                            <li key={idx} className="text-xs">
+                              • {conflict.startDate} to {conflict.endDate}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-sm">Please remove these items or change your dates.</p>
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Cart Items & Dates (2/3 width) */}
