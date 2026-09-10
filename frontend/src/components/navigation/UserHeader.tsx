@@ -54,7 +54,7 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
 
   return (
     <header
-      className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6"
+      className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6"
       data-testid="topbar"
     >
       {/* Mobile Menu Sheet */}
@@ -86,6 +86,23 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
         </SheetContent>
       </Sheet>
 
+      {/* Desktop Sidebar Toggle */}
+      <Button
+        size="icon"
+        variant="outline"
+        className="hidden lg:flex"
+        onClick={() => {
+          const container = document.getElementById("desktop-sidebar-container");
+          if (container) {
+            const isCollapsed = container.dataset.collapsed === "true";
+            container.dataset.collapsed = isCollapsed ? "false" : "true";
+            localStorage.setItem("sidebarCollapsed", isCollapsed ? "false" : "true");
+          }
+        }}
+      >
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle Sidebar</span>
+      </Button>
       {/* Breadcrumbs */}
       <div className="flex-1">
         <Breadcrumbs currentPath={currentPath} />
