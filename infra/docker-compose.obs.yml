@@ -16,6 +16,11 @@ services:
       - GRAFANA_REMOTE_WRITE_URL=http://prometheus:9090/api/v1/write
       - GRAFANA_REMOTE_WRITE_USERNAME=dummy
       - GRAFANA_REMOTE_WRITE_PASSWORD=dummy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   prometheus:
     image: prom/prometheus:latest
@@ -27,6 +32,11 @@ services:
       - "9090:9090"
     networks:
       - magazyn-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   grafana:
     image: grafana/grafana:latest
@@ -41,6 +51,11 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - magazyn-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   magazyn-network:
