@@ -480,3 +480,64 @@ func TestFreeReservation_CostComparison(t *testing.T) {
 		fixture.client.From("reservations").Delete("", "").Eq("id", respFree.Reservations[0].ID).Execute()
 	})
 }
+
+// TestTS2_AdminCreatesReservationForUser verifies TS-2 step 2:
+// When admin creates a reservation specifying another user's ID,
+// credits are deducted from the TARGET user, not the admin.
+func TestTS2_AdminCreatesReservationForUser(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	targetUserBalance := fixture.getUserBalance(fixture.testUserID)
+	adminBalance := fixture.getUserBalance(fixture.testUser2ID)
+
+	// Admin (testUser2ID) creates for testUserID
+	targetID := fixture.testUserID
+	isFree := false
+	cmd := types.CreateReservationsCommand{
+		UserID:          &targetID,
+		FreeReservation: &isFree,
+		Reservations: []types.CreateReservationItem{
+			{EquipmentID: fixture.equipmentID, StartDate: dateOffset(5), EndDate: dateOffset(7)},
+		},
+	}
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUser2ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Reservations)
+	assert.Equal(t, targetID, resp.Reservations[0].UserID, "Reservation owner should be the target user")
+
+	// Credits deducted from TARGET user (3 days * costPerDay)
+	assert.Equal(t, 3*fixture.costPerDay, targetUserBalance-fixture.getUserBalance(fixture.testUserID), "3-day cost from TARGET user")
+	// Admin balance unchanged
+	assert.Equal(t, adminBalance, fixture.getUserBalance(fixture.testUser2ID), "Admin balance must not change")
+
+	fixture.cleanup = append(fixture.cleanup, func() {
+		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
+	})
+	t.Logf("✓ TS-2: Admin created reservation for user, credits deducted from target")
+}
+
+// TestTS2_AdminModifiesAnotherUsersReservation verifies TS-2 step 4:
+// Admin can extend the end date of another user's reservation.
+// Credit adjustment is applied to the TARGET user's balance.
+func TestTS2_AdminModifiesAnotherUsersReservation(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	// Create reservation owned by testUserID
+	resID, err := fixture.createTestReservation(fixture.testUserID, 5, 7) // 3 days
+	require.NoError(t, err)
+	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
+
+	// Admin (testUser2ID) extends the end date +2 days
+	newEnd := dateOffset(9)
+	resp, err := fixture.svc.Update(ctx, resID, types.UpdateReservationCommand{EndDate: &newEnd}, fixture.testUser2ID, "admin")
+	require.NoError(t, err)
+	assert.Equal(t, newEnd, resp.EndDate)
+
+	// 2 extra days charged to the TARGET user (testUserID)
+	assert.Equal(t, 2*fixture.costPerDay, balanceAfterCreate-fixture.getUserBalance(fixture.testUserID), "Admin extension charges target user")
+	t.Logf("✓ TS-2: Admin modified reservation, 2-day charge applied to target user")
+}
