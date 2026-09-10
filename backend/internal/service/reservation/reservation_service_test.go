@@ -612,3 +612,73 @@ func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	mockEquipRepo.AssertExpectations(t)
 }
+
+func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
+	mockRepo, mockEquipRepo, mockUserRepo, _, svc := setupTestService()
+	ctx := context.Background()
+
+	userID := "user-123"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      userID,
+			Status:      constants.ReservationStatusPending,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03", // 3 days
+			IsFree:      false,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	deniedStatus := constants.ReservationStatusDenied
+	cmd := types.UpdateReservationCommand{
+		Status: &deniedStatus,
+	}
+
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:     "eq-1",
+		Name:   &name,
+		TypeID: "type-1",
+		Status: constants.EquipmentStatusOK,
+	}
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+
+	// Refund calculation
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+	mockRepo.On("RefundCredits", ctx, reservationID, int32(30)).Return(nil)
+
+	// Fetching new balance
+	mockUserRepo.On("GetByID", ctx, userID).Return(&types.PublicProfilesSelect{
+		ID:            userID,
+		CreditBalance: 150,
+	}, nil)
+
+	updatedRes := &types.PublicReservationsSelect{
+		ID:          reservationID,
+		EquipmentID: "eq-1",
+		Status:      constants.ReservationStatusDenied,
+		StartDate:   "2025-01-01",
+		EndDate:     "2025-01-03",
+	}
+	mockRepo.On("UpdateReservation", ctx, reservationID, mock.Anything, userID).Return(updatedRes, nil)
+
+	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
+
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, int32(30), result.CreditAdjustment)
+	assert.Equal(t, int32(150), result.RemainingBalance)
+	assert.Equal(t, constants.ReservationStatusDenied, result.Status)
+
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+}

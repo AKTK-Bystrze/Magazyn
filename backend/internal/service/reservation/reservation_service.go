@@ -257,9 +257,14 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		if current.Status != constants.ReservationStatusPending {
 			return nil, types.NewForbiddenError("Cannot modify non-pending reservation")
 		}
-		// User can only change Status to DENIED (Cancel)
-		// User might change dates? Plan says "If dates change: Check availability...".
-		// Plan "User ... Can only update own PENDING reservations".
+	}
+
+	// Validate status change before any DB modifications
+	if cmd.Status != nil && *cmd.Status != current.Status {
+		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
+			// User tried to set something other than DENIED or RETURNED
+			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
+		}
 	}
 
 	updateData := types.PublicReservationsUpdate{}
@@ -329,10 +334,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 
 	// Handle Status Change
 	if cmd.Status != nil && *cmd.Status != current.Status {
-		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
-			// User tried to set something other than DENIED or RETURNED
-			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
-		}
 		updateData.Status = cmd.Status
 		needsUpdate = true
 
@@ -353,9 +354,15 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 						if refundAmount > 0 {
 							if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 								logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
+								return nil, fmt.Errorf("failed to process refund: %w", err)
 							} else {
 								logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
 								creditAdjustment = refundAmount
+								// Fetch new balance
+								userProfile, err := s.userRepo.GetByID(ctx, current.UserID)
+								if err == nil && userProfile != nil {
+									newBalance = userProfile.CreditBalance
+								}
 							}
 						}
 					}
@@ -377,7 +384,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		if err != nil {
 			return nil, err
 		}
-		latestUpdatedAt = updated.UpdatedAt
 	} else {
 		// Only dates changed, and they were already updated via ModifyReservationDatesWithCredits
 		updated = &types.PublicReservationsSelect{
