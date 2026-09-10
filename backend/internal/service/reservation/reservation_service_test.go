@@ -682,3 +682,86 @@ func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 	mockUserRepo.AssertExpectations(t)
 }
+
+func TestUpdate_CancelRefund_EquipmentLookupError(t *testing.T) {
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	userID := "user-123"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      userID,
+			Status:      constants.ReservationStatusPending,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03",
+			IsFree:      false,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	deniedStatus := constants.ReservationStatusDenied
+	cmd := types.UpdateReservationCommand{
+		Status: &deniedStatus,
+	}
+
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(nil, assert.AnError)
+
+	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
+
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "refund failed: equipment eq-1 not found")
+
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestUpdate_CancelRefund_EquipmentTypeLookupError(t *testing.T) {
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	userID := "user-123"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      userID,
+			Status:      constants.ReservationStatusPending,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03",
+			IsFree:      false,
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	deniedStatus := constants.ReservationStatusDenied
+	cmd := types.UpdateReservationCommand{
+		Status: &deniedStatus,
+	}
+
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:     "eq-1",
+		Name:   &name,
+		TypeID: "type-1",
+		Status: constants.EquipmentStatusOK,
+	}
+
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(nil, assert.AnError)
+
+	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
+
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "refund failed: equipment type type-1 not found")
+
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+}

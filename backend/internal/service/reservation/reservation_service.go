@@ -339,36 +339,37 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 
 		// If cancelling (DENIED or CANCELLED), do a FULL refund
 		if isCancelling {
-			if !current.IsFree {
+			if current.IsFree {
+				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
+			} else {
 				eq, errEq := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
 				if errEq != nil {
-					logger.Errorf(ctx, "Refund failed: equipment %s not found", current.EquipmentID)
-				} else {
-					eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-					if errType != nil {
-						logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeID)
-					} else {
-						days := s.calculateDays(current.StartDate, current.EndDate)
-						refundAmount := days * eqType.CreditCostPerDay
+					logger.Errorf(ctx, "Refund failed: equipment %s not found: %v", current.EquipmentID, errEq)
+					return nil, fmt.Errorf("refund failed: equipment %s not found: %w", current.EquipmentID, errEq)
+				}
 
-						if refundAmount > 0 {
-							if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
-								logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
-								return nil, fmt.Errorf("failed to process refund: %w", err)
-							} else {
-								logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
-								creditAdjustment = refundAmount
-								// Fetch new balance
-								userProfile, err := s.userRepo.GetByID(ctx, current.UserID)
-								if err == nil && userProfile != nil {
-									newBalance = userProfile.CreditBalance
-								}
-							}
-						}
+				eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+				if errType != nil {
+					logger.Errorf(ctx, "Refund failed: equipment type %s not found: %v", eq.TypeID, errType)
+					return nil, fmt.Errorf("refund failed: equipment type %s not found: %w", eq.TypeID, errType)
+				}
+
+				days := s.calculateDays(current.StartDate, current.EndDate)
+				refundAmount := days * eqType.CreditCostPerDay
+
+				if refundAmount > 0 {
+					if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
+						logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
+						return nil, fmt.Errorf("failed to process refund: %w", err)
+					}
+					logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
+					creditAdjustment = refundAmount
+					// Fetch new balance
+					userProfile, err := s.userRepo.GetByID(ctx, current.UserID)
+					if err == nil && userProfile != nil {
+						newBalance = userProfile.CreditBalance
 					}
 				}
-			} else {
-				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
 			}
 		}
 	}
