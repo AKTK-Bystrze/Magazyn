@@ -6,13 +6,7 @@ import { EquipmentGrid } from "./EquipmentGrid";
 import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { CartIndicator } from "./CartIndicator";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Filter } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import type { EquipmentSearchItem } from "@/types";
@@ -23,8 +17,6 @@ import type { EquipmentSearchItem } from "@/types";
 interface EquipmentSearchContainerProps {
   /** Custom checkout path for cart navigation. Defaults to user checkout route. */
   checkoutPath?: string;
-  /** Whether the user has admin permissions */
-  isAdmin?: boolean;
 }
 
 /**
@@ -34,21 +26,19 @@ interface EquipmentSearchContainerProps {
  * @param props - Component props
  * @returns Equipment search interface with filters, grid, and cart indicator
  */
-function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSearchContainerProps) {
+function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProps) {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
-  const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(null);
+  const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(
+    null
+  );
 
   // Fetch equipment types - automatically transformed to camelCase
   const { data: types = [] } = useEquipmentTypes();
 
   // Fetch equipment list - automatically transformed to camelCase with nested type
-  const {
-    data: equipmentData,
-    isLoading,
-    error
-  } = useEquipmentList(activeFilters);
+  const { data: equipmentData, isLoading, error } = useEquipmentList(activeFilters);
 
   // Data is already transformed by the hook, no manual mapping needed!
   const equipment = equipmentData?.equipment ?? [];
@@ -56,7 +46,7 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
     page: 1,
     perPage: 25,
     totalItems: 0,
-    totalPages: 0
+    totalPages: 0,
   };
 
   const handleReset = () => {
@@ -74,7 +64,10 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]" data-testid="equipment-search-container">
+    <div
+      className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]"
+      data-testid="equipment-search-container"
+    >
       {/* Mobile Filter Trigger */}
       <div className="lg:hidden flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Sprzęt</h1>
@@ -94,7 +87,6 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
               types={types}
               onFilterChange={updateFilter}
               onReset={handleReset}
-              showDates={!isAdmin}
             />
           </SheetContent>
         </Sheet>
@@ -105,11 +97,10 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
         <div className="sticky top-6">
           <h2 className="text-xl font-bold mb-4">Filtry</h2>
           <FilterSidebar
-            filters={filters} 
-            types={types} 
+            filters={filters}
+            types={types}
             onFilterChange={updateFilter}
             onReset={handleReset}
-            showDates={!isAdmin}
           />
         </div>
       </aside>
@@ -126,7 +117,7 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
 
         <div className="flex-1">
           <EquipmentGrid
-            items={equipment} 
+            items={equipment}
             isLoading={isLoading}
             error={error as Error | null}
             onViewDetail={handleViewDetail}
@@ -141,21 +132,21 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
               size="sm"
               disabled={meta.page <= 1}
               onClick={() => updateFilter("page", meta.page - 1)}
-             >
+            >
               Poprzedni
-             </Button>
-             <div className="flex items-center px-4 text-sm font-medium">
+            </Button>
+            <div className="flex items-center px-4 text-sm font-medium">
               Strona {meta.page} z {meta.totalPages}
-             </div>
+            </div>
             <Button
               variant="outline"
               size="sm"
               disabled={meta.page >= meta.totalPages}
               onClick={() => updateFilter("page", meta.page + 1)}
-             >
+            >
               Następny
-             </Button>
-           </div>
+            </Button>
+          </div>
         )}
       </main>
 
@@ -172,7 +163,6 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
         isOpen={isDetailsOpen}
         equipment={selectedEquipment}
         onClose={() => setIsDetailsOpen(false)}
-        readOnly={!isAdmin}
       />
     </div>
   );
@@ -184,8 +174,6 @@ function EquipmentSearchContainer({ checkoutPath, isAdmin = false }: EquipmentSe
 interface EquipmentSearchContainerWithProviderProps {
   /** Custom checkout path for cart navigation */
   checkoutPath?: string;
-  /** Whether the user has admin permissions */
-  isAdmin?: boolean;
 }
 
 /**
@@ -209,11 +197,10 @@ interface EquipmentSearchContainerWithProviderProps {
  */
 export default function EquipmentSearchContainerWithProvider({
   checkoutPath,
-  isAdmin,
 }: EquipmentSearchContainerWithProviderProps) {
   return (
     <QueryProvider>
-      <EquipmentSearchContainer checkoutPath={checkoutPath} isAdmin={isAdmin} />
+      <EquipmentSearchContainer checkoutPath={checkoutPath} />
     </QueryProvider>
   );
 }

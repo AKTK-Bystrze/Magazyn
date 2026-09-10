@@ -39,7 +39,11 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full" data-testid="user-menu-trigger">
+        <Button
+          variant="ghost"
+          className="relative h-9 w-9 rounded-full"
+          data-testid="user-menu-trigger"
+        >
           <Avatar className="h-9 w-9">
             <AvatarFallback className="bg-primary text-primary-foreground">
               {getInitials(user.email)}
@@ -72,7 +76,11 @@ export function UserMenu({ user }: UserMenuProps) {
           <span className="ml-auto text-xs text-muted-foreground">Wkrótce</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="text-destructive" data-testid="logout-button">
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="text-destructive"
+          data-testid="logout-button"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Wyloguj się</span>
         </DropdownMenuItem>

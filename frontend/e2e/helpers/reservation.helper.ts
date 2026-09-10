@@ -32,9 +32,9 @@ export function calculateWorkerDates(workerIndex: number): { startDays: number; 
  */
 export async function clearCart(page: Page): Promise<void> {
   await page.evaluate(() => {
-    localStorage.removeItem('magazyn-cart');
+    localStorage.removeItem("magazyn-cart");
   });
-  await page.goto('/equipment', { waitUntil: 'domcontentloaded' });
+  await page.goto("/equipment", { waitUntil: "domcontentloaded" });
 }
 
 /**
@@ -45,14 +45,14 @@ export async function clearCart(page: Page): Promise<void> {
  * @returns A promise that resolves when the item is added and the cart indicator is visible.
  */
 export async function addToCart(page: Page, equipmentId: string): Promise<void> {
-  await page.goto('/equipment');
+  await page.goto("/equipment");
 
   const addButton = page.getByTestId(`equipment-add-to-cart-${equipmentId}`);
-  await addButton.waitFor({ state: 'visible', timeout: 15000 });
-  
+  await addButton.waitFor({ state: "visible", timeout: 15000 });
+
   await addButton.click();
 
-  await expect(page.getByTestId('cart-indicator')).toBeVisible({ timeout: 5000 });
+  await expect(page.getByTestId("cart-indicator")).toBeVisible({ timeout: 5000 });
 }
 
 /**
@@ -75,8 +75,8 @@ export async function addMultipleToCart(page: Page, equipmentIds: string[]): Pro
  * @returns A promise that resolves when the cart view is visible.
  */
 export async function goToCart(page: Page): Promise<void> {
-  await page.getByTestId('cart-indicator').click();
-  await expect(page.getByTestId('reservation-cart')).toBeVisible();
+  await page.getByTestId("cart-indicator").click();
+  await expect(page.getByTestId("reservation-cart")).toBeVisible();
 }
 
 /**
@@ -92,12 +92,12 @@ export async function setDates(page: Page, startDays: number, endDays: number): 
   start.setDate(start.getDate() + startDays);
   const end = new Date();
   end.setDate(end.getDate() + endDays);
-  
-  const startStr = start.toISOString().split('T')[0];
-  const endStr = end.toISOString().split('T')[0];
-  
-  await page.getByTestId('start-date-input').fill(startStr);
-  await page.getByTestId('end-date-input').fill(endStr);
+
+  const startStr = start.toISOString().split("T")[0];
+  const endStr = end.toISOString().split("T")[0];
+
+  await page.getByTestId("start-date-input").fill(startStr);
+  await page.getByTestId("end-date-input").fill(endStr);
 }
 
 /**
@@ -119,11 +119,11 @@ export async function createReservation(
   await goToCart(page);
   await setDates(page, startDays, endDays);
 
-  await page.getByTestId('checkout-button').click();
+  await page.getByTestId("checkout-button").click();
 
-  await expect(page.getByTestId('reservation-confirmation-modal')).toBeVisible();
+  await expect(page.getByTestId("reservation-confirmation-modal")).toBeVisible();
 
-  await page.getByTestId('confirm-reservation-button').click();
+  await page.getByTestId("confirm-reservation-button").click();
 
   await page.waitForURL(/\/reservations\?success=true/);
 }
@@ -136,18 +136,18 @@ export async function createReservation(
  * @throws An error if no reservation row is found.
  */
 export async function getLastReservationId(page: Page): Promise<string> {
-  await page.goto('/reservations');
+  await page.goto("/reservations");
 
   await page.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 5000 });
-  
+
   const firstRow = page.locator('[data-testid^="reservation-row-"]').first();
-  const testId = await firstRow.getAttribute('data-testid');
-  
+  const testId = await firstRow.getAttribute("data-testid");
+
   if (!testId) {
-    throw new Error('Could not find reservation row');
+    throw new Error("Could not find reservation row");
   }
-  
-  return testId.replace('reservation-row-', '');
+
+  return testId.replace("reservation-row-", "");
 }
 
 /**
@@ -159,15 +159,15 @@ export async function getLastReservationId(page: Page): Promise<string> {
 export async function getAllReservationIds(page: Page): Promise<string[]> {
   const rows = page.locator('[data-testid^="reservation-row-"]');
   const count = await rows.count();
-  
+
   const ids: string[] = [];
   for (let i = 0; i < count; i++) {
-    const testId = await rows.nth(i).getAttribute('data-testid');
+    const testId = await rows.nth(i).getAttribute("data-testid");
     if (testId) {
-      ids.push(testId.replace('reservation-row-', ''));
+      ids.push(testId.replace("reservation-row-", ""));
     }
   }
-  
+
   return ids;
 }
 
@@ -183,11 +183,8 @@ export async function cancelReservation(
   supabaseAdmin: SupabaseClient,
   reservationId: string
 ): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from('reservations')
-    .delete()
-    .eq('id', reservationId);
-    
+  const { error } = await supabaseAdmin.from("reservations").delete().eq("id", reservationId);
+
   if (error) {
     throw error;
   }
@@ -224,10 +221,10 @@ export async function restoreCredits(
   amount: number = 100
 ): Promise<void> {
   const { error } = await supabaseAdmin
-    .from('profiles')
+    .from("profiles")
     .update({ credit_balance: amount })
-    .eq('id', userId);
-    
+    .eq("id", userId);
+
   if (error) {
     throw error;
   }
@@ -246,15 +243,15 @@ export async function getUserCredits(
   userId: string
 ): Promise<number> {
   const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .select('credit_balance')
-    .eq('id', userId)
+    .from("profiles")
+    .select("credit_balance")
+    .eq("id", userId)
     .single();
-    
+
   if (error) {
     throw error;
   }
-  
+
   return data?.credit_balance ?? 0;
 }
 
@@ -288,7 +285,7 @@ export async function waitForReservationCount(
  * @returns The formatted date string.
  */
 export function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 /**
@@ -302,5 +299,3 @@ export function getDaysFromNow(days: number): Date {
   date.setDate(date.getDate() + days);
   return date;
 }
-
-

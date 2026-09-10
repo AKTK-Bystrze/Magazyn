@@ -80,7 +80,7 @@ export function StatusChangeDialog({
           title: UI.CONFIRM_STATUS_CHANGE_TITLE,
           message: `${UI.CONFIRM_STATUS_CHANGE_MESSAGE} ${
             RESERVATION_STATUS_LABELS[reservation.status]
-          } to ${RESERVATION_STATUS_LABELS[targetStatus || ""]}`,
+          } na ${RESERVATION_STATUS_LABELS[targetStatus || ""]}`,
           confirmButton: UI.CONFIRM_STATUS_CHANGE_BUTTON,
           cancelButton: UI.CANCEL_CHANGE,
           variant: "default" as const,
@@ -107,8 +107,7 @@ export function StatusChangeDialog({
           <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
             <AlertTriangle className={ICON_SIZE_SM + " text-amber-600"} />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
-              This action cannot be undone. The equipment will become available
-              for others to reserve.
+              Ta akcja nie może być cofnięta. Sprzęt stanie się dostępny do wypożyczenia dla innych.
             </AlertDescription>
           </Alert>
         )}
@@ -117,29 +116,19 @@ export function StatusChangeDialog({
         {content.showRefund && (
           <div className="bg-muted rounded-lg p-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                {UI.CONFIRM_REFUND_LABEL}
-              </span>
+              <span className="text-sm text-muted-foreground">{UI.CONFIRM_REFUND_LABEL}</span>
               <span className="text-lg font-semibold text-green-600">
-                +{reservation.creditCost} credits
+                +{reservation.creditCost} godzinek
               </span>
             </div>
           </div>
         )}
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             {content.cancelButton}
           </Button>
-          <Button
-            variant={content.variant}
-            onClick={handleConfirm}
-            disabled={isSubmitting}
-          >
+          <Button variant={content.variant} onClick={handleConfirm} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

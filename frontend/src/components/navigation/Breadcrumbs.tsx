@@ -1,9 +1,9 @@
 /**
  * Breadcrumbs Component
- * 
+ *
  * Auto-generated navigation breadcrumb trail.
  * Parses URL path and maps segments to readable labels.
- * 
+ *
  * @example
  * <Breadcrumbs currentPath="/reservations/create" />
  */
@@ -14,9 +14,9 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { BREADCRUMB_LABELS, BREADCRUMB_HIDDEN_PATHS } from '@/lib/config/nav-config';
-import { Fragment, useState, useEffect } from 'react';
+} from "@/components/ui/breadcrumb";
+import { BREADCRUMB_LABELS, BREADCRUMB_HIDDEN_PATHS } from "@/lib/config/nav-config";
+import { Fragment, useState, useEffect } from "react";
 
 interface BreadcrumbsProps {
   /** Current URL path */
@@ -40,11 +40,12 @@ export function Breadcrumbs({ currentPath, isAdmin = false }: BreadcrumbsProps) 
   useEffect(() => {
     const handleUpdate = (event: CustomEvent<{ path: string; label: string }>) => {
       const { path, label } = event.detail;
-      setDynamicLabels(prev => ({ ...prev, [path]: label }));
+      setDynamicLabels((prev) => ({ ...prev, [path]: label }));
     };
 
-    window.addEventListener('magazyn:breadcrumb-label', handleUpdate as EventListener);
-    return () => window.removeEventListener('magazyn:breadcrumb-label', handleUpdate as EventListener);
+    window.addEventListener("magazyn:breadcrumb-label", handleUpdate as EventListener);
+    return () =>
+      window.removeEventListener("magazyn:breadcrumb-label", handleUpdate as EventListener);
   }, []);
 
   if (BREADCRUMB_HIDDEN_PATHS.includes(currentPath)) {
@@ -55,16 +56,19 @@ export function Breadcrumbs({ currentPath, isAdmin = false }: BreadcrumbsProps) 
    * Parses URL path into breadcrumb segments
    */
   const segments: BreadcrumbSegment[] = [];
-  const parts = currentPath.split('/').filter(Boolean);
-  let currentHref = '';
-  
+  const parts = currentPath.split("/").filter(Boolean);
+  let currentHref = "";
+
   for (let i = 0; i < parts.length; i++) {
     const segment = parts[i];
     currentHref += `/${segment}`;
-    
+
     // Check dynamic labels first, then static config, then fallback to capitalized segment
-    const label = dynamicLabels[currentHref] || BREADCRUMB_LABELS[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
-    
+    const label =
+      dynamicLabels[currentHref] ||
+      BREADCRUMB_LABELS[segment] ||
+      segment.charAt(0).toUpperCase() + segment.slice(1);
+
     segments.push({
       label,
       href: currentHref,
@@ -76,8 +80,8 @@ export function Breadcrumbs({ currentPath, isAdmin = false }: BreadcrumbsProps) 
     return null;
   }
 
-  const homeHref = isAdmin ? '/admin' : '/dashboard';
-  const homeLabel = isAdmin ? 'Admin' : 'Home';
+  const homeHref = isAdmin ? "/admin" : "/dashboard";
+  const homeLabel = isAdmin ? "Admin" : "Home";
 
   return (
     <Breadcrumb>
@@ -85,12 +89,12 @@ export function Breadcrumbs({ currentPath, isAdmin = false }: BreadcrumbsProps) 
         <BreadcrumbItem>
           <BreadcrumbLink href={homeHref}>{homeLabel}</BreadcrumbLink>
         </BreadcrumbItem>
-        
+
         {segments.map((segment, index) => {
-          if (index === 0 && (segment.href === '/admin' || segment.href === '/dashboard')) {
+          if (index === 0 && (segment.href === "/admin" || segment.href === "/dashboard")) {
             return null;
           }
-          
+
           return (
             <Fragment key={segment.href}>
               <BreadcrumbSeparator />

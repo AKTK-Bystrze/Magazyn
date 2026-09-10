@@ -1,14 +1,14 @@
 /**
  * UserSidebar Component
- * 
+ *
  * Renders the sidebar navigation for standard users.
  * Uses centralized navigation configuration for consistency.
- * 
+ *
  * @example
  * <UserSidebar currentPath="/dashboard" />
  */
-import { cn } from '@/lib/utils';
-import { USER_NAV_ITEMS } from '@/lib/config/nav-config';
+import { cn } from "@/lib/utils";
+import { USER_NAV_ITEMS } from "@/lib/config/nav-config";
 
 interface UserSidebarProps {
   /** Current URL path for active state highlighting */
@@ -45,7 +45,7 @@ export function UserSidebar({ currentPath, className, onNavigate }: UserSidebarP
             />
             <h2 className="text-lg font-semibold tracking-tight">Magazyn</h2>
           </div>
-          
+
           {/* Navigation Items */}
           <div className="space-y-1">
             {USER_NAV_ITEMS.map((item) => (
@@ -55,9 +55,11 @@ export function UserSidebar({ currentPath, className, onNavigate }: UserSidebarP
                 onClick={onNavigate}
                 className={cn(
                   "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
-                  isActive(item.activePattern) ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                  isActive(item.activePattern)
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground"
                 )}
-                data-testid={`sidebar-nav-link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                data-testid={`sidebar-nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                 {item.label}

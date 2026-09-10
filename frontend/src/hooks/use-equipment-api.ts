@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { equipmentApi } from '@/lib/api/equipment-api';
-import type { EquipmentSearchParams } from '@/types';
+import { useQuery } from "@tanstack/react-query";
+import { equipmentApi } from "@/lib/api/equipment-api";
+import type { EquipmentSearchParams } from "@/types";
 
 /**
  * Custom hook for fetching equipment list with automatic transformation
@@ -11,7 +11,7 @@ import type { EquipmentSearchParams } from '@/types';
  */
 export function useEquipmentList(filters: Partial<EquipmentSearchParams>) {
   return useQuery({
-    queryKey: ['equipment', filters],
+    queryKey: ["equipment", filters],
     queryFn: () => equipmentApi.list(filters),
     // Keep previous data while fetching to prevent UI flash
     placeholderData: (previousData) => previousData,
@@ -25,7 +25,7 @@ export function useEquipmentList(filters: Partial<EquipmentSearchParams>) {
  */
 export function useEquipmentTypes() {
   return useQuery({
-    queryKey: ['equipment-types'],
+    queryKey: ["equipment-types"],
     queryFn: () => equipmentApi.listTypes(),
     // Equipment types rarely change, cache for 5 minutes
     staleTime: 1000 * 60 * 5,

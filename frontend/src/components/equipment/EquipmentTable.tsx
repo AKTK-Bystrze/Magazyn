@@ -46,9 +46,7 @@ interface EquipmentTableProps {
 /**
  * Returns badge variant based on equipment status
  */
-function getStatusVariant(
-  status: string
-): "default" | "secondary" | "destructive" | "outline" {
+function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case "ok":
       return "default";
@@ -150,9 +148,7 @@ export function EquipmentTable({
             <TableHead>{UI.NAME}</TableHead>
             <TableHead className="hidden md:table-cell">{UI.TYPE}</TableHead>
             <TableHead>{UI.STATUS}</TableHead>
-            <TableHead className="hidden lg:table-cell text-right">
-              {UI.CREDIT_COST}
-            </TableHead>
+            <TableHead className="hidden lg:table-cell text-right">{UI.CREDIT_COST}</TableHead>
             <TableHead className="hidden xl:table-cell">{UI.CREATED}</TableHead>
             <TableHead className="w-[70px]">{UI.ACTIONS}</TableHead>
           </TableRow>
@@ -175,25 +171,17 @@ export function EquipmentTable({
                 data-testid={`equipment-row-${item.id}`}
               >
                 <TableCell>
-                  <div className="font-mono text-sm font-medium">
-                    {item.internalId}
-                  </div>
+                  <div className="font-mono text-sm font-medium">{item.internalId}</div>
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">
                     {item.name || (
-                      <span className="text-muted-foreground italic">
-                        {item.type.name}
-                      </span>
+                      <span className="text-muted-foreground italic">{item.type.name}</span>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground md:hidden">
-                    {item.type.name}
-                  </div>
+                  <div className="text-xs text-muted-foreground md:hidden">{item.type.name}</div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {item.type.name}
-                </TableCell>
+                <TableCell className="hidden md:table-cell">{item.type.name}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(item.status)}>
                     {EQUIPMENT_STATUS_LABELS[item.status] || item.status}
@@ -203,8 +191,7 @@ export function EquipmentTable({
                   {item.type.creditCostPerDay}
                 </TableCell>
                 <TableCell className="hidden xl:table-cell text-muted-foreground">
-                  {/* TODO: Add createdAt to EquipmentSearchItem type if needed */}
-                  —
+                  {/* TODO: Add createdAt to EquipmentSearchItem type if needed */}—
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

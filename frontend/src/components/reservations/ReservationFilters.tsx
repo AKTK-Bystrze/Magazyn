@@ -38,21 +38,13 @@ interface ReservationFiltersProps {
  * @param onFilterChange - Callback when a filter changes
  * @param onReset - Callback to reset all filters
  */
-export function ReservationFilters({
-  filters,
-  onFilterChange,
-  onReset,
-}: ReservationFiltersProps) {
+export function ReservationFilters({ filters, onFilterChange, onReset }: ReservationFiltersProps) {
   const hasActiveFilters =
-    filters.status !== DEFAULT_STATUS_FILTER ||
-    filters.sort !== DEFAULT_SORT_OPTION;
+    filters.status !== DEFAULT_STATUS_FILTER || filters.sort !== DEFAULT_SORT_OPTION;
 
   const handleStatusChange = React.useCallback(
     (value: string) => {
-      onFilterChange(
-        "status",
-        value as Enums<"reservation_status"> | typeof DEFAULT_STATUS_FILTER
-      );
+      onFilterChange("status", value as Enums<"reservation_status"> | typeof DEFAULT_STATUS_FILTER);
     },
     [onFilterChange]
   );
@@ -106,12 +98,7 @@ export function ReservationFilters({
 
       {/* Reset Button */}
       {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onReset}
-          className="flex items-center gap-1"
-        >
+        <Button variant="ghost" size="sm" onClick={onReset} className="flex items-center gap-1">
           <X className={ICON_SIZE_SM} />
           Resetuj
         </Button>

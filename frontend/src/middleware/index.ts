@@ -107,7 +107,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
           hasToken: !!token,
           pathname: url.pathname,
         });
-        return context.redirect(redirectTo);
+
+        // Preserve all query params, especially PKCE 'code' for AuthListener processing
+        const targetUrl = new URL(redirectTo, url.origin);
+        url.searchParams.forEach((val, key) => {
+          if (!targetUrl.searchParams.has(key)) {
+            targetUrl.searchParams.set(key, val);
+          }
+        });
+
+        return context.redirect(targetUrl.pathname + targetUrl.search);
       }
     }
 

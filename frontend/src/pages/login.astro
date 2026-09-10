@@ -3,31 +3,31 @@
  * Login Page
  * Authentication page with email magic link login.
  */
-import AuthLayout from '../layouts/AuthLayout.astro';
-import { LoginFormContainer } from '@/components/auth/LoginFormContainer';
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { LoginFormContainer } from "@/components/auth/LoginFormContainer";
 ---
 
 <AuthLayout title="Zaloguj się | Magazyn">
-  <div class="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+  <div
+    class="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0"
+  >
     <div class="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
-      <div class="absolute inset-0 bg-stone-900" />
+      <div class="absolute inset-0 bg-stone-900"></div>
       <div class="relative z-20 flex items-center justify-center text-lg font-medium">
-        <img 
-          src="/logo-bystrze-kolor.png" 
-          alt="Bystrze Logo" 
+        <img
+          src="/logo-bystrze-kolor.png"
+          alt="Bystrze Logo"
           class="w-full max-w-[80%] h-auto object-contain block dark:hidden"
         />
-        <img 
-          src="/bystrze-logo-czarno-biale.png" 
-          alt="Bystrze Logo" 
+        <img
+          src="/bystrze-logo-czarno-biale.png"
+          alt="Bystrze Logo"
           class="w-full max-w-[80%] h-auto object-contain hidden dark:block"
         />
       </div>
       <div class="relative z-20 mt-auto">
         <blockquote class="space-y-2">
-          <p class="text-lg">
-            Bystrzacki Magazyn
-          </p>
+          <p class="text-lg">Bystrzacki Magazyn</p>
         </blockquote>
       </div>
     </div>

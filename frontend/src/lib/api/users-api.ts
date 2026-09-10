@@ -30,9 +30,7 @@ export const usersApi = {
    * @param filters - Filter and pagination options
    * @returns Paginated user list with transformed data
    */
-  list: async (
-    filters: Partial<UserFilterState>
-  ): Promise<UserListResponse> => {
+  list: async (filters: Partial<UserFilterState>): Promise<UserListResponse> => {
     const params: Record<string, string | number> = {};
 
     if (filters.page !== undefined) {
@@ -89,10 +87,7 @@ export const usersApi = {
    * @param command - Update command with optional email, role, creditBalance
    * @returns Updated user profile with transformed data
    */
-  update: async (
-    id: string,
-    command: UpdateUserCommand
-  ): Promise<UserProfile> => {
+  update: async (id: string, command: UpdateUserCommand): Promise<UserProfile> => {
     const body = transformUpdateUserCommand(command);
     const { data } = await api.patch<unknown>(`/api/users/${id}`, body);
     return transformUserProfile(data);
@@ -104,9 +99,7 @@ export const usersApi = {
    *
    * @param command - Bulk adjustment command
    */
-  bulkAdjustCredits: async (
-    command: BulkAdjustCreditsCommand
-  ): Promise<void> => {
+  bulkAdjustCredits: async (command: BulkAdjustCreditsCommand): Promise<void> => {
     const body = transformBulkAdjustCreditsCommand(command);
     await api.post<unknown>("/api/users/bulk-adjust-credits", body);
   },

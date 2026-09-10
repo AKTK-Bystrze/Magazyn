@@ -1,12 +1,12 @@
 // =============================================================================
 // ⚠️ DEPRECATED: This file has been split into domain-focused files
 // =============================================================================
-// 
+//
 // This file is kept for backward compatibility but will be removed in a future version.
 // Please import from the new domain-specific locations:
 //
 // - Equipment types: @/types/equipment
-// - Reservation types: @/types/reservations  
+// - Reservation types: @/types/reservations
 // - Credit types: @/types/credits
 // - Analytics types: @/types/analytics
 //

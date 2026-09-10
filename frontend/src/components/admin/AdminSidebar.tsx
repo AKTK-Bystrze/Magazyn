@@ -1,14 +1,14 @@
 /**
  * AdminSidebar Component
- * 
+ *
  * Renders the sidebar navigation for admin users.
  * Uses centralized navigation configuration for consistency.
- * 
+ *
  * @example
  * <AdminSidebar currentPath="/admin" />
  */
-import { cn } from '@/lib/utils';
-import { ADMIN_NAV_ITEMS } from '@/lib/config/nav-config';
+import { cn } from "@/lib/utils";
+import { ADMIN_NAV_ITEMS } from "@/lib/config/nav-config";
 
 interface AdminSidebarProps {
   /** Current URL path for active state highlighting */
@@ -55,7 +55,9 @@ export function AdminSidebar({ currentPath, className, onNavigate }: AdminSideba
                 onClick={onNavigate}
                 className={cn(
                   "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
-                  isActive(item.activePattern) ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                  isActive(item.activePattern)
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground"
                 )}
               >
                 {item.icon && <item.icon className="mr-2 h-4 w-4" />}

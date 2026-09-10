@@ -1,25 +1,25 @@
 /**
  * TopNavBar Component
- * 
+ *
  * Main application navigation bar with responsive design.
  * Shows role-based navigation links and user actions.
- * 
+ *
  * @example
- * <TopNavBar 
+ * <TopNavBar
  *   user={{ email: 'user@example.com', id: '123' }}
  *   role="user"
  *   currentPath="/dashboard"
  *   creditBalance={100}
  * />
  */
-import { useState } from 'react';
-import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DesktopLinks } from './DesktopLinks';
-import { UserMenu } from './UserMenu';
-import { MobileMenu } from './MobileMenu';
-import { ThemeToggle } from './ThemeToggle';
+import { useState } from "react";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DesktopLinks } from "./DesktopLinks";
+import { UserMenu } from "./UserMenu";
+import { MobileMenu } from "./MobileMenu";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface TopNavBarProps {
   /** User information for avatar and menu */
@@ -40,14 +40,17 @@ interface TopNavBarProps {
  */
 export function TopNavBar({ user, role, currentPath, creditBalance }: TopNavBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const isAdmin = role === 'admin' || role === 'super_admin';
+  const isAdmin = role === "admin" || role === "super_admin";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" data-testid="topbar">
+    <header
+      className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      data-testid="topbar"
+    >
       <div className="container mx-auto flex h-14 items-center px-4">
         {/* Logo */}
-        <a 
-          href={isAdmin ? '/admin' : '/dashboard'} 
+        <a
+          href={isAdmin ? "/admin" : "/dashboard"}
           className="flex items-center gap-2 mr-6"
           data-testid="nav-logo"
         >
@@ -75,7 +78,7 @@ export function TopNavBar({ user, role, currentPath, creditBalance }: TopNavBarP
           {/* Credit Balance (User only) */}
           {!isAdmin && creditBalance !== undefined && (
             <Badge variant="secondary" className="hidden sm:flex" data-testid="nav-credits-badge">
-              Credits: {creditBalance}
+              Godzinki: {creditBalance}
             </Badge>
           )}
 

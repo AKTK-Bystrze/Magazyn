@@ -3,7 +3,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowRight, Calendar, Coins } from "lucide-react";
 import { formatCreditAdjustment } from "@/lib/utils/credit-utils";
 import { formatDate } from "@/lib/utils/date-utils";
-import { pluralize } from "@/lib/utils/text-utils";
 import { ICON_SIZE_SM } from "@/lib/config/constants";
 
 interface CreditAdjustmentPreviewProps {
@@ -66,18 +65,18 @@ export function CreditAdjustmentPreview({
       <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Calendar className={ICON_SIZE_SM} />
-          <span>Date Comparison</span>
+          <span>Porównanie Dat</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
           {/* Original Dates */}
           <div className="text-sm">
-            <div className="text-muted-foreground mb-1">Original</div>
+            <div className="text-muted-foreground mb-1">Oryginalne</div>
             <div className="font-medium">
               {formatDate(originalDates.startDate)} - {formatDate(originalDates.endDate)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {originalDays} {pluralize(originalDays, "day")}
+              {originalDays} {originalDays === 1 ? "dzień" : "dni"}
             </div>
           </div>
 
@@ -88,12 +87,12 @@ export function CreditAdjustmentPreview({
 
           {/* New Dates */}
           <div className="text-sm">
-            <div className="text-muted-foreground mb-1">New</div>
+            <div className="text-muted-foreground mb-1">Nowe</div>
             <div className="font-medium">
               {formatDate(newDates.startDate)} - {formatDate(newDates.endDate)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {newDays} {pluralize(newDays, "day")}
+              {newDays} {newDays === 1 ? "dzień" : "dni"}
             </div>
           </div>
         </div>
@@ -106,7 +105,7 @@ export function CreditAdjustmentPreview({
           <div className="space-y-2">
             {/* Adjustment Amount */}
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Credit Adjustment:</span>
+              <span className="text-sm font-medium">Korekta Godzinek:</span>
               <span className={`text-sm font-bold ${adjustmentColor}`}>
                 {formatCreditAdjustment(adjustment)}
               </span>
@@ -114,14 +113,14 @@ export function CreditAdjustmentPreview({
 
             {/* Current Balance */}
             <div className="flex justify-between items-center text-xs">
-              <span className="text-muted-foreground">Current Balance:</span>
-              <span>{currentBalance} credits</span>
+              <span className="text-muted-foreground">Aktualne Saldo:</span>
+              <span>{currentBalance} godzinek</span>
             </div>
 
             {/* New Balance */}
             <div className="flex justify-between items-center pt-2 border-t">
-              <span className="text-sm font-medium">New Balance:</span>
-              <span className={`text-sm font-bold ${balanceColor}`}>{newBalance} credits</span>
+              <span className="text-sm font-medium">Nowe Saldo:</span>
+              <span className={`text-sm font-bold ${balanceColor}`}>{newBalance} godzinek</span>
             </div>
 
             {/* Insufficient Credits Warning */}
@@ -129,8 +128,8 @@ export function CreditAdjustmentPreview({
               <div className="text-xs text-red-600 dark:text-red-400 mt-2 flex items-start gap-1">
                 <span>⚠️</span>
                 <span>
-                  Insufficient credits. You need {Math.abs(newBalance)} more credits to complete
-                  this modification.
+                  Niewystarczająca liczba godzinek. Potrzebujesz {Math.abs(newBalance)} więcej
+                  godzinek, aby dokończyć tę modyfikację.
                 </span>
               </div>
             )}

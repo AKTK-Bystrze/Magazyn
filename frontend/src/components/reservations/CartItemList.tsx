@@ -30,11 +30,12 @@ export function CartItemList({
 }: CartItemListProps) {
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-lg" data-testid="cart-empty-state">
+      <div
+        className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-lg"
+        data-testid="cart-empty-state"
+      >
         <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
-        <h3 className="text-xl font-semibold text-foreground mb-2">
-          Your cart is empty
-        </h3>
+        <h3 className="text-xl font-semibold text-foreground mb-2">Your cart is empty</h3>
         <p className="text-muted-foreground text-center max-w-md">
           Browse equipment and add items to your cart to create a reservation.
         </p>
@@ -53,11 +54,7 @@ export function CartItemList({
       <h2 className="text-2xl font-bold">Cart Items ({items.length})</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((item) => (
-          <CartItem
-            key={item.equipmentId}
-            item={item}
-            onRemove={onRemoveItem}
-          />
+          <CartItem key={item.equipmentId} item={item} onRemove={onRemoveItem} />
         ))}
       </div>
     </div>

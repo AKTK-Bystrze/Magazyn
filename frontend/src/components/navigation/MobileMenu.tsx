@@ -59,7 +59,7 @@ export function MobileMenu({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-80" data-testid="mobile-menu">
         <SheetHeader className="text-left">
-          <SheetTitle>Navigation</SheetTitle>
+          <SheetTitle>Nawigacja</SheetTitle>
         </SheetHeader>
 
         {user && (
@@ -72,7 +72,7 @@ export function MobileMenu({
             <div className="flex flex-col">
               <p className="text-sm font-medium">{user.email}</p>
               {creditBalance !== undefined && !isAdmin && (
-                <p className="text-xs text-muted-foreground">Credits: {creditBalance}</p>
+                <p className="text-xs text-muted-foreground">Godzinki: {creditBalance}</p>
               )}
             </div>
           </div>
@@ -92,7 +92,7 @@ export function MobileMenu({
                   "hover:bg-accent hover:text-accent-foreground",
                   isActive && "bg-accent text-accent-foreground"
                 )}
-                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 {item.label}
               </a>
@@ -101,7 +101,7 @@ export function MobileMenu({
         </nav>
 
         <div className="border-t pt-4 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Theme</span>
+          <span className="text-sm text-muted-foreground">Motyw</span>
           <ThemeToggle />
         </div>
 
@@ -112,7 +112,7 @@ export function MobileMenu({
             onClick={handleLogout}
           >
             <LogOut className="mr-2 h-4 w-4" />
-            Log out
+            Wyloguj się
           </Button>
         </div>
       </SheetContent>

@@ -1,25 +1,32 @@
 /**
  * AdminHeader Component
- * 
+ *
  * Header component for admin layout containing:
  * - Mobile sidebar trigger
  * - Breadcrumb navigation
  * - User profile menu
- * 
+ *
  * @example
- * <AdminHeader 
- *   user={{ email: "admin@example.com", id: "1" }} 
- *   currentPath="/admin" 
+ * <AdminHeader
+ *   user={{ email: "admin@example.com", id: "1" }}
+ *   currentPath="/admin"
  * />
  */
-import { useState } from 'react';
-import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Breadcrumbs } from '@/components/navigation/Breadcrumbs';
-import { UserMenu } from '@/components/navigation/UserMenu';
-import { ThemeToggle } from '@/components/navigation/ThemeToggle';
-import { AdminSidebar } from './AdminSidebar';
+import { useState } from "react";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Breadcrumbs } from "@/components/navigation/Breadcrumbs";
+import { UserMenu } from "@/components/navigation/UserMenu";
+import { ThemeToggle } from "@/components/navigation/ThemeToggle";
+import { AdminSidebar } from "./AdminSidebar";
 
 interface AdminHeaderProps {
   /** User information object */
@@ -38,7 +45,10 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6" data-testid="topbar">
+    <header
+      className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6"
+      data-testid="topbar"
+    >
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="lg:hidden">
@@ -47,16 +57,18 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
-           {/* Mobile Sidebar */}
+          {/* Mobile Sidebar */}
           <SheetHeader className="sr-only">
             <SheetTitle>Menu Nawigacji</SheetTitle>
-            <SheetDescription>Główne elementy nawigacji dla obszaru administratora</SheetDescription>
+            <SheetDescription>
+              Główne elementy nawigacji dla obszaru administratora
+            </SheetDescription>
           </SheetHeader>
-           <AdminSidebar 
-             currentPath={currentPath} 
-             className="h-full border-r-0" 
-             onNavigate={() => setIsOpen(false)}
-           />
+          <AdminSidebar
+            currentPath={currentPath}
+            className="h-full border-r-0"
+            onNavigate={() => setIsOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 
@@ -66,18 +78,19 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
         variant="outline"
         className="hidden lg:flex"
         onClick={() => {
-          const container = document.getElementById('desktop-sidebar-container');
+          const container = document.getElementById("desktop-sidebar-container");
           if (container) {
-            const isCollapsed = container.dataset.collapsed === 'true';
-            container.dataset.collapsed = isCollapsed ? 'false' : 'true';
-            localStorage.setItem('sidebarCollapsed', isCollapsed ? 'false' : 'true');
+            const isCollapsed = container.dataset.collapsed === "true";
+            container.dataset.collapsed = isCollapsed ? "false" : "true";
+            localStorage.setItem("sidebarCollapsed", isCollapsed ? "false" : "true");
           }
         }}
       >
         <Menu className="h-5 w-5" />
         <span className="sr-only">Przełącz Menu</span>
       </Button>
-      
+
+
       <div className="flex-1">
         <Breadcrumbs currentPath={currentPath} isAdmin />
       </div>

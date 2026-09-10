@@ -2,11 +2,7 @@ import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { creditsApi } from "@/lib/api/credits-api";
 import type { CreditHistoryResponse } from "@/types";
-import {
-  DEFAULT_PAGE,
-  DEFAULT_PAGE_SIZE,
-  QUERY_STALE_TIME_MS,
-} from "@/lib/config/constants";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, QUERY_STALE_TIME_MS } from "@/lib/config/constants";
 
 /**
  * Query key factory for credit history
@@ -26,19 +22,13 @@ export function useCreditHistory() {
   const [page, setPage] = React.useState(DEFAULT_PAGE);
   const [perPage, setPerPage] = React.useState(DEFAULT_PAGE_SIZE);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isPlaceholderData,
-  } = useQuery<CreditHistoryResponse>({
-    queryKey: QUERY_KEYS.history(page, perPage),
-    queryFn: () => creditsApi.getHistory({ page, perPage }),
-    staleTime: QUERY_STALE_TIME_MS,
-    placeholderData: (previousData) => previousData,
-  });
+  const { data, isLoading, isError, error, refetch, isPlaceholderData } =
+    useQuery<CreditHistoryResponse>({
+      queryKey: QUERY_KEYS.history(page, perPage),
+      queryFn: () => creditsApi.getHistory({ page, perPage }),
+      staleTime: QUERY_STALE_TIME_MS,
+      placeholderData: (previousData) => previousData,
+    });
 
   const setPageHandler = React.useCallback((newPage: number) => {
     setPage(newPage);

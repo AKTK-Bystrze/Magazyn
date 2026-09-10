@@ -3,7 +3,13 @@ import { type EquipmentSearchParams, type EquipmentType } from "@/types";
 import type { DateRangeValidationErrors } from "@/types/reservation-cart.types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { DateRangePicker } from "@/components/reservations/DateRangePicker";
@@ -29,15 +35,17 @@ export function FilterSidebar({
   onFilterChange,
   onReset,
   showDates = true,
-  orientation = "vertical"
+  orientation = "vertical",
 }: FilterSidebarProps) {
   const [searchValue, setSearchValue] = React.useState(filters.search || "");
 
   // Validate date range
-  const [dateValidationErrors, setDateValidationErrors] = React.useState<DateRangeValidationErrors>({
-    startDate: null,
-    endDate: null,
-  });
+  const [dateValidationErrors, setDateValidationErrors] = React.useState<DateRangeValidationErrors>(
+    {
+      startDate: null,
+      endDate: null,
+    }
+  );
 
   // Validate dates whenever they change
   React.useEffect(() => {
@@ -93,7 +101,9 @@ export function FilterSidebar({
   const isHorizontal = orientation === "horizontal";
 
   return (
-    <div className={isHorizontal ? "flex flex-row flex-wrap items-end gap-x-4 gap-y-2" : "space-y-6"}>
+    <div
+      className={isHorizontal ? "flex flex-row flex-wrap items-end gap-x-4 gap-y-2" : "space-y-6"}
+    >
       <div className={isHorizontal ? "flex-1 min-w-[200px]" : "space-y-2"}>
         <Label htmlFor="search">Szukaj</Label>
         <Input
@@ -142,23 +152,23 @@ export function FilterSidebar({
             </SelectContent>
           </Select>
         ) : (
-            <RadioGroup
-              value={filters.status || "all"}
-              onValueChange={(val) => onFilterChange("status", val === "all" ? undefined : val)}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="all" id="status-all" />
-                <Label htmlFor="status-all">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_ALL}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ok" id="status-ok" />
-                <Label htmlFor="status-ok">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_AVAILABLE}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="broken" id="status-broken" />
-                <Label htmlFor="status-broken">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BROKEN}</Label>
-              </div>
-            </RadioGroup>
+          <RadioGroup
+            value={filters.status || "all"}
+            onValueChange={(val) => onFilterChange("status", val === "all" ? undefined : val)}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="all" id="status-all" />
+              <Label htmlFor="status-all">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_ALL}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="ok" id="status-ok" />
+              <Label htmlFor="status-ok">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_AVAILABLE}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="broken" id="status-broken" />
+              <Label htmlFor="status-broken">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BROKEN}</Label>
+            </div>
+          </RadioGroup>
         )}
       </div>
 
@@ -178,11 +188,7 @@ export function FilterSidebar({
         </div>
       )}
 
-      <Button
-        variant="outline"
-        className={isHorizontal ? "w-auto" : "w-full"}
-        onClick={onReset}
-      >
+      <Button variant="outline" className={isHorizontal ? "w-auto" : "w-full"} onClick={onReset}>
         {EQUIPMENT_FILTER_UI_STRINGS.RESET_FILTERS}
       </Button>
     </div>

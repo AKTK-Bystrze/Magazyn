@@ -99,14 +99,14 @@ export function CancelReservationDialog({
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
             <h2 id="cancel-dialog-title" className="text-xl font-bold">
-              {isBulk ? `Cancel ${targets.length} Reservations` : "Cancel Reservation"}
+              {isBulk ? `Anuluj ${targets.length} Rezerwacji` : "Anuluj Rezerwację"}
             </h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
               disabled={isSubmitting}
-              aria-label="Close dialog"
+              aria-label="Zamknij okno"
             >
               <X className={ICON_SIZE_SM} />
             </Button>
@@ -118,22 +118,22 @@ export function CancelReservationDialog({
           <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
             <AlertTriangle className={ICON_SIZE_SM + " text-amber-600"} />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
-              This action cannot be undone. The equipment will become available
-              for others to reserve.
+              Tej akcji nie można cofnąć. Sprzęt stanie się ponownie dostępny do rezerwacji dla
+              innych.
             </AlertDescription>
           </Alert>
 
           {/* Reservation Details */}
           <div className="space-y-3">
             <h3 className="font-medium text-sm text-muted-foreground">
-              {isBulk ? "Summary" : "Reservation Details"}
+              {isBulk ? "Podsumowanie" : "Szczegóły Rezerwacji"}
             </h3>
             <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
               {isBulk ? (
                 <>
                   <div className="flex justify-between border-b pb-2 mb-2">
-                    <span className="text-muted-foreground">Items:</span>
-                    <span className="font-medium">{targets.length} reservations</span>
+                    <span className="text-muted-foreground">Elementy:</span>
+                    <span className="font-medium">{targets.length} rezerwacji</span>
                   </div>
                   <div className="max-h-24 overflow-y-auto space-y-1 text-muted-foreground text-xs mb-2">
                     {targets.map((t) => (
@@ -145,38 +145,30 @@ export function CancelReservationDialog({
                 </>
               ) : (
                 <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Equipment:</span>
-                      <span className="font-medium">{firstItem.equipmentName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Dates:</span>
-                      <span>
-                        {formatDate(firstItem.startDate)} —{" "}
-                        {formatDate(firstItem.endDate)}
-                      </span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Sprzęt:</span>
+                    <span className="font-medium">{firstItem.equipmentName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Daty:</span>
+                    <span>
+                      {formatDate(firstItem.startDate)} — {formatDate(firstItem.endDate)}
+                    </span>
+                  </div>
                 </>
               )}
 
               <div className="flex justify-between border-t pt-2 mt-2">
-                <span className="text-muted-foreground">Total Refund:</span>
-                <span className="font-semibold text-green-600">
-                  +{totalCredits} credits
-                </span>
+                <span className="text-muted-foreground">Całkowity Zwrot:</span>
+                <span className="font-semibold text-green-600">+{totalCredits} godzinek</span>
               </div>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="flex-1"
-            >
-              Keep Reservation
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="flex-1">
+              Zachowaj Rezerwację
             </Button>
             <Button
               variant="destructive"
@@ -187,10 +179,10 @@ export function CancelReservationDialog({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Cancelling...
+                  Anulowanie...
                 </>
               ) : (
-                "Cancel Reservation"
+                "Anuluj Rezerwację"
               )}
             </Button>
           </div>

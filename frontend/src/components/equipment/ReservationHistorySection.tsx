@@ -18,9 +18,7 @@ interface ReservationHistorySectionProps {
 /**
  * Returns badge variant based on reservation status
  */
-function getStatusVariant(
-  status: string
-): "default" | "secondary" | "destructive" | "outline" {
+function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case "RENTED":
       return "default";
@@ -56,9 +54,7 @@ function getStatusLabel(status: string): string {
 /**
  * Reservation history section showing recent rentals for equipment
  */
-export function ReservationHistorySection({
-  reservations,
-}: ReservationHistorySectionProps) {
+export function ReservationHistorySection({ reservations }: ReservationHistorySectionProps) {
   if (reservations.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -71,10 +67,7 @@ export function ReservationHistorySection({
   return (
     <div className="space-y-3">
       {reservations.map((reservation) => (
-        <div
-          key={reservation.id}
-          className="rounded-lg border bg-card p-3 space-y-2"
-        >
+        <div key={reservation.id} className="rounded-lg border bg-card p-3 space-y-2">
           {/* Header: User and Status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

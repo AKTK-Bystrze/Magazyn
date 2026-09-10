@@ -1,22 +1,22 @@
 ---
 /**
  * AppLayout - Standard user application layout
- * 
+ *
  * Includes navigation bar configured for regular users with:
  * - Dashboard, Equipment, Reservations, Credits links
  * - User menu with logout
  * - Breadcrumbs for nested pages
- * 
+ *
  * @example
  * <AppLayout title="My Reservations">
  *   <ReservationsContainer client:load />
  * </AppLayout>
  */
-import BaseLayout from './BaseLayout.astro';
-import { UserSidebar } from '@/components/navigation/UserSidebar';
-import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { UserHeader } from '@/components/navigation/UserHeader';
-import { QueryProvider } from '@/components/providers/QueryProvider';
+import BaseLayout from "./BaseLayout.astro";
+import { UserSidebar } from "@/components/navigation/UserSidebar";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { UserHeader } from "@/components/navigation/UserHeader";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 interface Props {
   /** Page title displayed in browser tab */
@@ -34,7 +34,7 @@ const sessionInfo = Astro.locals.sessionInfo;
 const currentPath = Astro.url.pathname;
 
 // Determine if user is admin
-const isAdmin = sessionInfo?.role === 'admin' || sessionInfo?.role === 'super_admin';
+const isAdmin = sessionInfo?.role === "admin" || sessionInfo?.role === "super_admin";
 ---
 
 <BaseLayout title={title} description={description}>

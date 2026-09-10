@@ -50,8 +50,7 @@ export function DateRangePicker({
   const startDateId = React.useId();
   const endDateId = React.useId();
   const today = getTodayAsString();
-  const days =
-    startDate && endDate ? calculateDays(startDate, endDate) : null;
+  const days = startDate && endDate ? calculateDays(startDate, endDate) : null;
 
   return (
     <div className={compact ? "space-y-3" : "space-y-4"} data-testid="date-range-picker">
@@ -59,12 +58,7 @@ export function DateRangePicker({
         <div className="flex items-center justify-between">
           <h2 className={compact ? "text-lg font-semibold" : "text-2xl font-bold"}>{title}</h2>
           {showClearButton && (startDate || endDate) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClear}
-              className="h-8 px-2 text-xs"
-            >
+            <Button variant="ghost" size="sm" onClick={onClear} className="h-8 px-2 text-xs">
               {EQUIPMENT_FILTER_UI_STRINGS.CLEAR_DATES}
             </Button>
           )}
@@ -74,7 +68,7 @@ export function DateRangePicker({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor={startDateId} className="flex items-center gap-2">
-            <CalendarIcon className={ICON_SIZE_SM} />
+            <CalendarIcon className={ICON_SIZE_SM + " shrink-0"} />
             Data Rozpoczęcia
           </Label>
           <Input
@@ -82,13 +76,12 @@ export function DateRangePicker({
             type="date"
             value={startDate || ""}
             onChange={(e) => onStartDateChange(e.target.value)}
+            onClick={(e) => "showPicker" in e.currentTarget && e.currentTarget.showPicker()}
             min={allowPastDates ? undefined : today}
             aria-invalid={!!validationErrors.startDate}
             aria-describedby={validationErrors.startDate ? `${startDateId}-error` : undefined}
             className={
-              validationErrors.startDate
-                ? "border-destructive focus-visible:ring-destructive"
-                : ""
+              validationErrors.startDate ? "border-destructive focus-visible:ring-destructive" : ""
             }
             data-testid="start-date-input"
           />
@@ -101,7 +94,7 @@ export function DateRangePicker({
 
         <div className="space-y-2">
           <Label htmlFor={endDateId} className="flex items-center gap-2">
-            <CalendarIcon className={ICON_SIZE_SM} />
+            <CalendarIcon className={ICON_SIZE_SM + " shrink-0"} />
             Data Zakończenia
           </Label>
           <Input
@@ -109,13 +102,12 @@ export function DateRangePicker({
             type="date"
             value={endDate || ""}
             onChange={(e) => onEndDateChange(e.target.value)}
+            onClick={(e) => "showPicker" in e.currentTarget && e.currentTarget.showPicker()}
             min={startDate || today}
             aria-invalid={!!validationErrors.endDate}
             aria-describedby={validationErrors.endDate ? `${endDateId}-error` : undefined}
             className={
-              validationErrors.endDate
-                ? "border-destructive focus-visible:ring-destructive"
-                : ""
+              validationErrors.endDate ? "border-destructive focus-visible:ring-destructive" : ""
             }
             data-testid="end-date-input"
           />
@@ -130,7 +122,7 @@ export function DateRangePicker({
       {days !== null && days > 0 && (
         <Alert className="bg-muted">
           <div className="flex items-center gap-2">
-            <CalendarIcon className={ICON_SIZE_SM} />
+            <CalendarIcon className={ICON_SIZE_SM + " shrink-0"} />
             <p className="text-sm font-medium">
               Czas trwania rezerwacji: {days} {days === 1 ? "dzień" : "dni"}
             </p>
@@ -139,9 +131,7 @@ export function DateRangePicker({
       )}
 
       {!startDate || !endDate ? (
-        <p className="text-sm text-muted-foreground">
-          {ERROR_SELECT_DATES}
-        </p>
+        <p className="text-sm text-muted-foreground">{ERROR_SELECT_DATES}</p>
       ) : null}
     </div>
   );

@@ -67,6 +67,15 @@ jobs:
         run: |
           echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
 
+      - name: Run Backend Integration Tests
+        if: inputs.supabase-mode == 'local'
+        working-directory: ./backend
+        run: go test ./internal/... -v -tags=integration
+
+      - name: Reset Supabase Database
+        if: inputs.supabase-mode == 'local'
+        run: supabase db reset
+
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci

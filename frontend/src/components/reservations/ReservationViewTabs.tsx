@@ -14,10 +14,7 @@ interface ReservationViewTabsProps {
  * Tab navigation for switching between "My Reservations" and "All Reservations" views
  * Updates URL query param for shareable links
  */
-export function ReservationViewTabs({
-  activeScope,
-  onScopeChange,
-}: ReservationViewTabsProps) {
+export function ReservationViewTabs({ activeScope, onScopeChange }: ReservationViewTabsProps) {
   return (
     <div className="flex border-b border-border mb-4">
       <button

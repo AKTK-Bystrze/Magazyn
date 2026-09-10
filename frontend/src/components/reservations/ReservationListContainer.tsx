@@ -46,42 +46,34 @@ function ReservationListContainerInner({
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
   const [modifyDialogOpen, setModifyDialogOpen] = React.useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = React.useState(false);
-  const [selectedReservation, setSelectedReservation] =
-    React.useState<ReservationListItem | null>(null);
-  const [batchReservations, setBatchReservations] = React.useState<
-    ReservationListItem[]
-  >([]);
+  const [selectedReservation, setSelectedReservation] = React.useState<ReservationListItem | null>(
+    null
+  );
+  const [batchReservations, setBatchReservations] = React.useState<ReservationListItem[]>([]);
 
   // Feedback states
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(
-    null
-  );
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(
-        () => setSuccessMessage(null),
-        MESSAGE_AUTO_DISMISS_MS
-      );
+      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
 
   React.useEffect(() => {
     if (errorMessage) {
-      const timer = setTimeout(
-        () => setErrorMessage(null),
-        MESSAGE_AUTO_DISMISS_MS
-      );
+      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);
 
   const dialogReservation = selectedReservation || batchReservations[0];
   const isOwner = dialogReservation?.userId === currentUserId;
-  const needsOwnerProfile = !isOwner && !!dialogReservation && (modifyDialogOpen || returnDialogOpen);
+  const needsOwnerProfile =
+    !isOwner && !!dialogReservation && (modifyDialogOpen || returnDialogOpen);
 
   const { data: ownerProfile } = useQuery({
     queryKey: ["user", dialogReservation?.userId],
@@ -93,22 +85,16 @@ function ReservationListContainerInner({
   const currentUserBalance = isOwner ? sessionUserBalance : (ownerProfile?.creditBalance ?? 0);
 
   // Handle modify action
-  const handleModify = React.useCallback(
-    (reservation: ReservationListItem) => {
-      setSelectedReservation(reservation);
-      setModifyDialogOpen(true);
-    },
-    []
-  );
+  const handleModify = React.useCallback((reservation: ReservationListItem) => {
+    setSelectedReservation(reservation);
+    setModifyDialogOpen(true);
+  }, []);
 
   // Handle return action
-  const handleReturn = React.useCallback(
-    (reservation: ReservationListItem) => {
-      setSelectedReservation(reservation);
-      setReturnDialogOpen(true);
-    },
-    []
-  );
+  const handleReturn = React.useCallback((reservation: ReservationListItem) => {
+    setSelectedReservation(reservation);
+    setReturnDialogOpen(true);
+  }, []);
 
   // Handle modify dates confirm
   const handleModifyDatesConfirm = React.useCallback(
@@ -137,9 +123,7 @@ function ReservationListContainerInner({
           const results = await Promise.allSettled(
             targets.map((target) => updateReservation(target.id, command))
           );
-          const successful = results.filter(
-            (r) => r.status === "fulfilled"
-          ).length;
+          const successful = results.filter((r) => r.status === "fulfilled").length;
 
           if (successful === targets.length) {
             setSuccessMessage(`${successful} rezerwacji zaktualizowano pomyślnie.`);
@@ -154,8 +138,7 @@ function ReservationListContainerInner({
         setSelectedReservation(null);
         setBatchReservations([]);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Nie udało się zaktualizować dat";
+        const message = err instanceof Error ? err.message : "Nie udało się zaktualizować dat";
         setErrorMessage(message);
       }
     },
@@ -176,9 +159,7 @@ function ReservationListContainerInner({
       try {
         if (targets.length === 1) {
           await updateReservation(targets[0].id, command);
-          setSuccessMessage(
-            `Sprzęt "${targets[0].equipmentName}" oznaczony jako zwrócony.`
-          );
+          setSuccessMessage(`Sprzęt "${targets[0].equipmentName}" oznaczony jako zwrócony.`);
         } else {
           const hasDateChange = !!(command.startDate || command.endDate);
 
@@ -187,9 +168,7 @@ function ReservationListContainerInner({
             const results = await Promise.allSettled(
               targets.map((target) => updateReservation(target.id, command))
             );
-            const successful = results.filter(
-              (r) => r.status === "fulfilled"
-            ).length;
+            const successful = results.filter((r) => r.status === "fulfilled").length;
 
             setSuccessMessage(
               `${successful} elementów zaktualizowano i zwrócono. ${targets.length - successful} nie powiodło się.`
@@ -209,8 +188,7 @@ function ReservationListContainerInner({
         setSelectedReservation(null);
         setBatchReservations([]);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Nie udało się zwrócić sprzętu";
+        const message = err instanceof Error ? err.message : "Nie udało się zwrócić sprzętu";
         setErrorMessage(message);
       }
     },
@@ -218,14 +196,11 @@ function ReservationListContainerInner({
   );
 
   // Handle cancel action
-  const handleCancelClick = React.useCallback(
-    (reservation: ReservationListItem) => {
-      setSelectedReservation(reservation);
-      setBatchReservations([]); // Clear batch
-      setCancelDialogOpen(true);
-    },
-    []
-  );
+  const handleCancelClick = React.useCallback((reservation: ReservationListItem) => {
+    setSelectedReservation(reservation);
+    setBatchReservations([]); // Clear batch
+    setCancelDialogOpen(true);
+  }, []);
 
   // Confirm cancel
   const handleCancelConfirm = React.useCallback(async () => {
@@ -261,8 +236,7 @@ function ReservationListContainerInner({
       setSelectedReservation(null);
       setBatchReservations([]);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Nie udało się anulować rezerwacji";
+      const message = err instanceof Error ? err.message : "Nie udało się anulować rezerwacji";
       setErrorMessage(message);
     }
   }, [selectedReservation, batchReservations, cancelReservation, bulkUpdateStatus]);
@@ -275,43 +249,31 @@ function ReservationListContainerInner({
   }, []);
 
   // Handle bulk cancel
-  const handleCancelAll = React.useCallback(
-    (reservations: ReservationListItem[]) => {
-      setBatchReservations(reservations);
-      setSelectedReservation(null); // Clear single
-      setCancelDialogOpen(true);
-    },
-    []
-  );
+  const handleCancelAll = React.useCallback((reservations: ReservationListItem[]) => {
+    setBatchReservations(reservations);
+    setSelectedReservation(null); // Clear single
+    setCancelDialogOpen(true);
+  }, []);
 
   // Handle bulk modify dates
-  const handleModifyDatesAll = React.useCallback(
-    (reservations: ReservationListItem[]) => {
-      setBatchReservations(reservations);
-      setSelectedReservation(null);
-      setModifyDialogOpen(true);
-    },
-    []
-  );
+  const handleModifyDatesAll = React.useCallback((reservations: ReservationListItem[]) => {
+    setBatchReservations(reservations);
+    setSelectedReservation(null);
+    setModifyDialogOpen(true);
+  }, []);
 
   // Handle bulk return
-  const handleReturnAll = React.useCallback(
-    (reservations: ReservationListItem[]) => {
-      setBatchReservations(reservations);
-      setSelectedReservation(null);
-      setReturnDialogOpen(true);
-    },
-    []
-  );
+  const handleReturnAll = React.useCallback((reservations: ReservationListItem[]) => {
+    setBatchReservations(reservations);
+    setSelectedReservation(null);
+    setReturnDialogOpen(true);
+  }, []);
 
   // Handle view details - TODO: Navigate to detail page
-  const handleViewDetails = React.useCallback(
-    (reservation: ReservationListItem) => {
-      // Navigate to details page
-      window.location.href = `/reservations/${reservation.id}`;
-    },
-    []
-  );
+  const handleViewDetails = React.useCallback((reservation: ReservationListItem) => {
+    // Navigate to details page
+    window.location.href = `/reservations/${reservation.id}`;
+  }, []);
 
   // Handle page change
   const handlePageChange = React.useCallback(
@@ -339,8 +301,7 @@ function ReservationListContainerInner({
 
   // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
-    filters.status !== DEFAULT_STATUS_FILTER ||
-    filters.sort !== DEFAULT_SORT_OPTION;
+    filters.status !== DEFAULT_STATUS_FILTER || filters.sort !== DEFAULT_SORT_OPTION;
 
   // Regular users: actions only in "My Reservations"
   // Admins: actions in both "My Reservations" and "All Reservations"
@@ -364,24 +325,15 @@ function ReservationListContainerInner({
       {(error || errorMessage) && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
-          <AlertDescription>
-            {errorMessage || error?.message || "Wystąpił błąd"}
-          </AlertDescription>
+          <AlertDescription>{errorMessage || error?.message || "Wystąpił błąd"}</AlertDescription>
         </Alert>
       )}
 
       {/* View Tabs */}
-      <ReservationViewTabs
-        activeScope={filters.scope}
-        onScopeChange={handleScopeChange}
-      />
+      <ReservationViewTabs activeScope={filters.scope} onScopeChange={handleScopeChange} />
 
       {/* Filters */}
-      <ReservationFilters
-        filters={filters}
-        onFilterChange={setFilter}
-        onReset={resetFilters}
-      />
+      <ReservationFilters filters={filters} onFilterChange={setFilter} onReset={resetFilters} />
 
       {/* Reservation List */}
       <ReservationCardList
