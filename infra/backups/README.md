@@ -1,7 +1,7 @@
 # Database Backups
 
 This directory provides scripts for creating and restoring PostgreSQL database snapshots. 
-The backup script now uses a time-based rotation schedule instead of versioning to align with industry standards, and leverages the host `cron` daemon for 0 MB idle RAM usage.
+The backup script now uses a time-based rotation schedule instead of versioning to align with industry standards, and leverages the host `cron` daemon.
 
 ## Configuration
 
@@ -26,7 +26,7 @@ All files are automatically compressed with `gzip`. A `latest-*.sql.gz` copy is 
 
 ### Automation via Host Cron
 To enable automated daily backups, add the script to the host's crontab:
-1. SSH into the server and run `crontab -e`.
+1. run `crontab -e`.
 2. Add the following line to execute at 2:00 AM daily:
 ```bash
 0 2 * * * /absolute/path/to/Magazyn/infra/backups/backup_db.sh >> /var/log/magazyn-backup.log 2>&1
