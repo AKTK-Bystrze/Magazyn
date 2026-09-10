@@ -11,6 +11,7 @@ import (
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -526,6 +527,88 @@ func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ConflictError{}, err)
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
+	// Arrange
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+
+	userID := "user-123"
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      userID,
+			Status:      constants.ReservationStatusRented,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03", // 3 days
+		},
+	}
+
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+
+	// Admin returning equipment early
+	returnedStatus := constants.ReservationStatusReturned
+	newEndDate := "2025-01-01" // Returned after 1 day
+	cmd := types.UpdateReservationCommand{
+		Status:  &returnedStatus,
+		EndDate: &newEndDate,
+	}
+
+	mockRepo.On("GetOverlappingReservations", ctx, "eq-1", "2025-01-01", "2025-01-01", &reservationID).Return([]types.PublicReservationsSelect{}, nil)
+
+	// Expect it to call ModifyReservationDatesWithCredits
+	mockRepo.On("ModifyReservationDatesWithCredits", ctx, reservationID, "admin-999", "2025-01-01", "2025-01-01").
+		Return(&types.ModifyDatesResponse{
+			ID:               reservationID,
+			StartDate:        "2025-01-01",
+			EndDate:          "2025-01-01",
+			CreditAdjustment: 20, // 2 days * 10
+			NewBalance:       120,
+			UpdatedAt:        "2025-01-01T12:00:00Z",
+		}, nil)
+
+	// Expect it to update status
+	updatedRes := &types.PublicReservationsSelect{
+		ID:          reservationID,
+		EquipmentID: "eq-1",
+		Status:      constants.ReservationStatusReturned,
+		StartDate:   "2025-01-01",
+		EndDate:     "2025-01-01",
+	}
+
+	// We also need EquipmentRepo mock for the response calculation
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:     "eq-1",
+		Name:   &name,
+		TypeID: "type-1",
+		Status: constants.EquipmentStatusOK,
+	}
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+
+	// We need to match exactly what is passed to UpdateReservation.
+	// We use mock.Anything for updateData to simplify.
+	mockRepo.On("UpdateReservation", ctx, reservationID, mock.Anything, "admin-999").Return(updatedRes, nil)
+
+	// Act
+	result, err := svc.Update(ctx, reservationID, cmd, "admin-999", auth.RoleAdmin)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, int32(20), result.CreditAdjustment)
+	assert.Equal(t, int32(120), result.RemainingBalance)
+	assert.Equal(t, constants.ReservationStatusReturned, result.Status)
 	mockRepo.AssertExpectations(t)
 	mockEquipRepo.AssertExpectations(t)
 }

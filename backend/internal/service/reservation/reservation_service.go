@@ -228,7 +228,9 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 // Update updates a reservation
 func (s *reservationService) Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error) {
 	status := "unknown"
-	if cmd.Status != nil { status = string(*cmd.Status) }
+	if cmd.Status != nil {
+		status = string(*cmd.Status)
+	}
 	logger.Infof(ctx, "Updating reservation %s to status %s", id, status)
 	current, err := s.repo.GetReservationByID(ctx, id)
 	if err != nil {
@@ -263,51 +265,15 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	updateData := types.PublicReservationsUpdate{}
 	needsUpdate := false
 
-	// Handle Status Change
-	if cmd.Status != nil && *cmd.Status != current.Status {
-		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
-			// User tried to set something other than DENIED or RETURNED
-			// Users can cancel (DENIED) or return (RETURNED) their own pending reservations
-			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
-		}
-		updateData.Status = cmd.Status
-		needsUpdate = true
+	var creditAdjustment int32 = 0
+	var newBalance int32 = 0
+	var latestUpdatedAt *string
 
-		// If cancelling (DENIED), refund credits?
-		if *cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled {
-			// Skip refund for free reservations
-			if !current.IsFree {
-				// Refund logic: Calculate cost and refund
-				eq, errEq := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
-				if errEq != nil {
-					logger.Errorf(ctx, "Refund failed: equipment %s not found", current.EquipmentID)
-				} else {
-					eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-					if errType != nil {
-						logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeID)
-					} else {
-						days := s.calculateDays(current.StartDate, current.EndDate)
-						refundAmount := days * eqType.CreditCostPerDay
-
-						if refundAmount > 0 {
-							if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
-								logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
-							} else {
-								logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
-							}
-						}
-					}
-				}
-			} else {
-				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
-			}
-		}
-
-	}
+	// Check if this is a full cancellation
+	isCancelling := cmd.Status != nil && (*cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled)
 
 	// Handle Date Change
 	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
-	dateOnlyChange := datesChanging && cmd.Status == nil
 
 	if datesChanging {
 		start := current.StartDate
@@ -328,13 +294,17 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			return nil, types.NewConflictError("Dates not available", nil)
 		}
 
-		// If ONLY dates are changing (no status change), use the atomic credit adjustment function
-		if dateOnlyChange {
+		if !isCancelling {
+			// Use the atomic credit adjustment function to handle partial refunds or extra charges
 			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end)
 			if err != nil {
 				logger.Errorf(ctx, "Failed to modify dates with credits: %v", err)
 				return nil, err
 			}
+
+			creditAdjustment = result.CreditAdjustment
+			newBalance = result.NewBalance
+			latestUpdatedAt = &result.UpdatedAt
 
 			// Log successful credit adjustment
 			if result.CreditAdjustment != 0 {
@@ -345,39 +315,79 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 				}
 			}
 
-			//  Calculate new credit cost for response
-			eq, _ := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
-			eqType, _ := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-			days := s.calculateDays(start, end)
-			newCost := days * eqType.CreditCostPerDay
-
-			return &types.UpdateReservationResponse{
-				ID:               result.ID,
-				EquipmentID:      current.EquipmentID,
-				StartDate:        result.StartDate,
-				EndDate:          result.EndDate,
-				Status:           result.Status,
-				CreditCost:       newCost,
-				CreditAdjustment: result.CreditAdjustment,
-				RemainingBalance: result.NewBalance,
-				UpdatedAt:        result.UpdatedAt,
-			}, nil
+			// Update our local 'current' variable so we know dates were already updated
+			current.StartDate = start
+			current.EndDate = end
+		} else {
+			// Just update dates in updateData without calculating partial refunds
+			// because full refund will be handled below
+			updateData.StartDate = &start
+			updateData.EndDate = &end
+			needsUpdate = true
 		}
-
-		// If both dates AND status are changing, just update dates in the update data
-		// Status change refund logic will handle credits
-		updateData.StartDate = &start
-		updateData.EndDate = &end
-		needsUpdate = true
 	}
 
-	if !needsUpdate {
+	// Handle Status Change
+	if cmd.Status != nil && *cmd.Status != current.Status {
+		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
+			// User tried to set something other than DENIED or RETURNED
+			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
+		}
+		updateData.Status = cmd.Status
+		needsUpdate = true
+
+		// If cancelling (DENIED or CANCELLED), do a FULL refund
+		if isCancelling {
+			if !current.IsFree {
+				eq, errEq := s.equipmentRepo.GetByID(ctx, current.EquipmentID)
+				if errEq != nil {
+					logger.Errorf(ctx, "Refund failed: equipment %s not found", current.EquipmentID)
+				} else {
+					eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+					if errType != nil {
+						logger.Errorf(ctx, "Refund failed: equipment type %s not found", eq.TypeID)
+					} else {
+						days := s.calculateDays(current.StartDate, current.EndDate)
+						refundAmount := days * eqType.CreditCostPerDay
+
+						if refundAmount > 0 {
+							if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
+								logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
+							} else {
+								logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
+								creditAdjustment = refundAmount
+							}
+						}
+					}
+				}
+			} else {
+				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
+			}
+		}
+	}
+
+	if !needsUpdate && !datesChanging {
 		return nil, nil // Or return current
 	}
 
-	updated, err := s.repo.UpdateReservation(ctx, id, updateData, userID)
-	if err != nil {
-		return nil, err
+	var updated *types.PublicReservationsSelect
+	if needsUpdate {
+		var err error
+		updated, err = s.repo.UpdateReservation(ctx, id, updateData, userID)
+		if err != nil {
+			return nil, err
+		}
+		latestUpdatedAt = updated.UpdatedAt
+	} else {
+		// Only dates changed, and they were already updated via ModifyReservationDatesWithCredits
+		updated = &types.PublicReservationsSelect{
+			ID:          id,
+			EquipmentID: current.EquipmentID,
+			StartDate:   current.StartDate,
+			EndDate:     current.EndDate,
+			Status:      current.Status,
+			UpdatedAt:   latestUpdatedAt,
+		}
 	}
 
 	// Calculate credit cost for the response
@@ -392,13 +402,15 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	}
 
 	return &types.UpdateReservationResponse{
-		ID:          updated.ID,
-		EquipmentID: updated.EquipmentID,
-		StartDate:   updated.StartDate,
-		EndDate:     updated.EndDate,
-		Status:      updated.Status,
-		CreditCost:  creditCost,
-		UpdatedAt:   safeString(updated.UpdatedAt),
+		ID:               updated.ID,
+		EquipmentID:      updated.EquipmentID,
+		StartDate:        updated.StartDate,
+		EndDate:          updated.EndDate,
+		Status:           updated.Status,
+		CreditCost:       creditCost,
+		CreditAdjustment: creditAdjustment,
+		RemainingBalance: newBalance,
+		UpdatedAt:        safeString(updated.UpdatedAt),
 	}, nil
 }
 
