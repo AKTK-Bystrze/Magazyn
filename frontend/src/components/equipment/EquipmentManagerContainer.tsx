@@ -2,7 +2,7 @@ import * as React from "react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { useEquipmentManager } from "@/hooks/useEquipmentManager";
 import { EquipmentTable } from "./EquipmentTable";
-import { EquipmentFilters } from "./EquipmentFilters";
+import { FilterSidebar } from "./FilterSidebar";
 import { AddEquipmentDialog } from "./AddEquipmentDialog";
 import { EditEquipmentDialog } from "./EditEquipmentDialog";
 import { ConfirmArchiveDialog } from "./ConfirmArchiveDialog";
@@ -14,11 +14,15 @@ import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
 import {
   ICON_SIZE_SM,
   MESSAGE_AUTO_DISMISS_MS,
-  DEFAULT_EQUIPMENT_STATUS_FILTER,
   EQUIPMENT_MANAGER_UI_STRINGS,
 } from "@/lib/config/constants";
 import { defaultLogger as logger } from "@/lib/utils/logger";
-import type { EquipmentSearchItem, CreateEquipmentCommand, UpdateEquipmentCommand } from "@/types";
+import type {
+  EquipmentSearchItem,
+  CreateEquipmentCommand,
+  UpdateEquipmentCommand,
+  EquipmentSearchParams,
+} from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
 
@@ -173,11 +177,14 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     [setFilter]
   );
 
-  // Determine if filters are active (for empty state messaging)
-  const hasActiveFilters =
-    filters.status !== DEFAULT_EQUIPMENT_STATUS_FILTER ||
-    (filters.search && filters.search.length > 0) ||
-    filters.typeId !== undefined;
+  // Handle filter changes from Sidebar
+  const handleFilterChange = React.useCallback(
+    (key: keyof EquipmentSearchParams, value: string | undefined) => {
+      // @ts-expect-error - FilterSidebar callback simplifies values to string|undefined
+      setFilter(key, value);
+    },
+    [setFilter]
+  );
 
   // Handle details sheet close
   const handleDetailsSheetClose = React.useCallback(() => {
@@ -186,7 +193,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
   }, []);
 
   return (
-    <div className={`space-y-6 ${className ?? ""}`}>
+    <div className={`space-y-6 ${className ?? ""}`} data-testid="equipment-manager-container">
       {/* Header with Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -228,11 +235,13 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
       )}
 
       {/* Filters */}
-      <EquipmentFilters
+      <FilterSidebar
         filters={filters}
-        equipmentTypes={equipmentTypes}
-        onFilterChange={setFilter}
-        onReset={hasActiveFilters ? resetFilters : undefined}
+        types={equipmentTypes}
+        onFilterChange={handleFilterChange}
+        onReset={resetFilters}
+        orientation="horizontal"
+        showDates={false}
       />
 
       {/* Equipment Table */}

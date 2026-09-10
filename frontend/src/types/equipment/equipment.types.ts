@@ -125,13 +125,7 @@ export type UpdateEquipmentCommand = {
  * Filter state for Equipment Manager view
  * Used for admin equipment list with search, type, and status filters
  */
-export interface EquipmentManagerFilterState {
-  search?: string;
-  typeId?: string;
-  status?: EquipmentStatus | "ALL";
-  page: number;
-  perPage: number;
-}
+export type EquipmentManagerFilterState = EquipmentSearchParams;
 
 /**
  * Equipment reservation history item
