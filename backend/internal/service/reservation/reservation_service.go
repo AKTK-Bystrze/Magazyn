@@ -21,24 +21,19 @@ import (
 // Reservation Service Interface
 // ============================================================================
 
-// ReservationService defines operations for reservation management.
 type ReservationService interface {
 	// List retrieves a paginated list of reservations based on the provided query filters.
 	List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error)
 
-	// GetByID retrieves detailed reservation information
 	GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error)
 
-	// Create creates new reservations (transactional logic simulated)
 	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error)
 
-	// Update updates a reservation
 	Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error)
 
 	// BulkUpdate updates multiple reservations (Admin only)
 	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error)
 
-	// GetDashboardStats retrieves admin dashboard stats
 	GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error)
 }
 
@@ -53,7 +48,6 @@ type reservationService struct {
 	emailService  email.EmailService
 }
 
-// NewReservationService creates a new instance of ReservationService
 func NewReservationService(
 	repo repository.ReservationRepository,
 	equipmentRepo repository.EquipmentRepository,
@@ -71,10 +65,6 @@ func NewReservationService(
 // List retrieves a paginated list of reservations
 func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error) {
 	logger.Infof(ctx, "Listing reservations - Page: %d, PerPage: %d", query.Page, query.PerPage)
-	// Security: If user is not admin, they should only see their own - handled by controller/calling layer usually,
-	// but here we can enforce it if userID is passed in query.
-	// The plan says "GET /reservations: ... user_id (admin), equipment_id...".
-	// We assume the Controller sets query.UserID to the requester's ID if they are not admin.
 
 	items, total, err := s.repo.GetReservations(ctx, query)
 	if err != nil {
@@ -106,8 +96,6 @@ func (s *reservationService) GetByID(ctx context.Context, id string, userID stri
 		return nil, err
 	}
 
-	// Authorization check
-	// User can only view their own
 	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin && res.UserID != userID {
 		return nil, types.NewForbiddenError("You are not allowed to view this reservation")
 	}
@@ -118,15 +106,10 @@ func (s *reservationService) GetByID(ctx context.Context, id string, userID stri
 // Create creates new reservations (transactional logic handled by DB RPC)
 func (s *reservationService) Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error) {
 	logger.Infof(ctx, "Creating reservation for %d items, UserID: %s", len(cmd.Reservations), userID)
-	// Target User: Admin can create for others, otherwise for self
 	targetUserID := userID
 	if cmd.UserID != nil && *cmd.UserID != "" {
-		// Verify requester is admin? Controller should check this.
-		// We assume if cmd.UserID is set, the caller has verified permission to set it.
 		targetUserID = *cmd.UserID
 	}
-
-	// Check if free reservation requested
 	isFreeReservation := cmd.FreeReservation != nil && *cmd.FreeReservation
 
 	// 1. Validation & Cost Calculation (Read-Only)
@@ -163,21 +146,10 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	if isFreeReservation {
 		logger.Infof(ctx, "Creating free reservation for user %s", targetUserID)
 	}
-
-	// 2. Execute Atomic Transaction (RPC)
-	// This handles balance check, deduction, concurrency check, and creation.
 	reservationIDs, newBalance, err := s.repo.CreateReservationsAtomic(ctx, targetUserID, totalCost, isFreeReservation, userID, cmd.Reservations)
 	if err != nil {
-		// Map RPC errors if possible, or return internal.
-		// If RPC returns "Insufficient credits", we could map it.
-		// For now return as internal or error.
 		return nil, types.NewConflictError("Reservation failed: "+err.Error(), nil)
 	}
-
-	// 3. Construct Response
-	// We lack full details of created items (e.g. timestamps) unless we fetch them back.
-	// But we have IDs.
-	// For performance, we can construct the response from input + IDs. create_at will be missing or now().
 
 	var succeeded []types.ReservationListItem
 	for i, req := range cmd.Reservations {
@@ -201,8 +173,6 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		// In production, use a task queue.
 		bgCtx := context.Background()
 
-		// Fetch user email if not available. ideally passed in or we fetch profile.
-		// We have targetUserID.
 		profile, _ := s.userRepo.GetByID(bgCtx, targetUserID)
 		emailAddr := ""
 		if profile != nil {
@@ -237,14 +207,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		return nil, err
 	}
 
-	// Permissions
-	// Admin can do anything.
-	// User can only update OWN reservation.
-	// User can only update if status is PENDING.
-	// User can only cancel (Status -> DENIED/CANCELLED?).
-	// Plan says: "User ... Can only cancel (status -> DENIED)".
-	// Wait, plan says "PATCH /reservations/:id ... status: DENIED".
-
 	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
 	isOwner := current.UserID == userID
 
@@ -253,13 +215,10 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	}
 
 	if !isAdmin {
-		// User constraints
 		if current.Status != constants.ReservationStatusPending {
 			return nil, types.NewForbiddenError("Cannot modify non-pending reservation")
 		}
 	}
-
-	// Validate status change before any DB modifications
 	if cmd.Status != nil && *cmd.Status != current.Status {
 		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
 			// User tried to set something other than DENIED or RETURNED
@@ -375,7 +334,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	}
 
 	if !needsUpdate && !datesChanging {
-		return nil, nil // Or return current
+		return nil, nil
 	}
 
 	var updated *types.PublicReservationsSelect
@@ -421,17 +380,14 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	}, nil
 }
 
-// BulkUpdate updates multiple reservations
 func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error) {
 	return s.repo.BulkUpdateStatusAtomic(ctx, cmd.ReservationIDs, cmd.Status, adminID)
 }
 
-// GetDashboardStats retrieves admin dashboard stats
 func (s *reservationService) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
 	return s.repo.GetDashboardStats(ctx)
 }
 
-// Helper: Calculate days between two dates strings YYYY-MM-DD
 func (s *reservationService) calculateDays(start, end string) int32 {
 	layout := constants.DateFormatISO
 	t1, _ := time.Parse(layout, start)
