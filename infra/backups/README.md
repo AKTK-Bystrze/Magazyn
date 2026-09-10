@@ -1,41 +1,50 @@
 # Database Backups
 
-This directory provides scripts for creating and restoring PostgreSQL database snapshots.
+This directory provides scripts for creating and restoring PostgreSQL database snapshots. 
+The backup script now uses a time-based rotation schedule instead of versioning to align with industry standards, and leverages the host `cron` daemon for 0 MB idle RAM usage.
 
 ## Configuration
 
 Set the `DB_CONNECTION_STRING` in your project's root `.env` file:
 
 ```env
-DB_CONNECTION_STRING="postgresql://user:password@host:port/dbname"
+DB_CONNECTION_STRING="postgresql://postgres:password@127.0.0.1:5432/postgres"
 ```
 
-## Usage
+## Backup Usage
 
-### `backup_db.sh [VERSION]`
+### `backup_db.sh`
 
-Creates a versioned database snapshot. The `VERSION` is determined by the argument, a running `magazyn-backend` container's Docker image tag, or the current `git` tag. Snapshots include `public` and `auth` schema dumps, stored in `snapshots/<VERSION>/<TIMESTAMP>/`. The script retains the 10 most recent snapshots per version.
+Creates a timestamped database snapshot in the `daily/` and `weekly/` directories. 
+It retains the **7 most recent daily backups** and **4 most recent weekly backups** (promoted on Sundays).
+All files are automatically compressed with `gzip`. A `latest-*.sql.gz` copy is maintained in the root directory for easy integration with future offsite backup tools.
 
-**Example:**
-
+**Example (Manual run):**
 ```bash
-# Creates a snapshot
 ./backup_db.sh
 ```
 
-### `restore_db.sh <PATH_TO_SNAPSHOT>`
+### Automation via Host Cron
+To enable automated daily backups, add the script to the host's crontab:
+1. SSH into the server and run `crontab -e`.
+2. Add the following line to execute at 2:00 AM daily:
+```bash
+0 2 * * * /absolute/path/to/Magazyn/infra/backups/backup_db.sh >> /var/log/magazyn-backup.log 2>&1
+```
 
-Restores the database from a specified snapshot.
+## Restore Usage
+
+### `restore_db.sh <PATH_TO_SNAPSHOT_FILE.gz>`
+
+Restores the database from a specified snapshot file.
 
 > **WARNING:** This is a destructive operation and will **overwrite** the current database. Confirmation is required.
 
-It clears existing schemas, applies the snapshot's `public-rollback.sql`, checks out the corresponding `git` tag, and restarts services.
+It clears existing schemas, uncompresses and applies the snapshot on-the-fly, and restarts services.
 
 **Example:**
-
 ```bash
-# Restores the database from a snapshot
-./restore_db.sh snapshots/v1.0.0/20240212-123456/
+./restore_db.sh daily/public-rollback-20231025-020000.sql.gz
 ```
 
 ### `clear_schemas.sql`
