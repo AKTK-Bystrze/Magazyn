@@ -27,13 +27,13 @@ func TestTS1_BrokenEquipmentCannotBeReserved(t *testing.T) {
 		Execute()
 	require.NoError(t, err)
 
-	// Restore to "ok" on teardown (prepend so it runs before equipment deletion)
-	fixture.cleanup = append([]func(){func() {
+	// Restore to "ok" on teardown before equipment is deleted (append = runs first in LIFO)
+	fixture.cleanup = append(fixture.cleanup, func() {
 		fixture.client.From("equipment").
 			Update(map[string]interface{}{"status": constants.EquipmentStatusOK}, "", "").
 			Eq("id", fixture.equipmentID).
 			Execute()
-	}}, fixture.cleanup...)
+	})
 
 	ctx := context.Background()
 	cmd := types.CreateReservationsCommand{

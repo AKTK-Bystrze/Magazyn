@@ -34,6 +34,9 @@ type userTestFixture struct {
 	cleanup []func()
 }
 
+// setupUserTestFixture creates and initializes a new user-service test fixture.
+// It loads config, sets up service and repository dependencies, fetches real users
+// from the database, and resets their credit balances to a known state.
 func setupUserTestFixture(t *testing.T) *userTestFixture {
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	_, err := config.LoadConfig()
@@ -91,23 +94,24 @@ func setupUserTestFixture(t *testing.T) *userTestFixture {
 	return f
 }
 
+// teardown executes all registered cleanup functions in LIFO order.
 func (f *userTestFixture) teardown() {
 	for i := len(f.cleanup) - 1; i >= 0; i-- {
 		f.cleanup[i]()
 	}
 }
 
+// getUserBalance fetches the current credit balance for the specified user from the database.
 func (f *userTestFixture) getUserBalance(userID string) int32 {
-	type p struct {
+	type profile struct {
 		CreditBalance int32 `json:"credit_balance"`
 	}
-	var ps []p
-	data, _, _ := f.client.From("profiles").Select("credit_balance", "exact", false).Eq("id", userID).Execute()
-	_ = json.Unmarshal(data, &ps)
-	if len(ps) == 0 {
-		return 0
-	}
-	return ps[0].CreditBalance
+	var profiles []profile
+	data, _, err := f.client.From("profiles").Select("credit_balance", "exact", false).Eq("id", userID).Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &profiles))
+	require.NotEmpty(f.t, profiles)
+	return profiles[0].CreditBalance
 }
 
 // ============================================================================

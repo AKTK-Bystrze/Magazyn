@@ -72,9 +72,8 @@ func TestTS3_LateReturn_Succeeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// Reservation B: testUser2, adjacent booking starting day -1 to +3 (started yesterday)
-	resBID, err := fixture.createTestReservation(fixture.testUser2ID, -1, 3)
+	_, err = fixture.createTestReservation(fixture.testUser2ID, -1, 3)
 	require.NoError(t, err)
-	_ = resBID
 
 	// Admin marks reservation A as RETURNED today (2 days after declared end date)
 	returnStatus := constants.ReservationStatusReturned
