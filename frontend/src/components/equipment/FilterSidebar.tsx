@@ -168,6 +168,10 @@ export function FilterSidebar({
               <RadioGroupItem value="broken" id="status-broken" />
               <Label htmlFor="status-broken">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BROKEN}</Label>
             </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="blocked" id="status-blocked" />
+              <Label htmlFor="status-blocked">{EQUIPMENT_FILTER_UI_STRINGS.STATUS_BLOCKED}</Label>
+            </div>
           </RadioGroup>
         )}
       </div>

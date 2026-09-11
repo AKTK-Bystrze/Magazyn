@@ -9,12 +9,7 @@ import type {
   CreateEquipmentCommand,
   UpdateEquipmentCommand,
 } from "@/types";
-import {
-  DEFAULT_PAGE,
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_EQUIPMENT_STATUS_FILTER,
-  QUERY_STALE_TIME_MS,
-} from "@/lib/config/constants";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, QUERY_STALE_TIME_MS } from "@/lib/config/constants";
 
 /**
  * Default filter state for equipment manager list
@@ -22,7 +17,6 @@ import {
 const DEFAULT_FILTERS: EquipmentManagerFilterState = {
   page: DEFAULT_PAGE,
   perPage: DEFAULT_PAGE_SIZE,
-  status: DEFAULT_EQUIPMENT_STATUS_FILTER as EquipmentManagerFilterState["status"],
 };
 
 /**
@@ -127,7 +121,7 @@ export function useEquipmentManager(
       const params = {
         search: filters.search,
         type_id: filters.typeId,
-        status: filters.status === "ALL" ? undefined : filters.status,
+        status: filters.status,
         page: filters.page,
         perPage: filters.perPage,
       };

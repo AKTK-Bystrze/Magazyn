@@ -12,7 +12,6 @@ export { CartIndicator } from "./CartIndicator";
 // Equipment Manager (admin CRUD)
 export { EquipmentManagerContainer } from "./EquipmentManagerContainer";
 export { EquipmentTable } from "./EquipmentTable";
-export { EquipmentFilters } from "./EquipmentFilters";
 export { AddEquipmentDialog } from "./AddEquipmentDialog";
 export { EditEquipmentDialog } from "./EditEquipmentDialog";
 export { ConfirmArchiveDialog } from "./ConfirmArchiveDialog";
