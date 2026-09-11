@@ -32,8 +32,8 @@ const currentPath = Astro.url.pathname;
 <BaseLayout title={title} description={description}>
   <div id="admin-layout" class="flex min-h-screen w-full">
     {/* Desktop Sidebar Container */}
-    <div 
-      id="desktop-sidebar-container" 
+    <div
+      id="desktop-sidebar-container"
       class="hidden lg:block w-[280px] shrink-0 border-r bg-muted/40 overflow-hidden transition-[width] duration-300 data-[collapsed=true]:w-0 data-[collapsed=true]:border-r-0"
     >
       <div class="w-[280px] h-full flex flex-col gap-2">
@@ -60,10 +60,10 @@ const currentPath = Astro.url.pathname;
   <script is:inline>
     // Apply initial sidebar state to prevent flicker
     (function () {
-      const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-      const container = document.getElementById('desktop-sidebar-container');
+      const isCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
+      const container = document.getElementById("desktop-sidebar-container");
       if (container && isCollapsed) {
-        container.dataset.collapsed = 'true';
+        container.dataset.collapsed = "true";
       }
     })();
   </script>
