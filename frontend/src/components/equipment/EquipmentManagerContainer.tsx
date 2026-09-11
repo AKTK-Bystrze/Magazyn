@@ -180,8 +180,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
   // Handle filter changes from Sidebar
   const handleFilterChange = React.useCallback(
     (key: keyof EquipmentSearchParams, value: string | undefined) => {
-      // @ts-expect-error - FilterSidebar callback simplifies values to string|undefined
-      setFilter(key, value);
+      setFilter(key, value as never);
     },
     [setFilter]
   );

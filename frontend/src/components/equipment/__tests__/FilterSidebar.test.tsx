@@ -97,7 +97,7 @@ describe("FilterSidebar", () => {
     expect(onFilterChange).not.toHaveBeenCalled();
 
     act(() => {
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(400);
     });
 
     // onFilterChange should be called with "search" and the search value

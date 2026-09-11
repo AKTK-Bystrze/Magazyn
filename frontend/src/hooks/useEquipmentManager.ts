@@ -17,7 +17,6 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, QUERY_STALE_TIME_MS } from "@/lib/conf
 const DEFAULT_FILTERS: EquipmentManagerFilterState = {
   page: DEFAULT_PAGE,
   perPage: DEFAULT_PAGE_SIZE,
-  status: undefined,
 };
 
 /**
