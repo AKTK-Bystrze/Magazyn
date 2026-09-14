@@ -37,11 +37,11 @@ var defaultLogger *Logger
 func init() {
 	lvl := new(slog.LevelVar)
 	lvl.Set(slog.LevelInfo)
-
+	
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: lvl,
 	})
-
+	
 	defaultLogger = &Logger{
 		logger:   slog.New(handler),
 		levelVar: lvl,
@@ -103,16 +103,16 @@ func getContextAttrs(ctx context.Context) []slog.Attr {
 		return nil
 	}
 	attrs := []slog.Attr{}
-
+	
 	username := getUsernameFromContext(ctx)
 	if username != "[UNAUTHENTICATED]" {
 		attrs = append(attrs, slog.String("username", username))
 	}
-
+	
 	if traceID, ok := ctx.Value(appcontext.TraceIDContextKey).(string); ok && traceID != "" {
 		attrs = append(attrs, slog.String("trace_id", traceID))
 	}
-
+	
 	return attrs
 }
 

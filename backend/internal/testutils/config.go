@@ -2,8 +2,8 @@ package testutils
 
 import (
 	"context"
-	"fmt"
 	"magazyn/backend/internal/logger"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
