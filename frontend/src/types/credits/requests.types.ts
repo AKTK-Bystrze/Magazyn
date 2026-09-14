@@ -1,7 +1,17 @@
-import type { Pagination } from "../common.types";
+import type { PaginationMeta } from "../api.types";
 
-export type CreditRequestStatus = "awaiting" | "approved" | "rejected" | "approved with changes";
+export const CREDIT_REQUEST_STATUS = {
+  AWAITING: "awaiting",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  APPROVED_WITH_CHANGES: "approved with changes",
+} as const;
 
+export type CreditRequestStatus = typeof CREDIT_REQUEST_STATUS[keyof typeof CREDIT_REQUEST_STATUS];
+
+/**
+ * Credit request data transfer object representing a request for godzinki.
+ */
 export interface CreditRequestDTO {
   id: string;
   title: string;
@@ -15,6 +25,9 @@ export interface CreditRequestDTO {
   helpers: string[];
 }
 
+/**
+ * Data required to create a new credit request.
+ */
 export interface CreateCreditRequestDTO {
   title: string;
   description: string;
@@ -23,6 +36,9 @@ export interface CreateCreditRequestDTO {
   helpers: string[];
 }
 
+/**
+ * Data required to update an existing credit request.
+ */
 export interface UpdateCreditRequestDTO {
   title?: string;
   description?: string;
@@ -31,6 +47,9 @@ export interface UpdateCreditRequestDTO {
   helpers?: string[];
 }
 
+/**
+ * Data required by an admin to approve or reject a credit request.
+ */
 export interface ReviewCreditRequestDTO {
   credits_value?: number;
   helpers?: string[];
@@ -45,5 +64,5 @@ export interface UserCreditLeaderboardItem {
 
 export interface CreditRequestListResponse {
   requests: CreditRequestDTO[];
-  pagination: Pagination;
+  pagination: PaginationMeta;
 }

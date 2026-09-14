@@ -2,6 +2,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import type { CreditRequestDTO } from "@/types";
+import { CREDIT_REQUEST_STATUS } from "@/types";
+import { CREDIT_REQUEST_STATUS } from "@/types";
 
 interface Props {
   isOpen: boolean;
@@ -15,13 +17,13 @@ export function CreditRequestDetailsDialog({ isOpen, onClose, request, usersMap 
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "awaiting":
+      case CREDIT_REQUEST_STATUS.AWAITING:
         return <Badge variant="secondary">Oczekujący</Badge>;
-      case "approved":
+      case CREDIT_REQUEST_STATUS.APPROVED:
         return <Badge variant="default" className="bg-green-600">Zatwierdzony</Badge>;
-      case "rejected":
+      case CREDIT_REQUEST_STATUS.REJECTED:
         return <Badge variant="destructive">Odrzucony</Badge>;
-      case "approved with changes":
+      case CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES:
         return <Badge variant="default" className="bg-yellow-600">Zatwierdzony (zmiany)</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -65,7 +67,7 @@ export function CreditRequestDetailsDialog({ isOpen, onClose, request, usersMap 
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label className="text-muted-foreground">Twórca wniosku</Label>
-              <div>{usersMap[request.requestor_id] || request.requestor_id}</div>
+              <div>{request.requestor_id ? (usersMap[request.requestor_id] || request.requestor_id) : "-"}</div>
             </div>
             <div className="grid gap-2">
               <Label className="text-muted-foreground">Osoba uzyskująca pomoc</Label>
@@ -92,3 +94,6 @@ export function CreditRequestDetailsDialog({ isOpen, onClose, request, usersMap 
     </Dialog>
   );
 }
+
+
+

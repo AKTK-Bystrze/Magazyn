@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { creditRequestsApi, usersApi } from "@/lib/api";
 import type { CreditRequestDTO } from "@/types";
+import { CREDIT_REQUEST_STATUS } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SuperAdminCreditReview } from "./SuperAdminCreditReview";
 import { CreditRequestDetailsDialog } from "./CreditRequestDetailsDialog";
@@ -57,17 +58,17 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "awaiting":
+      case CREDIT_REQUEST_STATUS.AWAITING:
         return <Badge variant="secondary">Oczekujący</Badge>;
-      case "approved":
+      case CREDIT_REQUEST_STATUS.APPROVED:
         return (
           <Badge variant="default" className="bg-green-600">
             Zatwierdzony
           </Badge>
         );
-      case "rejected":
+      case CREDIT_REQUEST_STATUS.REJECTED:
         return <Badge variant="destructive">Odrzucony</Badge>;
-      case "approved with changes":
+      case CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES:
         return (
           <Badge variant="default" className="bg-yellow-600">
             Zatwierdzony (zmiany)
@@ -80,7 +81,7 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
 
   const filteredData = data.filter((item) => {
     if (filter === "all") return true;
-    if (filter === "approved") return item.status === "approved" || item.status === "approved with changes";
+    if (filter === CREDIT_REQUEST_STATUS.APPROVED) return item.status === CREDIT_REQUEST_STATUS.APPROVED || item.status === CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES;
     return item.status === filter;
   });
 
@@ -120,23 +121,23 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
               Wszystkie
             </Button>
             <Button
-              variant={filter === "awaiting" ? "default" : "outline"}
+              variant={filter === CREDIT_REQUEST_STATUS.AWAITING ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter("awaiting")}
+              onClick={() => setFilter(CREDIT_REQUEST_STATUS.AWAITING)}
             >
               Oczekujące
             </Button>
             <Button
-              variant={filter === "approved" ? "default" : "outline"}
+              variant={filter === CREDIT_REQUEST_STATUS.APPROVED ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter("approved")}
+              onClick={() => setFilter(CREDIT_REQUEST_STATUS.APPROVED)}
             >
               Zatwierdzone
             </Button>
             <Button
-              variant={filter === "rejected" ? "default" : "outline"}
+              variant={filter === CREDIT_REQUEST_STATUS.REJECTED ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter("rejected")}
+              onClick={() => setFilter(CREDIT_REQUEST_STATUS.REJECTED)}
             >
               Odrzucone
             </Button>
@@ -178,17 +179,17 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
                     <TableCell>{getStatusBadge(item.status)}</TableCell>
                     <TableCell>{new Date(item.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {item.status === "awaiting" && item.requestor_id === userId && (
+                      {item.status === CREDIT_REQUEST_STATUS.AWAITING && item.requestor_id === userId && (
                         <Button variant="outline" size="sm" onClick={() => onEditClick(item)}>
                           Edytuj
                         </Button>
                       )}
-                      {isSuperAdmin && item.status === "awaiting" && (
+                      {isSuperAdmin && item.status === CREDIT_REQUEST_STATUS.AWAITING && (
                         <Button size="sm" onClick={() => setReviewItem(item)}>
                           Rozpatrz
                         </Button>
                       )}
-                      {!(item.status === "awaiting" && (item.requestor_id === userId || isSuperAdmin)) && (
+                      {!(item.status === CREDIT_REQUEST_STATUS.AWAITING && (item.requestor_id === userId || isSuperAdmin)) && (
                         <Button variant="outline" size="sm" onClick={() => setDetailsItem(item)}>
                           Szczegóły
                         </Button>

@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { creditRequestsApi, usersApi } from "@/lib/api";
 import type { CreditRequestDTO, PublicUser, CreditRequestStatus } from "@/types";
+import { CREDIT_REQUEST_STATUS } from "@/types";
 
 interface Props {
   request: CreditRequestDTO;
@@ -51,7 +52,7 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
       return;
     }
 
-    if (status !== "rejected" && helpers.length === 0) {
+    if (status !== CREDIT_REQUEST_STATUS.REJECTED && helpers.length === 0) {
       setError("Musisz wybrać przynajmniej jedną osobę, która pomagała.");
       return;
     }
@@ -63,8 +64,8 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
       helpers.length !== request.helpers.length ||
       !helpers.every((h) => request.helpers.includes(h));
 
-    if (status === "approved" && isModified) {
-      finalStatus = "approved with changes";
+    if (status === CREDIT_REQUEST_STATUS.APPROVED && isModified) {
+      finalStatus = CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES;
     }
 
     setLoading(true);
@@ -140,14 +141,14 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
         </div>
 
         <DialogFooter className="flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0">
-          <Button variant="destructive" disabled={loading} onClick={() => handleReview("rejected")}>
+          <Button variant="destructive" disabled={loading} onClick={() => handleReview(CREDIT_REQUEST_STATUS.REJECTED)}>
             Odrzuć
           </Button>
           <div className="flex space-x-2">
             <Button variant="outline" disabled={loading} onClick={() => onOpenChange(false)}>
               Anuluj
             </Button>
-            <Button disabled={loading} onClick={() => handleReview("approved")}>
+            <Button disabled={loading} onClick={() => handleReview(CREDIT_REQUEST_STATUS.APPROVED)}>
               Zatwierdź
             </Button>
           </div>

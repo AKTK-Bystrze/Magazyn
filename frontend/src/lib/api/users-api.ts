@@ -2,6 +2,7 @@ import { api } from "./client";
 import type {
   UserFilterState,
   UserListResponse,
+  PublicUserListResponse,
   UserProfile,
   CreateUserCommand,
   UpdateUserCommand,

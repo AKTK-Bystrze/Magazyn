@@ -27,7 +27,7 @@ export function UsersCreditsList() {
         setLeaderboard(boardRes || []);
         
         // Sort public users by credit balance descending
-        const sortedUsers = (usersRes.users || []).sort((a, b) => b.creditBalance - a.creditBalance);
+        const sortedUsers = (usersRes.users || []).sort((a: PublicUser, b: PublicUser) => b.creditBalance - a.creditBalance);
         setPublicUsers(sortedUsers);
       } catch (err) {
         console.error(err);
