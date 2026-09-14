@@ -103,7 +103,6 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
         <Menu className="h-5 w-5" />
         <span className="sr-only">Toggle Sidebar</span>
       </Button>
-
       {/* Breadcrumbs */}
       <div className="flex-1">
         <Breadcrumbs currentPath={currentPath} />
