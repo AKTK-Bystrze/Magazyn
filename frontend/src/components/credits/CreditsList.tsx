@@ -104,14 +104,14 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <CardTitle>Wnioski o godzinki</CardTitle>
             <CardDescription>
               Historia i statusy wniosków o przyznanie godzinek za pomoc.
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant={filter === "all" ? "default" : "outline"}
               size="sm"
