@@ -1,10 +1,10 @@
 package supabase
 
 import (
-	"magazyn/backend/internal/logger"
 	"context"
 	"encoding/json"
 	"fmt"
+	"magazyn/backend/internal/logger"
 	"strings"
 
 	"magazyn/backend/internal/constants"

@@ -1,0 +1,16 @@
+package repository
+
+import (
+	"context"
+
+	"magazyn/backend/internal/types"
+)
+
+type CreditRequestRepository interface {
+	ListRequests(ctx context.Context, page, perPage int) ([]types.CreditRequestDTO, int64, error)
+	GetByID(ctx context.Context, id string) (*types.CreditRequestDTO, error)
+	Create(ctx context.Context, req types.CreditRequestDTO) (*types.CreditRequestDTO, error)
+	Update(ctx context.Context, id string, req types.CreditRequestDTO) (*types.CreditRequestDTO, error)
+	UpdateStatus(ctx context.Context, id string, status types.CreditRequestStatus, creditsValue *int32, helpers []string) error
+	GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error)
+}

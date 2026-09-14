@@ -66,6 +66,7 @@ func main() {
 	calendarRepo := supabaserepo.NewCalendarRepository(appState.SupabaseClient)
 	analyticsRepo := supabaserepo.NewAnalyticsRepository(appState.SupabaseClient)
 	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
+	creditRequestRepo := supabaserepo.NewCreditRequestRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 
 	// Initialize Services
 	authService := authservice.NewAuthService(authRepo)
@@ -74,6 +75,7 @@ func main() {
 	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
 	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)
 	creditService := creditservice.NewCreditHistoryService(creditRepo, userRepo)
+	creditRequestService := creditservice.NewCreditRequestService(creditRequestRepo, userService)
 
 	emailService := email.NewNoopEmailService()
 	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
@@ -86,6 +88,7 @@ func main() {
 	calendarHandler := calendarhandler.NewCalendarHandler(calendarService)
 	analyticsHandler := calendarhandler.NewAnalyticsHandler(analyticsService)
 	creditHandler := credithandler.NewCreditHistoryHandler(creditService)
+	creditRequestHandler := credithandler.NewCreditRequestHandler(creditRequestService)
 
 	// Initialize Middleware
 	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
@@ -106,6 +109,7 @@ func main() {
 
 	// User Routes
 	mux.Handle("GET /users/me", authMiddleware(http.HandlerFunc(userHandler.HandleGetProfile)))
+	mux.Handle("GET /users/public", authMiddleware(http.HandlerFunc(userHandler.HandleListPublicUsers)))
 	mux.Handle("GET /users", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleListUsers))))
 	mux.Handle("POST /users", authMiddleware(authmiddleware.RequireRoles(auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleCreateUser))))
 	mux.Handle("GET /users/{id}", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleGetProfile))))
@@ -136,6 +140,13 @@ func main() {
 
 	// Credit History Routes
 	mux.Handle("GET /credits/history", authMiddleware(http.HandlerFunc(creditHandler.HandleGetCreditHistory)))
+
+	// Credit Request Routes
+	mux.Handle("GET /credits/requests", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleListRequests)))
+	mux.Handle("POST /credits/requests", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleCreateRequest)))
+	mux.Handle("PUT /credits/requests/{id}", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleUpdateRequest)))
+	mux.Handle("PATCH /credits/requests/{id}/status", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleReviewRequest)))
+	mux.Handle("GET /users/credits", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleGetLeaderboard)))
 
 	// Analytics Routes (Admin only)
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))

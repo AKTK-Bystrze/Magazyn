@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
@@ -36,39 +35,8 @@ func (h *CreditHistoryHandler) HandleGetCreditHistory(w http.ResponseWriter, r *
 	}
 	userRole := common.GetUserRoleFromContext(r)
 
-	// 2. Parse Query Parameters
-	// ParsePagination handles defaults, but we need raw values or specific logic to pass to service
-	// which has strict validation.
-	// If we use common.ParsePagination, it sets defaults for us if missing/invalid.
-	// But service wants to throw error if invalid allowed value.
-	// So we should parse manually to differentiate "missing" vs "invalid".
-
-	pageStr := r.URL.Query().Get("page")
-	perPageStr := r.URL.Query().Get("per_page")
+	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	filterUserID := r.URL.Query().Get("user_id")
-
-	page := constants.DefaultPage
-	if pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil {
-			page = p
-		} else {
-			// If not integer, service will handle or we can error here.
-			// Let's pass it as is (if we could) or just let service handle validation of logic values.
-			// Since we pass int, we must convert here. If conversion fails, it's bad request.
-			common.RespondError(ctx, w, http.StatusBadRequest, "Page must be a number")
-			return
-		}
-	}
-
-	perPage := constants.DefaultPerPage
-	if perPageStr != "" {
-		if pp, err := strconv.Atoi(perPageStr); err == nil {
-			perPage = pp
-		} else {
-			common.RespondError(ctx, w, http.StatusBadRequest, "PerPage must be a number")
-			return
-		}
-	}
 
 	// 3. Authorization Check for Filtering
 	// Regular users cannot use user_id filter.

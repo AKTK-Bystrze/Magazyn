@@ -1,47 +1,49 @@
-// =============================================================================
-// CREDIT REQUEST TYPES
-// =============================================================================
+import type { Pagination } from "../common.types";
 
-import type { Enums } from "../../db/database.types";
+export type CreditRequestStatus = "awaiting" | "approved" | "rejected" | "approved with changes";
 
-/**
- * Credit request with status
- * From credit_requests table
- */
-export type CreditRequest = {
+export interface CreditRequestDTO {
   id: string;
-  userId: string;
-  username: string; // from profiles.username
-  amount: number;
+  title: string;
   description: string;
-  status: Enums<"credit_request_status">;
-  adminId: string | null;
-  adminUsername: string | null;
-  adminNote: string | null;
-  createdAt: string;
-  updatedAt: string | null;
-};
+  credits_value: number;
+  requestor_id: string | null;
+  user_helped_id: string | null;
+  status: CreditRequestStatus;
+  created_at: string;
+  updated_at: string;
+  helpers: string[];
+}
 
-/**
- * Credit request with approved amount (for responses)
- */
-export type CreditRequestWithApproval = CreditRequest & {
-  approvedAmount?: number;
-};
+export interface CreateCreditRequestDTO {
+  title: string;
+  description: string;
+  credits_value: number;
+  user_helped_id: string;
+  helpers: string[];
+}
 
-/**
- * Command to create credit request (POST /credit-requests)
- */
-export type CreateCreditRequestCommand = {
-  amount: number; // must be > 0
-  description: string; // min 10 chars, max 500
-};
+export interface UpdateCreditRequestDTO {
+  title?: string;
+  description?: string;
+  credits_value?: number;
+  user_helped_id?: string;
+  helpers?: string[];
+}
 
-/**
- * Command to approve/deny credit request (PATCH /credit-requests/:id)
- */
-export type UpdateCreditRequestCommand = {
-  status: "APPROVED" | "DENIED";
-  approvedAmount?: number; // required if status=APPROVED
-  adminNote?: string;
-};
+export interface ReviewCreditRequestDTO {
+  credits_value?: number;
+  helpers?: string[];
+  status: CreditRequestStatus;
+}
+
+export interface UserCreditLeaderboardItem {
+  user_id: string;
+  username: string;
+  total_credits: number;
+}
+
+export interface CreditRequestListResponse {
+  requests: CreditRequestDTO[];
+  pagination: Pagination;
+}

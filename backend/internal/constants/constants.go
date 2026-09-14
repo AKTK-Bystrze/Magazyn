@@ -10,12 +10,14 @@ import "time"
 
 // Database table names to avoid hardcoded strings.
 const (
-	TableProfiles        = "profiles"
-	TableEquipment       = "equipment"
-	TableReservations    = "reservations"
-	TableEquipmentTypes  = "equipment_types"
-	TableMaintenanceLogs = "maintenance_logs"
-	TableCreditHistory   = "credit_history"
+	TableProfiles             = "profiles"
+	TableEquipment            = "equipment"
+	TableReservations         = "reservations"
+	TableEquipmentTypes       = "equipment_types"
+	TableMaintenanceLogs      = "maintenance_logs"
+	TableCreditHistory        = "credit_history"
+	TableCreditRequests       = "credit_requests"
+	TableCreditRequestHelpers = "credit_request_helpers"
 )
 
 // ============================================================================

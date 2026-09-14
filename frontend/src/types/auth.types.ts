@@ -56,6 +56,28 @@ export type UserListItem = {
 };
 
 /**
+ * Public user information without sensitive data
+ */
+export type PublicUser = {
+  id: string;
+  username: string;
+  creditBalance: number;
+};
+
+/**
+ * Paginated public user list response
+ */
+export type PublicUserListResponse = {
+  users: PublicUser[];
+  pagination: {
+    page: number;
+    perPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+};
+
+/**
  * Command to create user (POST /users)
  * SuperAdmin only
  */
