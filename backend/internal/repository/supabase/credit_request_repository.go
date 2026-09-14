@@ -3,6 +3,7 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+	"sort"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
@@ -320,6 +321,10 @@ func (r *creditRequestRepository) GetLeaderboard(ctx context.Context) ([]types.U
 	for _, v := range m {
 		result = append(result, v)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].TotalCredits > result[j].TotalCredits
+	})
 
 	return result, nil
 }

@@ -46,6 +46,15 @@ const (
 )
 
 // ============================================================================
+// Credit Reason Constants
+// ============================================================================
+
+// Credit reason values used when adjusting user credit balances.
+const (
+	CreditReasonWorkCredit = "work_credit" // Credits awarded for approved help requests
+)
+
+// ============================================================================
 // Pagination Constants
 // ============================================================================
 

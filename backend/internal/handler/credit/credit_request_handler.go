@@ -11,14 +11,17 @@ import (
 	"magazyn/backend/internal/types"
 )
 
+// CreditRequestHandler handles HTTP requests for credit request operations.
 type CreditRequestHandler struct {
 	service credit.CreditRequestService
 }
 
+// NewCreditRequestHandler creates a new CreditRequestHandler with the given service.
 func NewCreditRequestHandler(service credit.CreditRequestService) *CreditRequestHandler {
 	return &CreditRequestHandler{service: service}
 }
 
+// HandleListRequests handles GET /credit-requests — returns paginated credit requests.
 func (h *CreditRequestHandler) HandleListRequests(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -38,6 +41,7 @@ func (h *CreditRequestHandler) HandleListRequests(w http.ResponseWriter, r *http
 	common.RespondJSON(ctx, w, http.StatusOK, resp)
 }
 
+// HandleCreateRequest handles POST /credit-requests — creates a new credit request.
 func (h *CreditRequestHandler) HandleCreateRequest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -66,6 +70,7 @@ func (h *CreditRequestHandler) HandleCreateRequest(w http.ResponseWriter, r *htt
 	common.RespondJSON(ctx, w, http.StatusCreated, resp)
 }
 
+// HandleUpdateRequest handles PUT /credit-requests/{id} — updates an existing credit request.
 func (h *CreditRequestHandler) HandleUpdateRequest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -95,6 +100,7 @@ func (h *CreditRequestHandler) HandleUpdateRequest(w http.ResponseWriter, r *htt
 	common.RespondJSON(ctx, w, http.StatusOK, resp)
 }
 
+// HandleReviewRequest handles PATCH /credit-requests/{id}/review — super admin approves or rejects a request.
 func (h *CreditRequestHandler) HandleReviewRequest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -130,6 +136,7 @@ func (h *CreditRequestHandler) HandleReviewRequest(w http.ResponseWriter, r *htt
 	common.RespondJSON(ctx, w, http.StatusOK, map[string]string{"message": "Status updated successfully"})
 }
 
+// HandleGetLeaderboard handles GET /credit-requests/leaderboard — returns the credit leaderboard.
 func (h *CreditRequestHandler) HandleGetLeaderboard(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)

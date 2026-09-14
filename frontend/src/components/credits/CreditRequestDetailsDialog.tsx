@@ -3,7 +3,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import type { CreditRequestDTO } from "@/types";
 import { CREDIT_REQUEST_STATUS } from "@/types";
-import { CREDIT_REQUEST_STATUS } from "@/types";
 
 interface Props {
   isOpen: boolean;

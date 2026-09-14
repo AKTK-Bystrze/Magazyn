@@ -8,11 +8,17 @@ import (
 	"magazyn/backend/internal/types"
 )
 
+// CreditRequestService defines the business logic for credit request operations.
 type CreditRequestService interface {
+	// ListRequests returns a paginated list of credit requests.
 	ListRequests(ctx context.Context, page, perPage int) (*types.CreditRequestListResponse, error)
+	// CreateRequest creates a new credit request on behalf of the given user.
 	CreateRequest(ctx context.Context, userID string, req types.CreateCreditRequestDTO) (*types.CreditRequestDTO, error)
+	// UpdateRequest updates an existing credit request (only by the original requestor).
 	UpdateRequest(ctx context.Context, userID string, id string, req types.UpdateCreditRequestDTO) (*types.CreditRequestDTO, error)
+	// ReviewRequest allows a super admin to approve or reject a credit request.
 	ReviewRequest(ctx context.Context, adminID string, id string, req types.ReviewCreditRequestDTO) error
+	// GetLeaderboard returns the credit leaderboard sorted by total credits descending.
 	GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error)
 }
 
@@ -74,6 +80,14 @@ func (s *creditRequestService) CreateRequest(ctx context.Context, userID string,
 		return nil, types.NewValidationError("credits_value must be strictly positive", map[string]int{"credits_value": int(req.CreditsValue)})
 	}
 
+	req.Helpers = deduplicateHelpers(req.Helpers)
+
+	for _, h := range req.Helpers {
+		if h == userID {
+			return nil, types.NewValidationError("Requestor cannot be listed as a helper", nil)
+		}
+	}
+
 	dto := types.CreditRequestDTO{
 		Title:        req.Title,
 		Description:  req.Description,
@@ -109,18 +123,25 @@ func (s *creditRequestService) UpdateRequest(ctx context.Context, userID string,
 	}
 
 	if req.Title != nil {
+		if *req.Title == "" {
+			return nil, types.NewValidationError("Title cannot be empty", nil)
+		}
 		existing.Title = *req.Title
 	}
 	if req.Description != nil {
 		existing.Description = *req.Description
 	}
 	if req.UserHelpedID != nil {
+		if *req.UserHelpedID == "" {
+			return nil, types.NewValidationError("user_helped_id cannot be empty", nil)
+		}
 		existing.UserHelpedID = req.UserHelpedID
 	}
 	if req.Helpers != nil {
 		if len(req.Helpers) == 0 {
 			return nil, types.NewValidationError("Helpers cannot be empty", nil)
 		}
+		req.Helpers = deduplicateHelpers(req.Helpers)
 		existing.Helpers = req.Helpers
 	}
 
@@ -164,7 +185,7 @@ func (s *creditRequestService) ReviewRequest(ctx context.Context, adminID string
 		bulkReq := types.BulkAdjustCreditsRequest{
 			UserIDs:     helpersToCredit,
 			Amount:      valToCredit,
-			Reason:      "work_credit",
+			Reason:      constants.CreditReasonWorkCredit,
 			Description: existing.Title,
 		}
 
@@ -179,4 +200,17 @@ func (s *creditRequestService) ReviewRequest(ctx context.Context, adminID string
 
 func (s *creditRequestService) GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error) {
 	return s.repo.GetLeaderboard(ctx)
+}
+
+// deduplicateHelpers removes duplicate user IDs from a helpers slice while preserving order.
+func deduplicateHelpers(helpers []string) []string {
+	seen := make(map[string]bool, len(helpers))
+	result := make([]string, 0, len(helpers))
+	for _, h := range helpers {
+		if !seen[h] {
+			seen[h] = true
+			result = append(result, h)
+		}
+	}
+	return result
 }

@@ -83,14 +83,8 @@ export function CreditRequestForm({ initialData, onSuccess, onCancel }: Props) {
         setHelpers([]);
       }
     } catch (err: unknown) {
-      if (typeof err === "object" && err !== null) {
-        const errorObj = err as Record<string, unknown>;
-        const response = errorObj.response as Record<string, unknown> | undefined;
-        const data = response?.data as Record<string, unknown> | undefined;
-        setError((data?.message as string) || (errorObj.message as string) || "Wystąpił błąd.");
-      } else {
-        setError("Wystąpił błąd.");
-      }
+      const message = err instanceof Error ? err.message : "Wystąpił błąd.";
+      setError(message);
     } finally {
       setLoading(false);
     }
