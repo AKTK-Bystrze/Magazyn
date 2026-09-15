@@ -30,6 +30,16 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
   const [reviewItem, setReviewItem] = useState<CreditRequest | null>(null);
   const [detailsItem, setDetailsItem] = useState<CreditRequest | null>(null);
   const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -80,9 +90,45 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
   };
 
   const filteredData = data.filter((item) => {
-    if (filter === "all") return true;
-    if (filter === CREDIT_REQUEST_STATUS.APPROVED) return item.status === CREDIT_REQUEST_STATUS.APPROVED || item.status === CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES;
-    return item.status === filter;
+    let matchesStatus = true;
+    if (filter !== "all") {
+      if (filter === CREDIT_REQUEST_STATUS.APPROVED) {
+        matchesStatus = item.status === CREDIT_REQUEST_STATUS.APPROVED || item.status === CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES;
+      } else {
+        matchesStatus = item.status === filter;
+      }
+    }
+    
+    let matchesSearch = true;
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      const userHelped = item.userHelpedId ? (usersMap[item.userHelpedId] || item.userHelpedId) : '';
+      const helpers = item.helpers?.map(h => usersMap[h] || h).join(', ') || '';
+      matchesSearch = item.title.toLowerCase().includes(lowerQuery) || 
+                      userHelped.toLowerCase().includes(lowerQuery) || 
+                      helpers.toLowerCase().includes(lowerQuery);
+    }
+    return matchesStatus && matchesSearch;
+  });
+
+  const sortedData = [...filteredData].sort((a: any, b: any) => {
+    if (!sortConfig) return 0;
+    let aValue = a[sortConfig.key];
+    let bValue = b[sortConfig.key];
+    
+    // Special handling for userHelpedId to sort by username instead of id
+    if (sortConfig.key === 'userHelpedId') {
+      aValue = a.userHelpedId ? (usersMap[a.userHelpedId] || a.userHelpedId) : '';
+      bValue = b.userHelpedId ? (usersMap[b.userHelpedId] || b.userHelpedId) : '';
+    }
+    
+    if (aValue < bValue) {
+      return sortConfig.direction === "asc" ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sortConfig.direction === "asc" ? 1 : -1;
+    }
+    return 0;
   });
 
   if (loading) {
@@ -112,39 +158,48 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
               Historia i statusy wniosków o przyznanie godzinek za pomoc.
             </CardDescription>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={filter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("all")}
-            >
-              Wszystkie
-            </Button>
-            <Button
-              variant={filter === CREDIT_REQUEST_STATUS.AWAITING ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(CREDIT_REQUEST_STATUS.AWAITING)}
-            >
-              Oczekujące
-            </Button>
-            <Button
-              variant={filter === CREDIT_REQUEST_STATUS.APPROVED ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(CREDIT_REQUEST_STATUS.APPROVED)}
-            >
-              Zatwierdzone
-            </Button>
-            <Button
-              variant={filter === CREDIT_REQUEST_STATUS.REJECTED ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(CREDIT_REQUEST_STATUS.REJECTED)}
-            >
-              Odrzucone
-            </Button>
+          <div className="flex flex-col gap-2">
+            <input 
+              type="text" 
+              placeholder="Szukaj użytkownika / tytułu..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter("all")}
+              >
+                Wszystkie
+              </Button>
+              <Button
+                variant={filter === CREDIT_REQUEST_STATUS.AWAITING ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(CREDIT_REQUEST_STATUS.AWAITING)}
+              >
+                Oczekujące
+              </Button>
+              <Button
+                variant={filter === CREDIT_REQUEST_STATUS.APPROVED ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(CREDIT_REQUEST_STATUS.APPROVED)}
+              >
+                Zatwierdzone
+              </Button>
+              <Button
+                variant={filter === CREDIT_REQUEST_STATUS.REJECTED ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(CREDIT_REQUEST_STATUS.REJECTED)}
+              >
+                Odrzucone
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          {filteredData.length === 0 ? (
+          {sortedData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Brak wniosków spełniających kryteria.
             </div>
@@ -152,17 +207,17 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tytuł</TableHead>
-                  <TableHead>Kto prosił o pomoc</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort('title')}>Tytuł {sortConfig?.key === 'title' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort('userHelpedId')}>Kto prosił o pomoc {sortConfig?.key === 'userHelpedId' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
                   <TableHead>Pomagający</TableHead>
-                  <TableHead>Wartość</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort('creditsValue')}>Wartość {sortConfig?.key === 'creditsValue' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort('status')}>Status {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort('createdAt')}>Data {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
                   <TableHead className="text-right">Akcje</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredData.map((item) => (
+                {sortedData.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.title}</TableCell>
                     <TableCell>{item.userHelpedId ? usersMap[item.userHelpedId] || item.userHelpedId : '-'}</TableCell>
