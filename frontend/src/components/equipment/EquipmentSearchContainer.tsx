@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEquipmentSearch } from "@/hooks/use-equipment-search";
-import { useEquipmentList, useEquipmentTypes } from "@/hooks/use-equipment-api";
+import { useInfiniteEquipmentList, useEquipmentTypes } from "@/hooks/use-equipment-api";
 import { FilterSidebar } from "./FilterSidebar";
 import { EquipmentGrid } from "./EquipmentGrid";
 import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
@@ -34,20 +34,44 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
     null
   );
 
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
   // Fetch equipment types - automatically transformed to camelCase
   const { data: types = [] } = useEquipmentTypes();
 
-  // Fetch equipment list - automatically transformed to camelCase with nested type
-  const { data: equipmentData, isLoading, error } = useEquipmentList(activeFilters);
+  // Fetch equipment list using infinite query
+  const { 
+    data: equipmentData, 
+    isLoading, 
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteEquipmentList(activeFilters);
 
-  // Data is already transformed by the hook, no manual mapping needed!
-  const equipment = equipmentData?.equipment ?? [];
-  const meta = equipmentData?.pagination ?? {
-    page: 1,
-    perPage: 25,
-    totalItems: 0,
-    totalPages: 0,
-  };
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Flatten the pages to a single array of items
+  const equipment = React.useMemo(() => {
+    return equipmentData?.pages.flatMap((page) => page.equipment) ?? [];
+  }, [equipmentData]);
+  
+  const totalItems = equipmentData?.pages[0]?.pagination.totalItems ?? 0;
 
   const handleReset = () => {
     updateFilter("search", "");
@@ -111,7 +135,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
         <div className="hidden lg:flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Inwentarz Sprzętu</h1>
           <div className="text-sm text-muted-foreground">
-            Pokazywanie {equipment.length} z {meta.totalItems} elementów
+            Pokazywanie {equipment.length} z {totalItems} elementów
           </div>
         </div>
 
@@ -124,30 +148,10 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
           />
         </div>
 
-        {/* Pagination Controls */}
-        {meta.totalPages > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={meta.page <= 1}
-              onClick={() => updateFilter("page", meta.page - 1)}
-            >
-              Poprzedni
-            </Button>
-            <div className="flex items-center px-4 text-sm font-medium">
-              Strona {meta.page} z {meta.totalPages}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={meta.page >= meta.totalPages}
-              onClick={() => updateFilter("page", meta.page + 1)}
-            >
-              Następny
-            </Button>
-          </div>
-        )}
+        {/* Intersection Observer Target */}
+        <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
+          {isFetchingNextPage && <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>}
+        </div>
       </main>
 
       <CartIndicator

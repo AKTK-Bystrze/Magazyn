@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { equipmentApi } from "@/lib/api/equipment-api";
 import type { EquipmentSearchParams } from "@/types";
 
@@ -15,6 +15,20 @@ export function useEquipmentList(filters: Partial<EquipmentSearchParams>) {
     queryFn: () => equipmentApi.list(filters),
     // Keep previous data while fetching to prevent UI flash
     placeholderData: (previousData) => previousData,
+  });
+}
+
+export function useInfiniteEquipmentList(filters: Partial<EquipmentSearchParams>) {
+  return useInfiniteQuery({
+    queryKey: ["equipment-infinite", filters],
+    queryFn: ({ pageParam = 1 }) => equipmentApi.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
   });
 }
 

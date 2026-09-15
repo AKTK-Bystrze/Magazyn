@@ -1,7 +1,6 @@
 import * as React from "react";
 import { ReservationCard } from "./ReservationCard";
 import { GroupedReservationCard } from "./GroupedReservationCard";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Package } from "lucide-react";
 import { ICON_SIZE_LG } from "@/lib/config/constants";
@@ -52,6 +51,25 @@ export function ReservationCardList({
 }: ReservationCardListProps) {
   // Track expanded groups
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
+
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && currentPage < totalPages) {
+          onPageChange(currentPage + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [currentPage, totalPages, onPageChange]);
 
   // Group reservations by date range
   const groups = React.useMemo(() => groupReservationsByDateRange(reservations), [reservations]);
@@ -130,8 +148,10 @@ export function ReservationCardList({
         })}
       </div>
 
-      {/* Pagination */}
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+      {/* Intersection Observer Target */}
+      <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
+        {currentPage < totalPages && <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>}
+      </div>
     </div>
   );
 }
