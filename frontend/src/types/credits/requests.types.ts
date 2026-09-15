@@ -12,57 +12,57 @@ export type CreditRequestStatus = typeof CREDIT_REQUEST_STATUS[keyof typeof CRED
 /**
  * Credit request data transfer object representing a request for godzinki.
  */
-export interface CreditRequestDTO {
+export interface CreditRequest {
   id: string;
   title: string;
   description: string;
-  credits_value: number;
-  requestor_id: string | null;
-  user_helped_id: string | null;
+  creditsValue: number;
+  requestorId: string | null;
+  userHelpedId: string | null;
   status: CreditRequestStatus;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   helpers: string[];
 }
 
 /**
  * Data required to create a new credit request.
  */
-export interface CreateCreditRequestDTO {
+export interface CreateCreditRequestCommand {
   title: string;
   description: string;
-  credits_value: number;
-  user_helped_id: string;
+  creditsValue: number;
+  userHelpedId: string;
   helpers: string[];
 }
 
 /**
  * Data required to update an existing credit request.
  */
-export interface UpdateCreditRequestDTO {
+export interface UpdateCreditRequestCommand {
   title?: string;
   description?: string;
-  credits_value?: number;
-  user_helped_id?: string;
+  creditsValue?: number;
+  userHelpedId?: string;
   helpers?: string[];
 }
 
 /**
  * Data required by an admin to approve or reject a credit request.
  */
-export interface ReviewCreditRequestDTO {
-  credits_value?: number;
+export interface ReviewCreditRequestCommand {
+  creditsValue?: number;
   helpers?: string[];
   status: CreditRequestStatus;
 }
 
-export interface UserCreditLeaderboardItem {
-  user_id: string;
+export interface LeaderboardItem {
+  userId: string;
   username: string;
-  total_credits: number;
+  totalCredits: number;
 }
 
 export interface CreditRequestListResponse {
-  requests: CreditRequestDTO[];
+  requests: CreditRequest[];
   pagination: PaginationMeta;
 }

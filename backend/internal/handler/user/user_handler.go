@@ -1,9 +1,7 @@
 package user
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -43,7 +41,7 @@ func (h *UserHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetProfile(ctx, id)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -69,7 +67,7 @@ func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.ListUsers(ctx, page, perPage, role, search)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -93,7 +91,7 @@ func (h *UserHandler) HandleListPublicUsers(w http.ResponseWriter, r *http.Reque
 
 	resp, err := h.service.ListPublicUsers(ctx, page, perPage, search)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -112,7 +110,7 @@ func (h *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.CreateUser(ctx, req)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -136,7 +134,7 @@ func (h *UserHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.UpdateUser(ctx, id, req)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -176,33 +174,10 @@ func (h *UserHandler) HandleBulkAdjustCredits(w http.ResponseWriter, r *http.Req
 	err := h.service.BulkAdjustCredits(ctx, adminID, req)
 	if err != nil {
 		logger.Errorf(ctx, "Bulk adjustment failed: %v", err)
-		// Return the actual error message for debugging
 		common.RespondError(ctx, w, http.StatusInternalServerError, fmt.Sprintf("Failed to adjust credits: %v", err))
 		return
 	}
 
 	logger.Infof(ctx, "Successfully adjusted credits for %d users", len(req.UserIDs))
 	common.RespondJSON(ctx, w, http.StatusOK, map[string]string{"message": "Credits adjusted successfully"})
-}
-
-// handleError helper to map service errors to HTTP responses
-func handleError(ctx context.Context, w http.ResponseWriter, err error) {
-	var notFound *types.NotFoundError
-	var conflict *types.ConflictError
-	var validation *types.ValidationError
-	var forbidden *types.ForbiddenError
-
-	switch {
-	case errors.As(err, &notFound):
-		common.RespondError(ctx, w, http.StatusNotFound, err.Error())
-	case errors.As(err, &conflict):
-		common.RespondError(ctx, w, http.StatusConflict, err.Error())
-	case errors.As(err, &validation):
-		common.RespondError(ctx, w, http.StatusBadRequest, err.Error())
-	case errors.As(err, &forbidden):
-		common.RespondError(ctx, w, http.StatusForbidden, err.Error())
-	default:
-		logger.Errorf(ctx, "Internal server error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
-	}
 }

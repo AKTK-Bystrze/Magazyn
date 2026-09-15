@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { creditRequestsApi, usersApi } from "@/lib/api";
-import type { UserCreditLeaderboardItem, PublicUser } from "@/types";
+import type { LeaderboardItem, PublicUser } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function UsersCreditsList() {
-  const [leaderboard, setLeaderboard] = useState<UserCreditLeaderboardItem[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>([]);
   const [publicUsers, setPublicUsers] = useState<PublicUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -100,9 +100,9 @@ export function UsersCreditsList() {
             </TableHeader>
             <TableBody>
               {leaderboard.map((item) => (
-                <TableRow key={item.user_id}>
+                <TableRow key={item.userId}>
                   <TableCell className="font-medium">{item.username}</TableCell>
-                  <TableCell className="text-right">{item.total_credits}</TableCell>
+                  <TableCell className="text-right">{item.totalCredits}</TableCell>
                 </TableRow>
               ))}
               {leaderboard.length === 0 && (
