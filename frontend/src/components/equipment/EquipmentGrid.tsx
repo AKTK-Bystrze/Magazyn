@@ -9,19 +9,20 @@ interface EquipmentGridProps {
   isLoading?: boolean;
   error?: Error | null;
   onViewDetail?: (item: EquipmentSearchItem) => void;
+  viewMode?: "grid" | "list";
 }
 
-export function EquipmentGrid({ items, isLoading, error, onViewDetail }: EquipmentGridProps) {
+export function EquipmentGrid({ items, isLoading, error, onViewDetail, viewMode = "grid" }: EquipmentGridProps) {
   if (isLoading) {
     return (
       <div
-        className="grid gap-6"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))" }}
+        className={viewMode === "grid" ? "grid gap-6" : "flex flex-col gap-4"}
+        style={viewMode === "grid" ? { gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))" } : undefined}
       >
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex flex-col space-y-3">
-            <Skeleton className="h-[200px] w-full rounded-xl" />
-            <div className="space-y-2">
+          <div key={i} className={`flex ${viewMode === "grid" ? "flex-col space-y-3" : "flex-row space-x-4 space-y-0 p-4 border rounded-xl"}`}>
+            {viewMode === "grid" && <Skeleton className="h-[200px] w-full rounded-xl" />}
+            <div className="space-y-2 flex-1">
               <Skeleton className="h-4 w-[250px]" />
               <Skeleton className="h-4 w-[200px]" />
             </div>
@@ -77,12 +78,12 @@ export function EquipmentGrid({ items, isLoading, error, onViewDetail }: Equipme
 
   return (
     <div
-      className="grid gap-6"
-      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))" }}
+      className={viewMode === "grid" ? "grid gap-6" : "flex flex-col gap-4"}
+      style={viewMode === "grid" ? { gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))" } : undefined}
       data-testid="equipment-grid"
     >
       {items.map((item) => (
-        <EquipmentCard key={item.id} item={item} onViewDetail={onViewDetail} />
+        <EquipmentCard key={item.id} item={item} onViewDetail={onViewDetail} viewMode={viewMode} />
       ))}
     </div>
   );

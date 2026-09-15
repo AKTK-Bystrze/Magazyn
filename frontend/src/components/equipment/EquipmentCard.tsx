@@ -13,9 +13,10 @@ import { FEEDBACK_DISPLAY_DURATION_MS } from "@/lib/config/constants";
 interface EquipmentCardProps {
   item: EquipmentSearchItem;
   onViewDetail?: (item: EquipmentSearchItem) => void;
+  viewMode?: "grid" | "list";
 }
 
-export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
+export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: EquipmentCardProps) {
   const [isInCart, setIsInCart] = React.useState(false);
   const [justAdded, setJustAdded] = React.useState(false);
 
@@ -81,6 +82,77 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
     // Dispatch event to update other components
     window.dispatchEvent(new Event("cart-updated"));
   };
+
+  if (viewMode === "list") {
+    return (
+      <Card
+        className="flex flex-row overflow-hidden transition-all hover:shadow-md items-center gap-4 p-4"
+        data-testid={`equipment-card-${item.id}`}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-semibold text-lg">{item.name}</h3>
+              <p className="text-sm text-muted-foreground">{item.type.name}</p>
+            </div>
+            <Badge
+              className={cn("text-white shrink-0", statusColor)}
+              data-testid={`equipment-status-badge-${item.id}`}
+            >
+              {statusLabel}
+            </Badge>
+          </div>
+          <p className="text-sm text-gray-600 line-clamp-2 mt-2">{item.description || "Brak opisu."}</p>
+        </div>
+        
+        <div className="flex flex-col gap-2 shrink-0 items-end ml-4 border-l pl-4 border-muted/50">
+          <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
+            <span className="text-primary">{item.type.creditCostPerDay}</span>
+            <span className="text-xs text-muted-foreground">godzinki/dzień</span>
+          </div>
+          <div className="flex gap-2">
+            {isAvailable && (
+              <Button
+                size="sm"
+                variant={isInCart ? (justAdded ? "default" : "secondary") : "outline"}
+                onClick={handleToggleCart}
+                className={cn(
+                  "transition-all duration-300 min-w-[110px]",
+                  justAdded && "bg-green-600 hover:bg-green-600 text-white",
+                  !justAdded &&
+                    isInCart &&
+                    "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
+                )}
+                aria-label={isInCart ? "Usuń z koszyka" : "Dodaj do koszyka"}
+              >
+                {justAdded ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Dodano
+                  </>
+                ) : isInCart ? (
+                  "W koszyku (Usuń)"
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Dodaj
+                  </>
+                )}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => onViewDetail && onViewDetail(item)}
+              aria-label={`Szczegóły sprzętu ${item.name}`}
+            >
+              Szczegóły
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card
