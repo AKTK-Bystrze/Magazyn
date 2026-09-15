@@ -1,41 +1,46 @@
 import { api } from "./client";
+import {
+  transformCreditRequestList,
+  transformCreditRequest,
+  transformLeaderboard,
+  transformCreateCommand,
+  transformUpdateCommand,
+  transformReviewCommand,
+} from "@/lib/transformers/credit-request.transformer";
 import type {
-  CreditRequestDTO,
-  CreateCreditRequestDTO,
-  UpdateCreditRequestDTO,
-  ReviewCreditRequestDTO,
-  UserCreditLeaderboardItem,
+  CreditRequest,
   CreditRequestListResponse,
-} from "@/types/credits/requests.types";
+  LeaderboardItem,
+  CreateCreditRequestCommand,
+  UpdateCreditRequestCommand,
+  ReviewCreditRequestCommand,
+} from "@/types";
 
 export const creditRequestsApi = {
-  getRequests: async (params: {
-    page?: number;
-    perPage?: number;
-  }): Promise<CreditRequestListResponse> => {
-    const { data } = await api.get<CreditRequestListResponse>("/api/credits/requests", {
+  getRequests: async (params: { page?: number; perPage?: number }): Promise<CreditRequestListResponse> => {
+    const { data } = await api.get<unknown>("/api/credits/requests", {
       page: params.page,
       per_page: params.perPage,
     });
-    return data;
+    return transformCreditRequestList(data);
   },
 
-  createRequest: async (payload: CreateCreditRequestDTO): Promise<CreditRequestDTO> => {
-    const { data } = await api.post<CreditRequestDTO>("/api/credits/requests", payload);
-    return data;
+  createRequest: async (cmd: CreateCreditRequestCommand): Promise<CreditRequest> => {
+    const { data } = await api.post<unknown>("/api/credits/requests", transformCreateCommand(cmd));
+    return transformCreditRequest(data as never);
   },
 
-  updateRequest: async (id: string, payload: UpdateCreditRequestDTO): Promise<CreditRequestDTO> => {
-    const { data } = await api.put<CreditRequestDTO>(`/api/credits/requests/${id}`, payload);
-    return data;
+  updateRequest: async (id: string, cmd: UpdateCreditRequestCommand): Promise<CreditRequest> => {
+    const { data } = await api.put<unknown>(`/api/credits/requests/${id}`, transformUpdateCommand(cmd));
+    return transformCreditRequest(data as never);
   },
 
-  reviewRequest: async (id: string, payload: ReviewCreditRequestDTO): Promise<void> => {
-    await api.patch(`/api/credits/requests/${id}/status`, payload);
+  reviewRequest: async (id: string, cmd: ReviewCreditRequestCommand): Promise<void> => {
+    await api.patch(`/api/credits/requests/${id}/status`, transformReviewCommand(cmd));
   },
 
-  getLeaderboard: async (): Promise<UserCreditLeaderboardItem[]> => {
-    const { data } = await api.get<UserCreditLeaderboardItem[]>("/api/users/credits");
-    return data;
+  getLeaderboard: async (): Promise<LeaderboardItem[]> => {
+    const { data } = await api.get<unknown>("/api/users/credits");
+    return transformLeaderboard(data);
   },
 };

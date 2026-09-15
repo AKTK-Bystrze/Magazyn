@@ -4,7 +4,7 @@ import { UsersCreditsList } from "./UsersCreditsList";
 import { CreditsList } from "./CreditsList";
 import { CreditRequestForm } from "./CreditRequestForm";
 import { CreditHistoryContainer } from "./CreditHistoryContainer";
-import type { CreditRequestDTO } from "@/types";
+import type { CreditRequest } from "@/types";
 
 interface Props {
   userId: string;
@@ -13,9 +13,9 @@ interface Props {
 
 export function CreditsTabs({ userId, isSuperAdmin }: Props) {
   const [activeTab, setActiveTab] = useState("leaderboard");
-  const [editingRequest, setEditingRequest] = useState<CreditRequestDTO | null>(null);
+  const [editingRequest, setEditingRequest] = useState<CreditRequest | null>(null);
 
-  const handleEditClick = (req: CreditRequestDTO) => {
+  const handleEditClick = (req: CreditRequest) => {
     setEditingRequest(req);
     setActiveTab("request");
   };

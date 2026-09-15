@@ -36,7 +36,7 @@ func (m *mockCreditRequestRepo) Update(ctx context.Context, id string, req types
 	return &req, nil
 }
 
-func (m *mockCreditRequestRepo) UpdateStatus(ctx context.Context, id string, status types.CreditRequestStatus, creditsValue *int32, helpers []string) error {
+func (m *mockCreditRequestRepo) ReviewAtomic(ctx context.Context, id string, adminID string, status types.CreditRequestStatus, creditsValue *int32, helpers []string, reason string, description string) error {
 	m.data[id].Status = status
 	if creditsValue != nil {
 		m.data[id].CreditsValue = *creditsValue
@@ -51,15 +51,9 @@ func (m *mockCreditRequestRepo) GetLeaderboard(ctx context.Context) ([]types.Use
 	return nil, nil
 }
 
-type mockUserService struct{}
-
-func (m *mockUserService) BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error {
-	return nil
-}
-
 func TestCreditRequestService_CreateRequest_NegativeCredits(t *testing.T) {
 	repo := &mockCreditRequestRepo{data: make(map[string]*types.CreditRequestDTO)}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	req := types.CreateCreditRequestDTO{
 		Title:        "Test",
@@ -75,7 +69,7 @@ func TestCreditRequestService_CreateRequest_NegativeCredits(t *testing.T) {
 
 func TestCreditRequestService_CreateRequest_Success(t *testing.T) {
 	repo := &mockCreditRequestRepo{data: make(map[string]*types.CreditRequestDTO)}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	req := types.CreateCreditRequestDTO{
 		Title:        "Test Title",
@@ -101,7 +95,7 @@ func TestCreditRequestService_UpdateRequest_Locked(t *testing.T) {
 			CreditsValue: 10,
 		},
 	}}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	req := types.UpdateCreditRequestDTO{
 		Title: func() *string { s := "new title"; return &s }(),
@@ -123,7 +117,7 @@ func TestCreditRequestService_UpdateRequest_NotRequestor(t *testing.T) {
 			CreditsValue: 10,
 		},
 	}}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	req := types.UpdateCreditRequestDTO{
 		Title: func() *string { s := "new title"; return &s }(),
@@ -145,7 +139,7 @@ func TestCreditRequestService_UpdateRequest_Success(t *testing.T) {
 			CreditsValue: 10,
 		},
 	}}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	req := types.UpdateCreditRequestDTO{
 		Title: func() *string { s := "new title"; return &s }(),
@@ -167,7 +161,7 @@ func TestCreditRequestService_ReviewRequest_NegativeCredits(t *testing.T) {
 			CreditsValue: 10,
 		},
 	}}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	badValue := int32(0)
 	req := types.ReviewCreditRequestDTO{
@@ -192,7 +186,7 @@ func TestCreditRequestService_ReviewRequest_Success(t *testing.T) {
 			Helpers:      []string{"u2"},
 		},
 	}}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	newValue := int32(20)
 	req := types.ReviewCreditRequestDTO{
@@ -219,7 +213,7 @@ func TestCreditRequestService_ReviewRequest_NotAwaiting(t *testing.T) {
 			CreditsValue: 10,
 		},
 	}}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	req := types.ReviewCreditRequestDTO{
 		Status: types.CreditRequestStatusRejected,
@@ -241,7 +235,7 @@ func TestCreditRequestService_ReviewRequest_InvalidStatus(t *testing.T) {
 			CreditsValue: 10,
 		},
 	}}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	req := types.ReviewCreditRequestDTO{
 		Status: types.CreditRequestStatusAwaiting,
@@ -254,7 +248,7 @@ func TestCreditRequestService_ReviewRequest_InvalidStatus(t *testing.T) {
 
 func TestCreditRequestService_ListRequests_Success(t *testing.T) {
 	repo := &mockCreditRequestRepo{data: make(map[string]*types.CreditRequestDTO)}
-	service := credit.NewCreditRequestService(repo, &mockUserService{})
+	service := credit.NewCreditRequestService(repo)
 
 	res, err := service.ListRequests(context.Background(), 1, 10)
 	assert.NoError(t, err)

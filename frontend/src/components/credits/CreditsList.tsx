@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { creditRequestsApi, usersApi } from "@/lib/api";
-import type { CreditRequestDTO } from "@/types";
+import type { CreditRequest } from "@/types";
 import { CREDIT_REQUEST_STATUS } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SuperAdminCreditReview } from "./SuperAdminCreditReview";
@@ -20,15 +20,15 @@ import { CreditRequestDetailsDialog } from "./CreditRequestDetailsDialog";
 interface Props {
   isSuperAdmin: boolean;
   userId: string;
-  onEditClick: (req: CreditRequestDTO) => void;
+  onEditClick: (req: CreditRequest) => void;
 }
 
 export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
-  const [data, setData] = useState<CreditRequestDTO[]>([]);
+  const [data, setData] = useState<CreditRequest[]>([]);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [reviewItem, setReviewItem] = useState<CreditRequestDTO | null>(null);
-  const [detailsItem, setDetailsItem] = useState<CreditRequestDTO | null>(null);
+  const [reviewItem, setReviewItem] = useState<CreditRequest | null>(null);
+  const [detailsItem, setDetailsItem] = useState<CreditRequest | null>(null);
   const [filter, setFilter] = useState("all");
 
   const load = async () => {
@@ -165,7 +165,7 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
                 {filteredData.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.title}</TableCell>
-                    <TableCell>{item.user_helped_id ? usersMap[item.user_helped_id] || item.user_helped_id : '-'}</TableCell>
+                    <TableCell>{item.userHelpedId ? usersMap[item.userHelpedId] || item.userHelpedId : '-'}</TableCell>
                     <TableCell>
                       {item.helpers?.length ? (
                         <span title={item.helpers.map(h => usersMap[h] || h).join(', ')}>
@@ -175,11 +175,11 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
                         '0 osób'
                       )}
                     </TableCell>
-                    <TableCell>{item.credits_value}</TableCell>
+                    <TableCell>{item.creditsValue}</TableCell>
                     <TableCell>{getStatusBadge(item.status)}</TableCell>
-                    <TableCell>{new Date(item.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {item.status === CREDIT_REQUEST_STATUS.AWAITING && item.requestor_id === userId && (
+                      {item.status === CREDIT_REQUEST_STATUS.AWAITING && item.requestorId === userId && (
                         <Button variant="outline" size="sm" onClick={() => onEditClick(item)}>
                           Edytuj
                         </Button>
@@ -189,7 +189,7 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
                           Rozpatrz
                         </Button>
                       )}
-                      {!(item.status === CREDIT_REQUEST_STATUS.AWAITING && (item.requestor_id === userId || isSuperAdmin)) && (
+                      {!(item.status === CREDIT_REQUEST_STATUS.AWAITING && (item.requestorId === userId || isSuperAdmin)) && (
                         <Button variant="outline" size="sm" onClick={() => setDetailsItem(item)}>
                           Szczegóły
                         </Button>

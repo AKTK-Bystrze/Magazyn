@@ -16,8 +16,8 @@ type CreditRequestRepository interface {
 	Create(ctx context.Context, req types.CreditRequestDTO) (*types.CreditRequestDTO, error)
 	// Update modifies an existing credit request and replaces its helper associations.
 	Update(ctx context.Context, id string, req types.CreditRequestDTO) (*types.CreditRequestDTO, error)
-	// UpdateStatus changes the status of a credit request, optionally overriding credits and helpers.
-	UpdateStatus(ctx context.Context, id string, status types.CreditRequestStatus, creditsValue *int32, helpers []string) error
+	// ReviewAtomic approves or rejects a request and credits helpers in a single transaction.
+	ReviewAtomic(ctx context.Context, id string, adminID string, status types.CreditRequestStatus, creditsValue *int32, helpers []string, reason string, description string) error
 	// GetLeaderboard returns aggregated credits per user from approved requests.
 	GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error)
 }

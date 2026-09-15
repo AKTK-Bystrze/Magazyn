@@ -23,16 +23,12 @@ type CreditRequestService interface {
 }
 
 type creditRequestService struct {
-	repo        repository.CreditRequestRepository
-	userService interface {
-		BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error
-	}
+	repo repository.CreditRequestRepository
 }
 
-func NewCreditRequestService(repo repository.CreditRequestRepository, userService interface {
-	BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error
-}) CreditRequestService {
-	return &creditRequestService{repo: repo, userService: userService}
+// NewCreditRequestService creates a new creditRequestService with the given repository.
+func NewCreditRequestService(repo repository.CreditRequestRepository) CreditRequestService {
+	return &creditRequestService{repo: repo}
 }
 
 func (s *creditRequestService) ListRequests(ctx context.Context, page, perPage int) (*types.CreditRequestListResponse, error) {
@@ -166,36 +162,8 @@ func (s *creditRequestService) ReviewRequest(ctx context.Context, adminID string
 		return types.NewValidationError("credits_value must be strictly positive", nil)
 	}
 
-	err = s.repo.UpdateStatus(ctx, id, req.Status, req.CreditsValue, req.Helpers)
-	if err != nil {
-		return err
-	}
-
-	if req.Status == types.CreditRequestStatusApproved || req.Status == types.CreditRequestStatusApprovedWithChanges {
-		helpersToCredit := req.Helpers
-		if helpersToCredit == nil {
-			helpersToCredit = existing.Helpers
-		}
-
-		valToCredit := existing.CreditsValue
-		if req.CreditsValue != nil {
-			valToCredit = *req.CreditsValue
-		}
-
-		bulkReq := types.BulkAdjustCreditsRequest{
-			UserIDs:     helpersToCredit,
-			Amount:      valToCredit,
-			Reason:      constants.CreditReasonWorkCredit,
-			Description: existing.Title,
-		}
-
-		if err := s.userService.BulkAdjustCredits(ctx, adminID, bulkReq); err != nil {
-			// If it fails, ideally we would rollback the status update, but we'll return the error for now
-			return err
-		}
-	}
-
-	return nil
+	return s.repo.ReviewAtomic(ctx, id, adminID, req.Status, req.CreditsValue, req.Helpers,
+		constants.CreditReasonWorkCredit, existing.Title)
 }
 
 func (s *creditRequestService) GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error) {

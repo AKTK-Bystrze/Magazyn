@@ -12,11 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { creditRequestsApi, usersApi } from "@/lib/api";
-import type { CreditRequestDTO, PublicUser, CreditRequestStatus } from "@/types";
+import type { CreditRequest, PublicUser, CreditRequestStatus } from "@/types";
 import { CREDIT_REQUEST_STATUS } from "@/types";
 
 interface Props {
-  request: CreditRequestDTO;
+  request: CreditRequest;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onReviewed: () => void;
@@ -25,13 +25,13 @@ interface Props {
 export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed }: Props) {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<PublicUser[]>([]);
-  const [creditsValue, setCreditsValue] = useState(request.credits_value.toString());
+  const [creditsValue, setCreditsValue] = useState(request.creditsValue.toString());
   const [helpers, setHelpers] = useState<string[]>(request.helpers);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
-      setCreditsValue(request.credits_value.toString());
+      setCreditsValue(request.creditsValue.toString());
       setHelpers(request.helpers);
       usersApi
         .listPublic({ perPage: 1000 })
@@ -60,7 +60,7 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
     // Determine final status
     let finalStatus = status;
     const isModified =
-      value !== request.credits_value ||
+      value !== request.creditsValue ||
       helpers.length !== request.helpers.length ||
       !helpers.every((h) => request.helpers.includes(h));
 
@@ -72,7 +72,7 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
     try {
       await creditRequestsApi.reviewRequest(request.id, {
         status: finalStatus,
-        credits_value: value,
+        creditsValue: value,
         helpers,
       });
       onReviewed();

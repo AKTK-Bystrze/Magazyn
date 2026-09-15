@@ -5,11 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { creditRequestsApi, usersApi } from "@/lib/api";
-import type { CreditRequestDTO, PublicUser } from "@/types";
+import type { CreditRequest, PublicUser } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
-  initialData?: CreditRequestDTO;
+  initialData?: CreditRequest;
   onSuccess: () => void;
   onCancel?: () => void;
 }
@@ -21,8 +21,8 @@ export function CreditRequestForm({ initialData, onSuccess, onCancel }: Props) {
 
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(initialData?.description || "");
-  const [creditsValue, setCreditsValue] = useState(initialData?.credits_value?.toString() || "");
-  const [userHelpedId, setUserHelpedId] = useState(initialData?.user_helped_id || "");
+  const [creditsValue, setCreditsValue] = useState(initialData?.creditsValue?.toString() || "");
+  const [userHelpedId, setUserHelpedId] = useState(initialData?.userHelpedId || "");
   const [helpers, setHelpers] = useState<string[]>(initialData?.helpers || []);
   const [error, setError] = useState("");
 
@@ -61,16 +61,16 @@ export function CreditRequestForm({ initialData, onSuccess, onCancel }: Props) {
         await creditRequestsApi.updateRequest(initialData.id, {
           title,
           description,
-          credits_value: value,
-          user_helped_id: userHelpedId,
+          creditsValue: value,
+          userHelpedId: userHelpedId,
           helpers,
         });
       } else {
         await creditRequestsApi.createRequest({
           title,
           description,
-          credits_value: value,
-          user_helped_id: userHelpedId,
+          creditsValue: value,
+          userHelpedId: userHelpedId,
           helpers,
         });
       }

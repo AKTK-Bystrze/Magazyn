@@ -75,7 +75,7 @@ func main() {
 	calendarService := calendarservice.NewCalendarService(calendarRepo, equipmentTypeRepo)
 	analyticsService := calendarservice.NewAnalyticsService(analyticsRepo, equipmentTypeRepo)
 	creditService := creditservice.NewCreditHistoryService(creditRepo, userRepo)
-	creditRequestService := creditservice.NewCreditRequestService(creditRequestRepo, userService)
+	creditRequestService := creditservice.NewCreditRequestService(creditRequestRepo)
 
 	emailService := email.NewNoopEmailService()
 	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
