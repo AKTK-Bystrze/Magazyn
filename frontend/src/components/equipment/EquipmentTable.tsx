@@ -117,6 +117,43 @@ export function EquipmentTable({
   onViewDetails,
   onArchive,
 }: EquipmentTableProps) {
+  const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedEquipment = React.useMemo(() => {
+    const sortableItems = [...equipment];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+        
+        if (sortConfig.key === 'type.name') {
+          aValue = a.type?.name;
+          bValue = b.type?.name;
+        } else if (sortConfig.key === 'type.creditCostPerDay') {
+          aValue = a.type?.creditCostPerDay;
+          bValue = b.type?.creditCostPerDay;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [equipment, sortConfig]);
+
   // Create action handlers with item bound
   const handleEdit = React.useCallback(
     (item: EquipmentSearchItem) => () => {
@@ -144,11 +181,11 @@ export function EquipmentTable({
       <Table data-testid="admin-equipment-table">
         <TableHeader>
           <TableRow>
-            <TableHead>{UI.INTERNAL_ID}</TableHead>
-            <TableHead>{UI.NAME}</TableHead>
-            <TableHead className="hidden md:table-cell">{UI.TYPE}</TableHead>
-            <TableHead>{UI.STATUS}</TableHead>
-            <TableHead className="hidden lg:table-cell text-right">{UI.CREDIT_COST}</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort('internalId')}>{UI.INTERNAL_ID} {sortConfig?.key === 'internalId' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort('name')}>{UI.NAME} {sortConfig?.key === 'name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => requestSort('type.name')}>{UI.TYPE} {sortConfig?.key === 'type.name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort('status')}>{UI.STATUS} {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="hidden lg:table-cell text-right cursor-pointer" onClick={() => requestSort('type.creditCostPerDay')}>{UI.CREDIT_COST} {sortConfig?.key === 'type.creditCostPerDay' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
             <TableHead className="hidden xl:table-cell">{UI.CREATED}</TableHead>
             <TableHead className="w-[70px]">{UI.ACTIONS}</TableHead>
           </TableRow>
@@ -159,11 +196,11 @@ export function EquipmentTable({
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
               <SkeletonRow key={`skeleton-${index}`} />
             ))
-          ) : equipment.length === 0 ? (
+          ) : sortedEquipment.length === 0 ? (
             <EmptyState />
           ) : (
             // Equipment rows
-            equipment.map((item) => (
+            sortedEquipment.map((item) => (
               <TableRow
                 key={item.id}
                 className="hover:bg-muted/50 cursor-pointer"
