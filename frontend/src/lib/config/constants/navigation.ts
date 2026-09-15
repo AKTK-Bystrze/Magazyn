@@ -20,7 +20,7 @@ export const NAV_LABELS = {
 
   // Admin navigation
   OVERVIEW: "Przegląd",
-  BROWSE_EQUIPMENT: "Przeglądaj Sprzęt",
+  BROWSE_EQUIPMENT: "Zarezerwuj Sprzęt",
   MANAGE_EQUIPMENT: "Zarządzaj Sprzętem",
   USERS: "Użytkownicy",
   ANALYTICS: "Analityka",
