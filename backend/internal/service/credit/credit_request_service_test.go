@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"magazyn/backend/internal/service/credit"
 	"magazyn/backend/internal/types"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // We mock the repository

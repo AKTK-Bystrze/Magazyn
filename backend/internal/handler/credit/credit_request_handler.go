@@ -34,7 +34,7 @@ func (h *CreditRequestHandler) HandleListRequests(w http.ResponseWriter, r *http
 
 	resp, err := h.service.ListRequests(ctx, page, perPage)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -63,7 +63,7 @@ func (h *CreditRequestHandler) HandleCreateRequest(w http.ResponseWriter, r *htt
 
 	resp, err := h.service.CreateRequest(ctx, userID, req)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *CreditRequestHandler) HandleUpdateRequest(w http.ResponseWriter, r *htt
 
 	resp, err := h.service.UpdateRequest(ctx, userID, id, req)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (h *CreditRequestHandler) HandleReviewRequest(w http.ResponseWriter, r *htt
 
 	err := h.service.ReviewRequest(ctx, userID, id, req)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 
@@ -147,7 +147,7 @@ func (h *CreditRequestHandler) HandleGetLeaderboard(w http.ResponseWriter, r *ht
 
 	resp, err := h.service.GetLeaderboard(ctx)
 	if err != nil {
-		handleError(ctx, w, err)
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 

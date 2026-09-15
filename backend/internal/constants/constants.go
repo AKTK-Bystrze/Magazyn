@@ -42,7 +42,6 @@ const (
 	EquipmentStatusOK      = "ok"      // Equipment is in good condition and available
 	EquipmentStatusBroken  = "broken"  // Equipment broken, not usable
 	EquipmentStatusBlocked = "blocked" // Equipment blocked by admin (e.g. for maintenance)
-
 )
 
 // ============================================================================

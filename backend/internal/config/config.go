@@ -3,8 +3,8 @@
 package config
 
 import (
-	"magazyn/backend/internal/logger"
 	"context"
+	"magazyn/backend/internal/logger"
 	"os"
 	"strings"
 
