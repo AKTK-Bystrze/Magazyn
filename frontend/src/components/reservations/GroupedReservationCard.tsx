@@ -55,87 +55,77 @@ export function GroupedReservationCard({
 
   return (
     <Card
-      className="overflow-hidden transition-shadow hover:shadow-md"
+      className="overflow-hidden transition-shadow hover:shadow-md border-l-4 border-l-indigo-500 bg-indigo-50/10 dark:bg-indigo-950/10"
       data-testid={`reservation-row-${group.groupKey}`}
     >
       {/* Header - Clickable to expand/collapse */}
-      <CardHeader
-        className="cursor-pointer select-none bg-muted/30 hover:bg-muted/50 transition-colors"
+      <div 
+        className="cursor-pointer select-none hover:bg-muted/30 transition-colors"
         onClick={onToggle}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            {isExpanded ? (
-              <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-            ) : (
-              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-            )}
-
-            <div className="flex flex-col gap-3 flex-1 min-w-0">
-              {/* User (Admin or All Reservations view) */}
-              {(mode === "admin" || scope === "all") && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium text-foreground text-sm">
-                    {group.username}
-                    {scope === "all" && isOwn && " (Ty)"}
-                  </span>
-                </div>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-lg truncate">
+                  Rezerwacja Grupowa ({group.items.length}{" "}
+                  {group.items.length === 1
+                    ? "element"
+                    : group.items.length % 10 >= 2 &&
+                        group.items.length % 10 <= 4 &&
+                        (group.items.length % 100 < 10 || group.items.length % 100 >= 20)
+                      ? "elementy"
+                      : "elementów"})
+                </h3>
+                {scope === "all" && isOwn && (
+                  <Badge variant="secondary" className="text-xs">
+                    Twoja rezerwacja
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground truncate">
+                {group.items.map((item) => item.equipmentName).join(", ")}
+              </p>
+            </div>
+            <StatusBadge status={group.status} />
+          </div>
+        </CardHeader>
+  
+        <CardContent className="space-y-4">
+          {(mode === "admin" || scope === "all") && (
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-foreground">{group.username}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span>
+              {formatDate(group.startDate)} — {formatDate(group.endDate)}
+            </span>
+            <span className="text-muted-foreground">
+              ({days} {days === 1 ? "dzień" : "dni"})
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{group.totalCreditCost} godzinek</span>
+            </div>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              {isExpanded ? (
+                <>Zwiń <ChevronDown className="h-4 w-4" /></>
+              ) : (
+                <>Rozwiń <ChevronRight className="h-4 w-4" /></>
               )}
-              {/* Date and Status Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <div className="font-medium">
-                      {formatDate(group.startDate)} → {formatDate(group.endDate)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {days} {days === 1 ? "dzień" : "dni"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <StatusBadge status={group.status} />
-                  <div className="text-sm text-muted-foreground">
-                    {group.items.length}{" "}
-                    {group.items.length === 1
-                      ? "element"
-                      : group.items.length % 10 >= 2 &&
-                          group.items.length % 10 <= 4 &&
-                          (group.items.length % 100 < 10 || group.items.length % 100 >= 20)
-                        ? "elementy"
-                        : "elementów"}
-                  </div>
-                </div>
-              </div>
-
-              {/* Equipment Names List */}
-              <div className="text-sm text-muted-foreground">
-                {group.items.map((item, index) => (
-                  <span key={item.id}>
-                    {item.equipmentName}
-                    {index < group.items.length - 1 && ", "}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex items-center gap-1.5 font-semibold">
-              <CreditCard className="h-4 w-4 text-primary" />
-              <span>{group.totalCreditCost}</span>
-              <span className="text-xs text-muted-foreground">godzinek</span>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
+        </CardContent>
+      </div>
 
       {/* Expanded Content */}
       {isExpanded && (
-        <CardContent className="pt-6 space-y-4">
+        <CardContent className="pt-2 space-y-4 border-t bg-background/50">
           {/* Bulk Actions */}
           {showActions && (canBulkModify || canBulkReturn) && (
             <div className="flex flex-wrap gap-2 pb-4 border-b">
