@@ -95,17 +95,17 @@ export function ConfirmationModal({
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Szczegóły Rezerwacji</h3>
             <div className="bg-muted p-4 rounded-lg space-y-2">
-              <div className="flex justify-between">
+              <div className="w-full flex justify-between items-center">
                 <span className="text-muted-foreground">Data Rozpoczęcia:</span>
-                <span className="font-medium">{formatDate(startDate)}</span>
+                <span className="font-medium text-right">{formatDate(startDate)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="w-full flex justify-between items-center">
                 <span className="text-muted-foreground">Data Zakończenia:</span>
-                <span className="font-medium">{formatDate(endDate)}</span>
+                <span className="font-medium text-right">{formatDate(endDate)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="w-full flex justify-between items-center">
                 <span className="text-muted-foreground">Czas trwania:</span>
-                <span className="font-medium">
+                <span className="font-medium text-right">
                   {costBreakdown.itemCosts[0]?.days || 0}{" "}
                   {(costBreakdown.itemCosts[0]?.days || 0) === 1 ? "dzień" : "dni"}
                 </span>
@@ -121,13 +121,13 @@ export function ConfirmationModal({
               {items.map((item) => (
                 <div
                   key={item.equipmentId}
-                  className="flex justify-between text-sm py-2 border-b last:border-0"
+                  className="w-full flex justify-between items-center text-sm py-2 border-b last:border-0"
                 >
                   <div>
                     <p className="font-medium">{item.name}</p>
                     <p className="text-muted-foreground text-xs">{item.typeName}</p>
                   </div>
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground text-right">
                     {item.creditCostPerDay} godzinki/dzień
                   </span>
                 </div>
@@ -151,7 +151,7 @@ export function ConfirmationModal({
                   {costBreakdown.itemCosts.map((item) => (
                     <div
                       key={item.equipmentId}
-                      className="flex justify-between text-sm border-b last:border-0 pb-2 last:pb-0"
+                      className="w-full flex justify-between items-center text-sm border-b last:border-0 pb-2 last:pb-0"
                     >
                       <span className="text-foreground">
                         {item.name}{" "}
@@ -159,20 +159,23 @@ export function ConfirmationModal({
                           ({item.creditCostPerDay} × {item.days})
                         </span>
                       </span>
-                      <span className="text-green-600 dark:text-green-400 font-medium">
+                      <span className="text-green-600 dark:text-green-400 font-medium text-right">
                         0 godzinek
                       </span>
                     </div>
                   ))}
-                  <div className="border-t pt-2 mt-2 flex justify-between text-sm">
+                  <div className="border-t pt-2 mt-2 w-full flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Aktualne Saldo:</span>
-                    <span data-testid="confirmation-current-balance">
+                    <span data-testid="confirmation-current-balance" className="text-right">
                       {costBreakdown.currentBalance} godzinki
                     </span>
                   </div>
-                  <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                  <div className="w-full flex justify-between items-center font-semibold text-lg border-t pt-2">
                     <span>Pozostałe Saldo:</span>
-                    <span className="text-primary" data-testid="confirmation-remaining-balance">
+                    <span
+                      className="text-primary text-right"
+                      data-testid="confirmation-remaining-balance"
+                    >
                       {costBreakdown.currentBalance} godzinki
                     </span>
                   </div>
@@ -180,31 +183,37 @@ export function ConfirmationModal({
               ) : (
                 <div className="space-y-2">
                   {costBreakdown.itemCosts.map((item) => (
-                    <div key={item.equipmentId} className="flex justify-between text-sm">
+                    <div
+                      key={item.equipmentId}
+                      className="w-full flex justify-between items-center text-sm"
+                    >
                       <span className="text-foreground">
                         {item.name}{" "}
                         <span className="text-muted-foreground">
                           ({item.creditCostPerDay} × {item.days})
                         </span>
                       </span>
-                      <span>{item.totalCost} godzinki</span>
+                      <span className="text-right">{item.totalCost} godzinki</span>
                     </div>
                   ))}
-                  <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+                  <div className="border-t pt-2 mt-2 w-full flex justify-between items-center font-semibold">
                     <span>Całkowity Koszt:</span>
-                    <span className="text-destructive">
+                    <span className="text-destructive text-right">
                       -{costBreakdown.totalCreditCost} godzinki
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="w-full flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Aktualne Saldo:</span>
-                    <span data-testid="confirmation-current-balance">
+                    <span data-testid="confirmation-current-balance" className="text-right">
                       {costBreakdown.currentBalance} godzinki
                     </span>
                   </div>
-                  <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                  <div className="w-full flex justify-between items-center font-semibold text-lg border-t pt-2">
                     <span>Pozostałe Saldo:</span>
-                    <span className="text-primary" data-testid="confirmation-remaining-balance">
+                    <span
+                      className="text-primary text-right"
+                      data-testid="confirmation-remaining-balance"
+                    >
                       {costBreakdown.remainingBalance} godzinki
                     </span>
                   </div>
