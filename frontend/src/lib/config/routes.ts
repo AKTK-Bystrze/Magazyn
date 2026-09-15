@@ -34,7 +34,7 @@ export const ROUTES = {
     ADMIN_RESERVATIONS_CREATE: "/admin/reservations/create",
     DASHBOARD: "/dashboard",
     ACCOUNT_DISABLED: "/account-disabled",
-    CREDIT_REQUESTS: "/credit-requests",
+    CREDITS: "/credits",
     CREDITS_HISTORY: "/credits/history",
     CREDITS_REQUEST: "/credits/request",
     RESERVATIONS: "/reservations",

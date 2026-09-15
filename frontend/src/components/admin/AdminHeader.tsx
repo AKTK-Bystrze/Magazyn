@@ -89,6 +89,7 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
         <Menu className="h-5 w-5" />
         <span className="sr-only">Przełącz Menu</span>
       </Button>
+
       <div className="flex-1">
         <Breadcrumbs currentPath={currentPath} isAdmin />
       </div>

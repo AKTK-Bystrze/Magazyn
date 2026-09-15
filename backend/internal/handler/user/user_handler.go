@@ -76,6 +76,30 @@ func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(ctx, w, http.StatusOK, resp)
 }
 
+// HandleListPublicUsers handles GET /users/public.
+func (h *UserHandler) HandleListPublicUsers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
+	search := r.URL.Query().Get("search")
+
+	// Validate search length
+	if search != "" {
+		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
+			return
+		}
+	}
+
+	resp, err := h.service.ListPublicUsers(ctx, page, perPage, search)
+	if err != nil {
+		handleError(ctx, w, err)
+		return
+	}
+
+	common.RespondJSON(ctx, w, http.StatusOK, resp)
+}
+
 // HandleCreateUser handles POST /users.
 // Only explicitly allowed roles (controlled by Middleware) should access this.
 func (h *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {

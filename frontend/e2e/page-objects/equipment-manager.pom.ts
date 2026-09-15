@@ -83,12 +83,12 @@ export class EquipmentManagerPage {
     }
 
     if (data.typeId) {
-      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_TYPE_SELECT).click({ force: true });
+      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_TYPE_SELECT).click();
       await this.page
         .getByRole("option")
         .filter({ hasText: new RegExp(data.typeId, "i") })
         .first()
-        .click({ force: true });
+        .click();
     }
 
     if (data.name) {
@@ -100,11 +100,11 @@ export class EquipmentManagerPage {
     }
 
     if (data.status) {
-      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_STATUS_SELECT).click({ force: true });
+      await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_STATUS_SELECT).click();
       await this.page
         .getByRole("option", { name: new RegExp(data.status, "i") })
         .first()
-        .click({ force: true });
+        .click();
     }
   }
 
@@ -112,7 +112,7 @@ export class EquipmentManagerPage {
    * Submits the equipment form.
    */
   async submitForm() {
-    await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_SUBMIT_BTN).click({ force: true });
+    await this.page.getByTestId(TEST_IDS.EQUIPMENT_FORM_SUBMIT_BTN).click();
   }
 
   /**
@@ -142,7 +142,7 @@ export class EquipmentManagerPage {
     const actionsMenu = this.page.getByTestId(TEST_IDS.equipmentActionsMenu(id));
     await actionsMenu.scrollIntoViewIfNeeded();
     await expect(actionsMenu).toBeVisible();
-    await actionsMenu.click({ force: true });
+    await actionsMenu.click();
 
     // Wait for the menu to open (Radix UI portal) and animation to finish
     await expect(this.page.getByRole("menu")).toBeVisible();
@@ -159,7 +159,7 @@ export class EquipmentManagerPage {
 
     const editBtn = this.page.getByTestId(TEST_IDS.equipmentEditBtn(id));
     await expect(editBtn).toBeVisible();
-    await editBtn.click({ force: true });
+    await editBtn.click();
   }
 
   /**
@@ -172,7 +172,7 @@ export class EquipmentManagerPage {
 
     const archiveBtn = this.page.getByTestId(TEST_IDS.equipmentArchiveBtn(id));
     await expect(archiveBtn).toBeVisible();
-    await archiveBtn.click({ force: true });
+    await archiveBtn.click();
     await expect(this.getArchiveDialog()).toBeVisible();
   }
 

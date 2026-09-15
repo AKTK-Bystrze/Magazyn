@@ -70,7 +70,7 @@ jobs:
       - name: Run Backend Integration Tests
         if: inputs.supabase-mode == 'local'
         working-directory: ./backend
-        run: go test ./internal/... -v -tags=integration
+        run: go test ./internal/... -v -tags=integration -p 1
 
       - name: Reset Supabase Database
         if: inputs.supabase-mode == 'local'

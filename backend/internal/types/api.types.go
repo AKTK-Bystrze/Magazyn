@@ -12,6 +12,19 @@ type UserResponse struct {
 	UpdatedAt     *string `json:"updated_at,omitempty"`
 }
 
+// PublicUserResponse represents public user info without sensitive fields like email.
+type PublicUserResponse struct {
+	ID            string `json:"id"`
+	Username      string `json:"username"`
+	CreditBalance int32  `json:"credit_balance"`
+}
+
+// PublicUserListResponse contains a list of public users and pagination metadata.
+type PublicUserListResponse struct {
+	Users      []PublicUserResponse `json:"users"`
+	Pagination Pagination           `json:"pagination"`
+}
+
 // UserListResponse contains a list of users and pagination metadata.
 type UserListResponse struct {
 	Users      []UserResponse `json:"users"`

@@ -127,6 +127,36 @@ export const api = {
   },
 
   /**
+   * Performs a PUT request
+   *
+   * @param url - Endpoint URL
+   * @param data - Request body data
+   * @returns Response data wrapped in an object
+   */
+  put: async <T>(url: string, data: unknown): Promise<{ data: T }> => {
+    const headers = await buildHeaders();
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: "Network error" }));
+      const message = errorData.message || errorData.error || "An error occurred";
+      const error = new Error(message);
+      (error as Error & { status?: number; details?: unknown }).status = response.status;
+      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
+      throw error;
+    }
+
+    const resData = await response.json();
+    return { data: resData };
+  },
+
+  /**
    * Performs a DELETE request
    *
    * @param url - Endpoint URL

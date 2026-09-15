@@ -153,7 +153,7 @@ export function CostEstimator({
                 dokończyć tę rezerwację.
               </p>
               <a
-                href={ROUTES.PROTECTED.CREDIT_REQUESTS}
+                href={ROUTES.PROTECTED.CREDITS_REQUEST}
                 className="text-sm underline hover:no-underline mt-2 inline-block"
               >
                 Poproś o więcej godzinek

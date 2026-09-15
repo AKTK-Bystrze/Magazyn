@@ -5,6 +5,7 @@ import type {
   CreateUserCommand,
   UpdateUserCommand,
   BulkAdjustCreditsCommand,
+  PublicUserListResponse,
 } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
@@ -167,6 +168,44 @@ export function transformUserListResponse(data: unknown): UserListResponse {
 
   return {
     users: (dto.users || []).map(transformUserListItem),
+    pagination: {
+      page: dto.pagination?.page ?? 1,
+      perPage: dto.pagination?.per_page ?? DEFAULT_PAGE_SIZE,
+      totalItems: dto.pagination?.total_items ?? 0,
+      totalPages: dto.pagination?.total_pages ?? 0,
+    },
+  };
+}
+
+// =============================================================================
+// PUBLIC USER TRANSFORMERS
+// =============================================================================
+
+interface PublicUserDTO {
+  id: string;
+  username: string;
+  credit_balance: number;
+}
+
+interface PublicUserListResponseDTO {
+  users: PublicUserDTO[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
+export function transformPublicUserListResponse(data: unknown): PublicUserListResponse {
+  const dto = data as PublicUserListResponseDTO;
+
+  return {
+    users: (dto.users || []).map((u) => ({
+      id: u.id,
+      username: u.username,
+      creditBalance: u.credit_balance,
+    })),
     pagination: {
       page: dto.pagination?.page ?? 1,
       perPage: dto.pagination?.per_page ?? DEFAULT_PAGE_SIZE,

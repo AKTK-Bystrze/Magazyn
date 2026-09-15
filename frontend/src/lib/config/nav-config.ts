@@ -63,7 +63,7 @@ export const USER_NAV_ITEMS: NavItem[] = [
   },
   {
     label: NAV_LABELS.CREDITS,
-    href: ROUTES.PROTECTED.CREDITS_HISTORY,
+    href: ROUTES.PROTECTED.CREDITS,
     icon: CreditCard,
     activePattern: /^\/credits/,
   },
@@ -111,7 +111,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   },
   {
     label: NAV_LABELS.CREDITS,
-    href: ROUTES.PROTECTED.CREDITS_HISTORY,
+    href: ROUTES.PROTECTED.CREDITS,
     icon: CreditCard,
     activePattern: /^\/credits/,
   },

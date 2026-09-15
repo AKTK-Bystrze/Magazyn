@@ -17,7 +17,8 @@ export * from "./equipment";
 export * from "./reservations";
 
 // Credits domain (split from equipment.types.ts)
-export * from "./credits";
+export * from "./credits/history.types";
+export * from "./credits/requests.types";
 
 // Analytics domain (split from equipment.types.ts)
 export * from "./analytics";

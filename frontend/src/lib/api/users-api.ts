@@ -2,6 +2,7 @@ import { api } from "./client";
 import type {
   UserFilterState,
   UserListResponse,
+  PublicUserListResponse,
   UserProfile,
   CreateUserCommand,
   UpdateUserCommand,
@@ -13,6 +14,7 @@ import {
   transformCreateUserCommand,
   transformUpdateUserCommand,
   transformBulkAdjustCreditsCommand,
+  transformPublicUserListResponse,
 } from "@/lib/transformers/user.transformer";
 
 /**
@@ -102,5 +104,29 @@ export const usersApi = {
   bulkAdjustCredits: async (command: BulkAdjustCreditsCommand): Promise<void> => {
     const body = transformBulkAdjustCreditsCommand(command);
     await api.post<unknown>("/api/users/bulk-adjust-credits", body);
+  },
+
+  /**
+   * Fetches paginated list of public users (no sensitive data)
+   * Available to any authenticated user
+   *
+   * @param filters - Filter and pagination options
+   * @returns Paginated public user list
+   */
+  listPublic: async (filters: Partial<UserFilterState>): Promise<PublicUserListResponse> => {
+    const params: Record<string, string | number> = {};
+
+    if (filters.page !== undefined) {
+      params.page = filters.page;
+    }
+    if (filters.perPage !== undefined) {
+      params.per_page = filters.perPage;
+    }
+    if (filters.search) {
+      params.search = filters.search;
+    }
+
+    const { data } = await api.get<unknown>("/api/users/public", params);
+    return transformPublicUserListResponse(data);
   },
 };

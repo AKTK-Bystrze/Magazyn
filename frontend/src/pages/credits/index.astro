@@ -1,0 +1,30 @@
+---
+export const prerender = false;
+
+import AppLayout from "@/layouts/AppLayout.astro";
+import { CreditsTabs } from "@/components/credits/CreditsTabs";
+import { ROUTES } from "@/lib/config/routes";
+
+const { user, sessionInfo } = Astro.locals;
+
+if (!user || !sessionInfo) {
+  return Astro.redirect(
+    `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.CREDITS)}`
+  );
+}
+
+const isSuperAdmin = sessionInfo.role === "super_admin";
+---
+
+<AppLayout title="Godzinki | Magazyn">
+  <div class="container mx-auto py-4 sm:py-8 px-4 max-w-7xl">
+    <div class="flex flex-col gap-2 mb-4 sm:mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Godzinki</h1>
+      <p class="text-sm sm:text-base text-muted-foreground">
+        Zarządzaj swoimi godzinkami, sprawdzaj ranking i zgłaszaj nowe wnioski.
+      </p>
+    </div>
+
+    <CreditsTabs client:load userId={user.id} isSuperAdmin={isSuperAdmin} />
+  </div>
+</AppLayout>

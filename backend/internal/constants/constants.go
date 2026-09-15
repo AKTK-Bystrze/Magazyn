@@ -10,12 +10,14 @@ import "time"
 
 // Database table names to avoid hardcoded strings.
 const (
-	TableProfiles        = "profiles"
-	TableEquipment       = "equipment"
-	TableReservations    = "reservations"
-	TableEquipmentTypes  = "equipment_types"
-	TableMaintenanceLogs = "maintenance_logs"
-	TableCreditHistory   = "credit_history"
+	TableProfiles             = "profiles"
+	TableEquipment            = "equipment"
+	TableReservations         = "reservations"
+	TableEquipmentTypes       = "equipment_types"
+	TableMaintenanceLogs      = "maintenance_logs"
+	TableCreditHistory        = "credit_history"
+	TableCreditRequests       = "credit_requests"
+	TableCreditRequestHelpers = "credit_request_helpers"
 )
 
 // ============================================================================
@@ -41,6 +43,15 @@ const (
 	EquipmentStatusBroken  = "broken"  // Equipment broken, not usable
 	EquipmentStatusBlocked = "blocked" // Equipment blocked by admin (e.g. for maintenance)
 
+)
+
+// ============================================================================
+// Credit Reason Constants
+// ============================================================================
+
+// Credit reason values used when adjusting user credit balances.
+const (
+	CreditReasonWorkCredit = "work_credit" // Credits awarded for approved help requests
 )
 
 // ============================================================================

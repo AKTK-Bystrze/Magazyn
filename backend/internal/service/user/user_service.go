@@ -22,6 +22,9 @@ type UserService interface {
 	// ListUsers retrieves a paginated list of users with optional filters.
 	ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error)
 
+	// ListPublicUsers retrieves a paginated list of public user profiles.
+	ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error)
+
 	// CreateUser creates a new user profile with the given inputs.
 	CreateUser(ctx context.Context, req types.CreateUserRequest) (*types.UserResponse, error)
 
@@ -108,6 +111,52 @@ func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, se
 	}
 
 	return &types.UserListResponse{
+		Users: userResponses,
+		Pagination: types.Pagination{
+			Page:       page,
+			PerPage:    perPage,
+			TotalItems: int(totalItems),
+			TotalPages: totalPages,
+		},
+	}, nil
+}
+
+// ListPublicUsers retrieves a paginated list of public users with optional search.
+func (s *userService) ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error) {
+	// Enforce pagination limits
+	if page < 1 {
+		page = constants.DefaultPage
+	}
+	if perPage < 1 {
+		perPage = constants.DefaultPerPage
+	}
+	if perPage > constants.MaxPerPage {
+		perPage = constants.MaxPerPage
+	}
+
+	logger.Infof(ctx, "Listing public users - Page: %d, PerPage: %d, Search: %s", page, perPage, search)
+
+	profiles, totalItems, err := s.repo.List(ctx, page, perPage, "", search)
+	if err != nil {
+		logger.Errorf(ctx, "Failed to list public users: %v", err)
+		return nil, types.NewInternalError("Failed to list public users", err)
+	}
+
+	userResponses := make([]types.PublicUserResponse, len(profiles))
+	for i, p := range profiles {
+		userResponses[i] = types.PublicUserResponse{
+			ID:            p.ID,
+			Username:      p.Username,
+			CreditBalance: p.CreditBalance,
+		}
+	}
+
+	totalPages := int(math.Ceil(float64(totalItems) / float64(perPage)))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	return &types.PublicUserListResponse{
 		Users: userResponses,
 		Pagination: types.Pagination{
 			Page:       page,

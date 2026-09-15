@@ -104,7 +104,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			name: "Bad Request - Invalid Page",
+			name: "Graceful Default - Invalid Page",
 			user: &types.User{ID: "user-123"},
 			profile: &types.PublicProfilesSelect{
 				ID:   "user-123",
@@ -113,8 +113,18 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			queryParams: map[string]string{
 				"page": "invalid",
 			},
-			setupMock:      func(m *MockCreditHistoryService) {},
-			expectedStatus: http.StatusBadRequest,
+			setupMock: func(m *MockCreditHistoryService) {
+				m.On("GetCreditHistory", mock.Anything, types.GetCreditHistoryQuery{
+					Page:    1,
+					PerPage: 25,
+					UserID:  nil,
+				}, "user-123").Return(&types.CreditHistoryResponse{
+					CurrentBalance: 100,
+					Pagination:     types.Pagination{Page: 1, PerPage: 25},
+					CreditHistory:  []types.CreditHistoryItemDTO{},
+				}, nil)
+			},
+			expectedStatus: http.StatusOK,
 		},
 	}
 
