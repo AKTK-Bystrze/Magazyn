@@ -7,7 +7,7 @@ import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { CartIndicator } from "./CartIndicator";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Filter } from "lucide-react";
+import { Filter, LayoutGrid, List } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import type { EquipmentSearchItem } from "@/types";
 
@@ -33,6 +33,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
   const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(
     null
   );
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   // Fetch equipment types - automatically transformed to camelCase
   const { data: types = [] } = useEquipmentTypes();
@@ -110,8 +111,28 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
         {/* Results Header (Desktop) */}
         <div className="hidden lg:flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Inwentarz Sprzętu</h1>
-          <div className="text-sm text-muted-foreground">
-            Pokazywanie {equipment.length} z {meta.totalItems} elementów
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-md">
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="sm"
+                className="px-2"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="sm"
+                className="px-2"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Pokazywanie {equipment.length} z {meta.totalItems} elementów
+            </div>
           </div>
         </div>
 
@@ -121,6 +142,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
             isLoading={isLoading}
             error={error as Error | null}
             onViewDetail={handleViewDetail}
+            viewMode={viewMode}
           />
         </div>
 
