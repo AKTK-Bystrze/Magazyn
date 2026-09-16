@@ -10,18 +10,18 @@ export interface LogEntry {
 }
 
 export class StructuredLogger {
-  private baseContext: Record<string, any>;
+  private baseContext: Record<string, unknown>;
 
-  constructor(context: Record<string, any> = {}) {
+  constructor(context: Record<string, unknown> = {}) {
     this.baseContext = context;
   }
 
   // Clones logger with additional context
-  with(context: Record<string, any>): StructuredLogger {
+  with(context: Record<string, unknown>): StructuredLogger {
     return new StructuredLogger({ ...this.baseContext, ...context });
   }
 
-  private log(level: LogLevel, msg: string, data?: Record<string, any>) {
+  private log(level: LogLevel, msg: string, data?: Record<string, unknown>) {
     const isServer = typeof window === "undefined";
 
     const entry: LogEntry = {
@@ -53,16 +53,16 @@ export class StructuredLogger {
     }
   }
 
-  info(msg: string, data?: Record<string, any>) {
+  info(msg: string, data?: Record<string, unknown>) {
     this.log("INFO", msg, data);
   }
-  debug(msg: string, data?: Record<string, any>) {
+  debug(msg: string, data?: Record<string, unknown>) {
     this.log("DEBUG", msg, data);
   }
-  warn(msg: string, data?: Record<string, any>) {
+  warn(msg: string, data?: Record<string, unknown>) {
     this.log("WARN", msg, data);
   }
-  error(msg: string, data?: Record<string, any>) {
+  error(msg: string, data?: Record<string, unknown>) {
     this.log("ERROR", msg, data);
   }
 }
