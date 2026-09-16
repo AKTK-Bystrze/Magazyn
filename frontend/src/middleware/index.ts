@@ -136,17 +136,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     return next();
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+
     // Handle API errors specifically for API routes
     if (context.request.url.includes("/api/")) {
-      context.locals.logger?.error("API Route Error", { name: error.name, error: error.message });
+      context.locals.logger?.error("API Route Error", { name: err.name, error: err.message });
       return handleApiError(error);
     }
 
     context.locals.logger?.error("Middleware error", {
-      name: error.name,
-      error: error.message,
-      stack: error.stack,
+      name: err.name,
+      error: err.message,
+      stack: err.stack,
     });
     return new Response("Internal Server Error", { status: 500 });
   }

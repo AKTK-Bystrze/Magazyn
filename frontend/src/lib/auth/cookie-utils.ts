@@ -3,6 +3,7 @@
  * Centralizes all cookie operations to eliminate duplication and magic numbers
  */
 
+import type { AstroCookies } from "astro";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import {
   COOKIE_WAIT_TIMEOUT_MS,
@@ -61,7 +62,7 @@ export function removeAuthCookie(): void {
  * Clears all authentication cookies from the server side (SSR).
  * Parses the raw request headers to find any chunked Supabase cookies and deletes them.
  */
-export function clearAllAuthCookies(request: Request, cookies: any): void {
+export function clearAllAuthCookies(request: Request, cookies: AstroCookies): void {
   const cookieHeader = request.headers.get("Cookie") || "";
   const cookieNames = cookieHeader.split(";").map((c) => c.split("=")[0].trim());
 
