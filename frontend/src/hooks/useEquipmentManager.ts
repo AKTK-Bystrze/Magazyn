@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { equipmentApi } from "@/lib/api/equipment-api";
 import type {
   EquipmentManagerFilterState,
@@ -76,6 +76,12 @@ interface UseEquipmentManagerReturn {
   archiveEquipment: (id: string) => Promise<void>;
   /** Mutation loading state */
   isMutating: boolean;
+  /** Fetch next page of items */
+  fetchNextPage: () => void;
+  /** True if there is a next page */
+  hasNextPage: boolean;
+  /** True if currently fetching next page */
+  isFetchingNextPage: boolean;
 }
 
 /**
@@ -114,18 +120,28 @@ export function useEquipmentManager(
     isLoading,
     error,
     refetch,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: QUERY_KEYS.list(filters),
-    queryFn: () => {
+    queryFn: ({ pageParam = 1 }) => {
       // Convert filter state to API params
       const params = {
         search: filters.search,
         type_id: filters.typeId,
         status: filters.status,
-        page: filters.page,
+        page: pageParam,
         perPage: filters.perPage,
       };
       return equipmentApi.list(params);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
     },
     enabled,
     staleTime: QUERY_STALE_TIME_MS,
@@ -213,9 +229,13 @@ export function useEquipmentManager(
     [archiveMutation]
   );
 
+  const equipment = React.useMemo(() => {
+    return equipmentData?.pages.flatMap((page) => page.equipment) ?? [];
+  }, [equipmentData]);
+
   return {
-    equipment: equipmentData?.equipment ?? [],
-    pagination: equipmentData?.pagination,
+    equipment,
+    pagination: equipmentData?.pages[0]?.pagination,
     equipmentTypes: typesData ?? [],
     isLoading,
     isTypesLoading,
@@ -228,5 +248,8 @@ export function useEquipmentManager(
     updateEquipment,
     archiveEquipment,
     isMutating: createMutation.isPending || updateMutation.isPending || archiveMutation.isPending,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 }
