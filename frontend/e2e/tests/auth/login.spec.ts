@@ -57,5 +57,13 @@ test.describe("Login Page", () => {
 
     // Assert: Verify successful login by checking for user menu trigger
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
+
+    // Act: Open user menu and log out
+    await page.getByTestId("user-menu-trigger").click();
+    await page.getByTestId("logout-button").click();
+
+    // Assert: Verify redirect to login page and successful logout
+    await expect(page).toHaveURL(/.*\/login/);
+    await expect(page.getByTestId("login-form")).toBeVisible();
   });
 });

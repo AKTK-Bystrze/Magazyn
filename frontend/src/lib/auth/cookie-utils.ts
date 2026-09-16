@@ -58,6 +58,27 @@ export function removeAuthCookie(): void {
 }
 
 /**
+ * Clears all authentication cookies from the server side (SSR).
+ * Parses the raw request headers to find any chunked Supabase cookies and deletes them.
+ */
+export function clearAllAuthCookies(request: Request, cookies: any): void {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const cookieNames = cookieHeader.split(";").map((c) => c.split("=")[0].trim());
+
+  for (const name of cookieNames) {
+    if (
+      name.startsWith("sb-magazyn-auth-token") ||
+      name.startsWith("sb-access-token") ||
+      name.startsWith("sb-refresh-token") ||
+      name.startsWith("sb-session-token") ||
+      name === AUTH_COOKIE_NAME
+    ) {
+      cookies.delete(name, { path: "/" });
+    }
+  }
+}
+
+/**
  * Gets the authentication token from cookies
  *
  * @returns The token if found, null otherwise
