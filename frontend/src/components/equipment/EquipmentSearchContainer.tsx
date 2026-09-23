@@ -69,28 +69,49 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
       className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]"
       data-testid="equipment-search-container"
     >
-      {/* Mobile Filter Trigger */}
       <div className="lg:hidden flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Sprzęt</h1>
-        <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filtry
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-md">
+            <Button
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("grid")}
+            >
+              <LayoutGrid className="h-4 w-4" />
             </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <SheetHeader className="mb-4">
-              <SheetTitle>Filtry</SheetTitle>
-            </SheetHeader>
-            <FilterSidebar
-              filters={filters}
-              types={types}
-              onFilterChange={updateFilter}
-              onReset={handleReset}
-            />
-          </SheetContent>
-        </Sheet>
+            <Button
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filtry
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <SheetHeader className="mb-4">
+                <SheetTitle>Filtry</SheetTitle>
+              </SheetHeader>
+              <div className="px-4 pb-4 overflow-y-auto h-[calc(100vh-5rem)]">
+                <FilterSidebar
+                  filters={filters}
+                  types={types}
+                  onFilterChange={updateFilter}
+                  onReset={handleReset}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       {/* Desktop Sidebar */}

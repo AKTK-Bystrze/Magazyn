@@ -83,12 +83,92 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     window.dispatchEvent(new Event("cart-updated"));
   };
 
-  if (viewMode === "list") {
+  const renderAddToCartButton = () => {
+    if (!isAvailable) return null;
+
     return (
-      <Card
-        className="flex flex-row overflow-hidden transition-all hover:shadow-md items-center gap-4 p-4"
-        data-testid={`equipment-card-${item.id}`}
+      <Button
+        size="sm"
+        variant={isInCart ? (justAdded ? "default" : "secondary") : "outline"}
+        onClick={handleToggleCart}
+        className={cn(
+          "transition-all duration-300 min-w-[110px]",
+          justAdded && "bg-green-600 hover:bg-green-600 text-white",
+          !justAdded &&
+            isInCart &&
+            "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
+        )}
+        aria-label={
+          viewMode === "list" ? (isInCart ? "Usuń z koszyka" : "Dodaj do koszyka") : undefined
+        }
+        data-testid={`equipment-add-to-cart-${item.id}`}
       >
+        {justAdded ? (
+          <>
+            <Check className={cn("h-4 w-4", viewMode === "list" ? "mr-2" : "mr-1")} />
+            Dodano
+          </>
+        ) : isInCart ? (
+          viewMode === "list" ? (
+            "W koszyku (Usuń)"
+          ) : (
+            <>
+              <span className="group-hover:hidden flex items-center">
+                <Check className="h-4 w-4 mr-1" />W Worku
+              </span>
+              <span className="hidden group-hover:flex items-center">Usuń</span>
+            </>
+          )
+        ) : (
+          <>
+            <ShoppingCart className={cn("h-4 w-4", viewMode === "list" ? "mr-2" : "mr-1")} />
+            Dodaj
+          </>
+        )}
+      </Button>
+    );
+  };
+
+  return (
+    <Card
+      className={cn(
+        "overflow-hidden transition-all hover:shadow-md",
+        viewMode === "list" ? "flex flex-row items-center gap-4 p-4" : "h-full flex flex-col"
+      )}
+      data-testid={`equipment-card-${item.id}`}
+    >
+      {viewMode === "grid" && (
+        <div className="relative">
+          <AspectRatio ratio={4 / 3} className="bg-muted">
+            {item.imagePath ? (
+              <img
+                src={item.imagePath}
+                alt={item.name}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder-equipment.svg"; // Fallback
+                }}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                Brak obrazu
+              </div>
+            )}
+          </AspectRatio>
+          <Badge
+            className={cn(
+              "absolute top-2 right-2 text-white hover:bg-opacity-80 active:bg-opacity-80",
+              statusColor
+            )}
+            data-testid={`equipment-status-badge-${item.id}`}
+          >
+            {statusLabel}
+          </Badge>
+        </div>
+      )}
+
+      {viewMode === "list" ? (
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start">
             <div>
@@ -102,44 +182,38 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
               {statusLabel}
             </Badge>
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2 mt-2">{item.description || "Brak opisu."}</p>
+          <p className="text-sm text-gray-600 line-clamp-2 mt-2">
+            {item.description || "Brak opisu."}
+          </p>
         </div>
-        
+      ) : (
+        <>
+          <CardHeader className="p-4 pb-2">
+            <div className="flex justify-between items-start gap-2">
+              <div>
+                <h3 className="font-semibold text-lg">{item.name}</h3>
+                <p className="text-sm text-muted-foreground">{item.type.name}</p>
+              </div>
+              {/* Placeholder for US-008 Favorite Button */}
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-4 pt-2 flex-grow">
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {item.description || "Brak opisu."}
+            </p>
+          </CardContent>
+        </>
+      )}
+
+      {viewMode === "list" ? (
         <div className="flex flex-col gap-2 shrink-0 items-end ml-4 border-l pl-4 border-muted/50">
           <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
             <span className="text-primary">{item.type.creditCostPerDay}</span>
             <span className="text-xs text-muted-foreground">godzinki/dzień</span>
           </div>
           <div className="flex gap-2">
-            {isAvailable && (
-              <Button
-                size="sm"
-                variant={isInCart ? (justAdded ? "default" : "secondary") : "outline"}
-                onClick={handleToggleCart}
-                className={cn(
-                  "transition-all duration-300 min-w-[110px]",
-                  justAdded && "bg-green-600 hover:bg-green-600 text-white",
-                  !justAdded &&
-                    isInCart &&
-                    "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
-                )}
-                aria-label={isInCart ? "Usuń z koszyka" : "Dodaj do koszyka"}
-              >
-                {justAdded ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Dodano
-                  </>
-                ) : isInCart ? (
-                  "W koszyku (Usuń)"
-                ) : (
-                  <>
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Dodaj
-                  </>
-                )}
-              </Button>
-            )}
+            {renderAddToCartButton()}
             <Button
               size="sm"
               variant="default"
@@ -150,109 +224,26 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
             </Button>
           </div>
         </div>
-      </Card>
-    );
-  }
-
-  return (
-    <Card
-      className="h-full flex flex-col overflow-hidden transition-all hover:shadow-md"
-      data-testid={`equipment-card-${item.id}`}
-    >
-      <div className="relative">
-        <AspectRatio ratio={4 / 3} className="bg-muted">
-          {item.imagePath ? (
-            <img
-              src={item.imagePath}
-              alt={item.name}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = "/placeholder-equipment.svg"; // Fallback
-              }}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              Brak obrazu
-            </div>
-          )}
-        </AspectRatio>
-        <Badge
-          className={cn(
-            "absolute top-2 right-2 text-white hover:bg-opacity-80 active:bg-opacity-80",
-            statusColor
-          )}
-          data-testid={`equipment-status-badge-${item.id}`}
-        >
-          {statusLabel}
-        </Badge>
-      </div>
-
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start gap-2">
-          <div>
-            <h3 className="font-semibold text-lg">{item.name}</h3>
-            <p className="text-sm text-muted-foreground">{item.type.name}</p>
+      ) : (
+        <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-between items-center border-t bg-muted/20 mt-auto gap-2">
+          <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
+            <span className="text-primary">{item.type.creditCostPerDay}</span>
+            <span className="text-xs text-muted-foreground">godzinki/dzień</span>
           </div>
-          {/* Placeholder for US-008 Favorite Button */}
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 pt-2 flex-grow">
-        <p className="text-sm text-gray-600 line-clamp-2">{item.description || "Brak opisu."}</p>
-      </CardContent>
-
-      <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-between items-center border-t bg-muted/20 mt-auto gap-2">
-        <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
-          <span className="text-primary">{item.type.creditCostPerDay}</span>
-          <span className="text-xs text-muted-foreground">godzinki/dzień</span>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          {isAvailable && (
+          <div className="flex gap-2 w-full sm:w-auto">
+            {renderAddToCartButton()}
             <Button
+              variant="outline"
               size="sm"
-              variant={isInCart ? (justAdded ? "default" : "secondary") : "outline"}
-              onClick={handleToggleCart}
-              className={cn(
-                "transition-all duration-300 min-w-[110px]",
-                justAdded && "bg-green-600 hover:bg-green-600 text-white",
-                !justAdded &&
-                  isInCart &&
-                  "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
-              )}
-              data-testid={`equipment-add-to-cart-${item.id}`}
+              onClick={() => onViewDetail?.(item)}
+              className="shrink-0"
+              data-testid={`equipment-details-button-${item.id}`}
             >
-              {justAdded ? (
-                <>
-                  <Check className="h-4 w-4 mr-1" />
-                  Dodano
-                </>
-              ) : isInCart ? (
-                <>
-                  <span className="group-hover:hidden flex items-center">
-                    <Check className="h-4 w-4 mr-1" />W Worku
-                  </span>
-                  <span className="hidden group-hover:flex items-center">Usuń</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="h-4 w-4 mr-1" />
-                  Dodaj
-                </>
-              )}
+              Szczegóły
             </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onViewDetail?.(item)}
-            className="shrink-0"
-            data-testid={`equipment-details-button-${item.id}`}
-          >
-            Szczegóły
-          </Button>
-        </div>
-      </CardFooter>
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 }
