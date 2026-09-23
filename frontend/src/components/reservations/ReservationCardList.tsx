@@ -10,13 +10,13 @@ import type { ReservationListItem } from "@/types";
 interface ReservationCardListProps {
   reservations: ReservationListItem[];
   isLoading: boolean;
-  currentPage: number;
-  totalPages: number;
   hasFilters?: boolean;
   mode: "user" | "admin";
   scope: "my" | "all";
   currentUserId?: string;
-  onPageChange: (page: number) => void;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
   onReturn?: (reservation: ReservationListItem) => void;
@@ -34,13 +34,13 @@ interface ReservationCardListProps {
 export function ReservationCardList({
   reservations,
   isLoading,
-  currentPage,
-  totalPages,
   hasFilters = false,
   mode,
   scope,
   currentUserId,
-  onPageChange,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
   onModify,
   onCancel,
   onReturn,
@@ -57,8 +57,8 @@ export function ReservationCardList({
   React.useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && currentPage < totalPages) {
-          onPageChange(currentPage + 1);
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
         }
       },
       { threshold: 0.1 }
@@ -69,7 +69,7 @@ export function ReservationCardList({
     }
 
     return () => observer.disconnect();
-  }, [currentPage, totalPages, onPageChange]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Group reservations by date range
   const groups = React.useMemo(() => groupReservationsByDateRange(reservations), [reservations]);
@@ -150,7 +150,9 @@ export function ReservationCardList({
 
       {/* Intersection Observer Target */}
       <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
-        {currentPage < totalPages && <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>}
+        {isFetchingNextPage && (
+          <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
+        )}
       </div>
     </div>
   );

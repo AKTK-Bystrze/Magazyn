@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reservationsApi } from "@/lib/api/reservations-api";
 import type {
   ReservationFilterState,
@@ -76,6 +76,12 @@ interface UseReservationsReturn {
   bulkUpdateStatus: (command: BulkUpdateReservationsCommand) => Promise<BulkStatusUpdateResponse>;
   /** Mutation loading state */
   isMutating: boolean;
+  /** Fetch next page of items */
+  fetchNextPage: () => void;
+  /** True if there is a next page */
+  hasNextPage: boolean;
+  /** True if currently fetching next page */
+  isFetchingNextPage: boolean;
 }
 
 /**
@@ -96,9 +102,24 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
   });
 
   // Fetch reservations
-  const { data, isLoading, error, refetch } = useQuery({
+  const {
+    data: infiniteData,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: QUERY_KEYS.list(filters),
-    queryFn: () => reservationsApi.list(filters),
+    queryFn: ({ pageParam = 1 }) => reservationsApi.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
     enabled,
     staleTime: QUERY_STALE_TIME_MS,
   });
@@ -171,6 +192,14 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     [bulkUpdateMutation]
   );
 
+  const data = React.useMemo(() => {
+    if (!infiniteData) return undefined;
+    return {
+      reservations: infiniteData.pages.flatMap((page) => page.reservations),
+      pagination: infiniteData.pages[0].pagination,
+    };
+  }, [infiniteData]);
+
   return {
     data,
     isLoading,
@@ -184,5 +213,8 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     bulkUpdateStatus,
     isMutating:
       updateMutation.isPending || cancelMutation.isPending || bulkUpdateMutation.isPending,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 }
