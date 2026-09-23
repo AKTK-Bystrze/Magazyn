@@ -1,22 +1,6 @@
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { equipmentApi } from "@/lib/api/equipment-api";
 import type { EquipmentSearchParams } from "@/types";
-
-/**
- * Custom hook for fetching equipment list with automatic transformation
- * Encapsulates query logic and provides type-safe equipment data
- *
- * @param filters - Equipment search and filter parameters
- * @returns React Query result with transformed equipment data
- */
-export function useEquipmentList(filters: Partial<EquipmentSearchParams>) {
-  return useQuery({
-    queryKey: ["equipment", filters],
-    queryFn: () => equipmentApi.list(filters),
-    // Keep previous data while fetching to prevent UI flash
-    placeholderData: (previousData) => previousData,
-  });
-}
 
 export function useInfiniteEquipmentList(filters: Partial<EquipmentSearchParams>) {
   return useInfiniteQuery({
