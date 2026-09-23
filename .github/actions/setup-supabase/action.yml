@@ -46,6 +46,8 @@ runs:
       if: inputs.mode == 'local'
       shell: bash
       run: |
+        echo "Logging into ghcr.io to prevent rate limits..."
+        echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         supabase start
         supabase status
 
