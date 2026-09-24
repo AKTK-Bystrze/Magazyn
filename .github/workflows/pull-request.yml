@@ -106,7 +106,7 @@ jobs:
           go-mod-path: 'backend/go.mod'
           go-sum-path: 'backend/go.sum'
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.14.0
           working-directory: backend
