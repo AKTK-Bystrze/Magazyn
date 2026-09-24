@@ -61,7 +61,7 @@ function ReservationListContainerInner({
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   // View state
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("list");
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   // Clear messages after timeout
   React.useEffect(() => {
@@ -350,6 +350,7 @@ function ReservationListContainerInner({
             className="px-2 h-8"
             onClick={() => setViewMode("list")}
             aria-label="Widok tabeli"
+            data-testid="view-mode-table"
           >
             <List className="h-4 w-4" />
           </Button>
