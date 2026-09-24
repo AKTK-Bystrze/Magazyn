@@ -1,7 +1,6 @@
 import * as React from "react";
 import { ReservationCard } from "./ReservationCard";
 import { GroupedReservationCard } from "./GroupedReservationCard";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Package } from "lucide-react";
 import { ICON_SIZE_LG } from "@/lib/config/constants";
@@ -11,13 +10,13 @@ import type { ReservationListItem } from "@/types";
 interface ReservationCardListProps {
   reservations: ReservationListItem[];
   isLoading: boolean;
-  currentPage: number;
-  totalPages: number;
   hasFilters?: boolean;
   mode: "user" | "admin";
   scope: "my" | "all";
   currentUserId?: string;
-  onPageChange: (page: number) => void;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
   onReturn?: (reservation: ReservationListItem) => void;
@@ -35,13 +34,13 @@ interface ReservationCardListProps {
 export function ReservationCardList({
   reservations,
   isLoading,
-  currentPage,
-  totalPages,
   hasFilters = false,
   mode,
   scope,
   currentUserId,
-  onPageChange,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
   onModify,
   onCancel,
   onReturn,
@@ -52,6 +51,25 @@ export function ReservationCardList({
 }: ReservationCardListProps) {
   // Track expanded groups
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
+
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Group reservations by date range
   const groups = React.useMemo(() => groupReservationsByDateRange(reservations), [reservations]);
@@ -85,9 +103,9 @@ export function ReservationCardList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
       {/* Reservation Cards */}
-      <div className="grid gap-4">
+      <div className="flex flex-col gap-4 w-full max-w-full">
         {groups.map((group) => {
           // Single-item groups render as regular cards
           if (group.items.length === 1) {
@@ -130,8 +148,12 @@ export function ReservationCardList({
         })}
       </div>
 
-      {/* Pagination */}
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
+      {/* Intersection Observer Target */}
+      <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
+        {isFetchingNextPage && (
+          <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
+        )}
+      </div>
     </div>
   );
 }

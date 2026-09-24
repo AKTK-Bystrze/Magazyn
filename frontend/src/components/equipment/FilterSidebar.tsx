@@ -104,6 +104,28 @@ export function FilterSidebar({
     <div
       className={isHorizontal ? "flex flex-row flex-wrap items-end gap-x-4 gap-y-2" : "space-y-6"}
     >
+      {showDates && (
+        <div
+          className={
+            isHorizontal
+              ? "w-auto bg-primary/5 p-4 rounded-md border border-primary/20"
+              : "space-y-2 bg-primary/5 p-4 rounded-md border border-primary/20"
+          }
+        >
+          <DateRangePicker
+            startDate={filters.availableFrom || null}
+            endDate={filters.availableTo || null}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
+            validationErrors={dateValidationErrors}
+            title={isHorizontal ? null : EQUIPMENT_FILTER_UI_STRINGS.FILTER_BY_AVAILABILITY}
+            showClearButton={true}
+            onClear={handleClearDates}
+            compact={true}
+          />
+        </div>
+      )}
+
       <div className={isHorizontal ? "flex-1 min-w-[200px]" : "space-y-2"}>
         <Label htmlFor="search">Szukaj</Label>
         <Input
@@ -175,22 +197,6 @@ export function FilterSidebar({
           </RadioGroup>
         )}
       </div>
-
-      {showDates && (
-        <div className={isHorizontal ? "w-auto" : "space-y-2"}>
-          <DateRangePicker
-            startDate={filters.availableFrom || null}
-            endDate={filters.availableTo || null}
-            onStartDateChange={handleStartDateChange}
-            onEndDateChange={handleEndDateChange}
-            validationErrors={dateValidationErrors}
-            title={isHorizontal ? null : EQUIPMENT_FILTER_UI_STRINGS.FILTER_BY_AVAILABILITY}
-            showClearButton={true}
-            onClear={handleClearDates}
-            compact={true}
-          />
-        </div>
-      )}
 
       <Button variant="outline" className={isHorizontal ? "w-auto" : "w-full"} onClick={onReset}>
         {EQUIPMENT_FILTER_UI_STRINGS.RESET_FILTERS}

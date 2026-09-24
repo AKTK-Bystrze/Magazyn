@@ -72,7 +72,6 @@ export const TEST_IDS = {
   equipmentCard: (id: string) => `equipment-card-${id}`,
   equipmentAddToCart: (id: string) => `equipment-add-to-cart-${id}`,
   equipmentDetailsButton: (id: string) => `equipment-details-button-${id}`,
-  equipmentStatusBadge: (id: string) => `equipment-status-badge-${id}`,
   cartItem: (id: string) => `cart-item-${id}`,
   cartItemRemove: (id: string) => `cart-item-remove-${id}`,
   reservationRow: (id: string) => `reservation-row-${id}`,

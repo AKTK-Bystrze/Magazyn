@@ -29,6 +29,10 @@ export function StatusBadge({ status, className, "data-testid": testId }: Status
     );
   }
 
+  if (status === "PENDING") {
+    return null;
+  }
+
   const variant = RESERVATION_STATUS_VARIANTS[status] ?? "outline";
   const label = RESERVATION_STATUS_LABELS[status] ?? status;
 

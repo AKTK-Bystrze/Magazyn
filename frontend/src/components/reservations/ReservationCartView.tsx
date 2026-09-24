@@ -404,16 +404,8 @@ export function ReservationCartView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Cart Items & Dates (2/3 width) */}
+        {/* Left Column: Dates & Cart Items (2/3 width) */}
         <div className="lg:col-span-2 space-y-8">
-          <section className="bg-card rounded-lg border shadow-sm p-6">
-            <CartItemList
-              items={cartState.items}
-              onRemoveItem={removeItem}
-              equipmentBrowsePath={equipmentBrowsePath}
-            />
-          </section>
-
           {!isEmpty && (
             <section className="bg-card rounded-lg border shadow-sm p-6">
               <DateRangePicker
@@ -425,6 +417,14 @@ export function ReservationCartView({
               />
             </section>
           )}
+
+          <section className="bg-card rounded-lg border shadow-sm p-6">
+            <CartItemList
+              items={cartState.items}
+              onRemoveItem={removeItem}
+              equipmentBrowsePath={equipmentBrowsePath}
+            />
+          </section>
         </div>
 
         {/* Right Column: Cost & Actions (1/3 width) */}

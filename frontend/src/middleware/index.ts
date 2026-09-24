@@ -1,5 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
 import { createSupabaseServerClient } from "../lib/auth/supabase-ssr";
+import { clearAllAuthCookies } from "../lib/auth/cookie-utils";
 import { ApiErrors, handleApiError } from "../lib/errors/api-error";
 import { getUserSession } from "../lib/auth/session-utils";
 import { RedirectManager } from "../lib/auth/redirect-manager";
@@ -42,9 +43,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Handle invalid refresh token error - clear cookies and redirect gracefully
     if (error && error.code === "refresh_token_not_found") {
       logger.error("Invalid refresh token detected");
-      context.cookies.delete("sb-access-token", { path: "/" });
-      context.cookies.delete("sb-refresh-token", { path: "/" });
-      context.cookies.delete("sb-session-token", { path: "/" });
+
+      // Force clear all authentication cookies directly
+      clearAllAuthCookies(context.request, context.cookies);
 
       return context.redirect("/login");
     }
@@ -137,6 +138,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
+
     // Handle API errors specifically for API routes
     if (context.request.url.includes("/api/")) {
       context.locals.logger?.error("API Route Error", { name: err.name, error: err.message });

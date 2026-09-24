@@ -32,8 +32,9 @@ export async function handleLogout(): Promise<void> {
     // Sign out from Supabase - this clears the session
     await supabase.auth.signOut();
   } catch (error) {
-    logger.error("Logout error:", { error });
-    // Continue with local cleanup even if server logout fails
+    // Downgrade to debug: it's common for this to fail if the session is already expired
+    // and we don't want it flashing as a red error in the console before redirect.
+    logger.debug("Supabase client signOut failed (likely already expired)", { error });
   }
 
   // Call server-side logout to clear cookies reliably
