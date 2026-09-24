@@ -85,14 +85,14 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
         className="w-full sm:max-w-lg overflow-y-auto overflow-x-hidden max-w-[95%]"
         data-testid="equipment-details-sheet"
       >
-        <SheetHeader className="border-b pb-4">
+        <SheetHeader className="border-b pb-4 px-4 pt-4 sm:px-6 sm:pt-6">
           <SheetTitle>{UI.DETAILS_TITLE}</SheetTitle>
           <SheetDescription>
             {equipment.internalId} • {equipment.type.name}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 py-4 px-4">
+        <div className="space-y-6 py-6 px-4 sm:px-6">
           {/* Hero Section */}
           <div className="space-y-4">
             {/* Equipment Image */}

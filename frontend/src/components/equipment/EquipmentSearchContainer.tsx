@@ -7,7 +7,7 @@ import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { CartIndicator } from "./CartIndicator";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Filter } from "lucide-react";
+import { Filter, LayoutGrid, List } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import type { EquipmentSearchItem } from "@/types";
 
@@ -33,6 +33,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
   const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(
     null
   );
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   const observerTarget = React.useRef<HTMLDivElement>(null);
 
@@ -40,13 +41,13 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
   const { data: types = [] } = useEquipmentTypes();
 
   // Fetch equipment list using infinite query
-  const { 
-    data: equipmentData, 
-    isLoading, 
+  const {
+    data: equipmentData,
+    isLoading,
     error,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
   } = useInfiniteEquipmentList(activeFilters);
 
   React.useEffect(() => {
@@ -58,11 +59,11 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
       },
       { threshold: 0.1 }
     );
-    
+
     if (observerTarget.current) {
       observer.observe(observerTarget.current);
     }
-    
+
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
@@ -70,7 +71,7 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
   const equipment = React.useMemo(() => {
     return equipmentData?.pages.flatMap((page) => page.equipment) ?? [];
   }, [equipmentData]);
-  
+
   const totalItems = equipmentData?.pages[0]?.pagination.totalItems ?? 0;
 
   const handleReset = () => {
@@ -92,28 +93,49 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
       className="flex flex-col lg:flex-row gap-6 p-6 min-h-[calc(100vh-4rem)]"
       data-testid="equipment-search-container"
     >
-      {/* Mobile Filter Trigger */}
       <div className="lg:hidden flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Sprzęt</h1>
-        <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filtry
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-md">
+            <Button
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("grid")}
+            >
+              <LayoutGrid className="h-4 w-4" />
             </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <SheetHeader className="mb-4">
-              <SheetTitle>Filtry</SheetTitle>
-            </SheetHeader>
-            <FilterSidebar
-              filters={filters}
-              types={types}
-              onFilterChange={updateFilter}
-              onReset={handleReset}
-            />
-          </SheetContent>
-        </Sheet>
+            <Button
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filtry
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <SheetHeader className="mb-4">
+                <SheetTitle>Filtry</SheetTitle>
+              </SheetHeader>
+              <div className="px-4 pb-4 overflow-y-auto h-[calc(100vh-5rem)]">
+                <FilterSidebar
+                  filters={filters}
+                  types={types}
+                  onFilterChange={updateFilter}
+                  onReset={handleReset}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
@@ -134,8 +156,28 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
         {/* Results Header (Desktop) */}
         <div className="hidden lg:flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Inwentarz Sprzętu</h1>
-          <div className="text-sm text-muted-foreground">
-            Pokazywanie {equipment.length} z {totalItems} elementów
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-md">
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="sm"
+                className="px-2"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="sm"
+                className="px-2"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Pokazywanie {equipment.length} z {totalItems} elementów
+            </div>
           </div>
         </div>
 
@@ -145,12 +187,15 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
             isLoading={isLoading}
             error={error as Error | null}
             onViewDetail={handleViewDetail}
+            viewMode={viewMode}
           />
         </div>
 
         {/* Intersection Observer Target */}
         <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
-          {isFetchingNextPage && <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>}
+          {isFetchingNextPage && (
+            <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
+          )}
         </div>
       </main>
 
