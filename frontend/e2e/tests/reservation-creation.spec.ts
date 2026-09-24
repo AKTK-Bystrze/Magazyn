@@ -75,9 +75,6 @@ test.describe("Reservation Creation", () => {
     await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_GRID)).toBeVisible();
 
     await expect(
-      authenticatedPage.getByTestId(TEST_IDS.equipmentStatusBadge(equip1.id))
-    ).toBeVisible();
-    await expect(
       authenticatedPage.getByTestId(TEST_IDS.equipmentDetailsButton(equip1.id))
     ).toBeVisible();
 

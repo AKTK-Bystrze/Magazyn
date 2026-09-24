@@ -102,6 +102,32 @@ export function UserTable({
   onToggleSelect,
   onToggleSelectAll,
 }: UserTableProps) {
+  const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedUsers = React.useMemo(() => {
+    const sortableItems = [...users];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [users, sortConfig]);
+
   const handleEdit = React.useCallback(
     (user: UserListItem) => () => {
       onEdit(user);
@@ -109,8 +135,8 @@ export function UserTable({
     [onEdit]
   );
 
-  const allSelected = users.length > 0 && selectedIds.length === users.length;
-  const ids = users.map((u) => u.id);
+  const allSelected = sortedUsers.length > 0 && selectedIds.length === sortedUsers.length;
+  const ids = sortedUsers.map((u) => u.id);
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -126,12 +152,12 @@ export function UserTable({
                 />
               </TableHead>
             )}
-            <TableHead>Nazwa użytkownika</TableHead>
-            <TableHead className="hidden md:table-cell">Email</TableHead>
-            <TableHead className="hidden lg:table-cell text-right">Godzinki</TableHead>
-            <TableHead>Rola</TableHead>
-            <TableHead className="hidden md:table-cell">Status</TableHead>
-            <TableHead className="hidden xl:table-cell">Utworzono</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort('username')}>Nazwa użytkownika {sortConfig?.key === 'username' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => requestSort('email')}>Email {sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="hidden lg:table-cell text-right cursor-pointer" onClick={() => requestSort('creditBalance')}>Godzinki {sortConfig?.key === 'creditBalance' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort('role')}>Rola {sortConfig?.key === 'role' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => requestSort('isEnabled')}>Status {sortConfig?.key === 'isEnabled' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="hidden xl:table-cell cursor-pointer" onClick={() => requestSort('createdAt')}>Utworzono {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
             {isSuperAdmin && <TableHead className="w-[70px]">Akcje</TableHead>}
           </TableRow>
         </TableHeader>
@@ -141,11 +167,11 @@ export function UserTable({
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
               <SkeletonRow key={`skeleton-${index}`} />
             ))
-          ) : users.length === 0 ? (
+          ) : sortedUsers.length === 0 ? (
             <EmptyState />
           ) : (
             // User rows
-            users.map((user) => (
+            sortedUsers.map((user) => (
               <TableRow
                 key={user.id}
                 className={`hover:bg-muted/50 ${

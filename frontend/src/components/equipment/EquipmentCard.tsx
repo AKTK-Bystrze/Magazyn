@@ -2,7 +2,6 @@ import * as React from "react";
 import { type EquipmentSearchItem } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShoppingCart, Check } from "lucide-react";
@@ -13,21 +12,15 @@ import { FEEDBACK_DISPLAY_DURATION_MS } from "@/lib/config/constants";
 interface EquipmentCardProps {
   item: EquipmentSearchItem;
   onViewDetail?: (item: EquipmentSearchItem) => void;
+  viewMode?: "grid" | "list";
 }
 
-export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
+export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: EquipmentCardProps) {
   const [isInCart, setIsInCart] = React.useState(false);
   const [justAdded, setJustAdded] = React.useState(false);
 
   const isAvailable = item.status === "ok";
-  const statusColor =
-    item.status === "ok"
-      ? "bg-green-500"
-      : item.status === "broken"
-        ? "bg-destructive"
-        : "bg-yellow-500";
-  const statusLabel =
-    item.status === "ok" ? "Dostępne" : item.status === "broken" ? "Zepsute" : "Zablokowane";
+
 
   // Check if item is in cart
   const checkCartStatus = React.useCallback(() => {
@@ -82,105 +75,144 @@ export function EquipmentCard({ item, onViewDetail }: EquipmentCardProps) {
     window.dispatchEvent(new Event("cart-updated"));
   };
 
+  const renderAddToCartButton = () => {
+    if (!isAvailable) return null;
+
+    return (
+      <Button
+        size="sm"
+        variant={isInCart ? (justAdded ? "default" : "secondary") : "outline"}
+        onClick={handleToggleCart}
+        className={cn(
+          "transition-all duration-300 min-w-[110px]",
+          justAdded && "bg-green-600 hover:bg-green-600 text-white",
+          !justAdded &&
+            isInCart &&
+            "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
+        )}
+        aria-label={isInCart ? "Usuń z koszyka" : "Dodaj do koszyka"}
+        data-testid={`equipment-add-to-cart-${item.id}`}
+      >
+        {justAdded ? (
+          <>
+            <Check className="h-4 w-4 mr-1" />
+            Dodano
+          </>
+        ) : isInCart ? (
+          <>
+            <span className="group-hover:hidden flex items-center">
+              <Check className="h-4 w-4 mr-1" />W Worku
+            </span>
+            <span className="hidden group-hover:flex items-center">Usuń</span>
+          </>
+        ) : (
+          <>
+            <ShoppingCart className="h-4 w-4 mr-1" />
+            Dodaj
+          </>
+        )}
+      </Button>
+    );
+  };
+
   return (
     <Card
-      className="h-full flex flex-col overflow-hidden transition-all hover:shadow-md"
+      className={cn(
+        "overflow-hidden transition-all hover:shadow-md",
+        viewMode === "list" ? "flex flex-col md:flex-row md:items-center gap-4 p-4" : "h-full flex flex-col",
+        !isAvailable && "border-destructive border-2"
+      )}
       data-testid={`equipment-card-${item.id}`}
     >
-      <div className="relative">
-        <AspectRatio ratio={4 / 3} className="bg-muted">
-          {item.imagePath ? (
-            <img
-              src={item.imagePath}
-              alt={item.name}
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = "/placeholder-equipment.svg"; // Fallback
-              }}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              Brak obrazu
+      {viewMode === "grid" && (
+        <div className="relative">
+          <AspectRatio ratio={4 / 3} className="bg-muted">
+            {item.imagePath ? (
+              <img
+                src={item.imagePath}
+                alt={item.name}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder-equipment.svg"; // Fallback
+                }}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                Brak obrazu
+              </div>
+            )}
+          </AspectRatio>
+        </div>
+      )}
+
+      {viewMode === "list" ? (
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-semibold text-lg">{item.name}</h3>
+              <p className="text-sm text-muted-foreground">{item.type.name}</p>
             </div>
-          )}
-        </AspectRatio>
-        <Badge
-          className={cn(
-            "absolute top-2 right-2 text-white hover:bg-opacity-80 active:bg-opacity-80",
-            statusColor
-          )}
-          data-testid={`equipment-status-badge-${item.id}`}
-        >
-          {statusLabel}
-        </Badge>
-      </div>
-
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start gap-2">
-          <div>
-            <h3 className="font-semibold text-lg">{item.name}</h3>
-            <p className="text-sm text-muted-foreground">{item.type.name}</p>
           </div>
-          {/* Placeholder for US-008 Favorite Button */}
+          <p className="text-sm text-gray-600 line-clamp-2 mt-2">
+            {item.description || "Brak opisu."}
+          </p>
         </div>
-      </CardHeader>
+      ) : (
+        <>
+          <CardHeader className="p-4 pb-2">
+            <div className="flex justify-between items-start gap-2">
+              <div>
+                <h3 className="font-semibold text-lg">{item.name}</h3>
+                <p className="text-sm text-muted-foreground">{item.type.name}</p>
+              </div>
+              {/* Placeholder for US-008 Favorite Button */}
+            </div>
+          </CardHeader>
 
-      <CardContent className="p-4 pt-2 flex-grow">
-        <p className="text-sm text-gray-600 line-clamp-2">{item.description || "Brak opisu."}</p>
-      </CardContent>
+          <CardContent className="p-4 pt-2 flex-grow">
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {item.description || "Brak opisu."}
+            </p>
+          </CardContent>
+        </>
+      )}
 
-      <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-between items-center border-t bg-muted/20 mt-auto gap-2">
-        <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
-          <span className="text-primary">{item.type.creditCostPerDay}</span>
-          <span className="text-xs text-muted-foreground">godzinki/dzień</span>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          {isAvailable && (
+      {viewMode === "list" ? (
+        <div className="flex flex-row md:flex-col gap-2 shrink-0 items-center md:items-end w-full md:w-auto mt-2 md:mt-0 pt-2 md:pt-0 md:ml-4 border-t md:border-t-0 md:border-l md:pl-4 border-muted/50 justify-end">
+          <div className="flex gap-2">
+            {renderAddToCartButton()}
             <Button
               size="sm"
-              variant={isInCart ? (justAdded ? "default" : "secondary") : "outline"}
-              onClick={handleToggleCart}
-              className={cn(
-                "transition-all duration-300 min-w-[110px]",
-                justAdded && "bg-green-600 hover:bg-green-600 text-white",
-                !justAdded &&
-                  isInCart &&
-                  "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
-              )}
-              data-testid={`equipment-add-to-cart-${item.id}`}
+              variant="default"
+              onClick={() => onViewDetail && onViewDetail(item)}
+              aria-label={`Szczegóły sprzętu ${item.name}`}
             >
-              {justAdded ? (
-                <>
-                  <Check className="h-4 w-4 mr-1" />
-                  Dodano
-                </>
-              ) : isInCart ? (
-                <>
-                  <span className="group-hover:hidden flex items-center">
-                    <Check className="h-4 w-4 mr-1" />W Worku
-                  </span>
-                  <span className="hidden group-hover:flex items-center">Usuń</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="h-4 w-4 mr-1" />
-                  Dodaj
-                </>
-              )}
+              Szczegóły
             </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onViewDetail?.(item)}
-            className="shrink-0"
-            data-testid={`equipment-details-button-${item.id}`}
-          >
-            Szczegóły
-          </Button>
+          </div>
         </div>
-      </CardFooter>
+      ) : (
+        <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-end items-center border-t bg-muted/20 mt-auto gap-2">
+          <div className="flex gap-2 w-full md:w-auto">
+            {renderAddToCartButton()}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewDetail?.(item)}
+              className="shrink-0"
+              data-testid={`equipment-details-button-${item.id}`}
+            >
+              Szczegóły
+            </Button>
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 }
+
+
+
+
+

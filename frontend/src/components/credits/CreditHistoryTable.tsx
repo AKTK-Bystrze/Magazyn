@@ -28,6 +28,32 @@ interface CreditHistoryTableProps {
  * Presentational component to display credit history in a table
  */
 export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps) {
+  const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedData = React.useMemo(() => {
+    const sortableItems = [...data];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [data, sortConfig]);
+
   if (isLoading) {
     return (
       <div className="rounded-md border overflow-x-auto">
@@ -77,7 +103,7 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
     );
   }
 
-  if (data.length === 0) {
+  if (sortedData.length === 0) {
     return (
       <div
         className="flex h-[200px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground"
@@ -94,25 +120,25 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
         <Table data-testid="credit-history-table">
           <TableHeader>
             <TableRow>
-              <TableHead className="whitespace-nowrap">
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_DATE}
+              <TableHead className="whitespace-nowrap cursor-pointer" onClick={() => requestSort('createdAt')}>
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_DATE} {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
               </TableHead>
-              <TableHead className="whitespace-nowrap">
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_REASON}
+              <TableHead className="whitespace-nowrap cursor-pointer" onClick={() => requestSort('reason')}>
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_REASON} {sortConfig?.key === 'reason' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
               </TableHead>
-              <TableHead className="hidden sm:table-cell whitespace-nowrap">
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION}
+              <TableHead className="hidden sm:table-cell whitespace-nowrap cursor-pointer" onClick={() => requestSort('description')}>
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION} {sortConfig?.key === 'description' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
               </TableHead>
-              <TableHead className="whitespace-nowrap">
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR}
+              <TableHead className="whitespace-nowrap cursor-pointer" onClick={() => requestSort('authorUsername')}>
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR} {sortConfig?.key === 'authorUsername' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
               </TableHead>
-              <TableHead className="text-right whitespace-nowrap">
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT}
+              <TableHead className="text-right whitespace-nowrap cursor-pointer" onClick={() => requestSort('amount')}>
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT} {sortConfig?.key === 'amount' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((item, index) => (
+            {sortedData.map((item, index) => (
               <CreditHistoryRow key={item.id} item={item} index={index} />
             ))}
           </TableBody>

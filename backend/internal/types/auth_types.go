@@ -46,10 +46,11 @@ type LogoutResponse struct {
 	Message string `json:"message"`
 }
 
-// MagicLink constants
+// OTPType represents the type of one-time password used for authentication.
 type OTPType string
 
 const (
+	// MagicLink is the OTP type for magic link authentication.
 	MagicLink OTPType = "magiclink"
 	// Add other types as needed
 )

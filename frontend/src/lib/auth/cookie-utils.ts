@@ -3,6 +3,7 @@
  * Centralizes all cookie operations to eliminate duplication and magic numbers
  */
 
+import type { AstroCookies } from "astro";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import {
   COOKIE_WAIT_TIMEOUT_MS,
@@ -54,6 +55,27 @@ export function removeAuthCookie(): void {
   // Try removing with localhost explicitly (for development/testing)
   if (window.location.hostname === "localhost") {
     document.cookie = `${AUTH_COOKIE_NAME}=; path=/; domain=localhost; max-age=0`;
+  }
+}
+
+/**
+ * Clears all authentication cookies from the server side (SSR).
+ * Parses the raw request headers to find any chunked Supabase cookies and deletes them.
+ */
+export function clearAllAuthCookies(request: Request, cookies: AstroCookies): void {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const cookieNames = cookieHeader.split(";").map((c) => c.split("=")[0].trim());
+
+  for (const name of cookieNames) {
+    if (
+      name.startsWith("sb-magazyn-auth-token") ||
+      name.startsWith("sb-access-token") ||
+      name.startsWith("sb-refresh-token") ||
+      name.startsWith("sb-session-token") ||
+      name === AUTH_COOKIE_NAME
+    ) {
+      cookies.delete(name, { path: "/" });
+    }
   }
 }
 
