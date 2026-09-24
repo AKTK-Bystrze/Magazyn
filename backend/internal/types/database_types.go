@@ -1,5 +1,6 @@
 package types
 
+// PublicProfilesSelect represents the PublicProfilesSelect structure.
 type PublicProfilesSelect struct {
 	CreatedAt     string  `json:"created_at"`
 	CreditBalance int32   `json:"credit_balance"`
@@ -11,6 +12,7 @@ type PublicProfilesSelect struct {
 	Username      string  `json:"username"`
 }
 
+// PublicProfilesInsert represents the PublicProfilesInsert structure.
 type PublicProfilesInsert struct {
 	CreatedAt     *string `json:"created_at,omitempty"`
 	CreditBalance *int32  `json:"credit_balance,omitempty"`
@@ -22,6 +24,7 @@ type PublicProfilesInsert struct {
 	Username      string  `json:"username"`
 }
 
+// PublicProfilesUpdate represents the PublicProfilesUpdate structure.
 type PublicProfilesUpdate struct {
 	CreatedAt     *string `json:"created_at,omitempty"`
 	CreditBalance *int32  `json:"credit_balance,omitempty"`
@@ -33,6 +36,7 @@ type PublicProfilesUpdate struct {
 	Username      *string `json:"username,omitempty"`
 }
 
+// PublicEquipmentTypesSelect represents the PublicEquipmentTypesSelect structure.
 type PublicEquipmentTypesSelect struct {
 	CreatedAt        string `json:"created_at"`
 	CreditCostPerDay int32  `json:"credit_cost_per_day"`
@@ -40,6 +44,7 @@ type PublicEquipmentTypesSelect struct {
 	Name             string `json:"name"`
 }
 
+// PublicEquipmentTypesInsert represents the PublicEquipmentTypesInsert structure.
 type PublicEquipmentTypesInsert struct {
 	CreatedAt        *string `json:"created_at,omitempty"`
 	CreditCostPerDay int32   `json:"credit_cost_per_day"`
@@ -47,6 +52,7 @@ type PublicEquipmentTypesInsert struct {
 	Name             string  `json:"name"`
 }
 
+// PublicEquipmentTypesUpdate represents the PublicEquipmentTypesUpdate structure.
 type PublicEquipmentTypesUpdate struct {
 	CreatedAt        *string `json:"created_at,omitempty"`
 	CreditCostPerDay *int32  `json:"credit_cost_per_day,omitempty"`
@@ -54,6 +60,7 @@ type PublicEquipmentTypesUpdate struct {
 	Name             *string `json:"name,omitempty"`
 }
 
+// PublicEquipmentSelect represents the PublicEquipmentSelect structure.
 type PublicEquipmentSelect struct {
 	CreatedAt   string  `json:"created_at"`
 	Description *string `json:"description"`
@@ -67,6 +74,7 @@ type PublicEquipmentSelect struct {
 	UpdatedAt   *string `json:"updated_at"`
 }
 
+// PublicEquipmentInsert represents the PublicEquipmentInsert structure.
 type PublicEquipmentInsert struct {
 	CreatedAt   *string `json:"created_at,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -80,6 +88,7 @@ type PublicEquipmentInsert struct {
 	UpdatedAt   *string `json:"updated_at,omitempty"`
 }
 
+// PublicEquipmentUpdate represents the PublicEquipmentUpdate structure.
 type PublicEquipmentUpdate struct {
 	CreatedAt   *string `json:"created_at,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -93,6 +102,7 @@ type PublicEquipmentUpdate struct {
 	UpdatedAt   *string `json:"updated_at,omitempty"`
 }
 
+// PublicReservationsSelect represents the PublicReservationsSelect structure.
 type PublicReservationsSelect struct {
 	CreatedAt   string  `json:"created_at"`
 	EndDate     string  `json:"end_date"`
@@ -105,6 +115,7 @@ type PublicReservationsSelect struct {
 	UserID      string  `json:"user_id"`
 }
 
+// PublicReservationsInsert represents the PublicReservationsInsert structure.
 type PublicReservationsInsert struct {
 	CreatedAt   *string `json:"created_at,omitempty"`
 	EndDate     string  `json:"end_date"`
@@ -117,6 +128,7 @@ type PublicReservationsInsert struct {
 	UserID      string  `json:"user_id"`
 }
 
+// PublicReservationsUpdate represents the PublicReservationsUpdate structure.
 type PublicReservationsUpdate struct {
 	CreatedAt   *string `json:"created_at,omitempty"`
 	EndDate     *string `json:"end_date,omitempty"`
@@ -128,6 +140,7 @@ type PublicReservationsUpdate struct {
 	UserID      *string `json:"user_id,omitempty"`
 }
 
+// PublicCreditHistorySelect represents the PublicCreditHistorySelect structure.
 type PublicCreditHistorySelect struct {
 	AuthorID      *string `json:"author_id"`
 	Amount        int32   `json:"amount"`
@@ -139,6 +152,7 @@ type PublicCreditHistorySelect struct {
 	UserID        string  `json:"user_id"`
 }
 
+// PublicCreditHistoryInsert represents the PublicCreditHistoryInsert structure.
 type PublicCreditHistoryInsert struct {
 	AuthorID      *string `json:"author_id,omitempty"`
 	Amount        int32   `json:"amount"`
@@ -150,6 +164,7 @@ type PublicCreditHistoryInsert struct {
 	UserID        string  `json:"user_id"`
 }
 
+// PublicCreditHistoryUpdate represents the PublicCreditHistoryUpdate structure.
 type PublicCreditHistoryUpdate struct {
 	AuthorID      *string `json:"author_id,omitempty"`
 	Amount        *int32  `json:"amount,omitempty"`
@@ -161,6 +176,7 @@ type PublicCreditHistoryUpdate struct {
 	UserID        *string `json:"user_id,omitempty"`
 }
 
+// PublicCreditRequestsSelect represents the PublicCreditRequestsSelect structure.
 type PublicCreditRequestsSelect struct {
 	AdminID     *string `json:"admin_id"`
 	AdminNote   *string `json:"admin_note"`
@@ -173,6 +189,7 @@ type PublicCreditRequestsSelect struct {
 	UserID      string  `json:"user_id"`
 }
 
+// PublicCreditRequestsInsert represents the PublicCreditRequestsInsert structure.
 type PublicCreditRequestsInsert struct {
 	AdminID     *string `json:"admin_id,omitempty"`
 	AdminNote   *string `json:"admin_note,omitempty"`
@@ -185,6 +202,7 @@ type PublicCreditRequestsInsert struct {
 	UserID      string  `json:"user_id"`
 }
 
+// PublicCreditRequestsUpdate represents the PublicCreditRequestsUpdate structure.
 type PublicCreditRequestsUpdate struct {
 	AdminID     *string `json:"admin_id,omitempty"`
 	AdminNote   *string `json:"admin_note,omitempty"`
@@ -197,6 +215,7 @@ type PublicCreditRequestsUpdate struct {
 	UserID      *string `json:"user_id,omitempty"`
 }
 
+// PublicMaintenanceLogsSelect represents the PublicMaintenanceLogsSelect structure.
 type PublicMaintenanceLogsSelect struct {
 	AdminID        *string `json:"admin_id"`
 	CreatedAt      string  `json:"created_at"`
@@ -207,6 +226,7 @@ type PublicMaintenanceLogsSelect struct {
 	PreviousStatus *string `json:"previous_status"`
 }
 
+// PublicMaintenanceLogsInsert represents the PublicMaintenanceLogsInsert structure.
 type PublicMaintenanceLogsInsert struct {
 	AdminID        *string `json:"admin_id,omitempty"`
 	CreatedAt      *string `json:"created_at,omitempty"`
@@ -217,6 +237,7 @@ type PublicMaintenanceLogsInsert struct {
 	PreviousStatus *string `json:"previous_status,omitempty"`
 }
 
+// PublicMaintenanceLogsUpdate represents the PublicMaintenanceLogsUpdate structure.
 type PublicMaintenanceLogsUpdate struct {
 	AdminID        *string `json:"admin_id,omitempty"`
 	CreatedAt      *string `json:"created_at,omitempty"`
@@ -227,6 +248,7 @@ type PublicMaintenanceLogsUpdate struct {
 	PreviousStatus *string `json:"previous_status,omitempty"`
 }
 
+// PublicReservationHistorySelect represents the PublicReservationHistorySelect structure.
 type PublicReservationHistorySelect struct {
 	ChangedByUserID *string `json:"changed_by_user_id"`
 	CreatedAt       string  `json:"created_at"`
@@ -239,6 +261,7 @@ type PublicReservationHistorySelect struct {
 	UserID          string  `json:"user_id"`
 }
 
+// PublicReservationHistoryInsert represents the PublicReservationHistoryInsert structure.
 type PublicReservationHistoryInsert struct {
 	ChangedByUserID *string `json:"changed_by_user_id,omitempty"`
 	CreatedAt       *string `json:"created_at,omitempty"`
@@ -251,6 +274,7 @@ type PublicReservationHistoryInsert struct {
 	UserID          string  `json:"user_id"`
 }
 
+// PublicReservationHistoryUpdate represents the PublicReservationHistoryUpdate structure.
 type PublicReservationHistoryUpdate struct {
 	ChangedByUserID *string `json:"changed_by_user_id,omitempty"`
 	CreatedAt       *string `json:"created_at,omitempty"`
@@ -263,6 +287,7 @@ type PublicReservationHistoryUpdate struct {
 	UserID          *string `json:"user_id,omitempty"`
 }
 
+// PublicAnalyticsEquipmentStatsSelect represents the PublicAnalyticsEquipmentStatsSelect structure.
 type PublicAnalyticsEquipmentStatsSelect struct {
 	EquipmentID       *string  `json:"equipment_id"`
 	EquipmentName     *string  `json:"equipment_name"`
@@ -271,6 +296,7 @@ type PublicAnalyticsEquipmentStatsSelect struct {
 	UtilizationRate   *float64 `json:"utilization_rate"`
 }
 
+// PublicAnalyticsUserStatsSelect represents the PublicAnalyticsUserStatsSelect structure.
 type PublicAnalyticsUserStatsSelect struct {
 	LastReservationDate *string `json:"last_reservation_date"`
 	TotalCreditsSpent   *int64  `json:"total_credits_spent"`

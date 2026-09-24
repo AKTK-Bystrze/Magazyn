@@ -8,7 +8,6 @@ import { EditUserDialog } from "./EditUserDialog";
 import { AdjustCreditsDialog } from "./AdjustCreditsDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/ui/pagination";
 import { AlertCircle, CheckCircle2, UserPlus, Coins } from "lucide-react";
 import { ICON_SIZE_SM, MESSAGE_AUTO_DISMISS_MS, DEFAULT_ROLE_FILTER } from "@/lib/config/constants";
 import type { UserListItem, CreateUserCommand, UpdateUserCommand } from "@/types";
@@ -37,7 +36,29 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     updateUser,
     bulkAdjustCredits,
     isMutating,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useUsers();
+
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
@@ -113,14 +134,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       setSelectedUser(null);
     },
     [updateUser]
-  );
-
-  // Handle page change
-  const handlePageChange = React.useCallback(
-    (page: number) => {
-      setFilter("page", page);
-    },
-    [setFilter]
   );
 
   // Handlers for selection
@@ -228,12 +241,12 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         onToggleSelectAll={handleToggleSelectAll}
       />
 
-      {/* Pagination */}
-      <Pagination
-        currentPage={filters.page}
-        totalPages={data?.pagination.totalPages ?? 0}
-        onPageChange={handlePageChange}
-      />
+      {/* Intersection Observer Target */}
+      <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
+        {isFetchingNextPage && (
+          <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
+        )}
+      </div>
 
       {/* Create User Dialog */}
       {isSuperAdmin && (

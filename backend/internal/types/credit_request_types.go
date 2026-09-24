@@ -4,9 +4,13 @@ package types
 type CreditRequestStatus string
 
 const (
-	CreditRequestStatusAwaiting            CreditRequestStatus = "awaiting"
-	CreditRequestStatusApproved            CreditRequestStatus = "approved"
-	CreditRequestStatusRejected            CreditRequestStatus = "rejected"
+	// CreditRequestStatusAwaiting indicates the request is awaiting review.
+	CreditRequestStatusAwaiting CreditRequestStatus = "awaiting"
+	// CreditRequestStatusApproved indicates the request has been approved.
+	CreditRequestStatusApproved CreditRequestStatus = "approved"
+	// CreditRequestStatusRejected indicates the request has been rejected.
+	CreditRequestStatusRejected CreditRequestStatus = "rejected"
+	// CreditRequestStatusApprovedWithChanges indicates the request was approved with admin modifications.
 	CreditRequestStatusApprovedWithChanges CreditRequestStatus = "approved with changes"
 )
 
@@ -49,12 +53,14 @@ type ReviewCreditRequestDTO struct {
 	Status       CreditRequestStatus `json:"status" binding:"required"` // approved, rejected, approved with changes
 }
 
+// UserCreditLeaderboardItem represents a user's standing in the credit leaderboard.
 type UserCreditLeaderboardItem struct {
 	UserID       string `json:"user_id"`
 	Username     string `json:"username"`
 	TotalCredits int32  `json:"total_credits"`
 }
 
+// CreditRequestListResponse represents a paginated list of credit requests.
 type CreditRequestListResponse struct {
 	Requests   []CreditRequestDTO `json:"requests"`
 	Pagination Pagination         `json:"pagination"`

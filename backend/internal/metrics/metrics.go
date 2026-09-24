@@ -44,7 +44,7 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 
-		bgCtx := context.WithValue(context.Background(), appcontext.AccessTokenContextKey, serviceKey)
+		bgCtx := context.WithValue(context.WithoutCancel(ctx), appcontext.AccessTokenContextKey, serviceKey)
 
 		updateMetrics := func() {
 			stats, err := repo.GetDashboardStats(bgCtx)
@@ -73,8 +73,9 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.Handler())
 	metricsServer := &http.Server{
-		Addr:    ":9091",
-		Handler: metricsMux,
+		Addr:              ":9091",
+		Handler:           metricsMux,
+		ReadHeaderTimeout: 3 * time.Second,
 	}
 
 	go func() {

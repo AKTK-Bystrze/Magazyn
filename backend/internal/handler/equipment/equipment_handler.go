@@ -13,15 +13,17 @@ import (
 	"magazyn/backend/internal/validation"
 )
 
+// EquipmentHandler handles HTTP requests related to equipment.
 type EquipmentHandler struct {
 	service equipmentservice.EquipmentService
 }
 
+// NewEquipmentHandler creates a new EquipmentHandler instance.
 func NewEquipmentHandler(s equipmentservice.EquipmentService) *EquipmentHandler {
 	return &EquipmentHandler{service: s}
 }
 
-// List handles get equpiment list
+// HandleList handles get equpiment list
 func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)

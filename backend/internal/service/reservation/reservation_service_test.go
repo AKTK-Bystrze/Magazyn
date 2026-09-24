@@ -456,8 +456,8 @@ func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 		"user-123",
 		cmd.Reservations,
 	).Return(reservationIDs, newBalance, nil)
-	mockUserRepo.On("GetByID", ctx, "user-123").Return(&types.PublicProfilesSelect{Email: "user@test.com"}, nil)
-	mockEmailService.On("SendReservationConfirmation", ctx, "user@test.com", map[string]interface{}{
+	mockUserRepo.On("GetByID", mock.Anything, "user-123").Return(&types.PublicProfilesSelect{Email: "user@test.com"}, nil)
+	mockEmailService.On("SendReservationConfirmation", mock.Anything, "user@test.com", map[string]interface{}{
 		"user_id": "user-123",
 		"count":   1,
 		"cost":    expectedCost,
@@ -656,7 +656,7 @@ func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
 	mockRepo.On("RefundCredits", ctx, reservationID, int32(30)).Return(nil)
 
 	// Fetching new balance
-	mockUserRepo.On("GetByID", ctx, userID).Return(&types.PublicProfilesSelect{
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(&types.PublicProfilesSelect{
 		ID:            userID,
 		CreditBalance: 150,
 	}, nil)

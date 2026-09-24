@@ -55,7 +55,16 @@ export function UserSelector({
     initialFilters: { perPage: 100 }, // Fetch more users for selection
   });
 
-  const users = data?.users ?? [];
+  const users = React.useMemo(() => data?.users ?? [], [data?.users]);
+
+  const sortedUsers = React.useMemo(() => {
+    if (!selectedUserId) return users;
+    return [...users].sort((a, b) => {
+      if (a.id === selectedUserId) return -1;
+      if (b.id === selectedUserId) return 1;
+      return a.username.localeCompare(b.username);
+    });
+  }, [users, selectedUserId]);
 
   // Loading state
   if (isLoading) {
@@ -116,7 +125,7 @@ export function UserSelector({
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {users.map((user: UserListItem) => (
+          {sortedUsers.map((user: UserListItem) => (
             <SelectItem key={user.id} value={user.id}>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
