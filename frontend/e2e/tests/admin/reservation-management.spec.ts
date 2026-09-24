@@ -205,7 +205,8 @@ test.describe.serial("Admin Reservation Management", () => {
     const reservationId = testId!.replace("reservation-row-", "");
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
-    await expect(statusBadge).toBeHidden();
+    await expect(statusBadge).toBeVisible();
+    await expect(statusBadge).toContainText(/W trakcie/i);
   });
 
   /**
