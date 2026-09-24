@@ -124,26 +124,32 @@ func (l *Logger) logWithCtx(ctx context.Context, level slog.Level, msg string) {
 	l.logger.LogAttrs(ctx, level, msg, attrs...)
 }
 
+// Debug logs a debug message
 func (l *Logger) Debug(ctx context.Context, message string) {
 	l.logWithCtx(ctx, slog.LevelDebug, message)
 }
 
+// Debugf logs a formatted debug message
 func (l *Logger) Debugf(ctx context.Context, format string, args ...interface{}) {
 	l.logWithCtx(ctx, slog.LevelDebug, fmt.Sprintf(format, args...))
 }
 
+// Info logs an info message
 func (l *Logger) Info(ctx context.Context, message string) {
 	l.logWithCtx(ctx, slog.LevelInfo, message)
 }
 
+// Infof logs a formatted info message
 func (l *Logger) Infof(ctx context.Context, format string, args ...interface{}) {
 	l.logWithCtx(ctx, slog.LevelInfo, fmt.Sprintf(format, args...))
 }
 
+// Warn logs a warning message
 func (l *Logger) Warn(ctx context.Context, message string) {
 	l.logWithCtx(ctx, slog.LevelWarn, message)
 }
 
+// Warnf logs a formatted warning message
 func (l *Logger) Warnf(ctx context.Context, format string, args ...interface{}) {
 	l.logWithCtx(ctx, slog.LevelWarn, fmt.Sprintf(format, args...))
 }
@@ -152,6 +158,7 @@ func (l *Logger) Error(ctx context.Context, message string) {
 	l.logWithCtx(ctx, slog.LevelError, message)
 }
 
+// Errorf logs a formatted error message
 func (l *Logger) Errorf(ctx context.Context, format string, args ...interface{}) {
 	l.logWithCtx(ctx, slog.LevelError, fmt.Sprintf(format, args...))
 }

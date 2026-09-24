@@ -1,3 +1,4 @@
+// Package email provides email sending functionality.
 package email
 
 import (
@@ -6,15 +7,15 @@ import (
 	"magazyn/backend/internal/logger"
 )
 
-// EmailService defines operations for sending emails
-type EmailService interface {
+// Service defines operations for sending emails
+type Service interface {
 	SendReservationConfirmation(ctx context.Context, email string, details map[string]interface{}) error
 }
 
 type noopEmailService struct{}
 
 // NewNoopEmailService creates a dummy email service that does nothing (for now)
-func NewNoopEmailService() EmailService {
+func NewNoopEmailService() Service {
 	return &noopEmailService{}
 }
 

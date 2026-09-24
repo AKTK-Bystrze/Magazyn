@@ -1,8 +1,7 @@
-package reservation
-
 // Package reservation provides the service layer logic for managing reservations.
 // It handles business rules validation, credit calculation, and orchestrates operations
 // between repositories.
+package reservation
 
 import (
 	"context"
@@ -21,6 +20,7 @@ import (
 // Reservation Service Interface
 // ============================================================================
 
+// ReservationService defines operations for managing reservations.
 type ReservationService interface {
 	// List retrieves a paginated list of reservations based on the provided query filters.
 	List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error)
@@ -45,14 +45,15 @@ type reservationService struct {
 	repo          repository.ReservationRepository
 	equipmentRepo repository.EquipmentRepository
 	userRepo      repository.UserRepository
-	emailService  email.EmailService
+	emailService  email.Service
 }
 
+// NewReservationService creates a new ReservationService instance.
 func NewReservationService(
 	repo repository.ReservationRepository,
 	equipmentRepo repository.EquipmentRepository,
 	userRepo repository.UserRepository,
-	emailService email.EmailService,
+	emailService email.Service,
 ) ReservationService {
 	return &reservationService{
 		repo:          repo,
@@ -229,8 +230,8 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	updateData := types.PublicReservationsUpdate{}
 	needsUpdate := false
 
-	var creditAdjustment int32 = 0
-	var newBalance int32 = 0
+	var creditAdjustment int32
+	var newBalance int32
 	var latestUpdatedAt *string
 
 	// Check if this is a full cancellation
