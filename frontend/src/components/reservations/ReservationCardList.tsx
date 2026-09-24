@@ -103,9 +103,9 @@ export function ReservationCardList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
       {/* Reservation Cards */}
-      <div className="grid gap-4">
+      <div className="flex flex-col gap-4 w-full max-w-full">
         {groups.map((group) => {
           // Single-item groups render as regular cards
           if (group.items.length === 1) {

@@ -78,7 +78,10 @@ export function CostEstimator({
           <h4 className="text-sm font-medium text-muted-foreground">Podział według Sprzętu</h4>
           <div className="space-y-1">
             {costBreakdown.itemCosts.map((item) => (
-              <div key={item.equipmentId} className="flex justify-between text-sm">
+              <div
+                key={item.equipmentId}
+                className="w-full flex justify-between items-center text-sm"
+              >
                 <span className="text-foreground">
                   {item.name}{" "}
                   <span className="text-muted-foreground">
@@ -88,8 +91,8 @@ export function CostEstimator({
                 <span
                   className={
                     costBreakdown.isFreeReservation
-                      ? "font-medium text-green-600 dark:text-green-400"
-                      : "font-medium"
+                      ? "font-medium text-green-600 dark:text-green-400 text-right"
+                      : "font-medium text-right"
                   }
                 >
                   {costBreakdown.isFreeReservation ? "0" : item.totalCost} godzinki
@@ -99,37 +102,37 @@ export function CostEstimator({
           </div>
         </div>
 
-        <div className="border-t pt-4 space-y-2">
+        <div className="border-t pt-4 space-y-2 w-full">
           {costBreakdown.isFreeReservation && (
-            <div className="flex justify-center py-2">
+            <div className="flex justify-center py-2 w-full">
               <span className="text-sm font-medium text-green-600 dark:text-green-400">
                 Darmowa Rezerwacja
               </span>
             </div>
           )}
-          <div className="flex justify-between text-sm">
+          <div className="w-full flex justify-between items-center text-sm">
             <span className="text-muted-foreground">Aktualne Saldo</span>
-            <span className="font-medium" data-testid="current-credit-balance">
+            <span className="font-medium text-right" data-testid="current-credit-balance">
               {costBreakdown.currentBalance} godzinki
             </span>
           </div>
-          <div className="flex justify-between text-sm">
+          <div className="w-full flex justify-between items-center text-sm">
             <span className="text-muted-foreground">Całkowity Koszt</span>
             <span
               className={
                 costBreakdown.isFreeReservation
-                  ? "font-medium text-green-600 dark:text-green-400"
-                  : "font-medium"
+                  ? "font-medium text-green-600 dark:text-green-400 text-right"
+                  : "font-medium text-right"
               }
               data-testid="reservation-total-cost"
             >
               {costBreakdown.isFreeReservation ? "0" : `-${costBreakdown.totalCreditCost}`} godzinki
             </span>
           </div>
-          <div className="border-t pt-2 flex justify-between font-semibold">
+          <div className="border-t pt-2 w-full flex justify-between items-center font-semibold">
             <span>Pozostałe Saldo</span>
             <span
-              className={hasInsufficientCredits ? "text-destructive" : "text-primary"}
+              className={`${hasInsufficientCredits ? "text-destructive" : "text-primary"} text-right`}
               data-testid="remaining-credit-balance"
             >
               {costBreakdown.isFreeReservation
