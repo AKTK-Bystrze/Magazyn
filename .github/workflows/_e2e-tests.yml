@@ -127,6 +127,4 @@ jobs:
       - name: Cleanup
         if: always()
         working-directory: ./infra
-        run: |
-          touch ../.env
-          docker compose down -v || true
+        run: docker compose down -v

@@ -45,11 +45,7 @@ runs:
     - name: Start Local Supabase
       if: inputs.mode == 'local'
       shell: bash
-      env:
-        SUPABASE_INTERNAL_IMAGE_REGISTRY: public.ecr.aws
       run: |
-        echo "Logging into ghcr.io to prevent rate limits..."
-        echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         supabase start
         supabase status
 
