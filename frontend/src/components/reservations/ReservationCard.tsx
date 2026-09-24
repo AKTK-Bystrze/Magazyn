@@ -1,6 +1,5 @@
 import * as React from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Calendar, CreditCard, Edit2, User, X } from "lucide-react";
@@ -69,109 +68,101 @@ export function ReservationCard({
       )}
       data-testid={`reservation-row-${reservation.id}`}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex flex-col gap-3 flex-1 min-w-0">
+          {/* User Row */}
+          <div className="flex items-center justify-between gap-2 min-w-0">
             <div className="flex items-center gap-2 min-w-0">
-              <h3 className="font-semibold text-lg truncate min-w-0 flex-1">
-                {reservation.equipmentName}
-              </h3>
-              {showOwnershipBadge && isOwn && (
-                <Badge variant="secondary" className="text-xs flex-shrink-0">
-                  Twoja rezerwacja
-                </Badge>
-              )}
+              <User className={ICON_SIZE_SM + " text-muted-foreground flex-shrink-0"} />
+              <span className="font-medium text-foreground text-sm truncate min-w-0 flex-1">
+                {reservation.username}
+                {showOwnershipBadge && isOwn && " (Ty)"}
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground truncate">{reservation.equipmentType}</p>
-          </div>
-          <div className="flex-shrink-0">
             <StatusBadge
               status={reservation.status}
               data-testid={`reservation-status-${reservation.id}`}
             />
           </div>
-        </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* User (Admin view or All Reservations view) */}
-        {(mode === "admin" || !isOwn) && (
-          <div className="flex items-center gap-2 text-sm">
-            <User className={ICON_SIZE_SM + " text-muted-foreground"} />
-            <span className="font-medium text-foreground">{reservation.username}</span>
+          {/* Dates Row */}
+          <div className="flex items-start justify-between gap-2 min-w-0">
+            <div className="flex items-start gap-2 flex-1 min-w-0">
+              <Calendar className={ICON_SIZE_SM + " text-muted-foreground flex-shrink-0 mt-0.5"} />
+              <div className="flex-1 min-w-0 break-words">
+                <div className="font-medium">
+                  {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {days} {days === 1 ? "dzień" : "dni"}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 font-semibold flex-shrink-0">
+              <CreditCard className={ICON_SIZE_SM + " text-primary"} />
+              <span>{reservation.creditCost}</span>
+              <span className="text-xs text-muted-foreground">godzinek</span>
+            </div>
           </div>
-        )}
-        {/* Date Range */}
-        <div className="flex items-start gap-2 text-sm min-w-0 w-full">
-          <Calendar className={ICON_SIZE_SM + " text-muted-foreground flex-shrink-0 mt-0.5"} />
-          <div className="flex-1 min-w-0 break-words">
-            <span>
-              {formatDate(reservation.startDate)} — {formatDate(reservation.endDate)}
-            </span>
-            <span className="text-muted-foreground ml-1 inline-block">
-              ({days} {days === 1 ? "dzień" : "dni"})
-            </span>
+
+          {/* Equipment Row */}
+          <div className="text-sm text-muted-foreground break-words line-clamp-2">
+            {reservation.equipmentName}
           </div>
+
+          {/* Actions */}
+          {showActions && (
+            <div className="flex flex-wrap gap-2 pt-3 mt-1 border-t">
+              {/* Modify - Only for Pending */}
+              {isPending && onModify && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleModify}
+                  className="flex items-center gap-1"
+                  data-testid="modify-dates-button"
+                >
+                  <Edit2 className={ICON_SIZE_SM} />
+                  Modyfikuj
+                </Button>
+              )}
+
+              {/* Cancel - If allowed by status utils */}
+              {canCancel && onCancel && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancel}
+                  className="flex items-center gap-1 text-destructive hover:text-destructive"
+                  data-testid="cancel-reservation-button"
+                >
+                  <X className={ICON_SIZE_SM} />
+                  Anuluj
+                </Button>
+              )}
+
+              {/* Return - If allowed by status utils */}
+              {canMarkReturned && onReturn && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReturn}
+                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
+                >
+                  <Calendar className={ICON_SIZE_SM} />
+                  Zwróć
+                </Button>
+              )}
+
+              <a
+                href={`/reservations/${reservation.id}`}
+                className="sm:ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground border border-input bg-background hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
+              >
+                Zobacz Szczegóły
+              </a>
+            </div>
+          )}
         </div>
-
-        {/* Cost */}
-        <div className="flex items-center gap-2 text-sm">
-          <CreditCard className={ICON_SIZE_SM + " text-muted-foreground flex-shrink-0"} />
-          <span className="font-medium">{reservation.creditCost} godzinki</span>
-        </div>
-
-        {/* Actions */}
-        {showActions && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {/* Modify - Only for Pending */}
-            {isPending && onModify && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleModify}
-                className="flex items-center gap-1"
-                data-testid="modify-dates-button"
-              >
-                <Edit2 className={ICON_SIZE_SM} />
-                Modyfikuj
-              </Button>
-            )}
-
-            {/* Cancel - If allowed by status utils */}
-            {canCancel && onCancel && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCancel}
-                className="flex items-center gap-1 text-destructive hover:text-destructive"
-                data-testid="cancel-reservation-button"
-              >
-                <X className={ICON_SIZE_SM} />
-                Anuluj
-              </Button>
-            )}
-
-            {/* Return - If allowed by status utils */}
-            {canMarkReturned && onReturn && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReturn}
-                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
-              >
-                <Calendar className={ICON_SIZE_SM} />
-                Zwróć
-              </Button>
-            )}
-
-            <a
-              href={`/reservations/${reservation.id}`}
-              className="sm:ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
-            >
-              Zobacz Szczegóły
-            </a>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

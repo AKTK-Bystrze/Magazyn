@@ -32,7 +32,7 @@ export type ReservationStatus = (typeof RESERVATION_STATUS)[keyof typeof RESERVA
  * Human-readable labels for reservation statuses
  */
 export const RESERVATION_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Oczekująca",
+  PENDING: "W trakcie",
   RENTED: "Wypożyczona",
   RETURNED: "Zwrócona",
   DENIED: "Anulowana",
@@ -66,7 +66,7 @@ export const RESERVATION_STATUS_VARIANTS: Record<
  */
 export const RESERVATION_FILTER_OPTIONS = [
   { value: "ALL", label: "Wszystkie statusy" },
-  { value: "PENDING", label: "Oczekująca" },
+  { value: "PENDING", label: "W trakcie" },
   { value: "RENTED", label: "Wypożyczona" },
   { value: "RETURNED", label: "Zwrócona" },
   { value: "DENIED", label: "Anulowana" },
