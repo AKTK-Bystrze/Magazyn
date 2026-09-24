@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,11 +17,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Calendar, X, CornerDownLeft, Eye, Edit2 } from "lucide-react";
-import {
-  ICON_SIZE_SM,
-  RESERVATION_STATUS_LABELS,
-  RESERVATION_STATUS,
-} from "@/lib/config/constants";
+import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
 import type { ReservationListItem } from "@/types";
 import { formatDate } from "@/lib/utils/date-utils";
 
@@ -45,23 +40,7 @@ interface ReservationTableProps {
   isFetchingNextPage: boolean;
 }
 
-/**
- * Returns badge variant based on reservation status
- */
-function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case RESERVATION_STATUS.PENDING:
-      return "secondary"; // Orange/Yellow visually in theme
-    case RESERVATION_STATUS.RENTED:
-      return "default"; // Blue/Primary
-    case RESERVATION_STATUS.RETURNED:
-      return "outline"; // Green visually in theme
-    case RESERVATION_STATUS.DENIED:
-      return "destructive"; // Red
-    default:
-      return "outline";
-  }
-}
+import { StatusBadge } from "./StatusBadge";
 
 /**
  * Loading skeleton row component
@@ -179,6 +158,43 @@ export function ReservationTable({
     onViewDetails(item);
   };
 
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedReservations = React.useMemo(() => {
+    const sortableItems = [...reservations];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: ReservationListItem, b: ReservationListItem) => {
+        let aValue = a[sortConfig.key as keyof ReservationListItem];
+        let bValue = b[sortConfig.key as keyof ReservationListItem];
+
+        if (sortConfig.key === "dates") {
+          aValue = a.startDate;
+          bValue = b.startDate;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [reservations, sortConfig]);
+
   const showUserColumn = mode === "admin" || scope === "all";
 
   // Mobile date formatter
@@ -188,37 +204,97 @@ export function ReservationTable({
     return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
   };
 
+  const renderSortIndicator = (key: string) => {
+    if (sortConfig?.key === key) {
+      return sortConfig.direction === "asc" ? " ↑" : " ↓";
+    }
+    return "";
+  };
+
   return (
     <div className="rounded-md border overflow-x-auto bg-card w-full max-w-full mt-6">
       <Table>
         <TableHeader>
           <TableRow>
             {/* Mobile Header */}
-            {showUserColumn && <TableHead className="md:hidden">Użytkownik</TableHead>}
-            <TableHead className="md:hidden">Daty</TableHead>
-            <TableHead className="md:hidden">Sprzęt</TableHead>
-            <TableHead className="md:hidden">Status</TableHead>
+            {showUserColumn && (
+              <TableHead
+                className="md:hidden cursor-pointer"
+                onClick={() => requestSort("username")}
+              >
+                Użytkownik{renderSortIndicator("username")}
+              </TableHead>
+            )}
+            <TableHead className="md:hidden cursor-pointer" onClick={() => requestSort("dates")}>
+              Daty{renderSortIndicator("dates")}
+            </TableHead>
+            <TableHead
+              className="md:hidden cursor-pointer"
+              onClick={() => requestSort("equipmentName")}
+            >
+              Sprzęt{renderSortIndicator("equipmentName")}
+            </TableHead>
+            <TableHead className="md:hidden cursor-pointer" onClick={() => requestSort("status")}>
+              Status{renderSortIndicator("status")}
+            </TableHead>
             <TableHead className="md:hidden w-[50px]"></TableHead>
 
             {/* Desktop Header */}
-            <TableHead className="hidden md:table-cell">Sprzęt</TableHead>
-            <TableHead className="hidden md:table-cell">Typ</TableHead>
-            <TableHead className="hidden md:table-cell">Status</TableHead>
-            <TableHead className="hidden md:table-cell">Od</TableHead>
-            <TableHead className="hidden md:table-cell">Do</TableHead>
-            <TableHead className="hidden md:table-cell text-right">Koszt</TableHead>
-            {showUserColumn && <TableHead className="hidden xl:table-cell">Użytkownik</TableHead>}
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("equipmentName")}
+            >
+              Sprzęt{renderSortIndicator("equipmentName")}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("equipmentType")}
+            >
+              Typ{renderSortIndicator("equipmentType")}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("status")}
+            >
+              Status{renderSortIndicator("status")}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("startDate")}
+            >
+              Od{renderSortIndicator("startDate")}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("endDate")}
+            >
+              Do{renderSortIndicator("endDate")}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell text-right cursor-pointer"
+              onClick={() => requestSort("creditCost")}
+            >
+              Koszt{renderSortIndicator("creditCost")}
+            </TableHead>
+            {showUserColumn && (
+              <TableHead
+                className="hidden xl:table-cell cursor-pointer"
+                onClick={() => requestSort("username")}
+              >
+                Użytkownik{renderSortIndicator("username")}
+              </TableHead>
+            )}
             <TableHead className="hidden md:table-cell w-[70px]">Akcje</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
             Array.from({ length: 5 }).map((_, index) => <SkeletonRow key={`skeleton-${index}`} />)
-          ) : reservations.length === 0 ? (
+          ) : sortedReservations.length === 0 ? (
             <EmptyState hasFilters={hasFilters} />
           ) : (
             <>
-              {reservations.map((item) => {
+              {sortedReservations.map((item) => {
                 const canModify = item.status === RESERVATION_STATUS.PENDING;
                 const canReturn =
                   item.status === RESERVATION_STATUS.PENDING ||
@@ -295,12 +371,7 @@ export function ReservationTable({
                       {item.equipmentName}
                     </TableCell>
                     <TableCell className="md:hidden">
-                      <Badge
-                        variant={getStatusVariant(item.status)}
-                        className="whitespace-nowrap text-xs"
-                      >
-                        {RESERVATION_STATUS_LABELS[item.status] || item.status}
-                      </Badge>
+                      <StatusBadge status={item.status} className="whitespace-nowrap text-xs" />
                     </TableCell>
                     <TableCell className="md:hidden text-right">
                       <ActionMenu />
@@ -319,9 +390,7 @@ export function ReservationTable({
                       {item.equipmentType}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <Badge variant={getStatusVariant(item.status)} className="whitespace-nowrap">
-                        {RESERVATION_STATUS_LABELS[item.status] || item.status}
-                      </Badge>
+                      <StatusBadge status={item.status} className="whitespace-nowrap" />
                     </TableCell>
                     <TableCell className="hidden md:table-cell whitespace-nowrap">
                       {formatDate(item.startDate)}
