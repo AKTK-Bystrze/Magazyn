@@ -64,7 +64,7 @@ export function ReservationCard({
   return (
     <Card
       className={cn(
-        "hover:shadow-md transition-shadow",
+        "w-full max-w-full overflow-hidden hover:shadow-md transition-shadow",
         showOwnershipBadge && isOwn && "ring-2 ring-primary/30 bg-primary/5"
       )}
       data-testid={`reservation-row-${reservation.id}`}
@@ -72,20 +72,24 @@ export function ReservationCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-lg truncate">{reservation.equipmentName}</h3>
+            <div className="flex items-center gap-2 min-w-0">
+              <h3 className="font-semibold text-lg truncate min-w-0 flex-1">
+                {reservation.equipmentName}
+              </h3>
               {showOwnershipBadge && isOwn && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs flex-shrink-0">
                   Twoja rezerwacja
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{reservation.equipmentType}</p>
+            <p className="text-sm text-muted-foreground truncate">{reservation.equipmentType}</p>
           </div>
-          <StatusBadge
-            status={reservation.status}
-            data-testid={`reservation-status-${reservation.id}`}
-          />
+          <div className="flex-shrink-0">
+            <StatusBadge
+              status={reservation.status}
+              data-testid={`reservation-status-${reservation.id}`}
+            />
+          </div>
         </div>
       </CardHeader>
 
@@ -98,19 +102,21 @@ export function ReservationCard({
           </div>
         )}
         {/* Date Range */}
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className={ICON_SIZE_SM + " text-muted-foreground"} />
-          <span>
-            {formatDate(reservation.startDate)} — {formatDate(reservation.endDate)}
-          </span>
-          <span className="text-muted-foreground">
-            ({days} {days === 1 ? "dzień" : "dni"})
-          </span>
+        <div className="flex items-start gap-2 text-sm min-w-0 w-full">
+          <Calendar className={ICON_SIZE_SM + " text-muted-foreground flex-shrink-0 mt-0.5"} />
+          <div className="flex-1 min-w-0 break-words">
+            <span>
+              {formatDate(reservation.startDate)} — {formatDate(reservation.endDate)}
+            </span>
+            <span className="text-muted-foreground ml-1 inline-block">
+              ({days} {days === 1 ? "dzień" : "dni"})
+            </span>
+          </div>
         </div>
 
         {/* Cost */}
         <div className="flex items-center gap-2 text-sm">
-          <CreditCard className={ICON_SIZE_SM + " text-muted-foreground"} />
+          <CreditCard className={ICON_SIZE_SM + " text-muted-foreground flex-shrink-0"} />
           <span className="font-medium">{reservation.creditCost} godzinki</span>
         </div>
 
@@ -160,7 +166,7 @@ export function ReservationCard({
 
             <a
               href={`/reservations/${reservation.id}`}
-              className="ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
+              className="sm:ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
             >
               Zobacz Szczegóły
             </a>

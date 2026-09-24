@@ -55,7 +55,7 @@ export function GroupedReservationCard({
 
   return (
     <Card
-      className="overflow-hidden transition-shadow hover:shadow-md"
+      className="w-full max-w-full overflow-hidden transition-shadow hover:shadow-md"
       data-testid={`reservation-row-${group.groupKey}`}
     >
       {/* Header - Clickable to expand/collapse */}
@@ -74,19 +74,19 @@ export function GroupedReservationCard({
             <div className="flex flex-col gap-3 flex-1 min-w-0">
               {/* User (Admin or All Reservations view) */}
               {(mode === "admin" || scope === "all") && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium text-foreground text-sm">
+                  <span className="font-medium text-foreground text-sm truncate min-w-0 flex-1">
                     {group.username}
                     {scope === "all" && isOwn && " (Ty)"}
                   </span>
                 </div>
               )}
               {/* Date and Status Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 min-w-0 w-full">
+                <div className="flex items-start gap-2 flex-1 min-w-0">
+                  <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0 break-words">
                     <div className="font-medium">
                       {formatDate(group.startDate)} → {formatDate(group.endDate)}
                     </div>
@@ -96,7 +96,7 @@ export function GroupedReservationCard({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
                   <StatusBadge status={group.status} />
                   <div className="text-sm text-muted-foreground">
                     {group.items.length}{" "}
@@ -112,7 +112,7 @@ export function GroupedReservationCard({
               </div>
 
               {/* Equipment Names List */}
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground break-words line-clamp-2">
                 {group.items.map((item, index) => (
                   <span key={item.id}>
                     {item.equipmentName}
@@ -143,6 +143,7 @@ export function GroupedReservationCard({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto h-auto py-2 whitespace-normal text-left sm:text-center"
                   onClick={(e) => {
                     e.stopPropagation();
                     onModifyDatesAll();
@@ -155,11 +156,11 @@ export function GroupedReservationCard({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto h-auto py-2 whitespace-normal text-left sm:text-center text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
                   onClick={(e) => {
                     e.stopPropagation();
                     onReturnAll();
                   }}
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
                 >
                   Zwróć Wszystkie
                 </Button>
@@ -168,6 +169,7 @@ export function GroupedReservationCard({
                 <Button
                   variant="destructive"
                   size="sm"
+                  className="w-full sm:w-auto h-auto py-2 whitespace-normal text-left sm:text-center"
                   onClick={(e) => {
                     e.stopPropagation();
                     onCancelAll();
