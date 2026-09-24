@@ -5,11 +5,11 @@ type CreditRequestStatus string
 
 const (
 	// CreditRequestStatusAwaiting indicates the request is awaiting review.
-	CreditRequestStatusAwaiting            CreditRequestStatus = "awaiting"
+	CreditRequestStatusAwaiting CreditRequestStatus = "awaiting"
 	// CreditRequestStatusApproved indicates the request has been approved.
-	CreditRequestStatusApproved            CreditRequestStatus = "approved"
+	CreditRequestStatusApproved CreditRequestStatus = "approved"
 	// CreditRequestStatusRejected indicates the request has been rejected.
-	CreditRequestStatusRejected            CreditRequestStatus = "rejected"
+	CreditRequestStatusRejected CreditRequestStatus = "rejected"
 	// CreditRequestStatusApprovedWithChanges indicates the request was approved with admin modifications.
 	CreditRequestStatusApprovedWithChanges CreditRequestStatus = "approved with changes"
 )
