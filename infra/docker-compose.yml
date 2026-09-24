@@ -75,7 +75,8 @@ services:
     container_name: magazyn-caddy
     restart: always
     ports:
-      - "${CADDY_PORT:-20164}:443"
+      - "0.0.0.0:${CADDY_PORT:-20164}:443"
+      - "[::]:443:443"
     volumes:
       - ./${CADDY_FILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
       - ./certs:/etc/caddy/certs:ro
