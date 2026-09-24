@@ -2,6 +2,7 @@ import * as React from "react";
 import type { GroupedReservation, ReservationListItem } from "@/types";
 import { RESERVATION_STATUS } from "@/lib/config/constants";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { ReservationCard } from "./ReservationCard";
@@ -59,7 +60,7 @@ export function GroupedReservationCard({
       data-testid={`reservation-row-${group.groupKey}`}
     >
       {/* Header - Clickable to expand/collapse */}
-      <div 
+      <div
         className="cursor-pointer select-none hover:bg-muted/30 transition-colors"
         onClick={onToggle}
       >
@@ -75,7 +76,8 @@ export function GroupedReservationCard({
                         group.items.length % 10 <= 4 &&
                         (group.items.length % 100 < 10 || group.items.length % 100 >= 20)
                       ? "elementy"
-                      : "elementów"})
+                      : "elementów"}
+                  )
                 </h3>
                 {scope === "all" && isOwn && (
                   <Badge variant="secondary" className="text-xs">
@@ -90,7 +92,7 @@ export function GroupedReservationCard({
             <StatusBadge status={group.status} />
           </div>
         </CardHeader>
-  
+
         <CardContent className="space-y-4">
           {(mode === "admin" || scope === "all") && (
             <div className="flex items-center gap-2 text-sm">
@@ -114,9 +116,13 @@ export function GroupedReservationCard({
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               {isExpanded ? (
-                <>Zwiń <ChevronDown className="h-4 w-4" /></>
+                <>
+                  Zwiń <ChevronDown className="h-4 w-4" />
+                </>
               ) : (
-                <>Rozwiń <ChevronRight className="h-4 w-4" /></>
+                <>
+                  Rozwiń <ChevronRight className="h-4 w-4" />
+                </>
               )}
             </div>
           </div>
