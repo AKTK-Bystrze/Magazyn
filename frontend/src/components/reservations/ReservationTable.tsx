@@ -309,6 +309,7 @@ export function ReservationTable({
                         size="icon"
                         onClick={(e) => e.stopPropagation()}
                         className="h-8 w-8"
+                        data-testid="reservation-action-menu-trigger"
                       >
                         <MoreHorizontal className={ICON_SIZE_SM} />
                       </Button>
@@ -332,6 +333,7 @@ export function ReservationTable({
                             <DropdownMenuItem
                               onClick={handleReturn(item)}
                               className="text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400"
+                              data-testid="return-reservation-button"
                             >
                               <CornerDownLeft className={ICON_SIZE_SM + " mr-2"} />
                               Zwróć
@@ -341,6 +343,7 @@ export function ReservationTable({
                             <DropdownMenuItem
                               onClick={handleCancel(item)}
                               className="text-destructive focus:text-destructive"
+                              data-testid="cancel-reservation-button"
                             >
                               <X className={ICON_SIZE_SM + " mr-2"} />
                               Anuluj
