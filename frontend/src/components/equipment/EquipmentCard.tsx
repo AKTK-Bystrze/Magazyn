@@ -1,8 +1,7 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { type EquipmentSearchItem } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShoppingCart, Check } from "lucide-react";
@@ -21,14 +20,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
   const [justAdded, setJustAdded] = React.useState(false);
 
   const isAvailable = item.status === "ok";
-  const statusColor =
-    item.status === "ok"
-      ? "bg-green-500"
-      : item.status === "broken"
-        ? "bg-destructive"
-        : "bg-yellow-500";
-  const statusLabel =
-    item.status === "ok" ? "Dostępne" : item.status === "broken" ? "Zepsute" : "Zablokowane";
+
 
   // Check if item is in cart
   const checkCartStatus = React.useCallback(() => {
@@ -133,7 +125,8 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     <Card
       className={cn(
         "overflow-hidden transition-all hover:shadow-md",
-        viewMode === "list" ? "flex flex-row items-center gap-4 p-4" : "h-full flex flex-col"
+        viewMode === "list" ? "flex flex-col sm:flex-row sm:items-center gap-4 p-4" : "h-full flex flex-col",
+        !isAvailable && "border-destructive border-2"
       )}
       data-testid={`equipment-card-${item.id}`}
     >
@@ -156,15 +149,6 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
               </div>
             )}
           </AspectRatio>
-          <Badge
-            className={cn(
-              "absolute top-2 right-2 text-white hover:bg-opacity-80 active:bg-opacity-80",
-              statusColor
-            )}
-            data-testid={`equipment-status-badge-${item.id}`}
-          >
-            {statusLabel}
-          </Badge>
         </div>
       )}
 
@@ -175,12 +159,6 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
               <h3 className="font-semibold text-lg">{item.name}</h3>
               <p className="text-sm text-muted-foreground">{item.type.name}</p>
             </div>
-            <Badge
-              className={cn("text-white shrink-0", statusColor)}
-              data-testid={`equipment-status-badge-${item.id}`}
-            >
-              {statusLabel}
-            </Badge>
           </div>
           <p className="text-sm text-gray-600 line-clamp-2 mt-2">
             {item.description || "Brak opisu."}
@@ -207,11 +185,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
       )}
 
       {viewMode === "list" ? (
-        <div className="flex flex-col gap-2 shrink-0 items-end ml-4 border-l pl-4 border-muted/50">
-          <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
-            <span className="text-primary">{item.type.creditCostPerDay}</span>
-            <span className="text-xs text-muted-foreground">godzinki/dzień</span>
-          </div>
+        <div className="flex flex-row sm:flex-col gap-2 shrink-0 items-center sm:items-end w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 sm:ml-4 border-t sm:border-t-0 sm:border-l sm:pl-4 border-muted/50 justify-end">
           <div className="flex gap-2">
             {renderAddToCartButton()}
             <Button
@@ -225,11 +199,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
           </div>
         </div>
       ) : (
-        <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-between items-center border-t bg-muted/20 mt-auto gap-2">
-          <div className="flex items-center gap-1 font-medium bg-secondary px-2 py-1 rounded">
-            <span className="text-primary">{item.type.creditCostPerDay}</span>
-            <span className="text-xs text-muted-foreground">godzinki/dzień</span>
-          </div>
+        <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-end items-center border-t bg-muted/20 mt-auto gap-2">
           <div className="flex gap-2 w-full sm:w-auto">
             {renderAddToCartButton()}
             <Button
@@ -247,3 +217,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     </Card>
   );
 }
+
+
+
+
