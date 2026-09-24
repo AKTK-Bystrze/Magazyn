@@ -125,7 +125,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     <Card
       className={cn(
         "overflow-hidden transition-all hover:shadow-md",
-        viewMode === "list" ? "flex flex-col sm:flex-row sm:items-center gap-4 p-4" : "h-full flex flex-col",
+        viewMode === "list" ? "flex flex-col md:flex-row md:items-center gap-4 p-4" : "h-full flex flex-col",
         !isAvailable && "border-destructive border-2"
       )}
       data-testid={`equipment-card-${item.id}`}
@@ -185,7 +185,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
       )}
 
       {viewMode === "list" ? (
-        <div className="flex flex-row sm:flex-col gap-2 shrink-0 items-center sm:items-end w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 sm:ml-4 border-t sm:border-t-0 sm:border-l sm:pl-4 border-muted/50 justify-end">
+        <div className="flex flex-row md:flex-col gap-2 shrink-0 items-center md:items-end w-full md:w-auto mt-2 md:mt-0 pt-2 md:pt-0 md:ml-4 border-t md:border-t-0 md:border-l md:pl-4 border-muted/50 justify-end">
           <div className="flex gap-2">
             {renderAddToCartButton()}
             <Button
@@ -200,7 +200,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
         </div>
       ) : (
         <CardFooter className="p-4 pt-0 flex flex-row flex-wrap justify-end items-center border-t bg-muted/20 mt-auto gap-2">
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-2 w-full md:w-auto">
             {renderAddToCartButton()}
             <Button
               variant="outline"
@@ -217,6 +217,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     </Card>
   );
 }
+
 
 
 
