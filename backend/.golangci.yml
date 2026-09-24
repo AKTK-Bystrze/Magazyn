@@ -9,7 +9,8 @@ formatters:
     - goimports
   settings:
     goimports:
-      local-prefixes: magazyn/backend
+      local-prefixes:
+        - magazyn/backend
 
 linters:
   enable:
