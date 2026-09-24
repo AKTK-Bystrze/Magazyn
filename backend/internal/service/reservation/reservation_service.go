@@ -171,7 +171,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		// Needs a detached context or careful context handling.
 		// Using Background context to ensure it runs even if request context cancels.
 		// In production, use a task queue.
-		bgCtx := context.Background()
+		bgCtx := context.WithoutCancel(ctx)
 
 		profile, _ := s.userRepo.GetByID(bgCtx, targetUserID)
 		emailAddr := ""

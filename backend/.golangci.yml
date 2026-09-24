@@ -1,4 +1,4 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
@@ -7,10 +7,9 @@ run:
 formatters:
   enable:
     - goimports
-
-formatters-settings:
-  goimports:
-    local-prefixes: magazyn/backend
+  settings:
+    goimports:
+      local-prefixes: magazyn/backend
 
 linters:
   enable:
@@ -19,8 +18,8 @@ linters:
     - revive
     - gosec
     - misspell
-
-linters-settings:
-  revive:
-    rules:
-      - name: var-naming
+  settings:
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: var-naming
