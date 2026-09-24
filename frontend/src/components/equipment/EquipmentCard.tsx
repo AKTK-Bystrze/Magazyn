@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { type EquipmentSearchItem } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -90,30 +90,24 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
             isInCart &&
             "bg-secondary hover:bg-destructive hover:text-destructive-foreground"
         )}
-        aria-label={
-          viewMode === "list" ? (isInCart ? "Usuń z koszyka" : "Dodaj do koszyka") : undefined
-        }
+        aria-label={isInCart ? "Usuń z koszyka" : "Dodaj do koszyka"}
         data-testid={`equipment-add-to-cart-${item.id}`}
       >
         {justAdded ? (
           <>
-            <Check className={cn("h-4 w-4", viewMode === "list" ? "mr-2" : "mr-1")} />
+            <Check className="h-4 w-4 mr-1" />
             Dodano
           </>
         ) : isInCart ? (
-          viewMode === "list" ? (
-            "W koszyku (Usuń)"
-          ) : (
-            <>
-              <span className="group-hover:hidden flex items-center">
-                <Check className="h-4 w-4 mr-1" />W Worku
-              </span>
-              <span className="hidden group-hover:flex items-center">Usuń</span>
-            </>
-          )
+          <>
+            <span className="group-hover:hidden flex items-center">
+              <Check className="h-4 w-4 mr-1" />W Worku
+            </span>
+            <span className="hidden group-hover:flex items-center">Usuń</span>
+          </>
         ) : (
           <>
-            <ShoppingCart className={cn("h-4 w-4", viewMode === "list" ? "mr-2" : "mr-1")} />
+            <ShoppingCart className="h-4 w-4 mr-1" />
             Dodaj
           </>
         )}
