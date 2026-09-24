@@ -357,6 +357,7 @@ export function ReservationTable({
                     key={item.id}
                     className="hover:bg-muted/50 cursor-pointer"
                     onClick={handleViewDetails(item)}
+                    data-testid={`reservation-row-${item.id}`}
                   >
                     {/* Mobile Cells */}
                     {showUserColumn && (
@@ -371,7 +372,11 @@ export function ReservationTable({
                       {item.equipmentName}
                     </TableCell>
                     <TableCell className="md:hidden">
-                      <StatusBadge status={item.status} className="whitespace-nowrap text-xs" />
+                      <StatusBadge
+                        status={item.status}
+                        className="whitespace-nowrap text-xs"
+                        data-testid={`reservation-status-${item.id}`}
+                      />
                     </TableCell>
                     <TableCell className="md:hidden text-right">
                       <ActionMenu />
@@ -390,7 +395,11 @@ export function ReservationTable({
                       {item.equipmentType}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <StatusBadge status={item.status} className="whitespace-nowrap" />
+                      <StatusBadge
+                        status={item.status}
+                        className="whitespace-nowrap"
+                        data-testid={`reservation-status-${item.id}`}
+                      />
                     </TableCell>
                     <TableCell className="hidden md:table-cell whitespace-nowrap">
                       {formatDate(item.startDate)}
