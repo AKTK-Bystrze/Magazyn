@@ -1,6 +1,16 @@
+version: "2"
+
 run:
   timeout: 5m
   tests: true
+
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - magazyn/backend
 
 linters:
   enable:
@@ -8,13 +18,9 @@ linters:
     - staticcheck
     - revive
     - gosec
-    - typecheck
-    - goimports
     - misspell
-
-linters-settings:
-  revive:
-    rules:
-      - name: var-naming
-  goimports:
-    local-prefixes: magazyn/backend
+  settings:
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: var-naming

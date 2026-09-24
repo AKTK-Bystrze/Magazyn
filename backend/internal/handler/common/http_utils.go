@@ -1,4 +1,4 @@
-// Package handler provides HTTP request handlers and utility functions for the API.
+// Package common provides HTTP request handlers and utility functions for the API.
 package common
 
 import (

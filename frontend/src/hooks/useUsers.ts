@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users-api";
 import type {
   UserFilterState,
@@ -71,6 +71,12 @@ interface UseUsersReturn {
   bulkAdjustCredits: (command: BulkAdjustCreditsCommand) => Promise<void>;
   /** Mutation loading state */
   isMutating: boolean;
+  /** Fetch next page of items */
+  fetchNextPage: () => void;
+  /** True if there is a next page */
+  hasNextPage: boolean;
+  /** True if currently fetching next page */
+  isFetchingNextPage: boolean;
 }
 
 /**
@@ -102,9 +108,24 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   });
 
   // Fetch users list
-  const { data, isLoading, error, refetch } = useQuery({
+  const {
+    data: infiniteData,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: QUERY_KEYS.list(filters),
-    queryFn: () => usersApi.list(filters),
+    queryFn: ({ pageParam = 1 }) => usersApi.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
     enabled,
     staleTime: QUERY_STALE_TIME_MS,
   });
@@ -181,6 +202,14 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     [bulkAdjustCreditsMutation]
   );
 
+  const data = React.useMemo(() => {
+    if (!infiniteData) return undefined;
+    return {
+      users: infiniteData.pages.flatMap((page) => page.users),
+      pagination: infiniteData.pages[0].pagination,
+    };
+  }, [infiniteData]);
+
   return {
     data,
     isLoading,
@@ -194,5 +223,8 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     bulkAdjustCredits,
     isMutating:
       createMutation.isPending || updateMutation.isPending || bulkAdjustCreditsMutation.isPending,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 }
