@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
-
 	"magazyn/backend/internal/logger"
+	"strings"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"

@@ -2,14 +2,12 @@ package auth
 
 import (
 	"context"
-	"time"
-
 	"magazyn/backend/internal/logger"
-
-	"strings"
+	"time"
 
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"strings"
 )
 
 // AuthService provides authentication and session management operations.

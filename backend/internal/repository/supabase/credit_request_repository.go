@@ -184,7 +184,7 @@ func (r *creditRequestRepository) Update(ctx context.Context, id string, req typ
 	}
 
 	jsonStr := client.Rpc("update_credit_request_atomic", "", params)
-	if err := parseRPCVoidResponse(jsonStr); err != nil {
+	if err := parseRpcVoidResponse(jsonStr); err != nil {
 		return nil, err
 	}
 
@@ -212,7 +212,7 @@ func (r *creditRequestRepository) ReviewAtomic(ctx context.Context, id string, a
 	}
 
 	jsonStr := client.Rpc("review_credit_request_atomic", "", params)
-	return parseRPCVoidResponse(jsonStr)
+	return parseRpcVoidResponse(jsonStr)
 }
 
 func (r *creditRequestRepository) GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error) {
@@ -240,7 +240,7 @@ func (r *creditRequestRepository) GetLeaderboard(ctx context.Context) ([]types.U
 	return result, nil
 }
 
-func parseRPCVoidResponse(jsonStr string) error {
+func parseRpcVoidResponse(jsonStr string) error {
 	if jsonStr == "" || jsonStr == "null" {
 		return nil
 	}
