@@ -9,7 +9,6 @@ import { ConfirmArchiveDialog } from "./ConfirmArchiveDialog";
 import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/ui/pagination";
 import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
 import {
   ICON_SIZE_SM,
@@ -41,7 +40,6 @@ interface EquipmentManagerContainerProps {
 function EquipmentManagerContainerInner({ className }: EquipmentManagerContainerProps) {
   const {
     equipment,
-    pagination,
     equipmentTypes,
     isLoading,
     error,
@@ -52,7 +50,29 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     updateEquipment,
     archiveEquipment,
     isMutating,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useEquipmentManager();
+
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
@@ -169,14 +189,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     [archiveEquipment]
   );
 
-  // Handle page change
-  const handlePageChange = React.useCallback(
-    (page: number) => {
-      setFilter("page", page);
-    },
-    [setFilter]
-  );
-
   // Handle filter changes from Sidebar
   const handleFilterChange = React.useCallback(
     (key: keyof EquipmentSearchParams, value: string | undefined) => {
@@ -252,12 +264,12 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         onArchive={handleArchiveClick}
       />
 
-      {/* Pagination */}
-      <Pagination
-        currentPage={filters.page}
-        totalPages={pagination?.totalPages ?? 0}
-        onPageChange={handlePageChange}
-      />
+      {/* Intersection Observer Target */}
+      <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
+        {isFetchingNextPage && (
+          <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
+        )}
+      </div>
 
       {/* Add Equipment Dialog */}
       <AddEquipmentDialog

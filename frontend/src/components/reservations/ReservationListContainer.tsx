@@ -40,6 +40,9 @@ function ReservationListContainerInner({
     updateReservation,
     bulkUpdateStatus,
     isMutating,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useReservations({ initialFilters });
 
   // Dialog states
@@ -275,13 +278,7 @@ function ReservationListContainerInner({
     window.location.href = `/reservations/${reservation.id}`;
   }, []);
 
-  // Handle page change
-  const handlePageChange = React.useCallback(
-    (page: number) => {
-      setFilter("page", page);
-    },
-    [setFilter]
-  );
+  // Calculate active filters count
 
   // Handle scope change with URL update
   const handleScopeChange = React.useCallback(
@@ -339,13 +336,13 @@ function ReservationListContainerInner({
       <ReservationCardList
         reservations={data?.reservations ?? []}
         isLoading={isLoading}
-        currentPage={filters.page}
-        totalPages={data?.pagination.totalPages ?? 0}
         hasFilters={hasActiveFilters}
         mode={mode}
         scope={filters.scope}
         currentUserId={currentUserId}
-        onPageChange={handlePageChange}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
         onModify={showActions ? handleModify : undefined}
         onCancel={showActions ? handleCancelClick : undefined}
         onReturn={showActions ? handleReturn : undefined}

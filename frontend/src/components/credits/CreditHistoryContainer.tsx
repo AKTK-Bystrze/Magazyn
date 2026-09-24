@@ -2,7 +2,6 @@ import * as React from "react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { useCreditHistory } from "@/hooks/useCreditHistory";
 import { CreditHistoryTable } from "./CreditHistoryTable";
-import { Pagination } from "@/components/ui/pagination";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Wallet } from "lucide-react";
 import { CREDIT_HISTORY_UI_STRINGS, ICON_SIZE_SM } from "@/lib/config/constants";
@@ -12,7 +11,27 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
  * Inner component that uses the useCreditHistory hook
  */
 function CreditHistoryContainerInner() {
-  const { data, isLoading, isError, error, page, setPage } = useCreditHistory();
+  const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useCreditHistory();
+
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="space-y-6">
@@ -50,18 +69,14 @@ function CreditHistoryContainerInner() {
 
       {/* Credit History Table */}
       <div className="space-y-4">
-        <CreditHistoryTable data={data?.creditHistory ?? []} isLoading={isLoading} />
+        <CreditHistoryTable data={data?.history ?? []} isLoading={isLoading} />
 
-        {/* Pagination */}
-        {(data?.pagination.totalPages ?? 0) > 1 && (
-          <div className="pt-2">
-            <Pagination
-              currentPage={page}
-              totalPages={data?.pagination.totalPages ?? 0}
-              onPageChange={setPage}
-            />
-          </div>
-        )}
+        {/* Intersection Observer Target */}
+        <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
+          {isFetchingNextPage && (
+            <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
+          )}
+        </div>
       </div>
     </div>
   );

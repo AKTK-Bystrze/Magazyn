@@ -4,9 +4,10 @@ package config
 
 import (
 	"context"
-	"magazyn/backend/internal/logger"
 	"os"
 	"strings"
+
+	"magazyn/backend/internal/logger"
 
 	"github.com/joho/godotenv"
 	"github.com/supabase-community/supabase-go"
