@@ -73,8 +73,9 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.Handler())
 	metricsServer := &http.Server{
-		Addr:    ":9091",
-		Handler: metricsMux,
+		Addr:              ":9091",
+		Handler:           metricsMux,
+		ReadHeaderTimeout: 3 * time.Second,
 	}
 
 	go func() {
