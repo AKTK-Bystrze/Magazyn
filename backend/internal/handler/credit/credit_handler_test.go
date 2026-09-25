@@ -2,12 +2,13 @@ package credit
 
 import (
 	"context"
-	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/auth"
-	"magazyn/backend/internal/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/auth"
+	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

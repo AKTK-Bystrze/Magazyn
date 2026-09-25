@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+
 	"magazyn/backend/internal/types"
 
 	gotruetypes "github.com/supabase-community/gotrue-go/types"

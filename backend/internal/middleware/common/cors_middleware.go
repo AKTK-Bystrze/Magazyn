@@ -1,8 +1,9 @@
 package common
 
 import (
-	"magazyn/backend/internal/logger"
 	"net/http"
+
+	"magazyn/backend/internal/logger"
 )
 
 func CORSMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {

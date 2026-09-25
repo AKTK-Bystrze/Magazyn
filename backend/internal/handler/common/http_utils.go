@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/logger"
-	"magazyn/backend/internal/types"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/logger"
+	"magazyn/backend/internal/types"
 )
 
 func ExtractBearerToken(r *http.Request) (string, error) {

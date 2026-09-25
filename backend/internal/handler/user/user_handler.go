@@ -3,13 +3,14 @@ package user
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service/user"
 	"magazyn/backend/internal/types"
 	"magazyn/backend/internal/validation"
-	"net/http"
 )
 
 type UserHandler struct {

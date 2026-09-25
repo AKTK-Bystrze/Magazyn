@@ -2,11 +2,12 @@ package auth
 
 import (
 	"context"
+	"strings"
+	"time"
+
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"strings"
-	"time"
 )
 
 type AuthService interface {

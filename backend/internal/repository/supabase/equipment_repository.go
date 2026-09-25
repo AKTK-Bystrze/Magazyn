@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 	"magazyn/backend/internal/validation"
-	"strings"
 
 	"github.com/supabase-community/postgrest-go"
 	"github.com/supabase-community/supabase-go"

@@ -3,6 +3,7 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"

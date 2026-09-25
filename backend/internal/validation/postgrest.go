@@ -3,11 +3,12 @@ package validation
 
 import (
 	"fmt"
-	"magazyn/backend/internal/constants"
-	"magazyn/backend/internal/types"
 	"regexp"
 	"strings"
 	"time"
+
+	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/types"
 )
 
 // PostgREST operator characters that need escaping in search filters

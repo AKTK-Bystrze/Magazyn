@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"magazyn/backend/internal/types"
 	"strings"
+
+	"magazyn/backend/internal/types"
 )
 
 // User role constants that match the database ENUM type.

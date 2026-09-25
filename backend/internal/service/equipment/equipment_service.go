@@ -3,12 +3,13 @@ package equipment
 import (
 	"context"
 	"fmt"
+	"math"
+	"strings"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"math"
-	"strings"
 )
 
 // Equipment Service Interface

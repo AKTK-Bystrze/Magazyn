@@ -1,11 +1,12 @@
 package auth
 
 import (
+	"net/http"
+
 	"magazyn/backend/internal/appcontext"
 	authutil "magazyn/backend/internal/auth"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
-	"net/http"
 )
 
 func RequireRoles(allowedRoles ...string) func(http.Handler) http.Handler {

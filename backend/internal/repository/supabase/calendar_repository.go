@@ -3,11 +3,12 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+	"sort"
+	"time"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"sort"
-	"time"
 
 	"github.com/supabase-community/supabase-go"
 )

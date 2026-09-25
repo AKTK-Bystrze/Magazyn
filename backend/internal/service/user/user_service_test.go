@@ -2,10 +2,11 @@ package user
 
 import (
 	"context"
+	"testing"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

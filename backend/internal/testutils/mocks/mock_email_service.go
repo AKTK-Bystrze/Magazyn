@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+
 	"magazyn/backend/internal/service/email"
 
 	"github.com/stretchr/testify/mock"

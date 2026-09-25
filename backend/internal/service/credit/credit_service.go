@@ -2,11 +2,12 @@ package credit
 
 import (
 	"context"
+	"math"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"math"
 )
 
 type CreditHistoryService interface {

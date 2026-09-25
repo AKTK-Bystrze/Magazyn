@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"magazyn/backend/internal/types"
 	"testing"
+
+	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 )

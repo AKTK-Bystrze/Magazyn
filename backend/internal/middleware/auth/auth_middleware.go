@@ -2,11 +2,12 @@ package auth
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
-	"net/http"
-	"strings"
 )
 
 func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.Handler {

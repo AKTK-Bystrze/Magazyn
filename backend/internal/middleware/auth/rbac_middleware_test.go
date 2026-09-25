@@ -3,11 +3,12 @@ package auth
 import (
 	"context"
 	"encoding/json"
-	"magazyn/backend/internal/appcontext"
-	"magazyn/backend/internal/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"magazyn/backend/internal/appcontext"
+	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 )

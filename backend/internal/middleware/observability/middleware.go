@@ -2,8 +2,9 @@ package observability
 
 import (
 	"context"
-	"magazyn/backend/internal/appcontext"
 	"net/http"
+
+	"magazyn/backend/internal/appcontext"
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"

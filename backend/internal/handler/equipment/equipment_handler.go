@@ -2,14 +2,15 @@ package equipment
 
 import (
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	"magazyn/backend/internal/types"
 	"magazyn/backend/internal/validation"
-	"net/http"
-	"time"
 )
 
 type EquipmentHandler struct {

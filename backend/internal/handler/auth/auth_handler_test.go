@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/handler/auth"
 	serviceMocks "magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

@@ -3,12 +3,13 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strings"
+
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	authservice "magazyn/backend/internal/service/auth"
 	"magazyn/backend/internal/types"
-	"net/http"
-	"strings"
 )
 
 type AuthHandler struct {

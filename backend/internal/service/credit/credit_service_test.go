@@ -2,10 +2,11 @@ package credit
 
 import (
 	"context"
+	"testing"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 )

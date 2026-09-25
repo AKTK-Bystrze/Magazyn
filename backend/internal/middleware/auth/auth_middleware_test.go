@@ -2,12 +2,13 @@ package auth
 
 import (
 	"errors"
-	"magazyn/backend/internal/appcontext"
-	serviceMocks "magazyn/backend/internal/testutils/mocks"
-	"magazyn/backend/internal/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"magazyn/backend/internal/appcontext"
+	serviceMocks "magazyn/backend/internal/testutils/mocks"
+	"magazyn/backend/internal/types"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

@@ -3,6 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/config"
 	authhandler "magazyn/backend/internal/handler/auth"
@@ -24,11 +30,6 @@ import (
 	equipmentservice "magazyn/backend/internal/service/equipment"
 	reservationservice "magazyn/backend/internal/service/reservation"
 	userservice "magazyn/backend/internal/service/user"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 func main() {

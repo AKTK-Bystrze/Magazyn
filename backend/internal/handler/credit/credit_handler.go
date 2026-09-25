@@ -1,12 +1,13 @@
 package credit
 
 import (
+	"net/http"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/service/credit"
 	"magazyn/backend/internal/types"
-	"net/http"
 )
 
 type CreditHistoryHandler struct {

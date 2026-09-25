@@ -3,13 +3,14 @@ package reservation
 // It maps HTTP requests to service calls and formats responses.
 import (
 	"encoding/json"
+	"net/http"
+
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service/reservation"
 	"magazyn/backend/internal/types"
-	"net/http"
 )
 
 type ReservationHandler struct {

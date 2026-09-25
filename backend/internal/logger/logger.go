@@ -5,10 +5,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"magazyn/backend/internal/appcontext"
-	model "magazyn/backend/internal/types"
 	"os"
 	"strings"
+
+	"magazyn/backend/internal/appcontext"
+	model "magazyn/backend/internal/types"
 )
 
 type LogLevel string

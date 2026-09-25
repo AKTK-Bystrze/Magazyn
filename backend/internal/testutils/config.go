@@ -3,11 +3,12 @@ package testutils
 import (
 	"context"
 	"fmt"
-	"magazyn/backend/internal/config"
-	"magazyn/backend/internal/logger"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"magazyn/backend/internal/config"
+	"magazyn/backend/internal/logger"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"

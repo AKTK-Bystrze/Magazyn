@@ -3,11 +3,12 @@ package metrics
 import (
 	"context"
 	"errors"
+	"net/http"
+	"time"
+
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
-	"net/http"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
