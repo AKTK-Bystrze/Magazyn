@@ -9,27 +9,39 @@
 - **Authentication**: Supabase Auth (`@supabase/ssr`)
 - **Testing**: Vitest (Unit) + Playwright (E2E)
 
-## 2. API Proxy Pattern
-The Astro SSR layer acts as a proxy between the frontend client and the Go backend:
-1. **Client Request**: React component fetches from `/api/*` via React Query.
-2. **Astro Route**: Matches `/pages/api/[...path].ts`. Extracts `locals.accessToken` populated by Astro Middleware.
-3. **Backend Request**: Astro forwards the request to the Go API, appending `Authorization: Bearer <token>`.
-4. **Response**: Relays backend data back to the client.
-**Why?** Keeps the JWT secure in a server-side HTTP-only cookie and avoids CORS issues.
+## 2. API Proxy Pattern & Full Request Flow
+The Astro SSR layer proxies requests to the Go backend to keep JWTs secure in HTTP-only cookies and avoid CORS.
+**Full Request Chain**:
+1. User Action → React Component Handler
+2. Custom Hook (e.g., `useEquipmentList`)
+3. API Module → API Client (`src/lib/api.ts`)
+4. **Frontend API Proxy** (`/pages/api/*`): Extracts `locals.accessToken` via middleware.
+5. **Go Backend**: Proxy forwards request with `Authorization: Bearer <token>`. Returns `snake_case` JSON.
+6. **Transformer Layer**: Zod validation + transforms to `camelCase`.
+7. React Query caches data → Component Re-renders.
 
-## 3. Authentication Flow (Magic Links)
-1. **Initiate**: User requests login. `supabase.auth.signInWithOtp` sends an email via Mailpit (local) or SMTP (prod).
-2. **Callback**: User clicks the email link containing `#access_token=...`.
-3. **Session Processing**: 
-   - `AuthListener.tsx` detects the hash change.
-   - Pushes token to `supabase.auth.setSession`.
-   - Writes standard `magazyn-auth-token` cookie for the API proxies.
-4. **Redirection**: Calls `RedirectManager` to navigate based on role.
+## 3. Type-Safe Transformer Pattern
+**Rule**: Backend sends `snake_case`, frontend uses `camelCase`.
+- **4 Layers**: DTOs (backend shape) → Zod Validators → Transformers (functions) → Frontend Types (app shape).
+- Transforms must be bidirectional when sending data back (e.g., camelCase → snake_case).
 
-## 4. Redirect Flow & Middleware
-- **Middleware (`src/middleware/index.ts`)**: Runs on every SSR request. Extracts the `magazyn-auth-token` cookie and hydrates `locals.user`.
-- **RedirectManager (`src/lib/auth/redirect-manager.ts`)**: Central source of truth for routing logic.
-  - `super_admin`, `admin` -> `/admin`
-  - `user` -> `/dashboard`
-  - Disabled accounts -> `/account-disabled`
-- **Protection**: If an unauthenticated user accesses `/dashboard`, they are redirected to `/login?redirect=/dashboard`. Upon successful authentication, they are routed back to their initial destination unless it violates security rules (e.g. users attempting to reach `/admin`).
+## 4. Authentication Flow (Magic Links)
+1. **Initiate**: `supabase.auth.signInWithOtp` sends email.
+2. **Callback**: User clicks link containing `#access_token=...`.
+3. **Session Processing** (`AuthListener.tsx`): Pushes token to `setSession`, writes `magazyn-auth-token` cookie.
+4. **Token Refresh**: Supabase auto-refreshes tokens. If a refresh token expires, a `SIGNED_OUT` event fires and redirects to login.
+
+## 5. Security & Redirect Flow
+- **SessionInfo Contract**: Must track `userId`, `role` (user|admin|super_admin), `isEnabled`, `creditBalance`, `username`.
+- **Security Rules**:
+  1. Never store tokens in `localStorage`.
+  2. Use `SameSite=Lax` cookies for CSRF protection.
+  3. Always trust `sessionInfo.role` from the backend, not JWT claims.
+  4. Validate all redirect URLs (same-origin/whitelisted).
+  5. Prevent redirect loops (max 3 in 5s).
+- **Middleware (`src/middleware/index.ts`)**: Runs on every SSR request to hydrate `locals.user` and `locals.sessionInfo`.
+- **RedirectManager (`src/lib/auth/redirect-manager.ts`)**: Central source of truth.
+  - API: `getRedirectForAuthState(user, sessionInfo, currentPath, redirectParam, origin)`
+  - **Access Matrix**:
+    - **Disabled Users**: Can access `/account-disabled` and `/api/auth/session`. All other pages redirect to `/account-disabled`. Other API routes return 403.
+    - **Enabled Users**: `super_admin`/`admin` → `/admin`, `user` → `/dashboard`. Unauthenticated users attempting protected routes go to `/login?redirect=<path>`.

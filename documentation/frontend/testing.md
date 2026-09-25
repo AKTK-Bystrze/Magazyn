@@ -3,7 +3,6 @@
 ## 1. Unit Testing (Vitest)
 - **DO**: Use `vi.fn()`, `vi.spyOn()`, and `vi.stubGlobal()` for test doubles.
 - **DO**: Place mock factory functions at the top level of the test file.
-- **DO**: Use `expect(value).toMatchInlineSnapshot()` for readable assertions.
 - **DO**: Configure `environment: 'jsdom'` for frontend component tests and use testing-library utilities.
 
 ## 2. E2E Testing (Playwright)
