@@ -70,7 +70,6 @@ func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 		details = e.Details
 		code = e.Code
 	default:
-		// Generic error
 		message = err.Error()
 	}
 	RespondJSON(ctx, w, status, map[string]interface{}{

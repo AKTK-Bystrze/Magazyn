@@ -47,14 +47,12 @@ export function ConfirmArchiveDialog({
 }: ConfirmArchiveDialogProps) {
   const [localError, setLocalError] = React.useState<string | null>(null);
 
-  // Clear error when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
       setLocalError(null);
     }
   }, [isOpen]);
 
-  // Handle confirm
   const handleConfirm = React.useCallback(async () => {
     if (!equipment) return;
 
@@ -68,7 +66,6 @@ export function ConfirmArchiveDialog({
     }
   }, [equipment, onConfirm, onClose]);
 
-  // Guard: don't render if no equipment
   if (!equipment) {
     return null;
   }

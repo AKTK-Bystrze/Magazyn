@@ -71,10 +71,6 @@ const MOCK_EMPTY = {
 test.describe("Credits History", () => {
   let creditPage: CreditHistoryPage;
 
-  test.beforeEach(async ({ page }) => {
-    creditPage = new CreditHistoryPage(page);
-  });
-
   // Use test.use to force mobile viewport if not already global,
   // but global config says we use Pixel 5.
 

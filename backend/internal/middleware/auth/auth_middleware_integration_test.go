@@ -26,7 +26,6 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 func TestAuthMiddleware_Integration(t *testing.T) {
-	// Create a unique user for this test
 	email := fmt.Sprintf("test_mid_%d@example.com", time.Now().Unix())
 	password := "testMid123!"
 	user, err := testutils.CreateTestUser(email, password)
@@ -36,7 +35,6 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		return
 	}
 	defer func() {
-		// Clean up
 		testutils.DeleteTestUser(user.ID.String())
 	}()
 	// Login to get a valid token
@@ -65,7 +63,6 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 		appURL := os.Getenv("PUBLIC_APP_URL")
-		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
@@ -93,7 +90,6 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 		appURL := os.Getenv("PUBLIC_APP_URL")
-		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)

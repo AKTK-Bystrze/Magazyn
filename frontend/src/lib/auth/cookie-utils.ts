@@ -12,11 +12,8 @@ import {
   COOKIE_EXTENDED_WAIT_MS,
 } from "@/lib/config/constants";
 
-// Cookie configuration constants
 export const AUTH_COOKIE_NAME = "magazyn-auth-token";
 
-// Max age: 1 year in seconds
-// Broken down for clarity: 60 seconds * 60 minutes * 24 hours * 365 days
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /**
@@ -34,7 +31,6 @@ export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
  * setAuthCookie(session.access_token)
  */
 export function setAuthCookie(accessToken: string): void {
-  // Detect production environment
   const isProd = import.meta.env.PROD;
   const secureFlag = isProd ? "; Secure" : "";
 
@@ -46,13 +42,10 @@ export function setAuthCookie(accessToken: string): void {
  * Used during logout or when authentication fails
  */
 export function removeAuthCookie(): void {
-  // Try removing with default domain
   document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
 
-  // Try removing with current hostname (needed if cookie was set with explicit domain)
   document.cookie = `${AUTH_COOKIE_NAME}=; path=/; domain=${window.location.hostname}; max-age=0`;
 
-  // Try removing with localhost explicitly (for development/testing)
   if (window.location.hostname === "localhost") {
     document.cookie = `${AUTH_COOKIE_NAME}=; path=/; domain=localhost; max-age=0`;
   }
@@ -121,7 +114,6 @@ export async function waitForCookie(timeout: number = COOKIE_WAIT_TIMEOUT_MS): P
     if (hasAuthCookie()) {
       return true;
     }
-    // Check every COOKIE_POLL_INTERVAL_MS
     await new Promise((resolve) => setTimeout(resolve, COOKIE_POLL_INTERVAL_MS));
   }
 
@@ -141,15 +133,12 @@ export async function waitForCookieAndRedirect(
 ): Promise<void> {
   setAuthCookie(accessToken);
 
-  // Wait a bit for cookie to be set
   await new Promise((resolve) => setTimeout(resolve, COOKIE_INITIAL_WAIT_MS));
 
-  // Double-check cookie is set
   if (!hasAuthCookie()) {
     logger.warn("⚠️ Cookie not set after initial wait, waiting longer...");
     await new Promise((resolve) => setTimeout(resolve, COOKIE_EXTENDED_WAIT_MS));
   }
 
-  // Perform redirect
   window.location.replace(redirectTo);
 }

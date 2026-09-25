@@ -99,8 +99,6 @@ func (r *analyticsRepository) GetUserStats(ctx context.Context, query types.Anal
 	return stats, nil
 }
 func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equipmentID string, limit int) ([]types.TopRenterDTO, error) {
-	// Query reservations joined with profiles, grouped by user
-	// This is a simplified approach - in production, you might use a DB view or RPC
 	data, _, err := r.client.From("reservations").
 		Select("user_id, profiles!user_id(username), start_date, end_date", "exact", false).
 		Eq("equipment_id", equipmentID).

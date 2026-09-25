@@ -33,7 +33,6 @@ const user = Astro.locals.user;
 const sessionInfo = Astro.locals.sessionInfo;
 const currentPath = Astro.url.pathname;
 
-// Determine if user is admin
 const isAdmin = sessionInfo?.role === "admin" || sessionInfo?.role === "super_admin";
 ---
 
@@ -74,7 +73,6 @@ const isAdmin = sessionInfo?.role === "admin" || sessionInfo?.role === "super_ad
   </div>
 
   <script is:inline>
-    // Apply initial sidebar state to prevent flicker
     (function () {
       const isCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
       const container = document.getElementById("desktop-sidebar-container");

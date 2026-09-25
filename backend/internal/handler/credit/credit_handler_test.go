@@ -127,7 +127,6 @@ func TestHandleGetCreditHistory(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Setup
 			mockService := new(MockCreditHistoryService)
 			tc.setupMock(mockService)
 			handler := NewCreditHistoryHandler(mockService)

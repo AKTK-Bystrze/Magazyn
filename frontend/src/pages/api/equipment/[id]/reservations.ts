@@ -11,7 +11,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
   locals.logger?.info(`Listing reservations for equipment ${params.id}`);
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}/reservations`;
 
-  // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({

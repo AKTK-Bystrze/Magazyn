@@ -39,7 +39,6 @@ export function FilterSidebar({
 }: FilterSidebarProps) {
   const [searchValue, setSearchValue] = React.useState(filters.search || "");
 
-  // Validate date range
   const [dateValidationErrors, setDateValidationErrors] = React.useState<DateRangeValidationErrors>(
     {
       startDate: null,
@@ -47,7 +46,6 @@ export function FilterSidebar({
     }
   );
 
-  // Validate dates whenever they change
   React.useEffect(() => {
     const errors: DateRangeValidationErrors = {
       startDate: null,
@@ -70,7 +68,6 @@ export function FilterSidebar({
     setDateValidationErrors(errors);
   }, [filters.availableFrom, filters.availableTo]);
 
-  // Handle debounced search
   React.useEffect(() => {
     const timer = setTimeout(() => {
       if (searchValue !== (filters.search || "")) {
@@ -81,7 +78,6 @@ export function FilterSidebar({
     return () => clearTimeout(timer);
   }, [searchValue, filters.search, onFilterChange]);
 
-  // Sync search value if updated from outside (e.g. reset)
   React.useEffect(() => {
     setSearchValue(filters.search || "");
   }, [filters.search]);

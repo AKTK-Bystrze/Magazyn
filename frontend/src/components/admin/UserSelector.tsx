@@ -66,7 +66,6 @@ export function UserSelector({
     });
   }, [users, selectedUserId]);
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -76,7 +75,6 @@ export function UserSelector({
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
@@ -88,7 +86,6 @@ export function UserSelector({
     );
   }
 
-  // No users available
   if (users.length === 0) {
     return (
       <div className="rounded-md border border-muted bg-muted/50 p-3 text-sm text-muted-foreground">

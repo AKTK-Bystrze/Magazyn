@@ -18,7 +18,6 @@ import (
 // Reservation Service Interface
 // ReservationService defines operations for managing reservations.
 type ReservationService interface {
-	// List retrieves a paginated list of reservations based on the provided query filters.
 	List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error)
 	GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error)
 	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error)
@@ -137,9 +136,6 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	}
 	// Send Email (Async)
 	go func() {
-		// Needs a detached context or careful context handling.
-		// Using Background context to ensure it runs even if request context cancels.
-		// In production, use a task queue.
 		bgCtx := context.WithoutCancel(ctx)
 		profile, _ := s.userRepo.GetByID(bgCtx, targetUserID)
 		emailAddr := ""
@@ -182,7 +178,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	}
 	if cmd.Status != nil && *cmd.Status != current.Status {
 		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
-			// User tried to set something other than DENIED or RETURNED
 			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
 		}
 	}
@@ -213,7 +208,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			return nil, types.NewConflictError("Dates not available", nil)
 		}
 		if !isCancelling {
-			// Use the atomic credit adjustment function to handle partial refunds or extra charges
 			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end)
 			if err != nil {
 				logger.Errorf(ctx, "Failed to modify dates with credits: %v", err)
@@ -234,8 +228,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			current.StartDate = start
 			current.EndDate = end
 		} else {
-			// Just update dates in updateData without calculating partial refunds
-			// because full refund will be handled below
 			updateData.StartDate = &start
 			updateData.EndDate = &end
 			needsUpdate = true
@@ -269,7 +261,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 					}
 					logger.Infof(ctx, "Refunded %d credits for reservation %s", refundAmount, id)
 					creditAdjustment = refundAmount
-					// Fetch new balance
 					userProfile, err := s.userRepo.GetByID(ctx, current.UserID)
 					if err == nil && userProfile != nil {
 						newBalance = userProfile.CreditBalance
@@ -289,7 +280,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			return nil, err
 		}
 	} else {
-		// Only dates changed, and they were already updated via ModifyReservationDatesWithCredits
 		updated = &types.PublicReservationsSelect{
 			ID:          id,
 			EquipmentID: current.EquipmentID,

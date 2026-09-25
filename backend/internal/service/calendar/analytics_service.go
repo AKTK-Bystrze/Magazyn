@@ -12,7 +12,6 @@ import (
 // Analytics Service Interface
 // AnalyticsService defines operations for equipment and user analytics
 type AnalyticsService interface {
-	// GetEquipmentStats retrieves aggregated equipment usage statistics
 	GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.EquipmentStatsResponse, error)
 	// GetUserStats retrieves aggregated user activity statistics
 	GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.UserStatsResponse, error)

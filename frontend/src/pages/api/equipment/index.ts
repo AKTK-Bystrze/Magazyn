@@ -10,7 +10,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const url = new URL(request.url);
   const rawParams = Object.fromEntries(url.searchParams);
 
-  // Validate input
   const result = equipmentQuerySchema.safeParse(rawParams);
   if (!result.success) {
     return new Response(
@@ -27,14 +26,12 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
   const backendUrl = new URL(`${BACKEND_URL}/equipment`);
 
-  // Forward validated parameters
   Object.entries(result.data).forEach(([key, value]) => {
     if (value !== undefined) {
       backendUrl.searchParams.append(key, String(value));
     }
   });
 
-  // Get session token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({
@@ -67,7 +64,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
   locals.logger?.info("Creating new equipment");
   const backendUrl = `${BACKEND_URL}/equipment`;
 
-  // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({

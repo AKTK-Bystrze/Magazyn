@@ -36,10 +36,8 @@ export function ReservationCard({
   onModify,
   onCancel,
   onReturn,
-  // onViewDetails - reserved for future use
 }: ReservationCardProps) {
   const isAdmin = mode === "admin";
-  // Determine available actions based on status and permissions
   const { canCancel, canMarkReturned } = React.useMemo(
     () => canChangeStatus(reservation.status, isOwn, isAdmin),
     [reservation.status, isOwn, isAdmin]

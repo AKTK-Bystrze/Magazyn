@@ -26,13 +26,11 @@ func NewCreditHistoryService(creditRepo repository.CreditHistoryRepository, user
 }
 func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string) (*types.CreditHistoryResponse, error) {
 	logger.Infof(ctx, "Fetching credit history (reqUser: %s) - Page: %d, PerPage: %d", requestingUserID, query.Page, query.PerPage)
-	// 1. Pagination Validation & Normalization
 	page := query.Page
 	if page < 1 {
 		page = constants.DefaultPage
 	}
 	perPage := query.PerPage
-	// Default validation if 0 or negative
 	if perPage <= 0 {
 		perPage = constants.DefaultPerPage
 	}
@@ -69,9 +67,6 @@ func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types
 	userProfile, err := s.userRepo.GetByID(ctx, targetUserID)
 	if err != nil {
 		logger.Errorf(ctx, "CreditService: Failed to fetch profile for %s: %v", targetUserID, err)
-		// If the user doesn't exist, GetByID returns error.
-		// Use standard NotFound handling if appropriate, or wrap it.
-		// Since user_id comes from either context (exists) or filter (might not exist), this handles both.
 		return nil, types.NewNotFoundError("User", targetUserID)
 	}
 	logger.Debugf(ctx, "CreditService: Profile found. Balance: %d", userProfile.CreditBalance)

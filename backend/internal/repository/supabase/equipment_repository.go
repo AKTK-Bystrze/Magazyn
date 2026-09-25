@@ -30,7 +30,6 @@ func NewEquipmentRepository(client *supabase.Client, supabaseURL, supabaseKey st
 	}
 }
 func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
-	// Use authenticated client to ensure RLS policies allow access
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	// Build base query with all filters
 	baseQuery := client.From("equipment").
@@ -46,7 +45,6 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 		baseQuery = baseQuery.Eq("status", *query.Status)
 	}
 	if query.Search != nil && *query.Search != "" {
-		// Sanitize search term to prevent PostgREST operator injection
 		searchTerm := validation.SanitizeSearchTerm(*query.Search)
 		baseQuery = baseQuery.Or(fmt.Sprintf("name.ilike.%%%s%%,description.ilike.%%%s%%", searchTerm, searchTerm), "")
 	}
@@ -58,7 +56,6 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 			return nil, 0, fmt.Errorf("failed to check equipment availability: %w", err)
 		}
 		conflictIDs = ids
-		// Debug logging
 		logger.Debugf(ctx, "Availability filter: %s to %s, found %d conflicting equipment IDs: %v",
 			*query.AvailableFrom, *query.AvailableTo, len(conflictIDs), conflictIDs)
 	}
@@ -92,7 +89,6 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	// Apply pagination to filtered results
 	offset := (query.Page - 1) * query.PerPage
 	endIndex := offset + query.PerPage
-	// Debug log first and last item dates
 	if len(filteredItems) > 0 {
 		logger.Debugf(ctx, "List result: %d items. First: %v (%s), Last: %v (%s)",
 			len(filteredItems), filteredItems[0].Name, filteredItems[0].CreatedAt,
@@ -147,16 +143,11 @@ func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID str
 		Single().
 		Execute()
 	if err != nil {
-		// Assume error means not found (or single row requirement failed which means 0 or >1)
-		// If >1, it exists (duplicate). If 0, it doesn't.
-		// We'll simplisticly assume error/empty implies not found.
 		return false, nil
 	}
 	return len(data) > 2, nil
 }
 func (r *equipmentRepository) Create(ctx context.Context, equipment types.PublicEquipmentInsert) (*types.PublicEquipmentSelect, error) {
-	// Use admin client (via auth context)
-	// RLS policies now handle permission checks
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	data, _, err := adminClient.From("equipment").
 		Insert(equipment, false, "", "representation", "").
@@ -175,7 +166,6 @@ func (r *equipmentRepository) Create(ctx context.Context, equipment types.Public
 	return &created, nil
 }
 func (r *equipmentRepository) Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error) {
-	// Use admin client (via auth context)
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	data, _, err := adminClient.From("equipment").
 		Update(equipment, "", "representation").
@@ -194,7 +184,6 @@ func (r *equipmentRepository) Update(ctx context.Context, id string, equipment t
 	}
 	var updated types.PublicEquipmentSelect // Single() returns object
 	if err := json.Unmarshal(data, &updated); err != nil {
-		// Fallback if it returned array
 		var updatedArr []types.PublicEquipmentSelect
 		if err2 := json.Unmarshal(data, &updatedArr); err2 == nil && len(updatedArr) > 0 {
 			return &updatedArr[0], nil
@@ -204,7 +193,6 @@ func (r *equipmentRepository) Update(ctx context.Context, id string, equipment t
 	return &updated, nil
 }
 func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
-	// Use admin client (via auth context)
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	archived := true
 	updateData := types.PublicEquipmentUpdate{
@@ -235,7 +223,6 @@ func (r *equipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentI
 	return logs, nil
 }
 func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
-	// Use admin client (via auth context)
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	desc := true
 	data, _, err := adminClient.From("maintenance_logs").
@@ -397,7 +384,5 @@ func (r *equipmentRepository) CreateMaintenanceLog(ctx context.Context, equipmen
 
 // Helper to check for unique violation
 func isUniqueViolation(err error) bool {
-	// Check for Postgres error code 23505 (unique_violation)
-	// or string matching if code is not directly accessible (Supabase-go wrapping)
 	return err != nil && (strings.Contains(err.Error(), "duplicate key value") || strings.Contains(err.Error(), "23505"))
 }

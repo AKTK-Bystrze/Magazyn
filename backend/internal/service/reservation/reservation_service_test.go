@@ -28,7 +28,6 @@ func setupTestService() (*mocks.MockReservationRepository, *mocks.MockEquipmentR
 
 // Authorization Tests - GetByID
 func TestGetByID_OwnerCanView(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	userID := "user-123"
@@ -50,7 +49,6 @@ func TestGetByID_OwnerCanView(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestGetByID_NonOwnerForbidden(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	ownerID := "user-123"
@@ -73,7 +71,6 @@ func TestGetByID_NonOwnerForbidden(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestGetByID_AdminCanViewAny(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	ownerID := "user-123"
@@ -96,7 +93,6 @@ func TestGetByID_AdminCanViewAny(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestGetByID_SuperAdminCanViewAny(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	ownerID := "user-123"
@@ -121,7 +117,6 @@ func TestGetByID_SuperAdminCanViewAny(t *testing.T) {
 
 // Authorization Tests - Update
 func TestUpdate_UserCannotUpdateOthers(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	ownerID := "user-123"
@@ -146,7 +141,6 @@ func TestUpdate_UserCannotUpdateOthers(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestUpdate_UserCannotModifyNonPending(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	userID := "user-123"
@@ -170,7 +164,6 @@ func TestUpdate_UserCannotModifyNonPending(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestUpdate_UserCanOnlyCancelOrReturn(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	userID := "user-123"
@@ -203,7 +196,6 @@ func TestUpdate_UserCanOnlyCancelOrReturn(t *testing.T) {
 
 // Business Logic Tests - List
 func TestList_Success(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	query := types.ReservationListQuery{
@@ -229,7 +221,6 @@ func TestList_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestList_PaginationCalculation(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 	query := types.ReservationListQuery{
@@ -249,7 +240,6 @@ func TestList_PaginationCalculation(t *testing.T) {
 
 // Business Logic Tests - Create
 func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
-	// Arrange
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 	cmd := types.CreateReservationsCommand{
@@ -272,7 +262,6 @@ func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 }
 func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
-	// Arrange
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 	cmd := types.CreateReservationsCommand{
@@ -303,7 +292,6 @@ func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 }
 func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
-	// Arrange
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 	cmd := types.CreateReservationsCommand{
@@ -334,7 +322,6 @@ func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 }
 func TestCreate_CostCalculation_SingleItem(t *testing.T) {
-	// Arrange
 	mockRepo, mockEquipRepo, mockUserRepo, mockEmailService, svc := setupTestService()
 	ctx := context.Background()
 	cmd := types.CreateReservationsCommand{
@@ -391,7 +378,6 @@ func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 }
 func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
-	// Arrange
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 	cmd := types.CreateReservationsCommand{
@@ -437,7 +423,6 @@ func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 }
 func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
-	// Arrange
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 	userID := "user-123"

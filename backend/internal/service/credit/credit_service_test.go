@@ -12,7 +12,6 @@ import (
 )
 
 func TestGetCreditHistory_Pagination(t *testing.T) {
-	// Setup
 	mockRepo := new(mocks.MockCreditHistoryRepository)
 	mockUserRepo := new(mocks.MockUserRepository)
 	service := NewCreditHistoryService(mockRepo, mockUserRepo)

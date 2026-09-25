@@ -7,7 +7,6 @@ import (
 )
 
 type EquipmentRepository interface {
-	// List retrieves a paginated list of equipment based on filters
 	List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error)
 	// GetByID retrieves a single equipment by ID
 	GetByID(ctx context.Context, id string) (*types.PublicEquipmentSelect, error)
@@ -46,6 +45,5 @@ type MaintenanceLogWithAdmin struct {
 type EquipmentTypeRepository interface {
 	ListAll(ctx context.Context) ([]types.PublicEquipmentTypesSelect, error)
 	Create(ctx context.Context, et types.PublicEquipmentTypesInsert) (*types.PublicEquipmentTypesSelect, error)
-	// GetTypesByIDs retrieves multiple equipment types by their IDs
 	GetTypesByIDs(ctx context.Context, ids []string) (map[string]types.PublicEquipmentTypesSelect, error)
 }

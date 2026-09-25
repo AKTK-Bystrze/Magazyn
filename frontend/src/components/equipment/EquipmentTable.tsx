@@ -117,7 +117,10 @@ export function EquipmentTable({
   onViewDetails,
   onArchive,
 }: EquipmentTableProps) {
-  const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   const requestSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";
@@ -133,11 +136,11 @@ export function EquipmentTable({
       sortableItems.sort((a: any, b: any) => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
-        
-        if (sortConfig.key === 'type.name') {
+
+        if (sortConfig.key === "type.name") {
           aValue = a.type?.name;
           bValue = b.type?.name;
-        } else if (sortConfig.key === 'type.creditCostPerDay') {
+        } else if (sortConfig.key === "type.creditCostPerDay") {
           aValue = a.type?.creditCostPerDay;
           bValue = b.type?.creditCostPerDay;
         }
@@ -154,7 +157,6 @@ export function EquipmentTable({
     return sortableItems;
   }, [equipment, sortConfig]);
 
-  // Create action handlers with item bound
   const handleEdit = React.useCallback(
     (item: EquipmentSearchItem) => () => {
       onEdit(item);
@@ -181,25 +183,48 @@ export function EquipmentTable({
       <Table data-testid="admin-equipment-table">
         <TableHeader>
           <TableRow>
-            <TableHead className="cursor-pointer" onClick={() => requestSort('internalId')}>{UI.INTERNAL_ID} {sortConfig?.key === 'internalId' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="cursor-pointer" onClick={() => requestSort('name')}>{UI.NAME} {sortConfig?.key === 'name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => requestSort('type.name')}>{UI.TYPE} {sortConfig?.key === 'type.name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="cursor-pointer" onClick={() => requestSort('status')}>{UI.STATUS} {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="hidden lg:table-cell text-right cursor-pointer" onClick={() => requestSort('type.creditCostPerDay')}>{UI.CREDIT_COST} {sortConfig?.key === 'type.creditCostPerDay' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort("internalId")}>
+              {UI.INTERNAL_ID}{" "}
+              {sortConfig?.key === "internalId" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort("name")}>
+              {UI.NAME}{" "}
+              {sortConfig?.key === "name" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("type.name")}
+            >
+              {UI.TYPE}{" "}
+              {sortConfig?.key === "type.name" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort("status")}>
+              {UI.STATUS}{" "}
+              {sortConfig?.key === "status" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="hidden lg:table-cell text-right cursor-pointer"
+              onClick={() => requestSort("type.creditCostPerDay")}
+            >
+              {UI.CREDIT_COST}{" "}
+              {sortConfig?.key === "type.creditCostPerDay"
+                ? sortConfig.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
+            </TableHead>
             <TableHead className="hidden xl:table-cell">{UI.CREATED}</TableHead>
             <TableHead className="w-[70px]">{UI.ACTIONS}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            // Loading skeletons
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
               <SkeletonRow key={`skeleton-${index}`} />
             ))
           ) : sortedEquipment.length === 0 ? (
             <EmptyState />
           ) : (
-            // Equipment rows
             sortedEquipment.map((item) => (
               <TableRow
                 key={item.id}

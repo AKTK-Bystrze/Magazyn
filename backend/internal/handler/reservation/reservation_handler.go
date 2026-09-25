@@ -34,7 +34,6 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		query.Status = &status
 	}
 	if qUserID := r.URL.Query().Get("user_id"); qUserID != "" {
-		// Only admin can filter by other user ID
 		if role == auth.RoleAdmin || role == auth.RoleSuperAdmin {
 			query.UserID = &qUserID
 		}
@@ -55,7 +54,6 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 	// scope="all" → show all reservations (any authenticated user)
 	// scope="my" or empty → show only user's own reservations
 	if scope == "all" {
-		// Bypass RLS to allow seeing all reservations
 		query.BypassRLS = true
 	} else {
 		query.UserID = &userID

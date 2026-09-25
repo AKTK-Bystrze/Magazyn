@@ -1,4 +1,4 @@
-import { type Page } from "@playwright/test";
+import { type Page, expect } from "@playwright/test";
 import { E2E_CONFIG } from "../constants";
 
 /**
@@ -36,8 +36,15 @@ export async function waitForMagicLinkSent(page: Page): Promise<void> {
  * @returns A promise that resolves when the user is logged out and redirected to login.
  */
 export async function logout(page: Page): Promise<void> {
-  await page.getByTestId("user-menu-trigger").click();
-  await page.getByTestId("logout-button").click();
+  const menuTrigger = page.getByTestId("user-menu-trigger");
+  const logoutBtn = page.getByTestId("logout-button");
+
+  await expect(async () => {
+    await menuTrigger.click();
+    await expect(logoutBtn).toBeVisible({ timeout: 1000 });
+  }).toPass();
+
+  await logoutBtn.click();
 
   // Wait for redirect to login page
   await page.waitForURL("**/login");

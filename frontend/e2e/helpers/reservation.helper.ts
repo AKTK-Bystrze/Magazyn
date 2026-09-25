@@ -179,7 +179,7 @@ export async function getAllReservationIds(page: Page): Promise<string[]> {
  * @returns A promise that resolves when the reservation is deleted.
  * @throws An error if the deletion fails.
  */
-export async function cancelReservation(
+export async function hardDeleteReservation(
   supabaseAdmin: SupabaseClient,
   reservationId: string
 ): Promise<void> {
@@ -197,12 +197,12 @@ export async function cancelReservation(
  * @param reservationIds - An array of reservation IDs to cancel.
  * @returns A promise that resolves when all reservations are deleted.
  */
-export async function cancelReservations(
+export async function hardDeleteReservations(
   supabaseAdmin: SupabaseClient,
   reservationIds: string[]
 ): Promise<void> {
   for (const id of reservationIds) {
-    await cancelReservation(supabaseAdmin, id);
+    await hardDeleteReservation(supabaseAdmin, id);
   }
 }
 

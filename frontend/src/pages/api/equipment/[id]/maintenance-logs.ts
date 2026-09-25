@@ -11,7 +11,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
   locals.logger?.info(`Listing maintenance logs for equipment ${params.id}`);
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}/maintenance-logs`;
 
-  // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({
@@ -45,7 +44,6 @@ export const POST: APIRoute = async ({ request, params, locals }) => {
   locals.logger?.info(`Creating maintenance log for equipment ${params.id}`);
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}/maintenance-logs`;
 
-  // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({

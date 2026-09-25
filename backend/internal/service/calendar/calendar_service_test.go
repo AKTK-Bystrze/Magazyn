@@ -179,11 +179,9 @@ func TestGetCalendarAvailability_MultiDayReservation(t *testing.T) {
 	assert.Len(t, result.Calendar, 5)
 	// Day 1 available
 	assert.True(t, result.Calendar[0].IsAvailable)
-	// Days 2-4 not available
 	assert.False(t, result.Calendar[1].IsAvailable)
 	assert.False(t, result.Calendar[2].IsAvailable)
 	assert.False(t, result.Calendar[3].IsAvailable)
-	// Day 5 available
 	assert.True(t, result.Calendar[4].IsAvailable)
 }
 

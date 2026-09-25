@@ -51,7 +51,6 @@ export function validateDateRange(
   return errors;
 }
 
-// Re-export calculateDays from date-utils for consistency
 export { calculateDays } from "@/lib/utils/date-utils";
 
 /**

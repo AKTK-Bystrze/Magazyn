@@ -36,9 +36,7 @@ describe("FilterSidebar", () => {
       screen.getByPlaceholderText(EQUIPMENT_FILTER_UI_STRINGS.SEARCH_PLACEHOLDER)
     ).toBeInTheDocument();
     expect(screen.getByText(EQUIPMENT_FILTER_UI_STRINGS.ALL_TYPES)).toBeInTheDocument();
-    // In vertical mode, availability uses RadioGroup
     expect(screen.getByLabelText(EQUIPMENT_FILTER_UI_STRINGS.STATUS_ALL)).toBeInTheDocument();
-    // DateRangePicker should be visible by default (it renders "Filtruj według dostępności")
     expect(
       screen.getByText(EQUIPMENT_FILTER_UI_STRINGS.FILTER_BY_AVAILABILITY)
     ).toBeInTheDocument();
@@ -56,8 +54,6 @@ describe("FilterSidebar", () => {
       />
     );
 
-    // In horizontal mode, availability uses a Select instead of RadioGroup
-    // Date picker title should not be rendered
     expect(
       screen.queryByText(EQUIPMENT_FILTER_UI_STRINGS.FILTER_BY_AVAILABILITY)
     ).not.toBeInTheDocument();
@@ -100,7 +96,6 @@ describe("FilterSidebar", () => {
       vi.advanceTimersByTime(400);
     });
 
-    // onFilterChange should be called with "search" and the search value
     expect(onFilterChange).toHaveBeenCalledWith("search", "raki");
 
     vi.useRealTimers();

@@ -26,7 +26,6 @@ func NewCreditHistoryRepository(client *supabase.Client, url, key string) reposi
 	}
 }
 func (r *creditHistoryRepository) GetCreditHistory(ctx context.Context, userID *string, page, perPage int) ([]types.CreditHistoryItemDTO, int64, error) {
-	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	// Build the query
 	// We select all fields from credit_history, plus the username from the associated user profile

@@ -13,7 +13,6 @@ import (
 // User Service Interface
 // UserService defines operations for user profile management.
 type UserService interface {
-	// GetProfile retrieves the profile of a user by ID.
 	GetProfile(ctx context.Context, id string) (*types.UserResponse, error)
 	// ListUsers retrieves a paginated list of users with optional filters.
 	ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error)
@@ -59,7 +58,6 @@ func (s *userService) GetProfile(ctx context.Context, id string) (*types.UserRes
 	return s.mapToUserResponse(profile), nil
 }
 func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error) {
-	// Enforce pagination limits
 	if page < 1 {
 		page = constants.DefaultPage
 	}
@@ -94,7 +92,6 @@ func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, se
 	}, nil
 }
 func (s *userService) ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error) {
-	// Enforce pagination limits
 	if page < 1 {
 		page = constants.DefaultPage
 	}
@@ -166,7 +163,6 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 	authUser, err := s.authRepo.CreateUser(ctx, req.Email, tempPassword)
 	if err != nil {
 		logger.Errorf(ctx, "AuthRepo.CreateUser failed: %v", err)
-		// Propagate specific error types from auth repo (ValidationError contains Supabase message)
 		if _, ok := err.(*types.ValidationError); ok {
 			return nil, err
 		}

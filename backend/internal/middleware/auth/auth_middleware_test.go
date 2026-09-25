@@ -43,7 +43,6 @@ func TestAuthMiddleware_HeaderValidation(t *testing.T) {
 	// I'll keep the main ones.
 }
 func TestAuthMiddleware_Logic(t *testing.T) {
-	// Helper to setup mocks
 	setupMocks := func() *serviceMocks.MockAuthRepository {
 		return new(serviceMocks.MockAuthRepository)
 	}
@@ -64,7 +63,6 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		mockRepo.On("GetProfile", mock.Anything, userID.String(), token).Return(profile, nil)
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			// Verify context populated
 			ctxUser := r.Context().Value(appcontext.UserContextKey).(*types.User)
 			assert.Equal(t, userID.String(), ctxUser.ID)
 			ctxProfile := r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
@@ -147,6 +145,5 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 	})
 }
 func TestMin(t *testing.T) {
-	// ... (Keep existing tests if possible, simplfied here)
 	assert.Equal(t, 5, min(5, 10))
 }

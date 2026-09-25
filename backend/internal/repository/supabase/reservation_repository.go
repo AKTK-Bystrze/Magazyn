@@ -28,8 +28,6 @@ func NewReservationRepository(client *supabase.Client, url string, key string) r
 	}
 }
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
-	// Use authenticated client for RLS enforcement
-	// Admin access is now handled by RLS policies
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	// Select basics + joined data including credit_cost_per_day for calculation
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
@@ -56,8 +54,6 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	if err != nil {
 		return nil, 0, err
 	}
-	// The response from Execute with "exact" count option in Select isn't straightforwardly mapped to countData length if paginated later.
-	// However, here we haven't paginated yet, so length is total count.
 	var countHolder []interface{}
 	if err := json.Unmarshal(countData, &countHolder); err != nil {
 		return nil, 0, err
@@ -78,13 +74,11 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	// Map to ListItem
 	result := make([]types.ReservationListItem, len(rawItems))
 	for i, item := range rawItems {
-		// Calculate credit cost: 0 if free, otherwise days * cost_per_day
 		var creditCost int32
 		if item.IsFree {
 			creditCost = 0
 		} else {
 			days := calculateDays(item.StartDate, item.EndDate)
-			// days is always a small positive integer (1-365 range), safe to cast to int32
 			creditCost = int32(days) * item.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
 		}
 		result[i] = types.ReservationListItem{
@@ -106,7 +100,6 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	return result, totalItems, nil
 }
 func (r *reservationRepository) GetReservationByID(ctx context.Context, id string) (*types.ReservationDetail, error) {
-	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	selectStr := "*, profiles!user_id(username, email), equipment(name, internal_id, equipment_types(name, credit_cost_per_day))"
 	data, _, err := client.From("reservations").
@@ -156,7 +149,6 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 	return detail, nil
 }
 func (r *reservationRepository) getAuditTrail(ctx context.Context, reservationID string) ([]types.ReservationAuditEntry, error) {
-	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	selectStr := "*, profiles!changed_by_user_id(username)"
 	data, _, err := client.From("reservation_history").
@@ -256,7 +248,6 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 		ReservationIDs []string `json:"reservation_ids"`
 		NewBalance     int32    `json:"new_balance"`
 	}
-	// Check for empty string?
 	if jsonStr == "" {
 		return nil, 0, types.NewInternalError("RPC returned empty response", nil)
 	}
@@ -266,16 +257,10 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 		return nil, 0, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
 	}
 	if msg, ok := rawResponse["message"]; ok {
-		// If message exists, it's likely an error (unless it's part of success, but our success is object with ids)
-		// Supabase errors usually have 'message' and 'code'.
-		// Our success object has 'reservation_ids' and 'new_balance'.
-		// Check against keys we expect.
 		if _, hasIDs := rawResponse["reservation_ids"]; !hasIDs {
-			// It is an error
 			return nil, 0, types.NewConflictError(fmt.Sprintf("%v", msg), nil)
 		}
 	}
-	// Also check "error" key just in case
 	if errVal, ok := rawResponse["error"]; ok {
 		return nil, 0, types.NewInternalError(fmt.Sprintf("RPC Error: %v", errVal), nil)
 	}
@@ -285,7 +270,6 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	return result.ReservationIDs, result.NewBalance, nil
 }
 func (r *reservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate, changedByUserID string) (*types.PublicReservationsSelect, error) {
-	// Use auth client - RLS policies map permissions
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	// Build RPC params
 	params := map[string]interface{}{
@@ -311,7 +295,6 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
 	}
 	if msg, ok := rawResponse["message"]; ok {
-		// It's an error
 		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
 	}
 	// Parse successful response
@@ -334,7 +317,6 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 	}, nil
 }
 func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids []string, status string, adminID string) (*types.BulkStatusUpdateResponse, error) {
-	// Use auth client - RLS policies map permissions
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	params := map[string]interface{}{
 		"p_reservation_ids": ids,
@@ -371,7 +353,6 @@ func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids 
 	return err
 }
 func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
-	// Use auth client - RLS policies map permissions
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	qb := client.From("reservations").
 		Select("*", "exact", false).
@@ -393,8 +374,6 @@ func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, 
 	return reservations, nil
 }
 func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
-	// Admin only, should have auth
-	// RLS policies now ensure complete data visibility for admin role
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	// Pending
 	_, pCount, err := client.From("reservations").Select("*", "exact", true).Eq("status", constants.ReservationStatusPending).Execute()
@@ -402,7 +381,6 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 		return nil, err
 	}
 	now := time.Now().Format("2006-01-02")
-	// Overdue
 	_, oCount, err := client.From("reservations").
 		Select("*", "exact", true).
 		Eq("status", constants.ReservationStatusRented).
@@ -428,7 +406,6 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 	}, nil
 }
 func (r *reservationRepository) GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
-	// Availability check - usually public, but let's stick to auth client if available
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	qb := client.From("reservations").
 		Select("*", "exact", false).
@@ -455,13 +432,10 @@ func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID
 		"p_reservation_id": reservationID,
 		"p_amount":         amount,
 	}
-	// RPC returns the response body as string
-	// TODO: Parse response to check for errors properly if library supports it.
 	_ = client.Rpc("refund_reservation_credits", "", params)
 	return nil
 }
 func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
-	// Use auth client
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	params := map[string]interface{}{
 		"p_reservation_id":     reservationID,
@@ -480,7 +454,6 @@ func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Co
 	}
 	// Check for error message
 	if msg, ok := rawResponse["message"]; ok {
-		// Error response from database
 		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
 	}
 	// Parse successful response

@@ -38,14 +38,11 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 		},
 	})
 	if err != nil {
-		// Forward the Supabase error message directly to the client
 		return types.NewValidationError(err.Error(), map[string]string{"email": email})
 	}
 	return nil
 }
 func (r *authRepository) CreateUser(ctx context.Context, email, password string) (*types.User, error) {
-	// Create user in Supabase Auth using the service key (Admin only)
-	// We verify the service key is present
 	if r.serviceKey == "" {
 		return nil, fmt.Errorf("service key is empty")
 	}
@@ -63,7 +60,6 @@ func (r *authRepository) CreateUser(ctx context.Context, email, password string)
 		EmailConfirm: true,
 	})
 	if err != nil {
-		// Forward the Supabase error message directly to the client
 		return nil, types.NewValidationError(err.Error(), map[string]string{"email": email})
 	}
 	return &types.User{
@@ -102,8 +98,6 @@ func (r *authRepository) GetUser(ctx context.Context, token string) (*types.User
 	}, nil
 }
 func (r *authRepository) GetProfile(ctx context.Context, userID string, token string) (*types.PublicProfilesSelect, error) {
-	// Create a new client with the user's token to enforce RLS
-	// This mirrors the logic previously in service/adapters.go
 	clientWithAuth, err := supabase.NewClient(
 		r.supabaseURL,
 		r.supabaseKey,

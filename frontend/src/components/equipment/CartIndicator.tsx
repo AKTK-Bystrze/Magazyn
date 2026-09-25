@@ -39,17 +39,14 @@ export function CartIndicator({
 }: CartIndicatorProps) {
   const [itemCount, setItemCount] = React.useState(0);
 
-  // Load cart count on mount and listen for updates
   React.useEffect(() => {
     const updateCount = () => {
       const cart = loadCartFromStorage();
       setItemCount(cart?.items?.length ?? 0);
     };
 
-    // Initial load
     updateCount();
 
-    // Listen for cart updates (dispatched from EquipmentCard)
     window.addEventListener("cart-updated", updateCount);
     window.addEventListener("storage", updateCount);
 
@@ -59,14 +56,12 @@ export function CartIndicator({
     };
   }, []);
 
-  // Save filter dates when navigating to checkout
   const handleCheckoutClick = () => {
     if (filterDates?.availableFrom && filterDates?.availableTo) {
       saveFilterDatesToStorage(filterDates.availableFrom, filterDates.availableTo);
     }
   };
 
-  // Don't render if cart is empty
   if (itemCount === 0) {
     return null;
   }

@@ -31,7 +31,6 @@ export const equipmentApi = {
     equipment: EquipmentSearchItem[];
     pagination: PaginationMeta;
   }> {
-    // Convert frontend params to backend format, only include defined values
     const queryParams: Record<string, string | number | boolean> = {};
 
     if (params) {
@@ -49,7 +48,6 @@ export const equipmentApi = {
       Object.keys(queryParams).length > 0 ? queryParams : undefined
     );
 
-    // Transform backend response to frontend format
     return transformEquipmentListResponse(response.data);
   },
 
@@ -62,7 +60,6 @@ export const equipmentApi = {
   async listTypes(): Promise<EquipmentType[]> {
     const response = await api.get("/api/equipment-types");
 
-    // Transform backend response to frontend format
     return transformEquipmentTypesResponse(response.data);
   },
 
@@ -73,7 +70,6 @@ export const equipmentApi = {
    * @returns Promise with created equipment
    */
   async create(command: CreateEquipmentCommand): Promise<EquipmentSearchItem> {
-    // Convert frontend camelCase to backend snake_case
     const payload = {
       internal_id: command.internalId,
       type_id: command.typeId,
@@ -85,7 +81,6 @@ export const equipmentApi = {
 
     const response = await api.post("/api/equipment", payload);
 
-    // Transform single equipment response
     return transformEquipmentDTO(response.data);
   },
 
@@ -97,7 +92,6 @@ export const equipmentApi = {
    * @returns Promise with updated equipment
    */
   async update(id: string, command: UpdateEquipmentCommand): Promise<EquipmentSearchItem> {
-    // Convert frontend camelCase to backend snake_case
     const payload: Record<string, unknown> = {};
     if (command.name !== undefined) payload.name = command.name;
     if (command.description !== undefined) payload.description = command.description;
@@ -106,7 +100,6 @@ export const equipmentApi = {
 
     const response = await api.patch(`/api/equipment/${id}`, payload);
 
-    // Transform single equipment response
     return transformEquipmentDTO(response.data);
   },
 
@@ -133,10 +126,8 @@ export const equipmentApi = {
   }> {
     const response = await api.get(`/api/equipment/${id}`);
 
-    // Transform single equipment using the DTO transformer directly
     const equipment = transformEquipmentDTO(response.data);
 
-    // Extract and transform maintenance logs
     const data = response.data as { maintenance_logs?: MaintenanceLogDTO[] };
     const maintenanceLogs = (data.maintenance_logs ?? []).map(transformMaintenanceLog);
 
@@ -187,15 +178,10 @@ export const equipmentApi = {
       per_page: 50,
     });
 
-    // Transform backend response to frontend format
     const data = response.data as { reservations?: ReservationHistoryDTO[] };
     return (data.reservations ?? []).map(transformReservationHistory);
   },
 };
-
-// =============================================================================
-// Maintenance Log DTO and Transformer
-// =============================================================================
 
 interface MaintenanceLogDTO {
   id: string;
@@ -220,11 +206,6 @@ function transformMaintenanceLog(dto: MaintenanceLogDTO): MaintenanceLog {
     createdAt: dto.created_at,
   };
 }
-
-// =============================================================================
-// Reservation History DTO and Transformer
-// Uses the standard reservations endpoint response format
-// =============================================================================
 
 interface ReservationHistoryDTO {
   id: string;

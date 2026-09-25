@@ -30,7 +30,6 @@ type creditTestFixture struct {
 }
 
 func setupCreditTestFixture(t *testing.T) *creditTestFixture {
-	// Config loader will try .env first, then .env.test if .env not found
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	appState, err := config.LoadConfig()
 	require.NoError(t, err, "Failed to load config")
@@ -158,8 +157,6 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 		}
 	}
 	if !found {
-		// This might indicate RLS (Row Level Security) is blocking admin access to other users' history
-		// This is actually a valuable finding from integration testing
 		if len(resp.CreditHistory) == 0 {
 			t.Skip("⚠️  Admin cannot view other user's credit history - RLS policy may need adjustment for admin role")
 		}

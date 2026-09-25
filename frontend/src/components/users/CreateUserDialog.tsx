@@ -67,13 +67,11 @@ export function CreateUserDialog({
   const [formData, setFormData] = React.useState(INITIAL_FORM_STATE);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  // Generate unique IDs for form fields
   const emailId = React.useId();
   const usernameId = React.useId();
   const roleId = React.useId();
   const creditsId = React.useId();
 
-  // Reset form when dialog opens
   React.useEffect(() => {
     if (isOpen) {
       setFormData(INITIAL_FORM_STATE);
@@ -81,13 +79,11 @@ export function CreateUserDialog({
     }
   }, [isOpen]);
 
-  // Handle input change
   const handleInputChange = React.useCallback(
     (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const value =
         field === "creditBalance" ? Math.max(0, parseInt(e.target.value) || 0) : e.target.value;
       setFormData((prev) => ({ ...prev, [field]: value }));
-      // Clear error when field is modified
       if (errors[field]) {
         setErrors((prev) => ({ ...prev, [field]: "" }));
       }
@@ -95,30 +91,25 @@ export function CreateUserDialog({
     [errors]
   );
 
-  // Handle role change
   const handleRoleChange = React.useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, role: value as Enums<"user_role"> }));
   }, []);
 
-  // Validate form
   const validateForm = React.useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = USER_VALIDATION_MESSAGES.EMAIL_REQUIRED;
     } else if (!USER_VALIDATION_PATTERNS.EMAIL.test(formData.email)) {
       newErrors.email = USER_VALIDATION_MESSAGES.EMAIL_INVALID;
     }
 
-    // Username validation
     if (!formData.username.trim()) {
       newErrors.username = USER_VALIDATION_MESSAGES.USERNAME_REQUIRED;
     } else if (!USER_VALIDATION_PATTERNS.USERNAME.test(formData.username)) {
       newErrors.username = USER_VALIDATION_MESSAGES.USERNAME_INVALID;
     }
 
-    // Credit balance validation
     if (formData.creditBalance < 0) {
       newErrors.creditBalance = USER_VALIDATION_MESSAGES.CREDIT_BALANCE_INVALID;
     }
@@ -127,7 +118,6 @@ export function CreateUserDialog({
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // Handle form submit
   const handleSubmit = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -145,7 +135,6 @@ export function CreateUserDialog({
         });
         onClose();
       } catch (err) {
-        // Handle API errors (e.g., email already exists)
         const message = err instanceof Error ? err.message : USER_VALIDATION_MESSAGES.CREATE_FAILED;
         if (message.toLowerCase().includes("email")) {
           setErrors((prev) => ({ ...prev, email: message }));

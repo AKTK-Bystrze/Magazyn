@@ -63,7 +63,6 @@ export function ModifyDatesDialog({
   });
   const [apiError, setApiError] = React.useState<string | null>(null);
 
-  // Reset state when dialog opens
   React.useEffect(() => {
     if (open) {
       setStartDate(reservation.startDate);
@@ -73,16 +72,13 @@ export function ModifyDatesDialog({
     }
   }, [open, reservation.startDate, reservation.endDate]);
 
-  // Calculate credit adjustment info
   const originalDays = calculateDays(reservation.startDate, reservation.endDate);
   const newDays = startDate && endDate ? calculateDays(startDate, endDate) : originalDays;
 
-  // Handle bulk or single cost
   const totalCost = reservations?.length
     ? reservations.reduce((sum, r) => sum + r.creditCost, 0)
     : reservation.creditCost;
 
-  // Get total credit per day
   const creditPerDay = totalCost / originalDays;
 
   const adjustmentInfo = calculateCreditAdjustment(
@@ -92,10 +88,8 @@ export function ModifyDatesDialog({
     currentUserBalance
   );
 
-  // Check if dates have changed
   const datesChanged = startDate !== reservation.startDate || endDate !== reservation.endDate;
 
-  // Validate dates
   const validate = (): boolean => {
     const errors: DateRangeValidationErrors = {
       startDate: null,
@@ -116,7 +110,6 @@ export function ModifyDatesDialog({
       errors.startDate = UI.DATES_MUST_CHANGE;
     }
 
-    // Check sufficient credits
     if (adjustmentInfo.newBalance < 0) {
       errors.endDate = UI.INSUFFICIENT_CREDITS_WARNING.replace(
         "{amount}",
@@ -128,7 +121,6 @@ export function ModifyDatesDialog({
     return !Object.values(errors).some((error) => error !== null);
   };
 
-  // Handle confirm
   const handleConfirm = async () => {
     if (!validate()) {
       return;
@@ -151,17 +143,14 @@ export function ModifyDatesDialog({
     }
   };
 
-  // Handle cancel
   const handleCancel = () => {
     if (!isSubmitting) {
       onOpenChange(false);
     }
   };
 
-  // Validate on date change
   React.useEffect(() => {
     if (startDate && endDate) {
-      // Clear errors when user changes dates
       setValidationErrors({ startDate: null, endDate: null });
       setApiError(null);
     }

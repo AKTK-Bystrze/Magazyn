@@ -29,16 +29,12 @@ type AppState struct {
 func LoadConfig() (*AppState, error) {
 	envPath := os.Getenv("ENV_FILE_PATH")
 	if envPath == "" {
-		// Load .env.test first (for E2E testing), then .env as fallback
-		// godotenv.Load does NOT override existing env vars, so order matters
 		_ = godotenv.Load("../.env.test") // Ignore error if not exists
 		if err := godotenv.Load("../.env"); err != nil {
 			logger.Info(context.Background(), "No .env file found, relying on existing environment variables")
 		}
 	} else {
-		// Try loading the specified path first
 		if err := godotenv.Load(envPath); err != nil {
-			// If the specified file doesn't exist, try .env.test fallback
 			testEnvPath := strings.Replace(envPath, ".env", ".env.test", 1)
 			if err := godotenv.Load(testEnvPath); err != nil {
 				logger.Infof(context.Background(), "No .env file found at %s or %s, relying on existing environment variables", envPath, testEnvPath)

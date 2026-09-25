@@ -7,8 +7,6 @@ import (
 )
 
 type CalendarRepository interface {
-	// GetEquipmentForCalendar retrieves non-archived equipment for calendar display.
-	// If equipmentID is provided, only that equipment is returned.
 	GetEquipmentForCalendar(ctx context.Context, equipmentID *string) ([]types.PublicEquipmentSelect, error)
 	// GetReservationsInDateRange retrieves all reservations that overlap with the given date range.
 	// If equipmentID is provided, only reservations for that equipment are returned.
@@ -16,8 +14,6 @@ type CalendarRepository interface {
 	GetReservationsInDateRange(ctx context.Context, startDate string, endDate string, equipmentID *string) ([]types.PublicReservationsSelect, error)
 }
 type AnalyticsRepository interface {
-	// GetEquipmentStats retrieves aggregated equipment statistics from the analytics view.
-	// Filters can be applied by year, month, and equipment_id.
 	GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) ([]types.PublicAnalyticsEquipmentStatsSelect, error)
 	// GetUserStats retrieves aggregated user statistics from the analytics view.
 	// Filters can be applied by year and month.

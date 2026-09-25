@@ -396,7 +396,6 @@ func TestTS2_AdminCreatesReservationForUser(t *testing.T) {
 	assert.Equal(t, targetID, resp.Reservations[0].UserID, "Reservation owner should be the target user")
 	// Credits deducted from TARGET user (3 days * costPerDay)
 	assert.Equal(t, 3*fixture.costPerDay, targetUserBalance-fixture.getUserBalance(fixture.testUserID), "3-day cost from TARGET user")
-	// Admin balance unchanged
 	assert.Equal(t, adminBalance, fixture.getUserBalance(fixture.testUser2ID), "Admin balance must not change")
 	fixture.cleanup = append(fixture.cleanup, func() {
 		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()

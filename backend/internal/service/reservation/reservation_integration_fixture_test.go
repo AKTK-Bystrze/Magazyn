@@ -39,7 +39,6 @@ func setupDateTestFixture(t *testing.T) *dateTestFixture {
 	return fixture
 }
 func initializeFixture(t *testing.T, fixture *dateTestFixture, client *supa.Client) {
-	// Get equipment type cost
 	type EquipType struct {
 		ID               string `json:"id"`
 		CreditCostPerDay int32  `json:"credit_cost_per_day"`
@@ -78,7 +77,6 @@ func createUniqueEquipment(t *testing.T, fixture *dateTestFixture) {
 	})
 }
 func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
-	//  Try to get existing users from the database
 	type profile struct {
 		ID string `json:"id"`
 	}

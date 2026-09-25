@@ -95,13 +95,11 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
   const { initialFilters, enabled = true } = options;
   const queryClient = useQueryClient();
 
-  // Merge initial filters with defaults
   const [filters, setFilters] = React.useState<ReservationFilterState>({
     ...DEFAULT_FILTERS,
     ...initialFilters,
   });
 
-  // Fetch reservations
   const {
     data: infiniteData,
     isLoading,
@@ -124,17 +122,14 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     staleTime: QUERY_STALE_TIME_MS,
   });
 
-  // Update mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, command }: { id: string; command: UpdateReservationCommand }) =>
       reservationsApi.update(id, command),
     onSuccess: () => {
-      // Invalidate list to refetch
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
   });
 
-  // Cancel mutation (convenience wrapper)
   const cancelMutation = useMutation({
     mutationFn: (id: string) => reservationsApi.cancel(id),
     onSuccess: () => {
@@ -142,7 +137,6 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     },
   });
 
-  // Bulk update mutation
   const bulkUpdateMutation = useMutation({
     mutationFn: (command: BulkUpdateReservationsCommand) => reservationsApi.bulkUpdate(command),
     onSuccess: () => {
@@ -150,12 +144,10 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     },
   });
 
-  // Update a single filter
   const setFilter = React.useCallback(
     <K extends keyof ReservationFilterState>(key: K, value: ReservationFilterState[K]) => {
       setFilters((prev) => {
         const newFilters = { ...prev, [key]: value };
-        // Reset to page 1 when filters change (except page itself)
         if (key !== "page") {
           newFilters.page = 1;
         }
@@ -165,12 +157,10 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     []
   );
 
-  // Reset all filters
   const resetFilters = React.useCallback(() => {
     setFilters({ ...DEFAULT_FILTERS, ...initialFilters });
   }, [initialFilters]);
 
-  // Action handlers
   const cancelReservation = React.useCallback(
     async (id: string) => {
       return cancelMutation.mutateAsync(id);

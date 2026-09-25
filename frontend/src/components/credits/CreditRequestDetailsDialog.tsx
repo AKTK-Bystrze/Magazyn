@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import type { CreditRequest } from "@/types";
@@ -19,11 +25,19 @@ export function CreditRequestDetailsDialog({ isOpen, onClose, request, usersMap 
       case CREDIT_REQUEST_STATUS.AWAITING:
         return <Badge variant="secondary">Oczekujący</Badge>;
       case CREDIT_REQUEST_STATUS.APPROVED:
-        return <Badge variant="default" className="bg-green-600">Zatwierdzony</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-600">
+            Zatwierdzony
+          </Badge>
+        );
       case CREDIT_REQUEST_STATUS.REJECTED:
         return <Badge variant="destructive">Odrzucony</Badge>;
       case CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES:
-        return <Badge variant="default" className="bg-yellow-600">Zatwierdzony (zmiany)</Badge>;
+        return (
+          <Badge variant="default" className="bg-yellow-600">
+            Zatwierdzony (zmiany)
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -66,19 +80,27 @@ export function CreditRequestDetailsDialog({ isOpen, onClose, request, usersMap 
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label className="text-muted-foreground">Twórca wniosku</Label>
-              <div>{request.requestorId ? (usersMap[request.requestorId] || request.requestorId) : "-"}</div>
+              <div>
+                {request.requestorId ? usersMap[request.requestorId] || request.requestorId : "-"}
+              </div>
             </div>
             <div className="grid gap-2">
               <Label className="text-muted-foreground">Osoba uzyskująca pomoc</Label>
-              <div>{request.userHelpedId ? (usersMap[request.userHelpedId] || request.userHelpedId) : '-'}</div>
+              <div>
+                {request.userHelpedId
+                  ? usersMap[request.userHelpedId] || request.userHelpedId
+                  : "-"}
+              </div>
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-muted-foreground">Osoby pomagające ({request.helpers?.length || 0})</Label>
+            <Label className="text-muted-foreground">
+              Osoby pomagające ({request.helpers?.length || 0})
+            </Label>
             <div className="text-sm flex flex-wrap gap-2">
               {request.helpers?.length ? (
-                request.helpers.map(h => (
+                request.helpers.map((h) => (
                   <Badge variant="outline" key={h}>
                     {usersMap[h] || h}
                   </Badge>
@@ -93,6 +115,3 @@ export function CreditRequestDetailsDialog({ isOpen, onClose, request, usersMap 
     </Dialog>
   );
 }
-
-
-

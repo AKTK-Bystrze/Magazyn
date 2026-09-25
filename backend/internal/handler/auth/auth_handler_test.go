@@ -74,7 +74,6 @@ func TestHandleGetSession_Success(t *testing.T) {
 	mockService.On("GetSession", mock.Anything, userID.String(), mock.Anything).Return(expectedSession, nil)
 	req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
 	req.Header.Set("Authorization", "Bearer test-token")
-	// Inject user into context (simulating middleware)
 	ctx := context.WithValue(req.Context(), appcontext.UserContextKey, user)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()

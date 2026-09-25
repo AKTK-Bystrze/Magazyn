@@ -65,7 +65,6 @@ func getUsernameFromContext(ctx context.Context) string {
 	// Try to get user profile from context (set by middleware)
 	profile := ctx.Value(appcontext.UserProfileContextKey)
 	if profile != nil {
-		// Type assert to PublicProfilesSelect
 		userProfile, ok := profile.(*model.PublicProfilesSelect)
 		if ok && userProfile.Username != "" {
 			return userProfile.Username

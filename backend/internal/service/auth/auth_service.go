@@ -21,8 +21,6 @@ type authService struct {
 }
 
 func NewAuthService(repo repository.AuthRepository) AuthService {
-	// Assuming supabaseURL and apiKey would be passed in or configured elsewhere
-	// For now, initializing with empty strings as they are not provided in the context
 	return &authService{
 		repo: repo,
 	}
@@ -69,7 +67,6 @@ func (s *authService) Logout(ctx context.Context, accessToken string) error {
 }
 func (s *authService) GetSession(ctx context.Context, userID string, userToken string) (*types.SessionResponse, error) {
 	logger.Infof(ctx, "Fetching session for user ID: %s", userID)
-	// 1. Get Profile (RLS enforced by repo using userToken)
 	profile, err := s.repo.GetProfile(ctx, userID, userToken)
 	if err != nil {
 		return nil, err

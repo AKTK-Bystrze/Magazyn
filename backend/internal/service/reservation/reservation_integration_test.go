@@ -15,10 +15,6 @@ import (
 )
 
 func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.Config, *supa.Client) {
-	// Load config from environment, .env, or .env.test
-	// Tests run from inside the package directory. We need to point to the root .env
-	// Assumes .env or .env.test is in project root (Magazyn/) which is 4 levels up: reservation -> service -> internal -> backend -> Magazyn
-	// If .env is not found, config loader will automatically try .env.test
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	appState, err := config.LoadConfig()
 	if err != nil {
@@ -29,10 +25,6 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	if supabaseURL == "" || supabaseKey == "" {
 		if appState != nil && appState.Config != nil {
 			supabaseURL = appState.Config.SupabaseURL
-			// In integration test we prefer service key, but if only anon is available in config...
-			// We might need to fail if service key is strictly required for setup (cleanup).
-			// If we rely on LoadConfig, we only get Anon key usually.
-			// Let's assume we need ENV vars set for testing properly.
 		}
 	}
 	if supabaseURL == "" || supabaseKey == "" {
@@ -50,7 +42,6 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	if appState != nil && appState.Config != nil {
 		conf = *appState.Config
 	} else {
-		// Minimal config if LoadConfig failed but we had env vars
 		conf = config.Config{
 			SupabaseURL: supabaseURL,
 			SupabaseKey: supabaseKey, // This might be service key, careful

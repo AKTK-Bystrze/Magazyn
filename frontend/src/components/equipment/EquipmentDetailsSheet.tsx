@@ -61,7 +61,6 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
     isMutating,
   } = useEquipmentDetails(equipment?.id ?? null);
 
-  // Guard: don't render content if no equipment
   if (!equipment) {
     return (
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>

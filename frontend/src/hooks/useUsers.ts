@@ -101,13 +101,11 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   const { initialFilters, enabled = true } = options;
   const queryClient = useQueryClient();
 
-  // Merge initial filters with defaults
   const [filters, setFilters] = React.useState<UserFilterState>({
     ...DEFAULT_FILTERS,
     ...initialFilters,
   });
 
-  // Fetch users list
   const {
     data: infiniteData,
     isLoading,
@@ -130,40 +128,32 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     staleTime: QUERY_STALE_TIME_MS,
   });
 
-  // Create mutation
   const createMutation = useMutation({
     mutationFn: (command: CreateUserCommand) => usersApi.create(command),
     onSuccess: () => {
-      // Invalidate list to refetch
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
   });
 
-  // Update mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, command }: { id: string; command: UpdateUserCommand }) =>
       usersApi.update(id, command),
     onSuccess: () => {
-      // Invalidate list and any cached details
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
   });
 
-  // Bulk adjust credits mutation
   const bulkAdjustCreditsMutation = useMutation({
     mutationFn: (command: BulkAdjustCreditsCommand) => usersApi.bulkAdjustCredits(command),
     onSuccess: () => {
-      // Invalidate list and any cached details
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
   });
 
-  // Update a single filter
   const setFilter = React.useCallback(
     <K extends keyof UserFilterState>(key: K, value: UserFilterState[K]) => {
       setFilters((prev) => {
         const newFilters = { ...prev, [key]: value };
-        // Reset to page 1 when filters change (except page itself)
         if (key !== "page") {
           newFilters.page = 1;
         }
@@ -173,12 +163,10 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     []
   );
 
-  // Reset all filters
   const resetFilters = React.useCallback(() => {
     setFilters({ ...DEFAULT_FILTERS, ...initialFilters });
   }, [initialFilters]);
 
-  // Create user handler
   const createUser = React.useCallback(
     async (command: CreateUserCommand) => {
       return createMutation.mutateAsync(command);
@@ -186,7 +174,6 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     [createMutation]
   );
 
-  // Update user handler
   const updateUser = React.useCallback(
     async (id: string, command: UpdateUserCommand) => {
       return updateMutation.mutateAsync({ id, command });
@@ -194,7 +181,6 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     [updateMutation]
   );
 
-  // Bulk adjust credits handler
   const bulkAdjustCredits = React.useCallback(
     async (command: BulkAdjustCreditsCommand) => {
       return bulkAdjustCreditsMutation.mutateAsync(command);

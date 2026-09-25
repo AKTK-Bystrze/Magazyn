@@ -15,7 +15,6 @@ import (
 // Equipment Service Interface
 // EquipmentService defines operations for equipment management
 type EquipmentService interface {
-	// List retrieves a paginated list of equipment with optional filters
 	List(ctx context.Context, userID string, query types.EquipmentListQuery) (*types.EquipmentListResponse, error)
 	// GetByID retrieves detailed equipment information including maintenance logs
 	GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error)
@@ -61,7 +60,6 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 	// Calculate favorites
 	favoriteIDs, err := s.repo.GetUserFavorites(ctx, userID)
 	if err != nil {
-		// Log error but don't fail request
 		logger.Warnf(ctx, "Failed to fetch user favorites: %v", err)
 		favoriteIDs = make(map[string]bool)
 	}
@@ -139,7 +137,6 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 		logger.Errorf(ctx, "Failed to fetch maintenance logs for equipment %s: %v", id, err)
 	} else {
 		for _, l := range logs {
-			// ... (rest of the loop)
 			logDTOs = append(logDTOs, types.MaintenanceLogDTO{
 				ID:             l.ID,
 				PreviousStatus: l.PreviousStatus,
@@ -226,8 +223,6 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 	}
 	// Create maintenance log if status changed
 	if cmd.Status != nil && *cmd.Status != oldEq.Status {
-		// We deliberately do not check for error here to not fail the update if logging fails
-		// but we log the error
 		_, logErr := s.repo.CreateMaintenanceLog(ctx, id, oldEq.Status, *cmd.Status, nil, adminID)
 		if logErr != nil {
 			logger.Errorf(ctx, "Failed to create status change log: %v", logErr)
@@ -314,7 +309,6 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 	return &url
 }
 func (s *equipmentService) CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error) {
-	// 1. Create Type
 	t := types.PublicEquipmentTypesInsert{
 		Name:             cmd.Name,
 		CreditCostPerDay: cmd.CreditCostPerDay,

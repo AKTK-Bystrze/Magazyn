@@ -1,15 +1,9 @@
-// =============================================================================
-// EQUIPMENT COMPONENTS - Barrel Export
-// =============================================================================
-
-// Equipment Search (public browsing)
 export { default as EquipmentSearchContainer } from "./EquipmentSearchContainer";
 export { EquipmentCard } from "./EquipmentCard";
 export { EquipmentGrid } from "./EquipmentGrid";
 export { FilterSidebar } from "./FilterSidebar";
 export { CartIndicator } from "./CartIndicator";
 
-// Equipment Manager (admin CRUD)
 export { EquipmentManagerContainer } from "./EquipmentManagerContainer";
 export { EquipmentTable } from "./EquipmentTable";
 export { AddEquipmentDialog } from "./AddEquipmentDialog";

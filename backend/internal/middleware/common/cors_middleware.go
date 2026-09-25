@@ -22,7 +22,6 @@ func CORSMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
 			if allowed && origin != "" {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 			} else if len(allowedOrigins) == 1 && allowedOrigins[0] == "*" {
-				// Only use wildcard if explicitly configured
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 			}
 			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")

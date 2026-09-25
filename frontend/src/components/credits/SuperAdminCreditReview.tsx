@@ -57,7 +57,6 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
       return;
     }
 
-    // Determine final status
     let finalStatus = status;
     const isModified =
       value !== request.creditsValue ||
@@ -135,7 +134,11 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
         </div>
 
         <DialogFooter className="flex-col sm:flex-row sm:justify-between space-y-2 sm:space-y-0">
-          <Button variant="destructive" disabled={loading} onClick={() => handleReview(CREDIT_REQUEST_STATUS.REJECTED)}>
+          <Button
+            variant="destructive"
+            disabled={loading}
+            onClick={() => handleReview(CREDIT_REQUEST_STATUS.REJECTED)}
+          >
             Odrzuć
           </Button>
           <div className="flex space-x-2">

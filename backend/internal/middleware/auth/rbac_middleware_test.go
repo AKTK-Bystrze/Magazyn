@@ -33,7 +33,6 @@ func TestRequireRoles(t *testing.T) {
 		})
 		middleware := RequireRoles("admin")(next)
 		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
-		// Put wrong type in context
 		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, "wrong-type-string")
 		req = req.WithContext(ctx)
 		w := httptest.NewRecorder()

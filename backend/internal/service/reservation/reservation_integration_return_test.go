@@ -26,7 +26,6 @@ func TestTS3_EarlyReturn(t *testing.T) {
 		fixture.testUser2ID, "admin")
 	require.NoError(t, err)
 	assert.Equal(t, constants.ReservationStatusReturned, resp.Status, "Status should be RETURNED")
-	// Balance unchanged: RETURNED does not trigger a refund
 	assert.Equal(t, balanceAfterCreate, fixture.getUserBalance(fixture.testUserID), "No credit change on RETURNED status")
 	t.Logf("✓ TS-3 early return: status=RETURNED, balance unchanged")
 }

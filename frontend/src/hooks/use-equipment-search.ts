@@ -4,7 +4,6 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from "@/lib/confi
 import { getTodayAsString } from "@/lib/utils/date-utils";
 
 export function useEquipmentSearch() {
-  // Initialize state from URL on mount
   const [filters, setFilters] = useState<EquipmentSearchParams>(() => {
     if (typeof window === "undefined") {
       return { page: DEFAULT_PAGE, perPage: DEFAULT_PAGE_SIZE };
@@ -21,7 +20,6 @@ export function useEquipmentSearch() {
     };
   });
 
-  // Function to sync state to URL
   const updateUrl = useCallback((newFilters: EquipmentSearchParams) => {
     const params = new URLSearchParams();
     if (newFilters.search) params.set("search", newFilters.search);
@@ -35,13 +33,11 @@ export function useEquipmentSearch() {
     window.history.replaceState({}, "", newUrl);
   }, []);
 
-  // Update filter handler
   const updateFilter = useCallback(
     (key: keyof EquipmentSearchParams, value: string | number | undefined) => {
       setFilters((prev) => {
         const newFilters = { ...prev, [key]: value };
 
-        // Reset page to 1 if filter changes (except specific page change)
         if (key !== "page") {
           newFilters.page = 1;
         }
@@ -52,13 +48,6 @@ export function useEquipmentSearch() {
     },
     [updateUrl]
   );
-
-  // Specific handler for debounced search
-  // The UI updates local input immediately, but we might want to delay the URL/Fetch update
-  // For simplicity in this hook we just expose a direct update.
-  // Debouncing can be handled in the component or via a separate simpler hook if needed.
-  // Given the requirement: "Translating... Typing in Search: Updates local state immediately, updates URL/fetches after 300ms debounce"
-  // We will add a debounced version of the filters for the query.
 
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
 

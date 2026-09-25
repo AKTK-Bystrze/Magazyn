@@ -3,21 +3,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { getUserSession } from "../session-utils";
 import type { SessionInfo } from "../../../types";
 
-// =============================================================================
-// Mock Setup using vi.mock() factory pattern
-// =============================================================================
-
-// Mock fetch globally
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
-// Suppress console logs during tests
 vi.spyOn(logger, "info").mockImplementation(() => {});
 vi.spyOn(logger, "error").mockImplementation(() => {});
-
-// =============================================================================
-// Test Data
-// =============================================================================
 
 const mockSessionInfo: SessionInfo = {
   userId: "uuid-12345",
@@ -30,10 +20,6 @@ const mockSessionInfo: SessionInfo = {
 };
 
 const validAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.validtoken";
-
-// =============================================================================
-// getUserSession Tests
-// =============================================================================
 
 describe("getUserSession", () => {
   beforeEach(() => {
@@ -88,7 +74,6 @@ describe("getUserSession", () => {
 
       await getUserSession(validAccessToken);
 
-      // Accept either localhost or 127.0.0.1 (both are valid)
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringMatching(/http:\/\/(localhost|127\.0\.0\.1):8080\/auth\/session/),
         expect.any(Object)

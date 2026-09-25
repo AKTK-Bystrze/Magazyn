@@ -9,12 +9,10 @@ export const GET: APIRoute = async ({ request, params, locals }) => {
   const url = new URL(request.url);
   const backendUrl = new URL(`${BACKEND_URL}/equipment/${params.id}/availability`);
 
-  // Forward query parameters (start_date, end_date)
   url.searchParams.forEach((value, key) => {
     backendUrl.searchParams.append(key, value);
   });
 
-  // Get token from middleware
   const token = locals.accessToken;
 
   const headers = new Headers({

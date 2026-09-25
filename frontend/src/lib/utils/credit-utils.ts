@@ -11,7 +11,6 @@ import type { CreditAdjustmentInfo } from "@/types/reservations/reservation.type
  * @returns True if extension is significant
  */
 export function isSignificantExtension(originalDays: number, newDays: number): boolean {
-  // If reservation is being shortened, it's not an extension
   if (newDays <= originalDays) {
     return false;
   }
@@ -19,7 +18,6 @@ export function isSignificantExtension(originalDays: number, newDays: number): b
   const dayIncrease = newDays - originalDays;
   const percentIncrease = (dayIncrease / originalDays) * 100;
 
-  // Significant if more than 3 days added OR more than 50% increase
   return dayIncrease > 3 || percentIncrease > 50;
 }
 
@@ -80,12 +78,10 @@ export function formatCreditAdjustment(adjustment: number): string {
  * @returns True if user has sufficient credits
  */
 export function hasSufficientCredits(adjustment: number, currentBalance: number): boolean {
-  // If adjustment is positive (refund) or zero, always sufficient
   if (adjustment >= 0) {
     return true;
   }
 
-  // For negative adjustments (charges), check if new balance would be non-negative
   const newBalance = currentBalance + adjustment;
   return newBalance >= 0;
 }

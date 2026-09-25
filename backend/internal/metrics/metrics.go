@@ -19,7 +19,6 @@ type Server struct {
 }
 
 func StartMetricsServer(ctx context.Context, repo repository.ReservationRepository, serviceKey string) *Server {
-	// Initialize custom Prometheus metrics
 	pendingReservations := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "magazyn_reservations_pending",
 		Help: "Current number of pending reservations",

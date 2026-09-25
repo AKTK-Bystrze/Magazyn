@@ -33,7 +33,6 @@ type calendarTestFixture struct {
 }
 
 func setupCalendarTestFixture(t *testing.T) *calendarTestFixture {
-	// Config loader will try .env first, then .env.test if .env not found
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	_, err := config.LoadConfig()
 	require.NoError(t, err)
@@ -57,7 +56,6 @@ func setupCalendarTestFixture(t *testing.T) *calendarTestFixture {
 	return fixture
 }
 func (f *calendarTestFixture) setupTestData() {
-	// Get test user
 	type profile struct {
 		ID string `json:"id"`
 	}
@@ -187,7 +185,6 @@ func TestCalendarAvailability_WithReservations_ShowsBlocked(t *testing.T) {
 			availableCount++
 		} else {
 			blockedCount++
-			// Verify reservation info is populated
 			assert.NotNil(t, entry.ReservationID, "Blocked entry should have reservation ID")
 			assert.NotNil(t, entry.ReservationStatus, "Blocked entry should have status")
 		}

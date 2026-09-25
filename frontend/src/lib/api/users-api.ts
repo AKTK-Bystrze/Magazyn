@@ -42,12 +42,10 @@ export const usersApi = {
       params.per_page = filters.perPage;
     }
 
-    // Only add role filter if not 'ALL'
     if (filters.role && filters.role !== "ALL") {
       params.role = filters.role;
     }
 
-    // Add search if provided
     if (filters.search) {
       params.search = filters.search;
     }

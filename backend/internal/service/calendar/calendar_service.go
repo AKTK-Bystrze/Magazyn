@@ -13,7 +13,6 @@ import (
 // Calendar Service Interface
 // CalendarService defines operations for calendar and availability functionality
 type CalendarService interface {
-	// GetCalendarAvailability retrieves equipment availability for a date range
 	GetCalendarAvailability(ctx context.Context, query types.CalendarAvailabilityQuery) (*types.CalendarAvailabilityResponse, error)
 }
 
@@ -83,7 +82,6 @@ func (s *calendarService) GetCalendarAvailability(ctx context.Context, query typ
 		resEnd, _ := time.Parse(constants.DateFormatISO, res.EndDate)
 		for d := resStart; !d.After(resEnd); d = d.AddDate(0, 0, 1) {
 			dateStr := d.Format(constants.DateFormatISO)
-			// Only include dates within our query range
 			if !d.Before(start) && !d.After(end) {
 				reservationLookup[res.EquipmentID][dateStr] = res
 			}

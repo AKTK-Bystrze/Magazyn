@@ -1,5 +1,4 @@
 import { defaultLogger as logger } from "@/lib/utils/logger";
-// Define a type for error details to avoid 'any'
 export type ErrorDetails = Record<string, unknown> | unknown;
 
 export class ApiError extends Error {
@@ -31,7 +30,6 @@ export function handleApiError(error: unknown): Response {
     );
   }
 
-  // Handle generic errors
   return new Response(
     JSON.stringify({
       error: "Internal server error",
@@ -44,7 +42,6 @@ export function handleApiError(error: unknown): Response {
   );
 }
 
-// Error Factories
 export const ApiErrors = {
   badRequest: (message: string, details?: ErrorDetails) =>
     new ApiError(message, 400, "BAD_REQUEST", details),

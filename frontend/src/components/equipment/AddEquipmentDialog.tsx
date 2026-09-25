@@ -70,14 +70,12 @@ export function AddEquipmentDialog({
   const [formData, setFormData] = React.useState(INITIAL_FORM_STATE);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  // Generate unique IDs for form fields
   const internalIdFieldId = React.useId();
   const typeIdFieldId = React.useId();
   const nameFieldId = React.useId();
   const descriptionFieldId = React.useId();
   const statusFieldId = React.useId();
 
-  // Reset form when dialog opens
   React.useEffect(() => {
     if (isOpen) {
       setFormData(INITIAL_FORM_STATE);
@@ -85,12 +83,10 @@ export function AddEquipmentDialog({
     }
   }, [isOpen]);
 
-  // Handle text input change
   const handleInputChange = React.useCallback(
     (field: keyof typeof formData) =>
       (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-        // Clear error when field is modified
         if (errors[field]) {
           setErrors((prev) => ({ ...prev, [field]: "" }));
         }
@@ -98,7 +94,6 @@ export function AddEquipmentDialog({
     [errors]
   );
 
-  // Handle type change
   const handleTypeChange = React.useCallback(
     (value: string) => {
       setFormData((prev) => ({ ...prev, typeId: value }));
@@ -109,7 +104,6 @@ export function AddEquipmentDialog({
     [errors]
   );
 
-  // Handle status change
   const handleStatusChange = React.useCallback((value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -117,21 +111,17 @@ export function AddEquipmentDialog({
     }));
   }, []);
 
-  // Validate form
   const validateForm = React.useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Internal ID validation
     if (!formData.internalId.trim()) {
       newErrors.internalId = VALIDATION.INTERNAL_ID_REQUIRED;
     }
 
-    // Type ID validation
     if (!formData.typeId) {
       newErrors.typeId = VALIDATION.TYPE_ID_REQUIRED;
     }
 
-    // Name validation (optional, but max length)
     if (formData.name && formData.name.length > 200) {
       newErrors.name = VALIDATION.NAME_MAX_LENGTH;
     }
@@ -140,7 +130,6 @@ export function AddEquipmentDialog({
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // Handle form submit
   const handleSubmit = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -159,7 +148,6 @@ export function AddEquipmentDialog({
         });
         onClose();
       } catch (err) {
-        // Handle API errors - extract message from either Error object or response body
         let errorMessage: string = VALIDATION.CREATE_FAILED;
 
         if (err instanceof Error) {
@@ -168,7 +156,6 @@ export function AddEquipmentDialog({
           errorMessage = String(err.error);
         }
 
-        // Map API errors to form fields
         if (
           errorMessage.toLowerCase().includes("internal id") ||
           errorMessage.toLowerCase().includes("already exists") ||

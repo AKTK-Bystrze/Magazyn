@@ -1,7 +1,3 @@
-// =============================================================================
-// BACKEND DTO TYPES (snake_case - Exact Go JSON Response Structure)
-// =============================================================================
-
 import type { PaginationResponseDTO } from "../api.types";
 
 /**

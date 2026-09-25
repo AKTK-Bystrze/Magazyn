@@ -12,12 +12,10 @@ import (
 )
 
 func ObservabilityMiddleware(next http.Handler) http.Handler {
-	// Initialize Sentry handler for asynchronous event dispatching
 	sentryHandler := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,
 	})
 	return sentryHandler.Handle(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract or generate Trace ID
 		traceID := r.Header.Get("X-Trace-Id")
 		if traceID == "" {
 			traceID = uuid.New().String()

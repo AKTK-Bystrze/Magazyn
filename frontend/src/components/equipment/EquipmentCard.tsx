@@ -21,8 +21,6 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
 
   const isAvailable = item.status === "ok";
 
-
-  // Check if item is in cart
   const checkCartStatus = React.useCallback(() => {
     const currentCart = loadCartFromStorage();
     if (currentCart) {
@@ -33,7 +31,6 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     }
   }, [item.id]);
 
-  // Initial check and event listener
   React.useEffect(() => {
     checkCartStatus();
 
@@ -49,12 +46,10 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     const currentCart = loadCartFromStorage() || { items: [], startDate: null, endDate: null };
 
     if (isInCart) {
-      // Remove from cart
       currentCart.items = currentCart.items.filter((i) => i.equipmentId !== item.id);
       saveCartToStorage(currentCart);
       setJustAdded(false);
     } else {
-      // Add to cart
       const cartItem: CartItem = {
         equipmentId: item.id,
         name: item.name,
@@ -66,12 +61,10 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
       currentCart.items.push(cartItem);
       saveCartToStorage(currentCart);
 
-      // Show feedback
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), FEEDBACK_DISPLAY_DURATION_MS);
     }
 
-    // Dispatch event to update other components
     window.dispatchEvent(new Event("cart-updated"));
   };
 
@@ -119,7 +112,9 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     <Card
       className={cn(
         "overflow-hidden transition-all hover:shadow-md",
-        viewMode === "list" ? "flex flex-col md:flex-row md:items-center gap-4 p-4" : "h-full flex flex-col",
+        viewMode === "list"
+          ? "flex flex-col md:flex-row md:items-center gap-4 p-4"
+          : "h-full flex flex-col",
         !isAvailable && "border-destructive border-2"
       )}
       data-testid={`equipment-card-${item.id}`}
@@ -211,8 +206,3 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     </Card>
   );
 }
-
-
-
-
-

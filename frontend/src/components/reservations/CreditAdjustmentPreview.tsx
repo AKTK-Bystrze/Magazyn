@@ -49,7 +49,6 @@ export function CreditAdjustmentPreview({
   const adjustment = originalCreditCost - newCreditCost;
   const newBalance = currentBalance + adjustment;
 
-  // Determine styling based on adjustment type
   const adjustmentColor =
     adjustment > 0
       ? "text-green-600 dark:text-green-400"

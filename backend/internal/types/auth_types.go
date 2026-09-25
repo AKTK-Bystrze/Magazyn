@@ -34,7 +34,5 @@ type LogoutResponse struct {
 type OTPType string
 
 const (
-	// MagicLink is the OTP type for magic link authentication.
 	MagicLink OTPType = "magiclink"
-	// Add other types as needed
 )

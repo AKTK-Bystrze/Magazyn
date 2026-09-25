@@ -7,7 +7,6 @@ import (
 )
 
 type ReservationRepository interface {
-	// GetReservations retrieves a paginated list of reservations based on filters
 	GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error)
 	// GetReservationByID retrieves a single reservation with full details by ID
 	GetReservationByID(ctx context.Context, id string) (*types.ReservationDetail, error)

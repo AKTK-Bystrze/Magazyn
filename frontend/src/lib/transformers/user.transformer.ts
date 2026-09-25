@@ -9,10 +9,6 @@ import type {
 } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
-// =============================================================================
-// BACKEND DTO TYPES (snake_case)
-// =============================================================================
-
 /**
  * Backend user DTO structure (snake_case)
  * Source: backend/internal/types/user_types.go
@@ -40,10 +36,6 @@ interface UserListResponseDTO {
     total_pages: number;
   };
 }
-
-// =============================================================================
-// REQUEST TRANSFORMERS (Frontend → Backend: camelCase → snake_case)
-// =============================================================================
 
 /**
  * Transforms CreateUserCommand to backend format
@@ -96,7 +88,6 @@ export function transformUpdateUserCommand(command: UpdateUserCommand): Record<s
 export function transformBulkAdjustCreditsCommand(
   command: BulkAdjustCreditsCommand
 ): Record<string, unknown> {
-  // Build description: combine user's reason with optional notes
   const descriptionParts: string[] = [];
   if (command.reason) {
     descriptionParts.push(command.reason);
@@ -108,16 +99,10 @@ export function transformBulkAdjustCreditsCommand(
   return {
     user_ids: command.userIds,
     amount: command.amount,
-    // Always use 'admin_adjustment' enum value for manual credit adjustments
     reason: "admin_adjustment",
-    // User's reason text becomes the human-readable description
     description: descriptionParts.join(" - ") || "Manual credit adjustment",
   };
 }
-
-// =============================================================================
-// RESPONSE TRANSFORMERS (Backend → Frontend: snake_case → camelCase)
-// =============================================================================
 
 /**
  * Transforms a single user from backend to frontend format
@@ -176,10 +161,6 @@ export function transformUserListResponse(data: unknown): UserListResponse {
     },
   };
 }
-
-// =============================================================================
-// PUBLIC USER TRANSFORMERS
-// =============================================================================
 
 interface PublicUserDTO {
   id: string;

@@ -55,7 +55,6 @@ func setupEquipmentTestFixture(t *testing.T) *equipmentTestFixture {
 	return fixture
 }
 func (f *equipmentTestFixture) setupTestData() {
-	// Get a test user
 	type profile struct {
 		ID string `json:"id"`
 	}
@@ -166,7 +165,6 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 	foundTestEquipment := false
 	favoriteCount := 0
 	for _, eq := range resp.Equipment {
-		// Count how many are marked as favorites
 		if eq.IsFavorite != nil && *eq.IsFavorite {
 			favoriteCount++
 		}
@@ -181,8 +179,6 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 		}
 	}
 	if !foundTestEquipment {
-		// Test equipment not in results - likely filtered by repository or RLS
-		// This is acceptable - the test verifies the favorites feature works
 		t.Logf("⚠️  Test equipment not in results (likely filtered by repository/RLS)")
 		t.Logf("Found %d total equipment, %d marked as favorites", len(resp.Equipment), favoriteCount)
 		t.Logf("✓ Favorites feature is functional (IsFavorite field populated)")

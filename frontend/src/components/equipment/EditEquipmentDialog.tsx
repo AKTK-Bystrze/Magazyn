@@ -64,12 +64,10 @@ export function EditEquipmentDialog({
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  // Generate unique IDs for form fields
   const nameFieldId = React.useId();
   const descriptionFieldId = React.useId();
   const statusFieldId = React.useId();
 
-  // Populate form when equipment changes
   React.useEffect(() => {
     if (isOpen && equipment) {
       setFormData({
@@ -81,12 +79,10 @@ export function EditEquipmentDialog({
     }
   }, [isOpen, equipment]);
 
-  // Handle text input change
   const handleInputChange = React.useCallback(
     (field: keyof typeof formData) =>
       (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-        // Clear error when field is modified
         if (errors[field]) {
           setErrors((prev) => ({ ...prev, [field]: "" }));
         }
@@ -94,7 +90,6 @@ export function EditEquipmentDialog({
     [errors]
   );
 
-  // Handle status change
   const handleStatusChange = React.useCallback((value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -102,11 +97,9 @@ export function EditEquipmentDialog({
     }));
   }, []);
 
-  // Validate form
   const validateForm = React.useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Name validation (optional, but max length)
     if (formData.name && formData.name.length > 200) {
       newErrors.name = VALIDATION.NAME_MAX_LENGTH;
     }
@@ -115,7 +108,6 @@ export function EditEquipmentDialog({
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // Handle form submit
   const handleSubmit = React.useCallback(
     async (e?: React.FormEvent | React.MouseEvent) => {
       if (e) e.preventDefault();
@@ -127,7 +119,6 @@ export function EditEquipmentDialog({
       }
 
       try {
-        // Only include fields that have changed
         const command: UpdateEquipmentCommand = {};
 
         const trimmedName = formData.name.trim() || undefined;
@@ -146,7 +137,6 @@ export function EditEquipmentDialog({
         await onSubmit(equipment.id, command);
         onClose();
       } catch (err) {
-        // Handle API errors - extract message from either Error object or response body
         let errorMessage: string = VALIDATION.UPDATE_FAILED;
 
         if (err instanceof Error) {
@@ -161,7 +151,6 @@ export function EditEquipmentDialog({
     [equipment, formData, validateForm, onSubmit, onClose]
   );
 
-  // Guard: don't render if no equipment
   if (!equipment) {
     return null;
   }

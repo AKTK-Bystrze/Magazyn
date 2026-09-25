@@ -8,6 +8,31 @@ import {
   calculateWorkerDates,
 } from "../../helpers/reservation.helper";
 
+import type { Page, Locator } from "@playwright/test";
+
+async function navigateToAllReservations(adminPage: Page) {
+  await adminPage.goto("/admin/reservations");
+  const viewModeBtn = adminPage.getByTestId("view-mode-table");
+  await viewModeBtn.waitFor({ state: "visible" });
+  await viewModeBtn.click();
+  await expect(adminPage.locator("table")).toBeVisible();
+  await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
+}
+
+async function cancelReservationViaUI(adminPage: Page, row: Locator) {
+  const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
+  await expect(actionTrigger).toBeVisible({ timeout: 10000 });
+  await actionTrigger.click();
+
+  const statusButton = adminPage.getByTestId("cancel-reservation-button");
+  await expect(statusButton).toBeVisible({ timeout: 10000 });
+  await statusButton.click();
+
+  const confirmButton = adminPage.getByRole("button", { name: "Anuluj Rezerwację" });
+  await expect(confirmButton).toBeVisible();
+  await confirmButton.click();
+}
+
 /**
  * Admin Reservation Management E2E tests.
  * Covers scenarios where an Admin creates and manages reservations for other users.
@@ -87,15 +112,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cart.waitForSuccess();
 
     // 5. Navigate to "All Reservations" to Manage it
-    await adminPage.goto("/admin/reservations");
-
-    await expect(async () => {
-      await adminPage.getByTestId("view-mode-table").click({ force: true });
-      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
-    }).toPass({ timeout: 10000 });
-
-    // Find the reservation by equipment name (worker-isolated, unique per test)
-    await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
+    await navigateToAllReservations(adminPage);
 
     // Find the row containing our equipment name (unique per test via timestamp)
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
@@ -110,18 +127,7 @@ test.describe.serial("Admin Reservation Management", () => {
     // Note: Assuming a UI specific implementation here based on typical Shadcn patterns in this project
     // If exact IDs are missing, we use role based locators.
 
-    const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
-    await expect(actionTrigger).toBeVisible({ timeout: 10000 });
-    await actionTrigger.click();
-
-    const statusButton = adminPage.getByTestId("cancel-reservation-button");
-    await expect(statusButton).toBeVisible({ timeout: 10000 });
-    await statusButton.click();
-
-    // Confirm action in dialog
-    const confirmButton = adminPage.getByRole("button", { name: "Anuluj Rezerwację" });
-    await expect(confirmButton).toBeVisible();
-    await confirmButton.click();
+    await cancelReservationViaUI(adminPage, row);
 
     // 7. Verify Status
     // Wait for the status badge to update
@@ -202,14 +208,7 @@ test.describe.serial("Admin Reservation Management", () => {
     expect(balanceAfter).toBe(balanceBefore);
 
     // 9. Navigate to "All Reservations" to verify the reservation
-    await adminPage.goto("/admin/reservations");
-
-    await expect(async () => {
-      await adminPage.getByTestId("view-mode-table").click({ force: true });
-      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
-    }).toPass({ timeout: 10000 });
-
-    await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
+    await navigateToAllReservations(adminPage);
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
     await expect(row.first()).toBeVisible({ timeout: 10000 });
@@ -272,13 +271,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cart.waitForSuccess();
 
     // 3. Go to All Reservations and find the row
-    await adminPage.goto("/admin/reservations");
-
-    await expect(async () => {
-      await adminPage.getByTestId("view-mode-table").click({ force: true });
-      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
-    }).toPass({ timeout: 10000 });
-    await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
+    await navigateToAllReservations(adminPage);
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
     await expect(row.first()).toBeVisible({ timeout: 10000 });
@@ -287,17 +280,7 @@ test.describe.serial("Admin Reservation Management", () => {
     const reservationId = testId!.replace("reservation-row-", "");
 
     // 4. Cancel the reservation
-    const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
-    await expect(actionTrigger).toBeVisible({ timeout: 10000 });
-    await actionTrigger.click();
-
-    const cancelButton = adminPage.getByTestId("cancel-reservation-button");
-    await expect(cancelButton).toBeVisible({ timeout: 10000 });
-    await cancelButton.click();
-
-    const confirmButton = adminPage.getByRole("button", { name: "Anuluj Rezerwację" });
-    await expect(confirmButton).toBeVisible();
-    await confirmButton.click();
+    await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
     await expect(statusBadge).toContainText(/Anulowana|Denied/i);

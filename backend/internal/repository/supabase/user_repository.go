@@ -30,7 +30,6 @@ func NewUserRepository(client *supabase.Client, url string, key string, serviceK
 	}
 }
 func (r *userRepository) List(ctx context.Context, page, perPage int, role, search string) ([]types.PublicProfilesSelect, int64, error) {
-	// Calculate offset
 	offset := (page - 1) * perPage
 	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
@@ -39,8 +38,6 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 		query = query.Eq("role", role)
 	}
 	if search != "" {
-		// Sanitize search term to prevent PostgREST operator injection
-		// Use ILIKE for case-insensitive search on username or email
 		searchTerm := validation.SanitizeSearchTerm(search)
 		filter := fmt.Sprintf("username.ilike.%%%s%%,email.ilike.%%%s%%", searchTerm, searchTerm)
 		query = query.Or(filter, "")
@@ -96,8 +93,6 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*types.P
 	return &profile, nil
 }
 func (r *userRepository) Create(ctx context.Context, profile types.PublicProfilesInsert) (*types.PublicProfilesSelect, error) {
-	// Use service key to bypass RLS for profile creation (admin operation)
-	// Normal users can't create profiles for others
 	var client *supabase.Client
 	var err error
 	if r.serviceKey != "" {
@@ -112,7 +107,6 @@ func (r *userRepository) Create(ctx context.Context, profile types.PublicProfile
 			return nil, err
 		}
 	} else {
-		// Fallback to user context if service key is missing (though this will likely fail RLS)
 		logger.Warn(ctx, "Service key missing for profile creation, falling back to user context")
 		client = getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	}
@@ -148,7 +142,6 @@ func (r *userRepository) Update(ctx context.Context, id string, profile types.Pu
 	return &updatedProfile, nil
 }
 func (r *userRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
-	// Build params for RPC
 	params := map[string]interface{}{
 		"p_user_ids":    userIDs,
 		"p_admin_id":    adminID,

@@ -23,7 +23,6 @@ export const createMockSupabaseClient = () => {
       }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
     },
-    // Helper to trigger auth events in tests
     _triggerAuthEvent: (event: AuthChangeEvent, session: Session | null) => {
       authCallback?.(event, session);
     },

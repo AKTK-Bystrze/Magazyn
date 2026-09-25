@@ -59,8 +59,6 @@ func TestSanitizeSearchTerm_InjectionAttempts_BlocksAttacks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := SanitizeSearchTerm(tt.input)
-			// The expected value already contains escaped characters, so this assertion
-			// verifies that operators are properly escaped
 			assert.Equal(t, tt.expected, result)
 		})
 	}

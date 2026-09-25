@@ -25,7 +25,6 @@ export function useEquipmentTypes() {
   return useQuery({
     queryKey: ["equipment-types"],
     queryFn: () => equipmentApi.listTypes(),
-    // Equipment types rarely change, cache for 5 minutes
     staleTime: 1000 * 60 * 5,
   });
 }

@@ -7,10 +7,6 @@
  * @module lib/config/constants/validation
  */
 
-// =============================================================================
-// DATE VALIDATION
-// =============================================================================
-
 /**
  * Date validation error messages
  */
@@ -24,10 +20,6 @@ export const DATE_VALIDATION = {
     "Data zakończenia musi być równa lub późniejsza niż data rozpoczęcia",
   DATES_MUST_CHANGE: "Wybierz inne daty, aby zmodyfikować rezerwację",
 } as const;
-
-// =============================================================================
-// AVAILABILITY VALIDATION
-// =============================================================================
 
 /**
  * Availability validation error messages
@@ -45,10 +37,6 @@ export const AVAILABILITY_VALIDATION = {
   SELECT_DATES: "Wybierz daty rozpoczęcia i zakończenia, aby kontynuować.",
 } as const;
 
-// =============================================================================
-// CREDIT VALIDATION
-// =============================================================================
-
 /**
  * Credit/balance validation error messages
  */
@@ -62,10 +50,6 @@ export const CREDIT_VALIDATION = {
   BALANCE_INVALID: "Saldo godzinek musi być nieujemne",
 } as const;
 
-// =============================================================================
-// VALIDATION PATTERNS
-// =============================================================================
-
 /**
  * Regular expression patterns for form validation
  */
@@ -74,21 +58,13 @@ export const VALIDATION_PATTERNS = {
   USERNAME: /^[a-zA-Z0-9_]+$/,
 } as const;
 
-// =============================================================================
-// LEGACY EXPORTS (for backward compatibility during migration)
-// =============================================================================
-
-// Date validation errors (from error-messages.ts)
 export const ERROR_START_DATE_PAST = DATE_VALIDATION.START_DATE_PAST;
 export const ERROR_END_DATE_BEFORE_START = DATE_VALIDATION.END_DATE_BEFORE_START;
 
-// Availability errors (from error-messages.ts)
 export const ERROR_ITEMS_UNAVAILABLE = AVAILABILITY_VALIDATION.ITEMS_UNAVAILABLE;
 export const ERROR_UNAVAILABLE_FOR_DATES = AVAILABILITY_VALIDATION.UNAVAILABLE_FOR_DATES;
 
-// Credit balance errors (from error-messages.ts)
 export const ERROR_INSUFFICIENT_CREDITS = CREDIT_VALIDATION.INSUFFICIENT;
 
-// General errors (from error-messages.ts)
 export const ERROR_AVAILABILITY_CHECK_FAILED = AVAILABILITY_VALIDATION.CHECK_FAILED;
 export const ERROR_SELECT_DATES = AVAILABILITY_VALIDATION.SELECT_DATES;
