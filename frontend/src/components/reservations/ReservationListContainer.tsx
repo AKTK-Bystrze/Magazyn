@@ -2,13 +2,15 @@ import * as React from "react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { useReservations } from "@/hooks/useReservations";
 import { ReservationCardList } from "./ReservationCardList";
+import { ReservationTable } from "./ReservationTable";
 import { ReservationFilters } from "./ReservationFilters";
 import { ReservationViewTabs, type ReservationScope } from "./ReservationViewTabs";
 import { CancelReservationDialog } from "./CancelReservationDialog";
 import { ModifyDatesDialog } from "./ModifyDatesDialog";
 import { ReturnWithDatesDialog } from "./ReturnWithDatesDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, CheckCircle2, LayoutGrid, List } from "lucide-react";
 import {
   ICON_SIZE_SM,
   MESSAGE_AUTO_DISMISS_MS,
@@ -57,6 +59,9 @@ function ReservationListContainerInner({
   // Feedback states
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  // View state
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   // Clear messages after timeout
   React.useEffect(() => {
@@ -326,31 +331,72 @@ function ReservationListContainerInner({
         </Alert>
       )}
 
-      {/* View Tabs */}
-      <ReservationViewTabs activeScope={filters.scope} onScopeChange={handleScopeChange} />
+      {/* View Tabs and Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <ReservationViewTabs activeScope={filters.scope} onScopeChange={handleScopeChange} />
+        <div className="flex items-center gap-1 bg-muted p-1 rounded-md self-start sm:self-auto">
+          <Button
+            variant={viewMode === "grid" ? "secondary" : "ghost"}
+            size="sm"
+            className="px-2 h-8"
+            onClick={() => setViewMode("grid")}
+            aria-label="Widok kafelków"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "secondary" : "ghost"}
+            size="sm"
+            className="px-2 h-8"
+            onClick={() => setViewMode("list")}
+            aria-label="Widok tabeli"
+            data-testid="view-mode-table"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* Filters */}
       <ReservationFilters filters={filters} onFilterChange={setFilter} onReset={resetFilters} />
 
-      {/* Reservation List */}
-      <ReservationCardList
-        reservations={data?.reservations ?? []}
-        isLoading={isLoading}
-        hasFilters={hasActiveFilters}
-        mode={mode}
-        scope={filters.scope}
-        currentUserId={currentUserId}
-        fetchNextPage={fetchNextPage}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        onModify={showActions ? handleModify : undefined}
-        onCancel={showActions ? handleCancelClick : undefined}
-        onReturn={showActions ? handleReturn : undefined}
-        onCancelAll={showActions ? handleCancelAll : undefined}
-        onModifyDatesAll={showActions ? handleModifyDatesAll : undefined}
-        onReturnAll={showActions ? handleReturnAll : undefined}
-        onViewDetails={handleViewDetails}
-      />
+      {/* Reservation List or Table */}
+      {viewMode === "grid" ? (
+        <ReservationCardList
+          reservations={data?.reservations ?? []}
+          isLoading={isLoading}
+          hasFilters={hasActiveFilters}
+          mode={mode}
+          scope={filters.scope}
+          currentUserId={currentUserId}
+          fetchNextPage={fetchNextPage}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onModify={showActions ? handleModify : undefined}
+          onCancel={showActions ? handleCancelClick : undefined}
+          onReturn={showActions ? handleReturn : undefined}
+          onCancelAll={showActions ? handleCancelAll : undefined}
+          onModifyDatesAll={showActions ? handleModifyDatesAll : undefined}
+          onReturnAll={showActions ? handleReturnAll : undefined}
+          onViewDetails={handleViewDetails}
+        />
+      ) : (
+        <ReservationTable
+          reservations={data?.reservations ?? []}
+          isLoading={isLoading}
+          hasFilters={hasActiveFilters}
+          mode={mode}
+          scope={filters.scope}
+          currentUserId={currentUserId}
+          onModify={showActions ? handleModify : undefined}
+          onCancel={showActions ? handleCancelClick : undefined}
+          onReturn={showActions ? handleReturn : undefined}
+          onViewDetails={handleViewDetails}
+          fetchNextPage={fetchNextPage}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+        />
+      )}
 
       {/* Cancel Dialog */}
       <CancelReservationDialog

@@ -89,6 +89,11 @@ test.describe.serial("Admin Reservation Management", () => {
     // 5. Navigate to "All Reservations" to Manage it
     await adminPage.goto("/admin/reservations");
 
+    await expect(async () => {
+      await adminPage.getByTestId("view-mode-table").click({ force: true });
+      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 10000 });
+
     // Find the reservation by equipment name (worker-isolated, unique per test)
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
 
@@ -105,7 +110,11 @@ test.describe.serial("Admin Reservation Management", () => {
     // Note: Assuming a UI specific implementation here based on typical Shadcn patterns in this project
     // If exact IDs are missing, we use role based locators.
 
-    const statusButton = row.first().getByTestId("cancel-reservation-button");
+    const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
+    await expect(actionTrigger).toBeVisible({ timeout: 10000 });
+    await actionTrigger.click();
+
+    const statusButton = adminPage.getByTestId("cancel-reservation-button");
     await expect(statusButton).toBeVisible({ timeout: 10000 });
     await statusButton.click();
 
@@ -116,7 +125,7 @@ test.describe.serial("Admin Reservation Management", () => {
 
     // 7. Verify Status
     // Wait for the status badge to update
-    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
+    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
     await expect(statusBadge).toContainText(/Anulowana|Denied/i);
     // double check color/class if possible, but text is good enough for now
   });
@@ -195,6 +204,11 @@ test.describe.serial("Admin Reservation Management", () => {
     // 9. Navigate to "All Reservations" to verify the reservation
     await adminPage.goto("/admin/reservations");
 
+    await expect(async () => {
+      await adminPage.getByTestId("view-mode-table").click({ force: true });
+      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 10000 });
+
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
@@ -204,8 +218,9 @@ test.describe.serial("Admin Reservation Management", () => {
     const testId = await row.first().getAttribute("data-testid");
     const reservationId = testId!.replace("reservation-row-", "");
 
-    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
-    await expect(statusBadge).toBeHidden();
+    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
+    await expect(statusBadge).toBeVisible();
+    await expect(statusBadge).toContainText(/W trakcie/i);
   });
 
   /**
@@ -258,6 +273,11 @@ test.describe.serial("Admin Reservation Management", () => {
 
     // 3. Go to All Reservations and find the row
     await adminPage.goto("/admin/reservations");
+
+    await expect(async () => {
+      await adminPage.getByTestId("view-mode-table").click({ force: true });
+      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 10000 });
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
@@ -267,7 +287,11 @@ test.describe.serial("Admin Reservation Management", () => {
     const reservationId = testId!.replace("reservation-row-", "");
 
     // 4. Cancel the reservation
-    const cancelButton = row.first().getByTestId("cancel-reservation-button");
+    const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
+    await expect(actionTrigger).toBeVisible({ timeout: 10000 });
+    await actionTrigger.click();
+
+    const cancelButton = adminPage.getByTestId("cancel-reservation-button");
     await expect(cancelButton).toBeVisible({ timeout: 10000 });
     await cancelButton.click();
 
@@ -275,7 +299,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
 
-    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`);
+    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
     await expect(statusBadge).toContainText(/Anulowana|Denied/i);
 
     // 5. Verify balance unchanged

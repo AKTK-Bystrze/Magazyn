@@ -29,12 +29,20 @@ export function StatusBadge({ status, className, "data-testid": testId }: Status
     );
   }
 
+  const label = RESERVATION_STATUS_LABELS[status] ?? status;
+
   if (status === "PENDING") {
-    return null;
+    return (
+      <Badge
+        className={`bg-green-500 hover:bg-green-600 text-white border-transparent ${className || ""}`}
+        data-testid={testId}
+      >
+        {label}
+      </Badge>
+    );
   }
 
   const variant = RESERVATION_STATUS_VARIANTS[status] ?? "outline";
-  const label = RESERVATION_STATUS_LABELS[status] ?? status;
 
   return (
     <Badge variant={variant} className={className} data-testid={testId}>

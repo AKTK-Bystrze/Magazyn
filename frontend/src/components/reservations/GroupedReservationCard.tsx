@@ -55,64 +55,59 @@ export function GroupedReservationCard({
 
   return (
     <Card
-      className="w-full max-w-full overflow-hidden transition-shadow hover:shadow-md"
+      className="w-full max-w-full overflow-hidden transition-shadow hover:shadow-md border-l-[16px] border-l-indigo-500 bg-indigo-50/10 dark:bg-indigo-950/10"
       data-testid={`reservation-row-${group.groupKey}`}
     >
       {/* Header - Clickable to expand/collapse */}
       <CardHeader
-        className="cursor-pointer select-none bg-muted/30 hover:bg-muted/50 transition-colors"
+        className="cursor-pointer select-none p-4 sm:p-6 bg-muted/10 hover:bg-muted/30 transition-colors"
         onClick={onToggle}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="flex items-start gap-3 w-full">
+          <div className="pt-0.5">
             {isExpanded ? (
-              <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
             ) : (
-              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
             )}
+          </div>
 
-            <div className="flex flex-col gap-3 flex-1 min-w-0">
-              {/* User (Admin or All Reservations view) */}
-              {(mode === "admin" || scope === "all") && (
-                <div className="flex items-center gap-2 min-w-0">
-                  <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium text-foreground text-sm truncate min-w-0 flex-1">
-                    {group.username}
-                    {scope === "all" && isOwn && " (Ty)"}
-                  </span>
-                </div>
-              )}
-              {/* Date and Status Row */}
-              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 min-w-0 w-full">
-                <div className="flex items-start gap-2 flex-1 min-w-0">
-                  <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0 break-words">
-                    <div className="font-medium">
-                      {formatDate(group.startDate)} → {formatDate(group.endDate)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {days} {days === 1 ? "dzień" : "dni"}
-                    </div>
+          <div className="flex flex-col gap-3 flex-1 min-w-0">
+            {/* User Row */}
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium text-foreground text-sm truncate min-w-0 flex-1">
+                  {group.username}
+                  {scope === "all" && isOwn && " (Ty)"}
+                </span>
+              </div>
+              <StatusBadge status={group.status} />
+            </div>
+
+            {/* Dates Row */}
+            <div className="flex items-start justify-between gap-2 min-w-0">
+              <div className="flex items-start gap-2 flex-1 min-w-0">
+                <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0 break-words">
+                  <div className="font-medium">
+                    {formatDate(group.startDate)} → {formatDate(group.endDate)}
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
-                  <StatusBadge status={group.status} />
-                  <div className="text-sm text-muted-foreground">
-                    {group.items.length}{" "}
-                    {group.items.length === 1
-                      ? "element"
-                      : group.items.length % 10 >= 2 &&
-                          group.items.length % 10 <= 4 &&
-                          (group.items.length % 100 < 10 || group.items.length % 100 >= 20)
-                        ? "elementy"
-                        : "elementów"}
+                  <div className="text-xs text-muted-foreground">
+                    {days} {days === 1 ? "dzień" : "dni"}
                   </div>
                 </div>
               </div>
+              <div className="flex items-center gap-1.5 font-semibold flex-shrink-0">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <span>{group.totalCreditCost}</span>
+                <span className="text-xs text-muted-foreground">godzinek</span>
+              </div>
+            </div>
 
-              {/* Equipment Names List */}
-              <div className="text-sm text-muted-foreground break-words line-clamp-2">
+            {/* Equipment list */}
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="text-sm text-muted-foreground break-words line-clamp-2 flex-1">
                 {group.items.map((item, index) => (
                   <span key={item.id}>
                     {item.equipmentName}
@@ -120,14 +115,16 @@ export function GroupedReservationCard({
                   </span>
                 ))}
               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex items-center gap-1.5 font-semibold">
-              <CreditCard className="h-4 w-4 text-primary" />
-              <span>{group.totalCreditCost}</span>
-              <span className="text-xs text-muted-foreground">godzinek</span>
+              <div className="text-sm text-muted-foreground flex-shrink-0 font-medium whitespace-nowrap">
+                {group.items.length}{" "}
+                {group.items.length === 1
+                  ? "element"
+                  : group.items.length % 10 >= 2 &&
+                      group.items.length % 10 <= 4 &&
+                      (group.items.length % 100 < 10 || group.items.length % 100 >= 20)
+                    ? "elementy"
+                    : "elementów"}
+              </div>
             </div>
           </div>
         </div>
