@@ -25,16 +25,15 @@ test.describe("Equipment Browsing", () => {
     await expect(firstCard).toBeVisible();
 
     const cardTestId = await firstCard.getAttribute("data-testid");
-    const equipmentId = cardTestId?.replace("equipment-card-", "");
+    expect(cardTestId).not.toBeNull();
+    const equipmentId = cardTestId!.replace("equipment-card-", "");
 
-    if (equipmentId) {
-      const detailsButton = authenticatedPage.getByTestId(
-        TEST_IDS.equipmentDetailsButton(equipmentId)
-      );
-      await detailsButton.click();
+    const detailsButton = authenticatedPage.getByTestId(
+      TEST_IDS.equipmentDetailsButton(equipmentId)
+    );
+    await detailsButton.click();
 
-      const detailsSheet = authenticatedPage.getByTestId("equipment-details-sheet");
-      await expect(detailsSheet).toBeVisible();
-    }
+    const detailsSheet = authenticatedPage.getByTestId("equipment-details-sheet");
+    await expect(detailsSheet).toBeVisible();
   });
 });

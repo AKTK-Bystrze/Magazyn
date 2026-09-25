@@ -1,4 +1,4 @@
-import { SupabaseClient, createClient } from "@supabase/supabase-js";
+import { createSupabaseAdmin } from "./fixtures/index";
 import { cleanupOrphanedTestEquipment } from "./helpers/data-setup.helper";
 
 /**
@@ -16,20 +16,7 @@ import { cleanupOrphanedTestEquipment } from "./helpers/data-setup.helper";
 async function globalTeardown() {
   console.log("\n[GLOBAL TEARDOWN] Starting cleanup...\n");
 
-  const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error("[GLOBAL TEARDOWN] ⚠️ Missing environment variables, skipping cleanup");
-    return;
-  }
-
-  const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  const supabaseAdmin = createSupabaseAdmin();
 
   try {
     const deletedCount = await cleanupOrphanedTestEquipment(supabaseAdmin);

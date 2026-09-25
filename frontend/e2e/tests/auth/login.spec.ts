@@ -49,8 +49,6 @@ test.describe("Login Page", () => {
 
     // Act: Get magic link from Mailpit
     const magicLink = await getMagicLinkFromEmail(testEmail);
-    console.log("MAGIC LINK IS:", magicLink);
-    page.on("console", (msg) => console.log("BROWSER CONSOLE:", msg.text()));
 
     // Act: Navigate to magic link
     await page.goto(magicLink);

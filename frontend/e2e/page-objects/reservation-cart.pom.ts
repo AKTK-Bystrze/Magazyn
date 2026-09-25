@@ -31,10 +31,6 @@ export class ReservationCartPOM {
   readonly confirmButton: Locator;
   readonly cancelButton: Locator;
 
-  // Error elements
-  readonly insufficientCreditsError: Locator;
-  readonly conflictError: Locator;
-
   // Admin elements
   readonly userSelectorTrigger: Locator;
 
@@ -63,10 +59,6 @@ export class ReservationCartPOM {
     // Confirmation
     this.confirmButton = page.getByTestId("confirm-reservation-button");
     this.cancelButton = page.getByTestId("cancel-confirmation-button");
-
-    // Errors
-    this.insufficientCreditsError = page.getByTestId("error-insufficient-credits");
-    this.conflictError = page.getByTestId("error-reservation-conflict");
 
     // Admin controls
     this.userSelectorTrigger = page.locator("#user-selector");
@@ -226,8 +218,8 @@ export class ReservationCartPOM {
    * @returns A promise that resolves when the confirmation modal is visible.
    */
   async proceedToConfirmation(): Promise<void> {
-    // Use force: true to bypass potential UI overlaps (e.g. CostEstimator in mobile view)
-    await this.checkoutButton.click({ force: true });
+    await this.checkoutButton.scrollIntoViewIfNeeded();
+    await this.checkoutButton.click();
 
     // Wait for confirmation modal to appear
     await expect(this.confirmationModal).toBeVisible();
@@ -239,8 +231,8 @@ export class ReservationCartPOM {
    * @returns A promise that resolves when the button is clicked.
    */
   async confirm(): Promise<void> {
-    // Use force: true to bypass potential UI overlaps (e.g. cost summary in mobile modal view)
-    await this.confirmButton.click({ force: true });
+    await this.confirmButton.scrollIntoViewIfNeeded();
+    await this.confirmButton.click();
   }
 
   /**
@@ -260,24 +252,6 @@ export class ReservationCartPOM {
    */
   async waitForSuccess(): Promise<void> {
     await this.page.waitForURL(/\/reservations\?success=true/);
-  }
-
-  /**
-   * Checks if the insufficient credits error is displayed.
-   *
-   * @returns A promise that resolves to true if the error is visible.
-   */
-  async hasInsufficientCreditsError(): Promise<boolean> {
-    return await this.insufficientCreditsError.isVisible();
-  }
-
-  /**
-   * Checks if the reservation conflict error is displayed.
-   *
-   * @returns A promise that resolves to true if the error is visible.
-   */
-  async hasConflictError(): Promise<boolean> {
-    return await this.conflictError.isVisible();
   }
 
   /**
