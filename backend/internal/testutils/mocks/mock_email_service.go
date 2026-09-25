@@ -2,13 +2,11 @@ package mocks
 
 import (
 	"context"
-
 	"magazyn/backend/internal/service/email"
 
 	"github.com/stretchr/testify/mock"
 )
 
-// MockEmailService implements email.Service
 type MockEmailService struct {
 	mock.Mock
 }

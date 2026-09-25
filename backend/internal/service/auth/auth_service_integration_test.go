@@ -5,13 +5,12 @@ package auth_test
 import (
 	"context"
 	"fmt"
-	"os"
-	"testing"
-	"time"
-
 	"magazyn/backend/internal/repository/supabase"
 	"magazyn/backend/internal/service/auth"
 	"magazyn/backend/internal/testutils"
+	"os"
+	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,7 +23,6 @@ func TestMain(m *testing.M) {
 	}
 	m.Run()
 }
-
 func TestLogin_Integration(t *testing.T) {
 	// authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
 	// Get config from environment
@@ -35,7 +33,6 @@ func TestLogin_Integration(t *testing.T) {
 	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
 	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 	service := auth.NewAuthService(repo)
-
 	t.Run("sends magic link to valid email", func(t *testing.T) {
 		// We can't verify email delivery without an email service mock or checking logs/mailserver
 		// But we can verify the API call succeeds
@@ -52,7 +49,6 @@ func TestLogin_Integration(t *testing.T) {
 		}
 	})
 }
-
 func TestGetSession_Integration(t *testing.T) {
 	// authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
 	// Get config from environment
@@ -63,11 +59,9 @@ func TestGetSession_Integration(t *testing.T) {
 	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
 	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 	service := auth.NewAuthService(repo)
-
 	// Create a unique user for this test
 	email := fmt.Sprintf("test_session_%d@example.com", time.Now().Unix())
 	password := "testRequest123!"
-
 	user, err := testutils.CreateTestUser(email, password)
 	if err != nil {
 		t.Logf("Failed to create test user (requires service role key): %v", err)
@@ -78,14 +72,11 @@ func TestGetSession_Integration(t *testing.T) {
 		// Clean up
 		testutils.DeleteTestUser(user.ID.String())
 	}()
-
 	t.Run("returns session for existing user", func(t *testing.T) {
 		// Profile creation happens via trigger on auth.users insert
 		// We might need to wait a moment for the trigger to fire
 		time.Sleep(1 * time.Second)
-
 		session, err := service.GetSession(context.Background(), user.ID.String(), "test-token")
-
 		require.NoError(t, err)
 		assert.NotNil(t, session)
 		assert.Equal(t, user.ID.String(), session.UserID)
@@ -93,10 +84,8 @@ func TestGetSession_Integration(t *testing.T) {
 		// Username is usually generated or empty initially depending on trigger logic
 		// Just verify we got a response
 	})
-
 	t.Run("returns error for non-existent user", func(t *testing.T) {
 		session, err := service.GetSession(context.Background(), "00000000-0000-0000-0000-000000000000", "test-token")
-
 		assert.Error(t, err)
 		assert.Nil(t, session)
 		assert.Equal(t, "profile not found", err.Error())

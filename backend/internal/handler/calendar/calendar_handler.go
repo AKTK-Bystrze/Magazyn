@@ -1,27 +1,22 @@
 package calendar
 
 import (
-	"net/http"
-	"strconv"
-
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	calendarservice "magazyn/backend/internal/service/calendar"
 	"magazyn/backend/internal/types"
+	"net/http"
+	"strconv"
 )
 
-// CalendarHandler handles HTTP requests for calendar endpoints
 type CalendarHandler struct {
 	service calendarservice.CalendarService
 }
 
-// NewCalendarHandler creates a new CalendarHandler
 func NewCalendarHandler(s calendarservice.CalendarService) *CalendarHandler {
 	return &CalendarHandler{service: s}
 }
-
-// HandleGetAvailability handles GET /calendar/availability
 func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -29,20 +24,16 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 		common.RespondUnauthorized(ctx, w)
 		return
 	}
-
 	// Parse query parameters
 	query := types.CalendarAvailabilityQuery{
 		Days: constants.CalendarDefaultDays,
 	}
-
 	if equipmentID := r.URL.Query().Get("equipment_id"); equipmentID != "" {
 		query.EquipmentID = &equipmentID
 	}
-
 	if startDate := r.URL.Query().Get("start_date"); startDate != "" {
 		query.StartDate = &startDate
 	}
-
 	if daysStr := r.URL.Query().Get("days"); daysStr != "" {
 		if days, err := strconv.Atoi(daysStr); err == nil {
 			if days < constants.CalendarMinDays {
@@ -59,7 +50,6 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 			return
 		}
 	}
-
 	// Validate equipment_id if provided (basic UUID check)
 	if query.EquipmentID != nil && *query.EquipmentID != "" {
 		if len(*query.EquipmentID) != constants.UUIDLength {
@@ -67,7 +57,6 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 			return
 		}
 	}
-
 	// Validate start_date format if provided
 	if query.StartDate != nil && *query.StartDate != "" {
 		if len(*query.StartDate) != constants.DateLengthISO {
@@ -75,7 +64,6 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 			return
 		}
 	}
-
 	response, err := h.service.GetCalendarAvailability(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleGetAvailability error: %v", err)
@@ -86,6 +74,5 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }

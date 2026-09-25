@@ -2,16 +2,13 @@ package mocks
 
 import (
 	"context"
-
 	"magazyn/backend/internal/service"
 	"magazyn/backend/internal/types"
 
-	gotruetypes "github.com/supabase-community/gotrue-go/types"
-
 	"github.com/stretchr/testify/mock"
+	gotruetypes "github.com/supabase-community/gotrue-go/types"
 )
 
-// MockAuthClient mocks service.AuthClient
 type MockAuthClient struct {
 	mock.Mock
 }
@@ -20,13 +17,11 @@ func (m *MockAuthClient) OTP(req gotruetypes.OTPRequest) error {
 	args := m.Called(req)
 	return args.Error(0)
 }
-
 func (m *MockAuthClient) WithToken(token string) service.AuthClientWithToken {
 	args := m.Called(token)
 	return args.Get(0).(service.AuthClientWithToken)
 }
 
-// MockAuthClientWithToken mocks service.AuthClientWithToken
 type MockAuthClientWithToken struct {
 	mock.Mock
 }
@@ -35,7 +30,6 @@ func (m *MockAuthClientWithToken) Logout() error {
 	args := m.Called()
 	return args.Error(0)
 }
-
 func (m *MockAuthClientWithToken) GetUser() (*gotruetypes.User, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
@@ -44,7 +38,6 @@ func (m *MockAuthClientWithToken) GetUser() (*gotruetypes.User, error) {
 	return args.Get(0).(*gotruetypes.User), args.Error(1)
 }
 
-// MockPostgrestClient mocks service.PostgrestClient
 type MockPostgrestClient struct {
 	mock.Mock
 }
@@ -53,13 +46,11 @@ func (m *MockPostgrestClient) From(table string) service.PostgrestQueryBuilder {
 	args := m.Called(table)
 	return args.Get(0).(service.PostgrestQueryBuilder)
 }
-
 func (m *MockPostgrestClient) WithUserToken(token string) service.PostgrestClient {
 	args := m.Called(token)
 	return args.Get(0).(service.PostgrestClient)
 }
 
-// MockPostgrestQueryBuilder mocks service.PostgrestQueryBuilder
 type MockPostgrestQueryBuilder struct {
 	mock.Mock
 }
@@ -69,7 +60,6 @@ func (m *MockPostgrestQueryBuilder) Select(columns string, count string, head bo
 	return args.Get(0).(service.PostgrestFilterBuilder)
 }
 
-// MockPostgrestFilterBuilder mocks service.PostgrestFilterBuilder
 type MockPostgrestFilterBuilder struct {
 	mock.Mock
 }
@@ -78,7 +68,6 @@ func (m *MockPostgrestFilterBuilder) Eq(column string, value string) service.Pos
 	args := m.Called(column, value)
 	return args.Get(0).(service.PostgrestFilterBuilder)
 }
-
 func (m *MockPostgrestFilterBuilder) ExecuteTo(dest interface{}) (string, error) {
 	args := m.Called(dest)
 	return args.String(0), args.Error(1)
@@ -97,7 +86,6 @@ func (m *MockPostgrestFilterBuilder) ReturnData(data interface{}) *mock.Call {
 	return m.On("ExecuteTo", mock.Anything)
 }
 
-// MockAuthService mocks service.AuthServiceInterface
 type MockAuthService struct {
 	mock.Mock
 }
@@ -109,12 +97,10 @@ func (m *MockAuthService) Login(ctx context.Context, email string) (*types.Login
 	}
 	return args.Get(0).(*types.LoginResponse), args.Error(1)
 }
-
 func (m *MockAuthService) Logout(ctx context.Context, token string) error {
 	args := m.Called(ctx, token)
 	return args.Error(0)
 }
-
 func (m *MockAuthService) GetSession(ctx context.Context, userID string, userToken string) (*types.SessionResponse, error) {
 	args := m.Called(ctx, userID, userToken)
 	if args.Get(0) == nil {
@@ -122,7 +108,6 @@ func (m *MockAuthService) GetSession(ctx context.Context, userID string, userTok
 	}
 	return args.Get(0).(*types.SessionResponse), args.Error(1)
 }
-
 func (m *MockAuthService) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.SessionResponse, error) {
 	args := m.Called(ctx, email, token, otpType)
 	if args.Get(0) == nil {

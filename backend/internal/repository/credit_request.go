@@ -2,11 +2,9 @@ package repository
 
 import (
 	"context"
-
 	"magazyn/backend/internal/types"
 )
 
-// CreditRequestRepository defines the data access interface for credit request operations.
 type CreditRequestRepository interface {
 	// ListRequests returns a paginated list of credit requests with their helpers.
 	ListRequests(ctx context.Context, page, perPage int) ([]types.CreditRequestDTO, int64, error)
