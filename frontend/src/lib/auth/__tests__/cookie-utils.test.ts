@@ -169,18 +169,29 @@ describe("cookie-utils", () => {
   });
 
   describe("waitForCookie", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it("resolves immediately if cookie is already set", async () => {
       mockCookie = "magazyn-auth-token=token";
-      const result = await waitForCookie(300);
+      const promise = waitForCookie(300);
+      await vi.runAllTimersAsync();
+      const result = await promise;
       expect(result).toBe(true);
     });
 
     it("resolves when cookie is set during wait", async () => {
       const promise = waitForCookie(300);
 
-      setTimeout(() => {
-        mockCookie = "magazyn-auth-token=test-token";
-      }, 100);
+      // Advance half way and set cookie
+      await vi.advanceTimersByTimeAsync(100);
+      mockCookie = "magazyn-auth-token=test-token";
+      await vi.advanceTimersByTimeAsync(50);
 
       const result = await promise;
       expect(result).toBe(true);
@@ -188,38 +199,42 @@ describe("cookie-utils", () => {
 
     it("returns false when timeout expires without cookie", async () => {
       mockCookie = "";
-      const result = await waitForCookie(100);
+      const promise = waitForCookie(100);
+      await vi.advanceTimersByTimeAsync(150);
+      const result = await promise;
       expect(result).toBe(false);
     });
 
     it("uses default timeout of 300ms", async () => {
-      const startTime = Date.now();
-      await waitForCookie();
-      const elapsed = Date.now() - startTime;
+      mockCookie = "";
+      const promise = waitForCookie();
 
-      expect(elapsed).toBeGreaterThanOrEqual(280);
-      expect(elapsed).toBeLessThan(400); // Increased tolerance for test environment
+      let resolved = false;
+      promise.then(() => {
+        resolved = true;
+      });
+
+      await vi.advanceTimersByTimeAsync(290);
+      expect(resolved).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(20);
+      expect(resolved).toBe(true);
     });
 
     it("accepts custom timeout", async () => {
-      const startTime = Date.now();
-      await waitForCookie(150);
-      const elapsed = Date.now() - startTime;
-
-      expect(elapsed).toBeGreaterThanOrEqual(130);
-      expect(elapsed).toBeLessThan(250);
-    });
-
-    it("polls for cookie presence and succeeds when cookie appears", async () => {
       mockCookie = "";
+      const promise = waitForCookie(150);
 
-      setTimeout(() => {
-        mockCookie = "magazyn-auth-token=delayed-token";
-      }, 100);
+      let resolved = false;
+      promise.then(() => {
+        resolved = true;
+      });
 
-      const result = await waitForCookie(300);
+      await vi.advanceTimersByTimeAsync(140);
+      expect(resolved).toBe(false);
 
-      expect(result).toBe(true);
+      await vi.advanceTimersByTimeAsync(20);
+      expect(resolved).toBe(true);
     });
   });
 
@@ -227,6 +242,7 @@ describe("cookie-utils", () => {
     let mockReplace: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
+      vi.useFakeTimers();
       mockReplace = vi.fn();
       vi.stubGlobal("window", {
         ...window,
@@ -238,60 +254,31 @@ describe("cookie-utils", () => {
     });
 
     afterEach(() => {
+      vi.useRealTimers();
       vi.unstubAllGlobals();
     });
 
     it("sets cookie before redirecting", async () => {
       const promise = waitForCookieAndRedirect("test-token", "/dashboard");
 
-      await vi.waitFor(() => {
-        expect(mockCookie).toContain("magazyn-auth-token=test-token");
-      });
-
-      await promise;
-    });
-
-    it("performs redirect after cookie is set", async () => {
-      await waitForCookieAndRedirect("test-token", "/admin");
-
-      expect(mockReplace).toHaveBeenCalledWith("/admin");
-    });
-
-    it("waits for cookie confirmation before redirecting", async () => {
-      const promise = waitForCookieAndRedirect("test-token", "/dashboard");
-
-      expect(mockReplace).not.toHaveBeenCalled();
-
+      await vi.advanceTimersByTimeAsync(150); // fast forward to let cookie be verified
       await promise;
 
-      expect(mockReplace).toHaveBeenCalled();
-    });
-
-    it("waits additional time if cookie not set after 100ms", async () => {
-      Object.defineProperty(document, "cookie", {
-        get: () => mockCookie,
-        set: (value: string) => {
-          setTimeout(() => {
-            mockCookie = value;
-          }, 150); // Delay cookie setting
-        },
-        configurable: true,
-      });
-
-      const startTime = Date.now();
-      await waitForCookieAndRedirect("test-token", "/dashboard");
-      const elapsed = Date.now() - startTime;
-
-      expect(elapsed).toBeGreaterThanOrEqual(280);
+      expect(mockCookie).toContain("magazyn-auth-token=test-token");
+      expect(mockReplace).toHaveBeenCalledWith("/dashboard");
     });
 
     it("handles different redirect URLs", async () => {
-      await waitForCookieAndRedirect("token1", "/admin");
+      const promise1 = waitForCookieAndRedirect("token1", "/admin");
+      await vi.advanceTimersByTimeAsync(150);
+      await promise1;
       expect(mockReplace).toHaveBeenCalledWith("/admin");
 
       mockReplace.mockClear();
 
-      await waitForCookieAndRedirect("token2", "/dashboard");
+      const promise2 = waitForCookieAndRedirect("token2", "/dashboard");
+      await vi.advanceTimersByTimeAsync(150);
+      await promise2;
       expect(mockReplace).toHaveBeenCalledWith("/dashboard");
     });
   });

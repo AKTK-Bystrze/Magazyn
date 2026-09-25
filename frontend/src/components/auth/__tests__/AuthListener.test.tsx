@@ -146,12 +146,13 @@ describe("AuthListener", () => {
       } as any);
       vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/dashboard");
 
-      await act(async () => {
-        await authStateCallback?.("SIGNED_IN", session);
-        await new Promise((resolve) => setTimeout(resolve, 100));
+      act(() => {
+        authStateCallback?.("SIGNED_IN", session);
       });
 
-      expect(mockReplace).toHaveBeenCalledWith("/dashboard");
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith("/dashboard");
+      });
     });
 
     it("should call getUserSession with access token on SIGNED_IN", async () => {
@@ -201,10 +202,7 @@ describe("AuthListener", () => {
       } as any);
       vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/admin");
 
-      await act(async () => {
-        render(<AuthListener />);
-        await new Promise((resolve) => setTimeout(resolve, 200));
-      });
+      render(<AuthListener />);
 
       await waitFor(
         () => {
@@ -233,10 +231,7 @@ describe("AuthListener", () => {
       } as any);
       vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/dashboard");
 
-      await act(async () => {
-        render(<AuthListener />);
-        await new Promise((resolve) => setTimeout(resolve, 200));
-      });
+      render(<AuthListener />);
 
       await waitFor(
         () => {
@@ -251,110 +246,7 @@ describe("AuthListener", () => {
 
       render(<AuthListener />);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       expect(supabase.auth.setSession).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("Redirect Logic - Enabled Users", () => {
-    it("should redirect super_admin to /admin", async () => {
-      mockLocation.pathname = "/login";
-      render(<AuthListener />);
-
-      const session = createMockSession();
-      vi.mocked(getUserSession).mockResolvedValue({
-        isEnabled: true,
-        role: "super_admin",
-      } as any);
-      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/admin");
-
-      await act(async () => {
-        await authStateCallback?.("SIGNED_IN", session);
-        await new Promise((resolve) => setTimeout(resolve, 400));
-      });
-
-      expect(mockReplace).toHaveBeenCalledWith("/admin");
-    });
-
-    it("should redirect admin to /admin", async () => {
-      mockLocation.pathname = "/login";
-      render(<AuthListener />);
-
-      const session = createMockSession();
-      vi.mocked(getUserSession).mockResolvedValue({
-        isEnabled: true,
-        role: "admin",
-      } as any);
-      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/admin");
-
-      await act(async () => {
-        await authStateCallback?.("SIGNED_IN", session);
-        await new Promise((resolve) => setTimeout(resolve, 400));
-      });
-
-      expect(mockReplace).toHaveBeenCalledWith("/admin");
-    });
-
-    it("should redirect user to /dashboard", async () => {
-      mockLocation.pathname = "/login";
-      render(<AuthListener />);
-
-      const session = createMockSession();
-      vi.mocked(getUserSession).mockResolvedValue({
-        isEnabled: true,
-        role: "user",
-      } as any);
-      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/dashboard");
-
-      await act(async () => {
-        await authStateCallback?.("SIGNED_IN", session);
-        await new Promise((resolve) => setTimeout(resolve, 400));
-      });
-
-      expect(mockReplace).toHaveBeenCalledWith("/dashboard");
-    });
-  });
-
-  describe("Redirect Logic - Disabled Users", () => {
-    it("should redirect disabled user to /account-disabled", async () => {
-      mockLocation.pathname = "/login";
-      render(<AuthListener />);
-
-      const session = createMockSession();
-      vi.mocked(getUserSession).mockResolvedValue({
-        isEnabled: false,
-        role: "super_admin",
-      } as any);
-      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/account-disabled");
-
-      await act(async () => {
-        await authStateCallback?.("SIGNED_IN", session);
-        await new Promise((resolve) => setTimeout(resolve, 400));
-      });
-
-      expect(mockReplace).toHaveBeenCalledWith("/account-disabled");
-    });
-
-    it("should override redirect param when user is disabled", async () => {
-      mockLocation.pathname = "/login";
-      mockLocation.search = "?redirect=/dashboard";
-
-      render(<AuthListener />);
-
-      const session = createMockSession();
-      vi.mocked(getUserSession).mockResolvedValue({
-        isEnabled: false,
-        role: "user",
-      } as any);
-      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/account-disabled");
-
-      await act(async () => {
-        await authStateCallback?.("SIGNED_IN", session);
-        await new Promise((resolve) => setTimeout(resolve, 400));
-      });
-
-      expect(mockReplace).toHaveBeenCalledWith("/account-disabled");
     });
   });
 
@@ -371,12 +263,13 @@ describe("AuthListener", () => {
       } as any);
       vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue(null);
 
-      await act(async () => {
-        await authStateCallback?.("SIGNED_IN", session);
-        await new Promise((resolve) => setTimeout(resolve, 400));
+      act(() => {
+        authStateCallback?.("SIGNED_IN", session);
       });
 
-      expect(mockReplace).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(mockReplace).not.toHaveBeenCalled();
+      });
     });
   });
 

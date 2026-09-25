@@ -1,6 +1,6 @@
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { RedirectManager, getDefaultRouteForUser } from "../redirect-manager";
+import { RedirectManager } from "../redirect-manager";
 import type { User } from "@supabase/supabase-js";
 import type { SessionInfo } from "../../../types";
 
@@ -343,47 +343,6 @@ describe("redirect-manager", () => {
         const result = RedirectManager.getRedirectForAuthState(user, null, "/login", null, origin);
         expect(result).toBe("/login");
       });
-    });
-  });
-
-  describe("getDefaultRouteForUser", () => {
-    it("returns login for null user", () => {
-      const result = getDefaultRouteForUser(null, null);
-      expect(result).toBe("/login");
-    });
-
-    it("returns login for user with null sessionInfo", () => {
-      const user = createMockUser();
-      const result = getDefaultRouteForUser(user, null);
-      expect(result).toBe("/login");
-    });
-
-    it("returns account-disabled for disabled user", () => {
-      const user = createMockUser();
-      const sessionInfo = createMockSessionInfo({ isEnabled: false });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe("/account-disabled");
-    });
-
-    it("returns dashboard for enabled regular user", () => {
-      const user = createMockUser();
-      const sessionInfo = createMockSessionInfo({ role: "user" });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe("/dashboard");
-    });
-
-    it("returns admin for enabled admin", () => {
-      const user = createMockUser();
-      const sessionInfo = createMockSessionInfo({ role: "admin" });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe("/admin");
-    });
-
-    it("returns admin for enabled super_admin", () => {
-      const user = createMockUser();
-      const sessionInfo = createMockSessionInfo({ role: "super_admin" });
-      const result = getDefaultRouteForUser(user, sessionInfo);
-      expect(result).toBe("/admin");
     });
   });
 });
