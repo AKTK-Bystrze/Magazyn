@@ -1,5 +1,5 @@
 import { expect, request } from "@playwright/test";
-import { E2E_CONFIG } from "../constants/config";
+import { E2E_CONFIG } from "../constants";
 
 export async function getMagicLinkFromEmail(emailAddress: string): Promise<string> {
   const reqContext = await request.newContext();

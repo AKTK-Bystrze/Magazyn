@@ -12,7 +12,7 @@ import { E2E_CONFIG } from "../constants";
 export async function resetCredits(
   supabaseAdmin: SupabaseClient,
   userId: string,
-  balance = E2E_CONFIG.DEFAULTS.CREDIT_BALANCE
+  balance = E2E_CONFIG.DEFAULTS.INITIAL_CREDITS
 ): Promise<void> {
   await supabaseAdmin.from("profiles").update({ credit_balance: balance }).eq("id", userId);
 }
@@ -209,8 +209,6 @@ export async function cleanupTestEquipment(
   supabaseAdmin: SupabaseClient,
   equipmentIds: string[]
 ): Promise<void> {
-  if (equipmentIds.length === 0) return;
-
   if (equipmentIds.length === 0) return;
 
   const { data: reservations } = await supabaseAdmin

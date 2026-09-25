@@ -24,11 +24,8 @@ test.describe("Admin Equipment Manager", () => {
     }
   });
 
-  test("should create and list equipment (edit/archive skipped due to flakiness)", async ({
-    adminPage,
-    workerIndex,
-    supabaseAdmin,
-  }) => {
+  // ponytail: DEBT - edit/archive tests skipped due to flakiness
+  test("should create and list equipment", async ({ adminPage, workerIndex, supabaseAdmin }) => {
     const equipmentPage = new EquipmentManagerPage(adminPage);
     const timestamp = Date.now();
     const uniqueInternalId = `E2E-W${workerIndex}-${timestamp}`;

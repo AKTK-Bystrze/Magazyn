@@ -58,8 +58,7 @@ export class EquipmentManagerPage {
    */
   async goto() {
     await this.page.goto("/admin/equipment/manage", { waitUntil: "networkidle" });
-    await this.page.waitForLoadState("domcontentloaded");
-    await this.page.waitForTimeout(E2E_CONFIG.TIMEOUT.ACTION);
+    await expect(this.table).toBeVisible();
   }
 
   /**
