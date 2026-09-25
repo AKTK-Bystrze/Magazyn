@@ -34,7 +34,6 @@ export class RedirectManager {
     redirectParam: string | null,
     origin: string
   ): string | null {
-    // Unauthenticated user -> login page
     if (!user) {
       if (currentPath === ROUTES.PUBLIC.LOGIN) {
         return null;
@@ -47,7 +46,6 @@ export class RedirectManager {
       return `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(currentPath)}`;
     }
 
-    // Disabled user -> account disabled page
     if (sessionInfo && !sessionInfo.isEnabled) {
       if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED) {
         return null;
@@ -62,14 +60,12 @@ export class RedirectManager {
     if (currentPath === ROUTES.PUBLIC.LOGIN) {
       if (redirectParam) {
         const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
-        // Validate redirect target against user's role
         if (
           safeRedirect !== ROUTES.PUBLIC.LOGIN &&
           isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)
         ) {
           return safeRedirect;
         }
-        // Fall through to default route if redirect is not allowed
       }
       return getDefaultRouteForUser(user, sessionInfo);
     }
@@ -81,7 +77,6 @@ export class RedirectManager {
   }
 }
 
-/// Checks if a redirect path is allowed for a given user role
 function isRedirectAllowedForRole(path: string, role: string | undefined): boolean {
   return (
     !path.startsWith(ROUTES.PROTECTED.ADMIN) || role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE
@@ -104,8 +99,6 @@ export function getDefaultRouteForUser(user: User | null, sessionInfo: SessionIn
     return ROUTES.PROTECTED.ACCOUNT_DISABLED;
   }
 
-  // SECURITY: Use ONLY sessionInfo.role (authoritative source from database)
-  // Never use user_metadata.role (can be stale)
   const role = sessionInfo.role;
 
   switch (role) {

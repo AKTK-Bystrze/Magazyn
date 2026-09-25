@@ -4,7 +4,6 @@ import { Button } from "../components/ui/button";
 
 export const prerender = false;
 
-// Check if user is authenticated
 const user = Astro.locals.user;
 ---
 
@@ -85,13 +84,11 @@ const user = Astro.locals.user;
   </main>
 
   <script>
-    // Constants - synchronized with lib/config
     const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:8080";
     const AUTH_COOKIE_NAME = "magazyn-auth-token";
     const SUCCESS_REDIRECT_DELAY_MS = 1500;
     const LOGIN_ROUTE = "/login";
 
-    // Get access token from cookie
     const accessToken = document.cookie.match(new RegExp(`${AUTH_COOKIE_NAME}=([^;]+)`))?.[1];
 
     /**
@@ -111,14 +108,12 @@ const user = Astro.locals.user;
       element.classList.remove("hidden");
     }
 
-    // Refresh status button
     document.getElementById("refresh-status-btn")?.addEventListener("click", async () => {
       const btn = document.getElementById("refresh-status-btn");
       const statusMsg = document.getElementById("status-message");
 
       if (!btn || !statusMsg) return;
 
-      // Show loading state
       btn.textContent = "Sprawdzanie…";
       btn.setAttribute("disabled", "true");
       statusMsg.classList.add("hidden");
@@ -136,7 +131,6 @@ const user = Astro.locals.user;
           const data = await response.json();
 
           if (data.isEnabled) {
-            // Account is now enabled! Redirect to appropriate page
             setStatusMessage(
               statusMsg,
               "Konto włączone! Przekierowuję…",
@@ -147,7 +141,6 @@ const user = Astro.locals.user;
               window.location.href = "/";
             }, SUCCESS_REDIRECT_DELAY_MS);
           } else {
-            // Still disabled
             setStatusMessage(
               statusMsg,
               "Konto nadal oczekuje na zatwierdzenie.",
@@ -173,7 +166,6 @@ const user = Astro.locals.user;
       }
     });
 
-    // Logout button
     document.getElementById("logout-btn")?.addEventListener("click", async () => {
       const btn = document.getElementById("logout-btn");
       if (!btn) return;
@@ -182,17 +174,11 @@ const user = Astro.locals.user;
       btn.setAttribute("disabled", "true");
 
       try {
-        // Clear the auth cookie
         document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 
-        // Clear Supabase local storage
         localStorage.removeItem(AUTH_COOKIE_NAME);
 
-        // Fallback for default key
         localStorage.removeItem("sb-gwamxxqarkcpvgzvpanc-auth-token");
-
-        // Optional: Dispatch a storage event or similar if we need to notify other tabs/components immediately
-        // But the redirect to /login should handle it as AuthListener checks cookies/storage on mount
 
         window.location.href = LOGIN_ROUTE;
       } catch (error) {

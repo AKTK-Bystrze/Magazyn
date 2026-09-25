@@ -18,31 +18,22 @@ import (
 
 // EquipmentService defines operations for equipment management
 type EquipmentService interface {
-	// List retrieves a paginated list of equipment with optional filters
 	List(ctx context.Context, userID string, query types.EquipmentListQuery) (*types.EquipmentListResponse, error)
 
-	// GetByID retrieves detailed equipment information including maintenance logs
 	GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error)
 
-	// Create creates new equipment with the given parameters
 	Create(ctx context.Context, cmd types.CreateEquipmentCommand, adminID string) (*types.EquipmentDTO, error)
 
-	// Update updates equipment fields
 	Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error)
 
-	// Archive soft-deletes equipment by setting is_archived = true
 	Archive(ctx context.Context, id string) error
 
-	// CheckAvailability checks if equipment is available for a given date range
 	CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error)
 
-	// ListEquipmentTypes retrieves all equipment types
 	ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error)
 
-	// CreateEquipmentType creates a new equipment type
 	CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error)
 
-	// CreateMaintenanceLog adds a maintenance log entry for equipment
 	CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error)
 }
 
@@ -77,21 +68,17 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 		return nil, types.NewInternalError("Failed to fetch equipment", err)
 	}
 
-	// Calculate favorites
 	favoriteIDs, err := s.repo.GetUserFavorites(ctx, userID)
 	if err != nil {
-		// Log error but don't fail request
 		logger.Warnf(ctx, "Failed to fetch user favorites: %v", err)
 		favoriteIDs = make(map[string]bool)
 	}
 
-	// Collect Type IDs
 	typeIDs := make([]string, len(equipmentList))
 	for i, eq := range equipmentList {
 		typeIDs[i] = eq.TypeID
 	}
 
-	// Bulk fetch types
 	typesMap, err := s.typeRepo.GetTypesByIDs(ctx, typeIDs)
 	if err != nil {
 		logger.Warnf(ctx, "Failed to fetch types: %v", err)
@@ -112,7 +99,6 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 		dtos[i] = s.mapToEquipmentDTO(eq, typeName, cost, &isFav)
 	}
 
-	// Calculate pagination
 	totalPages := int(math.Ceil(float64(totalItems) / float64(query.PerPage)))
 	if totalPages < 1 {
 		totalPages = 1
@@ -169,7 +155,6 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 		logger.Errorf(ctx, "Failed to fetch maintenance logs for equipment %s: %v", id, err)
 	} else {
 		for _, l := range logs {
-			// ... (rest of the loop)
 			logDTOs = append(logDTOs, types.MaintenanceLogDTO{
 				ID:             l.ID,
 				PreviousStatus: l.PreviousStatus,
@@ -266,10 +251,7 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 		return nil, err
 	}
 
-	// Create maintenance log if status changed
 	if cmd.Status != nil && *cmd.Status != oldEq.Status {
-		// We deliberately do not check for error here to not fail the update if logging fails
-		// but we log the error
 		_, logErr := s.repo.CreateMaintenanceLog(ctx, id, oldEq.Status, *cmd.Status, nil, adminID)
 		if logErr != nil {
 			logger.Errorf(ctx, "Failed to create status change log: %v", logErr)
@@ -369,7 +351,6 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 }
 
 func (s *equipmentService) CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error) {
-	// 1. Create Type
 	t := types.PublicEquipmentTypesInsert{
 		Name:             cmd.Name,
 		CreditCostPerDay: cmd.CreditCostPerDay,
@@ -391,14 +372,12 @@ func (s *equipmentService) CreateMaintenanceLog(ctx context.Context, equipmentID
 		return nil, types.NewNotFoundError("Equipment", equipmentID)
 	}
 
-	// Create log with current status as both previous and new (note-only entry)
 	log, err := s.repo.CreateMaintenanceLog(ctx, equipmentID, eq.Status, eq.Status, notes, userID)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to create maintenance log: %v", err)
 		return nil, types.NewInternalError("Failed to create maintenance log", err)
 	}
 
-	// Fetch author username
 	authorUsername := ""
 	if user, err := s.userRepo.GetByID(ctx, userID); err == nil && user != nil {
 		authorUsername = user.Username

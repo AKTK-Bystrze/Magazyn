@@ -49,14 +49,12 @@ func TestHasRole(t *testing.T) {
 	})
 
 	t.Run("handles whitespace in role", func(t *testing.T) {
-		// Test that roles with different casing still match due to EqualFold
 		profile := &types.PublicProfilesSelect{Role: "Admin"}
 		assert.True(t, HasRole(profile, "ADMIN"))
 	})
 }
 
 func TestRoleConstants(t *testing.T) {
-	// Verify role constants match expected database ENUM values
 	assert.Equal(t, "user", RoleUser, "RoleUser should be 'user'")
 	assert.Equal(t, "admin", RoleAdmin, "RoleAdmin should be 'admin'")
 	assert.Equal(t, "super_admin", RoleSuperAdmin, "RoleSuperAdmin should be 'super_admin'")

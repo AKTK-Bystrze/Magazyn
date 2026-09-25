@@ -28,7 +28,10 @@ interface CreditHistoryTableProps {
  * Presentational component to display credit history in a table
  */
 export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps) {
-  const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   const requestSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";
@@ -120,20 +123,52 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
         <Table data-testid="credit-history-table">
           <TableHeader>
             <TableRow>
-              <TableHead className="whitespace-nowrap cursor-pointer" onClick={() => requestSort('createdAt')}>
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_DATE} {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+              <TableHead
+                className="whitespace-nowrap cursor-pointer"
+                onClick={() => requestSort("createdAt")}
+              >
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_DATE}{" "}
+                {sortConfig?.key === "createdAt"
+                  ? sortConfig.direction === "asc"
+                    ? "↑"
+                    : "↓"
+                  : ""}
               </TableHead>
-              <TableHead className="whitespace-nowrap cursor-pointer" onClick={() => requestSort('reason')}>
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_REASON} {sortConfig?.key === 'reason' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+              <TableHead
+                className="whitespace-nowrap cursor-pointer"
+                onClick={() => requestSort("reason")}
+              >
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_REASON}{" "}
+                {sortConfig?.key === "reason" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
               </TableHead>
-              <TableHead className="hidden sm:table-cell whitespace-nowrap cursor-pointer" onClick={() => requestSort('description')}>
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION} {sortConfig?.key === 'description' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+              <TableHead
+                className="hidden sm:table-cell whitespace-nowrap cursor-pointer"
+                onClick={() => requestSort("description")}
+              >
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION}{" "}
+                {sortConfig?.key === "description"
+                  ? sortConfig.direction === "asc"
+                    ? "↑"
+                    : "↓"
+                  : ""}
               </TableHead>
-              <TableHead className="whitespace-nowrap cursor-pointer" onClick={() => requestSort('authorUsername')}>
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR} {sortConfig?.key === 'authorUsername' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+              <TableHead
+                className="whitespace-nowrap cursor-pointer"
+                onClick={() => requestSort("authorUsername")}
+              >
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR}{" "}
+                {sortConfig?.key === "authorUsername"
+                  ? sortConfig.direction === "asc"
+                    ? "↑"
+                    : "↓"
+                  : ""}
               </TableHead>
-              <TableHead className="text-right whitespace-nowrap cursor-pointer" onClick={() => requestSort('amount')}>
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT} {sortConfig?.key === 'amount' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+              <TableHead
+                className="text-right whitespace-nowrap cursor-pointer"
+                onClick={() => requestSort("amount")}
+              >
+                {CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT}{" "}
+                {sortConfig?.key === "amount" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -148,7 +183,6 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
   );
 }
 
-// Helper to get localized reason text and badge variant
 const getReasonDisplay = (reason: CreditHistoryItem["reason"]) => {
   switch (reason) {
     case "reservation_charge":

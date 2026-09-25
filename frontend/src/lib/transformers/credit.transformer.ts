@@ -1,10 +1,6 @@
 import type { CreditHistoryItem, CreditHistoryResponse } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
-// =============================================================================
-// BACKEND DTO TYPES (snake_case)
-// =============================================================================
-
 /**
  * Backend credit history item DTO structure (snake_case)
  */
@@ -34,10 +30,6 @@ interface CreditHistoryResponseDTO {
     total_pages: number;
   };
 }
-
-// =============================================================================
-// RESPONSE TRANSFORMERS (Backend → Frontend: snake_case → camelCase)
-// =============================================================================
 
 /**
  * Transforms a single credit history item from backend to frontend format

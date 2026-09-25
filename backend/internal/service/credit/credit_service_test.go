@@ -12,13 +12,11 @@ import (
 )
 
 func TestGetCreditHistory_Pagination(t *testing.T) {
-	// Setup
 	mockRepo := new(mocks.MockCreditHistoryRepository)
 	mockUserRepo := new(mocks.MockUserRepository)
 	service := NewCreditHistoryService(mockRepo, mockUserRepo)
 	ctx := context.Background()
 
-	// Test Case 1: Invalid PerPage (not in allowed constants)
 	query := types.GetCreditHistoryQuery{
 		Page:    1,
 		PerPage: 15, // Invalid
@@ -28,13 +26,11 @@ func TestGetCreditHistory_Pagination(t *testing.T) {
 	assert.IsType(t, &types.ValidationError{}, err)
 	assert.Contains(t, err.Error(), "Invalid per_page value")
 
-	// Test Case 2: Valid PerPage
 	queryValid := types.GetCreditHistoryQuery{
 		Page:    1,
 		PerPage: 25,
 	}
 
-	// Mocks
 	userID := "user1"
 	mockRepo.On("GetCreditHistory", ctx, &userID, 1, 25).Return([]types.CreditHistoryItemDTO{}, int64(0), nil)
 	mockUserRepo.On("GetByID", ctx, userID).Return(&types.PublicProfilesSelect{CreditBalance: 100}, nil)
@@ -60,7 +56,6 @@ func TestGetCreditHistory_PaginationDefaults(t *testing.T) {
 	}
 	userID := "user1"
 
-	// Expect call with defaults
 	mockRepo.On("GetCreditHistory", ctx, &userID, constants.DefaultPage, constants.DefaultPerPage).Return([]types.CreditHistoryItemDTO{}, int64(0), nil)
 	mockUserRepo.On("GetByID", ctx, userID).Return(&types.PublicProfilesSelect{CreditBalance: 100}, nil)
 

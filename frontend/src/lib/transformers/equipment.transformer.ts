@@ -30,7 +30,6 @@ export class EquipmentTransformError extends Error {
  * @throws EquipmentTransformError if validation fails
  */
 export function transformEquipmentDTO(dto: unknown): EquipmentSearchItem {
-  // Runtime validation
   const validated = equipmentDTOSchema.safeParse(dto);
 
   if (!validated.success) {
@@ -75,7 +74,6 @@ export function transformEquipmentListResponse(response: unknown): {
   equipment: EquipmentSearchItem[];
   pagination: PaginationMeta;
 } {
-  // Runtime validation
   const validated = equipmentListResponseDTOSchema.safeParse(response);
 
   if (!validated.success) {
@@ -111,7 +109,6 @@ export function transformEquipmentListResponse(response: unknown): {
  * @throws EquipmentTransformError if validation fails
  */
 export function transformEquipmentTypeDTO(dto: unknown): EquipmentType {
-  // Runtime validation
   const validated = equipmentTypeDTOSchema.safeParse(dto);
 
   if (!validated.success) {
@@ -144,7 +141,6 @@ export function transformEquipmentTypeDTO(dto: unknown): EquipmentType {
  * @throws EquipmentTransformError if validation fails
  */
 export function transformEquipmentTypesResponse(response: unknown): EquipmentType[] {
-  // Runtime validation
   const validated = equipmentTypesResponseDTOSchema.safeParse(response);
 
   if (!validated.success) {

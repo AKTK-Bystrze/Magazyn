@@ -68,13 +68,11 @@ export function EditUserDialog({
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  // Generate unique IDs for form fields
   const emailId = React.useId();
   const roleId = React.useId();
   const creditsId = React.useId();
   const statusId = React.useId();
 
-  // Initialize form with user data when dialog opens
   React.useEffect(() => {
     if (isOpen && user) {
       setFormData({
@@ -87,13 +85,11 @@ export function EditUserDialog({
     }
   }, [isOpen, user]);
 
-  // Handle input change
   const handleInputChange = React.useCallback(
     (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const value =
         field === "creditBalance" ? Math.max(0, parseInt(e.target.value) || 0) : e.target.value;
       setFormData((prev) => ({ ...prev, [field]: value }));
-      // Clear error when field is modified
       if (errors[field]) {
         setErrors((prev) => ({ ...prev, [field]: "" }));
       }
@@ -101,21 +97,17 @@ export function EditUserDialog({
     [errors]
   );
 
-  // Handle role change
   const handleRoleChange = React.useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, role: value as Enums<"user_role"> }));
   }, []);
 
-  // Validate form
   const validateForm = React.useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Email validation (only if changed)
     if (formData.email.trim() && !USER_VALIDATION_PATTERNS.EMAIL.test(formData.email)) {
       newErrors.email = USER_VALIDATION_MESSAGES.EMAIL_INVALID;
     }
 
-    // Credit balance validation
     if (formData.creditBalance < 0) {
       newErrors.creditBalance = USER_VALIDATION_MESSAGES.CREDIT_BALANCE_INVALID;
     }
@@ -124,7 +116,6 @@ export function EditUserDialog({
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // Build update command with only changed fields
   const buildUpdateCommand = React.useCallback((): UpdateUserCommand | null => {
     if (!user) return null;
 
@@ -143,11 +134,9 @@ export function EditUserDialog({
       command.isEnabled = formData.isEnabled;
     }
 
-    // Return null if nothing changed
     return Object.keys(command).length > 0 ? command : null;
   }, [formData, user]);
 
-  // Handle form submit
   const handleSubmit = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -158,7 +147,6 @@ export function EditUserDialog({
 
       const command = buildUpdateCommand();
       if (!command) {
-        // Nothing changed, just close
         onClose();
         return;
       }
@@ -167,7 +155,6 @@ export function EditUserDialog({
         await onSubmit(user.id, command);
         onClose();
       } catch (err) {
-        // Handle API errors
         const message = err instanceof Error ? err.message : USER_VALIDATION_MESSAGES.UPDATE_FAILED;
         if (message.toLowerCase().includes("email")) {
           setErrors((prev) => ({ ...prev, email: message }));

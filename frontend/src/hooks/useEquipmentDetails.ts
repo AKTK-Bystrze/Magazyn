@@ -53,7 +53,6 @@ interface UseEquipmentDetailsReturn {
 export function useEquipmentDetails(equipmentId: string | null): UseEquipmentDetailsReturn {
   const queryClient = useQueryClient();
 
-  // Fetch equipment details with maintenance logs (single API call)
   const {
     data: detailsData,
     isLoading,
@@ -66,7 +65,6 @@ export function useEquipmentDetails(equipmentId: string | null): UseEquipmentDet
     staleTime: QUERY_STALE_TIME_MS,
   });
 
-  // Fetch reservation history (separate endpoint)
   const {
     data: reservationHistoryData,
     isLoading: isReservationsLoading,
@@ -78,19 +76,16 @@ export function useEquipmentDetails(equipmentId: string | null): UseEquipmentDet
     staleTime: QUERY_STALE_TIME_MS,
   });
 
-  // Add maintenance log mutation
   const addMaintenanceLogMutation = useMutation({
     mutationFn: (command: CreateMaintenanceLogCommand) =>
       equipmentApi.addMaintenanceLog(equipmentId!, command),
     onSuccess: () => {
-      // Invalidate details query (which now includes maintenance logs)
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.details(equipmentId ?? ""),
       });
     },
   });
 
-  // Add maintenance log handler
   const addMaintenanceLog = React.useCallback(
     async (command: CreateMaintenanceLogCommand) => {
       return addMaintenanceLogMutation.mutateAsync(command);
@@ -98,7 +93,6 @@ export function useEquipmentDetails(equipmentId: string | null): UseEquipmentDet
     [addMaintenanceLogMutation]
   );
 
-  // Refetch all
   const refetch = React.useCallback(() => {
     refetchDetails();
     refetchReservations();

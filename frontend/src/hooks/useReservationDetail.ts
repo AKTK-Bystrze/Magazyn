@@ -40,7 +40,6 @@ interface UseReservationDetailReturn {
 export function useReservationDetail(reservationId: string): UseReservationDetailReturn {
   const queryClient = useQueryClient();
 
-  // Fetch reservation details
   const {
     data: reservation,
     isLoading,
@@ -52,22 +51,18 @@ export function useReservationDetail(reservationId: string): UseReservationDetai
     staleTime: QUERY_STALE_TIME_MS,
   });
 
-  // Status update mutation
   const updateMutation = useMutation({
     mutationFn: (command: UpdateReservationCommand) =>
       reservationsApi.update(reservationId, command),
     onSuccess: () => {
-      // Invalidate detail query to refetch
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.detail(reservationId),
       });
-      // Invalidate list queries to update reservation list
       queryClient.invalidateQueries({ queryKey: ["reservations", "list"] });
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
     },
   });
 
-  // Update status helper
   const updateStatus = React.useCallback(
     async (command: UpdateReservationCommand) => {
       return updateMutation.mutateAsync(command);

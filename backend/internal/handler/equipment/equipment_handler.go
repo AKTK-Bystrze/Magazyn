@@ -34,11 +34,9 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 
 	query := types.EquipmentListQuery{}
 
-	// Parse query params
 	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 
 	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
-		// Validate type_id is a valid UUID
 		if err := validation.ValidateUUID(typeID); err != nil {
 			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid type_id format")
 			return
@@ -46,7 +44,6 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		query.TypeID = &typeID
 	}
 	if status := r.URL.Query().Get("status"); status != "" {
-		// Validate status is a valid equipment status
 		if err := validation.ValidateEnum(status, constants.ValidEquipmentStatuses); err != nil {
 			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment status")
 			return
@@ -54,7 +51,6 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		query.Status = &status
 	}
 	if search := r.URL.Query().Get("search"); search != "" {
-		// Validate search length to prevent abuse
 		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
 			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
 			return
@@ -65,7 +61,6 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		query.IncludeArchived = true
 	}
 
-	// Parse availability date range parameters
 	if availFrom := r.URL.Query().Get("available_from"); availFrom != "" {
 		query.AvailableFrom = &availFrom
 	}
@@ -73,19 +68,16 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		query.AvailableTo = &availTo
 	}
 
-	// DEBUG: Log all incoming query parameters
 	logger.Infof(ctx, "[DEBUG] HandleList - Raw URL Query: %s", r.URL.RawQuery)
 	logger.Infof(ctx, "[DEBUG] HandleList - Query params: Page=%d, PerPage=%d, TypeID=%v, Status=%v, Search=%v, AvailableFrom=%v, AvailableTo=%v",
 		query.Page, query.PerPage, query.TypeID, query.Status, query.Search, query.AvailableFrom, query.AvailableTo)
 
-	// Validate that both availability dates are provided together
 	if (query.AvailableFrom != nil) != (query.AvailableTo != nil) {
 		common.RespondError(ctx, w, http.StatusBadRequest,
 			"Both available_from and available_to must be provided together")
 		return
 	}
 
-	// Validate date format and logical ordering
 	if query.AvailableFrom != nil && query.AvailableTo != nil {
 		logger.Infof(ctx, "HandleList - Availability filter active: from=%s, to=%s", *query.AvailableFrom, *query.AvailableTo)
 		if !isValidISODate(*query.AvailableFrom) {
@@ -123,7 +115,6 @@ func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request)
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
 	}
-	// Validate ID is a valid UUID
 	if err := validation.ValidateUUID(id); err != nil {
 		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment ID format")
 		return
@@ -277,7 +268,6 @@ func (h *EquipmentHandler) HandleCreateEquipmentType(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Validation (simple check)
 	if cmd.Name == "" {
 		common.RespondError(ctx, w, http.StatusBadRequest, "Name is required")
 		return

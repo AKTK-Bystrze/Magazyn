@@ -55,8 +55,6 @@ export function ReservationStatusActions({
   const isOwner = reservation.userId === currentUserId;
   const actions = canChangeStatus(reservation.status, isOwner, isAdmin);
 
-  // Fetch reservation owner's profile to get current credit balance
-  // Only needed when admin is modifying another user's reservation
   const needsOwnerProfile = !isOwner && (modifyDatesOpen || returnDialogOpen);
 
   const { data: ownerProfile } = useQuery({
@@ -66,10 +64,8 @@ export function ReservationStatusActions({
     staleTime: 0, // Always fetch fresh balance when dialog opens
   });
 
-  // Use current user's balance if they're the owner, otherwise use fetched owner's balance
   const userBalance = isOwner ? currentUserBalance : (ownerProfile?.creditBalance ?? 0);
 
-  // Handlers
   const handleCancelClick = () => {
     setTargetStatus("DENIED");
     setCancelDialogOpen(true);
@@ -88,7 +84,6 @@ export function ReservationStatusActions({
     setAdminStatusDialogOpen(true);
   };
 
-  // Confirmations
   const handleCancelConfirm = async () => {
     await onStatusChange("DENIED");
     setCancelDialogOpen(false);
@@ -107,7 +102,6 @@ export function ReservationStatusActions({
       endDate: newDates.endDate,
     };
     await reservationsApi.update(reservation.id, command);
-    // Reload page or invalidate queries handled by parent/hook
     window.location.reload(); // Simple refresh to show updated data
   };
 
@@ -116,7 +110,6 @@ export function ReservationStatusActions({
     window.location.reload();
   };
 
-  // No actions available
   if (!actions.canCancel && !actions.canMarkReturned && !actions.canChangeStatus) {
     return null;
   }

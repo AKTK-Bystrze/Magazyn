@@ -16,22 +16,16 @@ import (
 
 // UserService defines operations for user profile management.
 type UserService interface {
-	// GetProfile retrieves the profile of a user by ID.
 	GetProfile(ctx context.Context, id string) (*types.UserResponse, error)
 
-	// ListUsers retrieves a paginated list of users with optional filters.
 	ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error)
 
-	// ListPublicUsers retrieves a paginated list of public user profiles.
 	ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error)
 
-	// CreateUser creates a new user profile with the given inputs.
 	CreateUser(ctx context.Context, req types.CreateUserRequest) (*types.UserResponse, error)
 
-	// UpdateUser updates an existing user profile with the given inputs.
 	UpdateUser(ctx context.Context, id string, req types.UpdateUserRequest) (*types.UserResponse, error)
 
-	// BulkAdjustCredits adjusts credit balance for multiple users and records history.
 	BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error
 }
 
@@ -81,7 +75,6 @@ func (s *userService) GetProfile(ctx context.Context, id string) (*types.UserRes
 
 // ListUsers retrieves a paginated list of users with optional filters.
 func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error) {
-	// Enforce pagination limits
 	if page < 1 {
 		page = constants.DefaultPage
 	}
@@ -123,7 +116,6 @@ func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, se
 
 // ListPublicUsers retrieves a paginated list of public users with optional search.
 func (s *userService) ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error) {
-	// Enforce pagination limits
 	if page < 1 {
 		page = constants.DefaultPage
 	}
@@ -171,20 +163,10 @@ func (s *userService) ListPublicUsers(ctx context.Context, page, perPage int, se
 func (s *userService) CreateUser(ctx context.Context, req types.CreateUserRequest) (*types.UserResponse, error) {
 	logger.Infof(ctx, "Creating user with email: %s", req.Email)
 
-	// Check if email already exists
 	if _, err := s.repo.GetByEmail(ctx, req.Email); err == nil {
 		return nil, types.NewConflictError("User with this email already exists", map[string]string{"email": req.Email})
 	}
 
-	// Check if username already exists
-	// We reuse 'List' with exact search hack or need new repo method.
-	// Efficient way: List with search=username strictly or add GetByUsername to repo.
-	// For now using List with filters which uses ILIKE, so if List returns exact match we abort.
-	// Or better, add GetByUsername to repo. But for now relying on List is acceptable if exact match logic is verified.
-	// A better approach is trusting the DB constraint but user asked for "check before inserting".
-	// Let's rely on Repo's `List` with `search` param which does ILIKE.
-	// If any user matches username exactly, reject.
-	// Note: Provide 'role' as empty to search all users.
 	existingUsers, _, err := s.repo.List(ctx, 1, 1, "", req.Username)
 	if err == nil {
 		for _, u := range existingUsers {
@@ -194,28 +176,22 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 		}
 	}
 
-	// Default credit balance
 	creditBalance := int32(0)
 	if req.CreditBalance != nil {
 		creditBalance = *req.CreditBalance
 	}
 
-	// 1. Create user in Supabase Auth
-	// NOTE: Uses service role key internally for Auth Admin API
 	tempPassword := "TempPass123!@" // TODO: Application is not using password
 	authUser, err := s.authRepo.CreateUser(ctx, req.Email, tempPassword)
 
 	if err != nil {
 		logger.Errorf(ctx, "AuthRepo.CreateUser failed: %v", err)
-		// Propagate specific error types from auth repo (ValidationError contains Supabase message)
 		if _, ok := err.(*types.ValidationError); ok {
 			return nil, err
 		}
 		return nil, types.NewInternalError("Failed to create auth user", err)
 	}
 
-	// 2. Create profile in database
-	// Note: There's no auto-trigger for profile creation - profiles are created via API only (invite-only system)
 	profileInsert := types.PublicProfilesInsert{
 		ID:            authUser.ID,
 		Email:         req.Email,

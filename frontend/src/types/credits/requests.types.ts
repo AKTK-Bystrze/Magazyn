@@ -7,7 +7,8 @@ export const CREDIT_REQUEST_STATUS = {
   APPROVED_WITH_CHANGES: "approved with changes",
 } as const;
 
-export type CreditRequestStatus = typeof CREDIT_REQUEST_STATUS[keyof typeof CREDIT_REQUEST_STATUS];
+export type CreditRequestStatus =
+  (typeof CREDIT_REQUEST_STATUS)[keyof typeof CREDIT_REQUEST_STATUS];
 
 /**
  * Credit request data transfer object representing a request for godzinki.

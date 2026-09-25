@@ -28,9 +28,15 @@ export function CreditsTabs({ userId, isSuperAdmin }: Props) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="flex flex-col sm:flex-row w-full sm:w-fit !h-auto p-1 gap-1">
-        <TabsTrigger value="leaderboard" className="w-full sm:w-auto !h-9">Ranking Godzinek</TabsTrigger>
-        <TabsTrigger value="history" className="w-full sm:w-auto !h-9">Historia</TabsTrigger>
-        <TabsTrigger value="list" className="w-full sm:w-auto !h-9">Wnioski</TabsTrigger>
+        <TabsTrigger value="leaderboard" className="w-full sm:w-auto !h-9">
+          Ranking Godzinek
+        </TabsTrigger>
+        <TabsTrigger value="history" className="w-full sm:w-auto !h-9">
+          Historia
+        </TabsTrigger>
+        <TabsTrigger value="list" className="w-full sm:w-auto !h-9">
+          Wnioski
+        </TabsTrigger>
         <TabsTrigger value="request" className="w-full sm:w-auto !h-9">
           {editingRequest ? "Edytuj wniosek" : "Złóż wniosek"}
         </TabsTrigger>

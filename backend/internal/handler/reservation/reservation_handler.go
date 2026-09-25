@@ -44,7 +44,6 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		query.Status = &status
 	}
 	if qUserID := r.URL.Query().Get("user_id"); qUserID != "" {
-		// Only admin can filter by other user ID
 		if role == auth.RoleAdmin || role == auth.RoleSuperAdmin {
 			query.UserID = &qUserID
 		}
@@ -59,16 +58,11 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		query.StartDateTo = &end
 	}
 
-	// Check scope parameter for filtering
 	scope := r.URL.Query().Get("scope")
 
 	logger.Debugf(ctx, "Reservations list - Role: %s, Scope: %s, UserID: %s", role, scope, userID)
 
-	// Apply ownership filter based on scope
-	// scope="all" → show all reservations (any authenticated user)
-	// scope="my" or empty → show only user's own reservations
 	if scope == "all" {
-		// Bypass RLS to allow seeing all reservations
 		query.BypassRLS = true
 	} else {
 		query.UserID = &userID
@@ -137,13 +131,11 @@ func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Validation manual check (or use validator library if available in project)
 	if len(cmd.Reservations) == 0 {
 		common.RespondError(ctx, w, http.StatusBadRequest, "No reservations provided")
 		return
 	}
 
-	// Only admins can create free reservations
 	if cmd.FreeReservation != nil && *cmd.FreeReservation {
 		if role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 			common.RespondError(ctx, w, http.StatusForbidden, "Only admins can create free reservations")

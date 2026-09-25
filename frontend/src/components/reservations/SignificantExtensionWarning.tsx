@@ -22,7 +22,6 @@ export function SignificantExtensionWarning({ creditAdjustment }: DateChangeCred
   const isCharge = creditAdjustment < 0;
   const amount = Math.abs(creditAdjustment);
 
-  // Don't show if no credit change
   if (creditAdjustment === 0) {
     return null;
   }

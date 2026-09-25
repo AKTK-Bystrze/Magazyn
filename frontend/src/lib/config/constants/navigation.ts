@@ -12,13 +12,11 @@
  * Used by nav-config.ts for building navigation structure
  */
 export const NAV_LABELS = {
-  // User navigation
   DASHBOARD: "Panel",
   EQUIPMENT: "Sprzęt",
   RESERVATIONS: "Rezerwacje",
   CREDITS: "Godzinki",
 
-  // Admin navigation
   OVERVIEW: "Przegląd",
   BROWSE_EQUIPMENT: "Zarezerwuj Sprzęt",
   MANAGE_EQUIPMENT: "Zarządzaj Sprzętem",

@@ -7,7 +7,6 @@ import type { SessionInfo } from "../../../types";
 describe("redirect-manager", () => {
   const origin = "http://localhost:4321";
 
-  // Mock user helper
   const createMockUser = (overrides: Partial<User> = {}): User =>
     ({
       id: "test-user-id",
@@ -19,7 +18,6 @@ describe("redirect-manager", () => {
       ...overrides,
     }) as User;
 
-  // Mock sessionInfo helper
   const createMockSessionInfo = (overrides: Partial<SessionInfo> = {}): SessionInfo => ({
     userId: "test-user-id",
     email: "test@example.com",
@@ -199,7 +197,6 @@ describe("redirect-manager", () => {
           "https://evil.com",
           origin
         );
-        // Should fall back to default for user
         expect(result).toBe("/dashboard");
       });
 
@@ -226,7 +223,6 @@ describe("redirect-manager", () => {
           "/admin",
           origin
         );
-        // Regular users cannot access admin routes
         expect(result).toBe("/dashboard");
       });
 

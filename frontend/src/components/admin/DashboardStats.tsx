@@ -24,7 +24,6 @@ function StatCard({ title, value, description, icon: Icon }: StatCardProps) {
 }
 
 export function DashboardStats() {
-  // Mock data - would be replaced by real data fetching later
   const stats = [
     {
       title: "Wszystkie Rezerwacje",

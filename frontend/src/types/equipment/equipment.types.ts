@@ -1,7 +1,3 @@
-// =============================================================================
-// EQUIPMENT & EQUIPMENT TYPE TYPES
-// =============================================================================
-
 import type { Enums } from "../../db/database.types";
 
 export type EquipmentStatus = Enums<"equipment_status">;

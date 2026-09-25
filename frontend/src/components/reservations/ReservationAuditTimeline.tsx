@@ -17,7 +17,6 @@ interface ReservationAuditTimelineProps {
  * @param auditTrail - Array of audit entries from reservation
  */
 export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelineProps) {
-  // Sort by createdAt descending (newest first for display)
   const sortedEntries = React.useMemo(
     () =>
       auditTrail

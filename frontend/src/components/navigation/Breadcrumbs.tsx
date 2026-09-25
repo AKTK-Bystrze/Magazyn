@@ -63,7 +63,6 @@ export function Breadcrumbs({ currentPath, isAdmin = false }: BreadcrumbsProps) 
     const segment = parts[i];
     currentHref += `/${segment}`;
 
-    // Check dynamic labels first, then static config, then fallback to capitalized segment
     const label =
       dynamicLabels[currentHref] ||
       BREADCRUMB_LABELS[segment] ||

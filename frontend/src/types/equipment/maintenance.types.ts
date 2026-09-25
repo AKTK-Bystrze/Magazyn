@@ -1,7 +1,3 @@
-// =============================================================================
-// MAINTENANCE LOG TYPES
-// =============================================================================
-
 import type { Enums } from "../../db/database.types";
 import type { Equipment } from "./equipment.types";
 

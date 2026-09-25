@@ -85,13 +85,11 @@ export function ReservationCartView({
   const [clearCartPending, setClearCartPending] = React.useState(false);
   const errorContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // Clear conflict errors when dates or items change so the user can try again
   React.useEffect(() => {
     setAvailabilityResult({ isAllAvailable: true, unavailableItems: [] });
     setSubmissionError(null);
   }, [cartState.startDate, cartState.endDate, cartState.items]);
 
-  // Auto-scroll to error banner if conflicts exist
   React.useEffect(() => {
     if (
       (!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0) ||
@@ -110,8 +108,6 @@ export function ReservationCartView({
     submissionError,
   ]);
 
-  // Admin-only: selected user for creating reservations on their behalf
-  // Initialize with admin's own ID if provided
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
     initialSelectedUserId ?? null
   );
@@ -129,11 +125,8 @@ export function ReservationCartView({
     setSelectedUserCreditBalance(user.creditBalance);
   }, []);
 
-  // Use selected user's credit balance in admin mode, otherwise use initial (logged-in user's)
   const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : initialCreditBalance;
 
-  // Calculate cost breakdown with the effective credit balance
-  // This ensures admin mode uses selected user's balance, not the admin's
   const costBreakdown = React.useMemo(() => {
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
       return null;
@@ -145,7 +138,6 @@ export function ReservationCartView({
       effectiveCreditBalance
     );
 
-    // For free reservations, override costs to 0
     if (isAdmin && isFreeReservation && breakdown) {
       return {
         ...breakdown,
@@ -166,7 +158,6 @@ export function ReservationCartView({
     isFreeReservation,
   ]);
 
-  // Create a default safe breakdown if null (e.g. missing dates)
   const safeCostBreakdown = costBreakdown || {
     itemCosts: [],
     totalCreditCost: 0,
@@ -181,23 +172,18 @@ export function ReservationCartView({
     isAdmin && isFreeReservation
   );
 
-  // Check availability when user tries to proceed
   const handleProceed = async () => {
-    // 1. Admin mode requires a selected user
     if (isAdmin && !selectedUserId) {
       setSubmissionError("Please select a user to create the reservation for.");
       return;
     }
 
-    // 2. Basic validation
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
       return;
     }
 
-    // 3. Clear previous errors
     setSubmissionError(null);
 
-    // 4. Check real-time availability
     const result = await checkAvailability();
     setAvailabilityResult(result);
 
@@ -232,13 +218,10 @@ export function ReservationCartView({
           startDate: cartState.startDate!,
           endDate: cartState.endDate!,
         })),
-        // Admin mode: include selected user ID
         ...(isAdmin && selectedUserId && { userId: selectedUserId }),
-        // Admin mode: include free reservation flag if set
         ...(isAdmin && isFreeReservation && { freeReservation: true }),
       };
 
-      // Transform to backend format (snake_case)
       const backendCommand = transformCreateReservationsCommand(command);
 
       const response = await fetch("/api/reservations", {
@@ -251,14 +234,12 @@ export function ReservationCartView({
         const errorData = await response.json();
         let errorMessage = errorData.message || errorData.error || "Failed to create reservation";
 
-        // Replace equipment IDs with names for better UX
         cartState.items.forEach((item) => {
           if (errorMessage.includes(item.equipmentId)) {
             errorMessage = errorMessage.replace(item.equipmentId, `"${item.name}"`);
           }
         });
 
-        // Make conflict errors more user-friendly
         if (errorMessage.includes("Conflict detected")) {
           errorMessage = errorMessage.replace(
             "Conflict detected for equipment",
@@ -269,15 +250,12 @@ export function ReservationCartView({
         throw new Error(errorMessage);
       }
 
-      // Success!
       await response.json();
 
-      // Clear cart
       clearCart();
       setIsFreeReservation(false);
       setIsConfirmationOpen(false);
 
-      // Redirect to reservations page with success indicator
       window.location.href = `${successRedirectPath}?success=true`;
     } catch (error) {
       logger.error("Reservation failed:", { error });
@@ -290,17 +268,14 @@ export function ReservationCartView({
 
   const handleClearCart = () => {
     if (!clearCartPending) {
-      // First click - show warning
       setClearCartPending(true);
       setTimeout(() => setClearCartPending(false), CLEAR_CART_CONFIRM_TIMEOUT_MS);
     } else {
-      // Second click - actually clear
       clearCart();
       setClearCartPending(false);
     }
   };
 
-  // If cart is empty (initial state)
   const isEmpty = cartState.items.length === 0;
 
   return (

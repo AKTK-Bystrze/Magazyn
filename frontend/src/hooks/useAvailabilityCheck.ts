@@ -72,7 +72,6 @@ export function useAvailabilityCheck(
           const rawData = await response.json();
           logger.info(`Availability check result (raw)`, { item: item.name, data: rawData });
 
-          // Transform using availability transformer
           const data = transformEquipmentAvailabilityDTO(rawData);
           logger.info(`Availability check result (transformed)`, { item: item.name, data: data });
 

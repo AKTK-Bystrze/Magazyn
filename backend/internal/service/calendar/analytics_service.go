@@ -15,10 +15,8 @@ import (
 
 // AnalyticsService defines operations for equipment and user analytics
 type AnalyticsService interface {
-	// GetEquipmentStats retrieves aggregated equipment usage statistics
 	GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.EquipmentStatsResponse, error)
 
-	// GetUserStats retrieves aggregated user activity statistics
 	GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.UserStatsResponse, error)
 }
 
@@ -43,18 +41,12 @@ func NewAnalyticsService(analyticsRepo repository.AnalyticsRepository, typeRepo 
 func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.EquipmentStatsResponse, error) {
 	logger.Infof(ctx, "GetEquipmentStats - Year: %v, Month: %v, EquipmentID: %v", query.Year, query.Month, query.EquipmentID)
 
-	// Fetch raw stats from analytics view
 	rawStats, err := s.analyticsRepo.GetEquipmentStats(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to fetch equipment stats: %v", err)
 		return nil, types.NewInternalError("Failed to fetch equipment stats", err)
 	}
 
-	// TODO: The analytics view doesn't include equipment type_id.
-	// To populate EquipmentType, either update the view or make additional queries.
-	// For now, typeRepo is kept for future enhancement but not used.
-
-	// Transform to DTOs with top renters
 	stats := make([]types.EquipmentStatsDTO, 0, len(rawStats))
 	for _, raw := range rawStats {
 		if raw.EquipmentID == nil {
@@ -81,7 +73,6 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 			utilizationRate = *raw.UtilizationRate
 		}
 
-		// Fetch top renters for this equipment
 		topRenters, err := s.analyticsRepo.GetTopRentersForEquipment(ctx, *raw.EquipmentID, constants.TopRentersLimit)
 		if err != nil {
 			logger.Warnf(ctx, "Failed to fetch top renters for equipment %s: %v", *raw.EquipmentID, err)
@@ -101,7 +92,6 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 		stats = append(stats, dto)
 	}
 
-	// Build period response
 	period := types.PeriodDTO{
 		Year:  query.Year,
 		Month: query.Month,
@@ -117,14 +107,12 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 func (s *analyticsService) GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.UserStatsResponse, error) {
 	logger.Infof(ctx, "GetUserStats - Year: %v, Month: %v", query.Year, query.Month)
 
-	// Fetch raw stats from analytics view
 	rawStats, err := s.analyticsRepo.GetUserStats(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to fetch user stats: %v", err)
 		return nil, types.NewInternalError("Failed to fetch user stats", err)
 	}
 
-	// Transform to DTOs with favorite equipment type
 	stats := make([]types.UserStatsDTO, 0, len(rawStats))
 	for _, raw := range rawStats {
 		if raw.UserID == nil {
@@ -146,7 +134,6 @@ func (s *analyticsService) GetUserStats(ctx context.Context, query types.Analyti
 			totalCreditsSpent = int(*raw.TotalCreditsSpent)
 		}
 
-		// Fetch favorite equipment type for this user
 		favoriteType, err := s.analyticsRepo.GetFavoriteEquipmentTypeForUser(ctx, *raw.UserID)
 		if err != nil {
 			logger.Warnf(ctx, "Failed to fetch favorite type for user %s: %v", *raw.UserID, err)
@@ -165,7 +152,6 @@ func (s *analyticsService) GetUserStats(ctx context.Context, query types.Analyti
 		stats = append(stats, dto)
 	}
 
-	// Build period response
 	period := types.PeriodDTO{
 		Year:  query.Year,
 		Month: query.Month,

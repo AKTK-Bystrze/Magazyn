@@ -58,7 +58,6 @@ const currentPath = Astro.url.pathname;
   </div>
 
   <script is:inline>
-    // Apply initial sidebar state to prevent flicker
     (function () {
       const isCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
       const container = document.getElementById("desktop-sidebar-container");

@@ -44,11 +44,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       onSuccess(email);
     } catch (err: unknown) {
       logger.error("Login error:", { error: err });
-      // API client throws Error objects with message from backend
       const rawMessage = err instanceof Error ? err.message : "";
 
-      // Handle specific error: signups disabled (422) - show user-friendly Polish message only
-      // Handle specific error: signups disabled (422) - show user-friendly Polish message only
       const status = (err as Error & { status?: number }).status;
 
       if (status === 422) {

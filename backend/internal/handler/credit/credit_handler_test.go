@@ -130,22 +130,18 @@ func TestHandleGetCreditHistory(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Setup
 			mockService := new(MockCreditHistoryService)
 			tc.setupMock(mockService)
 			handler := NewCreditHistoryHandler(mockService)
 
-			// Create Request
 			req := httptest.NewRequest("GET", "/credit-history", nil)
 
-			// Add Query Params
 			q := req.URL.Query()
 			for k, v := range tc.queryParams {
 				q.Add(k, v)
 			}
 			req.URL.RawQuery = q.Encode()
 
-			// Add Context
 			ctx := req.Context()
 			if tc.user != nil {
 				ctx = context.WithValue(ctx, appcontext.UserContextKey, tc.user)
@@ -155,11 +151,9 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			}
 			req = req.WithContext(ctx)
 
-			// Execute
 			w := httptest.NewRecorder()
 			handler.HandleGetCreditHistory(w, req)
 
-			// Assert
 			assert.Equal(t, tc.expectedStatus, w.Code)
 			mockService.AssertExpectations(t)
 		})

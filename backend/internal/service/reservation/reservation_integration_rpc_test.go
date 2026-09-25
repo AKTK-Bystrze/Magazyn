@@ -26,7 +26,6 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Set user balance to very low (not enough for reservation)
 	lowBalance := int32(1) // 1 credit
 	_, _, _ = fixture.client.From("profiles").
 		Update(map[string]interface{}{"credit_balance": lowBalance}, "", "").
@@ -36,7 +35,6 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 	balanceBefore := fixture.getUserBalance(fixture.testUserID)
 	require.Equal(t, lowBalance, balanceBefore, "Setup failed: balance not set")
 
-	// Act: Try to create 3-day reservation (cost >> 1 credit)
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
 			{
@@ -48,17 +46,13 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 	}
 	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 
-	// Assert: Should fail with conflict/insufficient credits error
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "Reservation failed", "Expected RPC error message")
 
-	// Assert: Balance should be UNCHANGED (rollback verification)
 	balanceAfter := fixture.getUserBalance(fixture.testUserID)
 	assert.Equal(t, balanceBefore, balanceAfter, "Balance changed despite rollback - ATOMICITY VIOLATED")
 
-	// Assert: No reservation should exist
-	// Verify by checking if we can create it now with sufficient credits
 	_, _, _ = fixture.client.From("profiles").
 		Update(map[string]interface{}{"credit_balance": 100000}, "", "").
 		Eq("id", fixture.testUserID).
@@ -69,7 +63,6 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 	assert.NotNil(t, resp2)
 	t.Logf("✓ Atomicity verified: rollback on insufficient credits")
 
-	// Cleanup
 	fixture.cleanup = append(fixture.cleanup, func() {
 		fixture.client.From("reservations").Delete("", "").Eq("id", resp2.Reservations[0].ID).Execute()
 	})
@@ -86,12 +79,10 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create reservation (3 days)
 	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
 	require.NoError(t, err)
 	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
 
-	// Get credit history count before cancellation
 	type historyEntry struct {
 		ID string `json:"id"`
 	}
@@ -103,14 +94,12 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	json.Unmarshal(dataBefore, &historyBefore)
 	historyCountBefore := len(historyBefore)
 
-	// Act: Cancel reservation (status change to DENIED for user cancellation)
 	updateCmd := types.UpdateReservationCommand{
 		Status: stringPtr(constants.ReservationStatusDenied),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUserID, "user")
 	require.NoError(t, err)
 
-	// Assert: Credits refunded
 	balanceAfterCancel := fixture.getUserBalance(fixture.testUserID)
 	refundAmount := balanceAfterCancel - balanceAfterCreate
 	expectedRefund := 3 * fixture.costPerDay
@@ -118,7 +107,6 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	assert.Equal(t, expectedRefund, refundAmount, "Refund amount mismatch")
 	t.Logf("✓ Refunded %d credits", refundAmount)
 
-	// Assert: Credit history entry created
 	var historyAfter []historyEntry
 	dataAfter, _, _ := fixture.client.From("credit_history").
 		Select("id", "exact", false).
@@ -138,19 +126,16 @@ func TestRefundCredits_DeniedReservation_RefundsCorrectly(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create reservation
 	reservationID, err := fixture.createTestReservation(fixture.testUserID, 10, 14) // 5 days
 	require.NoError(t, err)
 	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
 
-	// Act: Admin denies reservation
 	updateCmd := types.UpdateReservationCommand{
 		Status: stringPtr(constants.ReservationStatusDenied),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
 
-	// Assert: Refund applied
 	balanceAfter := fixture.getUserBalance(fixture.testUserID)
 	refundAmount := balanceAfter - balanceAfterCreate
 	expectedRefund := 5 * fixture.costPerDay
@@ -170,11 +155,9 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create reservation (status: PENDING)
 	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
 	require.NoError(t, err)
 
-	// Get audit trail before update
 	type auditEntry struct {
 		ID     string `json:"id"`
 		Status string `json:"status"`
@@ -188,7 +171,6 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	auditCountBefore := len(auditBefore)
 	t.Logf("Audit entries before: %d", auditCountBefore)
 
-	// Act: Update status to RENTED
 	updateCmd := types.UpdateReservationCommand{
 		Status: stringPtr(constants.ReservationStatusRented),
 	}
@@ -196,7 +178,6 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
 
-	// Assert: Audit entry created
 	var auditAfter []auditEntry
 	dataAfter, _, _ := fixture.client.From("reservation_history").
 		Select("id,status", "exact", false).
@@ -209,7 +190,6 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	assert.Greater(t, auditCountAfter, auditCountBefore, "No audit entry created")
 	t.Logf("✓ Audit trail: %d -> %d entries", auditCountBefore, auditCountAfter)
 
-	// Verify the new entry contains the OLD status (audit records state before change)
 	latestEntry := auditAfter[len(auditAfter)-1]
 	assert.Equal(t, constants.ReservationStatusPending, latestEntry.Status, "Audit entry should record old status")
 	t.Logf("✓ Audit entry preserves old status: %s", latestEntry.Status)
@@ -225,11 +205,9 @@ func TestUpdateAudit_DateChange_RecordsOldDates(t *testing.T) {
 	originalStart := dateOffset(5)
 	originalEnd := dateOffset(7)
 
-	// Arrange: Create reservation
 	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
 	require.NoError(t, err)
 
-	// Act: Modify dates
 	newEnd := dateOffset(10)
 	updateCmd := types.UpdateReservationCommand{
 		EndDate: &newEnd,
@@ -237,7 +215,6 @@ func TestUpdateAudit_DateChange_RecordsOldDates(t *testing.T) {
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUserID, "user")
 	require.NoError(t, err)
 
-	// Assert: Fetch audit trail
 	type auditEntry struct {
 		StartDate string `json:"start_date"`
 		EndDate   string `json:"end_date"`
@@ -250,7 +227,6 @@ func TestUpdateAudit_DateChange_RecordsOldDates(t *testing.T) {
 		Execute()
 	json.Unmarshal(data, &auditEntries)
 
-	// The audit should contain at least one entry with ORIGINAL dates
 	found := false
 	for _, entry := range auditEntries {
 		if entry.StartDate == originalStart && entry.EndDate == originalEnd {
@@ -274,7 +250,6 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create 2 reservations for different users
 	res1ID, err := fixture.createTestReservation(fixture.testUserID, 5, 7) // 3 days
 	require.NoError(t, err)
 	balance1After := fixture.getUserBalance(fixture.testUserID)
@@ -283,7 +258,6 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	require.NoError(t, err)
 	balance2After := fixture.getUserBalance(fixture.testUser2ID)
 
-	// Act: Bulk deny both reservations
 	updateCmd := types.BulkUpdateReservationsCommand{
 		ReservationIDs: []string{res1ID, res2ID},
 		Status:         constants.ReservationStatusDenied,
@@ -292,7 +266,6 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int32(2), resp.UpdatedCount)
 
-	// Assert: Both users refunded
 	balance1Final := fixture.getUserBalance(fixture.testUserID)
 	balance2Final := fixture.getUserBalance(fixture.testUser2ID)
 
@@ -302,7 +275,6 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	expectedRefund1 := 3 * fixture.costPerDay
 	expectedRefund2 := 4 * fixture.costPerDay
 
-	// Debug logging
 	t.Logf("User1 - BalanceAfter: %d, BalanceFinal: %d, Refund: %d, Expected: %d, CostPerDay: %d",
 		balance1After, balance1Final, refund1, expectedRefund1, fixture.costPerDay)
 	t.Logf("User2 - BalanceAfter: %d, BalanceFinal: %d, Refund: %d, Expected: %d, CostPerDay: %d",

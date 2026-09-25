@@ -34,7 +34,6 @@ export function CancelReservationDialog({
   onConfirm,
   onClose,
 }: CancelReservationDialogProps) {
-  // Determine target(s)
   const targets = React.useMemo(() => {
     if (reservations && reservations.length > 0) return reservations;
     if (reservation) return [reservation];
@@ -47,7 +46,6 @@ export function CancelReservationDialog({
     [targets]
   );
 
-  // Handle escape key
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isSubmitting) {

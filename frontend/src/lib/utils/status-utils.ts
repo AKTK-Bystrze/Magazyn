@@ -29,7 +29,6 @@ export function canChangeStatus(
   isOwner: boolean,
   isAdmin: boolean
 ): StatusActionConfig {
-  // Final states cannot be modified
   if (isStatusFinal(currentStatus)) {
     return {
       canCancel: false,
@@ -39,7 +38,6 @@ export function canChangeStatus(
     };
   }
 
-  // Regular user actions (own reservations only)
   if (isOwner && !isAdmin) {
     return {
       canCancel: currentStatus === RESERVATION_STATUS.PENDING,
@@ -50,7 +48,6 @@ export function canChangeStatus(
     };
   }
 
-  // Admin actions
   if (isAdmin) {
     return {
       canCancel: currentStatus === RESERVATION_STATUS.PENDING,
@@ -61,7 +58,6 @@ export function canChangeStatus(
     };
   }
 
-  // Not owner and not admin -> no actions
   return {
     canCancel: false,
     canMarkReturned: false,
@@ -82,7 +78,6 @@ export function getAvailableTransitions(
   currentStatus: Enums<"reservation_status">,
   isAdmin: boolean
 ): Enums<"reservation_status">[] {
-  // Only admins can use dropdown, but keep isAdmin for future rules
   if (!isAdmin) {
     return [];
   }

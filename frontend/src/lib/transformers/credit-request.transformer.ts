@@ -8,8 +8,6 @@ import type {
 } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
-// ---- Backend DTO types (snake_case) ----
-
 interface CreditRequestDTO {
   id: string;
   title: string;
@@ -33,8 +31,6 @@ interface LeaderboardItemDTO {
   username: string;
   total_credits: number;
 }
-
-// ---- Response transformers (snake → camel) ----
 
 export function transformCreditRequest(dto: CreditRequestDTO): CreditRequest {
   return {
@@ -72,8 +68,6 @@ export function transformLeaderboard(data: unknown): LeaderboardItem[] {
     totalCredits: d.total_credits,
   }));
 }
-
-// ---- Request transformers (camel → snake) ----
 
 export function transformCreateCommand(cmd: CreateCreditRequestCommand): Record<string, unknown> {
   return {

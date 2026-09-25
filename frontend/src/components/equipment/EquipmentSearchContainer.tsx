@@ -37,10 +37,8 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
 
   const observerTarget = React.useRef<HTMLDivElement>(null);
 
-  // Fetch equipment types - automatically transformed to camelCase
   const { data: types = [] } = useEquipmentTypes();
 
-  // Fetch equipment list using infinite query
   const {
     data: equipmentData,
     isLoading,
@@ -67,7 +65,6 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Flatten the pages to a single array of items
   const equipment = React.useMemo(() => {
     return equipmentData?.pages.flatMap((page) => page.equipment) ?? [];
   }, [equipmentData]);
@@ -80,7 +77,6 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
     updateFilter("status", undefined);
     updateFilter("availableFrom", undefined);
     updateFilter("availableTo", undefined);
-    // Page automatically resets to 1 in hook
   };
 
   const handleViewDetail = (item: EquipmentSearchItem) => {

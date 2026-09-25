@@ -27,8 +27,6 @@ type authService struct {
 
 // NewAuthService creates a new instance of AuthService
 func NewAuthService(repo repository.AuthRepository) AuthService {
-	// Assuming supabaseURL and apiKey would be passed in or configured elsewhere
-	// For now, initializing with empty strings as they are not provided in the context
 	return &authService{
 		repo: repo,
 	}
@@ -54,16 +52,11 @@ func (s *authService) VerifyOTP(ctx context.Context, email, token string, otpTyp
 		return nil, err
 	}
 
-	// 1. Get Profile (RLS enforced by repo using userToken)
-	// Assuming session.User.ID is the userId and session.AccessToken is the userToken
 	profile, err := s.repo.GetProfile(ctx, session.User.ID, session.AccessToken)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. Construct Session Response using types.SessionResponse
-	// Calculate explicit expiry (e.g., 2 hours from now as per policy) or rely on token expiry client-side.
-	// We'll set it to 2 hours for now.
 	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
 
 	return &types.SessionResponse{
@@ -86,15 +79,11 @@ func (s *authService) Logout(ctx context.Context, accessToken string) error {
 // GetSession retrieves the current user's session details including profile information
 func (s *authService) GetSession(ctx context.Context, userID string, userToken string) (*types.SessionResponse, error) {
 	logger.Infof(ctx, "Fetching session for user ID: %s", userID)
-	// 1. Get Profile (RLS enforced by repo using userToken)
 	profile, err := s.repo.GetProfile(ctx, userID, userToken)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. Construct Session Response using types.SessionResponse
-	// Calculate explicit expiry (e.g., 2 hours from now as per policy) or rely on token expiry client-side.
-	// We'll set it to 2 hours for now.
 	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
 
 	response := &types.SessionResponse{

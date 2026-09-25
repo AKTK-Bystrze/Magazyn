@@ -21,7 +21,6 @@ export function useReservationCart(initialCreditBalance: number) {
     const saved = loadCartFromStorage();
     const filterDates = loadFilterDatesFromStorage();
 
-    // If cart exists but has no dates, and we have filter dates, use them
     if (saved) {
       if (!saved.startDate && !saved.endDate && filterDates) {
         return {
@@ -33,7 +32,6 @@ export function useReservationCart(initialCreditBalance: number) {
       return saved;
     }
 
-    // New cart - use filter dates if available
     return {
       items: [],
       startDate: filterDates?.availableFrom || getTodayAsString(),

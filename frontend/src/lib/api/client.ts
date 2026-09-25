@@ -41,7 +41,6 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: "Network error" }));
-      // Extract message from API error response and throw as Error
       const message = errorData.message || errorData.error || "An error occurred";
       const error = new Error(message);
       (error as Error & { status?: number; details?: unknown }).status = response.status;
@@ -180,7 +179,6 @@ export const api = {
       throw error;
     }
 
-    // Some DELETE endpoints return empty responses
     const text = await response.text();
     const resData = text ? JSON.parse(text) : undefined;
     return { data: resData as T };

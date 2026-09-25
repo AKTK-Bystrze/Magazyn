@@ -10,15 +10,10 @@ import (
 
 // CreditRequestService defines the business logic for credit request operations.
 type CreditRequestService interface {
-	// ListRequests returns a paginated list of credit requests.
 	ListRequests(ctx context.Context, page, perPage int) (*types.CreditRequestListResponse, error)
-	// CreateRequest creates a new credit request on behalf of the given user.
 	CreateRequest(ctx context.Context, userID string, req types.CreateCreditRequestDTO) (*types.CreditRequestDTO, error)
-	// UpdateRequest updates an existing credit request (only by the original requestor).
 	UpdateRequest(ctx context.Context, userID string, id string, req types.UpdateCreditRequestDTO) (*types.CreditRequestDTO, error)
-	// ReviewRequest allows a super admin to approve or reject a credit request.
 	ReviewRequest(ctx context.Context, adminID string, id string, req types.ReviewCreditRequestDTO) error
-	// GetLeaderboard returns the credit leaderboard sorted by total credits descending.
 	GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error)
 }
 

@@ -12,14 +12,12 @@ import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from "@/lib/auth/roles";
 
 const { user, sessionInfo } = Astro.locals;
 
-// Require authentication
 if (!user || !sessionInfo) {
   return Astro.redirect(
     `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(Astro.url.pathname)}`
   );
 }
 
-// Require admin role
 if (sessionInfo.role !== ADMIN_ROLE && sessionInfo.role !== SUPER_ADMIN_ROLE) {
   return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
 }

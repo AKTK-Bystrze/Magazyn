@@ -137,7 +137,6 @@ export function ReservationTable({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Action handlers
   const handleModify = (item: ReservationListItem) => (e: React.MouseEvent) => {
     e.stopPropagation();
     onModify?.(item);
@@ -197,7 +196,6 @@ export function ReservationTable({
 
   const showUserColumn = mode === "admin" || scope === "all";
 
-  // Mobile date formatter
   const formatDateMobile = (dateStr: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);

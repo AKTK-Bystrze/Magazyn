@@ -10,22 +10,18 @@ import { StructuredLogger } from "../lib/utils/logger";
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
 
-  // Initialize trace_id
   const traceId = context.request.headers.get("X-Trace-Id") || crypto.randomUUID();
   context.locals.trace_id = traceId;
 
-  // Initialize logger
   let logger = new StructuredLogger({ trace_id: traceId });
   context.locals.logger = logger;
 
   logger.info(`Request received`, { path: url.pathname });
 
-  // Create request-scoped Supabase client for proper SSR session isolation
   const supabase = createSupabaseServerClient(context.request, context.cookies);
   context.locals.supabase = supabase;
 
   try {
-    // 1. Get user from Supabase using getUser() (recommended for SSR)
     const {
       data: { user },
       error,
@@ -40,11 +36,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
       });
     }
 
-    // Handle invalid refresh token error - clear cookies and redirect gracefully
     if (error && error.code === "refresh_token_not_found") {
       logger.error("Invalid refresh token detected");
 
-      // Force clear all authentication cookies directly
       clearAllAuthCookies(context.request, context.cookies);
 
       return context.redirect("/login");
@@ -52,7 +46,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     context.locals.user = user || null;
     if (user) {
-      // Update logger with username
       logger = logger.with({ username: user.email || user.id });
       context.locals.logger = logger;
       logger.info("Middleware: User authenticated", { userId: user.id });
@@ -60,12 +53,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
       logger.debug("Middleware: No authenticated user");
     }
 
-    // 2. Fetch user session info if authenticated (to check isEnabled status)
     let sessionInfo: SessionInfo | null = null;
     let token: string | null = null;
 
     if (user) {
-      // Get access token from session
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -76,7 +67,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
         sessionInfo = await getUserSession(token);
         logger.debug("Middleware: Session info received", { sessionInfo });
 
-        // Store sessionInfo and token in locals for pages and API routes to access
         context.locals.sessionInfo = sessionInfo;
         context.locals.accessToken = token;
       } else {
@@ -84,7 +74,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
 
-    // 3. Unified Redirect Logic
     const isStaticAsset =
       /\.(css|js|mjs|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp4|webm)$/i.test(
         url.pathname
@@ -109,7 +98,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
           pathname: url.pathname,
         });
 
-        // Preserve all query params, especially PKCE 'code' for AuthListener processing
         const targetUrl = new URL(redirectTo, url.origin);
         url.searchParams.forEach((val, key) => {
           if (!targetUrl.searchParams.has(key)) {
@@ -121,7 +109,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
 
-    // 4. Protect API Routes
     const isAuthApiRoute = url.pathname.startsWith("/api/auth");
     if (url.pathname.startsWith("/api/") && !isAuthApiRoute) {
       if (!context.locals.user) {
@@ -139,7 +126,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
 
-    // Handle API errors specifically for API routes
     if (context.request.url.includes("/api/")) {
       context.locals.logger?.error("API Route Error", { name: err.name, error: err.message });
       return handleApiError(error);

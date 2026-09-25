@@ -86,14 +86,6 @@ func (m *MockPostgrestFilterBuilder) ExecuteTo(dest interface{}) (string, error)
 
 // Helper to set up ExecuteTo to populate destination
 func (m *MockPostgrestFilterBuilder) ReturnData(data interface{}) *mock.Call {
-	// This is a bit tricky with testify.
-	// We usually use Run() to modify arguments.
-	// But ExecuteTo takes a pointer.
-	// Standard usage in tests:
-	// mockBuilder.On("ExecuteTo", mock.Anything).Run(func(args mock.Arguments) {
-	//    dest := args.Get(0)
-	//    // reflect copy from data to dest
-	// }).Return("", nil)
 	return m.On("ExecuteTo", mock.Anything)
 }
 

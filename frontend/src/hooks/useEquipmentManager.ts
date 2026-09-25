@@ -108,13 +108,11 @@ export function useEquipmentManager(
   const { initialFilters, enabled = true } = options;
   const queryClient = useQueryClient();
 
-  // Merge initial filters with defaults
   const [filters, setFilters] = React.useState<EquipmentManagerFilterState>({
     ...DEFAULT_FILTERS,
     ...initialFilters,
   });
 
-  // Fetch equipment list
   const {
     data: equipmentData,
     isLoading,
@@ -126,7 +124,6 @@ export function useEquipmentManager(
   } = useInfiniteQuery({
     queryKey: QUERY_KEYS.list(filters),
     queryFn: ({ pageParam = 1 }) => {
-      // Convert filter state to API params
       const params = {
         search: filters.search,
         type_id: filters.typeId,
@@ -147,42 +144,34 @@ export function useEquipmentManager(
     staleTime: QUERY_STALE_TIME_MS,
   });
 
-  // Fetch equipment types
   const { data: typesData, isLoading: isTypesLoading } = useQuery({
     queryKey: QUERY_KEYS.types,
     queryFn: () => equipmentApi.listTypes(),
     staleTime: QUERY_STALE_TIME_MS * 5, // Types change less frequently
   });
 
-  // Create mutation
   const createMutation = useMutation({
     mutationFn: (command: CreateEquipmentCommand) => equipmentApi.create(command),
     onSuccess: () => {
-      // Invalidate list to refetch
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
   });
 
-  // Update mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, command }: { id: string; command: UpdateEquipmentCommand }) =>
       equipmentApi.update(id, command),
     onSuccess: () => {
-      // Invalidate list and any cached details
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
   });
 
-  // Archive mutation
   const archiveMutation = useMutation({
     mutationFn: (id: string) => equipmentApi.archive(id),
     onSuccess: () => {
-      // Invalidate list to refetch
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
     },
   });
 
-  // Update a single filter
   const setFilter = React.useCallback(
     <K extends keyof EquipmentManagerFilterState>(
       key: K,
@@ -190,7 +179,6 @@ export function useEquipmentManager(
     ) => {
       setFilters((prev) => {
         const newFilters = { ...prev, [key]: value };
-        // Reset to page 1 when filters change (except page itself)
         if (key !== "page") {
           newFilters.page = 1;
         }
@@ -200,12 +188,10 @@ export function useEquipmentManager(
     []
   );
 
-  // Reset all filters
   const resetFilters = React.useCallback(() => {
     setFilters({ ...DEFAULT_FILTERS, ...initialFilters });
   }, [initialFilters]);
 
-  // Create equipment handler
   const createEquipment = React.useCallback(
     async (command: CreateEquipmentCommand) => {
       return createMutation.mutateAsync(command);
@@ -213,7 +199,6 @@ export function useEquipmentManager(
     [createMutation]
   );
 
-  // Update equipment handler
   const updateEquipment = React.useCallback(
     async (id: string, command: UpdateEquipmentCommand) => {
       return updateMutation.mutateAsync({ id, command });
@@ -221,7 +206,6 @@ export function useEquipmentManager(
     [updateMutation]
   );
 
-  // Archive equipment handler
   const archiveEquipment = React.useCallback(
     async (id: string) => {
       return archiveMutation.mutateAsync(id);

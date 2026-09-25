@@ -25,7 +25,6 @@ export class AvailabilityTransformError extends Error {
  * @throws AvailabilityTransformError if validation fails
  */
 export function transformEquipmentAvailabilityDTO(dto: unknown): EquipmentAvailability {
-  // Runtime validation
   const validated = equipmentAvailabilityDTOSchema.safeParse(dto);
 
   if (!validated.success) {
@@ -42,7 +41,6 @@ export function transformEquipmentAvailabilityDTO(dto: unknown): EquipmentAvaila
 
   const data = validated.data;
 
-  // Transform: snake_case → camelCase
   return {
     equipmentId: data.equipment_id,
     isAvailable: data.is_available,

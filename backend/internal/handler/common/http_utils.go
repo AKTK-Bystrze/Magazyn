@@ -59,7 +59,6 @@ func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 	var details interface{}
 	code := "INTERNAL_ERROR"
 
-	// Check if it's one of our custom error types
 	switch e := err.(type) {
 	case *types.NotFoundError:
 		status = http.StatusNotFound
@@ -87,7 +86,6 @@ func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 		details = e.Details
 		code = e.Code
 	default:
-		// Generic error
 		message = err.Error()
 	}
 

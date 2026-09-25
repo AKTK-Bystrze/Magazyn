@@ -21,15 +21,12 @@ func TestAdjacentDates_SameUserCanReserveAfterReturn(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 
-	// Arrange: Create reservation days 7-10 (End date is inclusive: 10th)
 	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
 	require.NoError(t, err)
 	t.Logf("First reservation: %s (days 7-10)", reservationID1)
 
-	// Act: Create adjacent reservation (day 11-13, starts day after first ends)
 	reservationID2, err := fixture.createTestReservation(fixture.testUserID, 11, 13)
 
-	// Assert: Should succeed (adjacent is OK)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, reservationID2)
 	t.Logf("Second reservation: %s (days 11-13) - SUCCESS", reservationID2)
@@ -41,15 +38,12 @@ func TestAdjacentDates_DifferentUserCanReserveAfterReturn(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 
-	// Arrange: User A reserves days 7-10
 	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
 	require.NoError(t, err)
 	t.Logf("User A reservation: %s (days 7-10)", reservationID1)
 
-	// Act: User B reserves days 11-13 (starts day after)
 	reservationID2, err := fixture.createTestReservation(fixture.testUser2ID, 11, 13)
 
-	// Assert: Should succeed
 	assert.NoError(t, err)
 	assert.NotEmpty(t, reservationID2)
 	t.Logf("User B reservation: %s (days 11-13) - SUCCESS", reservationID2)
@@ -60,15 +54,12 @@ func TestOverlappingDates_SameUserConflict(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 
-	// Arrange: Create reservation days 7-10
 	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
 	require.NoError(t, err)
 	t.Logf("First reservation: %s (days 7-10)", reservationID1)
 
-	// Act: Try to reserve days 9-12 (overlaps)
 	_, err = fixture.createTestReservation(fixture.testUserID, 9, 12)
 
-	// Assert: Should fail with conflict
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Reservation failed")
 	t.Logf("Overlapping reservation rejected - EXPECTED")
@@ -79,15 +70,12 @@ func TestOverlappingDates_DifferentUserConflict(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 
-	// Arrange: User A reserves days 7-10
 	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
 	require.NoError(t, err)
 	t.Logf("User A reservation: %s (days 7-10)", reservationID1)
 
-	// Act: User B tries to reserve days 8-11 (overlaps)
 	_, err = fixture.createTestReservation(fixture.testUser2ID, 8, 11)
 
-	// Assert: Should fail
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Reservation failed")
 	t.Logf("User B conflicting reservation rejected - EXPECTED")
@@ -98,15 +86,12 @@ func TestExactSameDates_Conflict(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 
-	// Arrange: Create reservation days 7-10
 	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
 	require.NoError(t, err)
 	t.Logf("First reservation: %s (days 7-10)", reservationID1)
 
-	// Act: Try to reserve exact same dates
 	_, err = fixture.createTestReservation(fixture.testUserID, 7, 10)
 
-	// Assert: Should fail
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Reservation failed")
 	t.Logf("Duplicate date reservation rejected - EXPECTED")
@@ -120,7 +105,6 @@ func TestTodayReservation_SingleDay(t *testing.T) {
 	ctx := context.Background()
 	balanceBefore := fixture.getUserBalance(fixture.testUserID)
 
-	// Act: Reserve for today only
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
 			{
@@ -132,7 +116,6 @@ func TestTodayReservation_SingleDay(t *testing.T) {
 	}
 	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 
-	// Assert: Should succeed, cost = 1 day
 	require.NoError(t, err)
 	assert.NotEmpty(t, resp.Reservations)
 
@@ -154,7 +137,6 @@ func TestTodayReservation_MultiDay(t *testing.T) {
 	ctx := context.Background()
 	balanceBefore := fixture.getUserBalance(fixture.testUserID)
 
-	// Act: Reserve today → today+3 (4 days total)
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
 			{
@@ -166,7 +148,6 @@ func TestTodayReservation_MultiDay(t *testing.T) {
 	}
 	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 
-	// Assert: Should succeed, cost = 4 days
 	require.NoError(t, err)
 	expectedCost := fixture.costPerDay * 4
 	actualCost := balanceBefore - resp.RemainingBalance
@@ -184,15 +165,12 @@ func TestTodayReservation_AfterExistingEndsToday(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 
-	// Arrange: Create reservation ending today (yesterday → today)
 	reservationID1, err := fixture.createTestReservation(fixture.testUserID, -1, 0)
 	require.NoError(t, err)
 	t.Logf("First reservation: %s (yesterday → today)", reservationID1)
 
-	// Act: Create reservation starting TOMORROW (day 1)
 	reservationID2, err := fixture.createTestReservation(fixture.testUserID, 1, 2)
 
-	// Assert: Should succeed (adjacent)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, reservationID2)
 	t.Logf("Today-start reservation: %s - SUCCESS", reservationID2)
@@ -204,15 +182,12 @@ func TestTodayReservation_ConflictWithOngoing(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 
-	// Arrange: Create reservation spanning yesterday to tomorrow
 	reservationID1, err := fixture.createTestReservation(fixture.testUserID, -1, 1)
 	require.NoError(t, err)
 	t.Logf("Ongoing reservation: %s (yesterday → tomorrow)", reservationID1)
 
-	// Act: Try to reserve for today
 	_, err = fixture.createTestReservation(fixture.testUserID, 0, 0)
 
-	// Assert: Should fail
 	assert.Error(t, err)
 	t.Logf("Conflict with ongoing reservation rejected - EXPECTED")
 }
@@ -240,7 +215,6 @@ func TestCostCalculation_Matrix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			balanceBefore := fixture.getUserBalance(fixture.testUserID)
 
-			// Act
 			cmd := types.CreateReservationsCommand{
 				Reservations: []types.CreateReservationItem{
 					{
@@ -252,7 +226,6 @@ func TestCostCalculation_Matrix(t *testing.T) {
 			}
 			resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 
-			// Assert
 			require.NoError(t, err)
 			assert.NotEmpty(t, resp.Reservations)
 
@@ -261,7 +234,6 @@ func TestCostCalculation_Matrix(t *testing.T) {
 			assert.Equal(t, expectedCost, actualCost)
 			t.Logf("Cost for %d days: %d credits ✓", tt.wantDays, actualCost)
 
-			// Cleanup
 			fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
 		})
 	}
@@ -274,7 +246,6 @@ func TestMultiReservation_SameEquipmentDifferentDates(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Act: Create 2 distinct reservations for same equipment
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
 			{
@@ -291,7 +262,6 @@ func TestMultiReservation_SameEquipmentDifferentDates(t *testing.T) {
 	}
 	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 
-	// Assert: Should succeed
 	require.NoError(t, err)
 	assert.Len(t, resp.Reservations, 2)
 	t.Logf("Batch reservation successful. IDs: %s, %s", resp.Reservations[0].ID, resp.Reservations[1].ID)
@@ -309,12 +279,10 @@ func TestMultiReservation_PartialConflict(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Arrange: Create blocking reservation (10-12)
 	blockingID, err := fixture.createTestReservation(fixture.testUser2ID, 10, 12)
 	require.NoError(t, err)
 	t.Logf("Blocking reservation: %s", blockingID)
 
-	// Act: Try batch where one is OK (5-7) and one conflicts (10-12)
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
 			{
@@ -331,7 +299,6 @@ func TestMultiReservation_PartialConflict(t *testing.T) {
 	}
 	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 
-	// Assert: Should fail ATOMICALLY (none created)
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "Reservation failed") // Matches our DB error
@@ -345,7 +312,6 @@ func TestMultiReservation_TotalCostCalculation(t *testing.T) {
 
 	balanceBefore := fixture.getUserBalance(fixture.testUserID)
 
-	// Act: Create 3 items × 3 days each = 9 total days
 	res1ID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
 	require.NoError(t, err)
 
@@ -355,7 +321,6 @@ func TestMultiReservation_TotalCostCalculation(t *testing.T) {
 	res3ID, err := fixture.createTestReservation(fixture.testUserID, 15, 17)
 	require.NoError(t, err)
 
-	// Assert: Total cost = 9 days × costPerDay
 	balanceAfter := fixture.getUserBalance(fixture.testUserID)
 	totalCost := balanceBefore - balanceAfter
 	expectedCost := 9 * fixture.costPerDay
@@ -373,11 +338,9 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Get initial balance
 	balanceBefore := fixture.getUserBalance(fixture.testUserID)
 	t.Logf("Initial balance: %d credits", balanceBefore)
 
-	// Create free reservation
 	isFree := true
 	cmd := types.CreateReservationsCommand{
 		Reservations: []types.CreateReservationItem{
@@ -391,11 +354,9 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 	}
 	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 
-	// Assert: Should succeed
 	require.NoError(t, err)
 	assert.Len(t, resp.Reservations, 1)
 
-	// Verify reservation was created with is_free = true
 	var reservations []struct {
 		ID     string `json:"id"`
 		IsFree bool   `json:"is_free"`
@@ -409,7 +370,6 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 	require.Len(t, reservations, 1)
 	assert.True(t, reservations[0].IsFree, "Reservation should be marked as free")
 
-	// Verify balance was NOT deducted
 	balanceAfter := fixture.getUserBalance(fixture.testUserID)
 	assert.Equal(t, balanceBefore, balanceAfter, "Balance should remain unchanged for free reservation")
 	t.Logf("Balance after free reservation: %d credits (unchanged) ✓", balanceAfter)
@@ -430,7 +390,6 @@ func TestFreeReservation_CostComparison(t *testing.T) {
 	days := 5 // 5-day reservation
 	expectedCost := int32(days) * fixture.costPerDay
 
-	// Test 1: Regular reservation (should deduct credits)
 	balanceBeforeRegular := fixture.getUserBalance(fixture.testUserID)
 
 	cmdRegular := types.CreateReservationsCommand{
@@ -454,7 +413,6 @@ func TestFreeReservation_CostComparison(t *testing.T) {
 		fixture.client.From("reservations").Delete("", "").Eq("id", respRegular.Reservations[0].ID).Execute()
 	})
 
-	// Test 2: Free reservation (should NOT deduct credits)
 	balanceBeforeFree := fixture.getUserBalance(fixture.testUserID)
 
 	isFree := true
@@ -492,7 +450,6 @@ func TestTS2_AdminCreatesReservationForUser(t *testing.T) {
 	targetUserBalance := fixture.getUserBalance(fixture.testUserID)
 	adminBalance := fixture.getUserBalance(fixture.testUser2ID)
 
-	// Admin (testUser2ID) creates for testUserID
 	targetID := fixture.testUserID
 	isFree := false
 	cmd := types.CreateReservationsCommand{
@@ -507,9 +464,7 @@ func TestTS2_AdminCreatesReservationForUser(t *testing.T) {
 	require.NotEmpty(t, resp.Reservations)
 	assert.Equal(t, targetID, resp.Reservations[0].UserID, "Reservation owner should be the target user")
 
-	// Credits deducted from TARGET user (3 days * costPerDay)
 	assert.Equal(t, 3*fixture.costPerDay, targetUserBalance-fixture.getUserBalance(fixture.testUserID), "3-day cost from TARGET user")
-	// Admin balance unchanged
 	assert.Equal(t, adminBalance, fixture.getUserBalance(fixture.testUser2ID), "Admin balance must not change")
 
 	fixture.cleanup = append(fixture.cleanup, func() {
@@ -526,18 +481,15 @@ func TestTS2_AdminModifiesAnotherUsersReservation(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Create reservation owned by testUserID
 	resID, err := fixture.createTestReservation(fixture.testUserID, 5, 7) // 3 days
 	require.NoError(t, err)
 	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
 
-	// Admin (testUser2ID) extends the end date +2 days
 	newEnd := dateOffset(9)
 	resp, err := fixture.svc.Update(ctx, resID, types.UpdateReservationCommand{EndDate: &newEnd}, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
 	assert.Equal(t, newEnd, resp.EndDate)
 
-	// 2 extra days charged to the TARGET user (testUserID)
 	assert.Equal(t, 2*fixture.costPerDay, balanceAfterCreate-fixture.getUserBalance(fixture.testUserID), "Admin extension charges target user")
 	t.Logf("✓ TS-2: Admin modified reservation, 2-day charge applied to target user")
 }

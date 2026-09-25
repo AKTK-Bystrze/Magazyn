@@ -1,8 +1,3 @@
-// =============================================================================
-// AUTH & USER TYPES
-// =============================================================================
-
-// Re-export database types for reference
 import type { Enums } from "../db/database.types";
 
 /**
@@ -109,10 +104,6 @@ export type BulkAdjustCreditsCommand = {
   reason: string;
   description?: string;
 };
-
-// =============================================================================
-// USER LIST & FILTERING TYPES
-// =============================================================================
 
 /**
  * Filter state for user list queries

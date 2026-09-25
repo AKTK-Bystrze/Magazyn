@@ -14,23 +14,18 @@ describe("cookie-utils", () => {
   let mockCookie = "";
 
   beforeEach(() => {
-    // Reset cookie
     mockCookie = "";
 
-    // Mock document.cookie
     Object.defineProperty(document, "cookie", {
       get: () => mockCookie,
       set: (value: string) => {
-        // Parse and update mockCookie
         if (value.includes("max-age=0")) {
-          // Cookie is being cleared
           const cookieName = value.split("=")[0];
           mockCookie = mockCookie
             .split("; ")
             .filter((c) => !c.startsWith(cookieName))
             .join("; ");
         } else {
-          // Cookie is being set
           mockCookie = value;
         }
       },
@@ -103,7 +98,6 @@ describe("cookie-utils", () => {
       mockCookie = "magazyn-auth-token=some-token; path=/";
       removeAuthCookie();
 
-      // The mock should clear the cookie
       expect(mockCookie).not.toContain("magazyn-auth-token=some-token");
     });
 
@@ -184,7 +178,6 @@ describe("cookie-utils", () => {
     it("resolves when cookie is set during wait", async () => {
       const promise = waitForCookie(300);
 
-      // Set cookie after 100ms
       setTimeout(() => {
         mockCookie = "magazyn-auth-token=test-token";
       }, 100);
@@ -204,7 +197,6 @@ describe("cookie-utils", () => {
       await waitForCookie();
       const elapsed = Date.now() - startTime;
 
-      // Should take around 300ms (timeout) since cookie was never set
       expect(elapsed).toBeGreaterThanOrEqual(280);
       expect(elapsed).toBeLessThan(400); // Increased tolerance for test environment
     });
@@ -214,23 +206,19 @@ describe("cookie-utils", () => {
       await waitForCookie(150);
       const elapsed = Date.now() - startTime;
 
-      // Should take around 150ms
       expect(elapsed).toBeGreaterThanOrEqual(130);
       expect(elapsed).toBeLessThan(250);
     });
 
     it("polls for cookie presence and succeeds when cookie appears", async () => {
-      // Start with no cookie
       mockCookie = "";
 
-      // Set cookie after 100ms to simulate async cookie setting
       setTimeout(() => {
         mockCookie = "magazyn-auth-token=delayed-token";
       }, 100);
 
       const result = await waitForCookie(300);
 
-      // Should have succeeded because cookie appeared during wait period
       expect(result).toBe(true);
     });
   });
@@ -256,7 +244,6 @@ describe("cookie-utils", () => {
     it("sets cookie before redirecting", async () => {
       const promise = waitForCookieAndRedirect("test-token", "/dashboard");
 
-      // Wait for cookie to be set
       await vi.waitFor(() => {
         expect(mockCookie).toContain("magazyn-auth-token=test-token");
       });
@@ -273,18 +260,14 @@ describe("cookie-utils", () => {
     it("waits for cookie confirmation before redirecting", async () => {
       const promise = waitForCookieAndRedirect("test-token", "/dashboard");
 
-      // Redirect should not happen immediately
       expect(mockReplace).not.toHaveBeenCalled();
 
       await promise;
 
-      // Redirect should happen after wait
       expect(mockReplace).toHaveBeenCalled();
     });
 
     it("waits additional time if cookie not set after 100ms", async () => {
-      // Simulate slow cookie setting
-
       Object.defineProperty(document, "cookie", {
         get: () => mockCookie,
         set: (value: string) => {
@@ -299,7 +282,6 @@ describe("cookie-utils", () => {
       await waitForCookieAndRedirect("test-token", "/dashboard");
       const elapsed = Date.now() - startTime;
 
-      // Should wait full 300ms (100ms + 200ms backup wait)
       expect(elapsed).toBeGreaterThanOrEqual(280);
     });
 
@@ -316,26 +298,21 @@ describe("cookie-utils", () => {
 
   describe("Integration Tests", () => {
     it("completes full cookie lifecycle", async () => {
-      // Set cookie
       setAuthCookie("my-token");
       expect(hasAuthCookie()).toBe(true);
       expect(getAuthCookie()).toBe("my-token");
 
-      // Check cookie
       await expect(waitForCookie(100)).resolves.toBe(true);
 
-      // Remove cookie
       removeAuthCookie();
       expect(hasAuthCookie()).toBe(false);
       expect(getAuthCookie()).toBeNull();
     });
 
     it("handles cookie update flow", async () => {
-      // Set initial cookie
       setAuthCookie("old-token");
       expect(getAuthCookie()).toBe("old-token");
 
-      // Update cookie
       setAuthCookie("new-token");
       expect(getAuthCookie()).toBe("new-token");
       expect(getAuthCookie()).not.toBe("old-token");
@@ -355,7 +332,6 @@ describe("cookie-utils", () => {
 
     it("uses appropriate max-age for long-lived sessions", () => {
       setAuthCookie("token");
-      // 1 year is reasonable for remember-me functionality
       expect(mockCookie).toContain("max-age=31536000");
     });
   });

@@ -59,21 +59,17 @@ export function MaintenanceLogSection({
   const [notes, setNotes] = React.useState("");
   const notesInputId = React.useId();
 
-  // Silence unused warning - equipmentId may be used in future
   void equipmentId;
 
-  // Handle add log toggle
   const handleToggleAdd = React.useCallback(() => {
     setIsAddingLog((prev) => !prev);
     setNotes("");
   }, []);
 
-  // Handle notes input change
   const handleNotesChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setNotes(e.target.value);
   }, []);
 
-  // Handle add log submit
   const handleSubmit = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -82,13 +78,12 @@ export function MaintenanceLogSection({
         setIsAddingLog(false);
         setNotes("");
       } catch {
-        // Error handling is done by parent
+        // Ignored
       }
     },
     [notes, onAddLog]
   );
 
-  // Handle cancel
   const handleCancel = React.useCallback(() => {
     setIsAddingLog(false);
     setNotes("");

@@ -12,10 +12,6 @@
  * These strings are shared across multiple domains and components.
  */
 export const CORE_UI_STRINGS = {
-  // ==========================================================================
-  // SPECIAL TERMINOLOGY
-  // ==========================================================================
-
   /** Shopping cart → worek (bag) */
   CART: "worek",
   /** Credits (plural) → godzinki (little hours) */
@@ -31,20 +27,12 @@ export const CORE_UI_STRINGS = {
   /** Administrator */
   ADMIN: "administrator",
 
-  // ==========================================================================
-  // COMMON NOUNS
-  // ==========================================================================
-
   STATUS: "status",
   DATE: "data",
   ITEM: "przedmiot",
   ITEMS: "przedmioty",
   DAY: "dzień",
   DAYS: "dni",
-
-  // ==========================================================================
-  // COMMON ACTIONS (reusable across all domains)
-  // ==========================================================================
 
   SAVE: "Zapisz",
   CANCEL: "Anuluj",
@@ -59,10 +47,6 @@ export const CORE_UI_STRINGS = {
   CONFIRM: "Potwierdź",
   BACK: "Wstecz",
   CONTINUE: "Kontynuuj",
-
-  // ==========================================================================
-  // LOADING STATES (reusable)
-  // ==========================================================================
 
   LOADING: "Ładowanie...",
   SAVING: "Zapisywanie...",

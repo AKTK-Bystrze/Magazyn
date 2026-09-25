@@ -31,7 +31,9 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
   const [detailsItem, setDetailsItem] = useState<CreditRequest | null>(null);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(
+    null
+  );
 
   const requestSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";
@@ -49,9 +51,9 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
         usersApi.listPublic({ perPage: 100 }),
       ]);
       setData(res.requests || []);
-      
+
       const map: Record<string, string> = {};
-      (usersRes.users || []).forEach(u => {
+      (usersRes.users || []).forEach((u) => {
         map[u.id] = u.username;
       });
       setUsersMap(map);
@@ -93,20 +95,23 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
     let matchesStatus = true;
     if (filter !== "all") {
       if (filter === CREDIT_REQUEST_STATUS.APPROVED) {
-        matchesStatus = item.status === CREDIT_REQUEST_STATUS.APPROVED || item.status === CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES;
+        matchesStatus =
+          item.status === CREDIT_REQUEST_STATUS.APPROVED ||
+          item.status === CREDIT_REQUEST_STATUS.APPROVED_WITH_CHANGES;
       } else {
         matchesStatus = item.status === filter;
       }
     }
-    
+
     let matchesSearch = true;
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
-      const userHelped = item.userHelpedId ? (usersMap[item.userHelpedId] || item.userHelpedId) : '';
-      const helpers = item.helpers?.map(h => usersMap[h] || h).join(', ') || '';
-      matchesSearch = item.title.toLowerCase().includes(lowerQuery) || 
-                      userHelped.toLowerCase().includes(lowerQuery) || 
-                      helpers.toLowerCase().includes(lowerQuery);
+      const userHelped = item.userHelpedId ? usersMap[item.userHelpedId] || item.userHelpedId : "";
+      const helpers = item.helpers?.map((h) => usersMap[h] || h).join(", ") || "";
+      matchesSearch =
+        item.title.toLowerCase().includes(lowerQuery) ||
+        userHelped.toLowerCase().includes(lowerQuery) ||
+        helpers.toLowerCase().includes(lowerQuery);
     }
     return matchesStatus && matchesSearch;
   });
@@ -115,13 +120,12 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
     if (!sortConfig) return 0;
     let aValue = a[sortConfig.key];
     let bValue = b[sortConfig.key];
-    
-    // Special handling for userHelpedId to sort by username instead of id
-    if (sortConfig.key === 'userHelpedId') {
-      aValue = a.userHelpedId ? (usersMap[a.userHelpedId] || a.userHelpedId) : '';
-      bValue = b.userHelpedId ? (usersMap[b.userHelpedId] || b.userHelpedId) : '';
+
+    if (sortConfig.key === "userHelpedId") {
+      aValue = a.userHelpedId ? usersMap[a.userHelpedId] || a.userHelpedId : "";
+      bValue = b.userHelpedId ? usersMap[b.userHelpedId] || b.userHelpedId : "";
     }
-    
+
     if (aValue < bValue) {
       return sortConfig.direction === "asc" ? -1 : 1;
     }
@@ -159,9 +163,9 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
             </CardDescription>
           </div>
           <div className="flex flex-col gap-2">
-            <input 
-              type="text" 
-              placeholder="Szukaj użytkownika / tytułu..." 
+            <input
+              type="text"
+              placeholder="Szukaj użytkownika / tytułu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -207,12 +211,47 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer" onClick={() => requestSort('title')}>Tytuł {sortConfig?.key === 'title' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => requestSort('userHelpedId')}>Kto prosił o pomoc {sortConfig?.key === 'userHelpedId' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort("title")}>
+                    Tytuł{" "}
+                    {sortConfig?.key === "title"
+                      ? sortConfig.direction === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort("userHelpedId")}>
+                    Kto prosił o pomoc{" "}
+                    {sortConfig?.key === "userHelpedId"
+                      ? sortConfig.direction === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
+                  </TableHead>
                   <TableHead>Pomagający</TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => requestSort('creditsValue')}>Wartość {sortConfig?.key === 'creditsValue' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => requestSort('status')}>Status {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => requestSort('createdAt')}>Data {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort("creditsValue")}>
+                    Wartość{" "}
+                    {sortConfig?.key === "creditsValue"
+                      ? sortConfig.direction === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort("status")}>
+                    Status{" "}
+                    {sortConfig?.key === "status"
+                      ? sortConfig.direction === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => requestSort("createdAt")}>
+                    Data{" "}
+                    {sortConfig?.key === "createdAt"
+                      ? sortConfig.direction === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
+                  </TableHead>
                   <TableHead className="text-right">Akcje</TableHead>
                 </TableRow>
               </TableHeader>
@@ -220,31 +259,37 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
                 {sortedData.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.title}</TableCell>
-                    <TableCell>{item.userHelpedId ? usersMap[item.userHelpedId] || item.userHelpedId : '-'}</TableCell>
+                    <TableCell>
+                      {item.userHelpedId ? usersMap[item.userHelpedId] || item.userHelpedId : "-"}
+                    </TableCell>
                     <TableCell>
                       {item.helpers?.length ? (
-                        <span title={item.helpers.map(h => usersMap[h] || h).join(', ')}>
-                          {item.helpers.map(h => usersMap[h] || h).join(', ')}
+                        <span title={item.helpers.map((h) => usersMap[h] || h).join(", ")}>
+                          {item.helpers.map((h) => usersMap[h] || h).join(", ")}
                         </span>
                       ) : (
-                        '0 osób'
+                        "0 osób"
                       )}
                     </TableCell>
                     <TableCell>{item.creditsValue}</TableCell>
                     <TableCell>{getStatusBadge(item.status)}</TableCell>
                     <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {item.status === CREDIT_REQUEST_STATUS.AWAITING && item.requestorId === userId && (
-                        <Button variant="outline" size="sm" onClick={() => onEditClick(item)}>
-                          Edytuj
-                        </Button>
-                      )}
+                      {item.status === CREDIT_REQUEST_STATUS.AWAITING &&
+                        item.requestorId === userId && (
+                          <Button variant="outline" size="sm" onClick={() => onEditClick(item)}>
+                            Edytuj
+                          </Button>
+                        )}
                       {isSuperAdmin && item.status === CREDIT_REQUEST_STATUS.AWAITING && (
                         <Button size="sm" onClick={() => setReviewItem(item)}>
                           Rozpatrz
                         </Button>
                       )}
-                      {!(item.status === CREDIT_REQUEST_STATUS.AWAITING && (item.requestorId === userId || isSuperAdmin)) && (
+                      {!(
+                        item.status === CREDIT_REQUEST_STATUS.AWAITING &&
+                        (item.requestorId === userId || isSuperAdmin)
+                      ) && (
                         <Button variant="outline" size="sm" onClick={() => setDetailsItem(item)}>
                           Szczegóły
                         </Button>
