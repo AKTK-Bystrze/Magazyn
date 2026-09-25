@@ -25,9 +25,10 @@ export function UsersCreditsList() {
           usersApi.listPublic({ perPage: 100 }),
         ]);
         setLeaderboard(boardRes || []);
-        
-        // Sort public users by credit balance descending
-        const sortedUsers = (usersRes.users || []).sort((a: PublicUser, b: PublicUser) => b.creditBalance - a.creditBalance);
+
+        const sortedUsers = (usersRes.users || []).sort(
+          (a: PublicUser, b: PublicUser) => b.creditBalance - a.creditBalance
+        );
         setPublicUsers(sortedUsers);
       } catch (err) {
         console.error(err);
@@ -41,8 +42,16 @@ export function UsersCreditsList() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card><CardContent className="pt-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
-        <Card><CardContent className="pt-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+        <Card>
+          <CardContent className="pt-6">
+            <Skeleton className="h-20 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <Skeleton className="h-20 w-full" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -52,9 +61,7 @@ export function UsersCreditsList() {
       <Card>
         <CardHeader>
           <CardTitle>Aktualne Saldo</CardTitle>
-          <CardDescription>
-            Lista użytkowników i ich obecne saldo godzinek.
-          </CardDescription>
+          <CardDescription>Lista użytkowników i ich obecne saldo godzinek.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -86,9 +93,7 @@ export function UsersCreditsList() {
       <Card>
         <CardHeader>
           <CardTitle>Ranking Otrzymanych</CardTitle>
-          <CardDescription>
-            Suma godzinek przyznanych za pomoc.
-          </CardDescription>
+          <CardDescription>Suma godzinek przyznanych za pomoc.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>

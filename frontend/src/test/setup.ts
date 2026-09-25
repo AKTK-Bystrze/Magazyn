@@ -1,7 +1,6 @@
 import "@testing-library/jest-dom";
 import { vi, beforeEach } from "vitest";
 
-// Mock import.meta.env for Vite environment variables
 vi.stubGlobal("import", {
   meta: {
     env: {
@@ -12,7 +11,6 @@ vi.stubGlobal("import", {
   },
 });
 
-// Reset mocks between tests
 beforeEach(() => {
   vi.clearAllMocks();
 });

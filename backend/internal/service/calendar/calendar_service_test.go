@@ -111,16 +111,13 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		assert.NotNil(t, result)
 		assert.Len(t, result.Calendar, 3) // 3 days
 
-		// Check day 1 is available
 		assert.Equal(t, "2025-12-01", result.Calendar[0].Date)
 		assert.True(t, result.Calendar[0].IsAvailable)
 
-		// Check day 2 is not available (has reservation)
 		assert.Equal(t, "2025-12-02", result.Calendar[1].Date)
 		assert.False(t, result.Calendar[1].IsAvailable)
 		assert.Equal(t, "res-1", *result.Calendar[1].ReservationID)
 
-		// Check day 3 is available
 		assert.Equal(t, "2025-12-03", result.Calendar[2].Date)
 		assert.True(t, result.Calendar[2].IsAvailable)
 
@@ -201,7 +198,6 @@ func TestGetCalendarAvailability_MultiDayReservation(t *testing.T) {
 		{ID: "eq-uuid-1", InternalID: "K-01", Name: stringPtr("Kayak")},
 	}
 
-	// Reservation spans days 2-4
 	reservations := []types.PublicReservationsSelect{
 		{
 			ID:          "res-1",
@@ -220,13 +216,10 @@ func TestGetCalendarAvailability_MultiDayReservation(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, result.Calendar, 5)
 
-	// Day 1 available
 	assert.True(t, result.Calendar[0].IsAvailable)
-	// Days 2-4 not available
 	assert.False(t, result.Calendar[1].IsAvailable)
 	assert.False(t, result.Calendar[2].IsAvailable)
 	assert.False(t, result.Calendar[3].IsAvailable)
-	// Day 5 available
 	assert.True(t, result.Calendar[4].IsAvailable)
 }
 

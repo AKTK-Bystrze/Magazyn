@@ -74,7 +74,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isDetailsSheetOpen, setIsDetailsSheetOpen] = React.useState(false);
@@ -83,7 +82,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     null
   );
 
-  // Feedback states
   React.useEffect(() => {
     if (error) {
       logger.error("EquipmentManagerContainer Error:", error);
@@ -94,7 +92,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [archiveError, setArchiveError] = React.useState<string | null>(null);
 
-  // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
@@ -109,17 +106,14 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     }
   }, [errorMessage]);
 
-  // Handle add equipment button click
   const handleAddClick = React.useCallback(() => {
     setIsAddDialogOpen(true);
   }, []);
 
-  // Handle add dialog close
   const handleAddDialogClose = React.useCallback(() => {
     setIsAddDialogOpen(false);
   }, []);
 
-  // Handle add equipment submit
   const handleAddSubmit = React.useCallback(
     async (command: CreateEquipmentCommand) => {
       await createEquipment(command);
@@ -129,19 +123,16 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     [createEquipment]
   );
 
-  // Handle edit action
   const handleEditClick = React.useCallback((item: EquipmentSearchItem) => {
     setSelectedEquipment(item);
     setIsEditDialogOpen(true);
   }, []);
 
-  // Handle edit dialog close
   const handleEditDialogClose = React.useCallback(() => {
     setIsEditDialogOpen(false);
     setSelectedEquipment(null);
   }, []);
 
-  // Handle edit equipment submit
   const handleEditSubmit = React.useCallback(
     async (id: string, command: UpdateEquipmentCommand) => {
       await updateEquipment(id, command);
@@ -152,27 +143,23 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     [updateEquipment]
   );
 
-  // Handle view details action
   const handleViewDetails = React.useCallback((item: EquipmentSearchItem) => {
     setSelectedEquipment(item);
     setIsDetailsSheetOpen(true);
   }, []);
 
-  // Handle archive action
   const handleArchiveClick = React.useCallback((item: EquipmentSearchItem) => {
     setSelectedEquipment(item);
     setArchiveError(null);
     setIsArchiveDialogOpen(true);
   }, []);
 
-  // Handle archive dialog close
   const handleArchiveDialogClose = React.useCallback(() => {
     setIsArchiveDialogOpen(false);
     setSelectedEquipment(null);
     setArchiveError(null);
   }, []);
 
-  // Handle archive confirm
   const handleArchiveConfirm = React.useCallback(
     async (id: string) => {
       try {
@@ -189,7 +176,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     [archiveEquipment]
   );
 
-  // Handle filter changes from Sidebar
   const handleFilterChange = React.useCallback(
     (key: keyof EquipmentSearchParams, value: string | undefined) => {
       setFilter(key, value as never);
@@ -197,7 +183,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     [setFilter]
   );
 
-  // Handle details sheet close
   const handleDetailsSheetClose = React.useCallback(() => {
     setIsDetailsSheetOpen(false);
     setSelectedEquipment(null);

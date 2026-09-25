@@ -32,7 +32,6 @@ export const createMockSessionInfo = (overrides: Partial<SessionInfo> = {}): Ses
   ...overrides,
 });
 
-// Prebuilt scenarios
 export const mockUsers = {
   enabledSuperAdmin: createMockUser({
     user_metadata: { role: "super_admin" },

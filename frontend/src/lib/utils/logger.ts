@@ -16,7 +16,6 @@ export class StructuredLogger {
     this.baseContext = context;
   }
 
-  // Clones logger with additional context
   with(context: Record<string, unknown>): StructuredLogger {
     return new StructuredLogger({ ...this.baseContext, ...context });
   }
@@ -34,7 +33,6 @@ export class StructuredLogger {
       ...data,
     };
 
-    // Make sure these are strictly typed or omitted if empty
     if (!entry.username) delete entry.username;
     if (!entry.trace_id) entry.trace_id = "unknown";
 

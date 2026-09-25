@@ -67,7 +67,6 @@ func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []strin
 		return make(map[string]types.PublicEquipmentTypesSelect), nil
 	}
 
-	// Remove duplicates
 	uniqueIDs := make([]string, 0, len(ids))
 	seen := make(map[string]bool)
 	for _, id := range ids {
@@ -77,11 +76,6 @@ func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []strin
 		}
 	}
 
-	// Supabase (Postgrest) "in" filter format: (id1,id2,id3)
-	// Note: supabase-go might handle slice for In directly?
-	// Looking at previous usages like `In("status", []string{...})`, it seems supported.
-
-	// We'll use In filter.
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	data, _, err := client.From("equipment_types").
 		Select("*", "exact", false).

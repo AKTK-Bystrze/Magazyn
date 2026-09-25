@@ -23,7 +23,6 @@ type Server struct {
 // StartMetricsServer initializes Prometheus metrics, starts a background goroutine
 // to update them periodically, and starts an HTTP server to expose the metrics.
 func StartMetricsServer(ctx context.Context, repo repository.ReservationRepository, serviceKey string) *Server {
-	// Initialize custom Prometheus metrics
 	pendingReservations := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "magazyn_reservations_pending",
 		Help: "Current number of pending reservations",
@@ -39,7 +38,6 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 
 	prometheus.MustRegister(pendingReservations, overdueReservations, activeTodayReservations)
 
-	// Start a background goroutine to update the metrics
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
@@ -69,7 +67,6 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 		}
 	}(ctx)
 
-	// Metrics Server on a separate internal port
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.Handler())
 	metricsServer := &http.Server{

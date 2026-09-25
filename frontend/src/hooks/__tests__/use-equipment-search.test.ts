@@ -11,7 +11,6 @@ describe("useEquipmentSearch", () => {
   const mockReplaceState = vi.fn();
 
   beforeEach(() => {
-    // Reset window.location mock
     Object.defineProperty(window, "location", {
       writable: true,
       value: {
@@ -21,7 +20,6 @@ describe("useEquipmentSearch", () => {
       },
     });
 
-    // Mock history.replaceState
     Object.defineProperty(window, "history", {
       writable: true,
       value: {
@@ -78,7 +76,6 @@ describe("useEquipmentSearch", () => {
     expect(result.current.filters.search).toBe("hammer");
     expect(result.current.filters.page).toBe(1);
 
-    // Check URL update
     expect(mockReplaceState).toHaveBeenCalledWith(
       {},
       "",
@@ -95,7 +92,6 @@ describe("useEquipmentSearch", () => {
 
     expect(result.current.filters.page).toBe(3);
 
-    // Check URL update
     expect(mockReplaceState).toHaveBeenCalledWith(
       {},
       "",
@@ -111,17 +107,13 @@ describe("useEquipmentSearch", () => {
       result.current.updateFilter("search", "fast typing");
     });
 
-    // Immediate state update
     expect(result.current.filters.search).toBe("fast typing");
-    // Active filters (for query) should not have updated yet due to debounce
     expect(result.current.activeFilters.search).toBeUndefined();
 
-    // Fast forward time
     act(() => {
       vi.advanceTimersByTime(300);
     });
 
-    // Now active filters should be updated
     expect(result.current.activeFilters.search).toBe("fast typing");
 
     vi.useRealTimers();

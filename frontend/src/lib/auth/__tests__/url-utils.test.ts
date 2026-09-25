@@ -5,7 +5,6 @@ import { isSafeRedirect, validateRedirectUrl } from "../url-utils";
 describe("url-utils", () => {
   const origin = "http://localhost:4321";
 
-  // Mock console methods to keep test output clean
   beforeEach(() => {
     vi.spyOn(logger, "warn").mockImplementation(() => {});
     vi.spyOn(logger, "error").mockImplementation(() => {});
@@ -74,13 +73,11 @@ describe("url-utils", () => {
 
     describe("Edge Cases", () => {
       it("rejects root path (not in whitelist)", () => {
-        // Root path is not in whitelist, so should be rejected
         expect(isSafeRedirect("/", origin)).toBe(false);
       });
 
       it("handles malformed URLs gracefully", () => {
         expect(isSafeRedirect("ht!tp://invalid", origin)).toBe(false);
-        // Note: logger.error IS called but we don't test implementation details
       });
 
       it("handles empty strings", () => {
@@ -88,8 +85,6 @@ describe("url-utils", () => {
       });
 
       it("allows whitelisted paths with query parameters (query params validated by receiving page)", () => {
-        // Query params don't execute on redirect - receiving page must sanitize
-        // Only pathname is validated for whitelist
         expect(isSafeRedirect("/admin?redirect=<script>alert(1)</script>", origin)).toBe(true);
       });
     });
@@ -202,11 +197,9 @@ describe("url-utils", () => {
     });
 
     it("handles chained redirect validation", () => {
-      // First redirect attempt
       const firstAttempt = validateRedirectUrl("https://evil.com", origin, "/login");
       expect(firstAttempt).toBe("/login");
 
-      // Verify the fallback is safe
       expect(isSafeRedirect(firstAttempt, origin)).toBe(true);
     });
   });

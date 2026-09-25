@@ -34,7 +34,6 @@ export const reservationsApi = {
       scope: filters.scope,
     };
 
-    // Only add status if not 'ALL'
     if (filters.status && filters.status !== "ALL") {
       params.status = filters.status;
     }

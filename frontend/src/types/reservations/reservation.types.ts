@@ -1,7 +1,3 @@
-// =============================================================================
-// RESERVATION TYPES
-// =============================================================================
-
 import type { Enums } from "../../db/database.types";
 
 /**
@@ -151,10 +147,6 @@ export type ReservationDashboardSummary = {
   overdueItems: OverdueItem[];
 };
 
-// =============================================================================
-// VIEW STATE TYPES
-// =============================================================================
-
 /**
  * Sort options for reservation list
  */
@@ -211,10 +203,6 @@ export type GroupedReservation = {
   items: ReservationListItem[]; // Individual reservations
   createdAt: string; // Earliest created_at
 };
-
-// =============================================================================
-// DATE MODIFICATION TYPES
-// =============================================================================
 
 /**
  * Credit adjustment calculation result

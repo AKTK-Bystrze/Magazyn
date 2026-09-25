@@ -49,7 +49,6 @@ export function ReservationCardList({
   onReturnAll,
   onViewDetails,
 }: ReservationCardListProps) {
-  // Track expanded groups
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
 
   const observerTarget = React.useRef<HTMLDivElement>(null);
@@ -71,7 +70,6 @@ export function ReservationCardList({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Group reservations by date range
   const groups = React.useMemo(() => groupReservationsByDateRange(reservations), [reservations]);
 
   const toggleGroup = (groupKey: string) => {
@@ -86,7 +84,6 @@ export function ReservationCardList({
     });
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -97,7 +94,6 @@ export function ReservationCardList({
     );
   }
 
-  // Empty state
   if (reservations.length === 0) {
     return <EmptyState hasFilters={hasFilters} />;
   }
@@ -107,7 +103,6 @@ export function ReservationCardList({
       {/* Reservation Cards */}
       <div className="flex flex-col gap-4 w-full max-w-full mt-6">
         {groups.map((group) => {
-          // Single-item groups render as regular cards
           if (group.items.length === 1) {
             const reservation = group.items[0];
             const isOwn = currentUserId ? reservation.userId === currentUserId : false;
@@ -127,7 +122,6 @@ export function ReservationCardList({
             );
           }
 
-          // Multi-item groups render as expandable grouped cards
           return (
             <GroupedReservationCard
               key={group.groupKey}

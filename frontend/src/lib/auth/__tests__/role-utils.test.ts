@@ -3,10 +3,6 @@ import { getDefaultRouteForUser, isAdmin, isSuperAdmin } from "../role-utils";
 import type { User } from "@supabase/supabase-js";
 import type { SessionInfo } from "../../../types";
 
-// =============================================================================
-// Test Data Factories
-// =============================================================================
-
 const createMockUser = (overrides: Partial<User> = {}): User => ({
   id: "test-user-id",
   email: "test@example.com",
@@ -27,10 +23,6 @@ const createMockSessionInfo = (overrides: Partial<SessionInfo> = {}): SessionInf
   expiresAt: "2025-12-31T00:00:00Z",
   ...overrides,
 });
-
-// =============================================================================
-// getDefaultRouteForUser Tests
-// =============================================================================
 
 describe("getDefaultRouteForUser", () => {
   describe("when user is null", () => {
@@ -105,7 +97,6 @@ describe("getDefaultRouteForUser", () => {
       const user = createMockUser({
         user_metadata: { role: "admin" },
       });
-      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
       expect(getDefaultRouteForUser(user, null)).toBe("/login");
     });
 
@@ -113,7 +104,6 @@ describe("getDefaultRouteForUser", () => {
       const user = createMockUser({
         user_metadata: { role: "super_admin" },
       });
-      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
       expect(getDefaultRouteForUser(user, null)).toBe("/login");
     });
 
@@ -121,7 +111,6 @@ describe("getDefaultRouteForUser", () => {
       const user = createMockUser({
         user_metadata: { role: "user" },
       });
-      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
       expect(getDefaultRouteForUser(user, null)).toBe("/login");
     });
 
@@ -129,7 +118,6 @@ describe("getDefaultRouteForUser", () => {
       const user = createMockUser({
         user_metadata: {},
       });
-      // SECURITY: Never trust user_metadata, redirect to login to fetch fresh sessionInfo
       expect(getDefaultRouteForUser(user, null)).toBe("/login");
     });
   });
@@ -147,10 +135,6 @@ describe("getDefaultRouteForUser", () => {
     });
   });
 });
-
-// =============================================================================
-// isAdmin Tests
-// =============================================================================
 
 describe("isAdmin", () => {
   it("should return false for null sessionInfo", () => {
@@ -185,10 +169,6 @@ describe("isAdmin", () => {
     expect(isAdmin(sessionInfo)).toBe(false);
   });
 });
-
-// =============================================================================
-// isSuperAdmin Tests
-// =============================================================================
 
 describe("isSuperAdmin", () => {
   it("should return false for null sessionInfo", () => {

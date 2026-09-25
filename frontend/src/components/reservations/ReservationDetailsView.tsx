@@ -37,7 +37,6 @@ export function ReservationDetailsView({
   const { reservation, isLoading, error, updateStatus, isUpdating } =
     useReservationDetail(reservationId);
 
-  // Update breadcrumb label when data is loaded
   React.useEffect(() => {
     if (reservation) {
       const label = `${formatDate(reservation.startDate)} - ${formatDate(reservation.endDate)}: ${reservation.equipmentName}`;
@@ -55,7 +54,6 @@ export function ReservationDetailsView({
     await updateStatus({ status: newStatus });
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -66,7 +64,6 @@ export function ReservationDetailsView({
     );
   }
 
-  // Error state
   if (error || !reservation) {
     const errorMessage =
       error?.message === "403"

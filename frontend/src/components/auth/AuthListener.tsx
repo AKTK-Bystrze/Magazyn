@@ -12,14 +12,12 @@ import { defaultLogger as logger } from "@/lib/utils/logger";
  * Must be placed at the root of the application (in Layout)
  */
 export const AuthListener: React.FC = () => {
-  // Use React state instead of global variable for redirect tracking
   const [isRedirectInProgress, setIsRedirectInProgress] = useState(false);
 
   useEffect(() => {
     const checkHashForToken = async () => {
       const hash = window.location.hash;
       if (hash && hash.includes("access_token")) {
-        // CRITICAL: Set redirect flag IMMEDIATELY to prevent auth event handler from racing
         setIsRedirectInProgress(true);
 
         const hashParams = new URLSearchParams(hash.substring(1));
@@ -28,7 +26,6 @@ export const AuthListener: React.FC = () => {
 
         if (access_token && refresh_token) {
           try {
-            // Clean hash FIRST to prevent re-processing
             window.history.replaceState(
               null,
               "",
@@ -57,7 +54,6 @@ export const AuthListener: React.FC = () => {
                 return;
               }
 
-              // Use RedirectManager for consistent redirect logic
               const urlParams = new URLSearchParams(window.location.search);
               const redirectParam = urlParams.get("redirect");
 
@@ -72,7 +68,6 @@ export const AuthListener: React.FC = () => {
               if (redirectTo) {
                 if (normalizePath(window.location.pathname) !== normalizePath(redirectTo)) {
                   logger.info(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
-                  // Cookies are automatically managed by @supabase/ssr
                   window.location.replace(redirectTo);
                 }
               }
@@ -83,7 +78,6 @@ export const AuthListener: React.FC = () => {
             window.location.href = ROUTES.PUBLIC.LOGIN;
           }
         } else {
-          // No valid tokens, reset flag
           setIsRedirectInProgress(false);
         }
       }
@@ -94,15 +88,10 @@ export const AuthListener: React.FC = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // @supabase/ssr automatically manages cookies - no manual sync needed
-
-      // Handle token refresh
       if (event === "TOKEN_REFRESHED" && session) {
         logger.info("🔄 Token refreshed (cookies auto-updated)");
       }
 
-      // Handle token refresh failures (network issues, expired refresh token)
-      // Note: Supabase may not always emit this event - verify in production
       if (event === "TOKEN_REFRESHED" && !session) {
         logger.error("❌ Token refresh failed, logging out");
         await supabase.auth.signOut();
@@ -111,7 +100,6 @@ export const AuthListener: React.FC = () => {
       }
 
       if (event === "SIGNED_IN" && session) {
-        // Skip if hash present (hash handler processes) or redirect in progress
         if (window.location.hash.includes("access_token")) {
           logger.info("⏸️ Skipping - hash handler will process");
           return;
@@ -126,7 +114,6 @@ export const AuthListener: React.FC = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const redirectParam = urlParams.get("redirect");
 
-        // Use RedirectManager for consistent redirect logic
         const redirectTo = RedirectManager.getRedirectForAuthState(
           session.user,
           sessionInfo,
@@ -141,7 +128,6 @@ export const AuthListener: React.FC = () => {
 
           if (currentPath !== targetPath) {
             logger.info(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
-            // Cookies automatically managed by @supabase/ssr
             window.location.replace(redirectTo);
           }
         }

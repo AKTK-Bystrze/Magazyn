@@ -34,7 +34,6 @@ type creditTestFixture struct {
 }
 
 func setupCreditTestFixture(t *testing.T) *creditTestFixture {
-	// Config loader will try .env first, then .env.test if .env not found
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	appState, err := config.LoadConfig()
 	require.NoError(t, err, "Failed to load config")
@@ -49,11 +48,9 @@ func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 	client, err := supa.NewClient(supabaseURL, supabaseKey, nil)
 	require.NoError(t, err)
 
-	// Setup repositories
 	creditRepo := supabase.NewCreditHistoryRepository(client, supabaseURL, supabaseKey)
 	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey, supabaseKey)
 
-	// Create service
 	svc := credit.NewCreditHistoryService(creditRepo, userRepo)
 
 	fixture := &creditTestFixture{
@@ -63,7 +60,6 @@ func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 		cleanup: []func(){},
 	}
 
-	// Get test users
 	fixture.setupTestUsers(appState)
 
 	return fixture
@@ -83,7 +79,6 @@ func (f *creditTestFixture) setupTestUsers(appState *config.AppState) {
 	require.NoError(f.t, json.Unmarshal(data, &profiles))
 	require.True(f.t, len(profiles) >= 2, "Need at least 2 test users")
 
-	// First user is regular user, find admin
 	f.testUserID = profiles[0].ID
 	for _, p := range profiles {
 		if p.Role == "admin" || p.Role == "superadmin" {
@@ -133,19 +128,16 @@ func TestGetCreditHistory_OwnHistory_ReturnsPaginated(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create some credit history entries for test user
 	fixture.createTestCreditEntry(fixture.testUserID, 100, "work_credit")
 	fixture.createTestCreditEntry(fixture.testUserID, -50, "reservation_charge")
 	fixture.createTestCreditEntry(fixture.testUserID, 75, "admin_adjustment")
 
-	// Act: Fetch own history (page 1, 10 per page)
 	query := types.GetCreditHistoryQuery{
 		Page:    1,
 		PerPage: 10,
 	}
 	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.GreaterOrEqual(t, len(resp.CreditHistory), 3, "Should have at least 3 test entries")
@@ -164,10 +156,8 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create credit history for test user
 	fixture.createTestCreditEntry(fixture.testUserID, 200, "admin_adjustment")
 
-	// Act: Admin fetches other user's history
 	targetUserID := fixture.testUserID
 	query := types.GetCreditHistoryQuery{
 		UserID:  &targetUserID,
@@ -176,11 +166,9 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	}
 	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.adminID)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 
-	// Verify at least one entry matches our test data
 	found := false
 	for _, entry := range resp.CreditHistory {
 		if entry.Reason == "admin_adjustment" && entry.Amount == 200 {
@@ -190,8 +178,6 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	}
 
 	if !found {
-		// This might indicate RLS (Row Level Security) is blocking admin access to other users' history
-		// This is actually a valuable finding from integration testing
 		if len(resp.CreditHistory) == 0 {
 			t.Skip("⚠️  Admin cannot view other user's credit history - RLS policy may need adjustment for admin role")
 		}
@@ -208,7 +194,6 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create multiple entries (at least 15)
 	for i := 0; i < 15; i++ {
 		fixture.createTestCreditEntry(
 			fixture.testUserID,
@@ -217,7 +202,6 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 		)
 	}
 
-	// Act: Test different page sizes
 	testCases := []struct {
 		perPage  int
 		expected int
@@ -251,14 +235,12 @@ func TestGetCreditHistory_InvalidPerPage_ReturnsError(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Act: Try invalid per_page value (15 is not in allowed list: 10, 25, 50, 100)
 	query := types.GetCreditHistoryQuery{
 		Page:    1,
 		PerPage: 15, // Invalid
 	}
 	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "Invalid per_page value")

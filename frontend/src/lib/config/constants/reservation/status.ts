@@ -7,10 +7,6 @@
  * @module lib/config/constants/reservation/status
  */
 
-// =============================================================================
-// STATUS ENUM (must match database)
-// =============================================================================
-
 /**
  * Reservation status values matching database enum
  * CRUCIAL: Must match backend enum exactly
@@ -24,10 +20,6 @@ export const RESERVATION_STATUS = {
 
 export type ReservationStatus = (typeof RESERVATION_STATUS)[keyof typeof RESERVATION_STATUS];
 
-// =============================================================================
-// STATUS LABELS (Polish)
-// =============================================================================
-
 /**
  * Human-readable labels for reservation statuses
  */
@@ -38,10 +30,6 @@ export const RESERVATION_STATUS_LABELS: Record<string, string> = {
   DENIED: "Anulowana",
   ALL: "Wszystkie statusy",
 };
-
-// =============================================================================
-// STATUS VARIANTS (for Badge component)
-// =============================================================================
 
 /**
  * Badge variants for each reservation status
@@ -56,10 +44,6 @@ export const RESERVATION_STATUS_VARIANTS: Record<
   RETURNED: "outline",
   DENIED: "destructive",
 };
-
-// =============================================================================
-// FILTER & SORT OPTIONS
-// =============================================================================
 
 /**
  * Status filter options for reservation lists (including 'ALL')
@@ -80,10 +64,6 @@ export const RESERVATION_SORT_OPTIONS = [
   { value: "date_asc", label: "Data rozpoczęcia (rosnąco)" },
   { value: "date_desc", label: "Data rozpoczęcia (malejąco)" },
 ] as const;
-
-// =============================================================================
-// DEFAULTS
-// =============================================================================
 
 export const DEFAULT_STATUS_FILTER = "ALL";
 export const DEFAULT_SORT_OPTION = "created_desc";

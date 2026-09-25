@@ -36,7 +36,6 @@ export function normalizePath(path: string): string {
  */
 export function isSafeRedirect(url: string, origin: string): boolean {
   try {
-    // Parse the URL - if relative, it will be resolved against origin
     const parsed = new URL(url, origin);
 
     if (parsed.origin !== origin) {
@@ -56,7 +55,6 @@ export function isSafeRedirect(url: string, origin: string): boolean {
   }
 }
 
-/// Checks if a path is in the whitelist of allowed redirect targets
 function isAllowedPath(path: string): boolean {
   const allowedPaths = getAllRoutes();
   return allowedPaths.includes(path as AppRoute);

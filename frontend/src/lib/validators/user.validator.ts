@@ -2,10 +2,6 @@ import { z } from "zod";
 import { paginationResponseDTOSchema } from "./equipment.validator";
 import { USER_VALIDATION_PATTERNS } from "@/lib/config/constants";
 
-// =============================================================================
-// USER DTO VALIDATION SCHEMAS
-// =============================================================================
-
 /**
  * Zod schema for validating backend UserDTO responses
  * Provides runtime validation to catch API contract violations
@@ -31,10 +27,6 @@ export const userListResponseDTOSchema = z.object({
   users: z.array(userDTOSchema),
   pagination: paginationResponseDTOSchema,
 });
-
-// =============================================================================
-// USER COMMAND VALIDATION SCHEMAS (for API input)
-// =============================================================================
 
 /**
  * Zod schema for create user command validation
@@ -87,7 +79,6 @@ export const userListQuerySchema = z.object({
   per_page: z.coerce.number().int().positive().max(100).default(25),
 });
 
-// Type exports
 export type UserDTO = z.infer<typeof userDTOSchema>;
 export type UserListResponseDTO = z.infer<typeof userListResponseDTOSchema>;
 export type CreateUserCommandInput = z.infer<typeof createUserCommandSchema>;

@@ -42,7 +42,6 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
   const [searchValue, setSearchValue] = React.useState(filters.search ?? "");
   const searchInputId = React.useId();
 
-  // Debounced search update
   React.useEffect(() => {
     const timer = setTimeout(() => {
       if (searchValue !== filters.search) {
@@ -53,13 +52,11 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
     return () => clearTimeout(timer);
   }, [searchValue, filters.search, onFilterChange]);
 
-  // Handle search input change
   const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
     setSearchValue(value);
   }, []);
 
-  // Handle role filter change
   const handleRoleChange = React.useCallback(
     (value: string) => {
       onFilterChange("role", value as UserFilterState["role"]);
@@ -67,13 +64,11 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
     [onFilterChange]
   );
 
-  // Handle reset
   const handleReset = React.useCallback(() => {
     setSearchValue("");
     onReset?.();
   }, [onReset]);
 
-  // Check if filters are active
   const hasActiveFilters =
     filters.role !== DEFAULT_ROLE_FILTER || (filters.search && filters.search.length > 0);
 

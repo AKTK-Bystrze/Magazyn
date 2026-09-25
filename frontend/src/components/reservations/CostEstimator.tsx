@@ -32,7 +32,6 @@ export function CostEstimator({
     }
     const breakdown = calculateCost(items, startDate, endDate, currentCreditBalance);
 
-    // For free reservations, override costs to 0
     if (isFreeReservation && breakdown) {
       return {
         ...breakdown,

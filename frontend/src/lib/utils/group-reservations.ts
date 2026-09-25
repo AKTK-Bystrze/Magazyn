@@ -11,7 +11,6 @@ import { MIXED_STATUS } from "@/lib/config/constants";
 export function groupReservationsByDateRange(
   reservations: ReservationListItem[]
 ): GroupedReservation[] {
-  // Create a map to group reservations
   const groupMap = new Map<string, ReservationListItem[]>();
 
   for (const reservation of reservations) {
@@ -24,18 +23,14 @@ export function groupReservationsByDateRange(
     groupMap.get(groupKey)!.push(reservation);
   }
 
-  // Convert map to array of grouped reservations
   const groups: GroupedReservation[] = [];
 
   for (const [groupKey, items] of groupMap.entries()) {
-    // Calculate total credit cost
     const totalCreditCost = items.reduce((sum, item) => sum + item.creditCost, 0);
 
-    // Determine aggregate status
     const statuses = new Set(items.map((item) => item.status));
     const status = statuses.size === 1 ? items[0].status : MIXED_STATUS;
 
-    // Find earliest createdAt
     const createdAt = items.map((item) => item.createdAt).sort()[0];
 
     groups.push({
@@ -51,6 +46,5 @@ export function groupReservationsByDateRange(
     });
   }
 
-  // Sort by createdAt descending (most recent first)
   return groups.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

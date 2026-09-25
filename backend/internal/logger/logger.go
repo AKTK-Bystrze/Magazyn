@@ -77,23 +77,19 @@ func getUsernameFromContext(ctx context.Context) string {
 		return "[UNAUTHENTICATED]"
 	}
 
-	// Try to get user profile from context (set by middleware)
 	profile := ctx.Value(appcontext.UserProfileContextKey)
 	if profile != nil {
-		// Type assert to PublicProfilesSelect
 		userProfile, ok := profile.(*model.PublicProfilesSelect)
 		if ok && userProfile.Username != "" {
 			return userProfile.Username
 		}
 	}
 
-	// Fallback: check if there's a user in context at all
 	user := ctx.Value(appcontext.UserContextKey)
 	if user == nil {
 		return "[UNAUTHENTICATED]"
 	}
 
-	// If we have a user but no profile, return a generic authenticated marker
 	return "[AUTHENTICATED]"
 }
 

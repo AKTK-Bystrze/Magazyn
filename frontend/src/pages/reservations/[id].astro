@@ -14,14 +14,12 @@ if (!user || !sessionInfo) {
   );
 }
 
-// Extract reservation ID from URL params
 const { id } = Astro.params;
 
 if (!id) {
   return Astro.redirect(ROUTES.PROTECTED.RESERVATIONS);
 }
 
-// Check if user is admin
 const isAdmin = user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.SUPER_ADMIN;
 ---
 

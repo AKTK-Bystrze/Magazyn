@@ -12,8 +12,6 @@
  * @module lib/config/constants.ts
  */
 
-// Re-export everything from the new structure for backward compatibility
 export * from "./constants/index";
 
-// Also re-export validation patterns that were in the old structure
 export { VALIDATION_PATTERNS as USER_VALIDATION_PATTERNS } from "./constants/validation";

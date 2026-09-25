@@ -1,9 +1,5 @@
 import { z } from "zod";
 
-// ============================================================================
-// Equipment Command Schemas
-// ============================================================================
-
 /**
  * Schema for creating new equipment
  * Validates all required fields and constraints
@@ -35,10 +31,6 @@ export const updateEquipmentSchema = z
   });
 
 export type UpdateEquipmentCommand = z.infer<typeof updateEquipmentSchema>;
-
-// ============================================================================
-// Query Parameter Schemas
-// ============================================================================
 
 /**
  * Schema for equipment list query parameters
@@ -88,10 +80,6 @@ export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
  * Schema for UUID path parameter validation
  */
 export const uuidParamSchema = z.string().uuid("ID must be a valid UUID");
-
-// ============================================================================
-// Response Type Definitions
-// ============================================================================
 
 export interface EquipmentDTO {
   id: string;

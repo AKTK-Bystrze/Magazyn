@@ -9,10 +9,6 @@ import type {
 } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
-// =============================================================================
-// REQUEST TRANSFORMERS (Frontend → Backend: camelCase → snake_case)
-// =============================================================================
-
 /**
  * Transforms frontend CreateReservationsCommand to backend format
  * Converts camelCase to snake_case for API submission
@@ -67,10 +63,6 @@ export function transformUpdateReservationCommand(command: UpdateReservationComm
 
   return result;
 }
-
-// =============================================================================
-// RESPONSE TRANSFORMERS (Backend → Frontend: snake_case → camelCase)
-// =============================================================================
 
 /**
  * Backend reservation DTO structure (snake_case)

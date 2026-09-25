@@ -48,8 +48,6 @@ export function GroupedReservationCard({
   const canBulkModify = group.status === RESERVATION_STATUS.PENDING;
   const canBulkReturn =
     group.status === RESERVATION_STATUS.PENDING || group.status === RESERVATION_STATUS.RENTED;
-  // Regular users: actions only in "My Reservations"
-  // Admins: actions in both "My Reservations" and "All Reservations"
   const showActions = mode === "admin" || scope === "my";
   const isOwn = currentUserId ? group.userId === currentUserId : false;
 

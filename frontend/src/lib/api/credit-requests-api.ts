@@ -17,7 +17,10 @@ import type {
 } from "@/types";
 
 export const creditRequestsApi = {
-  getRequests: async (params: { page?: number; perPage?: number }): Promise<CreditRequestListResponse> => {
+  getRequests: async (params: {
+    page?: number;
+    perPage?: number;
+  }): Promise<CreditRequestListResponse> => {
     const { data } = await api.get<unknown>("/api/credits/requests", {
       page: params.page,
       per_page: params.perPage,
@@ -31,7 +34,10 @@ export const creditRequestsApi = {
   },
 
   updateRequest: async (id: string, cmd: UpdateCreditRequestCommand): Promise<CreditRequest> => {
-    const { data } = await api.put<unknown>(`/api/credits/requests/${id}`, transformUpdateCommand(cmd));
+    const { data } = await api.put<unknown>(
+      `/api/credits/requests/${id}`,
+      transformUpdateCommand(cmd)
+    );
     return transformCreditRequest(data as never);
   },
 

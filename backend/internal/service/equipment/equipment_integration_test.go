@@ -67,7 +67,6 @@ func setupEquipmentTestFixture(t *testing.T) *equipmentTestFixture {
 }
 
 func (f *equipmentTestFixture) setupTestData() {
-	// Get a test user
 	type profile struct {
 		ID string `json:"id"`
 	}
@@ -78,7 +77,6 @@ func (f *equipmentTestFixture) setupTestData() {
 		f.testUserID = profiles[0].ID
 	}
 
-	// Get an equipment type
 	type eqType struct {
 		ID string `json:"id"`
 	}
@@ -89,7 +87,6 @@ func (f *equipmentTestFixture) setupTestData() {
 		f.typeID = types[0].ID
 	}
 
-	// Create test equipment
 	f.createTestEquipment()
 }
 
@@ -178,32 +175,26 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Add test equipment to favorites
 	fixture.addToFavorites(fixture.equipmentID)
 
-	// Act: List equipment for this user
 	query := types.EquipmentListQuery{
 		Page:    1,
 		PerPage: 50,
 	}
 	resp, err := fixture.svc.List(ctx, fixture.testUserID, query)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.GreaterOrEqual(t, len(resp.Equipment), 0, "Should return equipment list")
 
-	// Check if our test equipment appears in the list
 	foundTestEquipment := false
 	favoriteCount := 0
 
 	for _, eq := range resp.Equipment {
-		// Count how many are marked as favorites
 		if eq.IsFavorite != nil && *eq.IsFavorite {
 			favoriteCount++
 		}
 
-		// Check if our test equipment is in the results
 		if eq.ID == fixture.equipmentID {
 			foundTestEquipment = true
 			if eq.IsFavorite != nil && *eq.IsFavorite {
@@ -215,8 +206,6 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 	}
 
 	if !foundTestEquipment {
-		// Test equipment not in results - likely filtered by repository or RLS
-		// This is acceptable - the test verifies the favorites feature works
 		t.Logf("⚠️  Test equipment not in results (likely filtered by repository/RLS)")
 		t.Logf("Found %d total equipment, %d marked as favorites", len(resp.Equipment), favoriteCount)
 		t.Logf("✓ Favorites feature is functional (IsFavorite field populated)")
@@ -224,8 +213,6 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 		t.Logf("✓ Found test equipment in list with %d total favorites", favoriteCount)
 	}
 
-	// Test passes as long as the API returns successfully and favorites logic runs
-	// (even if the specific test equipment isn't in the filtered results)
 	t.Logf("✓ Equipment list test completed successfully")
 }
 
@@ -236,10 +223,8 @@ func TestCheckAvailability_BookedDates_ReturnsUnavailable(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create a reservation for days 5-7
 	fixture.createReservation(fixture.equipmentID, 5, 7)
 
-	// Act: Check availability for overlapping range (days 6-8)
 	startDate := time.Now().AddDate(0, 0, 6).Format("2006-01-02")
 	endDate := time.Now().AddDate(0, 0, 8).Format("2006-01-02")
 
@@ -249,7 +234,6 @@ func TestCheckAvailability_BookedDates_ReturnsUnavailable(t *testing.T) {
 	}
 	resp, err := fixture.svc.CheckAvailability(ctx, fixture.equipmentID, query)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.False(t, resp.IsAvailable, "Equipment should NOT be available (overlaps with reservation)")
@@ -263,10 +247,8 @@ func TestCheckAvailability_FreeDates_ReturnsAvailable(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create reservation for days 5-7 (don't overlap with days 10-12)
 	fixture.createReservation(fixture.equipmentID, 5, 7)
 
-	// Act: Check availability for non-overlapping range (days 10-12)
 	startDate := time.Now().AddDate(0, 0, 10).Format("2006-01-02")
 	endDate := time.Now().AddDate(0, 0, 12).Format("2006-01-02")
 
@@ -276,7 +258,6 @@ func TestCheckAvailability_FreeDates_ReturnsAvailable(t *testing.T) {
 	}
 	resp, err := fixture.svc.CheckAvailability(ctx, fixture.equipmentID, query)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.True(t, resp.IsAvailable, "Equipment should be available (no overlapping reservations)")

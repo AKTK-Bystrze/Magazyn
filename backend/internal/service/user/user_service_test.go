@@ -170,17 +170,13 @@ func TestCreateUser_Success(t *testing.T) {
 		IsEnabled:     &isEnabled, // Default
 	}
 
-	// 1. Check Email - expect NotFound (which means we can proceed)
 	mockRepo.On("GetByEmail", ctx, email).Return(nil, types.NewNotFoundError("User", email))
 
-	// 2. Check Username via List - expect empty list or list without our username
 	mockRepo.On("List", ctx, 1, 1, "", username).Return([]types.PublicProfilesSelect{}, int64(0), nil)
 
-	// 3. Expect AuthRepository.CreateUser call
 	mockAuthRepo.On("CreateUser", ctx, email, mock.AnythingOfType("string")).
 		Return(&types.User{ID: "auth-id-123", Email: email}, nil)
 
-	// 4. Expect repo.Create to insert the profile directly (no DB trigger)
 	mockRepo.On("Create", ctx, mock.AnythingOfType("types.PublicProfilesInsert")).
 		Return(&types.PublicProfilesSelect{
 			ID:            "auth-id-123",
@@ -215,13 +211,10 @@ func TestCreateUser_AuthFailure(t *testing.T) {
 		Role:     auth.RoleUser,
 	}
 
-	// 1. Check Email - not found
 	mockRepo.On("GetByEmail", ctx, req.Email).Return(nil, types.NewNotFoundError("User", req.Email))
 
-	// 2. Check Username - not found
 	mockRepo.On("List", ctx, 1, 1, "", req.Username).Return([]types.PublicProfilesSelect{}, int64(0), nil)
 
-	// 3. Auth Create - Fail
 	expectedErr := assert.AnError
 	mockAuthRepo.On("CreateUser", ctx, email, mock.AnythingOfType("string")).
 		Return(nil, expectedErr)
@@ -249,7 +242,6 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 		Role:     auth.RoleUser,
 	}
 
-	// 1. Check Email - found existing user
 	mockRepo.On("GetByEmail", ctx, email).Return(&types.PublicProfilesSelect{ID: "1", Email: email}, nil)
 
 	resp, err := service.CreateUser(ctx, req)
@@ -275,10 +267,8 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 		Role:     auth.RoleUser,
 	}
 
-	// 1. Check Email - not found
 	mockRepo.On("GetByEmail", ctx, req.Email).Return(nil, types.NewNotFoundError("User", req.Email))
 
-	// 2. Check Username - found existing
 	mockRepo.On("List", ctx, 1, 1, "", username).Return([]types.PublicProfilesSelect{
 		{ID: "1", Username: username},
 	}, int64(1), nil)
@@ -306,7 +296,6 @@ func TestUpdateUser_Success(t *testing.T) {
 		Role: &role,
 	}
 
-	// We expect Check for existence first
 	mockRepo.On("GetByID", ctx, id).Return(&types.PublicProfilesSelect{ID: id}, nil)
 
 	mockRepo.On("Update", ctx, id, mock.AnythingOfType("types.PublicProfilesUpdate")).

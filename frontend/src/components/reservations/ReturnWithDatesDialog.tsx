@@ -62,7 +62,6 @@ export function ReturnWithDatesDialog({
   });
   const [apiError, setApiError] = React.useState<string | null>(null);
 
-  // Reset state when dialog opens
   React.useEffect(() => {
     if (open) {
       setModifyDates(false);
@@ -73,11 +72,9 @@ export function ReturnWithDatesDialog({
     }
   }, [open, reservation]);
 
-  // Calculations for credit adjustment
   const originalDays = calculateDays(reservation.startDate, reservation.endDate);
   const newDays = startDate && endDate ? calculateDays(startDate, endDate) : originalDays;
 
-  // Handle bulk or single cost
   const totalCost = reservations?.length
     ? reservations.reduce((sum, r) => sum + r.creditCost, 0)
     : reservation.creditCost;
@@ -91,10 +88,8 @@ export function ReturnWithDatesDialog({
     currentUserBalance
   );
 
-  // Check if dates have actually changed
   const datesChanged = startDate !== reservation.startDate || endDate !== reservation.endDate;
 
-  // Validate dates
   const validate = (): boolean => {
     if (!modifyDates) return true;
 
@@ -113,7 +108,6 @@ export function ReturnWithDatesDialog({
       errors.endDate = UI.END_DATE_MUST_BE_AFTER_START;
     }
 
-    // Check sufficient credits if extending
     if (adjustmentInfo.newBalance < 0) {
       errors.endDate = UI.INSUFFICIENT_CREDITS_WARNING.replace(
         "{amount}",
@@ -150,7 +144,6 @@ export function ReturnWithDatesDialog({
     }
   };
 
-  // Handle errors clearing
   React.useEffect(() => {
     if (modifyDates && startDate && endDate) {
       setValidationErrors({ startDate: null, endDate: null });

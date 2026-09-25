@@ -67,7 +67,6 @@ export const GET: APIRoute = async ({ locals, request }) => {
     const url = new URL(request.url);
     const backendUrl = new URL(`${BACKEND_URL}/reservations`);
 
-    // Forward all query parameters
     backendUrl.search = url.search;
 
     locals.logger?.info(`[Reservations API] GET Request URL:`, { data: backendUrl.toString() });
@@ -119,7 +118,6 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
     const body = await request.json();
     const url = new URL(request.url);
 
-    // Check if this is a bulk update
     const isBulk = url.pathname.endsWith("/bulk");
     const backendPath = isBulk ? "/reservations/bulk" : "/reservations";
 

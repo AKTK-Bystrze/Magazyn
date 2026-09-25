@@ -54,7 +54,6 @@ export function StatusChangeDialog({
     onOpenChange(false);
   };
 
-  // Get dialog content based on mode
   const getDialogContent = () => {
     switch (mode) {
       case "cancel":

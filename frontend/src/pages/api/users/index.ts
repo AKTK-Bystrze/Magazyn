@@ -22,7 +22,6 @@ export const GET: APIRoute = async ({ locals, request }) => {
     const url = new URL(request.url);
     const backendUrl = new URL(`${BACKEND_URL}/users`);
 
-    // Forward all query parameters
     backendUrl.search = url.search;
 
     locals.logger?.info(`[Users API] GET Request URL:`, { data: backendUrl.toString() });

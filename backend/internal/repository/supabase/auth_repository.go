@@ -41,7 +41,6 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 		},
 	})
 	if err != nil {
-		// Forward the Supabase error message directly to the client
 		return types.NewValidationError(err.Error(), map[string]string{"email": email})
 	}
 	return nil
@@ -49,28 +48,21 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 
 // CreateUser creates a new user in Supabase Auth using the service key (Admin only)
 func (r *authRepository) CreateUser(ctx context.Context, email, password string) (*types.User, error) {
-	// Create user in Supabase Auth using the service key (Admin only)
-	// We verify the service key is present
 	if r.serviceKey == "" {
 		return nil, fmt.Errorf("service key is empty")
 	}
 
-	// Create a new client with the service key
 	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create admin client: %w", err)
 	}
 
-	// Admin requests require the Service Key to be sent as the Bearer token.
-	// supabase-go/gotrue-go might not set this automatically from the 'key' arg in NewClient
-	// (which sets the 'apikey' header). We explicitly set the token here.
 	user, err := adminClient.Auth.WithToken(r.serviceKey).AdminCreateUser(gotruetypes.AdminCreateUserRequest{
 		Email:        email,
 		Password:     &password,
 		EmailConfirm: true,
 	})
 	if err != nil {
-		// Forward the Supabase error message directly to the client
 		return nil, types.NewValidationError(err.Error(), map[string]string{"email": email})
 	}
 
@@ -120,8 +112,6 @@ func (r *authRepository) GetUser(ctx context.Context, token string) (*types.User
 
 // GetProfile retrieves the user's profile using their token (RLS)
 func (r *authRepository) GetProfile(ctx context.Context, userID string, token string) (*types.PublicProfilesSelect, error) {
-	// Create a new client with the user's token to enforce RLS
-	// This mirrors the logic previously in service/adapters.go
 	clientWithAuth, err := supabase.NewClient(
 		r.supabaseURL,
 		r.supabaseKey,

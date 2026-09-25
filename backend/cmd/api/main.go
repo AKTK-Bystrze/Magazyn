@@ -57,7 +57,6 @@ func main() {
 
 	logger.Infof(ctx, "🌐 App URL for Magic Links: %s", appState.Config.AppURL)
 
-	// Initialize Repositories
 	authRepo := supabaserepo.NewAuthRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey, appState.Config.SupabaseServiceKey, appState.Config.AppURL)
 	equipmentRepo := supabaserepo.NewEquipmentRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	equipmentTypeRepo := supabaserepo.NewEquipmentTypeRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
@@ -68,7 +67,6 @@ func main() {
 	creditRepo := supabaserepo.NewCreditHistoryRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 	creditRequestRepo := supabaserepo.NewCreditRequestRepository(appState.SupabaseClient, appState.Config.SupabaseURL, appState.Config.SupabaseKey)
 
-	// Initialize Services
 	authService := authservice.NewAuthService(authRepo)
 	equipmentService := equipmentservice.NewEquipmentService(equipmentRepo, equipmentTypeRepo, userRepo, appState.Config.SupabaseURL)
 	userService := userservice.NewUserService(userRepo, authRepo, creditRepo)
@@ -80,7 +78,6 @@ func main() {
 	emailService := email.NewNoopEmailService()
 	reservationService := reservationservice.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
 
-	// Initialize Handlers
 	authHandler := authhandler.NewAuthHandler(authService)
 	equipmentHandler := equipmenthandler.NewEquipmentHandler(equipmentService)
 	userHandler := userhandler.NewUserHandler(userService)
@@ -90,7 +87,6 @@ func main() {
 	creditHandler := credithandler.NewCreditHistoryHandler(creditService)
 	creditRequestHandler := credithandler.NewCreditRequestHandler(creditRequestService)
 
-	// Initialize Middleware
 	authMiddleware := authmiddleware.NewAuthMiddleware(authRepo)
 
 	mux := http.NewServeMux()
@@ -107,7 +103,6 @@ func main() {
 	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(authHandler.HandleLogout)))
 	mux.Handle("GET /auth/session", authMiddleware(http.HandlerFunc(authHandler.HandleGetSession)))
 
-	// User Routes
 	mux.Handle("GET /users/me", authMiddleware(http.HandlerFunc(userHandler.HandleGetProfile)))
 	mux.Handle("GET /users/public", authMiddleware(http.HandlerFunc(userHandler.HandleListPublicUsers)))
 	mux.Handle("GET /users", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(userHandler.HandleListUsers))))
@@ -127,7 +122,6 @@ func main() {
 	mux.Handle("GET /equipment/{id}/availability", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCheckAvailability)))
 	mux.Handle("POST /equipment/{id}/maintenance-logs", authMiddleware(http.HandlerFunc(equipmentHandler.HandleCreateMaintenanceLog)))
 
-	// Reservation Routes
 	mux.Handle("GET /reservations", authMiddleware(http.HandlerFunc(reservationHandler.HandleList)))
 	mux.Handle("POST /reservations", authMiddleware(http.HandlerFunc(reservationHandler.HandleCreate)))
 	mux.Handle("GET /reservations/dashboard", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(reservationHandler.HandleDashboardStats))))
@@ -135,24 +129,19 @@ func main() {
 	mux.Handle("GET /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleGetByID)))
 	mux.Handle("PATCH /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleUpdate)))
 
-	// Calendar Routes
 	mux.Handle("GET /calendar/availability", authMiddleware(http.HandlerFunc(calendarHandler.HandleGetAvailability)))
 
-	// Credit History Routes
 	mux.Handle("GET /credits/history", authMiddleware(http.HandlerFunc(creditHandler.HandleGetCreditHistory)))
 
-	// Credit Request Routes
 	mux.Handle("GET /credits/requests", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleListRequests)))
 	mux.Handle("POST /credits/requests", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleCreateRequest)))
 	mux.Handle("PUT /credits/requests/{id}", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleUpdateRequest)))
 	mux.Handle("PATCH /credits/requests/{id}/status", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleReviewRequest)))
 	mux.Handle("GET /users/credits", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleGetLeaderboard)))
 
-	// Analytics Routes (Admin only)
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))
 	mux.Handle("GET /analytics/user-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetUserStats))))
 
-	// Initialize metrics server
 	metricsServer := metrics.StartMetricsServer(ctx, reservationRepo, appState.Config.SupabaseServiceKey)
 
 	port := ":" + appState.Config.Port
@@ -177,7 +166,6 @@ func main() {
 		}
 	}()
 
-	// Wait for shutdown signal
 	<-ctx.Done()
 	logger.Info(context.Background(), "Shutting down servers gracefully...")
 

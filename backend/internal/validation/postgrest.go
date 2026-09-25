@@ -55,7 +55,6 @@ func ValidateUUID(id string) error {
 		)
 	}
 
-	// Convert to lowercase for case-insensitive matching
 	lowerID := strings.ToLower(id)
 	if !uuidRegex.MatchString(lowerID) {
 		return types.NewValidationError(

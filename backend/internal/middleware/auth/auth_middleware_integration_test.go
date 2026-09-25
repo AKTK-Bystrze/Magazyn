@@ -28,7 +28,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestAuthMiddleware_Integration(t *testing.T) {
-	// Create a unique user for this test
 	email := fmt.Sprintf("test_mid_%d@example.com", time.Now().Unix())
 	password := "testMid123!"
 
@@ -39,16 +38,13 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		return
 	}
 	defer func() {
-		// Clean up
 		testutils.DeleteTestUser(user.ID.String())
 	}()
 
-	// Login to get a valid token
 	tokenResp, err := testutils.TestClient.Auth.SignInWithEmailPassword(email, password)
 	require.NoError(t, err, "Failed to sign in test user")
 	validToken := tokenResp.AccessToken
 
-	// Wait for profile trigger
 	time.Sleep(1 * time.Second)
 
 	t.Run("valid token populates context", func(t *testing.T) {
@@ -61,13 +57,10 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
-		// Get config from environment
 		url := os.Getenv("PUBLIC_SUPABASE_URL")
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 		appURL := os.Getenv("PUBLIC_APP_URL")
-		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
@@ -94,13 +87,10 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 			t.Error("Next handler should not be called")
 		})
 
-		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
-		// Get config from environment
 		url := os.Getenv("PUBLIC_SUPABASE_URL")
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 		appURL := os.Getenv("PUBLIC_APP_URL")
-		// dbAdapter := service.NewSupabaseDBAdapter(testutils.TestClient, url, key)
 		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 		middleware := NewAuthMiddleware(repo)(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)

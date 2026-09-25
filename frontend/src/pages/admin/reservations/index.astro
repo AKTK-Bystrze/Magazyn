@@ -7,14 +7,12 @@ import { ROUTES } from "@/lib/config/routes";
 
 const { user, sessionInfo } = Astro.locals;
 
-// Redirect if not authenticated
 if (!user || !sessionInfo) {
   return Astro.redirect(
     `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.ADMIN_RESERVATIONS)}`
   );
 }
 
-// Check for admin role
 const isAdmin = sessionInfo.role === "admin" || sessionInfo.role === "super_admin";
 if (!isAdmin) {
   return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);

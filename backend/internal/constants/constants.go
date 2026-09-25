@@ -73,8 +73,6 @@ var AllowedPerPageValues = []int{10, 25, 50, 100}
 
 // Authentication-related timing and security constants.
 const (
-	// SessionExpiryDuration defines how long a session is valid (per PRD requirement 3.1.4).
-	// Sessions expire after 2 hours and users must re-authenticate.
 	SessionExpiryDuration = 2 * time.Hour
 )
 

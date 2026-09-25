@@ -26,24 +26,17 @@ func TestMain(m *testing.M) {
 }
 
 func TestLogin_Integration(t *testing.T) {
-	// authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
-	// Get config from environment
 	url := os.Getenv("PUBLIC_SUPABASE_URL")
 	key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	appURL := os.Getenv("PUBLIC_APP_URL")
-	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
 	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 	service := auth.NewAuthService(repo)
 
 	t.Run("sends magic link to valid email", func(t *testing.T) {
-		// We can't verify email delivery without an email service mock or checking logs/mailserver
-		// But we can verify the API call succeeds
 		_, err := service.Login(context.Background(), "test_integration@example.com")
 		if err != nil {
 			if assert.Error(t, err) { // It returns error, let's check it
-				// If it's a 400 from Supabase, it might be "Signups not allowed" or "User already registered" without magic link enabled
-				// We'll skip in this case to allow CI to pass if environment is restricted
 				t.Logf("Skipping TestLogin_Integration due to API error (likely env config): %v", err)
 				t.Skip("Skipping test due to Supabase 400 error (configuration/permissions)")
 			}
@@ -54,17 +47,13 @@ func TestLogin_Integration(t *testing.T) {
 }
 
 func TestGetSession_Integration(t *testing.T) {
-	// authAdapter := NewSupabaseAuthAdapter(testutils.TestClient)
-	// Get config from environment
 	url := os.Getenv("PUBLIC_SUPABASE_URL")
 	key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	appURL := os.Getenv("PUBLIC_APP_URL")
-	// dbAdapter := NewSupabaseDBAdapter(testutils.TestClient, url, key)
 	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 	service := auth.NewAuthService(repo)
 
-	// Create a unique user for this test
 	email := fmt.Sprintf("test_session_%d@example.com", time.Now().Unix())
 	password := "testRequest123!"
 
@@ -75,13 +64,10 @@ func TestGetSession_Integration(t *testing.T) {
 		return
 	}
 	defer func() {
-		// Clean up
 		testutils.DeleteTestUser(user.ID.String())
 	}()
 
 	t.Run("returns session for existing user", func(t *testing.T) {
-		// Profile creation happens via trigger on auth.users insert
-		// We might need to wait a moment for the trigger to fire
 		time.Sleep(1 * time.Second)
 
 		session, err := service.GetSession(context.Background(), user.ID.String(), "test-token")
@@ -90,8 +76,6 @@ func TestGetSession_Integration(t *testing.T) {
 		assert.NotNil(t, session)
 		assert.Equal(t, user.ID.String(), session.UserID)
 		assert.Equal(t, email, session.Email)
-		// Username is usually generated or empty initially depending on trigger logic
-		// Just verify we got a response
 	})
 
 	t.Run("returns error for non-existent user", func(t *testing.T) {

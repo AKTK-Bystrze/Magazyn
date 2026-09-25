@@ -1,4 +1,3 @@
-// This file should export the Supabase client for server-side usage
 import { createClient } from "@supabase/supabase-js";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
@@ -7,7 +6,6 @@ const supabaseAnonKey =
   import.meta.env.PUBLIC_SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // Warn but don't crash, might be build time
   logger.warn("Missing Supabase env vars in supabase.client.ts");
 }
 

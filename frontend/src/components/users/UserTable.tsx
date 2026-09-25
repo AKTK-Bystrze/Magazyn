@@ -102,7 +102,10 @@ export function UserTable({
   onToggleSelect,
   onToggleSelectAll,
 }: UserTableProps) {
-  const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   const requestSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";
@@ -152,25 +155,56 @@ export function UserTable({
                 />
               </TableHead>
             )}
-            <TableHead className="cursor-pointer" onClick={() => requestSort('username')}>Nazwa użytkownika {sortConfig?.key === 'username' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => requestSort('email')}>Email {sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="hidden lg:table-cell text-right cursor-pointer" onClick={() => requestSort('creditBalance')}>Godzinki {sortConfig?.key === 'creditBalance' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="cursor-pointer" onClick={() => requestSort('role')}>Rola {sortConfig?.key === 'role' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => requestSort('isEnabled')}>Status {sortConfig?.key === 'isEnabled' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
-            <TableHead className="hidden xl:table-cell cursor-pointer" onClick={() => requestSort('createdAt')}>Utworzono {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}</TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort("username")}>
+              Nazwa użytkownika{" "}
+              {sortConfig?.key === "username" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("email")}
+            >
+              Email{" "}
+              {sortConfig?.key === "email" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="hidden lg:table-cell text-right cursor-pointer"
+              onClick={() => requestSort("creditBalance")}
+            >
+              Godzinki{" "}
+              {sortConfig?.key === "creditBalance"
+                ? sortConfig.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
+            </TableHead>
+            <TableHead className="cursor-pointer" onClick={() => requestSort("role")}>
+              Rola {sortConfig?.key === "role" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="hidden md:table-cell cursor-pointer"
+              onClick={() => requestSort("isEnabled")}
+            >
+              Status{" "}
+              {sortConfig?.key === "isEnabled" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="hidden xl:table-cell cursor-pointer"
+              onClick={() => requestSort("createdAt")}
+            >
+              Utworzono{" "}
+              {sortConfig?.key === "createdAt" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
             {isSuperAdmin && <TableHead className="w-[70px]">Akcje</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            // Loading skeletons
             Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
               <SkeletonRow key={`skeleton-${index}`} />
             ))
           ) : sortedUsers.length === 0 ? (
             <EmptyState />
           ) : (
-            // User rows
             sortedUsers.map((user) => (
               <TableRow
                 key={user.id}

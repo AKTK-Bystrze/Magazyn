@@ -49,12 +49,10 @@ export function AdjustCreditsDialog({
   const [description, setDescription] = React.useState<string>("");
   const [error, setError] = React.useState<string | null>(null);
 
-  // Generate unique IDs for accessibility
   const amountId = React.useId();
   const reasonId = React.useId();
   const descriptionId = React.useId();
 
-  // Reset form when dialog opens
   React.useEffect(() => {
     if (isOpen) {
       setAmount(0);

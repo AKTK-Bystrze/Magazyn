@@ -34,7 +34,6 @@ func setupTestService() (*mocks.MockReservationRepository, *mocks.MockEquipmentR
 // ============================================================================
 
 func TestGetByID_OwnerCanView(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -50,10 +49,8 @@ func TestGetByID_OwnerCanView(t *testing.T) {
 
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
 
-	// Act
 	result, err := svc.GetByID(ctx, reservationID, userID, auth.RoleUser)
 
-	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, reservationID, result.ID)
@@ -61,7 +58,6 @@ func TestGetByID_OwnerCanView(t *testing.T) {
 }
 
 func TestGetByID_NonOwnerForbidden(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -78,10 +74,8 @@ func TestGetByID_NonOwnerForbidden(t *testing.T) {
 
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
 
-	// Act
 	result, err := svc.GetByID(ctx, reservationID, requestingUserID, auth.RoleUser)
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ForbiddenError{}, err)
@@ -89,7 +83,6 @@ func TestGetByID_NonOwnerForbidden(t *testing.T) {
 }
 
 func TestGetByID_AdminCanViewAny(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -106,10 +99,8 @@ func TestGetByID_AdminCanViewAny(t *testing.T) {
 
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
 
-	// Act
 	result, err := svc.GetByID(ctx, reservationID, adminID, auth.RoleAdmin)
 
-	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, reservationID, result.ID)
@@ -117,7 +108,6 @@ func TestGetByID_AdminCanViewAny(t *testing.T) {
 }
 
 func TestGetByID_SuperAdminCanViewAny(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -134,10 +124,8 @@ func TestGetByID_SuperAdminCanViewAny(t *testing.T) {
 
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
 
-	// Act
 	result, err := svc.GetByID(ctx, reservationID, superAdminID, auth.RoleSuperAdmin)
 
-	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, reservationID, result.ID)
@@ -149,7 +137,6 @@ func TestGetByID_SuperAdminCanViewAny(t *testing.T) {
 // ============================================================================
 
 func TestUpdate_UserCannotUpdateOthers(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -168,10 +155,8 @@ func TestUpdate_UserCannotUpdateOthers(t *testing.T) {
 
 	cmd := types.UpdateReservationCommand{}
 
-	// Act
 	result, err := svc.Update(ctx, reservationID, cmd, requestingUserID, auth.RoleUser)
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ForbiddenError{}, err)
@@ -180,7 +165,6 @@ func TestUpdate_UserCannotUpdateOthers(t *testing.T) {
 }
 
 func TestUpdate_UserCannotModifyNonPending(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -198,10 +182,8 @@ func TestUpdate_UserCannotModifyNonPending(t *testing.T) {
 
 	cmd := types.UpdateReservationCommand{}
 
-	// Act
 	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ForbiddenError{}, err)
@@ -210,7 +192,6 @@ func TestUpdate_UserCannotModifyNonPending(t *testing.T) {
 }
 
 func TestUpdate_UserCanOnlyCancelOrReturn(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -229,16 +210,13 @@ func TestUpdate_UserCanOnlyCancelOrReturn(t *testing.T) {
 
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
 
-	// Try to set status to RENTED (not allowed for users - only admin can rent out)
 	rentedStatus := constants.ReservationStatusRented
 	cmd := types.UpdateReservationCommand{
 		Status: &rentedStatus,
 	}
 
-	// Act
 	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ValidationError{}, err)
@@ -251,7 +229,6 @@ func TestUpdate_UserCanOnlyCancelOrReturn(t *testing.T) {
 // ============================================================================
 
 func TestList_Success(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -268,10 +245,8 @@ func TestList_Success(t *testing.T) {
 
 	mockRepo.On("GetReservations", ctx, query).Return(items, total, nil)
 
-	// Act
 	result, err := svc.List(ctx, query)
 
-	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Len(t, result.Reservations, 2)
@@ -283,7 +258,6 @@ func TestList_Success(t *testing.T) {
 }
 
 func TestList_PaginationCalculation(t *testing.T) {
-	// Arrange
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -297,10 +271,8 @@ func TestList_PaginationCalculation(t *testing.T) {
 
 	mockRepo.On("GetReservations", ctx, query).Return(items, total, nil)
 
-	// Act
 	result, err := svc.List(ctx, query)
 
-	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, 5, result.Pagination.TotalPages)
 	mockRepo.AssertExpectations(t)
@@ -311,7 +283,6 @@ func TestList_PaginationCalculation(t *testing.T) {
 // ============================================================================
 
 func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
-	// Arrange
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -327,10 +298,8 @@ func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
 
 	mockEquipRepo.On("GetByID", ctx, "nonexistent-eq").Return(nil, types.NewNotFoundError("Equipment", "nonexistent-eq"))
 
-	// Act
 	result, err := svc.Create(ctx, cmd, "user-123")
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ValidationError{}, err)
@@ -339,7 +308,6 @@ func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
 }
 
 func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
-	// Arrange
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -364,10 +332,8 @@ func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
 
 	mockEquipRepo.On("GetByID", ctx, "eq-archived").Return(equipment, nil)
 
-	// Act
 	result, err := svc.Create(ctx, cmd, "user-123")
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ValidationError{}, err)
@@ -376,7 +342,6 @@ func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
 }
 
 func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
-	// Arrange
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -401,10 +366,8 @@ func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
 
 	mockEquipRepo.On("GetByID", ctx, "eq-broken").Return(equipment, nil)
 
-	// Act
 	result, err := svc.Create(ctx, cmd, "user-123")
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ValidationError{}, err)
@@ -413,7 +376,6 @@ func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
 }
 
 func TestCreate_CostCalculation_SingleItem(t *testing.T) {
-	// Arrange
 	mockRepo, mockEquipRepo, mockUserRepo, mockEmailService, svc := setupTestService()
 	ctx := context.Background()
 
@@ -464,10 +426,8 @@ func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 		"balance": newBalance,
 	}).Return(nil)
 
-	// Act
 	result, err := svc.Create(ctx, cmd, "user-123")
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expectedCost, result.TotalCreditCost)
@@ -478,7 +438,6 @@ func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 }
 
 func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
-	// Arrange
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -520,10 +479,8 @@ func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
 		cmd.Reservations,
 	).Return(nil, int32(0), types.NewConflictError("Insufficient credits", nil))
 
-	// Act
 	result, err := svc.Create(ctx, cmd, "user-123")
 
-	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.IsType(t, &types.ConflictError{}, err)
@@ -532,7 +489,6 @@ func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
 }
 
 func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
-	// Arrange
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 
@@ -551,7 +507,6 @@ func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
 
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
 
-	// Admin returning equipment early
 	returnedStatus := constants.ReservationStatusReturned
 	newEndDate := "2025-01-01" // Returned after 1 day
 	cmd := types.UpdateReservationCommand{
@@ -561,7 +516,6 @@ func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
 
 	mockRepo.On("GetOverlappingReservations", ctx, "eq-1", "2025-01-01", "2025-01-01", &reservationID).Return([]types.PublicReservationsSelect{}, nil)
 
-	// Expect it to call ModifyReservationDatesWithCredits
 	mockRepo.On("ModifyReservationDatesWithCredits", ctx, reservationID, "admin-999", "2025-01-01", "2025-01-01").
 		Return(&types.ModifyDatesResponse{
 			ID:               reservationID,
@@ -572,7 +526,6 @@ func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
 			UpdatedAt:        "2025-01-01T12:00:00Z",
 		}, nil)
 
-	// Expect it to update status
 	updatedRes := &types.PublicReservationsSelect{
 		ID:          reservationID,
 		EquipmentID: "eq-1",
@@ -581,7 +534,6 @@ func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
 		EndDate:     "2025-01-01",
 	}
 
-	// We also need EquipmentRepo mock for the response calculation
 	name := "Test Equipment"
 	equipment := &types.PublicEquipmentSelect{
 		ID:     "eq-1",
@@ -596,14 +548,10 @@ func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
 	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
 	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
 
-	// We need to match exactly what is passed to UpdateReservation.
-	// We use mock.Anything for updateData to simplify.
 	mockRepo.On("UpdateReservation", ctx, reservationID, mock.Anything, "admin-999").Return(updatedRes, nil)
 
-	// Act
 	result, err := svc.Update(ctx, reservationID, cmd, "admin-999", auth.RoleAdmin)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, int32(20), result.CreditAdjustment)
@@ -650,12 +598,10 @@ func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
 		CreditCostPerDay: 10,
 	}
 
-	// Refund calculation
 	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
 	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
 	mockRepo.On("RefundCredits", ctx, reservationID, int32(30)).Return(nil)
 
-	// Fetching new balance
 	mockUserRepo.On("GetByID", mock.Anything, userID).Return(&types.PublicProfilesSelect{
 		ID:            userID,
 		CreditBalance: 150,

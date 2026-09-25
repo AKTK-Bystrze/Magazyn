@@ -8,10 +8,6 @@
 
 import { CREDIT_VALIDATION } from "../validation";
 
-// =============================================================================
-// USER VALIDATION
-// =============================================================================
-
 /**
  * Validation error messages for user forms
  */
@@ -23,7 +19,6 @@ export const USER_VALIDATION_MESSAGES = {
   CREDIT_BALANCE_INVALID: CREDIT_VALIDATION.BALANCE_INVALID,
   CREATE_FAILED: "Nie udało się utworzyć użytkownika",
   UPDATE_FAILED: "Nie udało się zaktualizować użytkownika",
-  // Login-specific messages
   LOGIN_EMAIL_REQUIRED: "E-mail jest wymagany",
   LOGIN_EMAIL_INVALID: "Wprowadź poprawny adres e-mail",
   LOGIN_SIGNUP_DISABLED:

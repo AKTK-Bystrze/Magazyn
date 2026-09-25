@@ -47,7 +47,6 @@ function ReservationListContainerInner({
     isFetchingNextPage,
   } = useReservations({ initialFilters });
 
-  // Dialog states
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
   const [modifyDialogOpen, setModifyDialogOpen] = React.useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = React.useState(false);
@@ -56,14 +55,11 @@ function ReservationListContainerInner({
   );
   const [batchReservations, setBatchReservations] = React.useState<ReservationListItem[]>([]);
 
-  // Feedback states
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  // View state
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
-  // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
@@ -92,19 +88,16 @@ function ReservationListContainerInner({
 
   const currentUserBalance = isOwner ? sessionUserBalance : (ownerProfile?.creditBalance ?? 0);
 
-  // Handle modify action
   const handleModify = React.useCallback((reservation: ReservationListItem) => {
     setSelectedReservation(reservation);
     setModifyDialogOpen(true);
   }, []);
 
-  // Handle return action
   const handleReturn = React.useCallback((reservation: ReservationListItem) => {
     setSelectedReservation(reservation);
     setReturnDialogOpen(true);
   }, []);
 
-  // Handle modify dates confirm
   const handleModifyDatesConfirm = React.useCallback(
     async (start: Date, end: Date) => {
       const targets =
@@ -127,7 +120,6 @@ function ReservationListContainerInner({
             `Daty rezerwacji dla "${targets[0].equipmentName}" zaktualizowane pomyślnie.`
           );
         } else {
-          // Bulk update
           const results = await Promise.allSettled(
             targets.map((target) => updateReservation(target.id, command))
           );
@@ -153,7 +145,6 @@ function ReservationListContainerInner({
     [selectedReservation, batchReservations, updateReservation]
   );
 
-  // Handle return confirm
   const handleReturnConfirm = React.useCallback(
     async (command: UpdateReservationCommand) => {
       const targets =
@@ -172,7 +163,6 @@ function ReservationListContainerInner({
           const hasDateChange = !!(command.startDate || command.endDate);
 
           if (hasDateChange) {
-            // Individual updates if dates change (no atomic RPC for both yet)
             const results = await Promise.allSettled(
               targets.map((target) => updateReservation(target.id, command))
             );
@@ -182,7 +172,6 @@ function ReservationListContainerInner({
               `${successful} elementów zaktualizowano i zwrócono. ${targets.length - successful} nie powiodło się.`
             );
           } else {
-            // Bulk return (Atomic RPC)
             const result = await bulkUpdateStatus({
               reservationIds: targets.map((t) => t.id),
               status: "RETURNED",
@@ -203,14 +192,12 @@ function ReservationListContainerInner({
     [selectedReservation, batchReservations, updateReservation, bulkUpdateStatus]
   );
 
-  // Handle cancel action
   const handleCancelClick = React.useCallback((reservation: ReservationListItem) => {
     setSelectedReservation(reservation);
     setBatchReservations([]); // Clear batch
     setCancelDialogOpen(true);
   }, []);
 
-  // Confirm cancel
   const handleCancelConfirm = React.useCallback(async () => {
     const targets =
       batchReservations.length > 0
@@ -223,13 +210,11 @@ function ReservationListContainerInner({
 
     try {
       if (targets.length === 1) {
-        // Single cancel
         await cancelReservation(targets[0].id);
         setSuccessMessage(
           `Rezerwacja "${targets[0].equipmentName}" została anulowana. Godzinki zostały zwrócone.`
         );
       } else {
-        // Bulk cancel (Atomic RPC)
         const result = await bulkUpdateStatus({
           reservationIds: targets.map((t) => t.id),
           status: "DENIED",
@@ -249,47 +234,37 @@ function ReservationListContainerInner({
     }
   }, [selectedReservation, batchReservations, cancelReservation, bulkUpdateStatus]);
 
-  // Handle cancel dialog close
   const handleCancelDialogClose = React.useCallback(() => {
     setCancelDialogOpen(false);
     setSelectedReservation(null);
     setBatchReservations([]);
   }, []);
 
-  // Handle bulk cancel
   const handleCancelAll = React.useCallback((reservations: ReservationListItem[]) => {
     setBatchReservations(reservations);
     setSelectedReservation(null); // Clear single
     setCancelDialogOpen(true);
   }, []);
 
-  // Handle bulk modify dates
   const handleModifyDatesAll = React.useCallback((reservations: ReservationListItem[]) => {
     setBatchReservations(reservations);
     setSelectedReservation(null);
     setModifyDialogOpen(true);
   }, []);
 
-  // Handle bulk return
   const handleReturnAll = React.useCallback((reservations: ReservationListItem[]) => {
     setBatchReservations(reservations);
     setSelectedReservation(null);
     setReturnDialogOpen(true);
   }, []);
 
-  // Handle view details - TODO: Navigate to detail page
   const handleViewDetails = React.useCallback((reservation: ReservationListItem) => {
-    // Navigate to details page
     window.location.href = `/reservations/${reservation.id}`;
   }, []);
 
-  // Calculate active filters count
-
-  // Handle scope change with URL update
   const handleScopeChange = React.useCallback(
     (scope: ReservationScope) => {
       setFilter("scope", scope);
-      // Update URL query param for shareable links
       const url = new URL(window.location.href);
       if (scope === "my") {
         url.searchParams.delete("scope");
@@ -301,15 +276,10 @@ function ReservationListContainerInner({
     [setFilter]
   );
 
-  // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
     filters.status !== DEFAULT_STATUS_FILTER || filters.sort !== DEFAULT_SORT_OPTION;
 
-  // Regular users: actions only in "My Reservations"
-  // Admins: actions in both "My Reservations" and "All Reservations"
   const showActions = mode === "admin" || filters.scope === "my";
-
-  // Moved dialogReservation definition up to hook usage
 
   return (
     <div className="space-y-6" data-testid="reservation-list-container">

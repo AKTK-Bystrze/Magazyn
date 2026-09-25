@@ -1,7 +1,3 @@
-// =============================================================================
-// CREDIT HISTORY TYPES
-// =============================================================================
-
 import type { Enums } from "../../db/database.types";
 import type { PaginationMeta } from "../api.types";
 

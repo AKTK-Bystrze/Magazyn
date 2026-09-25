@@ -8,10 +8,6 @@ import {
 } from "../user.transformer";
 import type { CreateUserCommand, UpdateUserCommand } from "@/types";
 
-// =============================================================================
-// Test Data Factories
-// =============================================================================
-
 /**
  * Creates a mock backend user DTO (snake_case format)
  */
@@ -43,10 +39,6 @@ const createMockUserListResponseDTO = (
     ...pagination,
   },
 });
-
-// =============================================================================
-// transformCreateUserCommand Tests
-// =============================================================================
 
 describe("transformCreateUserCommand", () => {
   it("should transform all fields from camelCase to snake_case", () => {
@@ -92,10 +84,6 @@ describe("transformCreateUserCommand", () => {
     expect(result.role).toBe("super_admin");
   });
 });
-
-// =============================================================================
-// transformUpdateUserCommand Tests
-// =============================================================================
 
 describe("transformUpdateUserCommand", () => {
   it("should only include defined fields", () => {
@@ -155,10 +143,6 @@ describe("transformUpdateUserCommand", () => {
   });
 });
 
-// =============================================================================
-// transformUserListItem Tests
-// =============================================================================
-
 describe("transformUserListItem", () => {
   it("should transform snake_case DTO to camelCase frontend type", () => {
     const dto = createMockUserDTO();
@@ -193,10 +177,6 @@ describe("transformUserListItem", () => {
   });
 });
 
-// =============================================================================
-// transformUserProfile Tests
-// =============================================================================
-
 describe("transformUserProfile", () => {
   it("should transform DTO to UserProfile including updatedAt", () => {
     const dto = createMockUserDTO();
@@ -222,10 +202,6 @@ describe("transformUserProfile", () => {
     expect(result.updatedAt).toBeNull();
   });
 });
-
-// =============================================================================
-// transformUserListResponse Tests
-// =============================================================================
 
 describe("transformUserListResponse", () => {
   it("should transform paginated response with users", () => {

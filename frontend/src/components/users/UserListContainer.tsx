@@ -60,25 +60,20 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [adjustCreditsOpen, setAdjustCreditsOpen] = React.useState(false);
   const [selectedUser, setSelectedUser] = React.useState<UserListItem | null>(null);
 
-  // Selection state
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  // Reset selection when users change (filters, page, etc)
   React.useEffect(() => {
     setSelectedIds([]);
   }, [data?.users]);
 
-  // Feedback states
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  // Clear messages after timeout
   React.useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
@@ -93,17 +88,14 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     }
   }, [errorMessage]);
 
-  // Handle create user button click
   const handleCreateClick = React.useCallback(() => {
     setCreateDialogOpen(true);
   }, []);
 
-  // Handle create user dialog close
   const handleCreateDialogClose = React.useCallback(() => {
     setCreateDialogOpen(false);
   }, []);
 
-  // Handle create user submit
   const handleCreateSubmit = React.useCallback(
     async (command: CreateUserCommand) => {
       const user = await createUser(command);
@@ -113,19 +105,16 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     [createUser]
   );
 
-  // Handle edit button click
   const handleEditClick = React.useCallback((user: UserListItem) => {
     setSelectedUser(user);
     setEditDialogOpen(true);
   }, []);
 
-  // Handle edit dialog close
   const handleEditDialogClose = React.useCallback(() => {
     setEditDialogOpen(false);
     setSelectedUser(null);
   }, []);
 
-  // Handle edit user submit
   const handleEditSubmit = React.useCallback(
     async (userId: string, command: UpdateUserCommand) => {
       const user = await updateUser(userId, command);
@@ -136,7 +125,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     [updateUser]
   );
 
-  // Handlers for selection
   const handleToggleSelect = React.useCallback((id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   }, []);
@@ -145,7 +133,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     setSelectedIds(checked ? ids : []);
   }, []);
 
-  // Handlers for adjust credits
   const handleAdjustCreditsClick = React.useCallback(() => {
     setAdjustCreditsOpen(true);
   }, []);
@@ -165,7 +152,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     [bulkAdjustCredits, selectedIds.length]
   );
 
-  // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
     filters.role !== DEFAULT_ROLE_FILTER || (filters.search && filters.search.length > 0);
 

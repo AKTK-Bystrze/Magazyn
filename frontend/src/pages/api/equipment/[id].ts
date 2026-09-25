@@ -8,7 +8,6 @@ export const GET: APIRoute = async ({ params, locals }) => {
   locals.logger?.info(`Fetching equipment ${params.id}`);
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}`;
 
-  // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({
@@ -38,7 +37,6 @@ export const PATCH: APIRoute = async ({ request, params, locals }) => {
   locals.logger?.info(`Updating equipment ${params.id}`);
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}`;
 
-  // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({
@@ -71,7 +69,6 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   locals.logger?.info(`Deleting equipment ${params.id}`);
   const backendUrl = `${BACKEND_URL}/equipment/${params.id}`;
 
-  // Use token from middleware (already validated)
   const token = locals.accessToken;
 
   const headers = new Headers({

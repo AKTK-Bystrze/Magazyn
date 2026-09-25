@@ -37,7 +37,6 @@ type calendarTestFixture struct {
 }
 
 func setupCalendarTestFixture(t *testing.T) *calendarTestFixture {
-	// Config loader will try .env first, then .env.test if .env not found
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
 	_, err := config.LoadConfig()
 	require.NoError(t, err)
@@ -69,7 +68,6 @@ func setupCalendarTestFixture(t *testing.T) *calendarTestFixture {
 }
 
 func (f *calendarTestFixture) setupTestData() {
-	// Get test user
 	type profile struct {
 		ID string `json:"id"`
 	}
@@ -80,7 +78,6 @@ func (f *calendarTestFixture) setupTestData() {
 		f.testUserID = profiles[0].ID
 	}
 
-	// Get equipment type
 	type eqType struct {
 		ID string `json:"id"`
 	}
@@ -91,7 +88,6 @@ func (f *calendarTestFixture) setupTestData() {
 		f.typeID = types[0].ID
 	}
 
-	// Create 3 test equipment items
 	f.equipment1ID = f.createTestEquipment("CAL-TEST-1")
 	f.equipment2ID = f.createTestEquipment("CAL-TEST-2")
 	f.equipment3ID = f.createTestEquipment("CAL-TEST-3")
@@ -165,25 +161,19 @@ func TestCalendarAvailability_MultipleEquipment_CorrectGrid(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Query 7 days starting tomorrow
 	startDate := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 
-	// Act: Get calendar for all equipment (no filter), 7 days
 	query := types.CalendarAvailabilityQuery{
 		StartDate: &startDate,
 		Days:      7,
 	}
 	resp, err := fixture.svc.GetCalendarAvailability(ctx, query)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 
-	// Should have at least 3 equipment × 7 days = 21 entries (our test equipment)
-	// But there might be more equipment in the database
 	assert.GreaterOrEqual(t, len(resp.Calendar), 21, "Should have at least 21 entries (3 equipment × 7 days)")
 
-	// Verify structure: each entry has required fields
 	for _, entry := range resp.Calendar {
 		assert.NotEmpty(t, entry.Date, "Entry should have date")
 		assert.NotEmpty(t, entry.EquipmentID, "Entry should have equipment ID")
@@ -200,10 +190,8 @@ func TestCalendarAvailability_WithReservations_ShowsBlocked(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Arrange: Create reservation for equipment1, days 2-4
 	fixture.createReservation(fixture.equipment1ID, 2, 4)
 
-	// Act: Get calendar for only equipment1, 7 days starting tomorrow
 	startDate := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 	query := types.CalendarAvailabilityQuery{
 		EquipmentID: &fixture.equipment1ID,
@@ -212,12 +200,10 @@ func TestCalendarAvailability_WithReservations_ShowsBlocked(t *testing.T) {
 	}
 	resp, err := fixture.svc.GetCalendarAvailability(ctx, query)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, 7, len(resp.Calendar), "Should have exactly 7 entries (1 equipment × 7 days)")
 
-	// Count blocked days (days 2-4 from query start = indices 1, 2, 3 in 7-day grid)
 	blockedCount := 0
 	availableCount := 0
 	for _, entry := range resp.Calendar {
@@ -225,13 +211,11 @@ func TestCalendarAvailability_WithReservations_ShowsBlocked(t *testing.T) {
 			availableCount++
 		} else {
 			blockedCount++
-			// Verify reservation info is populated
 			assert.NotNil(t, entry.ReservationID, "Blocked entry should have reservation ID")
 			assert.NotNil(t, entry.ReservationStatus, "Blocked entry should have status")
 		}
 	}
 
-	// At least 3 days should be blocked (days 2, 3, 4)
 	assert.GreaterOrEqual(t, blockedCount, 3, "Should have at least 3 blocked days")
 	assert.GreaterOrEqual(t, availableCount, 1, "Should have at least some available days")
 
@@ -245,7 +229,6 @@ func TestCalendarAvailability_FilterByEquipment_ReturnsOnlySpecified(t *testing.
 	defer fixture.teardown()
 	ctx := context.Background()
 
-	// Act: Get calendar for only equipment2, 5 days
 	startDate := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 	query := types.CalendarAvailabilityQuery{
 		EquipmentID: &fixture.equipment2ID,
@@ -254,12 +237,10 @@ func TestCalendarAvailability_FilterByEquipment_ReturnsOnlySpecified(t *testing.
 	}
 	resp, err := fixture.svc.GetCalendarAvailability(ctx, query)
 
-	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, 5, len(resp.Calendar), "Should have exactly 5 entries (1 equipment × 5 days)")
 
-	// All entries should be for the same equipment
 	for _, entry := range resp.Calendar {
 		assert.Equal(t, fixture.equipment2ID, entry.EquipmentID, "All entries should be for equipment2")
 	}
