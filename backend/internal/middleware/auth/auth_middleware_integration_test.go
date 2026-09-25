@@ -44,7 +44,13 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 	require.NoError(t, err, "Failed to sign in test user")
 	validToken := tokenResp.AccessToken
 	// Wait for profile trigger
-	time.Sleep(1 * time.Second)
+	for i := 0; i < 20; i++ {
+		data, _, _ := testutils.TestClient.From("profiles").Select("*", "exact", false).Eq("id", user.ID.String()).Execute()
+		if len(data) > 2 { // Data is returned as "[]" if empty, >2 means at least one profile
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	t.Run("valid token populates context", func(t *testing.T) {
 		var capturedUser *types.User
 		var capturedProfile *types.PublicProfilesSelect

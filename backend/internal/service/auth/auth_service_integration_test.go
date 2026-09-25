@@ -8,6 +8,7 @@ import (
 	"magazyn/backend/internal/repository/supabase"
 	"magazyn/backend/internal/service/auth"
 	"magazyn/backend/internal/testutils"
+	"magazyn/backend/internal/types"
 	"os"
 	"testing"
 	"time"
@@ -74,9 +75,16 @@ func TestGetSession_Integration(t *testing.T) {
 	}()
 	t.Run("returns session for existing user", func(t *testing.T) {
 		// Profile creation happens via trigger on auth.users insert
-		// We might need to wait a moment for the trigger to fire
-		time.Sleep(1 * time.Second)
-		session, err := service.GetSession(context.Background(), user.ID.String(), "test-token")
+		// We poll to wait for the trigger to fire
+		var session *types.Session
+		var err error
+		for i := 0; i < 20; i++ {
+			session, err = service.GetSession(context.Background(), user.ID.String(), "test-token")
+			if err == nil {
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
 		require.NoError(t, err)
 		assert.NotNil(t, session)
 		assert.Equal(t, user.ID.String(), session.UserID)
