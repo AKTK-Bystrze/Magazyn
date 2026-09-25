@@ -13,20 +13,48 @@ The backend uses a strict **Layered Architecture** with Constructor Injection.
 
 ## 2. Authentication & Authorization
 - **Middleware Flow**: Requests pass through `cors` -> `auth` -> `rbac`.
-- **`auth_middleware.go`**: Validates JWTs received in the `Authorization: Bearer` header. Extracts user info via `gotrue-go` and injects `UserContextKey` and `ProfileContextKey` into the request context.
+- **`auth_middleware.go`**: Validates JWTs received in the `Authorization: Bearer` header. Extracts user info via `gotrue-go` and injects contexts.
 - **Roles**: Enforced using `rbac_middleware.go` wrappers on routes (e.g., `RequireRoles(auth.RoleAdmin)`).
+
+### Context Key Access Pattern
+Extract context values in handlers using these explicit type assertions:
+```go
+user    := r.Context().Value(appcontext.UserContextKey).(*types.User)
+profile := r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
+token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
+```
+
+### Auth Access Control Table
+| Endpoint Pattern | Required Roles | Special Rules |
+|-----------------|----------------|---------------|
+| `/auth/session` | Any authenticated | **Only** endpoint accessible by disabled users. |
+| `/auth/*` (other) | Any authenticated | Must be enabled. |
+| `/equipment/*` | Any authenticated | Must be enabled. |
+| `/admin/*` | `admin`, `super_admin` | Must be enabled. |
+| `/admin/users/*` | `super_admin` | Must be enabled. |
 
 ## 3. Database & Supabase Interaction
 - **Clients**: Uses `supabase-go` (for PostgREST data fetching) and `gotrue-go` (for Auth operations).
 - **Service Role vs Anon Key**: 
   - Standard operations use the user's JWT + Anon Key to leverage Supabase Row Level Security (RLS).
-  - Privileged backend operations use the `SUPABASE_SERVICE_ROLE_KEY` (e.g., bypassing RLS to create users or handle automated tasks).
-- **Atomic Operations**: Complex multi-table mutations (e.g., `create_reservation_atomic`, `refund_reservation_credits`) are implemented as PostgreSQL Stored Procedures and called via Supabase RPC. Standard REST does not support explicit `BEGIN`/`COMMIT` transactions.
+  - Privileged backend operations use the `SUPABASE_SERVICE_ROLE_KEY` (e.g., bypassing RLS to create users).
+- **Atomic Operations**: Complex multi-table mutations are implemented as PostgreSQL Stored Procedures and called via Supabase RPC.
 
 ## 4. Input Validation & Security
-- **PostgREST Injection Protection**: ALWAYS sanitize user input used in `ILIKE` clauses using `validation.SanitizeSearchTerm()`. Failing to do so allows operators (like `.eq.`) to execute maliciously.
-- **UUID Validation**: Validate ID parameters with `validation.ValidateUUID(id)`.
-- **Date Validation**: Use `validation.ValidateISODate(date)` and `validation.ValidateDateRange(start, end)`.
+
+**Checklist for new endpoints:**
+1. UUID parameters validated?
+2. Dates validated?
+3. Enums validated against constants?
+4. Search strings length checked?
+5. Search strings sanitized before PostgREST ILIKE?
+
+### Validation API Surface (`internal/validation`)
+- `SanitizeSearchTerm(term string) string` - Escapes `, . ( ) = * !` to prevent PostgREST injection. **CRITICAL: use for all `ILIKE` inputs.**
+- `ValidateUUID(id string) error` - Ensures valid 8-4-4-4-12 UUID format.
+- `ValidateISODate(date string) error` - Ensures YYYY-MM-DD.
+- `ValidateEnum(val string, allowed []string) error` - e.g., `validation.ValidateEnum(status, constants.ValidEquipmentStatuses)`.
+- `ValidateStringLength(str string, min, max int) error` - e.g., `validation.ValidateStringLength(search, 0, constants.MaxSearchLength)`.
 
 ## 5. Coding Standards
 - **File Naming**: `snake_case.go` for all files. Test files suffix with `_test.go` or `_integration_test.go`.
