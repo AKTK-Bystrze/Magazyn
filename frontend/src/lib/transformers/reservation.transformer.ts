@@ -198,3 +198,8 @@ export function transformReservationDetail(data: unknown): ReservationDetail {
     auditTrail: (dto.audit_trail || []).map(transformAuditEntry),
   };
 }
+export function transformBulkUpdateCommand(
+  cmd: import("@/types").BulkUpdateReservationsCommand
+): Record<string, unknown> {
+  return { reservation_ids: cmd.reservationIds, status: cmd.status };
+}
