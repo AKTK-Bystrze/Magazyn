@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockEmailService implements email.Service
 type MockEmailService struct {
 	mock.Mock
 }

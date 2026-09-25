@@ -20,7 +20,6 @@ type authRepository struct {
 	appURL      string
 }
 
-// NewAuthRepository creates a new Supabase implementation of AuthRepository
 func NewAuthRepository(client *supabase.Client, url string, key string, serviceKey string, appURL string) repository.AuthRepository {
 	return &authRepository{
 		client:      client,
@@ -30,8 +29,6 @@ func NewAuthRepository(client *supabase.Client, url string, key string, serviceK
 		appURL:      appURL,
 	}
 }
-
-// SendMagicLink sends a magic link to the specified email
 func (r *authRepository) SendMagicLink(ctx context.Context, email string) error {
 	err := r.client.Auth.OTP(gotruetypes.OTPRequest{
 		Email:      email,
@@ -45,18 +42,18 @@ func (r *authRepository) SendMagicLink(ctx context.Context, email string) error 
 	}
 	return nil
 }
-
-// CreateUser creates a new user in Supabase Auth using the service key (Admin only)
 func (r *authRepository) CreateUser(ctx context.Context, email, password string) (*types.User, error) {
 	if r.serviceKey == "" {
 		return nil, fmt.Errorf("service key is empty")
 	}
-
+	// Create a new client with the service key
 	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create admin client: %w", err)
 	}
-
+	// Admin requests require the Service Key to be sent as the Bearer token.
+	// supabase-go/gotrue-go might not set this automatically from the 'key' arg in NewClient
+	// (which sets the 'apikey' header). We explicitly set the token here.
 	user, err := adminClient.Auth.WithToken(r.serviceKey).AdminCreateUser(gotruetypes.AdminCreateUserRequest{
 		Email:        email,
 		Password:     &password,
@@ -65,14 +62,11 @@ func (r *authRepository) CreateUser(ctx context.Context, email, password string)
 	if err != nil {
 		return nil, types.NewValidationError(err.Error(), map[string]string{"email": email})
 	}
-
 	return &types.User{
 		ID:    user.ID.String(),
 		Email: user.Email,
 	}, nil
 }
-
-// VerifyOTP verifies the OTP and returns the session
 func (r *authRepository) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.Session, error) {
 	resp, err := r.client.Auth.VerifyForUser(gotruetypes.VerifyForUserRequest{
 		Email: email,
@@ -82,7 +76,6 @@ func (r *authRepository) VerifyOTP(ctx context.Context, email, token string, otp
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.Session{
 		AccessToken: resp.AccessToken,
 		User: types.User{
@@ -91,26 +84,19 @@ func (r *authRepository) VerifyOTP(ctx context.Context, email, token string, otp
 		},
 	}, nil
 }
-
-// Logout invalidates the user's session
 func (r *authRepository) Logout(ctx context.Context, token string) error {
 	return r.client.Auth.WithToken(token).Logout()
 }
-
-// GetUser validates the token and returns the user identity
 func (r *authRepository) GetUser(ctx context.Context, token string) (*types.User, error) {
 	resp, err := r.client.Auth.WithToken(token).GetUser()
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.User{
 		ID:    resp.ID.String(),
 		Email: resp.Email,
 	}, nil
 }
-
-// GetProfile retrieves the user's profile using their token (RLS)
 func (r *authRepository) GetProfile(ctx context.Context, userID string, token string) (*types.PublicProfilesSelect, error) {
 	clientWithAuth, err := supabase.NewClient(
 		r.supabaseURL,
@@ -124,24 +110,19 @@ func (r *authRepository) GetProfile(ctx context.Context, userID string, token st
 	if err != nil {
 		return nil, fmt.Errorf("failed to create authenticated client: %w", err)
 	}
-
 	data, _, err := clientWithAuth.From("profiles").
 		Select("*", "exact", false).
 		Eq("id", userID).
 		Execute()
-
 	if err != nil {
 		return nil, err
 	}
-
 	var profiles []types.PublicProfilesSelect
 	if err := json.Unmarshal(data, &profiles); err != nil {
 		return nil, err
 	}
-
 	if len(profiles) == 0 {
 		return nil, types.NewNotFoundError("Profile", userID)
 	}
-
 	return &profiles[0], nil
 }

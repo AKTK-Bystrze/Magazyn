@@ -1,6 +1,5 @@
 package types
 
-// UserResponse represents the public user profile data returned by the API.
 type UserResponse struct {
 	ID            string  `json:"id"`
 	Email         string  `json:"email"`
@@ -11,35 +10,25 @@ type UserResponse struct {
 	CreatedAt     string  `json:"created_at"`
 	UpdatedAt     *string `json:"updated_at,omitempty"`
 }
-
-// PublicUserResponse represents public user info without sensitive fields like email.
 type PublicUserResponse struct {
 	ID            string `json:"id"`
 	Username      string `json:"username"`
 	CreditBalance int32  `json:"credit_balance"`
 }
-
-// PublicUserListResponse contains a list of public users and pagination metadata.
 type PublicUserListResponse struct {
 	Users      []PublicUserResponse `json:"users"`
 	Pagination Pagination           `json:"pagination"`
 }
-
-// UserListResponse contains a list of users and pagination metadata.
 type UserListResponse struct {
 	Users      []UserResponse `json:"users"`
 	Pagination Pagination     `json:"pagination"`
 }
-
-// Pagination holds pagination metadata to be included in list responses.
 type Pagination struct {
 	Page       int `json:"page"`
 	PerPage    int `json:"per_page"`
 	TotalItems int `json:"total_items"`
 	TotalPages int `json:"total_pages"`
 }
-
-// CreateUserRequest defines the structure for creating a new user via the API.
 type CreateUserRequest struct {
 	Email         string `json:"email" binding:"required,email"`
 	Username      string `json:"username" binding:"required"`
@@ -47,16 +36,12 @@ type CreateUserRequest struct {
 	CreditBalance *int32 `json:"credit_balance"`
 	IsEnabled     *bool  `json:"is_enabled"`
 }
-
-// UpdateUserRequest defines the structure for updating an existing user's details.
 type UpdateUserRequest struct {
 	Email         *string `json:"email" binding:"omitempty,email"`
 	Role          *string `json:"role" binding:"omitempty,oneof=user admin super_admin"`
 	CreditBalance *int32  `json:"credit_balance" binding:"omitempty,min=0"`
 	IsEnabled     *bool   `json:"is_enabled"`
 }
-
-// BulkAdjustCreditsRequest defines the structure for adjusting credits for multiple users.
 type BulkAdjustCreditsRequest struct {
 	UserIDs     []string `json:"user_ids" binding:"required,min=1"`
 	Amount      int32    `json:"amount" binding:"required"`

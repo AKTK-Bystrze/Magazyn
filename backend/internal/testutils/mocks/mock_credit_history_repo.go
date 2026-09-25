@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockCreditHistoryRepository implements repository.CreditHistoryRepository
 type MockCreditHistoryRepository struct {
 	mock.Mock
 }
@@ -24,7 +23,6 @@ func (m *MockCreditHistoryRepository) GetCreditHistory(ctx context.Context, user
 	}
 	return args.Get(0).([]types.CreditHistoryItemDTO), args.Get(1).(int64), args.Error(2)
 }
-
 func (m *MockCreditHistoryRepository) Create(ctx context.Context, item types.PublicCreditHistoryInsert) error {
 	args := m.Called(ctx, item)
 	return args.Error(0)

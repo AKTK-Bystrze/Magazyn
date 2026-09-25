@@ -1,4 +1,3 @@
-// Package metrics provides Prometheus metrics initialization and an internal HTTP server for scraping.
 package metrics
 
 import (
@@ -15,13 +14,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Server encapsulates the metrics HTTP server.
 type Server struct {
 	httpServer *http.Server
 }
 
-// StartMetricsServer initializes Prometheus metrics, starts a background goroutine
-// to update them periodically, and starts an HTTP server to expose the metrics.
 func StartMetricsServer(ctx context.Context, repo repository.ReservationRepository, serviceKey string) *Server {
 	pendingReservations := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "magazyn_reservations_pending",
@@ -35,15 +31,12 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 		Name: "magazyn_reservations_active_today",
 		Help: "Current number of active reservations today",
 	})
-
 	prometheus.MustRegister(pendingReservations, overdueReservations, activeTodayReservations)
-
+	// Start a background goroutine to update the metrics
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
-
 		bgCtx := context.WithValue(context.WithoutCancel(ctx), appcontext.AccessTokenContextKey, serviceKey)
-
 		updateMetrics := func() {
 			stats, err := repo.GetDashboardStats(bgCtx)
 			if err != nil {
@@ -54,9 +47,7 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 				activeTodayReservations.Set(float64(stats.ActiveToday))
 			}
 		}
-
 		updateMetrics() // Initial execution
-
 		for {
 			select {
 			case <-ticker.C:
@@ -66,7 +57,7 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 			}
 		}
 	}(ctx)
-
+	// Metrics Server on a separate internal port
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.Handler())
 	metricsServer := &http.Server{
@@ -74,20 +65,16 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 		Handler:           metricsMux,
 		ReadHeaderTimeout: 3 * time.Second,
 	}
-
 	go func() {
 		logger.Infof(ctx, "Metrics server listening on port :9091")
 		if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Errorf(ctx, "Metrics server failed: %v", err)
 		}
 	}()
-
 	return &Server{
 		httpServer: metricsServer,
 	}
 }
-
-// Shutdown gracefully shuts down the metrics HTTP server.
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }

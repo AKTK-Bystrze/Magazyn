@@ -1,12 +1,7 @@
-// Package constants defines application-wide constants for reservation status, equipment status,
 // pagination defaults, authentication settings, and storage configuration.
 package constants
 
 import "time"
-
-// ============================================================================
-// Database Table Constants
-// ============================================================================
 
 // Database table names to avoid hardcoded strings.
 const (
@@ -20,10 +15,6 @@ const (
 	TableCreditRequestHelpers = "credit_request_helpers"
 )
 
-// ============================================================================
-// Reservation Status Constants
-// ============================================================================
-
 // Reservation status values that represent the lifecycle of an equipment rental.
 const (
 	ReservationStatusPending   = "PENDING"   // Reservation created but equipment not yet picked up
@@ -33,10 +24,6 @@ const (
 	ReservationStatusCancelled = "CANCELLED" // Reservation cancelled
 )
 
-// ============================================================================
-// Equipment Status Constants
-// ============================================================================
-
 // Equipment status values that indicate the current condition and availability.
 const (
 	EquipmentStatusOK      = "ok"      // Equipment is in good condition and available
@@ -44,18 +31,10 @@ const (
 	EquipmentStatusBlocked = "blocked" // Equipment blocked by admin (e.g. for maintenance)
 )
 
-// ============================================================================
-// Credit Reason Constants
-// ============================================================================
-
 // Credit reason values used when adjusting user credit balances.
 const (
 	CreditReasonWorkCredit = "work_credit" // Credits awarded for approved help requests
 )
-
-// ============================================================================
-// Pagination Constants
-// ============================================================================
 
 // Pagination defaults and limits for list endpoints.
 const (
@@ -67,27 +46,15 @@ const (
 // AllowedPerPageValues defines the standard allowed page sizes for pagination.
 var AllowedPerPageValues = []int{10, 25, 50, 100}
 
-// ============================================================================
-// Authentication Constants
-// ============================================================================
-
 // Authentication-related timing and security constants.
 const (
 	SessionExpiryDuration = 2 * time.Hour
 )
 
-// ============================================================================
-// Storage Constants
-// ============================================================================
-
 // Storage configuration for file uploads and asset management.
 const (
 	StorageBucket = "equipment" // Supabase storage bucket name for equipment images
 )
-
-// ============================================================================
-// Calendar Constants
-// ============================================================================
 
 // Calendar-related defaults and limits for availability endpoints.
 const (
@@ -100,10 +67,6 @@ const (
 	DateFormatISO       = "2006-01-02" // ISO date format for Go time parsing
 )
 
-// ============================================================================
-// Validation Constants
-// ============================================================================
-
 // Validation constraints for input parameters.
 const (
 	UUIDLength    = 36 // Length of a standard UUID string
@@ -111,10 +74,6 @@ const (
 	MinMonth      = 1  // Minimum month value
 	MaxMonth      = 12 // Maximum month value
 )
-
-// ============================================================================
-// Input Validation Constants
-// ============================================================================
 
 // ValidEquipmentStatuses lists all valid equipment status values for validation.
 var ValidEquipmentStatuses = []string{EquipmentStatusOK, EquipmentStatusBroken, EquipmentStatusBlocked}
