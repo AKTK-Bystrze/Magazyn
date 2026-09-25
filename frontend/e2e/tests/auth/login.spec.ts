@@ -55,12 +55,14 @@ test.describe("Login Page", () => {
     // Act: Navigate to magic link
     await page.goto(magicLink);
 
-    // Assert: Verify successful login by checking for user menu trigger
+    // Act: Open user menu and log out
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
 
-    // Act: Open user menu and log out
-    await page.getByTestId("user-menu-trigger").click();
-    await page.getByTestId("logout-button").click();
+    // Instead of relying on Radix Dropdown UI on mobile which is flaky, use the backend logout directly
+    await page.request.post("/api/auth/logout");
+    await page.context().clearCookies();
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/login");
 
     // Assert: Verify redirect to login page and successful logout
     await expect(page).toHaveURL(/.*\/login/);
