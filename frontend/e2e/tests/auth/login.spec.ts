@@ -57,8 +57,15 @@ test.describe("Login Page", () => {
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
 
     // Act: Open user menu and log out
-    await page.getByTestId("user-menu-trigger").click();
-    await page.getByTestId("logout-button").click();
+    const menuTrigger = page.getByTestId("user-menu-trigger");
+    const logoutBtn = page.getByTestId("logout-button");
+
+    await expect(async () => {
+      await menuTrigger.click();
+      await expect(logoutBtn).toBeVisible({ timeout: 1000 });
+    }).toPass();
+
+    await logoutBtn.click();
 
     // Assert: Verify redirect to login page and successful logout
     await expect(page).toHaveURL(/.*\/login/);
