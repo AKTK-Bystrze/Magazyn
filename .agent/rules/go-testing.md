@@ -29,3 +29,14 @@ alwaysApply: false
 - Test HTTP handlers with realistic request/response cycles - Create complete request/response scenarios using `httptest`, including headers, query parameters, and request bodies. Verify not just status codes but also response content and structure.
 - Monitor test coverage with purpose and only when asked - Run `go test -cover` to measure coverage, but focus on meaningful tests over arbitrary percentages. Critical business logic and error paths should have thorough coverage, but don't write tests solely to increase metrics.
 
+
+### Guidelines for INTEGRATION
+
+- **Test Naming Convention**: Follow `Test<Method>_<Scenario>_<ExpectedBehavior>` (e.g. `TestCreate_InsufficientCredits_ReturnsConflictError`). Avoid vague names like `TestCreate`.
+- **TestMain Setup**: Use `TestMain(m *testing.M)` with `testutils.SetupIntegrationTest()` to load environments and DB connections before tests run.
+- **Fixture Pattern**: Use a `setupTestFixture(t)` pattern that returns a struct with services, clients, and a LIFO `cleanup []func()` array. Call `defer fixture.teardown()` at the start of tests to guarantee cleanup instead of manually cleaning up at the end.
+- **File Splitting**: For complex domains, split tests (e.g. `reservation_integration_fixture_test.go`, `_create_test.go`, `_update_test.go`).
+- **Anti-Patterns**: 
+  - DO NOT use `time.Sleep()` for async waits; use active DB polling.
+  - DO NOT duplicate setup code; use shared fixtures.
+  - DO NOT hardcode test User/Equipment IDs; generate unique IDs or rely on DB defaults.
