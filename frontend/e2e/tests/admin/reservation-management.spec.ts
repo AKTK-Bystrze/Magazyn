@@ -89,6 +89,11 @@ test.describe.serial("Admin Reservation Management", () => {
     // 5. Navigate to "All Reservations" to Manage it
     await adminPage.goto("/admin/reservations");
 
+    await expect(async () => {
+      await adminPage.getByTestId("view-mode-table").click({ force: true });
+      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 10000 });
+
     // Find the reservation by equipment name (worker-isolated, unique per test)
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
 
@@ -199,6 +204,11 @@ test.describe.serial("Admin Reservation Management", () => {
     // 9. Navigate to "All Reservations" to verify the reservation
     await adminPage.goto("/admin/reservations");
 
+    await expect(async () => {
+      await adminPage.getByTestId("view-mode-table").click({ force: true });
+      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 10000 });
+
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
@@ -263,6 +273,11 @@ test.describe.serial("Admin Reservation Management", () => {
 
     // 3. Go to All Reservations and find the row
     await adminPage.goto("/admin/reservations");
+
+    await expect(async () => {
+      await adminPage.getByTestId("view-mode-table").click({ force: true });
+      await expect(adminPage.locator("table")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 10000 });
     await adminPage.waitForSelector('[data-testid^="reservation-row-"]', { timeout: 10000 });
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });

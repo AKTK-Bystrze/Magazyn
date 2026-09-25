@@ -55,7 +55,7 @@ export function GroupedReservationCard({
 
   return (
     <Card
-      className="w-full max-w-full overflow-hidden transition-shadow hover:shadow-md border-l-8 border-l-indigo-500 bg-indigo-50/10 dark:bg-indigo-950/10"
+      className="w-full max-w-full overflow-hidden transition-shadow hover:shadow-md border-l-[16px] border-l-indigo-500 bg-indigo-50/10 dark:bg-indigo-950/10"
       data-testid={`reservation-row-${group.groupKey}`}
     >
       {/* Header - Clickable to expand/collapse */}
