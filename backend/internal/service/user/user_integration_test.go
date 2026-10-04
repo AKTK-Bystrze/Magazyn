@@ -46,7 +46,7 @@ func setupUserTestFixture(t *testing.T) *userTestFixture {
 	creditRepo := supabase.NewCreditHistoryRepository(client, supabaseURL, supabaseKey)
 	f := &userTestFixture{
 		t:       t,
-		svc:     user.NewUserService(userRepo, authRepo, creditRepo),
+		svc:     user.NewUserService(userRepo, authRepo),
 		credSvc: credit.NewCreditHistoryService(creditRepo, userRepo),
 		client:  client,
 		cleanup: []func(){},

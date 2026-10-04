@@ -12,19 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockCreditHistoryRepository struct {
-	mock.Mock
-}
-
-func (m *MockCreditHistoryRepository) GetCreditHistory(ctx context.Context, userID *string, page, perPage int) ([]types.CreditHistoryItemDTO, int64, error) {
-	args := m.Called(ctx, userID, page, perPage)
-	return args.Get(0).([]types.CreditHistoryItemDTO), args.Get(1).(int64), args.Error(2)
-}
-func (m *MockCreditHistoryRepository) Create(ctx context.Context, item types.PublicCreditHistoryInsert) error {
-	args := m.Called(ctx, item)
-	return args.Error(0)
-}
-
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -71,8 +58,7 @@ func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userID
 func TestGetProfile_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	id := "user-123"
 	email := "test@example.com"
@@ -92,8 +78,7 @@ func TestGetProfile_Success(t *testing.T) {
 func TestGetProfile_NotFound(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	id := "unknown"
 	mockRepo.On("GetByID", ctx, id).Return(nil, types.NewNotFoundError("User", id))
@@ -106,8 +91,7 @@ func TestGetProfile_NotFound(t *testing.T) {
 func TestListUsers_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	page := 1
 	perPage := 10
@@ -129,8 +113,7 @@ func TestListUsers_Success(t *testing.T) {
 func TestCreateUser_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	email := "new@example.com"
 	username := "newuser"
@@ -172,8 +155,7 @@ func TestCreateUser_Success(t *testing.T) {
 func TestCreateUser_AuthFailure(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	email := "fail@example.com"
 	req := types.CreateUserRequest{
@@ -199,8 +181,7 @@ func TestCreateUser_AuthFailure(t *testing.T) {
 func TestCreateUser_EmailConflict(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	email := "existing@example.com"
 	req := types.CreateUserRequest{
@@ -220,8 +201,7 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 func TestCreateUser_UsernameConflict(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	username := "existinguser"
 	req := types.CreateUserRequest{
@@ -245,8 +225,7 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 func TestUpdateUser_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	id := "user-123"
 	role := auth.RoleAdmin
@@ -269,8 +248,7 @@ func TestUpdateUser_Success(t *testing.T) {
 func TestBulkAdjustCredits_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	adminID := "admin-123"
 	userIDs := []string{"user-1", "user-2"}

@@ -14,11 +14,6 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Message string `json:"message"`
 }
-type VerifyOTPRequest struct {
-	Email string `json:"email" validate:"required,email"`
-	Token string `json:"token" validate:"required"`
-	Type  string `json:"type" validate:"required"`
-}
 type SessionResponse struct {
 	UserID        string `json:"userId"`
 	Email         string `json:"email"`
@@ -31,8 +26,3 @@ type SessionResponse struct {
 type LogoutResponse struct {
 	Message string `json:"message"`
 }
-type OTPType string
-
-const (
-	MagicLink OTPType = "magiclink"
-)

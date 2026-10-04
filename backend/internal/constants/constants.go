@@ -1,18 +1,15 @@
 // pagination defaults, authentication settings, and storage configuration.
 package constants
 
-import "time"
-
 // Database table names to avoid hardcoded strings.
 const (
-	TableProfiles             = "profiles"
-	TableEquipment            = "equipment"
-	TableReservations         = "reservations"
-	TableEquipmentTypes       = "equipment_types"
-	TableMaintenanceLogs      = "maintenance_logs"
-	TableCreditHistory        = "credit_history"
-	TableCreditRequests       = "credit_requests"
-	TableCreditRequestHelpers = "credit_request_helpers"
+	TableProfiles        = "profiles"
+	TableEquipment       = "equipment"
+	TableReservations    = "reservations"
+	TableEquipmentTypes  = "equipment_types"
+	TableMaintenanceLogs = "maintenance_logs"
+	TableCreditHistory   = "credit_history"
+	TableCreditRequests  = "credit_requests"
 )
 
 // Reservation status values that represent the lifecycle of an equipment rental.
@@ -45,11 +42,6 @@ const (
 
 // AllowedPerPageValues defines the standard allowed page sizes for pagination.
 var AllowedPerPageValues = []int{10, 25, 50, 100}
-
-// Authentication-related timing and security constants.
-const (
-	SessionExpiryDuration = 2 * time.Hour
-)
 
 // Storage configuration for file uploads and asset management.
 const (
@@ -89,7 +81,5 @@ var ValidReservationStatuses = []string{
 
 // Input length constraints
 const (
-	MaxSearchLength     = 100 // Maximum length for search queries
-	MaxInternalIDLength = 50  // Maximum length for equipment internal IDs
-	MinPasswordLength   = 8   // Minimum password length for user accounts
+	MaxSearchLength = 100 // Maximum length for search queries
 )

@@ -60,7 +60,7 @@ type ModifyDatesResponse struct {
 }
 type ReservationListResponse struct {
 	Reservations []ReservationListItem `json:"reservations"`
-	Pagination   PaginationResponse    `json:"pagination"`
+	Pagination   Pagination            `json:"pagination"`
 }
 type ReservationDashboardSummary struct {
 	PendingReservations int64 `json:"pending_reservations"`

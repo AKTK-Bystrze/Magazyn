@@ -62,7 +62,7 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 	}
 	return &types.ReservationListResponse{
 		Reservations: items,
-		Pagination: types.PaginationResponse{
+		Pagination: types.Pagination{
 			Page:       query.Page,
 			PerPage:    query.PerPage,
 			TotalItems: int(total),
