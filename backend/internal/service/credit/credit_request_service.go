@@ -73,7 +73,7 @@ func (s *creditRequestService) CreateRequest(ctx context.Context, userID string,
 		CreditsValue: req.CreditsValue,
 		RequestorID:  &userID,
 		UserHelpedID: &req.UserHelpedID,
-		Status:       types.CreditRequestStatusPending,
+		Status:       types.CreditRequestStatusAwaiting,
 		Helpers:      req.Helpers,
 	}
 	return s.repo.Create(ctx, dto)
@@ -86,7 +86,7 @@ func (s *creditRequestService) UpdateRequest(ctx context.Context, userID string,
 	if existing.RequestorID == nil || *existing.RequestorID != userID {
 		return nil, types.NewForbiddenError("You are not the requestor of this credit request")
 	}
-	if existing.Status != types.CreditRequestStatusPending {
+	if existing.Status != types.CreditRequestStatusAwaiting {
 		return nil, types.NewForbiddenError("Only awaiting requests can be modified")
 	}
 	if req.CreditsValue != nil {
@@ -124,10 +124,10 @@ func (s *creditRequestService) ReviewRequest(ctx context.Context, adminID string
 	if err != nil {
 		return err
 	}
-	if existing.Status != types.CreditRequestStatusPending {
+	if existing.Status != types.CreditRequestStatusAwaiting {
 		return types.NewForbiddenError("Only awaiting requests can be reviewed")
 	}
-	if req.Status != types.CreditRequestStatusApproved && req.Status != types.CreditRequestStatusDenied  {
+	if req.Status != types.CreditRequestStatusApproved && req.Status != types.CreditRequestStatusRejected && req.Status != types.CreditRequestStatusApprovedWithChanges {
 		return types.NewValidationError("Invalid status", nil)
 	}
 	if req.CreditsValue != nil && *req.CreditsValue <= 0 {
