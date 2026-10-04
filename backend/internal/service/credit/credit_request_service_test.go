@@ -71,7 +71,7 @@ func TestCreditRequestService_CreateRequest_Success(t *testing.T) {
 	res, err := service.CreateRequest(context.Background(), "u1", req)
 	assert.NoError(t, err)
 	assert.Equal(t, "Test Title", res.Title)
-	assert.Equal(t, types.CreditRequestStatusAwaiting, res.Status)
+	assert.Equal(t, types.CreditRequestStatusPending, res.Status)
 }
 func TestCreditRequestService_UpdateRequest_Locked(t *testing.T) {
 	reqID := "req1"
@@ -99,7 +99,7 @@ func TestCreditRequestService_UpdateRequest_NotRequestor(t *testing.T) {
 		reqID: {
 			ID:           reqID,
 			RequestorID:  &userID,
-			Status:       types.CreditRequestStatusAwaiting,
+			Status:       types.CreditRequestStatusPending,
 			CreditsValue: 10,
 		},
 	}}
@@ -118,7 +118,7 @@ func TestCreditRequestService_UpdateRequest_Success(t *testing.T) {
 		reqID: {
 			ID:           reqID,
 			RequestorID:  &userID,
-			Status:       types.CreditRequestStatusAwaiting,
+			Status:       types.CreditRequestStatusPending,
 			CreditsValue: 10,
 		},
 	}}
@@ -137,7 +137,7 @@ func TestCreditRequestService_ReviewRequest_NegativeCredits(t *testing.T) {
 		reqID: {
 			ID:           reqID,
 			RequestorID:  &userID,
-			Status:       types.CreditRequestStatusAwaiting,
+			Status:       types.CreditRequestStatusPending,
 			CreditsValue: 10,
 		},
 	}}
@@ -158,7 +158,7 @@ func TestCreditRequestService_ReviewRequest_Success(t *testing.T) {
 		reqID: {
 			ID:           reqID,
 			RequestorID:  &userID,
-			Status:       types.CreditRequestStatusAwaiting,
+			Status:       types.CreditRequestStatusPending,
 			CreditsValue: 10,
 			Helpers:      []string{"u2"},
 		},
@@ -189,7 +189,7 @@ func TestCreditRequestService_ReviewRequest_NotAwaiting(t *testing.T) {
 	}}
 	service := credit.NewCreditRequestService(repo)
 	req := types.ReviewCreditRequestDTO{
-		Status: types.CreditRequestStatusRejected,
+		Status: types.CreditRequestStatusDenied,
 	}
 	err := service.ReviewRequest(context.Background(), "admin1", reqID, req)
 	assert.Error(t, err)
@@ -202,13 +202,13 @@ func TestCreditRequestService_ReviewRequest_InvalidStatus(t *testing.T) {
 		reqID: {
 			ID:           reqID,
 			RequestorID:  &userID,
-			Status:       types.CreditRequestStatusAwaiting,
+			Status:       types.CreditRequestStatusPending,
 			CreditsValue: 10,
 		},
 	}}
 	service := credit.NewCreditRequestService(repo)
 	req := types.ReviewCreditRequestDTO{
-		Status: types.CreditRequestStatusAwaiting,
+		Status: types.CreditRequestStatusPending,
 	}
 	err := service.ReviewRequest(context.Background(), "admin1", reqID, req)
 	assert.Error(t, err)

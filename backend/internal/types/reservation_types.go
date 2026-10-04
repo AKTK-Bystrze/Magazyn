@@ -83,7 +83,7 @@ type CreateReservationsCommand struct {
 type UpdateReservationCommand struct {
 	StartDate *string `json:"start_date,omitempty" validate:"omitempty,datetime=2006-01-02"`
 	EndDate   *string `json:"end_date,omitempty" validate:"omitempty,datetime=2006-01-02"`
-	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=PENDING RENTED RETURNED DENIED CANCELLED"`
+	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=PENDING RENTED RETURNED DENIED"`
 }
 type BulkStatusUpdateResponse struct {
 	UpdatedCount int32 `json:"updated_count"`

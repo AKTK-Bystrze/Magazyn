@@ -3,10 +3,9 @@ package types
 type CreditRequestStatus string
 
 const (
-	CreditRequestStatusAwaiting            CreditRequestStatus = "awaiting"
-	CreditRequestStatusApproved            CreditRequestStatus = "approved"
-	CreditRequestStatusRejected            CreditRequestStatus = "rejected"
-	CreditRequestStatusApprovedWithChanges CreditRequestStatus = "approved with changes"
+	CreditRequestStatusPending  CreditRequestStatus = "PENDING"
+	CreditRequestStatusApproved CreditRequestStatus = "APPROVED"
+	CreditRequestStatusDenied   CreditRequestStatus = "DENIED"
 )
 
 type CreditRequestDTO struct {
@@ -38,7 +37,7 @@ type UpdateCreditRequestDTO struct {
 type ReviewCreditRequestDTO struct {
 	CreditsValue *int32              `json:"credits_value"`
 	Helpers      []string            `json:"helpers"`
-	Status       CreditRequestStatus `json:"status" binding:"required"` // approved, rejected, approved with changes
+	Status       CreditRequestStatus `json:"status" binding:"required"` // APPROVED, DENIED
 }
 type UserCreditLeaderboardItem struct {
 	UserID       string `json:"user_id"`
