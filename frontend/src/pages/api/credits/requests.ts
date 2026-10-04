@@ -1,1 +1,4 @@
-import { createProxyHandler } from "@/lib/api/proxy";`n`nexport const GET = createProxyHandler({ path: "/credits/requests", method: "GET", forwardQuery: true });`nexport const POST = createProxyHandler({ path: "/credits/requests", method: "POST" });
+import { createProxyHandler } from "@/lib/api/proxy";
+
+export const GET = createProxyHandler({ path: "/credits/requests", method: "GET", forwardQuery: true });
+export const POST = createProxyHandler({ path: "/credits/requests", method: "POST" });
