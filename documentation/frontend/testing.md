@@ -6,6 +6,12 @@
 - **DO**: Configure `environment: 'jsdom'` for frontend component tests and use testing-library utilities.
 
 ## 2. E2E Testing (Playwright)
+- **Viewport**: Tests run on mobile viewport (Pixel 5: 393×851px).
+- **Directory Structure**:
+  - `e2e/tests/` (test files by feature)
+  - `e2e/fixtures/` (Playwright fixtures)
+  - `e2e/helpers/` (reusable helper functions)
+  - `e2e/constants/` (`TEST_IDS`, `E2E_CONFIG`)
 - **Hybrid Test Data Strategy**:
   - Use worker-isolated generic users (`testUser`, `adminUser`, `superAdminUser`) to balance speed and reliability without recreating users for every test.
   - Reset relevant user states in `beforeEach` or `afterEach`.
