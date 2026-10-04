@@ -118,8 +118,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
 
 > [!TIP]
-> See [frontend/e2e/README.md](frontend/e2e/README.md) for detailed Docker setup and testing.
-> See [`documentation/frontend/e2e/local-ci-simulation.md`](documentation/frontend/e2e/local-ci-simulation.md) for CI simulation setup and testing.
+> See [documentation/frontend/testing.md](documentation/frontend/testing.md) for E2E testing guidelines and CI simulation setup.
 
 ### Local Development Setup
 
@@ -224,8 +223,7 @@ You can simulate the exact GitHub Actions CI environment locally using the provi
 - **Visuals**: Runs on mobile viewport (Pixel 5).
 
 > [!TIP]
-> See [`frontend/e2e/README.md`](frontend/e2e/README.md) for full documentation, authentication flows, and debugging guide.
-> See [`documentation/frontend/e2e/local-ci-simulation.md`](documentation/frontend/e2e/local-ci-simulation.md) for full documentation on how CI simulation works and how to debug it.
+> See [documentation/frontend/testing.md](documentation/frontend/testing.md) for full E2E documentation and debugging guides.
 
 #### 3. Running Integration Tests
 

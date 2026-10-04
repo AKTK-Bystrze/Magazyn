@@ -342,5 +342,5 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 
 - [Architecture](./architecture.md) - Backend architecture patterns
 - [Coding Standards](./coding_standards.md) - Code conventions
-- [Frontend Auth](../../frontend/docs/auth.md) - Frontend auth implementation
+- [Frontend Auth](../frontend/architecture.md) - Frontend auth implementation
 - [Auth Workflow](../../documentation/workflows/auth-workflow.md) - End-to-end flow
