@@ -472,7 +472,7 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      credit_request_status: "PENDING" | "APPROVED" | "DENIED";
+      credit_request_status: "awaiting" | "approved" | "rejected" | "approved with changes";
       credit_transaction_reason:
         | "reservation_charge"
         | "reservation_refund"
@@ -480,7 +480,7 @@ export type Database = {
         | "admin_adjustment"
         | "work_credit";
       equipment_status: "ok" | "broken" | "blocked";
-      reservation_status: "PENDING" | "RENTED" | "RETURNED" | "DENIED";
+      reservation_status: "PENDING" | "RENTED" | "RETURNED" | "DENIED" | "CANCELLED";
       user_role: "user" | "admin" | "super_admin";
     };
     CompositeTypes: {
@@ -603,7 +603,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      credit_request_status: ["PENDING", "APPROVED", "DENIED"],
+      credit_request_status: ["awaiting", "approved", "rejected", "approved with changes"],
       credit_transaction_reason: [
         "reservation_charge",
         "reservation_refund",
@@ -612,7 +612,7 @@ export const Constants = {
         "work_credit",
       ],
       equipment_status: ["ok", "broken", "blocked"],
-      reservation_status: ["PENDING", "RENTED", "RETURNED", "DENIED"],
+      reservation_status: ["PENDING", "RENTED", "RETURNED", "DENIED", "CANCELLED"],
       user_role: ["user", "admin", "super_admin"],
     },
   },

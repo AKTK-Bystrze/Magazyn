@@ -13,22 +13,9 @@ Backend rules and guidelines (e.g. testing, docker, db migrations) are maintaine
 
 ## 💻 Frontend Documentation
 
-- [Architecture](frontend/architecture.md) - Frontend design patterns
-- [Coding Standards](frontend/coding_standards.md) - TypeScript/React conventions
-- [Authentication](frontend/auth.md) - Frontend auth implementation
-- [Redirect Flow](frontend/redirect-flow.md) - Navigation and redirect logic
-
-### Frontend Standards
-
-- [React Guidelines](frontend/standards/react.md)
-- [Astro Guidelines](frontend/standards/astro.md)
-- [Vitest Testing](frontend/standards/vitest-unit-testing.md)
-- [Playwright E2E](frontend/standards/playwright-e2e-itesting.md)
-- [Shadcn/ui Components](frontend/standards/ui-shadcn-helper.md)
-
-### E2E Testing
-
-- [E2E Testing Guide](frontend/e2e/README.md) - End-to-end testing documentation
+- [Architecture](frontend/architecture.md) - Frontend design patterns, auth, and redirect logic
+- [Coding Guidelines](frontend/guidelines.md) - TypeScript/React conventions and structure
+- [Testing Standards](frontend/testing.md) - Unit and E2E testing documentation
 
 ---
 
