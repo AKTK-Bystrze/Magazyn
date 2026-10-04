@@ -6,7 +6,6 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-// CreditRequestRepository defines the data access interface for credit request operations.
 type CreditRequestRepository interface {
 	ListRequests(ctx context.Context, page, perPage int) ([]types.CreditRequestDTO, int64, error)
 	GetByID(ctx context.Context, id string) (*types.CreditRequestDTO, error)

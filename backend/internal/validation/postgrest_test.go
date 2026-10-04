@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestSanitizeSearchTerm_SpecialCharacters_EscapesOperators verifies that PostgREST operators are properly escaped
 func TestSanitizeSearchTerm_SpecialCharacters_EscapesOperators(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -23,7 +22,6 @@ func TestSanitizeSearchTerm_SpecialCharacters_EscapesOperators(t *testing.T) {
 		{"normal text", "camera lens", "camera lens"},
 		{"empty string", "", ""},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := SanitizeSearchTerm(tt.input)
@@ -31,8 +29,6 @@ func TestSanitizeSearchTerm_SpecialCharacters_EscapesOperators(t *testing.T) {
 		})
 	}
 }
-
-// TestSanitizeSearchTerm_InjectionAttempts_BlocksAttacks tests common SQL injection patterns
 func TestSanitizeSearchTerm_InjectionAttempts_BlocksAttacks(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -60,7 +56,6 @@ func TestSanitizeSearchTerm_InjectionAttempts_BlocksAttacks(t *testing.T) {
 			"or\\(name\\.eq\\.test\\,id\\.eq\\.123\\)",
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := SanitizeSearchTerm(tt.input)
@@ -68,8 +63,6 @@ func TestSanitizeSearchTerm_InjectionAttempts_BlocksAttacks(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateUUID_ValidFormat_ReturnsNil tests valid UUID formats
 func TestValidateUUID_ValidFormat_ReturnsNil(t *testing.T) {
 	tests := []struct {
 		name string
@@ -81,7 +74,6 @@ func TestValidateUUID_ValidFormat_ReturnsNil(t *testing.T) {
 		{"all zeros", "00000000-0000-0000-0000-000000000000"},
 		{"all f's", "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateUUID(tt.uuid)
@@ -89,8 +81,6 @@ func TestValidateUUID_ValidFormat_ReturnsNil(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateUUID_InvalidFormat_ReturnsError tests invalid UUID formats
 func TestValidateUUID_InvalidFormat_ReturnsError(t *testing.T) {
 	tests := []struct {
 		name string
@@ -104,7 +94,6 @@ func TestValidateUUID_InvalidFormat_ReturnsError(t *testing.T) {
 		{"invalid characters", "550e8400-e29b-41d4-a716-gggggggggggg"},
 		{"not a uuid", "not-a-valid-uuid-string-here"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateUUID(tt.uuid)
@@ -112,8 +101,6 @@ func TestValidateUUID_InvalidFormat_ReturnsError(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateISODate_ValidFormat_ReturnsNil tests valid ISO date formats
 func TestValidateISODate_ValidFormat_ReturnsNil(t *testing.T) {
 	tests := []struct {
 		name string
@@ -126,7 +113,6 @@ func TestValidateISODate_ValidFormat_ReturnsNil(t *testing.T) {
 		{"january", "2025-01-15"},
 		{"december", "2025-12-15"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateISODate(tt.date)
@@ -134,8 +120,6 @@ func TestValidateISODate_ValidFormat_ReturnsNil(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateISODate_InvalidFormat_ReturnsError tests invalid date formats
 func TestValidateISODate_InvalidFormat_ReturnsError(t *testing.T) {
 	tests := []struct {
 		name string
@@ -152,7 +136,6 @@ func TestValidateISODate_InvalidFormat_ReturnsError(t *testing.T) {
 		{"too long", "2025-12-25T00:00:00"},
 		{"invalid separator", "2025/12/25"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateISODate(tt.date)
@@ -160,11 +143,8 @@ func TestValidateISODate_InvalidFormat_ReturnsError(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateEnum_AllowedValue_ReturnsNil tests valid enum values
 func TestValidateEnum_AllowedValue_ReturnsNil(t *testing.T) {
 	allowedStatuses := []string{"PENDING", "APPROVED", "DENIED"}
-
 	tests := []struct {
 		name  string
 		value string
@@ -173,7 +153,6 @@ func TestValidateEnum_AllowedValue_ReturnsNil(t *testing.T) {
 		{"middle value", "APPROVED"},
 		{"last value", "DENIED"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateEnum(tt.value, allowedStatuses)
@@ -181,11 +160,8 @@ func TestValidateEnum_AllowedValue_ReturnsNil(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateEnum_DisallowedValue_ReturnsError tests invalid enum values
 func TestValidateEnum_DisallowedValue_ReturnsError(t *testing.T) {
 	allowedStatuses := []string{"PENDING", "APPROVED", "DENIED"}
-
 	tests := []struct {
 		name  string
 		value string
@@ -196,7 +172,6 @@ func TestValidateEnum_DisallowedValue_ReturnsError(t *testing.T) {
 		{"partial match", "PEND"},
 		{"similar value", "APPROVED_EXTRA"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateEnum(tt.value, allowedStatuses)
@@ -204,8 +179,6 @@ func TestValidateEnum_DisallowedValue_ReturnsError(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateInt32Range_ValidValue_ReturnsNil tests values within range
 func TestValidateInt32Range_ValidValue_ReturnsNil(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -219,7 +192,6 @@ func TestValidateInt32Range_ValidValue_ReturnsNil(t *testing.T) {
 		{"negative range", -50, -100, 0},
 		{"single value range", 42, 42, 42},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateInt32Range(tt.value, tt.min, tt.max)
@@ -227,8 +199,6 @@ func TestValidateInt32Range_ValidValue_ReturnsNil(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateInt32Range_InvalidValue_ReturnsError tests values outside range
 func TestValidateInt32Range_InvalidValue_ReturnsError(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -241,7 +211,6 @@ func TestValidateInt32Range_InvalidValue_ReturnsError(t *testing.T) {
 		{"far below", -1000, 0, 100},
 		{"far above", 1000, 0, 100},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateInt32Range(tt.value, tt.min, tt.max)
@@ -249,8 +218,6 @@ func TestValidateInt32Range_InvalidValue_ReturnsError(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateStringLength_ValidLength_ReturnsNil tests strings within length range
 func TestValidateStringLength_ValidLength_ReturnsNil(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -264,7 +231,6 @@ func TestValidateStringLength_ValidLength_ReturnsNil(t *testing.T) {
 		{"empty allowed", "", 0, 10},
 		{"exact length", "test", 4, 4},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateStringLength(tt.str, tt.minLength, tt.maxLength)
@@ -272,8 +238,6 @@ func TestValidateStringLength_ValidLength_ReturnsNil(t *testing.T) {
 		})
 	}
 }
-
-// TestValidateStringLength_InvalidLength_ReturnsError tests strings outside length range
 func TestValidateStringLength_InvalidLength_ReturnsError(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -286,7 +250,6 @@ func TestValidateStringLength_InvalidLength_ReturnsError(t *testing.T) {
 		{"empty not allowed", "", 1, 10},
 		{"way too long", "this is a very long string that exceeds the maximum", 1, 10},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateStringLength(tt.str, tt.minLength, tt.maxLength)

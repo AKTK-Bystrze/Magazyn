@@ -110,6 +110,7 @@ export function MobileMenu({
             variant="outline"
             className="w-full justify-start text-destructive"
             onClick={handleLogout}
+            data-testid="mobile-logout-button"
           >
             <LogOut className="mr-2 h-4 w-4" />
             Wyloguj się

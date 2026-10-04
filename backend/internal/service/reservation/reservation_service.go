@@ -1,4 +1,3 @@
-// Package reservation provides the service layer logic for managing reservations.
 // It handles business rules validation, credit calculation, and orchestrates operations
 // between repositories.
 package reservation
@@ -16,29 +15,19 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-// ============================================================================
 // Reservation Service Interface
-// ============================================================================
-
 // ReservationService defines operations for managing reservations.
 type ReservationService interface {
 	List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error)
-
 	GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error)
-
 	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error)
-
 	Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error)
-
+	// BulkUpdate updates multiple reservations (Admin only)
 	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error)
-
 	GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error)
 }
 
-// ============================================================================
 // Reservation Service Implementation
-// ============================================================================
-
 type reservationService struct {
 	repo          repository.ReservationRepository
 	equipmentRepo repository.EquipmentRepository
@@ -46,7 +35,6 @@ type reservationService struct {
 	emailService  email.Service
 }
 
-// NewReservationService creates a new ReservationService instance.
 func NewReservationService(
 	repo repository.ReservationRepository,
 	equipmentRepo repository.EquipmentRepository,
@@ -60,22 +48,18 @@ func NewReservationService(
 		emailService:  emailService,
 	}
 }
-
-// List retrieves a paginated list of reservations
 func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error) {
 	logger.Infof(ctx, "Listing reservations - Page: %d, PerPage: %d", query.Page, query.PerPage)
-
 	items, total, err := s.repo.GetReservations(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to list reservations: %v", err)
 		return nil, types.NewInternalError("Failed to list reservations", err)
 	}
-
+	// Calculate pagination
 	totalPages := 0
 	if query.PerPage > 0 {
 		totalPages = int((total + int64(query.PerPage) - 1) / int64(query.PerPage))
 	}
-
 	return &types.ReservationListResponse{
 		Reservations: items,
 		Pagination: types.PaginationResponse{
@@ -86,22 +70,16 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 		},
 	}, nil
 }
-
-// GetByID retrieves detailed reservation information
 func (s *reservationService) GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error) {
 	res, err := s.repo.GetReservationByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-
 	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin && res.UserID != userID {
 		return nil, types.NewForbiddenError("You are not allowed to view this reservation")
 	}
-
 	return res, nil
 }
-
-// Create creates new reservations (transactional logic handled by DB RPC)
 func (s *reservationService) Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error) {
 	logger.Infof(ctx, "Creating reservation for %d items, UserID: %s", len(cmd.Reservations), userID)
 	targetUserID := userID
@@ -109,10 +87,9 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		targetUserID = *cmd.UserID
 	}
 	isFreeReservation := cmd.FreeReservation != nil && *cmd.FreeReservation
-
+	// 1. Validation & Cost Calculation (Read-Only)
 	totalCost := int32(0)
 	costMap := make(map[int]int32)
-
 	for i, req := range cmd.Reservations {
 		eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
 		if err != nil {
@@ -121,25 +98,21 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		if eq.IsArchived || eq.Status == constants.EquipmentStatusBroken {
 			return nil, types.NewValidationError(fmt.Sprintf("Equipment %s is not available", safeString(eq.Name)), nil)
 		}
-
 		if !isFreeReservation {
 			eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
 			if err != nil {
 				return nil, types.NewInternalError("failed to fetch equipment type", err)
 			}
-
 			days := s.calculateDays(req.StartDate, req.EndDate)
 			cost := days * eqType.CreditCostPerDay
 			totalCost += cost
 			costMap[i] = cost
-
 			logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, Days=%d, CostPerDay=%d, ItemCost=%d",
 				req.EquipmentID, eq.TypeID, days, eqType.CreditCostPerDay, cost)
 		} else {
 			costMap[i] = 0
 		}
 	}
-
 	if isFreeReservation {
 		logger.Infof(ctx, "Creating free reservation for user %s", targetUserID)
 	}
@@ -147,7 +120,6 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	if err != nil {
 		return nil, types.NewConflictError("Reservation failed: "+err.Error(), nil)
 	}
-
 	var succeeded []types.ReservationListItem
 	for i, req := range cmd.Reservations {
 		if i < len(reservationIDs) {
@@ -162,16 +134,14 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 			})
 		}
 	}
-
+	// Send Email (Async)
 	go func() {
 		bgCtx := context.WithoutCancel(ctx)
-
 		profile, _ := s.userRepo.GetByID(bgCtx, targetUserID)
 		emailAddr := ""
 		if profile != nil {
 			emailAddr = profile.Email
 		}
-
 		details := map[string]interface{}{
 			"user_id": targetUserID,
 			"count":   len(succeeded),
@@ -180,15 +150,12 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		}
 		_ = s.emailService.SendReservationConfirmation(bgCtx, emailAddr, details)
 	}()
-
 	return &types.CreateReservationsResponse{
 		Reservations:     succeeded,
 		TotalCreditCost:  totalCost,
 		RemainingBalance: newBalance,
 	}, nil
 }
-
-// Update updates a reservation
 func (s *reservationService) Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error) {
 	status := "unknown"
 	if cmd.Status != nil {
@@ -199,14 +166,11 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	if err != nil {
 		return nil, err
 	}
-
 	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
 	isOwner := current.UserID == userID
-
 	if !isAdmin && !isOwner {
 		return nil, types.NewForbiddenError("Not allowed")
 	}
-
 	if !isAdmin {
 		if current.Status != constants.ReservationStatusPending {
 			return nil, types.NewForbiddenError("Cannot modify non-pending reservation")
@@ -217,18 +181,15 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
 		}
 	}
-
 	updateData := types.PublicReservationsUpdate{}
 	needsUpdate := false
-
 	var creditAdjustment int32
 	var newBalance int32
 	var latestUpdatedAt *string
-
+	// Check if this is a full cancellation
 	isCancelling := cmd.Status != nil && (*cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled)
-
+	// Handle Date Change
 	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
-
 	if datesChanging {
 		start := current.StartDate
 		if cmd.StartDate != nil {
@@ -238,7 +199,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		if cmd.EndDate != nil {
 			end = *cmd.EndDate
 		}
-
+		// Check availability
 		conflicts, err := s.repo.GetOverlappingReservations(ctx, current.EquipmentID, start, end, &id)
 		if err != nil {
 			return nil, err
@@ -246,18 +207,16 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		if len(conflicts) > 0 {
 			return nil, types.NewConflictError("Dates not available", nil)
 		}
-
 		if !isCancelling {
 			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end)
 			if err != nil {
 				logger.Errorf(ctx, "Failed to modify dates with credits: %v", err)
 				return nil, err
 			}
-
 			creditAdjustment = result.CreditAdjustment
 			newBalance = result.NewBalance
 			latestUpdatedAt = &result.UpdatedAt
-
+			// Log successful credit adjustment
 			if result.CreditAdjustment != 0 {
 				if result.CreditAdjustment > 0 {
 					logger.Infof(ctx, "Refunded %d credits for shortening reservation %s", result.CreditAdjustment, id)
@@ -265,7 +224,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 					logger.Infof(ctx, "Charged %d credits for extending reservation %s", -result.CreditAdjustment, id)
 				}
 			}
-
+			// Update our local 'current' variable so we know dates were already updated
 			current.StartDate = start
 			current.EndDate = end
 		} else {
@@ -274,11 +233,11 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			needsUpdate = true
 		}
 	}
-
+	// Handle Status Change
 	if cmd.Status != nil && *cmd.Status != current.Status {
 		updateData.Status = cmd.Status
 		needsUpdate = true
-
+		// If cancelling (DENIED or CANCELLED), do a FULL refund
 		if isCancelling {
 			if current.IsFree {
 				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
@@ -288,16 +247,13 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 					logger.Errorf(ctx, "Refund failed: equipment %s not found: %v", current.EquipmentID, errEq)
 					return nil, fmt.Errorf("refund failed: equipment %s not found: %w", current.EquipmentID, errEq)
 				}
-
 				eqType, errType := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
 				if errType != nil {
 					logger.Errorf(ctx, "Refund failed: equipment type %s not found: %v", eq.TypeID, errType)
 					return nil, fmt.Errorf("refund failed: equipment type %s not found: %w", eq.TypeID, errType)
 				}
-
 				days := s.calculateDays(current.StartDate, current.EndDate)
 				refundAmount := days * eqType.CreditCostPerDay
-
 				if refundAmount > 0 {
 					if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 						logger.Errorf(ctx, "Failed to refund %d credits for reservation %s: %v", refundAmount, id, err)
@@ -313,11 +269,9 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			}
 		}
 	}
-
 	if !needsUpdate && !datesChanging {
 		return nil, nil
 	}
-
 	var updated *types.PublicReservationsSelect
 	if needsUpdate {
 		var err error
@@ -335,7 +289,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			UpdatedAt:   latestUpdatedAt,
 		}
 	}
-
+	// Calculate credit cost for the response
 	eq, _ := s.equipmentRepo.GetByID(ctx, updated.EquipmentID)
 	var creditCost int32
 	if eq != nil {
@@ -345,7 +299,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			creditCost = days * eqType.CreditCostPerDay
 		}
 	}
-
 	return &types.UpdateReservationResponse{
 		ID:               updated.ID,
 		EquipmentID:      updated.EquipmentID,
@@ -358,27 +311,22 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		UpdatedAt:        safeString(updated.UpdatedAt),
 	}, nil
 }
-
 func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error) {
 	return s.repo.BulkUpdateStatusAtomic(ctx, cmd.ReservationIDs, cmd.Status, adminID)
 }
-
 func (s *reservationService) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
 	return s.repo.GetDashboardStats(ctx)
 }
-
 func (s *reservationService) calculateDays(start, end string) int32 {
 	layout := constants.DateFormatISO
 	t1, _ := time.Parse(layout, start)
 	t2, _ := time.Parse(layout, end)
-
 	days := int32(t2.Sub(t1).Hours() / 24)
 	if days < 0 {
 		return 0
 	}
 	return days + 1
 }
-
 func safeString(s *string) string {
 	if s == nil {
 		return ""

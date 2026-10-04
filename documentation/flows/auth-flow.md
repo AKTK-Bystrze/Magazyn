@@ -208,6 +208,5 @@ Centralized in `RedirectManager` class with loop prevention:
 
 ## Related Documentation
 
-- **Frontend**: [auth.md](../../frontend/docs/auth.md)
-- **Backend**: [auth.md](../../backend/docs/auth.md)
-- **Redirect Flow**: [redirect-flow.md](../../frontend/docs/redirect-flow.md)
+- **Frontend Architecture**: [architecture.md](../frontend/architecture.md)
+- **Backend Auth**: [auth.md](../backend/auth.md)

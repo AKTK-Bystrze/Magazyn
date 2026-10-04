@@ -10,17 +10,13 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-// CreditHistoryHandler handles HTTP requests for credit history.
 type CreditHistoryHandler struct {
 	service credit.CreditHistoryService
 }
 
-// NewCreditHistoryHandler creates a new instance of CreditHistoryHandler.
 func NewCreditHistoryHandler(service credit.CreditHistoryService) *CreditHistoryHandler {
 	return &CreditHistoryHandler{service: service}
 }
-
-// HandleGetCreditHistory handles GET /credit-history.
 func (h *CreditHistoryHandler) HandleGetCreditHistory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -29,12 +25,10 @@ func (h *CreditHistoryHandler) HandleGetCreditHistory(w http.ResponseWriter, r *
 		return
 	}
 	userRole := common.GetUserRoleFromContext(r)
-
 	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	filterUserID := r.URL.Query().Get("user_id")
 	isAdmin := userRole == auth.RoleAdmin || userRole == auth.RoleSuperAdmin
 	var targetUserID *string
-
 	if filterUserID != "" {
 		if !isAdmin {
 			common.RespondError(ctx, w, http.StatusForbidden, "Only admins can filter by user_id")
