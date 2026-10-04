@@ -7,16 +7,21 @@ interface ProxyOptions {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   /** Whether to forward query params from the original request */
   forwardQuery?: boolean;
+  /** Whether the route requires authentication (defaults to true) */
+  requireAuth?: boolean;
 }
 
 /**
- * Creates a standard authenticated proxy handler for Astro API routes.
+ * Creates a standard proxy handler for Astro API routes.
  * Forwards the request to the Go backend with the JWT token and trace ID.
  */
 export function createProxyHandler(opts: ProxyOptions) {
+  const requireAuth = opts.requireAuth !== false;
+
   return async ({ locals, request, params }: APIContext): Promise<Response> => {
     const token = locals.accessToken;
-    if (!token) {
+
+    if (requireAuth && !token) {
       return new Response(JSON.stringify({ error: "Unauthorized", code: "UNAUTHORIZED" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -35,27 +40,39 @@ export function createProxyHandler(opts: ProxyOptions) {
       const headers = new Headers({
         "X-Trace-Id": locals.trace_id || "",
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       });
 
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+
       const fetchOpts: RequestInit = { method: opts.method, headers };
-      if (opts.method !== "GET" && opts.method !== "DELETE") {
-        fetchOpts.body = JSON.stringify(await request.json());
+      if (opts.method !== "GET" && opts.method !== "DELETE" && opts.method !== "HEAD") {
+        const rawBody = await request.text();
+        if (rawBody) {
+          fetchOpts.body = rawBody;
+        }
       }
 
       const response = await fetch(backendUrl.toString(), fetchOpts);
-      const data = await response.json();
+      const responseText = await response.text();
 
-      return new Response(JSON.stringify(data), {
+      // Forward headers from backend, defaulting to application/json if none provided
+      const responseContentType = response.headers.get("Content-Type") || "application/json";
+
+      return new Response(responseText, {
         status: response.status,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": responseContentType },
       });
     } catch (error) {
       locals.logger?.error(`[Proxy] ${opts.method} ${opts.path} error:`, { error });
-      return new Response(JSON.stringify({ error: "Internal Server Error", code: "INTERNAL_ERROR" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Internal Server Error", code: "INTERNAL_ERROR" }),
+        {
+          status: 502, // Using 502 Bad Gateway since this is a proxy error
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
   };
 }
