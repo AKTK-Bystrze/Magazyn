@@ -6,21 +6,12 @@ trigger: always_on
 
 ### Guidelines for GO
 
-#### GIN
-
-- Use middleware for cross-cutting concerns like authentication, logging, and request validation
-- Implement structured logging with context for better debugging of {{error_scenarios}}
-- Use binding validation for request payloads with custom validators for complex business rules
-- Apply the context package properly to manage request-scoped values and cancellation signals
-- Implement proper error handling with custom error types and consistent HTTP status codes
-- Use the gin.H map for JSON responses consistently across handlers for {{api_endpoints}}
-
-#### ECHO
-
-- Use the middleware system for cross-cutting concerns with proper ordering based on execution requirements
-- Implement the context package for request-scoped values and proper cancellation propagation
-- Use the validator package for request validation of {{input_types}} with custom validation rules
-- Apply proper route grouping for related endpoints and consistent path prefixing
-- Implement structured error handling with custom error types and appropriate HTTP status codes
-- Use context timeouts for external service calls to prevent resource leaks when handling {{external_dependencies}}
-
+- **Architecture**: Enforce Layered Architecture (`handler` -> `service` -> `repository`). Business logic strictly belongs in the `service` layer.
+- **Routing**: Use the standard library `net/http` with `http.NewServeMux()`. Do not use external frameworks like Gin or Echo.
+- **Contexts**: Always propagate `context.Context` from HTTP requests down through services to repositories for logging, cancellation, and identity injection.
+- **Dependency Injection**: Pass dependencies (e.g., repositories) via Constructor Injection functions (`NewAuthService(repo)`). Do not use global state.
+- **Database / PostgREST**: 
+  - Use `supabase-go` for database ops and `gotrue-go` for auth operations. 
+  - Always sanitize search terms for `ILIKE` clauses using `validation.SanitizeSearchTerm(term)` to prevent PostgREST injection.
+- **Error Handling**: Use structured domain errors (e.g., `types.NotFoundError`, `types.ConflictError`). Map them to proper HTTP status codes at the `handler` level using `http_utils.go`.
+- **Testing**: Group tests using `t.Run()` and verify context extraction explicitly. Check `.agent/rules/go-testing.md` for specific unit testing rules.

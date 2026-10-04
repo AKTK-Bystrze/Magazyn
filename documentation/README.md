@@ -2,48 +2,12 @@
 
 This index provides navigation to all project documentation.
 
-## 📖 Overview
+## 📦 Backend Documentation
 
-- [Tech Stack & Architecture](overview/techstack.md) - Technologies and frameworks used
-- [Project Structure](overview/project_structure.md) - Monorepo layout and directory organization
-- [API Overview](overview/api.md) - API design and endpoint summary
-- [Conventional Commits](overview/conventional-commits.md) - Commit message guidelines
+- [Backend Developer Guide](backend/README.md) - Dense, precise reference for backend architecture, security, and conventions.
 
-### Architecture Diagrams
-
-- [High-Level Architecture](overview/high-level-architecture.md) - Overview of main components and data flows
-- [Detailed Architecture](overview/detailed-architecture.md) - Technical breakdown of all layers, middleware, and patterns
-
----
-
-## 📋 Product Requirements
-
-- [PRD Index](design-docs/prd/index.md) - Product Requirements Document navigation
-- [Product Overview](design-docs/prd/overview.md) - Problem statement and functional requirements
-- [Success Metrics](design-docs/prd/metrics.md) - KPIs and success criteria
-
-### Design Documents
-
-- [Database Plan](design-docs/db-plan.md) - Database schema and relationships
-- [API Plan](design-docs/api-plan.md) - API endpoint specifications
-- [UI Plan](design-docs/ui-plan.md) - User interface design specifications
-
----
-
-## ⚙️ Backend Documentation
-
-- [Backend Index](backend/index.md) - Backend project structure overview
-- [Architecture](backend/architecture.md) - Backend design patterns
-- [Coding Standards](backend/coding_standards.md) - Go coding conventions
-- [Authentication](backend/auth.md) - Auth implementation details
-- [Validation & Security](backend/validation_security.md) - Input validation patterns
-
-### Backend Standards
-
-- [Go Guidelines](backend/standards/go.md)
-- [Go Testing](backend/standards/go-testing.md)
-- [Docker](backend/standards/docker.md)
-- [Database Migrations](backend/standards/db-supabase-migrations.md)
+### Backend Rules
+Backend rules and guidelines (e.g. testing, docker, db migrations) are maintained directly as agent rules in the .agent/rules/ directory at the project root.
 
 ---
 
