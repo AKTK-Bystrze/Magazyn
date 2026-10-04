@@ -97,7 +97,7 @@ func TestTodayReservation_SingleDay(t *testing.T) {
 			},
 		},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
 	// Assert: Should succeed, cost = 1 day
 	require.NoError(t, err)
 	assert.NotEmpty(t, resp.Reservations)
@@ -109,6 +109,7 @@ func TestTodayReservation_SingleDay(t *testing.T) {
 		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
 	})
 }
+
 func TestTodayReservation_MultiDay(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
@@ -124,7 +125,7 @@ func TestTodayReservation_MultiDay(t *testing.T) {
 			},
 		},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
 	// Assert: Should succeed, cost = 4 days
 	require.NoError(t, err)
 	expectedCost := fixture.costPerDay * 4
@@ -190,7 +191,7 @@ func TestCostCalculation_Matrix(t *testing.T) {
 					},
 				},
 			}
-			resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
+			resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
 			// Assert
 			require.NoError(t, err)
 			assert.NotEmpty(t, resp.Reservations)
@@ -203,6 +204,7 @@ func TestCostCalculation_Matrix(t *testing.T) {
 		})
 	}
 }
+
 func TestMultiReservation_SameEquipmentDifferentDates(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
@@ -222,7 +224,7 @@ func TestMultiReservation_SameEquipmentDifferentDates(t *testing.T) {
 			},
 		},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
 	// Assert: Should succeed
 	require.NoError(t, err)
 	assert.Len(t, resp.Reservations, 2)
@@ -232,6 +234,7 @@ func TestMultiReservation_SameEquipmentDifferentDates(t *testing.T) {
 		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[1].ID).Execute()
 	})
 }
+
 func TestMultiReservation_PartialConflict(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
@@ -255,7 +258,7 @@ func TestMultiReservation_PartialConflict(t *testing.T) {
 			},
 		},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
 	// Assert: Should fail ATOMICALLY (none created)
 	assert.Error(t, err)
 	assert.Nil(t, resp)
@@ -300,7 +303,7 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 		},
 		FreeReservation: &isFree,
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "admin")
 	// Assert: Should succeed
 	require.NoError(t, err)
 	assert.Len(t, resp.Reservations, 1)
@@ -325,6 +328,7 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
 	})
 }
+
 func TestFreeReservation_CostComparison(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
@@ -342,7 +346,7 @@ func TestFreeReservation_CostComparison(t *testing.T) {
 			},
 		},
 	}
-	respRegular, err := fixture.svc.Create(ctx, cmdRegular, fixture.testUserID)
+	respRegular, err := fixture.svc.Create(ctx, cmdRegular, fixture.testUserID, "user")
 	require.NoError(t, err)
 	balanceAfterRegular := fixture.getUserBalance(fixture.testUserID)
 	costRegular := balanceBeforeRegular - balanceAfterRegular
@@ -364,7 +368,7 @@ func TestFreeReservation_CostComparison(t *testing.T) {
 		},
 		FreeReservation: &isFree,
 	}
-	respFree, err := fixture.svc.Create(ctx, cmdFree, fixture.testUserID)
+	respFree, err := fixture.svc.Create(ctx, cmdFree, fixture.testUserID, "admin")
 	require.NoError(t, err)
 	balanceAfterFree := fixture.getUserBalance(fixture.testUserID)
 	costFree := balanceBeforeFree - balanceAfterFree
@@ -374,6 +378,7 @@ func TestFreeReservation_CostComparison(t *testing.T) {
 		fixture.client.From("reservations").Delete("", "").Eq("id", respFree.Reservations[0].ID).Execute()
 	})
 }
+
 func TestTS2_AdminCreatesReservationForUser(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
@@ -390,7 +395,7 @@ func TestTS2_AdminCreatesReservationForUser(t *testing.T) {
 			{EquipmentID: fixture.equipmentID, StartDate: dateOffset(5), EndDate: dateOffset(7)},
 		},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUser2ID)
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
 	require.NotEmpty(t, resp.Reservations)
 	assert.Equal(t, targetID, resp.Reservations[0].UserID, "Reservation owner should be the target user")

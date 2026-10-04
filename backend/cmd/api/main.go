@@ -112,7 +112,7 @@ func main() {
 	mux.Handle("GET /credits/requests", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleListRequests)))
 	mux.Handle("POST /credits/requests", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleCreateRequest)))
 	mux.Handle("PUT /credits/requests/{id}", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleUpdateRequest)))
-	mux.Handle("PATCH /credits/requests/{id}/status", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleReviewRequest)))
+	mux.Handle("PATCH /credits/requests/{id}/status", authMiddleware(authmiddleware.RequireRoles(auth.RoleSuperAdmin)(http.HandlerFunc(creditRequestHandler.HandleReviewRequest))))
 	mux.Handle("GET /users/credits", authMiddleware(http.HandlerFunc(creditRequestHandler.HandleGetLeaderboard)))
 	// Analytics Routes (Admin only)
 	mux.Handle("GET /analytics/equipment-stats", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(analyticsHandler.HandleGetEquipmentStats))))

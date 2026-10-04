@@ -1,3 +1,4 @@
+// Package constants defines application-wide constants including database table names,
 // pagination defaults, authentication settings, and storage configuration.
 package constants
 
@@ -14,30 +15,42 @@ const (
 
 // Reservation status values that represent the lifecycle of an equipment rental.
 const (
-	ReservationStatusPending   = "PENDING"   // Reservation created but equipment not yet picked up
-	ReservationStatusRented    = "RENTED"    // Equipment currently rented out
-	ReservationStatusReturned  = "RETURNED"  // Equipment returned and reservation complete
-	ReservationStatusDenied    = "DENIED"    // Reservation denied by admin
-	ReservationStatusCancelled = "CANCELLED" // Reservation cancelled
+	// ReservationStatusPending indicates reservation is created but equipment is not yet picked up.
+	ReservationStatusPending = "PENDING"
+	// ReservationStatusRented indicates equipment is currently rented out.
+	ReservationStatusRented = "RENTED"
+	// ReservationStatusReturned indicates equipment is returned and reservation is complete.
+	ReservationStatusReturned = "RETURNED"
+	// ReservationStatusDenied indicates reservation was denied by an administrator.
+	ReservationStatusDenied = "DENIED"
+	// ReservationStatusCancelled indicates reservation was cancelled.
+	ReservationStatusCancelled = "CANCELLED"
 )
 
 // Equipment status values that indicate the current condition and availability.
 const (
-	EquipmentStatusOK      = "ok"      // Equipment is in good condition and available
-	EquipmentStatusBroken  = "broken"  // Equipment broken, not usable
-	EquipmentStatusBlocked = "blocked" // Equipment blocked by admin (e.g. for maintenance)
+	// EquipmentStatusOK indicates equipment is in good condition and available.
+	EquipmentStatusOK = "ok"
+	// EquipmentStatusBroken indicates equipment is broken and unusable.
+	EquipmentStatusBroken = "broken"
+	// EquipmentStatusBlocked indicates equipment is blocked by an admin (e.g. for maintenance).
+	EquipmentStatusBlocked = "blocked"
 )
 
 // Credit reason values used when adjusting user credit balances.
 const (
-	CreditReasonWorkCredit = "work_credit" // Credits awarded for approved help requests
+	// CreditReasonWorkCredit indicates credits awarded for approved help requests.
+	CreditReasonWorkCredit = "work_credit"
 )
 
 // Pagination defaults and limits for list endpoints.
 const (
-	DefaultPage    = 1   // Default page number when not specified
-	DefaultPerPage = 25  // Default number of items per page
-	MaxPerPage     = 100 // Maximum items per page to prevent excessive data transfer
+	// DefaultPage is the default page number when not specified.
+	DefaultPage = 1
+	// DefaultPerPage is the default number of items per page.
+	DefaultPerPage = 25
+	// MaxPerPage is the maximum items per page to prevent excessive data transfer.
+	MaxPerPage = 100
 )
 
 // AllowedPerPageValues defines the standard allowed page sizes for pagination.
@@ -45,26 +58,38 @@ var AllowedPerPageValues = []int{10, 25, 50, 100}
 
 // Storage configuration for file uploads and asset management.
 const (
-	StorageBucket = "equipment" // Supabase storage bucket name for equipment images
+	// StorageBucket is the Supabase storage bucket name for equipment images.
+	StorageBucket = "equipment"
 )
 
 // Calendar-related defaults and limits for availability endpoints.
 const (
-	CalendarDefaultDays = 30           // Default number of days for calendar view
-	CalendarMaxDays     = 90           // Maximum number of days allowed in a single request
-	CalendarMinDays     = 1            // Minimum number of days for calendar view
-	TopRentersLimit     = 5            // Number of top renters to include in equipment stats
-	AnalyticsMinYear    = 2000         // Minimum year for analytics filters
-	AnalyticsMaxYear    = 2100         // Maximum year for analytics filters
-	DateFormatISO       = "2006-01-02" // ISO date format for Go time parsing
+	// CalendarDefaultDays is the default number of days for calendar view.
+	CalendarDefaultDays = 30
+	// CalendarMaxDays is the maximum number of days allowed in a single request.
+	CalendarMaxDays = 90
+	// CalendarMinDays is the minimum number of days for calendar view.
+	CalendarMinDays = 1
+	// TopRentersLimit is the number of top renters to include in equipment stats.
+	TopRentersLimit = 5
+	// AnalyticsMinYear is the minimum year for analytics filters.
+	AnalyticsMinYear = 2000
+	// AnalyticsMaxYear is the maximum year for analytics filters.
+	AnalyticsMaxYear = 2100
+	// DateFormatISO is the ISO date format for Go time parsing.
+	DateFormatISO = "2006-01-02"
 )
 
 // Validation constraints for input parameters.
 const (
-	UUIDLength    = 36 // Length of a standard UUID string
-	DateLengthISO = 10 // Length of an ISO 8601 date string (YYYY-MM-DD)
-	MinMonth      = 1  // Minimum month value
-	MaxMonth      = 12 // Maximum month value
+	// UUIDLength is the character length of a standard UUID string.
+	UUIDLength = 36
+	// DateLengthISO is the length of an ISO 8601 date string (YYYY-MM-DD).
+	DateLengthISO = 10
+	// MinMonth is the minimum month value.
+	MinMonth = 1
+	// MaxMonth is the maximum month value.
+	MaxMonth = 12
 )
 
 // ValidEquipmentStatuses lists all valid equipment status values for validation.
@@ -79,7 +104,8 @@ var ValidReservationStatuses = []string{
 	ReservationStatusCancelled,
 }
 
-// Input length constraints
+// Input length constraints.
 const (
-	MaxSearchLength = 100 // Maximum length for search queries
+	// MaxSearchLength is the maximum character length for search queries.
+	MaxSearchLength = 100
 )

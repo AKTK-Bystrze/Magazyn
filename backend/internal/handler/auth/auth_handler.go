@@ -1,3 +1,4 @@
+// Package auth provides HTTP handlers for authentication and user sessions.
 package auth
 
 import (
@@ -12,13 +13,17 @@ import (
 	"magazyn/backend/internal/types"
 )
 
+// AuthHandler handles HTTP endpoints for login, logout, and session verification.
 type AuthHandler struct {
 	service authservice.AuthService
 }
 
+// NewAuthHandler creates a new instance of AuthHandler.
 func NewAuthHandler(s authservice.AuthService) *AuthHandler {
 	return &AuthHandler{service: s}
 }
+
+// HandleLogin initiates passwordless login via magic link.
 func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	var req types.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -50,6 +55,8 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	logger.Infof(r.Context(), "Login link sent to %s", req.Email)
 	common.RespondJSON(r.Context(), w, http.StatusOK, types.LoginResponse{Message: "Login link sent to your email"})
 }
+
+// HandleLogout revokes the user's active session.
 func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	token, err := common.ExtractBearerToken(r)
 	if err != nil {
@@ -64,6 +71,8 @@ func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	common.RespondJSON(r.Context(), w, http.StatusOK, types.LogoutResponse{Message: "Logged out successfully"})
 }
+
+// HandleGetSession retrieves the current user profile and session state.
 func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 	user := common.GetUserFromContext(r)
 	if user == nil {

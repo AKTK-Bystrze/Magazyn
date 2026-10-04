@@ -1,22 +1,26 @@
+// Package credit provides HTTP handlers for credit history and credit request management.
 package credit
 
 import (
 	"net/http"
 
-	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/service/credit"
 	"magazyn/backend/internal/types"
 )
 
+// CreditHistoryHandler handles HTTP endpoints for retrieving user credit history.
 type CreditHistoryHandler struct {
 	service credit.CreditHistoryService
 }
 
+// NewCreditHistoryHandler creates a new instance of CreditHistoryHandler.
 func NewCreditHistoryHandler(service credit.CreditHistoryService) *CreditHistoryHandler {
 	return &CreditHistoryHandler{service: service}
 }
+
+// HandleGetCreditHistory retrieves paginated credit history records for the requesting user or target user.
 func (h *CreditHistoryHandler) HandleGetCreditHistory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -27,13 +31,8 @@ func (h *CreditHistoryHandler) HandleGetCreditHistory(w http.ResponseWriter, r *
 	userRole := common.GetUserRoleFromContext(r)
 	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	filterUserID := r.URL.Query().Get("user_id")
-	isAdmin := userRole == auth.RoleAdmin || userRole == auth.RoleSuperAdmin
 	var targetUserID *string
 	if filterUserID != "" {
-		if !isAdmin {
-			common.RespondError(ctx, w, http.StatusForbidden, "Only admins can filter by user_id")
-			return
-		}
 		targetUserID = &filterUserID
 	}
 	query := types.GetCreditHistoryQuery{
@@ -41,7 +40,7 @@ func (h *CreditHistoryHandler) HandleGetCreditHistory(w http.ResponseWriter, r *
 		PerPage: perPage,
 		UserID:  targetUserID,
 	}
-	resp, err := h.service.GetCreditHistory(ctx, query, userID)
+	resp, err := h.service.GetCreditHistory(ctx, query, userID, userRole)
 	if err != nil {
 		common.RespondWithError(ctx, w, err)
 		return

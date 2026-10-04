@@ -169,7 +169,7 @@ func TestTS4_UserSeesAdjustedBalance_Integration(t *testing.T) {
 		UserID:  &targetID,
 		Page:    1,
 		PerPage: 10,
-	}, fixture.user1ID)
+	}, fixture.user1ID, "user")
 	require.NoError(t, err)
 	// Find the work_credit entry
 	found := false
