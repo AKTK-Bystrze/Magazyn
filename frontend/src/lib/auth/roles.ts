@@ -25,14 +25,22 @@ import type { Database } from "../../db/database.types";
  * }
  */
 
+import { USER_ROLE as USER_ROLES } from "@/lib/config/constants/user/role";
+
 /** Regular admin role - has access to admin panel */
-export const ADMIN_ROLE = "admin";
+export const ADMIN_ROLE = USER_ROLES.ADMIN;
 
 /** Super admin role - has full system access including user management */
-export const SUPER_ADMIN_ROLE = "super_admin";
+export const SUPER_ADMIN_ROLE = USER_ROLES.SUPER_ADMIN;
 
 /** Standard user role - has access to user dashboard only */
-export const USER_ROLE = "user";
+export const STANDARD_USER_ROLE = USER_ROLES.USER;
+
+/**
+ * Standard user role string - has access to user dashboard only.
+ * @deprecated Use STANDARD_USER_ROLE or USER_ROLE.USER to avoid naming collision.
+ */
+export const USER_ROLE = USER_ROLES.USER;
 
 /**
  * Union type of all possible user roles

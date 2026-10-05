@@ -240,7 +240,7 @@ interface EquipmentSearchContainerWithProviderProps {
  * />
  * ```
  */
-export default function EquipmentSearchContainerWithProvider({
+export function EquipmentSearchContainerWithProvider({
   checkoutPath,
 }: EquipmentSearchContainerWithProviderProps) {
   return (
@@ -249,3 +249,5 @@ export default function EquipmentSearchContainerWithProvider({
     </QueryProvider>
   );
 }
+
+export default EquipmentSearchContainerWithProvider;

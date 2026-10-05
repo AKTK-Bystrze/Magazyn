@@ -47,7 +47,7 @@ export function createProxyHandler(opts: ProxyOptions) {
       }
 
       const fetchOpts: RequestInit = { method: opts.method, headers };
-      if (opts.method !== "GET" && opts.method !== "DELETE" && opts.method !== "HEAD") {
+      if (opts.method !== "GET" && opts.method !== "DELETE") {
         const rawBody = await request.text();
         if (rawBody) {
           fetchOpts.body = rawBody;
