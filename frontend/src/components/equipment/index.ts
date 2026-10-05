@@ -1,4 +1,7 @@
-export { default as EquipmentSearchContainer } from "./EquipmentSearchContainer";
+export {
+  EquipmentSearchContainer,
+  EquipmentSearchContainerWithProvider,
+} from "./EquipmentSearchContainer";
 export { EquipmentCard } from "./EquipmentCard";
 export { EquipmentGrid } from "./EquipmentGrid";
 export { FilterSidebar } from "./FilterSidebar";

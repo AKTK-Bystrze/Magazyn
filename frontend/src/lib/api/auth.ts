@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { LoginRequestDTO, LoginResponseDTO } from "@/types/auth";
+import type { LoginRequestDTO, LoginResponseDTO } from "@/types/auth.types";
 
 /**
  * Initiates the login process using magic link
