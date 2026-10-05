@@ -7,5 +7,5 @@ export const GET = createProxyHandler({
   method: "GET",
   requireAuth: false,
 });
-export const PUT = createProxyHandler({ path: "/equipment/[id]", method: "PUT" });
+export const PATCH = createProxyHandler({ path: "/equipment/[id]", method: "PATCH" });
 export const DELETE = createProxyHandler({ path: "/equipment/[id]", method: "DELETE" });

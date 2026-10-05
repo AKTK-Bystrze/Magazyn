@@ -84,7 +84,7 @@ export function transformUpdateCommand(cmd: UpdateCreditRequestCommand): Record<
   if (cmd.title !== undefined) result.title = cmd.title;
   if (cmd.description !== undefined) result.description = cmd.description;
   if (cmd.creditsValue !== undefined) result.credits_value = cmd.creditsValue;
-  if (cmd.userHelpedId !== undefined) result.userHelpedId = cmd.userHelpedId;
+  if (cmd.userHelpedId !== undefined) result.user_helped_id = cmd.userHelpedId;
   if (cmd.helpers !== undefined) result.helpers = cmd.helpers;
   return result;
 }
