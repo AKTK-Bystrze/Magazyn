@@ -41,15 +41,10 @@ func (s *authService) VerifyOTP(ctx context.Context, email, token string, otpTyp
 	if err != nil {
 		return nil, err
 	}
-	// 1. Get Profile (RLS enforced by repo using userToken)
-	// Assuming session.User.ID is the userId and session.AccessToken is the userToken
 	profile, err := s.repo.GetProfile(ctx, session.User.ID, session.AccessToken)
 	if err != nil {
 		return nil, err
 	}
-	// 2. Construct Session Response using types.SessionResponse
-	// Calculate explicit expiry (e.g., 2 hours from now as per policy) or rely on token expiry client-side.
-	// We'll set it to 2 hours for now.
 	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
 	return &types.SessionResponse{
 		UserID:        session.User.ID,
@@ -58,7 +53,7 @@ func (s *authService) VerifyOTP(ctx context.Context, email, token string, otpTyp
 		Role:          string(profile.Role),
 		CreditBalance: profile.CreditBalance,
 		IsEnabled:     profile.IsEnabled,
-		ExpiresAt:     expiresAt, // User-friendly expiry time
+		ExpiresAt:     expiresAt,
 	}, nil
 }
 func (s *authService) Logout(ctx context.Context, accessToken string) error {
@@ -71,9 +66,6 @@ func (s *authService) GetSession(ctx context.Context, userID string, userToken s
 	if err != nil {
 		return nil, err
 	}
-	// 2. Construct Session Response using types.SessionResponse
-	// Calculate explicit expiry (e.g., 2 hours from now as per policy) or rely on token expiry client-side.
-	// We'll set it to 2 hours for now.
 	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
 	response := &types.SessionResponse{
 		UserID:        profile.ID,

@@ -92,9 +92,7 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
         </SheetHeader>
 
         <div className="space-y-6 py-6 px-4 sm:px-6">
-          {/* Hero Section */}
           <div className="space-y-4">
-            {/* Equipment Image */}
             <div className="aspect-video rounded-lg bg-muted overflow-hidden">
               <img
                 src={equipment.imagePath ?? PLACEHOLDER_EQUIPMENT_IMAGE}
@@ -103,7 +101,6 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
               />
             </div>
 
-            {/* Equipment Info */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{equipment.name || equipment.type.name}</h2>
@@ -116,7 +113,6 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
                 <p className="text-muted-foreground">{equipment.description}</p>
               )}
 
-              {/* Equipment Details Grid */}
               <div className="grid grid-cols-2 gap-4 rounded-lg border bg-muted/50 p-4">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">
@@ -148,7 +144,6 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
             </div>
           </div>
 
-          {/* Maintenance History Section */}
           <div className="border-t pt-4">
             <h3 className="text-lg font-semibold mb-4">{UI.MAINTENANCE_HISTORY}</h3>
             {isLogsLoading ? (
@@ -166,7 +161,6 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
             )}
           </div>
 
-          {/* Reservation History Section */}
           <div className="border-t pt-4">
             <h3 className="text-lg font-semibold mb-4">{UI.RESERVATION_HISTORY}</h3>
             {isReservationsLoading ? (

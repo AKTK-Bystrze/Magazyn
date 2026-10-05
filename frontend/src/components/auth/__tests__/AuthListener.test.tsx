@@ -61,7 +61,7 @@ const mockLocation = {
   search: "",
   hash: "",
   origin: "http://localhost:4321",
-  replace: vi.fn(), // Mock replace to prevent errors
+  replace: vi.fn(),
 };
 
 let mockCookie = "";
@@ -78,7 +78,7 @@ describe("AuthListener", () => {
     mockLocation.pathname = "/login";
     mockLocation.search = "";
     mockLocation.hash = "";
-    mockLocation.replace = mockReplace; // Connect mockReplace to location object
+    mockLocation.replace = mockReplace;
 
     mockCookie = "";
 
@@ -126,7 +126,7 @@ describe("AuthListener", () => {
 
   afterEach(() => {
     authStateCallback = null;
-    vi.unstubAllGlobals(); // Clean up global stubs
+    vi.unstubAllGlobals();
   });
 
   describe("Cookie Management", () => {

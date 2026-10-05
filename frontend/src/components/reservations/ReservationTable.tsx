@@ -189,7 +189,6 @@ export function ReservationTable({
       <Table>
         <TableHeader>
           <TableRow>
-            {/* Mobile Header */}
             {showUserColumn && (
               <TableHead
                 className="md:hidden cursor-pointer"
@@ -212,7 +211,6 @@ export function ReservationTable({
             </TableHead>
             <TableHead className="md:hidden w-[50px]"></TableHead>
 
-            {/* Desktop Header */}
             <TableHead
               className="hidden md:table-cell cursor-pointer"
               onClick={() => requestSort("equipmentName")}
@@ -335,7 +333,6 @@ export function ReservationTable({
                     onClick={handleViewDetails(item)}
                     data-testid={`reservation-row-${item.id}`}
                   >
-                    {/* Mobile Cells */}
                     {showUserColumn && (
                       <TableCell className="md:hidden truncate max-w-[100px] text-sm">
                         {item.username}
@@ -358,7 +355,6 @@ export function ReservationTable({
                       <ActionMenu />
                     </TableCell>
 
-                    {/* Desktop Cells */}
                     <TableCell className="hidden md:table-cell">
                       <div
                         className="font-medium truncate max-w-[200px]"
@@ -399,7 +395,6 @@ export function ReservationTable({
                 );
               })}
 
-              {/* Intersection Observer Target for infinite scroll */}
               <TableRow ref={observerTarget}>
                 <TableCell
                   colSpan={showUserColumn ? 8 : 7}

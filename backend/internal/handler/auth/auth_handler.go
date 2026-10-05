@@ -80,7 +80,6 @@ func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 		common.RespondUnauthorized(r.Context(), w)
 		return
 	}
-	// Extract token from Authorization header for RLS enforcement
 	token, err := common.ExtractBearerToken(r)
 	if err != nil {
 		logger.Warnf(r.Context(), "Token extraction failed: %v", err)

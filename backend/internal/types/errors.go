@@ -1,4 +1,3 @@
-// It provides structured error handling with error codes, messages, and details for different HTTP status scenarios.
 package types
 
 import (
@@ -6,7 +5,6 @@ import (
 	"fmt"
 )
 
-// Custom Error Types
 // AppError is the base error type with code and message
 type AppError struct {
 	Code    string
@@ -91,6 +89,5 @@ func NewInternalError(message string, err error) *InternalError {
 	}
 }
 
-// Sentinel Errors
 // ErrProfileNotFound indicates that a user profile was not found in the database
 var ErrProfileNotFound = errors.New("profile not found")

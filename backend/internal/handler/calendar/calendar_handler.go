@@ -29,7 +29,6 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 		common.RespondUnauthorized(ctx, w)
 		return
 	}
-	// Parse query parameters
 	query := types.CalendarAvailabilityQuery{
 		Days: constants.CalendarDefaultDays,
 	}
@@ -55,14 +54,12 @@ func (h *CalendarHandler) HandleGetAvailability(w http.ResponseWriter, r *http.R
 			return
 		}
 	}
-	// Validate equipment_id if provided (basic UUID check)
 	if query.EquipmentID != nil && *query.EquipmentID != "" {
 		if len(*query.EquipmentID) != constants.UUIDLength {
 			common.RespondError(ctx, w, http.StatusBadRequest, "equipment_id must be a valid UUID")
 			return
 		}
 	}
-	// Validate start_date format if provided
 	if query.StartDate != nil && *query.StartDate != "" {
 		if len(*query.StartDate) != constants.DateLengthISO {
 			common.RespondError(ctx, w, http.StatusBadRequest, "start_date must be in YYYY-MM-DD format")

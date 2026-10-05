@@ -1,6 +1,5 @@
 package types
 
-// DTOs (Data Transfer Objects) - Equipment API Responses
 // EquipmentDTO represents equipment with joined type information for list view
 type EquipmentDTO struct {
 	ID               string  `json:"id"`
@@ -12,7 +11,7 @@ type EquipmentDTO struct {
 	Status           string  `json:"status"`
 	CreditCostPerDay int32   `json:"credit_cost_per_day"`
 	ImageURL         *string `json:"image_url"`
-	IsFavorite       *bool   `json:"is_favorite,omitempty"` // Only in list view
+	IsFavorite       *bool   `json:"is_favorite,omitempty"`
 	IsArchived       bool    `json:"is_archived"`
 	CreatedAt        string  `json:"created_at"`
 	UpdatedAt        *string `json:"updated_at,omitempty"`
@@ -56,7 +55,6 @@ type ConflictingReservation struct {
 	Status    string `json:"status"`
 }
 
-// Command Models - Request Validation
 // CreateEquipmentCommand represents a request to create new equipment
 type CreateEquipmentCommand struct {
 	InternalID  string  `json:"internal_id"`
@@ -82,8 +80,8 @@ type EquipmentListQuery struct {
 	Search          *string `json:"search"`
 	Status          *string `json:"status"`
 	IncludeArchived bool    `json:"include_archived"`
-	AvailableFrom   *string `json:"available_from"` // ISO date YYYY-MM-DD
-	AvailableTo     *string `json:"available_to"`   // ISO date YYYY-MM-DD
+	AvailableFrom   *string `json:"available_from"`
+	AvailableTo     *string `json:"available_to"`
 }
 type AvailabilityQuery struct {
 	StartDate string `json:"start_date"`

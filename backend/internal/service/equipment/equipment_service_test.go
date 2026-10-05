@@ -179,7 +179,6 @@ func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userID
 	return args.Error(0)
 }
 
-// Tests
 func TestCreateEquipment_Success(t *testing.T) {
 	mockRepo := new(MockEquipmentRepository)
 	mockTypeRepo := new(MockEquipmentTypeRepository)
@@ -254,7 +253,7 @@ func TestArchiveEquipment_ActiveReservations(t *testing.T) {
 	err := service.Archive(ctx, id)
 	assert.Error(t, err)
 	assert.IsType(t, &types.ConflictError{}, err)
-	mockRepo.AssertNotCalled(t, "Archive", ctx, id) // Should not call archive
+	mockRepo.AssertNotCalled(t, "Archive", ctx, id)
 }
 func TestCheckAvailability_Available(t *testing.T) {
 	mockRepo := new(MockEquipmentRepository)
@@ -272,7 +271,6 @@ func TestCheckAvailability_Available(t *testing.T) {
 	assert.Empty(t, result.ConflictingReservations)
 }
 
-// Helper
 func stringPtr(s string) *string {
 	return &s
 }

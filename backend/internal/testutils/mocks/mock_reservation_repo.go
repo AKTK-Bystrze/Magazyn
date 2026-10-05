@@ -13,7 +13,6 @@ type MockReservationRepository struct {
 	mock.Mock
 }
 
-// Ensure mock implements interface
 var _ repository.ReservationRepository = (*MockReservationRepository)(nil)
 
 func (m *MockReservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {

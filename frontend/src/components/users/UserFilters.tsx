@@ -74,7 +74,6 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
 
   return (
     <div className="flex flex-col sm:flex-row gap-4">
-      {/* Search Input */}
       <div className="relative flex-1 max-w-md">
         <Search
           className={`absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground ${ICON_SIZE_SM}`}
@@ -93,7 +92,6 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
         />
       </div>
 
-      {/* Role Filter */}
       <Select value={filters.role} onValueChange={handleRoleChange}>
         <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filtruj według roli">
           <SelectValue placeholder="Wszystkie Role" />
@@ -107,7 +105,6 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
         </SelectContent>
       </Select>
 
-      {/* Reset Button */}
       {hasActiveFilters && onReset && (
         <Button
           variant="ghost"

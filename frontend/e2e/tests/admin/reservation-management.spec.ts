@@ -60,7 +60,6 @@ test.describe.serial("Admin Reservation Management", () => {
    * Restores the PUBLIC user's credit balance.
    */
   test.afterEach(async ({ supabaseAdmin, testUser }) => {
-    // Restore credits for the user who received the reservation (target user)
     await restoreCredits(supabaseAdmin, testUser.id, initialUserCredits);
   });
 
@@ -87,23 +86,17 @@ test.describe.serial("Admin Reservation Management", () => {
     const [equip1] = testEquipment;
     const cart = new ReservationCartPOM(adminPage);
 
-    // 1. Add equipment to cart as Admin
     await addToCart(adminPage, equip1.id);
 
-    // 2. Go to Cart
     await goToCart(adminPage);
     await cart.waitForCartView();
 
-    // 3. Select Target User (Standard Test User)
     await cart.selectUser(testUser.email);
 
-    // 4. Configure Dates and Checkout
     // Use worker-specific date offset to prevent reservations from being grouped across parallel tests
     const { startDays, endDays } = calculateWorkerDates(workerIndex);
     await cart.setDatesFromNow(startDays, endDays);
 
-    // Verify credits are displayed (sanity check)
-    // Note: This might show the selected user's credits if the UI updates correctly
     const totalCost = await cart.getTotalCost();
     expect(totalCost).toBeGreaterThan(0);
 
@@ -111,29 +104,18 @@ test.describe.serial("Admin Reservation Management", () => {
     await cart.confirm();
     await cart.waitForSuccess();
 
-    // 5. Navigate to "All Reservations" to Manage it
     await navigateToAllReservations(adminPage);
 
-    // Find the row containing our equipment name (unique per test via timestamp)
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
     await expect(row.first()).toBeVisible({ timeout: 10000 });
 
-    // Get the reservation ID from the row
     const testId = await row.first().getAttribute("data-testid");
     const reservationId = testId!.replace("reservation-row-", "");
 
-    // 6. Deny the Reservation
-    // Clicking "Change Status" button/menu
-    // Note: Assuming a UI specific implementation here based on typical Shadcn patterns in this project
-    // If exact IDs are missing, we use role based locators.
-
     await cancelReservationViaUI(adminPage, row);
 
-    // 7. Verify Status
-    // Wait for the status badge to update
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
     await expect(statusBadge).toContainText(/Anulowana|Denied/i);
-    // double check color/class if possible, but text is good enough for now
   });
 
   /**
@@ -160,23 +142,16 @@ test.describe.serial("Admin Reservation Management", () => {
     const [equip1] = testEquipment;
     const cart = new ReservationCartPOM(adminPage);
 
-    // 1. Add equipment to cart as Admin
     await addToCart(adminPage, equip1.id);
-
-    // 2. Go to Cart
     await goToCart(adminPage);
     await cart.waitForCartView();
-
-    // 3. Select Target User (Standard Test User)
     await cart.selectUser(testUser.email);
 
-    // 4. Enable Free Reservation checkbox
     const freeReservationCheckbox = adminPage.getByTestId("free-reservation-checkbox");
     await expect(freeReservationCheckbox).toBeVisible();
     await freeReservationCheckbox.check();
     await expect(freeReservationCheckbox).toBeChecked();
 
-    // 5. Get user's initial balance before creating free reservation
     const { data: profileBefore } = await supabaseAdmin
       .from("profiles")
       .select("credit_balance")
@@ -185,11 +160,9 @@ test.describe.serial("Admin Reservation Management", () => {
     const balanceBefore = profileBefore?.credit_balance ?? E2E_CONFIG.DEFAULTS.INITIAL_CREDITS;
     console.log(`Test user balance before free reservation: ${balanceBefore} credits`);
 
-    // 6. Configure Dates
     const { startDays, endDays } = calculateWorkerDates(workerIndex);
     await cart.setDatesFromNow(startDays, endDays);
 
-    // 7. Verify cost is 0 for free reservation
     const totalCost = await cart.getTotalCost();
     expect(totalCost).toBe(0);
 
@@ -197,7 +170,6 @@ test.describe.serial("Admin Reservation Management", () => {
     await cart.confirm();
     await cart.waitForSuccess();
 
-    // 8. Verify user's balance is unchanged
     const { data: profileAfter } = await supabaseAdmin
       .from("profiles")
       .select("credit_balance")
@@ -207,13 +179,11 @@ test.describe.serial("Admin Reservation Management", () => {
     console.log(`Test user balance after free reservation: ${balanceAfter} credits`);
     expect(balanceAfter).toBe(balanceBefore);
 
-    // 9. Navigate to "All Reservations" to verify the reservation
     await navigateToAllReservations(adminPage);
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
     await expect(row.first()).toBeVisible({ timeout: 10000 });
 
-    // Verify the reservation was created successfully and check for free indicator
     const testId = await row.first().getAttribute("data-testid");
     const reservationId = testId!.replace("reservation-row-", "");
 
@@ -243,7 +213,6 @@ test.describe.serial("Admin Reservation Management", () => {
     const [equip1] = testEquipment;
     const cart = new ReservationCartPOM(adminPage);
 
-    // 1. Capture balance before
     const { data: profileBefore } = await supabaseAdmin
       .from("profiles")
       .select("credit_balance")
@@ -251,7 +220,6 @@ test.describe.serial("Admin Reservation Management", () => {
       .single();
     const balanceBefore = profileBefore?.credit_balance ?? E2E_CONFIG.DEFAULTS.INITIAL_CREDITS;
 
-    // 2. Create a free reservation
     await addToCart(adminPage, equip1.id);
     await goToCart(adminPage);
     await cart.waitForCartView();
@@ -270,7 +238,6 @@ test.describe.serial("Admin Reservation Management", () => {
     await cart.confirm();
     await cart.waitForSuccess();
 
-    // 3. Go to All Reservations and find the row
     await navigateToAllReservations(adminPage);
 
     const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
@@ -279,13 +246,11 @@ test.describe.serial("Admin Reservation Management", () => {
     const testId = await row.first().getAttribute("data-testid");
     const reservationId = testId!.replace("reservation-row-", "");
 
-    // 4. Cancel the reservation
     await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
     await expect(statusBadge).toContainText(/Anulowana|Denied/i);
 
-    // 5. Verify balance unchanged
     const { data: profileAfter } = await supabaseAdmin
       .from("profiles")
       .select("credit_balance")

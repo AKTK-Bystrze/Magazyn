@@ -183,7 +183,6 @@ export function EditUserDialog({
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4 pb-8">
-            {/* Username (read-only) */}
             <div className="grid gap-2">
               <Label className="text-muted-foreground">Nazwa użytkownika</Label>
               <Input value={user.username} disabled className="bg-muted" aria-readonly="true" />
@@ -192,7 +191,6 @@ export function EditUserDialog({
               </p>
             </div>
 
-            {/* Email Field */}
             <div className="grid gap-2">
               <Label htmlFor={emailId}>Email</Label>
               <Input
@@ -212,7 +210,6 @@ export function EditUserDialog({
               )}
             </div>
 
-            {/* Role Field */}
             <div className="grid gap-2">
               <Label htmlFor={roleId}>Rola</Label>
               <Select
@@ -231,7 +228,6 @@ export function EditUserDialog({
               </Select>
             </div>
 
-            {/* Credit Balance Field */}
             <div className="grid gap-2">
               <Label htmlFor={creditsId}>Stan Konta (Kredyty)</Label>
               <Input
@@ -255,7 +251,6 @@ export function EditUserDialog({
               </p>
             </div>
 
-            {/* Account Status Field */}
             <div className="grid gap-2">
               <Label>Status Konta</Label>
               <RadioGroup
@@ -291,7 +286,6 @@ export function EditUserDialog({
               </p>
             </div>
 
-            {/* Form-level error */}
             {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>
 

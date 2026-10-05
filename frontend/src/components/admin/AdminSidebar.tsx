@@ -31,7 +31,6 @@ export function AdminSidebar({ currentPath, className, onNavigate }: AdminSideba
     <div className={cn("pb-12 h-full border-r bg-sidebar", className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
-          {/* Logo / Brand */}
           <div className="mb-2 px-4 flex items-center gap-2">
             <img
               src="/logo-bystrze-kolor.png"
@@ -46,7 +45,6 @@ export function AdminSidebar({ currentPath, className, onNavigate }: AdminSideba
             <h2 className="text-lg font-semibold tracking-tight">Magazyn</h2>
           </div>
 
-          {/* Navigation Items */}
           <div className="space-y-1">
             {ADMIN_NAV_ITEMS.map((item) => (
               <a

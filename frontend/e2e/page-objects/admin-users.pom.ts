@@ -84,8 +84,6 @@ export class AdminUsersPage {
    */
   async saveChanges() {
     await this.saveButton.click();
-    // Check if error message appears before assuming success
-    // Wait for modal to disappear
     await expect(this.editModal).not.toBeVisible();
   }
 

@@ -177,7 +177,6 @@ func TestValidateStringLength_InvalidLength_ReturnsError(t *testing.T) {
 	}
 }
 
-// Benchmark sanitization performance
 func BenchmarkSanitizeSearchTerm(b *testing.B) {
 	input := "test,id.eq.value(something)"
 	for i := 0; i < b.N; i++ {
@@ -185,7 +184,6 @@ func BenchmarkSanitizeSearchTerm(b *testing.B) {
 	}
 }
 
-// Benchmark UUID validation performance
 func BenchmarkValidateUUID(b *testing.B) {
 	uuid := "550e8400-e29b-41d4-a716-446655440000"
 	for i := 0; i < b.N; i++ {

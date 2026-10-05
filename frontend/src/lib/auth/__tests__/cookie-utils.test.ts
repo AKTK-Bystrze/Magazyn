@@ -45,7 +45,7 @@ describe("cookie-utils", () => {
     it("exports correct max age (1 year in seconds)", () => {
       const oneYearInSeconds = 60 * 60 * 24 * 365;
       expect(COOKIE_MAX_AGE).toBe(oneYearInSeconds);
-      expect(COOKIE_MAX_AGE).toBe(31536000); // 1 year
+      expect(COOKIE_MAX_AGE).toBe(31536000);
     });
   });
 
@@ -188,7 +188,6 @@ describe("cookie-utils", () => {
     it("resolves when cookie is set during wait", async () => {
       const promise = waitForCookie(300);
 
-      // Advance half way and set cookie
       await vi.advanceTimersByTimeAsync(100);
       mockCookie = "magazyn-auth-token=test-token";
       await vi.advanceTimersByTimeAsync(50);
@@ -261,7 +260,7 @@ describe("cookie-utils", () => {
     it("sets cookie before redirecting", async () => {
       const promise = waitForCookieAndRedirect("test-token", "/dashboard");
 
-      await vi.advanceTimersByTimeAsync(150); // fast forward to let cookie be verified
+      await vi.advanceTimersByTimeAsync(150);
       await promise;
 
       expect(mockCookie).toContain("magazyn-auth-token=test-token");

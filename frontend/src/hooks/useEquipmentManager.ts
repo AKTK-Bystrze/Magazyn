@@ -143,7 +143,7 @@ export function useEquipmentManager(
   const { data: typesData, isLoading: isTypesLoading } = useQuery({
     queryKey: QUERY_KEYS.types,
     queryFn: () => equipmentApi.listTypes(),
-    staleTime: QUERY_STALE_TIME_MS * 5, // Types change less frequently
+    staleTime: QUERY_STALE_TIME_MS * 5,
   });
 
   const createMutation = useMutation({

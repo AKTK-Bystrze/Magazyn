@@ -13,7 +13,6 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-// Ensure mock implements interface
 var _ repository.UserRepository = (*MockUserRepository)(nil)
 
 func (m *MockUserRepository) List(ctx context.Context, page, perPage int, role, search string) ([]types.PublicProfilesSelect, int64, error) {
