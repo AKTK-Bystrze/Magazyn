@@ -209,4 +209,4 @@ Centralized in `RedirectManager` class with loop prevention:
 ## Related Documentation
 
 - **Frontend Architecture**: [architecture.md](../frontend/architecture.md)
-- **Backend Auth**: [auth.md](../backend/auth.md)
+- **Backend Auth**: [Backend Developer Guide](../backend/README.md)

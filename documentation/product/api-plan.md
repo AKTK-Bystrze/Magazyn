@@ -945,7 +945,7 @@ The API exposes the following main resources, mapped to database tables:
 
 ### 2.6 Credit History
 
-#### GET /credit-history [IMPLEMENTED]
+#### GET /credits/history [IMPLEMENTED]
 Implementation: 
 - Handler: `backend/internal/handler/credit/credit_handler.go`
 - Service: `backend/internal/service/credit/credit_service.go`
@@ -1007,7 +1007,7 @@ Implementation:
 
 ### 2.7 Credit Requests
 
-#### GET /credit-requests
+#### GET /credits/requests
 
 **Description**: List credit requests (user sees own, superAdmin sees all)
 
@@ -1015,7 +1015,7 @@ Implementation:
 
 - `page` (integer, default: 1): Page number
 - `per_page` (integer, default: 25, values: 10/25/50/100): Items per page
-- `status` (string, optional): Filter by status (PENDING/APPROVED/DENIED)
+- `status` (string, optional): Filter by status (awaiting/approved/rejected/approved with changes)
 
 **Response** (200 OK):
 
@@ -1024,14 +1024,12 @@ Implementation:
   "credit_requests": [
     {
       "id": "uuid",
-      "user_id": "uuid",
-      "username": "john_doe",
-      "amount": 30,
+      "title": "Dock repair",
       "description": "Helped repair dock",
-      "status": "PENDING",
-      "admin_id": null,
-      "admin_username": null,
-      "admin_note": null,
+      "credits_value": 30,
+      "requestor_id": "uuid",
+      "user_helped_id": null,
+      "status": "awaiting",
       "created_at": "2025-11-27T19:56:29Z",
       "updated_at": null
     }
@@ -1051,7 +1049,7 @@ Implementation:
 
 ---
 
-#### POST /credit-requests
+#### POST /credits/requests
 
 **Description**: Submit credit request
 
@@ -1059,25 +1057,30 @@ Implementation:
 
 ```json
 {
-  "amount": 30,
-  "description": "Helped repair dock on Nov 25"
+  "title": "Dock repair",
+  "description": "Helped repair dock on Nov 25",
+  "credits_value": 30,
+  "user_helped_id": null
 }
 ```
 
 **Validation**:
 
-- `amount`: Required, integer > 0
-- `description`: Required, min 10 characters, max 500 characters
+- `title`: Required, non-empty
+- `credits_value`: Required, integer > 0
+- `description`: Optional
 
 **Response** (201 Created):
 
 ```json
 {
   "id": "uuid",
-  "user_id": "uuid",
-  "amount": 30,
+  "title": "Dock repair",
   "description": "Helped repair dock on Nov 25",
-  "status": "PENDING",
+  "credits_value": 30,
+  "requestor_id": "uuid",
+  "user_helped_id": null,
+  "status": "awaiting",
   "created_at": "2025-11-27T19:56:29Z"
 }
 ```
@@ -1089,25 +1092,21 @@ Implementation:
 
 ---
 
-#### PATCH /credit-requests/:id
+#### PATCH /credits/requests/:id/status
 
-**Description**: Approve/deny credit request (SuperAdmin only)
+**Description**: Approve/reject credit request (SuperAdmin only)
 
 **Request Body**:
 
 ```json
 {
-  "status": "APPROVED",
-  "approved_amount": 25,
-  "admin_note": "Good work, but 25 credits is more appropriate"
+  "status": "approved"
 }
 ```
 
 **Validation**:
 
-- `status`: Required, one of: APPROVED/DENIED
-- `approved_amount`: Required if status=APPROVED, integer > 0
-- `admin_note`: Optional, max 500 characters
+- `status`: Required, one of: approved/rejected/approved with changes
 
 **Response** (200 OK):
 
@@ -1689,7 +1688,7 @@ EXCLUDE USING gist (
 
 **Implementation**:
 
-- Backend sends email via Gmail SMTP
+- Backend sends email via Noop email service
 - Email sent after successful transaction commit
 - Single email per multi-item reservation session
 
@@ -1896,7 +1895,7 @@ All errors return consistent JSON structure:
 
 **Current Version**: v1
 
-**URL Structure**: `/api/v1/{resource}`
+**URL Structure**: `/{resource}` (Backend direct) / `/api/{resource}` (Astro BFF)
 
 **Future Versions**:
 
@@ -1920,7 +1919,7 @@ All errors return consistent JSON structure:
 
 - JWT verification using Supabase public key
 - PostgreSQL connection to Supabase database
-- Gmail SMTP for email notifications
+- Email service (Noop implementation) for notifications
 
 **Database (PostgreSQL/Supabase)**:
 

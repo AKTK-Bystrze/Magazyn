@@ -89,6 +89,7 @@ Magazyn/backend/
 │   ├── config/            # ENV / configuration loader
 │   ├── handler/           # HTTP request handlers
 │   ├── middleware/        # JWT validation via Supabase Auth
+│   ├── repository/        # Data access layer (PostgREST / Supabase)
 │   ├── service/           # Business logic
 │   └── types/             # Shared Go types + domain models
 ├── pkg/                   # Optional reusable utilities
@@ -100,7 +101,7 @@ Magazyn/backend/
 
 - Stateless API server.
 - Verifies Supabase JWTs.
-- Sends transactional emails (e.g., Gmail SMTP).
+- Sends transactional emails via Noop email service.
 - Connects to remote Supabase Postgres via environment variables.
 
 ---

@@ -1,6 +1,6 @@
 # Database Documentation
 
-This document reflects the current state of the database schema as of the latest migration.
+This document reflects the current state of the database schema as of the latest migrations.
 
 ## Enums
 
@@ -14,6 +14,7 @@ This document reflects the current state of the database schema as of the latest
 - `RENTED`
 - `RETURNED`
 - `DENIED`
+- `CANCELLED`
 
 ### equipment_status
 - `ok`
@@ -21,9 +22,10 @@ This document reflects the current state of the database schema as of the latest
 - `blocked`
 
 ### credit_request_status
-- `PENDING`
-- `APPROVED`
-- `DENIED`
+- `awaiting`
+- `approved`
+- `rejected`
+- `approved with changes`
 
 ### credit_transaction_reason
 - `reservation_charge`
@@ -31,6 +33,8 @@ This document reflects the current state of the database schema as of the latest
 - `reservation_adjustment`
 - `admin_adjustment`
 - `work_credit`
+
+---
 
 ## Tables
 
@@ -74,10 +78,11 @@ Booking records.
 - `start_date` (date)
 - `end_date` (date)
 - `status` (reservation_status, default: 'PENDING')
+- `is_free` (boolean, not null, default: false) - *Indicates whether the reservation is free of credit cost*
 - `created_at` (timestamptz)
 - `updated_at` (timestamptz)
 - Constraint: `end_date >= start_date`
-- Exclusion constraint to prevent overlapping bookings for same equipment.
+- Exclusion constraint to prevent overlapping bookings for the same equipment.
 
 ### credit_history
 Immutable ledger of credit transactions.
@@ -87,20 +92,26 @@ Immutable ledger of credit transactions.
 - `reason` (credit_transaction_reason)
 - `description` (text)
 - `reservation_id` (uuid, foreign key to reservations, nullable)
-- `admin_id` (uuid, foreign key to profiles, nullable)
+- `author_id` (uuid, foreign key to profiles, nullable)
 - `created_at` (timestamptz)
 
 ### credit_requests
-Requests for credits.
+Requests submitted by users to earn credits for club service or helping others.
 - `id` (uuid, pk)
-- `user_id` (uuid, foreign key to profiles)
-- `amount` (integer)
+- `title` (varchar(255), not null)
 - `description` (text)
-- `status` (credit_request_status, default: 'PENDING')
-- `admin_id` (uuid, foreign key to profiles, nullable)
-- `admin_note` (text)
+- `credits_value` (integer, not null, check: credits_value > 0)
+- `requestor_id` (uuid, foreign key to profiles)
+- `user_helped_id` (uuid, foreign key to profiles, nullable)
+- `status` (varchar(50), not null, default: 'awaiting', check: in 'awaiting', 'approved', 'rejected', 'approved with changes')
 - `created_at` (timestamptz)
 - `updated_at` (timestamptz)
+
+### credit_request_helpers
+Junction table linking credit requests with multiple helper users who participated in the task.
+- `credit_request_id` (uuid, foreign key to credit_requests on delete cascade)
+- `user_id` (uuid, foreign key to profiles on delete set null)
+- Primary Key: `(credit_request_id, user_id)`
 
 ### maintenance_logs
 Audit trail for equipment status changes.
@@ -124,6 +135,8 @@ Audit trail for reservation changes.
 - `changed_by_user_id` (uuid, foreign key to profiles, nullable)
 - `created_at` (timestamptz)
 
+---
+
 ## Views
 
 ### analytics_equipment_stats
@@ -142,22 +155,45 @@ Calculated statistics for users.
 - `total_credits_spent`
 - `last_reservation_date`
 
-## RPC Functions (Remote Procedure Calls)
+---
+
+## RPC Functions (Stored Procedures)
 
 ### create_reservation_atomic
-Creates reservations and deducts credits in a single transaction.
+Creates reservations and deducts credits in a single atomic transaction.
 - **Parameters**: 
   - `p_user_id` (UUID)
   - `p_total_cost` (INTEGER)
-  - `p_reservations` (JSONB array of objects)
-- **Returns**: JSONB (created reservation IDs and new balance)
+  - `p_is_free` (BOOLEAN)
+  - `p_created_by_user_id` (UUID)
+  - `p_reservations` (JSONB array of objects: `{equipment_id, start_date, end_date}`)
+- **Returns**: JSONB (`{reservation_ids: UUID[], new_balance: INTEGER}`)
+
+### modify_reservation_dates_with_credits
+Modifies reservation date ranges, checks conflicts, and atomically recalculates/adjusts user credit balance (bypassing adjustments for free reservations).
+- **Parameters**:
+  - `p_reservation_id` (UUID)
+  - `p_changed_by_user_id` (UUID)
+  - `p_new_start_date` (DATE)
+  - `p_new_end_date` (DATE)
+- **Returns**: JSONB (updated reservation details and new balance)
+
+### bulk_update_reservations_status
+Updates multiple reservation statuses atomically, refunding credits if reservations are denied (skipping refunds for free reservations).
+- **Parameters**:
+  - `p_reservation_ids` (UUID[])
+  - `p_status` (TEXT)
+  - `p_admin_id` (UUID)
+- **Returns**: JSONB (`{updated_count: INTEGER, skipped_ids: UUID[]}`)
 
 ### refund_reservation_credits
 Refunds credits to a user and logs the transaction.
 - **Parameters**:
   - `p_reservation_id` (UUID)
-  - `p_amount` (INT)
+  - `p_amount` (INTEGER)
 - **Returns**: void
+
+---
 
 ## Row Level Security (RLS) & Policies
 RLS is enabled on all tables. Policies generally follow:
@@ -165,6 +201,8 @@ RLS is enabled on all tables. Policies generally follow:
 - `insert/update/delete`: Restricted to Admins/SuperAdmins for most resources. Users can manage their own requests/reservations within limits (e.g., PENDING only).
 
 **Note**: Infinite recursion in Admin policies was fixed by using a `security definer` function `get_user_role()` to check roles.
+
+---
 
 ## Triggers & Automation
 - `handle_new_user` (split into `set_user_role_metadata` and `create_user_profile`): Sets default role to 'user' and creates a disabled profile upon signup.

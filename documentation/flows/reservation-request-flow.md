@@ -9,7 +9,7 @@ sequenceDiagram
     participant FE as Frontend (Astro/React)
     participant GO as Go Backend
     participant DB as Supabase (Postgres)
-    participant SMTP as Gmail
+    participant Email as Email Service (Noop)
 
     Note over U, FE: 1. Input Phase (React State)
     U->>FE: Selects Dates & Equipment
@@ -29,7 +29,7 @@ sequenceDiagram
 
     Note over GO, DB: 5. Side Effects
     GO->>DB: INSERT into credit_history
-    GO->>SMTP: Send Email Confirmation
+    GO->>Email: Send Email Confirmation
 
     Note over GO, FE: 6. Response Phase (Public DTO)
     GO->>GO: Map db.Reservation -> <br/>dto.ReservationResponse
@@ -69,7 +69,7 @@ sequenceDiagram
 ### 5. Side Effects
 
 - Records credit transaction in history
-- Sends email confirmation via Gmail SMTP
+- Sends email confirmation via Noop email service
 - Maintains audit trail
 
 ### 6. Response Phase (Backend)

@@ -50,7 +50,7 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 | Layer | Technology |
 |-------|------------|
 | **Frontend** | Astro 5 (SSR) + React 19 + TypeScript 5 + TanStack Query |
-| **Backend** | Go (Gin) + Gmail SMTP |
+| **Backend** | Go (net/http) + Email Service (Noop) |
 | **Database** | Supabase (PostgreSQL + Auth + Storage) |
 | **Deploy** | Docker Compose + Caddy |
 
@@ -160,13 +160,13 @@ Database instance is created on Supabase. It can be started locally or remotely 
    npm run dev
    ```
 
-   The application will be available at `http://localhost:3000`
+   The application will be available at `http://localhost:4321`
 
 4. **Start Go backend** (in separate terminal)
 
    ```bash
    cd backend
-   go run main.go
+   go run ./cmd/api
    ```
 
    The API will be available at `http://localhost:8080`
@@ -242,7 +242,7 @@ go test -tags=integration ./...
 
 | Script            | Description                                 |
 | ----------------- | ------------------------------------------- |
-| `npm run dev`     | Start Astro development server on port 3000 |
+| `npm run dev`     | Start Astro development server on port 4321 |
 | `npm start`       | Alias for `npm run dev`                     |
 | `npm run build`   | Build production-ready application          |
 | `npm run preview` | Preview production build locally            |
@@ -272,7 +272,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 - `chore:` - Maintenance tasks (no release)
 
 
-📚 **[See detailed commit type guide →](documentation/conventional-commits.md)**
+📚 **[See detailed commit type guide →](documentation/overview/conventional-commits.md)**
 
 **Enforcement:**
 - **CI**: PR titles validated automatically on every PR
@@ -281,8 +281,8 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 **Documentation:**
 
 - [Documentation Index](documentation/README.md)
-- [Product Requirements Document](documentation/design-docs/prd/index.md)
+- [Product Requirements Document](documentation/product/prd/index.md)
 - [Technology Stack & Architecture](documentation/overview/techstack.md)
-- [Database Schema Plan](documentation/design-docs/db-plan.md)
+- [Database Schema Plan](documentation/database/db-doc.md)
 - [Conventional Commits Guide](documentation/overview/conventional-commits.md)
 
