@@ -17,7 +17,6 @@ if (!user || !sessionInfo) {
 
 <AppLayout title={`${CREDIT_HISTORY_UI_STRINGS.PAGE_TITLE} | Magazyn`}>
   <div class="container mx-auto py-4 sm:py-8 px-4 max-w-7xl">
-    <!-- Header -->
     <div class="flex flex-col gap-2 mb-4 sm:mb-6">
       <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
         {CREDIT_HISTORY_UI_STRINGS.PAGE_TITLE}
@@ -27,7 +26,6 @@ if (!user || !sessionInfo) {
       </p>
     </div>
 
-    <!-- Credit History View -->
     <CreditHistoryContainer client:load />
   </div>
 </AppLayout>

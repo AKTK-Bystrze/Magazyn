@@ -14,6 +14,7 @@ import { RoleBadge } from "./RoleBadge";
 import { Pencil } from "lucide-react";
 import { ICON_SIZE_SM, SKELETON_ROW_COUNT } from "@/lib/config/constants";
 import { formatDateLocalized } from "@/lib/utils/date-utils";
+import { useTableSort } from "@/lib/hooks/useTableSort";
 import type { UserListItem } from "@/types";
 
 /**
@@ -102,34 +103,13 @@ export function UserTable({
   onToggleSelect,
   onToggleSelectAll,
 }: UserTableProps) {
-  const [sortConfig, setSortConfig] = React.useState<{
-    key: string;
-    direction: "asc" | "desc";
-  } | null>(null);
-
-  const requestSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedUsers = React.useMemo(() => {
-    const sortableItems = [...users];
-    if (sortConfig !== null) {
-      sortableItems.sort((a: any, b: any) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [users, sortConfig]);
+  const {
+    sortConfig,
+    requestSort,
+    sortedData: sortedUsers,
+  } = useTableSort(users, {
+    getValue: (user, key) => user[key as keyof UserListItem],
+  });
 
   const handleEdit = React.useCallback(
     (user: UserListItem) => () => {

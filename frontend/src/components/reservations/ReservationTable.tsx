@@ -20,6 +20,7 @@ import { MoreHorizontal, Calendar, X, CornerDownLeft, Eye, Edit2 } from "lucide-
 import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
 import type { ReservationListItem } from "@/types";
 import { formatDate } from "@/lib/utils/date-utils";
+import { useTableSort } from "@/lib/hooks/useTableSort";
 
 /**
  * Props for the ReservationTable component
@@ -157,42 +158,16 @@ export function ReservationTable({
     onViewDetails(item);
   };
 
-  const [sortConfig, setSortConfig] = React.useState<{
-    key: string;
-    direction: "asc" | "desc";
-  } | null>(null);
-
-  const requestSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedReservations = React.useMemo(() => {
-    const sortableItems = [...reservations];
-    if (sortConfig !== null) {
-      sortableItems.sort((a: ReservationListItem, b: ReservationListItem) => {
-        let aValue = a[sortConfig.key as keyof ReservationListItem];
-        let bValue = b[sortConfig.key as keyof ReservationListItem];
-
-        if (sortConfig.key === "dates") {
-          aValue = a.startDate;
-          bValue = b.startDate;
-        }
-
-        if (aValue < bValue) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [reservations, sortConfig]);
+  const {
+    sortConfig,
+    requestSort,
+    sortedData: sortedReservations,
+  } = useTableSort(reservations, {
+    getValue: (item, key) => {
+      if (key === "dates") return item.startDate;
+      return item[key as keyof ReservationListItem];
+    },
+  });
 
   const showUserColumn = mode === "admin" || scope === "all";
 
@@ -214,7 +189,6 @@ export function ReservationTable({
       <Table>
         <TableHeader>
           <TableRow>
-            {/* Mobile Header */}
             {showUserColumn && (
               <TableHead
                 className="md:hidden cursor-pointer"
@@ -237,7 +211,6 @@ export function ReservationTable({
             </TableHead>
             <TableHead className="md:hidden w-[50px]"></TableHead>
 
-            {/* Desktop Header */}
             <TableHead
               className="hidden md:table-cell cursor-pointer"
               onClick={() => requestSort("equipmentName")}
@@ -360,7 +333,6 @@ export function ReservationTable({
                     onClick={handleViewDetails(item)}
                     data-testid={`reservation-row-${item.id}`}
                   >
-                    {/* Mobile Cells */}
                     {showUserColumn && (
                       <TableCell className="md:hidden truncate max-w-[100px] text-sm">
                         {item.username}
@@ -383,7 +355,6 @@ export function ReservationTable({
                       <ActionMenu />
                     </TableCell>
 
-                    {/* Desktop Cells */}
                     <TableCell className="hidden md:table-cell">
                       <div
                         className="font-medium truncate max-w-[200px]"
@@ -424,7 +395,6 @@ export function ReservationTable({
                 );
               })}
 
-              {/* Intersection Observer Target for infinite scroll */}
               <TableRow ref={observerTarget}>
                 <TableCell
                   colSpan={showUserColumn ? 8 : 7}

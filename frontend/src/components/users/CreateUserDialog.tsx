@@ -160,7 +160,6 @@ export function CreateUserDialog({
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {/* Email Field */}
             <div className="grid gap-2">
               <Label htmlFor={emailId}>
                 Email <span className="text-destructive">*</span>
@@ -182,7 +181,6 @@ export function CreateUserDialog({
               )}
             </div>
 
-            {/* Username Field */}
             <div className="grid gap-2">
               <Label htmlFor={usernameId}>
                 Nazwa użytkownika <span className="text-destructive">*</span>
@@ -204,7 +202,6 @@ export function CreateUserDialog({
               )}
             </div>
 
-            {/* Role Field */}
             <div className="grid gap-2">
               <Label htmlFor={roleId}>
                 Rola <span className="text-destructive">*</span>
@@ -225,7 +222,6 @@ export function CreateUserDialog({
               </Select>
             </div>
 
-            {/* Credit Balance Field */}
             <div className="grid gap-2">
               <Label htmlFor={creditsId}>Początkowe Saldo Godzinek</Label>
               <Input
@@ -246,7 +242,6 @@ export function CreateUserDialog({
               )}
             </div>
 
-            {/* Form-level error */}
             {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>
 

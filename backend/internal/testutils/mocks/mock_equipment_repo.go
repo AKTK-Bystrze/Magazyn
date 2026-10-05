@@ -13,7 +13,6 @@ type MockEquipmentRepository struct {
 	mock.Mock
 }
 
-// Ensure mock implements interface
 var _ repository.EquipmentRepository = (*MockEquipmentRepository)(nil)
 
 func (m *MockEquipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
@@ -58,13 +57,6 @@ func (m *MockEquipmentRepository) Update(ctx context.Context, id string, equipme
 func (m *MockEquipmentRepository) Archive(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
-}
-func (m *MockEquipmentRepository) GetTypeForEquipment(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error) {
-	args := m.Called(ctx, typeID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicEquipmentTypesSelect), args.Error(1)
 }
 func (m *MockEquipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentID string) ([]types.PublicMaintenanceLogsSelect, error) {
 	args := m.Called(ctx, equipmentID)

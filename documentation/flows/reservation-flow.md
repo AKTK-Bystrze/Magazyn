@@ -33,7 +33,7 @@ Cost = Days × CreditCostPerDay (from EquipmentType)
 ```
 
 ### Day Calculation Logic
-Located in [reservation_service.go](file:///e:/bystrze/Magazyn/backend/internal/service/reservation/reservation_service.go#L334-L342):
+Located in `backend/internal/service/reservation/reservation_service.go`:
 
 ```go
 func (s *reservationService) calculateDays(start, end string) int32 {
@@ -63,7 +63,7 @@ func (s *reservationService) calculateDays(start, end string) int32 {
 
 ## Reservation Status Lifecycle
 
-Statuses are defined in [constants.go](file:///e:/bystrze/Magazyn/backend/internal/constants/constants.go#L23-L32):
+Statuses are defined in `backend/internal/constants/constants.go`:
 
 | Status | Description |
 |--------|-------------|
@@ -121,7 +121,7 @@ stateDiagram-v2
    - Sum total cost
 
 3. **Atomic Transaction** (via DB RPC)
-   - Calls [create_reservation_atomic](file:///e:/bystrze/Magazyn/supabase/migrations/20251210201500_add_reservation_rpc.sql) PostgreSQL function
+   - Calls `create_reservation_atomic` PostgreSQL function (see [Database Documentation](../database/db-doc.md#create_reservation_atomic))
    - Steps within transaction:
      1. Lock user row (`FOR UPDATE`)
      2. Verify sufficient balance
@@ -168,7 +168,7 @@ When status changes to `DENIED` or `CANCELLED`:
 1. Fetch equipment details
 2. Fetch equipment type for cost calculation
 3. Calculate refund: `days × credit_cost_per_day`
-4. Call [refund_reservation_credits](file:///e:/bystrze/Magazyn/supabase/migrations/20251210204500_add_refund_rpc.sql) RPC
+4. Call `refund_reservation_credits` RPC (see [Database Documentation](../database/db-doc.md#refund_reservation_credits))
    - Updates user's `credit_balance`
    - Logs refund in `credit_history` with reason `reservation_refund`
 
@@ -179,7 +179,7 @@ When dates are modified:
 1. Check for overlapping reservations (excluding current)
 2. If conflicts exist, return `409 Conflict`
 3. Update reservation dates
-4. **Note:** Credit recalculation for date changes is not yet fully implemented
+4. **Credit Recalculation:** Handled atomically via `modify_reservation_dates_with_credits` RPC, which calculates difference in days/credits, validates balance, updates `credit_history`, and skips adjustment for free reservations.
 
 ---
 
@@ -248,9 +248,22 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 |-----------|------|-------------|
 | `p_user_id` | UUID | User creating reservations |
 | `p_total_cost` | INTEGER | Pre-calculated total credit cost |
+| `p_is_free` | BOOLEAN | Whether reservations are free (charges 0 credits) |
+| `p_created_by_user_id` | UUID | Creator/actor user ID |
 | `p_reservations` | JSONB | Array of `{equipment_id, start_date, end_date}` |
 
 **Returns:** `{reservation_ids: UUID[], new_balance: INTEGER}`
+
+### `modify_reservation_dates_with_credits`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `p_reservation_id` | UUID | Reservation being modified |
+| `p_changed_by_user_id` | UUID | User requesting modification |
+| `p_new_start_date` | DATE | New start date |
+| `p_new_end_date` | DATE | New end date |
+
+**Returns:** JSONB object containing updated reservation fields, cost differences, and new balance
 
 ### `refund_reservation_credits`
 
@@ -267,9 +280,8 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 
 | File | Purpose |
 |------|---------|
-| [reservation_service.go](file:///e:/bystrze/Magazyn/backend/internal/service/reservation/reservation_service.go) | Business logic |
-| [reservation.go](file:///e:/bystrze/Magazyn/backend/internal/repository/reservation.go) | Repository interface |
-| [constants.go](file:///e:/bystrze/Magazyn/backend/internal/constants/constants.go) | Status constants |
-| [add_reservation_rpc.sql](file:///e:/bystrze/Magazyn/supabase/migrations/20251210201500_add_reservation_rpc.sql) | Atomic creation RPC |
-| [add_refund_rpc.sql](file:///e:/bystrze/Magazyn/supabase/migrations/20251210204500_add_refund_rpc.sql) | Credit refund RPC |
-| [email_service.go](file:///e:/bystrze/Magazyn/backend/internal/service/email/email_service.go) | Email notifications |
+| `backend/internal/service/reservation/reservation_service.go` | Business logic |
+| `backend/internal/repository/supabase/reservation_repository.go` | Repository implementation |
+| `backend/internal/constants/constants.go` | Status constants |
+| `supabase/migrations/20260314183802_add_is_free_to_reservations.sql` | Atomic reservation RPCs and `is_free` support |
+| `backend/internal/service/email/email_service.go` | Email service (Noop implementation) |

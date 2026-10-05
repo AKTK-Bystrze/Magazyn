@@ -103,7 +103,7 @@ export function useEquipmentDetails(equipmentId: string | null): UseEquipmentDet
     maintenanceLogs: detailsData?.maintenanceLogs ?? [],
     reservationHistory: reservationHistoryData ?? [],
     isLoading,
-    isLogsLoading: isLoading, // Logs now load with details
+    isLogsLoading: isLoading,
     isReservationsLoading,
     error: error as Error | null,
     addMaintenanceLog,

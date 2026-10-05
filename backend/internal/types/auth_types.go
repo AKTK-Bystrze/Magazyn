@@ -1,24 +1,28 @@
 package types
 
+// User represents an authenticated user identity.
 type User struct {
 	ID    string
 	Email string
 }
+
+// Session represents an authenticated session with an access token.
 type Session struct {
 	AccessToken string
 	User        User
 }
+
+// LoginRequest contains the user's email address to initiate magic link authentication.
 type LoginRequest struct {
-	Email string `json:"email" validate:"required,email"`
+	Email string `json:"email"`
 }
+
+// LoginResponse indicates the outcome of initiating login.
 type LoginResponse struct {
 	Message string `json:"message"`
 }
-type VerifyOTPRequest struct {
-	Email string `json:"email" validate:"required,email"`
-	Token string `json:"token" validate:"required"`
-	Type  string `json:"type" validate:"required"`
-}
+
+// SessionResponse represents the current session details returned to the frontend.
 type SessionResponse struct {
 	UserID        string `json:"userId"`
 	Email         string `json:"email"`
@@ -28,11 +32,8 @@ type SessionResponse struct {
 	IsEnabled     bool   `json:"isEnabled"`
 	ExpiresAt     string `json:"expiresAt"`
 }
+
+// LogoutResponse indicates the outcome of logging out.
 type LogoutResponse struct {
 	Message string `json:"message"`
 }
-type OTPType string
-
-const (
-	MagicLink OTPType = "magiclink"
-)

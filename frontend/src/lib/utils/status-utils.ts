@@ -89,7 +89,7 @@ export function getAvailableTransitions(
       return [RESERVATION_STATUS.RETURNED];
     case RESERVATION_STATUS.RETURNED:
     case RESERVATION_STATUS.DENIED:
-      return []; // Final states
+      return [];
     default:
       return [];
   }

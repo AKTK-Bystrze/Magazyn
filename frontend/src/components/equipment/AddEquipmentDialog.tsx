@@ -183,7 +183,6 @@ export function AddEquipmentDialog({
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {/* Internal ID Field */}
             <div className="grid gap-2">
               <Label htmlFor={internalIdFieldId}>
                 {UI.FORM_INTERNAL_ID} <span className="text-destructive">*</span>
@@ -206,7 +205,6 @@ export function AddEquipmentDialog({
               )}
             </div>
 
-            {/* Equipment Type Field */}
             <div className="grid gap-2">
               <Label htmlFor={typeIdFieldId}>
                 {UI.FORM_TYPE} <span className="text-destructive">*</span>
@@ -238,7 +236,6 @@ export function AddEquipmentDialog({
               )}
             </div>
 
-            {/* Display Name Field */}
             <div className="grid gap-2">
               <Label htmlFor={nameFieldId}>{UI.FORM_NAME}</Label>
               <Input
@@ -260,7 +257,6 @@ export function AddEquipmentDialog({
               )}
             </div>
 
-            {/* Description Field */}
             <div className="grid gap-2">
               <Label htmlFor={descriptionFieldId}>{UI.FORM_DESCRIPTION}</Label>
               <Input
@@ -274,7 +270,6 @@ export function AddEquipmentDialog({
               />
             </div>
 
-            {/* Status Field */}
             <div className="grid gap-2">
               <Label htmlFor={statusFieldId}>{UI.FORM_STATUS}</Label>
               <Select
@@ -297,9 +292,6 @@ export function AddEquipmentDialog({
               </Select>
             </div>
 
-            {/* TODO: Image Upload Field - Phase 5 */}
-
-            {/* Form-level error */}
             {errors.form && (
               <p className="text-sm text-destructive" data-testid="equipment-form-error">
                 {errors.form}

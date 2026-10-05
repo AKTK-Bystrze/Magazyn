@@ -100,7 +100,6 @@ export function ReservationCardList({
 
   return (
     <div className="w-full max-w-full overflow-hidden space-y-6">
-      {/* Reservation Cards */}
       <div className="flex flex-col gap-4 w-full max-w-full mt-6">
         {groups.map((group) => {
           if (group.items.length === 1) {
@@ -142,7 +141,6 @@ export function ReservationCardList({
         })}
       </div>
 
-      {/* Intersection Observer Target */}
       <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
         {isFetchingNextPage && (
           <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>

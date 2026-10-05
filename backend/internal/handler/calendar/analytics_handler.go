@@ -12,13 +12,17 @@ import (
 	"magazyn/backend/internal/types"
 )
 
+// AnalyticsHandler handles HTTP endpoints for analytics and reporting.
 type AnalyticsHandler struct {
 	service calendarservice.AnalyticsService
 }
 
+// NewAnalyticsHandler creates a new instance of AnalyticsHandler.
 func NewAnalyticsHandler(s calendarservice.AnalyticsService) *AnalyticsHandler {
 	return &AnalyticsHandler{service: s}
 }
+
+// HandleGetEquipmentStats retrieves equipment utilization and maintenance analytics.
 func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -34,11 +38,13 @@ func (h *AnalyticsHandler) HandleGetEquipmentStats(w http.ResponseWriter, r *htt
 	response, err := h.service.GetEquipmentStats(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleGetEquipmentStats error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
+
+// HandleGetUserStats retrieves user reservation and credit expenditure analytics.
 func (h *AnalyticsHandler) HandleGetUserStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -54,7 +60,7 @@ func (h *AnalyticsHandler) HandleGetUserStats(w http.ResponseWriter, r *http.Req
 	response, err := h.service.GetUserStats(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleGetUserStats error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)

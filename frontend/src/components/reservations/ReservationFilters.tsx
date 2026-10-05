@@ -58,7 +58,6 @@ export function ReservationFilters({ filters, onFilterChange, onReset }: Reserva
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Status Filter */}
       <div className="flex items-center gap-2">
         <label htmlFor="status-filter" className="text-sm font-medium sr-only">
           Status
@@ -77,7 +76,6 @@ export function ReservationFilters({ filters, onFilterChange, onReset }: Reserva
         </Select>
       </div>
 
-      {/* Sort Options */}
       <div className="flex items-center gap-2">
         <label htmlFor="sort-filter" className="text-sm font-medium sr-only">
           Sortuj według
@@ -96,7 +94,6 @@ export function ReservationFilters({ filters, onFilterChange, onReset }: Reserva
         </Select>
       </div>
 
-      {/* Reset Button */}
       {hasActiveFilters && (
         <Button variant="ghost" size="sm" onClick={onReset} className="flex items-center gap-1">
           <X className={ICON_SIZE_SM} />

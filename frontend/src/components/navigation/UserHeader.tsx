@@ -57,7 +57,6 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
       className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6"
       data-testid="topbar"
     >
-      {/* Mobile Menu Sheet */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="lg:hidden">
@@ -86,7 +85,6 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar Toggle */}
       <Button
         size="icon"
         variant="outline"
@@ -103,12 +101,10 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
         <Menu className="h-5 w-5" />
         <span className="sr-only">Toggle Sidebar</span>
       </Button>
-      {/* Breadcrumbs */}
       <div className="flex-1">
         <Breadcrumbs currentPath={currentPath} />
       </div>
 
-      {/* Right Actions */}
       <div className="flex items-center gap-2">
         {creditBalance !== undefined && (
           <Badge variant="secondary" className="hidden sm:flex">

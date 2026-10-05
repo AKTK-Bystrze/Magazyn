@@ -129,7 +129,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
                 className="h-full w-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = "/placeholder-equipment.svg"; // Fallback
+                  target.src = "/placeholder-equipment.svg";
                 }}
               />
             ) : (
@@ -161,7 +161,6 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
                 <h3 className="font-semibold text-lg">{item.name}</h3>
                 <p className="text-sm text-muted-foreground">{item.type.name}</p>
               </div>
-              {/* Placeholder for US-008 Favorite Button */}
             </div>
           </CardHeader>
 

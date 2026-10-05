@@ -13,7 +13,6 @@ type MockCreditHistoryRepository struct {
 	mock.Mock
 }
 
-// Ensure mock implements interface
 var _ repository.CreditHistoryRepository = (*MockCreditHistoryRepository)(nil)
 
 func (m *MockCreditHistoryRepository) GetCreditHistory(ctx context.Context, userID *string, page, perPage int) ([]types.CreditHistoryItemDTO, int64, error) {

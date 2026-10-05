@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reservationsApi } from "@/lib/api/reservations-api";
+import { getNextPageParam } from "@/lib/config/query";
 import type {
   ReservationFilterState,
   ReservationListResponse,
@@ -112,12 +113,7 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     queryKey: QUERY_KEYS.list(filters),
     queryFn: ({ pageParam = 1 }) => reservationsApi.list({ ...filters, page: pageParam }),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
-        return lastPage.pagination.page + 1;
-      }
-      return undefined;
-    },
+    getNextPageParam,
     enabled,
     staleTime: QUERY_STALE_TIME_MS,
   });

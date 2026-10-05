@@ -73,7 +73,6 @@ export function CancelReservationDialog({
       className="fixed inset-0 flex items-center justify-center"
       style={{ zIndex: Z_INDEX_MODAL_BACKDROP }}
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0"
         style={{
@@ -83,7 +82,6 @@ export function CancelReservationDialog({
         aria-hidden="true"
       />
 
-      {/* Dialog */}
       <Card
         className="relative w-full max-w-md m-4"
         style={{
@@ -112,7 +110,6 @@ export function CancelReservationDialog({
         </CardHeader>
 
         <CardContent className="pt-6 space-y-6">
-          {/* Warning */}
           <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
             <AlertTriangle className={ICON_SIZE_SM + " text-amber-600"} />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
@@ -121,7 +118,6 @@ export function CancelReservationDialog({
             </AlertDescription>
           </Alert>
 
-          {/* Reservation Details */}
           <div className="space-y-3">
             <h3 className="font-medium text-sm text-muted-foreground">
               {isBulk ? "Podsumowanie" : "Szczegóły Rezerwacji"}
@@ -163,7 +159,6 @@ export function CancelReservationDialog({
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3">
             <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="flex-1">
               Zachowaj Rezerwację

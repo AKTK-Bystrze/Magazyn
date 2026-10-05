@@ -40,7 +40,7 @@ export function calculateCreditAdjustment(
 ): CreditAdjustmentInfo {
   const originalCost = originalDays * creditPerDay;
   const newCost = newDays * creditPerDay;
-  const adjustment = originalCost - newCost; // positive = refund, negative = charge
+  const adjustment = originalCost - newCost;
 
   return {
     originalDays,

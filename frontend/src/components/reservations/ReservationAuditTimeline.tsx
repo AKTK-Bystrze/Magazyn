@@ -38,7 +38,6 @@ export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelin
       </CardHeader>
       <CardContent>
         <div className="relative space-y-4">
-          {/* Vertical line */}
           <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
 
           {sortedEntries.map((entry, index) => {
@@ -48,7 +47,6 @@ export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelin
 
             return (
               <div key={entry.id} className="relative pl-10 pb-4">
-                {/* Timeline dot */}
                 <div
                   className={`absolute left-2.5 top-1.5 h-3 w-3 rounded-full border-2 ${
                     isInitial
@@ -57,9 +55,7 @@ export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelin
                   }`}
                 />
 
-                {/* Entry content */}
                 <div className="space-y-2">
-                  {/* Status and timestamp */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <StatusBadge status={entry.status} />
                     {isInitial && (
@@ -67,7 +63,6 @@ export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelin
                     )}
                   </div>
 
-                  {/* Changed by */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className={ICON_SIZE_SM} />
                     <span>
@@ -78,7 +73,6 @@ export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelin
                     </span>
                   </div>
 
-                  {/* Date and relative time */}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Clock className={ICON_SIZE_SM} />
                     <span>
@@ -86,7 +80,6 @@ export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelin
                     </span>
                   </div>
 
-                  {/* Date range (if different from primary reservation) */}
                   {!isInitial && (
                     <div className="text-xs text-muted-foreground">
                       {formatDate(entry.startDate)} — {formatDate(entry.endDate)}

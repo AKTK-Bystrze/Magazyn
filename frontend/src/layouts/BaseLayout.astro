@@ -38,7 +38,6 @@ const traceId = Astro.locals.trace_id || "unknown";
     <meta name="trace-id" content={traceId} />
     <title>{title}</title>
 
-    <!-- Theme script - prevents Flash of Unstyled Content (FOUC) -->
     {/* eslint-disable-next-line react/no-unknown-property */}
     <script is:inline>
       (function () {
@@ -54,14 +53,13 @@ const traceId = Astro.locals.trace_id || "unknown";
       })();
     </script>
 
-    <!-- Sentry Initialization -->
     <script>
       import * as Sentry from "@sentry/react";
 
       Sentry.init({
         dsn: import.meta.env.PUBLIC_SENTRY_DSN,
         integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
-        tracesSampleRate: 0.1, // Adjust for production
+        tracesSampleRate: 0.1,
         replaysSessionSampleRate: 0.1,
         replaysOnErrorSampleRate: 1.0,
       });

@@ -3,17 +3,14 @@
  * Matches data-testid attributes in UI components.
  */
 export const TEST_IDS = {
-  // Layout
   TOPBAR: "topbar",
   USER_MENU_TRIGGER: "user-menu-trigger",
   LOGOUT_BUTTON: "logout-button",
 
-  // Equipment
   EQUIPMENT_GRID: "equipment-grid",
   EQUIPMENT_GRID_EMPTY: "equipment-grid-empty",
   EQUIPMENT_SEARCH_CONTAINER: "equipment-search-container",
 
-  // Cart
   CART_INDICATOR: "cart-indicator",
   CART_ITEM_COUNT: "cart-item-count",
   RESERVATION_CART: "reservation-cart",
@@ -24,19 +21,15 @@ export const TEST_IDS = {
   CANCEL_RESERVATION_BUTTON: "cancel-reservation-button",
   RESERVATION_SUCCESS_MESSAGE: "reservation-success-message",
 
-  // Date Picker
   DATE_PICKER_START: "date-picker-start",
   DATE_PICKER_END: "date-picker-end",
   DATE_VALIDATION_ERROR: "date-validation-error",
 
-  // Confirmation Modal
   CONFIRMATION_CURRENT_BALANCE: "confirmation-current-balance",
   CONFIRMATION_REMAINING_BALANCE: "confirmation-remaining-balance",
 
-  // Reservation List
   RESERVATION_LIST_CONTAINER: "reservation-list-container",
 
-  // Admin Users
   ADMIN_USERS_TABLE: "admin-users-table",
   ADMIN_SEARCH_INPUT: "admin-search-input",
   ADMIN_EDIT_USER_MODAL: "admin-edit-user-modal",
@@ -46,7 +39,6 @@ export const TEST_IDS = {
   ADMIN_SAVE_USER_BTN: "admin-save-user-btn",
   ADMIN_SUCCESS_ALERT: "admin-success-alert",
 
-  // Admin Equipment Manager
   ADMIN_ADD_EQUIPMENT_BTN: "admin-add-equipment-btn",
   ADMIN_EQUIPMENT_TABLE: "admin-equipment-table",
   ADMIN_ADD_EQUIPMENT_DIALOG: "admin-add-equipment-dialog",
@@ -64,11 +56,9 @@ export const TEST_IDS = {
   EQUIPMENT_ARCHIVE_CONFIRM_BTN: "equipment-archive-confirm-btn",
   EQUIPMENT_ARCHIVE_CANCEL_BTN: "equipment-archive-cancel-btn",
 
-  // Credit History
   CREDIT_HISTORY_TABLE: "credit-history-table",
   CREDIT_HISTORY_EMPTY_STATE: "credit-history-empty-state",
 
-  // Dynamic IDs (functions)
   equipmentCard: (id: string) => `equipment-card-${id}`,
   equipmentAddToCart: (id: string) => `equipment-add-to-cart-${id}`,
   equipmentDetailsButton: (id: string) => `equipment-details-button-${id}`,

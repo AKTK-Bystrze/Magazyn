@@ -13,16 +13,16 @@ export const equipmentDTOSchema = z
     name: z.string().nullable(),
     description: z.string().nullable(),
     status: z.enum(["ok", "broken", "blocked"], {
-      errorMap: () => ({ message: 'Status must be "ok", "broken" or "blocked"' }),
+      message: 'Status must be "ok", "broken" or "blocked"',
     }),
     credit_cost_per_day: z.number().int().min(0, "Credit cost must be non-negative"),
     image_url: z.string().nullable(),
     is_favorite: z.boolean().optional(),
     is_archived: z.boolean(),
-    created_at: z.string(), // ISO 8601 string from backend
+    created_at: z.string(),
     updated_at: z.string().nullable().optional(),
   })
-  .passthrough(); // Allow extra fields like maintenance_logs from detail endpoint
+  .passthrough();
 
 /**
  * Zod schema for pagination response
@@ -49,7 +49,7 @@ export const equipmentTypeDTOSchema = z.object({
   id: z.string().uuid("Equipment type ID must be a valid UUID"),
   name: z.string().min(1, "Type name is required"),
   credit_cost_per_day: z.number().int().min(0, "Credit cost must be non-negative"),
-  created_at: z.string(), // ISO 8601 string from backend
+  created_at: z.string(),
 });
 
 /**

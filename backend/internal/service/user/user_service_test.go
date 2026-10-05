@@ -12,19 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockCreditHistoryRepository struct {
-	mock.Mock
-}
-
-func (m *MockCreditHistoryRepository) GetCreditHistory(ctx context.Context, userID *string, page, perPage int) ([]types.CreditHistoryItemDTO, int64, error) {
-	args := m.Called(ctx, userID, page, perPage)
-	return args.Get(0).([]types.CreditHistoryItemDTO), args.Get(1).(int64), args.Error(2)
-}
-func (m *MockCreditHistoryRepository) Create(ctx context.Context, item types.PublicCreditHistoryInsert) error {
-	args := m.Called(ctx, item)
-	return args.Error(0)
-}
-
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -71,8 +58,7 @@ func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userID
 func TestGetProfile_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	id := "user-123"
 	email := "test@example.com"
@@ -92,8 +78,7 @@ func TestGetProfile_Success(t *testing.T) {
 func TestGetProfile_NotFound(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	id := "unknown"
 	mockRepo.On("GetByID", ctx, id).Return(nil, types.NewNotFoundError("User", id))
@@ -106,8 +91,7 @@ func TestGetProfile_NotFound(t *testing.T) {
 func TestListUsers_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	page := 1
 	perPage := 10
@@ -129,8 +113,7 @@ func TestListUsers_Success(t *testing.T) {
 func TestCreateUser_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	email := "new@example.com"
 	username := "newuser"
@@ -142,16 +125,12 @@ func TestCreateUser_Success(t *testing.T) {
 		Username:      username,
 		Role:          role,
 		CreditBalance: &credit,
-		IsEnabled:     &isEnabled, // Default
+		IsEnabled:     &isEnabled,
 	}
-	// 1. Check Email - expect NotFound (which means we can proceed)
 	mockRepo.On("GetByEmail", ctx, email).Return(nil, types.NewNotFoundError("User", email))
-	// 2. Check Username via List - expect empty list or list without our username
 	mockRepo.On("List", ctx, 1, 1, "", username).Return([]types.PublicProfilesSelect{}, int64(0), nil)
-	// 3. Expect AuthRepository.CreateUser call
 	mockAuthRepo.On("CreateUser", ctx, email, mock.AnythingOfType("string")).
 		Return(&types.User{ID: "auth-id-123", Email: email}, nil)
-	// 4. Expect repo.Create to insert the profile directly (no DB trigger)
 	mockRepo.On("Create", ctx, mock.AnythingOfType("types.PublicProfilesInsert")).
 		Return(&types.PublicProfilesSelect{
 			ID:            "auth-id-123",
@@ -172,8 +151,7 @@ func TestCreateUser_Success(t *testing.T) {
 func TestCreateUser_AuthFailure(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	email := "fail@example.com"
 	req := types.CreateUserRequest{
@@ -181,11 +159,8 @@ func TestCreateUser_AuthFailure(t *testing.T) {
 		Username: "failuser",
 		Role:     auth.RoleUser,
 	}
-	// 1. Check Email - not found
 	mockRepo.On("GetByEmail", ctx, req.Email).Return(nil, types.NewNotFoundError("User", req.Email))
-	// 2. Check Username - not found
 	mockRepo.On("List", ctx, 1, 1, "", req.Username).Return([]types.PublicProfilesSelect{}, int64(0), nil)
-	// 3. Auth Create - Fail
 	expectedErr := assert.AnError
 	mockAuthRepo.On("CreateUser", ctx, email, mock.AnythingOfType("string")).
 		Return(nil, expectedErr)
@@ -199,8 +174,7 @@ func TestCreateUser_AuthFailure(t *testing.T) {
 func TestCreateUser_EmailConflict(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	email := "existing@example.com"
 	req := types.CreateUserRequest{
@@ -208,7 +182,6 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 		Username: "user",
 		Role:     auth.RoleUser,
 	}
-	// 1. Check Email - found existing user
 	mockRepo.On("GetByEmail", ctx, email).Return(&types.PublicProfilesSelect{ID: "1", Email: email}, nil)
 	resp, err := service.CreateUser(ctx, req)
 	assert.Error(t, err)
@@ -220,8 +193,7 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 func TestCreateUser_UsernameConflict(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	username := "existinguser"
 	req := types.CreateUserRequest{
@@ -229,9 +201,7 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 		Username: username,
 		Role:     auth.RoleUser,
 	}
-	// 1. Check Email - not found
 	mockRepo.On("GetByEmail", ctx, req.Email).Return(nil, types.NewNotFoundError("User", req.Email))
-	// 2. Check Username - found existing
 	mockRepo.On("List", ctx, 1, 1, "", username).Return([]types.PublicProfilesSelect{
 		{ID: "1", Username: username},
 	}, int64(1), nil)
@@ -245,15 +215,13 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 func TestUpdateUser_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	id := "user-123"
 	role := auth.RoleAdmin
 	req := types.UpdateUserRequest{
 		Role: &role,
 	}
-	// We expect Check for existence first
 	mockRepo.On("GetByID", ctx, id).Return(&types.PublicProfilesSelect{ID: id}, nil)
 	mockRepo.On("Update", ctx, id, mock.AnythingOfType("types.PublicProfilesUpdate")).
 		Return(&types.PublicProfilesSelect{
@@ -269,8 +237,7 @@ func TestUpdateUser_Success(t *testing.T) {
 func TestBulkAdjustCredits_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
-	mockCreditRepo := new(MockCreditHistoryRepository)
-	service := NewUserService(mockRepo, mockAuthRepo, mockCreditRepo)
+	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
 	adminID := "admin-123"
 	userIDs := []string{"user-1", "user-2"}

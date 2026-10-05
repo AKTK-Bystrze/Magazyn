@@ -27,7 +27,7 @@ import type { UpdateReservationCommand } from "@/types/reservations/reservation.
 interface ReservationStatusActionsProps {
   reservation: ReservationDetail;
   currentUserId: string;
-  currentUserBalance: number; // User's credit balance from session
+  currentUserBalance: number;
   isAdmin: boolean;
   onStatusChange: (newStatus: Enums<"reservation_status">) => Promise<void>;
   isUpdating: boolean;
@@ -61,7 +61,7 @@ export function ReservationStatusActions({
     queryKey: ["user", reservation.userId],
     queryFn: () => usersApi.getById(reservation.userId),
     enabled: needsOwnerProfile,
-    staleTime: 0, // Always fetch fresh balance when dialog opens
+    staleTime: 0,
   });
 
   const userBalance = isOwner ? currentUserBalance : (ownerProfile?.creditBalance ?? 0);
@@ -102,7 +102,7 @@ export function ReservationStatusActions({
       endDate: newDates.endDate,
     };
     await reservationsApi.update(reservation.id, command);
-    window.location.reload(); // Simple refresh to show updated data
+    window.location.reload();
   };
 
   const handleReturnConfirm = async (command: UpdateReservationCommand) => {
@@ -116,7 +116,6 @@ export function ReservationStatusActions({
 
   return (
     <div className="flex flex-wrap gap-3">
-      {/* Modify Dates Button (Pending only) */}
       {reservation.status === "PENDING" && (isOwner || isAdmin) && (
         <Button variant="outline" onClick={handleModifyDatesClick} disabled={isUpdating}>
           <CalendarClock className={ICON_SIZE_SM + " mr-2"} />
@@ -124,7 +123,6 @@ export function ReservationStatusActions({
         </Button>
       )}
 
-      {/* Cancel Button */}
       {actions.canCancel && (
         <Button
           variant="outline"
@@ -137,7 +135,6 @@ export function ReservationStatusActions({
         </Button>
       )}
 
-      {/* Mark Returned Button */}
       {actions.canMarkReturned && (
         <Button variant="outline" onClick={handleMarkReturnedClick} disabled={isUpdating}>
           <CheckCircle className={ICON_SIZE_SM + " mr-2"} />
@@ -145,7 +142,6 @@ export function ReservationStatusActions({
         </Button>
       )}
 
-      {/* Admin Status Dropdown */}
       {actions.canChangeStatus && actions.availableStatuses.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -168,7 +164,6 @@ export function ReservationStatusActions({
         </DropdownMenu>
       )}
 
-      {/* Dialogs */}
       <StatusChangeDialog
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}

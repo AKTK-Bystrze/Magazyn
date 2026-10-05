@@ -29,7 +29,6 @@ func NewReservationRepository(client *supabase.Client, url string, key string) r
 }
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	// Select basics + joined data including credit_cost_per_day for calculation
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
 	qb := client.From("reservations").Select(selectStr, "exact", false)
 	if query.Status != nil && *query.Status != "" {
@@ -47,9 +46,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	if query.StartDateTo != nil && *query.StartDateTo != "" {
 		qb = qb.Lte("start_date", *query.StartDateTo)
 	}
-	// Calculate offset
 	offset := (query.Page - 1) * query.PerPage
-	// Get total count
 	countData, _, err := qb.Execute()
 	if err != nil {
 		return nil, 0, err
@@ -59,19 +56,16 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 		return nil, 0, err
 	}
 	totalItems := int64(len(countHolder))
-	// Pagination & Order
 	qb = qb.Range(offset, offset+query.PerPage-1, "")
 	qb = qb.Order("created_at", nil)
 	data, _, err := qb.Execute()
 	if err != nil {
 		return nil, 0, err
 	}
-	// Temp struct for unmarshalling nested response
 	var rawItems []joinedResponse
 	if err := json.Unmarshal(data, &rawItems); err != nil {
 		return nil, 0, err
 	}
-	// Map to ListItem
 	result := make([]types.ReservationListItem, len(rawItems))
 	for i, item := range rawItems {
 		var creditCost int32
@@ -118,7 +112,6 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 	if err != nil {
 		return nil, err
 	}
-	// Calculate credit cost: 0 if free, otherwise days * cost_per_day (same logic as list view)
 	var creditCost int32
 	if raw.IsFree {
 		creditCost = 0
@@ -178,7 +171,6 @@ func (r *reservationRepository) getAuditTrail(ctx context.Context, reservationID
 	return result, nil
 }
 
-// Private Types for Data Mapping
 type joinedResponse struct {
 	types.PublicReservationsSelect
 	Profile struct {
@@ -214,21 +206,6 @@ type auditRaw struct {
 	} `json:"profiles"`
 }
 
-func (r *reservationRepository) CreateReservation(ctx context.Context, reservation types.PublicReservationsInsert) (*types.PublicReservationsSelect, error) {
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("reservations").
-		Insert(reservation, false, "", "", "").
-		Single().
-		Execute()
-	if err != nil {
-		return nil, err
-	}
-	var created types.PublicReservationsSelect
-	if err := json.Unmarshal(data, &created); err != nil {
-		return nil, err
-	}
-	return &created, nil
-}
 func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, createdByUserID string, reservations []types.CreateReservationItem) ([]string, int32, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	params := map[string]interface{}{
@@ -238,10 +215,8 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 		"p_created_by_user_id": createdByUserID,
 		"p_reservations":       reservations,
 	}
-	// Debug params
 	paramBytes, _ := json.Marshal(params)
 	logger.Infof(ctx, "RPC Params: %s", string(paramBytes))
-	// Temporarily:
 	jsonStr := client.Rpc("create_reservation_atomic", "", params)
 	logger.Infof(ctx, "RPC Response: %s", jsonStr)
 	var result struct {
@@ -251,7 +226,6 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	if jsonStr == "" {
 		return nil, 0, types.NewInternalError("RPC returned empty response", nil)
 	}
-	// Check for error in response
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
 		return nil, 0, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
@@ -271,7 +245,6 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 }
 func (r *reservationRepository) UpdateReservation(ctx context.Context, id string, reservation types.PublicReservationsUpdate, changedByUserID string) (*types.PublicReservationsSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	// Build RPC params
 	params := map[string]interface{}{
 		"p_reservation_id":     id,
 		"p_changed_by_user_id": changedByUserID,
@@ -289,7 +262,6 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 	if jsonStr == "" {
 		return nil, types.NewInternalError("RPC returned empty response", nil)
 	}
-	// Check for error in response
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
 		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
@@ -297,7 +269,6 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 	if msg, ok := rawResponse["message"]; ok {
 		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
 	}
-	// Parse successful response
 	var result struct {
 		ID        string  `json:"id"`
 		Status    string  `json:"status"`
@@ -327,7 +298,6 @@ func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids 
 	if jsonStr == "" {
 		return nil, types.NewInternalError("RPC returned empty response", nil)
 	}
-	// Check for error in response
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
 		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
@@ -340,17 +310,6 @@ func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids 
 		return nil, types.NewInternalError("Failed to parse bulk update result: "+jsonStr, err)
 	}
 	return &result, nil
-}
-func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids []string, status string) error {
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	updateData := types.PublicReservationsUpdate{
-		Status: &status,
-	}
-	_, _, err := client.From("reservations").
-		Update(updateData, "", "").
-		In("id", ids).
-		Execute()
-	return err
 }
 func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
@@ -375,7 +334,6 @@ func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, 
 }
 func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	// Pending
 	_, pCount, err := client.From("reservations").Select("*", "exact", true).Eq("status", constants.ReservationStatusPending).Execute()
 	if err != nil {
 		return nil, err
@@ -389,7 +347,6 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 	if err != nil {
 		return nil, err
 	}
-	// Active Today
 	_, aCount, err := client.From("reservations").
 		Select("*", "exact", true).
 		Eq("status", constants.ReservationStatusRented).
@@ -404,27 +361,6 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 		OverdueReservations: oCount,
 		ActiveToday:         aCount,
 	}, nil
-}
-func (r *reservationRepository) GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	qb := client.From("reservations").
-		Select("*", "exact", false).
-		Lte("start_date", rangeEnd).
-		Gte("end_date", rangeStart).
-		Neq("status", constants.ReservationStatusDenied).
-		Neq("status", "CANCELLED")
-	if equipmentID != nil {
-		qb = qb.Eq("equipment_id", *equipmentID)
-	}
-	data, _, err := qb.Execute()
-	if err != nil {
-		return nil, err
-	}
-	var reservations []types.PublicReservationsSelect
-	if err := json.Unmarshal(data, &reservations); err != nil {
-		return nil, err
-	}
-	return reservations, nil
 }
 func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID string, amount int32) error {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
@@ -447,16 +383,13 @@ func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Co
 	if jsonStr == "" {
 		return nil, types.NewInternalError("RPC returned empty response", nil)
 	}
-	// Check for error in response
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
 		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
 	}
-	// Check for error message
 	if msg, ok := rawResponse["message"]; ok {
 		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
 	}
-	// Parse successful response
 	var result types.ModifyDatesResponse
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		return nil, types.NewInternalError("Failed to parse modify result: "+jsonStr, err)
