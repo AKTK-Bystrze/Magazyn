@@ -225,9 +225,7 @@ export function EquipmentTable({
                 <TableCell className="hidden lg:table-cell text-right tabular-nums">
                   {item.type.creditCostPerDay}
                 </TableCell>
-                <TableCell className="hidden xl:table-cell text-muted-foreground">
-                  {/* TODO: Add createdAt to EquipmentSearchItem type if needed */}—
-                </TableCell>
+                <TableCell className="hidden xl:table-cell text-muted-foreground">—</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

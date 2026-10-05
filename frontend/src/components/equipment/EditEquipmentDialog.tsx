@@ -168,7 +168,6 @@ export function EditEquipmentDialog({
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {/* Read-only Internal ID */}
             <div className="grid gap-2">
               <Label className="text-muted-foreground">{UI.FORM_INTERNAL_ID}</Label>
               <Input type="text" value={equipment.internalId} disabled className="bg-muted" />
@@ -177,7 +176,6 @@ export function EditEquipmentDialog({
               </p>
             </div>
 
-            {/* Read-only Equipment Type */}
             <div className="grid gap-2">
               <Label className="text-muted-foreground">{UI.FORM_TYPE}</Label>
               <Input
@@ -191,7 +189,6 @@ export function EditEquipmentDialog({
               </p>
             </div>
 
-            {/* Display Name Field */}
             <div className="grid gap-2">
               <Label htmlFor={nameFieldId}>{UI.FORM_NAME}</Label>
               <Input
@@ -213,7 +210,6 @@ export function EditEquipmentDialog({
               )}
             </div>
 
-            {/* Description Field */}
             <div className="grid gap-2">
               <Label htmlFor={descriptionFieldId}>{UI.FORM_DESCRIPTION}</Label>
               <Input
@@ -226,7 +222,6 @@ export function EditEquipmentDialog({
               />
             </div>
 
-            {/* Status Field */}
             <div className="grid gap-2">
               <Label htmlFor={statusFieldId}>{UI.FORM_STATUS}</Label>
               <Select
@@ -249,9 +244,6 @@ export function EditEquipmentDialog({
               </Select>
             </div>
 
-            {/* TODO: Image Upload Field - Phase 5 */}
-
-            {/* Form-level error */}
             {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>
 

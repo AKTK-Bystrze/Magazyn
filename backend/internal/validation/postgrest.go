@@ -1,4 +1,4 @@
-// It includes helpers for validating UUIDs, dates, enums, and sanitizing PostgREST filter inputs.
+// Package validation provides helpers for validating UUIDs, dates, enums, and sanitizing PostgREST filter inputs.
 package validation
 
 import (
@@ -10,7 +10,6 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-// PostgREST operator characters that need escaping in search filters
 var postgrestReplacer = strings.NewReplacer(
 	",", "\\,",
 	".", "\\.",
@@ -21,7 +20,6 @@ var postgrestReplacer = strings.NewReplacer(
 	"!", "\\!",
 )
 
-// UUID validation regex (standard UUID format with hyphens)
 var uuidRegex = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 func SanitizeSearchTerm(input string) string {
@@ -37,7 +35,6 @@ func ValidateUUID(id string) error {
 			map[string]interface{}{"length": len(id)},
 		)
 	}
-	// Convert to lowercase for case-insensitive matching
 	lowerID := strings.ToLower(id)
 	if !uuidRegex.MatchString(lowerID) {
 		return types.NewValidationError(

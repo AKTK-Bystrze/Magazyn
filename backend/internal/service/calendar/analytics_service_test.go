@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Mock Analytics Repository
 // MockAnalyticsRepository is a mock implementation of AnalyticsRepository
 type MockAnalyticsRepository struct {
 	mock.Mock
@@ -46,10 +45,8 @@ func (m *MockAnalyticsRepository) GetFavoriteEquipmentTypeForUser(ctx context.Co
 	return args.Get(0).(*string), args.Error(1)
 }
 
-// Ensure mock implements interface
 var _ repository.AnalyticsRepository = (*MockAnalyticsRepository)(nil)
 
-// Analytics Service Tests
 func TestGetEquipmentStats_Success(t *testing.T) {
 	t.Run("returns equipment stats with top renters", func(t *testing.T) {
 		mockAnalyticsRepo := new(MockAnalyticsRepository)

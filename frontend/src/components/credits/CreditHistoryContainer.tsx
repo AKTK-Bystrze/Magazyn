@@ -35,7 +35,6 @@ function CreditHistoryContainerInner() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header & Balance Card */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="md:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -57,7 +56,6 @@ function CreditHistoryContainerInner() {
         </Card>
       </div>
 
-      {/* Error State */}
       {isError && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
@@ -67,11 +65,9 @@ function CreditHistoryContainerInner() {
         </Alert>
       )}
 
-      {/* Credit History Table */}
       <div className="space-y-4">
         <CreditHistoryTable data={data?.history ?? []} isLoading={isLoading} />
 
-        {/* Intersection Observer Target */}
         <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
           {isFetchingNextPage && (
             <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>

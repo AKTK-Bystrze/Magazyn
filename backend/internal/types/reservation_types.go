@@ -1,6 +1,5 @@
 package types
 
-// DTOs (Data Transfer Objects) - Reservation API Responses
 // ReservationListItem represents a reservation with joined equipment and user info for lists
 type ReservationListItem struct {
 	ID            string  `json:"id"`

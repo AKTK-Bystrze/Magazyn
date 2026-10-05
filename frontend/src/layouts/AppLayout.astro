@@ -38,7 +38,6 @@ const isAdmin = sessionInfo?.role === "admin" || sessionInfo?.role === "super_ad
 
 <BaseLayout title={title} description={description}>
   <div id="app-layout" class="flex min-h-screen w-full">
-    {/* Desktop Sidebar Container */}
     <div
       id="desktop-sidebar-container"
       class="hidden lg:block w-[280px] shrink-0 border-r bg-muted/40 overflow-hidden transition-[width] duration-300 data-[collapsed=true]:w-0 data-[collapsed=true]:border-r-0 sticky top-0 h-screen"
@@ -54,7 +53,6 @@ const isAdmin = sessionInfo?.role === "admin" || sessionInfo?.role === "super_ad
       </div>
     </div>
 
-    {/* Main Content Area */}
     <div class="flex flex-col flex-1 min-w-0 transition-all duration-300">
       <QueryProvider client:load>
         <UserHeader

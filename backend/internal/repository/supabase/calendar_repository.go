@@ -118,7 +118,6 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 	if err := json.Unmarshal(data, &rawReservations); err != nil {
 		return nil, err
 	}
-	// Aggregate by user
 	userStats := make(map[string]*types.TopRenterDTO)
 	for _, res := range rawReservations {
 		if _, exists := userStats[res.UserID]; !exists {
@@ -132,16 +131,13 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 		userStats[res.UserID].ReservationCount++
 		userStats[res.UserID].DaysRented += calculateDays(res.StartDate, res.EndDate)
 	}
-	// Convert to slice and sort by reservation count (descending)
 	result := make([]types.TopRenterDTO, 0, len(userStats))
 	for _, stats := range userStats {
 		result = append(result, *stats)
 	}
-	// Sort by reservation count (descending)
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].ReservationCount > result[j].ReservationCount
 	})
-	// Limit results
 	if len(result) > limit {
 		result = result[:limit]
 	}
@@ -170,14 +166,12 @@ func (r *analyticsRepository) GetFavoriteEquipmentTypeForUser(ctx context.Contex
 	if len(rawReservations) == 0 {
 		return nil, nil
 	}
-	// Count by type
 	typeCounts := make(map[string]int)
 	typeNames := make(map[string]string)
 	for _, res := range rawReservations {
 		typeCounts[res.Equipment.TypeID]++
 		typeNames[res.Equipment.TypeID] = res.Equipment.EquipmentType.Name
 	}
-	// Find max
 	maxCount := 0
 	var favoriteTypeID string
 	for typeID, count := range typeCounts {

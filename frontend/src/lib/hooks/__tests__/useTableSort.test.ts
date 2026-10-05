@@ -57,7 +57,6 @@ describe("useTableSort", () => {
     });
 
     expect(result.current.sortConfig).toEqual({ key: "category", direction: "asc" });
-    // Non-null values first, null at the end
     expect(result.current.sortedData[0].category).toBe("Fruit");
     expect(result.current.sortedData[1].category).toBe("Mammal");
     expect(result.current.sortedData[2].category).toBeNull();

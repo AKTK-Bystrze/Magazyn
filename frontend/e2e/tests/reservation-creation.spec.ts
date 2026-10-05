@@ -185,10 +185,9 @@ test.describe("Reservation Creation", () => {
           end_date: endDate.toISOString().split("T")[0],
         },
       ],
-      free_reservation: true, // Non-admin trying to create free reservation
+      free_reservation: true,
     };
 
-    // Extract auth token from storage for API request
     const storageState = await authenticatedPage.context().storageState();
     const authToken = storageState.cookies.find((c) => c.name.includes("auth-token"))?.value;
     let accessToken = "";

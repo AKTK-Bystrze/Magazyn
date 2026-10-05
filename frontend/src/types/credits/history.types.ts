@@ -7,14 +7,14 @@ import type { PaginationMeta } from "../api.types";
  */
 export type CreditHistoryItem = {
   id: string;
-  userId: string; // from credit_history.user_id
-  username: string; // from profiles.username (JOIN)
-  amount: number; // negative for charges, positive for credits
+  userId: string;
+  username: string;
+  amount: number;
   reason: Enums<"credit_transaction_reason">;
   description: string | null;
   reservationId: string | null;
-  authorId: string | null; // ID of who performed the action
-  authorUsername: string | null; // from author_id → profiles.username
+  authorId: string | null;
+  authorUsername: string | null;
   createdAt: string;
 };
 

@@ -194,7 +194,7 @@ function ReservationListContainerInner({
 
   const handleCancelClick = React.useCallback((reservation: ReservationListItem) => {
     setSelectedReservation(reservation);
-    setBatchReservations([]); // Clear batch
+    setBatchReservations([]);
     setCancelDialogOpen(true);
   }, []);
 
@@ -242,7 +242,7 @@ function ReservationListContainerInner({
 
   const handleCancelAll = React.useCallback((reservations: ReservationListItem[]) => {
     setBatchReservations(reservations);
-    setSelectedReservation(null); // Clear single
+    setSelectedReservation(null);
     setCancelDialogOpen(true);
   }, []);
 
@@ -283,7 +283,6 @@ function ReservationListContainerInner({
 
   return (
     <div className="space-y-6" data-testid="reservation-list-container">
-      {/* Success Message */}
       {successMessage && (
         <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
           <CheckCircle2 className={ICON_SIZE_SM + " text-green-600"} />
@@ -293,7 +292,6 @@ function ReservationListContainerInner({
         </Alert>
       )}
 
-      {/* Error Message */}
       {(error || errorMessage) && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
@@ -301,7 +299,6 @@ function ReservationListContainerInner({
         </Alert>
       )}
 
-      {/* View Tabs and Toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <ReservationViewTabs activeScope={filters.scope} onScopeChange={handleScopeChange} />
         <div className="flex items-center gap-1 bg-muted p-1 rounded-md self-start sm:self-auto">
@@ -327,10 +324,8 @@ function ReservationListContainerInner({
         </div>
       </div>
 
-      {/* Filters */}
       <ReservationFilters filters={filters} onFilterChange={setFilter} onReset={resetFilters} />
 
-      {/* Reservation List or Table */}
       {viewMode === "grid" ? (
         <ReservationCardList
           reservations={data?.reservations ?? []}
@@ -368,7 +363,6 @@ function ReservationListContainerInner({
         />
       )}
 
-      {/* Cancel Dialog */}
       <CancelReservationDialog
         isOpen={cancelDialogOpen}
         reservation={selectedReservation}
@@ -378,7 +372,6 @@ function ReservationListContainerInner({
         onClose={handleCancelDialogClose}
       />
 
-      {/* Modify Dates Dialog */}
       {dialogReservation && (
         <ModifyDatesDialog
           open={modifyDialogOpen}
@@ -395,7 +388,6 @@ function ReservationListContainerInner({
         />
       )}
 
-      {/* Return With Dates Dialog */}
       {dialogReservation && (
         <ReturnWithDatesDialog
           open={returnDialogOpen}

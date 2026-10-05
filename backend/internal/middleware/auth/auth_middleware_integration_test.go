@@ -37,14 +37,12 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 	defer func() {
 		testutils.DeleteTestUser(user.ID.String())
 	}()
-	// Login to get a valid token
 	tokenResp, err := testutils.TestClient.Auth.SignInWithEmailPassword(email, password)
 	require.NoError(t, err, "Failed to sign in test user")
 	validToken := tokenResp.AccessToken
-	// Wait for profile trigger
 	for i := 0; i < 20; i++ {
 		data, _, _ := testutils.TestClient.From("profiles").Select("*", "exact", false).Eq("id", user.ID.String()).Execute()
-		if len(data) > 2 { // Data is returned as "[]" if empty, >2 means at least one profile
+		if len(data) > 2 {
 			break
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -57,8 +55,6 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 			capturedProfile, _ = r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
 			w.WriteHeader(http.StatusOK)
 		})
-		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
-		// Get config from environment
 		url := os.Getenv("PUBLIC_SUPABASE_URL")
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
@@ -84,8 +80,6 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t.Error("Next handler should not be called")
 		})
-		// authAdapter := service.NewSupabaseAuthAdapter(testutils.TestClient)
-		// Get config from environment
 		url := os.Getenv("PUBLIC_SUPABASE_URL")
 		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
 		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
