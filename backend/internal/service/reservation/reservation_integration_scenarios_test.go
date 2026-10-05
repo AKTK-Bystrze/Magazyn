@@ -35,7 +35,7 @@ func TestTS1_BrokenEquipmentCannotBeReserved(t *testing.T) {
 			{EquipmentID: fixture.equipmentID, StartDate: dateOffset(3), EndDate: dateOffset(5)},
 		},
 	}
-	_, err = fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
+	_, err = fixture.svc.Create(ctx, cmd, fixture.testUserID)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not available", "Broken equipment should not be reservable")
 	t.Logf("✓ Broken equipment reservation rejected")

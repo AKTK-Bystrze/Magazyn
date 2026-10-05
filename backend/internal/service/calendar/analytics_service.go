@@ -20,11 +20,13 @@ type AnalyticsService interface {
 // Analytics Service Implementation
 type analyticsService struct {
 	analyticsRepo repository.AnalyticsRepository
+	typeRepo      repository.EquipmentTypeRepository
 }
 
-func NewAnalyticsService(analyticsRepo repository.AnalyticsRepository) AnalyticsService {
+func NewAnalyticsService(analyticsRepo repository.AnalyticsRepository, typeRepo repository.EquipmentTypeRepository) AnalyticsService {
 	return &analyticsService{
 		analyticsRepo: analyticsRepo,
+		typeRepo:      typeRepo,
 	}
 }
 func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.EquipmentStatsResponse, error) {
@@ -35,6 +37,9 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 		logger.Errorf(ctx, "Failed to fetch equipment stats: %v", err)
 		return nil, types.NewInternalError("Failed to fetch equipment stats", err)
 	}
+	// TODO: The analytics view doesn't include equipment type_id.
+	// To populate EquipmentType, either update the view or make additional queries.
+	// For now, typeRepo is kept for future enhancement but not used.
 	// Transform to DTOs with top renters
 	stats := make([]types.EquipmentStatsDTO, 0, len(rawStats))
 	for _, raw := range rawStats {

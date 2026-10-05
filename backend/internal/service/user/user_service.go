@@ -28,14 +28,16 @@ type UserService interface {
 
 // User Service Implementation
 type userService struct {
-	repo     repository.UserRepository
-	authRepo repository.AuthRepository
+	repo       repository.UserRepository
+	authRepo   repository.AuthRepository
+	creditRepo repository.CreditHistoryRepository
 }
 
-func NewUserService(repo repository.UserRepository, authRepo repository.AuthRepository) UserService {
+func NewUserService(repo repository.UserRepository, authRepo repository.AuthRepository, creditRepo repository.CreditHistoryRepository) UserService {
 	return &userService{
-		repo:     repo,
-		authRepo: authRepo,
+		repo:       repo,
+		authRepo:   authRepo,
+		creditRepo: creditRepo,
 	}
 }
 func (s *userService) BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error {

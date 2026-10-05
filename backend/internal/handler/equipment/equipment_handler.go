@@ -1,4 +1,3 @@
-// Package equipment provides HTTP handlers for equipment inventory, types, and availability.
 package equipment
 
 import (
@@ -14,17 +13,13 @@ import (
 	"magazyn/backend/internal/validation"
 )
 
-// EquipmentHandler handles HTTP endpoints for managing equipment inventory.
 type EquipmentHandler struct {
 	service equipmentservice.EquipmentService
 }
 
-// NewEquipmentHandler creates a new instance of EquipmentHandler.
 func NewEquipmentHandler(s equipmentservice.EquipmentService) *EquipmentHandler {
 	return &EquipmentHandler{service: s}
 }
-
-// HandleList lists equipment items with optional filtering and pagination.
 func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -98,7 +93,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	response, err := h.service.List(ctx, userID, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleList error: %v", err)
-		common.RespondWithError(ctx, w, err)
+		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)
@@ -211,13 +206,11 @@ func (h *EquipmentHandler) HandleCheckAvailability(w http.ResponseWriter, r *htt
 	response, err := h.service.CheckAvailability(ctx, id, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleCheckAvailability error: %v", err)
-		common.RespondWithError(ctx, w, err)
+		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
-
-// HandleListEquipmentTypes retrieves all available equipment categories/types.
 func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -228,13 +221,36 @@ func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *ht
 	response, err := h.service.ListEquipmentTypes(ctx)
 	if err != nil {
 		logger.Errorf(ctx, "HandleListEquipmentTypes error: %v", err)
-		common.RespondWithError(ctx, w, err)
+		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
-
-// HandleCreateMaintenanceLog records a maintenance or service event for an equipment item.
+func (h *EquipmentHandler) HandleCreateEquipmentType(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID := common.GetUserIDFromContext(r)
+	if userID == "" {
+		common.RespondUnauthorized(ctx, w)
+		return
+	}
+	var cmd types.CreateEquipmentTypeRequest
+	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	// Validation (simple check)
+	if cmd.Name == "" {
+		common.RespondError(ctx, w, http.StatusBadRequest, "Name is required")
+		return
+	}
+	response, err := h.service.CreateEquipmentType(ctx, cmd)
+	if err != nil {
+		logger.Errorf(ctx, "HandleCreateEquipmentType error: %v", err)
+		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	common.RespondJSON(ctx, w, http.StatusCreated, response)
+}
 func (h *EquipmentHandler) HandleCreateMaintenanceLog(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)

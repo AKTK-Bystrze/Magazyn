@@ -26,7 +26,7 @@ interface EquipmentSearchContainerProps {
  * @param props - Component props
  * @returns Equipment search interface with filters, grid, and cart indicator
  */
-export function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProps) {
+function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProps) {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
@@ -240,7 +240,7 @@ interface EquipmentSearchContainerWithProviderProps {
  * />
  * ```
  */
-export function EquipmentSearchContainerWithProvider({
+export default function EquipmentSearchContainerWithProvider({
   checkoutPath,
 }: EquipmentSearchContainerWithProviderProps) {
   return (
@@ -249,5 +249,3 @@ export function EquipmentSearchContainerWithProvider({
     </QueryProvider>
   );
 }
-
-export default EquipmentSearchContainerWithProvider;

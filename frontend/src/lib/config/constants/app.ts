@@ -59,4 +59,3 @@ export const MESSAGE_AUTO_DISMISS_MS = 5000;
 
 /** 1 minute stale time */
 export const QUERY_STALE_TIME_MS = 1000 * 60;
-export const QUERY_STALE_TIME = QUERY_STALE_TIME_MS;

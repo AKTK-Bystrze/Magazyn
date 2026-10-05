@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { equipmentApi } from "@/lib/api/equipment-api";
-import { getNextPageParam } from "@/lib/config/query";
 import type {
   EquipmentManagerFilterState,
   EquipmentSearchItem,
@@ -135,7 +134,12 @@ export function useEquipmentManager(
       return equipmentApi.list(params);
     },
     initialPageParam: 1,
-    getNextPageParam,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
     enabled,
     staleTime: QUERY_STALE_TIME_MS,
   });

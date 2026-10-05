@@ -6,7 +6,6 @@ import type {
   ReservationDetail,
   ReservationAuditEntry,
   UpdateReservationCommand,
-  BulkUpdateReservationsCommand,
 } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
@@ -198,10 +197,4 @@ export function transformReservationDetail(data: unknown): ReservationDetail {
     equipmentInternalId: dto.equipment_internal_id,
     auditTrail: (dto.audit_trail || []).map(transformAuditEntry),
   };
-} 
-
-export function transformBulkUpdateCommand(
-  cmd: BulkUpdateReservationsCommand
-): Record<string, unknown> {
-  return { reservation_ids: cmd.reservationIds, status: cmd.status };
 }

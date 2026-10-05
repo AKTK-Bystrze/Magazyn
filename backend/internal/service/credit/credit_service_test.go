@@ -21,7 +21,7 @@ func TestGetCreditHistory_Pagination(t *testing.T) {
 		Page:    1,
 		PerPage: 15, // Invalid
 	}
-	_, err := service.GetCreditHistory(ctx, query, "user1", "user")
+	_, err := service.GetCreditHistory(ctx, query, "user1")
 	assert.Error(t, err)
 	assert.IsType(t, &types.ValidationError{}, err)
 	assert.Contains(t, err.Error(), "Invalid per_page value")
@@ -34,14 +34,13 @@ func TestGetCreditHistory_Pagination(t *testing.T) {
 	userID := "user1"
 	mockRepo.On("GetCreditHistory", ctx, &userID, 1, 25).Return([]types.CreditHistoryItemDTO{}, int64(0), nil)
 	mockUserRepo.On("GetByID", ctx, userID).Return(&types.PublicProfilesSelect{CreditBalance: 100}, nil)
-	resp, err := service.GetCreditHistory(ctx, queryValid, userID, "user")
+	resp, err := service.GetCreditHistory(ctx, queryValid, userID)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, int32(100), resp.CurrentBalance)
 	mockRepo.AssertExpectations(t)
 	mockUserRepo.AssertExpectations(t)
 }
-
 func TestGetCreditHistory_PaginationDefaults(t *testing.T) {
 	mockRepo := new(mocks.MockCreditHistoryRepository)
 	mockUserRepo := new(mocks.MockUserRepository)
@@ -55,24 +54,7 @@ func TestGetCreditHistory_PaginationDefaults(t *testing.T) {
 	// Expect call with defaults
 	mockRepo.On("GetCreditHistory", ctx, &userID, constants.DefaultPage, constants.DefaultPerPage).Return([]types.CreditHistoryItemDTO{}, int64(0), nil)
 	mockUserRepo.On("GetByID", ctx, userID).Return(&types.PublicProfilesSelect{CreditBalance: 100}, nil)
-	_, err := service.GetCreditHistory(ctx, query, userID, "user")
+	_, err := service.GetCreditHistory(ctx, query, userID)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
-}
-
-func TestGetCreditHistory_NonAdminFilterOtherUser_Forbidden(t *testing.T) {
-	mockRepo := new(mocks.MockCreditHistoryRepository)
-	mockUserRepo := new(mocks.MockUserRepository)
-	service := NewCreditHistoryService(mockRepo, mockUserRepo)
-	ctx := context.Background()
-	otherUser := "user-2"
-	query := types.GetCreditHistoryQuery{
-		Page:    1,
-		PerPage: 25,
-		UserID:  &otherUser,
-	}
-	_, err := service.GetCreditHistory(ctx, query, "user-1", "user")
-	assert.Error(t, err)
-	assert.IsType(t, &types.ForbiddenError{}, err)
-	assert.Contains(t, err.Error(), "Only admins can filter by user_id")
 }

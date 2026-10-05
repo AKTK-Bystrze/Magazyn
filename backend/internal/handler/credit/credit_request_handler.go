@@ -4,23 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/service/credit"
 	"magazyn/backend/internal/types"
 )
 
-// CreditRequestHandler handles HTTP endpoints for credit requests (creation, review, leaderboard).
 type CreditRequestHandler struct {
 	service credit.CreditRequestService
 }
 
-// NewCreditRequestHandler creates a new instance of CreditRequestHandler.
 func NewCreditRequestHandler(service credit.CreditRequestService) *CreditRequestHandler {
 	return &CreditRequestHandler{service: service}
 }
-
-// HandleListRequests retrieves paginated credit requests.
 func (h *CreditRequestHandler) HandleListRequests(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -36,8 +33,6 @@ func (h *CreditRequestHandler) HandleListRequests(w http.ResponseWriter, r *http
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, resp)
 }
-
-// HandleCreateRequest creates a new credit request.
 func (h *CreditRequestHandler) HandleCreateRequest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -61,8 +56,6 @@ func (h *CreditRequestHandler) HandleCreateRequest(w http.ResponseWriter, r *htt
 	}
 	common.RespondJSON(ctx, w, http.StatusCreated, resp)
 }
-
-// HandleUpdateRequest updates an existing credit request before review.
 func (h *CreditRequestHandler) HandleUpdateRequest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -87,13 +80,16 @@ func (h *CreditRequestHandler) HandleUpdateRequest(w http.ResponseWriter, r *htt
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, resp)
 }
-
-// HandleReviewRequest reviews (approves, rejects, approves with changes) a credit request.
 func (h *CreditRequestHandler) HandleReviewRequest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
 	if userID == "" {
 		common.RespondUnauthorized(ctx, w)
+		return
+	}
+	userRole := common.GetUserRoleFromContext(r)
+	if userRole != auth.RoleSuperAdmin {
+		common.RespondError(ctx, w, http.StatusForbidden, "Only super admin can review requests")
 		return
 	}
 	id := r.PathValue("id")
@@ -113,8 +109,6 @@ func (h *CreditRequestHandler) HandleReviewRequest(w http.ResponseWriter, r *htt
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, map[string]string{"message": "Status updated successfully"})
 }
-
-// HandleGetLeaderboard retrieves the credit leaderboard for users.
 func (h *CreditRequestHandler) HandleGetLeaderboard(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)

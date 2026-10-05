@@ -27,8 +27,8 @@ export class StructuredLogger {
       time: new Date().toISOString(),
       level,
       msg,
-      username: (this.baseContext.username as string | undefined) || undefined,
-      trace_id: (this.baseContext.trace_id as string | undefined) || "unknown",
+      username: this.baseContext.username || undefined,
+      trace_id: this.baseContext.trace_id || "unknown",
       ...this.baseContext,
       ...data,
     };

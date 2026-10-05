@@ -53,7 +53,8 @@ var _ repository.AnalyticsRepository = (*MockAnalyticsRepository)(nil)
 func TestGetEquipmentStats_Success(t *testing.T) {
 	t.Run("returns equipment stats with top renters", func(t *testing.T) {
 		mockAnalyticsRepo := new(MockAnalyticsRepository)
-		service := NewAnalyticsService(mockAnalyticsRepo)
+		mockTypeRepo := new(MockEquipmentTypeRepository)
+		service := NewAnalyticsService(mockAnalyticsRepo, mockTypeRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
 		equipmentID := "eq-uuid-1"
@@ -90,7 +91,8 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 	})
 	t.Run("returns empty stats when no equipment found", func(t *testing.T) {
 		mockAnalyticsRepo := new(MockAnalyticsRepository)
-		service := NewAnalyticsService(mockAnalyticsRepo)
+		mockTypeRepo := new(MockEquipmentTypeRepository)
+		service := NewAnalyticsService(mockAnalyticsRepo, mockTypeRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
 		mockAnalyticsRepo.On("GetEquipmentStats", ctx, query).Return([]types.PublicAnalyticsEquipmentStatsSelect{}, nil)
@@ -101,7 +103,8 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 	})
 	t.Run("includes period in response", func(t *testing.T) {
 		mockAnalyticsRepo := new(MockAnalyticsRepository)
-		service := NewAnalyticsService(mockAnalyticsRepo)
+		mockTypeRepo := new(MockEquipmentTypeRepository)
+		service := NewAnalyticsService(mockAnalyticsRepo, mockTypeRepo)
 		ctx := context.Background()
 		year := 2025
 		month := 12
@@ -116,7 +119,8 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 func TestGetUserStats_Success(t *testing.T) {
 	t.Run("returns user stats with favorite equipment type", func(t *testing.T) {
 		mockAnalyticsRepo := new(MockAnalyticsRepository)
-		service := NewAnalyticsService(mockAnalyticsRepo)
+		mockTypeRepo := new(MockEquipmentTypeRepository)
+		service := NewAnalyticsService(mockAnalyticsRepo, mockTypeRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
 		userID := "user-uuid-1"
@@ -151,7 +155,8 @@ func TestGetUserStats_Success(t *testing.T) {
 	})
 	t.Run("handles nil favorite equipment type", func(t *testing.T) {
 		mockAnalyticsRepo := new(MockAnalyticsRepository)
-		service := NewAnalyticsService(mockAnalyticsRepo)
+		mockTypeRepo := new(MockEquipmentTypeRepository)
+		service := NewAnalyticsService(mockAnalyticsRepo, mockTypeRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
 		userID := "user-uuid-1"
@@ -175,7 +180,8 @@ func TestGetUserStats_Success(t *testing.T) {
 	})
 	t.Run("returns empty stats when no users found", func(t *testing.T) {
 		mockAnalyticsRepo := new(MockAnalyticsRepository)
-		service := NewAnalyticsService(mockAnalyticsRepo)
+		mockTypeRepo := new(MockEquipmentTypeRepository)
+		service := NewAnalyticsService(mockAnalyticsRepo, mockTypeRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
 		mockAnalyticsRepo.On("GetUserStats", ctx, query).Return([]types.PublicAnalyticsUserStatsSelect{}, nil)

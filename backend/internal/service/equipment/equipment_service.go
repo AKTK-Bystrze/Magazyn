@@ -28,6 +28,8 @@ type EquipmentService interface {
 	CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error)
 	// ListEquipmentTypes retrieves all equipment types
 	ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error)
+	// CreateEquipmentType creates a new equipment type
+	CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error)
 	// CreateMaintenanceLog adds a maintenance log entry for equipment
 	CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error)
 }
@@ -91,7 +93,7 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 	}
 	return &types.EquipmentListResponse{
 		Equipment: dtos,
-		Pagination: types.Pagination{
+		Pagination: types.PaginationResponse{
 			Page:       query.Page,
 			PerPage:    query.PerPage,
 			TotalItems: int(totalItems),
@@ -305,6 +307,18 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 	projectURL = strings.TrimSuffix(projectURL, "/")
 	url := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", projectURL, constants.StorageBucket, *imagePath)
 	return &url
+}
+func (s *equipmentService) CreateEquipmentType(ctx context.Context, cmd types.CreateEquipmentTypeRequest) (*types.PublicEquipmentTypesSelect, error) {
+	t := types.PublicEquipmentTypesInsert{
+		Name:             cmd.Name,
+		CreditCostPerDay: cmd.CreditCostPerDay,
+	}
+	created, err := s.typeRepo.Create(ctx, t)
+	if err != nil {
+		logger.Errorf(ctx, "Failed to create equipment type: %v", err)
+		return nil, types.NewInternalError("Failed to create equipment type", err)
+	}
+	return created, nil
 }
 func (s *equipmentService) CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error) {
 	eq, err := s.repo.GetByID(ctx, equipmentID)

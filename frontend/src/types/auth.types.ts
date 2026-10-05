@@ -23,17 +23,6 @@ export type LoginRequest = {
 };
 
 /**
- * Login response body
- * POST /auth/login
- */
-export type LoginResponse = {
-  message: string;
-};
-
-export type LoginRequestDTO = LoginRequest;
-export type LoginResponseDTO = LoginResponse;
-
-/**
  * User profile with credit balance
  * Derived from profiles table, field names in camelCase
  */

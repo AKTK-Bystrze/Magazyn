@@ -2,7 +2,7 @@
  * Navigation Configuration
  *
  * Central configuration for navigation items, labels, and theme settings.
- * Used by UserSidebar, AdminSidebar, UserHeader, AdminHeader, and Breadcrumbs components.
+ * Used by TopNavBar, DesktopLinks, MobileMenu, and Breadcrumbs components.
  *
  * @module lib/config/nav-config
  */

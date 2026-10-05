@@ -209,7 +209,7 @@ func TestList_Success(t *testing.T) {
 	total := int64(2)
 	mockRepo.On("GetReservations", ctx, query).Return(items, total, nil)
 	// Act
-	result, err := svc.List(ctx, query, "", "")
+	result, err := svc.List(ctx, query)
 	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -220,42 +220,6 @@ func TestList_Success(t *testing.T) {
 	assert.Equal(t, 1, result.Pagination.TotalPages)
 	mockRepo.AssertExpectations(t)
 }
-
-func TestList_ScopeAll_BypassesRLS(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	scope := "all"
-	query := types.ReservationListQuery{
-		Page:    1,
-		PerPage: 25,
-		Scope:   &scope,
-	}
-	expectedQuery := query
-	expectedQuery.BypassRLS = true
-	mockRepo.On("GetReservations", ctx, expectedQuery).Return([]types.ReservationListItem{}, int64(0), nil)
-	result, err := svc.List(ctx, query, "user-123", "user")
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestList_DefaultScope_RestrictsToUserID(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	query := types.ReservationListQuery{
-		Page:    1,
-		PerPage: 25,
-	}
-	userID := "user-123"
-	expectedQuery := query
-	expectedQuery.UserID = &userID
-	mockRepo.On("GetReservations", ctx, expectedQuery).Return([]types.ReservationListItem{}, int64(0), nil)
-	result, err := svc.List(ctx, query, userID, "user")
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	mockRepo.AssertExpectations(t)
-}
-
 func TestList_PaginationCalculation(t *testing.T) {
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
@@ -267,7 +231,7 @@ func TestList_PaginationCalculation(t *testing.T) {
 	total := int64(47) // Should result in 5 pages
 	mockRepo.On("GetReservations", ctx, query).Return(items, total, nil)
 	// Act
-	result, err := svc.List(ctx, query, "", "")
+	result, err := svc.List(ctx, query)
 	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, 5, result.Pagination.TotalPages)
@@ -289,7 +253,7 @@ func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
 	}
 	mockEquipRepo.On("GetByID", ctx, "nonexistent-eq").Return(nil, types.NewNotFoundError("Equipment", "nonexistent-eq"))
 	// Act
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
+	result, err := svc.Create(ctx, cmd, "user-123")
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -297,7 +261,6 @@ func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
 	assert.Contains(t, err.Error(), "not found")
 	mockEquipRepo.AssertExpectations(t)
 }
-
 func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
@@ -320,7 +283,7 @@ func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
 	}
 	mockEquipRepo.On("GetByID", ctx, "eq-archived").Return(equipment, nil)
 	// Act
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
+	result, err := svc.Create(ctx, cmd, "user-123")
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -328,7 +291,6 @@ func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
 	assert.Contains(t, err.Error(), "not available")
 	mockEquipRepo.AssertExpectations(t)
 }
-
 func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
 	_, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
@@ -351,7 +313,7 @@ func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
 	}
 	mockEquipRepo.On("GetByID", ctx, "eq-broken").Return(equipment, nil)
 	// Act
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
+	result, err := svc.Create(ctx, cmd, "user-123")
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -359,28 +321,6 @@ func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
 	assert.Contains(t, err.Error(), "not available")
 	mockEquipRepo.AssertExpectations(t)
 }
-
-func TestCreate_FreeReservation_ForbiddenForUser(t *testing.T) {
-	_, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	isFree := true
-	cmd := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: "eq-1",
-				StartDate:   "2025-01-01",
-				EndDate:     "2025-01-03",
-			},
-		},
-		FreeReservation: &isFree,
-	}
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ForbiddenError{}, err)
-	assert.Contains(t, err.Error(), "Only admins can create free reservations")
-}
-
 func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 	mockRepo, mockEquipRepo, mockUserRepo, mockEmailService, svc := setupTestService()
 	ctx := context.Background()
@@ -427,7 +367,7 @@ func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 		"balance": newBalance,
 	}).Return(nil)
 	// Act
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
+	result, err := svc.Create(ctx, cmd, "user-123")
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, result)
@@ -437,7 +377,6 @@ func TestCreate_CostCalculation_SingleItem(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	mockEquipRepo.AssertExpectations(t)
 }
-
 func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
@@ -475,7 +414,7 @@ func TestCreate_InsufficientCredits_ConflictError(t *testing.T) {
 		cmd.Reservations,
 	).Return(nil, int32(0), types.NewConflictError("Insufficient credits", nil))
 	// Act
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
+	result, err := svc.Create(ctx, cmd, "user-123")
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, result)

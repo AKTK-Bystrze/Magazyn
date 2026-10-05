@@ -44,7 +44,8 @@ func setupCalendarTestFixture(t *testing.T) *calendarTestFixture {
 	client, err := supa.NewClient(supabaseURL, supabaseKey, nil)
 	require.NoError(t, err)
 	calendarRepo := supabase.NewCalendarRepository(client)
-	svc := calendar.NewCalendarService(calendarRepo)
+	typeRepo := supabase.NewEquipmentTypeRepository(client, supabaseURL, supabaseKey)
+	svc := calendar.NewCalendarService(calendarRepo, typeRepo)
 	fixture := &calendarTestFixture{
 		t:       t,
 		svc:     svc,

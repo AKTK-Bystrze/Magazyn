@@ -47,70 +47,55 @@ type UpdateReservationResponse struct {
 	RemainingBalance int32  `json:"remaining_balance"`
 	UpdatedAt        string `json:"updated_at"`
 }
-
-// ModifyDatesResponse represents the response when modifying reservation dates.
 type ModifyDatesResponse struct {
-	ID        string `json:"id"`
-	StartDate string `json:"start_date"`
-	EndDate   string `json:"end_date"`
-	Status    string `json:"status"`
-	UpdatedAt string `json:"updated_at"`
-	OldCost   int32  `json:"old_cost"`
-	NewCost   int32  `json:"new_cost"`
-	// CreditAdjustment indicates credit refund (positive) or charge (negative).
-	CreditAdjustment int32 `json:"credit_adjustment"`
-	NewBalance       int32 `json:"new_balance"`
+	ID               string `json:"id"`
+	StartDate        string `json:"start_date"`
+	EndDate          string `json:"end_date"`
+	Status           string `json:"status"`
+	UpdatedAt        string `json:"updated_at"`
+	OldCost          int32  `json:"old_cost"`
+	NewCost          int32  `json:"new_cost"`
+	CreditAdjustment int32  `json:"credit_adjustment"` // positive = refund, negative = charge
+	NewBalance       int32  `json:"new_balance"`
 }
-
-// ReservationListResponse represents the paginated response for listing reservations.
 type ReservationListResponse struct {
 	Reservations []ReservationListItem `json:"reservations"`
-	Pagination   Pagination            `json:"pagination"`
+	Pagination   PaginationResponse    `json:"pagination"`
 }
-
-// ReservationDashboardSummary represents aggregated dashboard metrics for reservations.
 type ReservationDashboardSummary struct {
 	PendingReservations int64 `json:"pending_reservations"`
 	OverdueReservations int64 `json:"overdue_reservations"`
 	ActiveToday         int64 `json:"active_today"`
 }
 
-// CreateReservationItem represents a single item in a reservation creation request.
+// Command Models - Request Validation
+// CreateReservationItem represents a single item in a create request
 type CreateReservationItem struct {
-	EquipmentID string `json:"equipment_id"`
-	StartDate   string `json:"start_date"`
-	EndDate     string `json:"end_date"`
+	EquipmentID string `json:"equipment_id" validate:"required,uuid"`
+	StartDate   string `json:"start_date" validate:"required,datetime=2006-01-02"`
+	EndDate     string `json:"end_date" validate:"required,datetime=2006-01-02,gtefield=StartDate"`
 }
-
-// CreateReservationsCommand represents the command to create one or more reservations.
 type CreateReservationsCommand struct {
-	Reservations []CreateReservationItem `json:"reservations"`
-	// UserID allows an admin to create a reservation on behalf of another user.
-	UserID *string `json:"user_id,omitempty"`
-	// FreeReservation allows an admin to waive credit costs.
-	FreeReservation *bool `json:"free_reservation,omitempty"`
+	Reservations    []CreateReservationItem `json:"reservations" validate:"required,min=1,dive"`
+	UserID          *string                 `json:"user_id,omitempty" validate:"omitempty,uuid"`     // Admin only
+	FreeReservation *bool                   `json:"free_reservation,omitempty" validate:"omitempty"` // Admin+ only
 }
-
-// UpdateReservationCommand represents the payload for updating reservation dates or status.
 type UpdateReservationCommand struct {
-	StartDate *string `json:"start_date,omitempty"`
-	EndDate   *string `json:"end_date,omitempty"`
-	Status    *string `json:"status,omitempty"`
+	StartDate *string `json:"start_date,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	EndDate   *string `json:"end_date,omitempty" validate:"omitempty,datetime=2006-01-02"`
+	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=PENDING RENTED RETURNED DENIED CANCELLED"`
 }
-
-// BulkStatusUpdateResponse contains counts of updated and refunded reservations.
 type BulkStatusUpdateResponse struct {
 	UpdatedCount int32 `json:"updated_count"`
 	RefundCount  int32 `json:"refund_count"`
 }
-
-// BulkUpdateReservationsCommand represents the command to transition multiple reservations.
 type BulkUpdateReservationsCommand struct {
-	ReservationIDs []string `json:"reservation_ids"`
-	Status         string   `json:"status"`
+	ReservationIDs []string `json:"reservation_ids" validate:"required,min=1,dive,uuid"`
+	Status         string   `json:"status" validate:"required,oneof=RENTED RETURNED DENIED"`
 }
 
-// ReservationListQuery represents filters and pagination for listing reservations.
+// Queries
+// ReservationListQuery represents filters for listing reservations
 type ReservationListQuery struct {
 	Page          int     `json:"page"`
 	PerPage       int     `json:"per_page"`
@@ -119,7 +104,5 @@ type ReservationListQuery struct {
 	EquipmentID   *string `json:"equipment_id"`
 	StartDateFrom *string `json:"start_date_from"`
 	StartDateTo   *string `json:"start_date_to"`
-	Scope         *string `json:"scope"`
-	// BypassRLS indicates whether to bypass Row Level Security when listing all reservations.
-	BypassRLS bool `json:"-"`
+	BypassRLS     bool    `json:"-"` // If true, use unauthenticated client (for "all" scope)
 }

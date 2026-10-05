@@ -20,7 +20,6 @@ import { MoreHorizontal, Calendar, X, CornerDownLeft, Eye, Edit2 } from "lucide-
 import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
 import type { ReservationListItem } from "@/types";
 import { formatDate } from "@/lib/utils/date-utils";
-import { useTableSort } from "@/lib/hooks/useTableSort";
 
 /**
  * Props for the ReservationTable component
@@ -158,16 +157,42 @@ export function ReservationTable({
     onViewDetails(item);
   };
 
-  const {
-    sortConfig,
-    requestSort,
-    sortedData: sortedReservations,
-  } = useTableSort(reservations, {
-    getValue: (item, key) => {
-      if (key === "dates") return item.startDate;
-      return item[key as keyof ReservationListItem];
-    },
-  });
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedReservations = React.useMemo(() => {
+    const sortableItems = [...reservations];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: ReservationListItem, b: ReservationListItem) => {
+        let aValue = a[sortConfig.key as keyof ReservationListItem];
+        let bValue = b[sortConfig.key as keyof ReservationListItem];
+
+        if (sortConfig.key === "dates") {
+          aValue = a.startDate;
+          bValue = b.startDate;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [reservations, sortConfig]);
 
   const showUserColumn = mode === "admin" || scope === "all";
 

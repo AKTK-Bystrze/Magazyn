@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users-api";
-import { getNextPageParam } from "@/lib/config/query";
 import type {
   UserFilterState,
   UserListResponse,
@@ -119,7 +118,12 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     queryKey: QUERY_KEYS.list(filters),
     queryFn: ({ pageParam = 1 }) => usersApi.list({ ...filters, page: pageParam }),
     initialPageParam: 1,
-    getNextPageParam,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
     enabled,
     staleTime: QUERY_STALE_TIME_MS,
   });

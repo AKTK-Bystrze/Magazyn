@@ -84,7 +84,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
 
   React.useEffect(() => {
     if (error) {
-      logger.error("EquipmentManagerContainer Error:", { error: error.message });
+      logger.error("EquipmentManagerContainer Error:", error);
     }
   }, [error]);
 

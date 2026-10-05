@@ -1,4 +1,3 @@
-// Package common provides shared HTTP helper functions for response formatting, context extraction, and error mapping.
 package common
 
 import (
@@ -14,7 +13,6 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-// ExtractBearerToken extracts the bearer token from the Authorization header of the request.
 func ExtractBearerToken(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -26,8 +24,6 @@ func ExtractBearerToken(r *http.Request) (string, error) {
 	}
 	return parts[1], nil
 }
-
-// RespondJSON marshals data as JSON and writes it to the response writer with the specified status code.
 func RespondJSON(ctx context.Context, w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -35,13 +31,9 @@ func RespondJSON(ctx context.Context, w http.ResponseWriter, status int, data in
 		logger.Errorf(ctx, "Failed to encode JSON response: %v", err)
 	}
 }
-
-// RespondError writes a standard JSON error response envelope.
 func RespondError(ctx context.Context, w http.ResponseWriter, status int, message string) {
 	RespondJSON(ctx, w, status, map[string]string{"error": message})
 }
-
-// RespondWithError inspects domain error types and maps them to appropriate HTTP status codes and JSON envelopes.
 func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 	if err == nil {
 		return
@@ -86,13 +78,9 @@ func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 		"details": details,
 	})
 }
-
-// RespondUnauthorized writes a 401 Unauthorized JSON error envelope.
 func RespondUnauthorized(ctx context.Context, w http.ResponseWriter) {
 	RespondError(ctx, w, http.StatusUnauthorized, "Unauthorized")
 }
-
-// GetUserIDFromContext extracts the authenticated user ID from the request context.
 func GetUserIDFromContext(r *http.Request) string {
 	val := r.Context().Value(appcontext.UserContextKey)
 	if val == nil {
@@ -103,8 +91,6 @@ func GetUserIDFromContext(r *http.Request) string {
 	}
 	return ""
 }
-
-// GetUserFromContext extracts the authenticated User struct from the request context.
 func GetUserFromContext(r *http.Request) *types.User {
 	val := r.Context().Value(appcontext.UserContextKey)
 	if val == nil {
@@ -115,8 +101,6 @@ func GetUserFromContext(r *http.Request) *types.User {
 	}
 	return nil
 }
-
-// GetUserProfileFromContext extracts the user profile from the request context.
 func GetUserProfileFromContext(r *http.Request) *types.PublicProfilesSelect {
 	val := r.Context().Value(appcontext.UserProfileContextKey)
 	if val == nil {
@@ -127,8 +111,6 @@ func GetUserProfileFromContext(r *http.Request) *types.PublicProfilesSelect {
 	}
 	return nil
 }
-
-// GetUserRoleFromContext extracts the authenticated user's role from the request context.
 func GetUserRoleFromContext(r *http.Request) string {
 	p := GetUserProfileFromContext(r)
 	if p == nil {
@@ -136,8 +118,6 @@ func GetUserRoleFromContext(r *http.Request) string {
 	}
 	return p.Role
 }
-
-// ParsePagination extracts and validates page and per_page parameters from the request query string.
 func ParsePagination(r *http.Request, defaultPage, defaultPerPage int) (int, int) {
 	page := defaultPage
 	if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {

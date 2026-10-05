@@ -11,7 +11,7 @@ export const userDTOSchema = z.object({
   email: z.string().email("Invalid email format"),
   username: z.string().min(1, "Username is required"),
   role: z.enum(["user", "admin", "super_admin"], {
-    message: "Role must be one of: user, admin, super_admin",
+    errorMap: () => ({ message: "Role must be one of: user, admin, super_admin" }),
   }),
   credit_balance: z.number().int().min(0, "Credit balance must be non-negative"),
   is_enabled: z.boolean(),
@@ -42,7 +42,7 @@ export const createUserCommandSchema = z.object({
       "Username can only contain letters, numbers, and underscores"
     ),
   role: z.enum(["user", "admin", "super_admin"], {
-    message: "Role must be one of: user, admin, super_admin",
+    errorMap: () => ({ message: "Role must be one of: user, admin, super_admin" }),
   }),
   credit_balance: z
     .number()
@@ -61,7 +61,7 @@ export const updateUserCommandSchema = z.object({
   email: z.string().email("Invalid email format").optional(),
   role: z
     .enum(["user", "admin", "super_admin"], {
-      message: "Role must be one of: user, admin, super_admin",
+      errorMap: () => ({ message: "Role must be one of: user, admin, super_admin" }),
     })
     .optional(),
   credit_balance: z.number().int().min(0, "Credit balance must be non-negative").optional(),

@@ -75,81 +75,65 @@ export type Database = {
           },
         ];
       };
-      credit_request_helpers: {
+      credit_requests: {
         Row: {
-          credit_request_id: string;
+          admin_id: string | null;
+          admin_note: string | null;
+          amount: number;
+          created_at: string;
+          description: string;
+          id: string;
+          status: Database["public"]["Enums"]["credit_request_status"];
+          updated_at: string | null;
           user_id: string;
         };
         Insert: {
-          credit_request_id: string;
+          admin_id?: string | null;
+          admin_note?: string | null;
+          amount: number;
+          created_at?: string;
+          description: string;
+          id?: string;
+          status?: Database["public"]["Enums"]["credit_request_status"];
+          updated_at?: string | null;
           user_id: string;
         };
         Update: {
-          credit_request_id?: string;
+          admin_id?: string | null;
+          admin_note?: string | null;
+          amount?: number;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          status?: Database["public"]["Enums"]["credit_request_status"];
+          updated_at?: string | null;
           user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "credit_request_helpers_credit_request_id_fkey";
-            columns: ["credit_request_id"];
+            foreignKeyName: "credit_requests_admin_id_fkey";
+            columns: ["admin_id"];
             isOneToOne: false;
-            referencedRelation: "credit_requests";
+            referencedRelation: "analytics_user_stats";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "credit_requests_admin_id_fkey";
+            columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "credit_request_helpers_user_id_fkey";
+            foreignKeyName: "credit_requests_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      credit_requests: {
-        Row: {
-          created_at: string;
-          credits_value: number;
-          description: string | null;
-          id: string;
-          requestor_id: string | null;
-          status: Database["public"]["Enums"]["credit_request_status"];
-          title: string;
-          updated_at: string | null;
-          user_helped_id: string | null;
-        };
-        Insert: {
-          created_at?: string;
-          credits_value: number;
-          description?: string | null;
-          id?: string;
-          requestor_id?: string | null;
-          status?: Database["public"]["Enums"]["credit_request_status"];
-          title: string;
-          updated_at?: string | null;
-          user_helped_id?: string | null;
-        };
-        Update: {
-          created_at?: string;
-          credits_value?: number;
-          description?: string | null;
-          id?: string;
-          requestor_id?: string | null;
-          status?: Database["public"]["Enums"]["credit_request_status"];
-          title?: string;
-          updated_at?: string | null;
-          user_helped_id?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "credit_requests_requestor_id_fkey";
-            columns: ["requestor_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            referencedRelation: "analytics_user_stats";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: "credit_requests_user_helped_id_fkey";
-            columns: ["user_helped_id"];
+            foreignKeyName: "credit_requests_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -405,7 +389,6 @@ export type Database = {
           end_date: string;
           equipment_id: string;
           id: string;
-          is_free: boolean;
           start_date: string;
           status: Database["public"]["Enums"]["reservation_status"];
           updated_at: string | null;
@@ -416,7 +399,6 @@ export type Database = {
           end_date: string;
           equipment_id: string;
           id?: string;
-          is_free?: boolean;
           start_date: string;
           status?: Database["public"]["Enums"]["reservation_status"];
           updated_at?: string | null;
@@ -427,7 +409,6 @@ export type Database = {
           end_date?: string;
           equipment_id?: string;
           id?: string;
-          is_free?: boolean;
           start_date?: string;
           status?: Database["public"]["Enums"]["reservation_status"];
           updated_at?: string | null;

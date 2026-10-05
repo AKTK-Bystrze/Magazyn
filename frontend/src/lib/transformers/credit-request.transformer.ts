@@ -32,12 +32,6 @@ interface LeaderboardItemDTO {
   total_credits: number;
 }
 
-/**
- * Transforms a backend CreditRequestDTO into a domain CreditRequest entity with camelCase properties.
- *
- * @param dto - Raw credit request DTO from backend
- * @returns Transformed CreditRequest entity
- */
 export function transformCreditRequest(dto: CreditRequestDTO): CreditRequest {
   return {
     id: dto.id,
@@ -53,12 +47,6 @@ export function transformCreditRequest(dto: CreditRequestDTO): CreditRequest {
   };
 }
 
-/**
- * Transforms a backend paginated credit request list response into domain format.
- *
- * @param data - Raw response data from backend
- * @returns Transformed credit request list response with standardized pagination
- */
 export function transformCreditRequestList(data: unknown): CreditRequestListResponse {
   const dto = data as CreditRequestListResponseDTO;
   return {
@@ -72,12 +60,6 @@ export function transformCreditRequestList(data: unknown): CreditRequestListResp
   };
 }
 
-/**
- * Transforms a raw leaderboard response into domain LeaderboardItem entities.
- *
- * @param data - Raw leaderboard DTO array from backend
- * @returns Array of transformed LeaderboardItem entities
- */
 export function transformLeaderboard(data: unknown): LeaderboardItem[] {
   const dtos = data as LeaderboardItemDTO[];
   return (dtos || []).map((d) => ({
@@ -87,12 +69,6 @@ export function transformLeaderboard(data: unknown): LeaderboardItem[] {
   }));
 }
 
-/**
- * Transforms a CreateCreditRequestCommand into snake_case payload for backend API.
- *
- * @param cmd - Creation command input
- * @returns Raw payload object ready for HTTP POST
- */
 export function transformCreateCommand(cmd: CreateCreditRequestCommand): Record<string, unknown> {
   return {
     title: cmd.title,
@@ -103,29 +79,16 @@ export function transformCreateCommand(cmd: CreateCreditRequestCommand): Record<
   };
 }
 
-/**
- * Transforms an UpdateCreditRequestCommand into snake_case payload for backend API.
- * Correctly serializes `user_helped_id` for backend compatibility.
- *
- * @param cmd - Update command input
- * @returns Raw payload object ready for HTTP PUT / PATCH
- */
 export function transformUpdateCommand(cmd: UpdateCreditRequestCommand): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   if (cmd.title !== undefined) result.title = cmd.title;
   if (cmd.description !== undefined) result.description = cmd.description;
   if (cmd.creditsValue !== undefined) result.credits_value = cmd.creditsValue;
-  if (cmd.userHelpedId !== undefined) result.user_helped_id = cmd.userHelpedId;
+  if (cmd.userHelpedId !== undefined) result.userHelpedId = cmd.userHelpedId;
   if (cmd.helpers !== undefined) result.helpers = cmd.helpers;
   return result;
 }
 
-/**
- * Transforms a ReviewCreditRequestCommand into snake_case payload for backend API review.
- *
- * @param cmd - Review command input with status and optional adjustments
- * @returns Raw payload object ready for HTTP review endpoint
- */
 export function transformReviewCommand(cmd: ReviewCreditRequestCommand): Record<string, unknown> {
   const result: Record<string, unknown> = { status: cmd.status };
   if (cmd.creditsValue !== undefined) result.credits_value = cmd.creditsValue;

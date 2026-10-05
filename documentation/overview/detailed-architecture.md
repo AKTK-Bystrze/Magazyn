@@ -64,7 +64,7 @@ flowchart TB
         end
         
         SupabaseGoClient["Supabase Go Client<br/>(PostgreSQL Adapter)"]
-        EmailService["Email Service<br/>(Noop / Mock)<br/>(Reservations Only)"]
+        EmailService["Email Service<br/>Gmail SMTP<br/>(Reservations Only)"]
     end
     
     subgraph Database["Supabase PostgreSQL"]
@@ -95,7 +95,7 @@ flowchart TB
     subgraph External["External Services"]
         SupabaseAuth["Supabase Auth<br/>• Magic Links<br/>• JWT Tokens"]
         SupabaseStorage["Supabase Storage<br/>• Equipment Images"]
-        Email["Email Service<br/>(Noop / Mock)"]
+        Gmail["Gmail SMTP<br/>(Reservations Only)"]
     end
     
     Browser -->|"HTTPS"| Pages
@@ -156,7 +156,7 @@ flowchart TB
     
     SupabaseClient -.->|"Login/Session"| SupabaseAuth
     AuthService -.-> SupabaseAuth
-    EmailService --> Email
+    EmailService --> Gmail
     ReservationService --> EmailService
     
     classDef clientStyle fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
@@ -172,7 +172,7 @@ flowchart TB
     class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,SupabaseGoClient,EmailService backendStyle
     class Profiles,EquipmentTypes,Equipment,Reservations,CreditHistory,CreditRequests dbStyle
     class ReservationHistory,MaintenanceLogs,Triggers,StoredProcs,RLS dbStyle
-    class SupabaseAuth,SupabaseStorage,Email externalStyle
+    class SupabaseAuth,SupabaseStorage,Gmail externalStyle
 ```
 
 ## Architecture Layers
@@ -232,7 +232,7 @@ flowchart TB
   - Credit validation
   - Conflict detection
   - Calls stored procedures for atomic operations
-  - Sends email notifications via Noop email service (NoopEmailService)
+  - Sends email notifications via Gmail SMTP
 - **Credit Service**:
   - Transaction logging
   - Balance updates with audit trail
@@ -315,7 +315,7 @@ flowchart TB
    - Creates reservation
    - Logs to `credit_history`
    - Returns transaction result
-8. **Service**: Sends reservation confirmation email via Noop email service
+8. **Service**: Sends reservation confirmation email via Gmail SMTP
 9. **Response**: Flows back through layers
 10. **Frontend**: TanStack Query invalidates cache, updates UI
 
@@ -323,10 +323,10 @@ flowchart TB
 
 ## Authentication Flow
 
-**Note**: All authentication is handled by Supabase. Custom email services are NOT used for authentication emails.
+**Note**: All authentication is handled by Supabase. Gmail SMTP is NOT used for authentication emails.
 
 1. **Login Request**: User enters email → Frontend calls `/api/auth/login`
-2. **Magic Link**: Supabase Auth sends magic link email (handled by Supabase)
+2. **Magic Link**: Supabase Auth sends magic link email (NOT Gmail SMTP)
 3. **Click Link**: User clicks link → Supabase validates → creates session
 4. **Set Cookie**: Supabase sets session cookie (httpOnly)
 5. **Middleware**: On each request, middleware validates session

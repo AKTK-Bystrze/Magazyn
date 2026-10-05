@@ -23,7 +23,6 @@ import {
   EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_MANAGER_UI_STRINGS,
 } from "@/lib/config/constants";
-import { useTableSort } from "@/lib/hooks/useTableSort";
 import type { EquipmentSearchItem } from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
@@ -118,17 +117,45 @@ export function EquipmentTable({
   onViewDetails,
   onArchive,
 }: EquipmentTableProps) {
-  const {
-    sortConfig,
-    requestSort,
-    sortedData: sortedEquipment,
-  } = useTableSort(equipment, {
-    getValue: (item, key) => {
-      if (key === "type.name") return item.type?.name;
-      if (key === "type.creditCostPerDay") return item.type?.creditCostPerDay;
-      return item[key as keyof EquipmentSearchItem];
-    },
-  });
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedEquipment = React.useMemo(() => {
+    const sortableItems = [...equipment];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (sortConfig.key === "type.name") {
+          aValue = a.type?.name;
+          bValue = b.type?.name;
+        } else if (sortConfig.key === "type.creditCostPerDay") {
+          aValue = a.type?.creditCostPerDay;
+          bValue = b.type?.creditCostPerDay;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [equipment, sortConfig]);
 
   const handleEdit = React.useCallback(
     (item: EquipmentSearchItem) => () => {

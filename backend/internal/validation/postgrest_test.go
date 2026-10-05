@@ -101,6 +101,48 @@ func TestValidateUUID_InvalidFormat_ReturnsError(t *testing.T) {
 		})
 	}
 }
+func TestValidateISODate_ValidFormat_ReturnsNil(t *testing.T) {
+	tests := []struct {
+		name string
+		date string
+	}{
+		{"regular date", "2025-12-25"},
+		{"first day of year", "2025-01-01"},
+		{"last day of year", "2025-12-31"},
+		{"leap year feb 29", "2024-02-29"},
+		{"january", "2025-01-15"},
+		{"december", "2025-12-15"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateISODate(tt.date)
+			assert.NoError(t, err)
+		})
+	}
+}
+func TestValidateISODate_InvalidFormat_ReturnsError(t *testing.T) {
+	tests := []struct {
+		name string
+		date string
+	}{
+		{"empty string", ""},
+		{"wrong format MM/DD/YYYY", "12/25/2025"},
+		{"wrong format DD-MM-YYYY", "25-12-2025"},
+		{"missing leading zero", "2025-1-1"},
+		{"invalid month", "2025-13-01"},
+		{"invalid day", "2025-12-32"},
+		{"non-leap year feb 29", "2025-02-29"},
+		{"too short", "2025-12"},
+		{"too long", "2025-12-25T00:00:00"},
+		{"invalid separator", "2025/12/25"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateISODate(tt.date)
+			assert.Error(t, err)
+		})
+	}
+}
 func TestValidateEnum_AllowedValue_ReturnsNil(t *testing.T) {
 	allowedStatuses := []string{"PENDING", "APPROVED", "DENIED"}
 	tests := []struct {
@@ -133,6 +175,45 @@ func TestValidateEnum_DisallowedValue_ReturnsError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateEnum(tt.value, allowedStatuses)
+			assert.Error(t, err)
+		})
+	}
+}
+func TestValidateInt32Range_ValidValue_ReturnsNil(t *testing.T) {
+	tests := []struct {
+		name  string
+		value int32
+		min   int32
+		max   int32
+	}{
+		{"min boundary", 0, 0, 100},
+		{"max boundary", 100, 0, 100},
+		{"middle value", 50, 0, 100},
+		{"negative range", -50, -100, 0},
+		{"single value range", 42, 42, 42},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateInt32Range(tt.value, tt.min, tt.max)
+			assert.NoError(t, err)
+		})
+	}
+}
+func TestValidateInt32Range_InvalidValue_ReturnsError(t *testing.T) {
+	tests := []struct {
+		name  string
+		value int32
+		min   int32
+		max   int32
+	}{
+		{"below min", -1, 0, 100},
+		{"above max", 101, 0, 100},
+		{"far below", -1000, 0, 100},
+		{"far above", 1000, 0, 100},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateInt32Range(tt.value, tt.min, tt.max)
 			assert.Error(t, err)
 		})
 	}

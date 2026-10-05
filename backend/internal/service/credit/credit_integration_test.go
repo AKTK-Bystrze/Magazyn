@@ -120,7 +120,7 @@ func TestGetCreditHistory_OwnHistory_ReturnsPaginated(t *testing.T) {
 		Page:    1,
 		PerPage: 10,
 	}
-	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
+	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
@@ -131,7 +131,6 @@ func TestGetCreditHistory_OwnHistory_ReturnsPaginated(t *testing.T) {
 	assert.GreaterOrEqual(t, resp.CurrentBalance, int32(0), "Balance should be non-negative")
 	t.Logf("✓ User fetched own history: %d entries, balance: %d", len(resp.CreditHistory), resp.CurrentBalance)
 }
-
 func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	fixture := setupCreditTestFixture(t)
 	defer fixture.teardown()
@@ -145,7 +144,7 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 		Page:    1,
 		PerPage: 25,
 	}
-	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.adminID, "admin")
+	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.adminID)
 	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
@@ -193,7 +192,7 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 				Page:    1,
 				PerPage: tc.perPage,
 			}
-			resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
+			resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
 			require.NoError(t, err)
 			assert.Equal(t, tc.perPage, resp.Pagination.PerPage)
 			assert.LessOrEqual(t, len(resp.CreditHistory), tc.perPage,
@@ -202,7 +201,6 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 		})
 	}
 }
-
 func TestGetCreditHistory_InvalidPerPage_ReturnsError(t *testing.T) {
 	fixture := setupCreditTestFixture(t)
 	defer fixture.teardown()
@@ -212,7 +210,7 @@ func TestGetCreditHistory_InvalidPerPage_ReturnsError(t *testing.T) {
 		Page:    1,
 		PerPage: 15, // Invalid
 	}
-	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
+	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, resp)

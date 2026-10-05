@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import Layout from "../layouts/Layout.astro";
 import { Button } from "../components/ui/button";
 
 export const prerender = false;
@@ -7,7 +7,7 @@ export const prerender = false;
 const user = Astro.locals.user;
 ---
 
-<BaseLayout title="Zaloguj się | Wynajem Sprzętu">
+<Layout title="Zaloguj się | Wynajem Sprzętu">
   <main class="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
     <div class="max-w-md w-full space-y-8 text-center">
       <!-- Icon -->
@@ -188,4 +188,4 @@ const user = Astro.locals.user;
       }
     });
   </script>
-</BaseLayout>
+</Layout>

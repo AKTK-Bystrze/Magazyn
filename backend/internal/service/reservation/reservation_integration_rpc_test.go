@@ -39,7 +39,7 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 			},
 		},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
+	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 	// Assert: Should fail with conflict/insufficient credits error
 	assert.Error(t, err)
 	assert.Nil(t, resp)
@@ -53,7 +53,7 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 		Update(map[string]interface{}{"credit_balance": 100000}, "", "").
 		Eq("id", fixture.testUserID).
 		Execute()
-	resp2, err2 := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
+	resp2, err2 := fixture.svc.Create(ctx, cmd, fixture.testUserID)
 	require.NoError(t, err2, "If rollback worked, reservation should not exist")
 	assert.NotNil(t, resp2)
 	t.Logf("✓ Atomicity verified: rollback on insufficient credits")

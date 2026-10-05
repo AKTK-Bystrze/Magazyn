@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { creditsApi } from "@/lib/api/credits-api";
-import { getNextPageParam } from "@/lib/config/query";
 import { DEFAULT_PAGE_SIZE, QUERY_STALE_TIME_MS } from "@/lib/config/constants";
 
 /**
@@ -33,7 +32,12 @@ export function useCreditHistory() {
     queryKey: QUERY_KEYS.history(perPage),
     queryFn: ({ pageParam = 1 }) => creditsApi.getHistory({ page: pageParam, perPage }),
     initialPageParam: 1,
-    getNextPageParam,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
     staleTime: QUERY_STALE_TIME_MS,
   });
 

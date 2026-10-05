@@ -10,7 +10,7 @@ flowchart TB
     
     Frontend["Frontend<br/>Astro 5 SSR + React 19<br/>TanStack Query"]
     
-    Backend["Backend API<br/>Go (net/http)<br/>Business Logic"]
+    Backend["Backend API<br/>Go (Gin)<br/>Business Logic"]
     
     subgraph Supabase["Supabase Services"]
         DB["PostgreSQL Database<br/>Tables, RLS, Triggers"]
@@ -18,7 +18,7 @@ flowchart TB
         Storage["Storage<br/>Equipment Images"]
     end
     
-    Email["Email Service<br/>(Noop / Mock)"]
+    SMTP["Gmail SMTP<br/>Email Notifications"]
     
     Browser -->|"HTTPS Requests"| Caddy
     
@@ -31,7 +31,7 @@ flowchart TB
     Backend -->|"SQL Queries"| DB
     Backend -->|"Verify JWT"| Auth
     Backend -->|"Upload Images"| Storage
-    Backend -->|"Reservation Emails"| Email
+    Backend -->|"Reservation Emails"| SMTP
     
     classDef browserStyle fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
     classDef proxyStyle fill:#fff9c4,stroke:#f57c00,stroke-width:2px
@@ -43,7 +43,7 @@ flowchart TB
     class Caddy proxyStyle
     class Frontend,Backend appStyle
     class DB,Auth,Storage supabaseStyle
-    class Email externalStyle
+    class SMTP externalStyle
 ```
 
 ## Key Components
@@ -71,7 +71,7 @@ flowchart TB
 - JWT verification via Supabase
 - Business logic (reservations, credits, equipment)
 - Image upload handling (admin only)
-- Reservation email notifications via Noop email service
+- Reservation email notifications via Gmail SMTP
 
 ### Supabase Services
 
@@ -91,8 +91,8 @@ flowchart TB
 - Admin uploads via backend API (not direct)
 - RLS policies for secure access
 
-### Email Service (Noop)
-- Reservation confirmation emails (mocked via NoopEmailService in development)
+### Gmail SMTP
+- Reservation confirmation emails
 - Credit request notifications
 - NOT used for authentication (Supabase handles all auth)
 

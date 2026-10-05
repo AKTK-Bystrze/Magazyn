@@ -1,4 +1,4 @@
-// Package reservation handles business rules validation, credit calculation, and orchestrates operations
+// It handles business rules validation, credit calculation, and orchestrates operations
 // between repositories.
 package reservation
 
@@ -15,11 +15,12 @@ import (
 	"magazyn/backend/internal/types"
 )
 
+// Reservation Service Interface
 // ReservationService defines operations for managing reservations.
 type ReservationService interface {
-	List(ctx context.Context, query types.ReservationListQuery, userID string, role string) (*types.ReservationListResponse, error)
+	List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error)
 	GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error)
-	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string, role string) (*types.CreateReservationsResponse, error)
+	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error)
 	Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error)
 	// BulkUpdate updates multiple reservations (Admin only)
 	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error)
@@ -34,7 +35,6 @@ type reservationService struct {
 	emailService  email.Service
 }
 
-// NewReservationService creates a new instance of ReservationService.
 func NewReservationService(
 	repo repository.ReservationRepository,
 	equipmentRepo repository.EquipmentRepository,
@@ -48,20 +48,8 @@ func NewReservationService(
 		emailService:  emailService,
 	}
 }
-
-func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery, userID string, role string) (*types.ReservationListResponse, error) {
+func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery) (*types.ReservationListResponse, error) {
 	logger.Infof(ctx, "Listing reservations - Page: %d, PerPage: %d", query.Page, query.PerPage)
-	// Apply ownership filter based on scope
-	// scope="all" → show all reservations (any authenticated user)
-	// scope="my" or empty → show only user's own reservations
-	if query.Scope != nil && *query.Scope == "all" {
-		query.BypassRLS = true
-		if query.UserID != nil && role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
-			query.UserID = nil
-		}
-	} else if userID != "" {
-		query.UserID = &userID
-	}
 	items, total, err := s.repo.GetReservations(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to list reservations: %v", err)
@@ -74,7 +62,7 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 	}
 	return &types.ReservationListResponse{
 		Reservations: items,
-		Pagination: types.Pagination{
+		Pagination: types.PaginationResponse{
 			Page:       query.Page,
 			PerPage:    query.PerPage,
 			TotalItems: int(total),
@@ -82,7 +70,6 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 		},
 	}, nil
 }
-
 func (s *reservationService) GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error) {
 	res, err := s.repo.GetReservationByID(ctx, id)
 	if err != nil {
@@ -93,17 +80,13 @@ func (s *reservationService) GetByID(ctx context.Context, id string, userID stri
 	}
 	return res, nil
 }
-
-func (s *reservationService) Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string, role string) (*types.CreateReservationsResponse, error) {
+func (s *reservationService) Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string) (*types.CreateReservationsResponse, error) {
 	logger.Infof(ctx, "Creating reservation for %d items, UserID: %s", len(cmd.Reservations), userID)
 	targetUserID := userID
 	if cmd.UserID != nil && *cmd.UserID != "" {
 		targetUserID = *cmd.UserID
 	}
 	isFreeReservation := cmd.FreeReservation != nil && *cmd.FreeReservation
-	if isFreeReservation && role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
-		return nil, types.NewForbiddenError("Only admins can create free reservations")
-	}
 	// 1. Validation & Cost Calculation (Read-Only)
 	totalCost := int32(0)
 	costMap := make(map[int]int32)
