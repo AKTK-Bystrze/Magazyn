@@ -115,7 +115,7 @@ func (f *dateTestFixture) createTestReservation(
 			},
 		},
 	}
-	resp, err := f.svc.Create(ctx, cmd, userID)
+	resp, err := f.svc.Create(ctx, cmd, userID, "admin")
 	if err != nil {
 		return "", err
 	}

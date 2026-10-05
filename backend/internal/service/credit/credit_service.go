@@ -4,27 +4,32 @@ import (
 	"context"
 	"math"
 
+	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 )
 
+// CreditHistoryService defines operations for querying credit history.
 type CreditHistoryService interface {
-	GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string) (*types.CreditHistoryResponse, error)
+	GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string, userRole string) (*types.CreditHistoryResponse, error)
 }
+
 type creditHistoryService struct {
 	creditRepo repository.CreditHistoryRepository
 	userRepo   repository.UserRepository
 }
 
+// NewCreditHistoryService creates a new instance of CreditHistoryService.
 func NewCreditHistoryService(creditRepo repository.CreditHistoryRepository, userRepo repository.UserRepository) CreditHistoryService {
 	return &creditHistoryService{
 		creditRepo: creditRepo,
 		userRepo:   userRepo,
 	}
 }
-func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string) (*types.CreditHistoryResponse, error) {
+
+func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string, userRole string) (*types.CreditHistoryResponse, error) {
 	logger.Infof(ctx, "Fetching credit history (reqUser: %s) - Page: %d, PerPage: %d", requestingUserID, query.Page, query.PerPage)
 	page := query.Page
 	if page < 1 {
@@ -51,8 +56,10 @@ func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types
 	}
 	// 2. Determine Target User (Authorization Logic for Data Access)
 	targetUserID := requestingUserID
-	// If query.UserID is provided (and we assume caller has permission to ask, enforced in handler), use it.
 	if query.UserID != nil && *query.UserID != "" {
+		if *query.UserID != requestingUserID && userRole != auth.RoleAdmin && userRole != auth.RoleSuperAdmin {
+			return nil, types.NewForbiddenError("Only admins can filter by user_id")
+		}
 		targetUserID = *query.UserID
 	}
 	// 3. Fetch Credit History

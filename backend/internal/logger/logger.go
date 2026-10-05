@@ -12,16 +12,6 @@ import (
 	model "magazyn/backend/internal/types"
 )
 
-type LogLevel string
-
-// Log level constants for filtering and categorizing log messages.
-const (
-	DEBUG LogLevel = "DEBUG"
-	INFO  LogLevel = "INFO"
-	WARN  LogLevel = "WARN"
-	ERROR LogLevel = "ERROR"
-)
-
 type Logger struct {
 	logger   *slog.Logger
 	levelVar *slog.LevelVar
@@ -40,9 +30,7 @@ func init() {
 		levelVar: lvl,
 	}
 }
-func GetLogger() *Logger {
-	return defaultLogger
-}
+
 func SetMinLevel(levelStr string) {
 	level := strings.ToUpper(levelStr)
 	switch level {

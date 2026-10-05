@@ -1,12 +1,17 @@
-// These keys are used to pass user and profile information through the request lifecycle.
+// Package appcontext defines context key types and constants used to pass user and profile information through the request lifecycle.
 package appcontext
 
+// ContextKey represents a custom key type for storing values in context.Context.
 type ContextKey string
 
-// Context key constants for storing user information in request contexts.
+// Context key constants for storing request-scoped values.
 const (
-	UserContextKey        ContextKey = "user"         // Stores the authenticated user (*types.User)
-	UserProfileContextKey ContextKey = "user_profile" // Stores the user's profile (*types.PublicProfilesSelect)
-	AccessTokenContextKey ContextKey = "access_token" // Stores the JWT token for RLS enforcement
-	TraceIDContextKey     ContextKey = "trace_id"     // Stores the request trace ID
+	// UserContextKey stores the authenticated user (*types.User).
+	UserContextKey ContextKey = "user"
+	// UserProfileContextKey stores the user's profile (*types.PublicProfilesSelect).
+	UserProfileContextKey ContextKey = "user_profile"
+	// AccessTokenContextKey stores the JWT token for RLS enforcement.
+	AccessTokenContextKey ContextKey = "access_token"
+	// TraceIDContextKey stores the request trace ID.
+	TraceIDContextKey ContextKey = "trace_id"
 )

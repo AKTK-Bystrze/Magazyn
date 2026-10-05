@@ -39,7 +39,7 @@ export async function getMagicLinkFromEmail(emailAddress: string): Promise<strin
 
   // Find the token confirmation link robustly
   const magicLink = links.find(
-    (link) =>
+    (link: string) =>
       link.includes("auth/v1/verify") || link.includes("token=") || link.includes("token_hash=")
   );
 
