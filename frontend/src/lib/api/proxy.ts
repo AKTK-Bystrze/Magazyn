@@ -30,7 +30,13 @@ export function createProxyHandler(opts: ProxyOptions) {
 
     try {
       // Interpolate dynamic segments from Astro params (e.g. [id])
-      const resolvedPath = opts.path.replace(/\[(\w+)\]/g, (_, key) => params[key] ?? "");
+      const resolvedPath = opts.path.replace(/\[(\w+)\]/g, (_, key) => {
+        const value = params[key];
+        if (!value) {
+          throw new Error(`[Proxy] Missing required path param: ${key} for path: ${opts.path}`);
+        }
+        return value;
+      });
       const backendUrl = new URL(`${BACKEND_URL}${resolvedPath}`);
 
       if (opts.forwardQuery) {
@@ -54,8 +60,14 @@ export function createProxyHandler(opts: ProxyOptions) {
         }
       }
 
+      locals.logger?.info(`[Proxy] ${opts.method} ${backendUrl.pathname}`);
+
       const response = await fetch(backendUrl.toString(), fetchOpts);
       const responseText = await response.text();
+
+      if (!response.ok) {
+        locals.logger?.warn(`[Proxy] ${opts.method} ${backendUrl.pathname} → ${response.status}`);
+      }
 
       // Forward headers from backend, defaulting to application/json if none provided
       const responseContentType = response.headers.get("Content-Type") || "application/json";
