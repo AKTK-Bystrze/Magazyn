@@ -7,6 +7,7 @@ import (
 )
 
 type EquipmentRepository interface {
+	// List retrieves a paginated list of equipment matching the query filters.
 	List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error)
 	// GetByID retrieves a single equipment by ID
 	GetByID(ctx context.Context, id string) (*types.PublicEquipmentSelect, error)
@@ -20,8 +21,6 @@ type EquipmentRepository interface {
 	Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error)
 	// Archive sets the is_archived flag to true
 	Archive(ctx context.Context, id string) error
-	// GetTypeForEquipment loads the type information for a piece of equipment
-	GetTypeForEquipment(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error)
 	// GetMaintenanceLogs retrieves maintenance logs for equipment
 	GetMaintenanceLogs(ctx context.Context, equipmentID string) ([]types.PublicMaintenanceLogsSelect, error)
 	// GetMaintenanceLogsWithAdmin retrieves logs joined with admin profile

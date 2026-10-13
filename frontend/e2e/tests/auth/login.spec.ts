@@ -37,23 +37,17 @@ test.describe("Login Page", () => {
     // e2e resource exhaustion and timeouts rather than clear test failures.
     const testEmail = testUser.email;
 
-    // Clear the mailbox before testing to ensure we get the fresh magic link
     await clearMailbox(testEmail);
 
-    // Act: Request magic link
     await submitLoginEmail(page, testEmail);
     await waitForMagicLinkSent(page);
 
-    // Assert: Verify success message
     await expect(page.getByText(/Sprawdź swoją pocztę/i)).toBeVisible();
 
-    // Act: Get magic link from Mailpit
     const magicLink = await getMagicLinkFromEmail(testEmail);
 
-    // Act: Navigate to magic link
     await page.goto(magicLink);
 
-    // Act: Open user menu and log out
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
 
     // Instead of relying on Radix Dropdown UI on mobile which is flaky, use the backend logout directly
@@ -62,7 +56,6 @@ test.describe("Login Page", () => {
     await page.evaluate(() => localStorage.clear());
     await page.goto("/login");
 
-    // Assert: Verify redirect to login page and successful logout
     await expect(page).toHaveURL(/.*\/login/);
     await expect(page.getByTestId("login-form")).toBeVisible();
   });

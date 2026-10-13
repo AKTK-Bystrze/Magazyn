@@ -1,6 +1,5 @@
 import { test, expect } from "../../fixtures";
 import { CreditHistoryPage } from "../../page-objects/credit-history.pom";
-// Using relative path to ensure resolution without relying on potentially unconfigured aliases in E2E
 import { CREDIT_HISTORY_UI_STRINGS } from "../../../src/lib/config/constants/credit/ui-strings";
 
 const API_ROUTE_CREDITS_HISTORY = "**/api/credits/history*";
@@ -71,9 +70,6 @@ const MOCK_EMPTY = {
 test.describe("Credits History", () => {
   let creditPage: CreditHistoryPage;
 
-  // Use test.use to force mobile viewport if not already global,
-  // but global config says we use Pixel 5.
-
   test("should display comprehensive history view with correct layout", async ({
     authenticatedPage,
   }) => {
@@ -93,23 +89,18 @@ test.describe("Credits History", () => {
     await expect(historyTable).toBeVisible();
     await expect(authenticatedPage.getByText(CREDIT_HISTORY_UI_STRINGS.PAGE_TITLE)).toBeVisible();
 
-    // Rows index 0, 1, 2
     await expect(creditPage.getHistoryRow(0)).toBeVisible();
     await expect(creditPage.getHistoryRow(1)).toBeVisible();
     await expect(creditPage.getHistoryRow(2)).toBeVisible();
     await expect(creditPage.getHistoryRow(3)).toBeHidden();
 
-    // "Autor" should be visible (as per plan/code check)
     await expect(creditPage.getColumnHeader(CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR)).toBeVisible();
 
-    // "Description" should be hidden on mobile
     await expect(
       creditPage.getColumnHeader(CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION)
     ).toBeHidden();
 
-    // Hover/Click reason badge in first row
     await creditPage.hoverReason(0);
-    // Tooltip should contain description "Opis" from row 0
     await expect(
       authenticatedPage.getByRole("tooltip").getByText(MOCK_HISTORY.credit_history[0].description)
     ).toBeVisible();

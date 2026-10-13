@@ -61,8 +61,8 @@ export function useEquipmentSearch() {
   }, [filters, updateUrl]);
 
   return {
-    filters, // For input binding
-    activeFilters: debouncedFilters, // For API query
+    filters,
+    activeFilters: debouncedFilters,
     updateFilter,
   };
 }

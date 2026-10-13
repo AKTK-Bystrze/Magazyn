@@ -7,6 +7,7 @@ import (
 )
 
 type AuthRepository interface {
+	// SendMagicLink sends an authentication magic link to the provided email address
 	SendMagicLink(ctx context.Context, email string) error
 	// Logout invalidates the user's session
 	Logout(ctx context.Context, token string) error

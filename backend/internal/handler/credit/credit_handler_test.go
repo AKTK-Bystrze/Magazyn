@@ -18,13 +18,14 @@ type MockCreditHistoryService struct {
 	mock.Mock
 }
 
-func (m *MockCreditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string) (*types.CreditHistoryResponse, error) {
-	args := m.Called(ctx, query, requestingUserID)
+func (m *MockCreditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string, userRole string) (*types.CreditHistoryResponse, error) {
+	args := m.Called(ctx, query, requestingUserID, userRole)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*types.CreditHistoryResponse), args.Error(1)
 }
+
 func TestHandleGetCreditHistory(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -33,7 +34,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 		queryParams    map[string]string
 		setupMock      func(*MockCreditHistoryService)
 		expectedStatus int
-		expectedBody   string // Partial match or specific error code
+		expectedBody   string
 	}{
 		{
 			name: "Success - Regular User Own History",
@@ -48,7 +49,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 					Page:    1,
 					PerPage: 25,
 					UserID:  nil,
-				}, "user-123").Return(&types.CreditHistoryResponse{
+				}, "user-123", auth.RoleUser).Return(&types.CreditHistoryResponse{
 					CurrentBalance: 100,
 					Pagination:     types.Pagination{Page: 1, PerPage: 25, TotalItems: 0, TotalPages: 0},
 					CreditHistory:  []types.CreditHistoryItemDTO{},
@@ -72,7 +73,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 					Page:    1,
 					PerPage: 25,
 					UserID:  &targetID,
-				}, "admin-123").Return(&types.CreditHistoryResponse{
+				}, "admin-123", auth.RoleAdmin).Return(&types.CreditHistoryResponse{
 					CurrentBalance: 50,
 					Pagination:     types.Pagination{Page: 1, PerPage: 25},
 					CreditHistory:  []types.CreditHistoryItemDTO{},
@@ -90,7 +91,14 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			queryParams: map[string]string{
 				"user_id": "other-user",
 			},
-			setupMock:      func(m *MockCreditHistoryService) {},
+			setupMock: func(m *MockCreditHistoryService) {
+				otherUser := "other-user"
+				m.On("GetCreditHistory", mock.Anything, types.GetCreditHistoryQuery{
+					Page:    1,
+					PerPage: 25,
+					UserID:  &otherUser,
+				}, "user-123", auth.RoleUser).Return(nil, types.NewForbiddenError("Only admins can filter by user_id"))
+			},
 			expectedStatus: http.StatusForbidden,
 		},
 		{
@@ -116,7 +124,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 					Page:    1,
 					PerPage: 25,
 					UserID:  nil,
-				}, "user-123").Return(&types.CreditHistoryResponse{
+				}, "user-123", auth.RoleUser).Return(&types.CreditHistoryResponse{
 					CurrentBalance: 100,
 					Pagination:     types.Pagination{Page: 1, PerPage: 25},
 					CreditHistory:  []types.CreditHistoryItemDTO{},
@@ -130,15 +138,12 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			mockService := new(MockCreditHistoryService)
 			tc.setupMock(mockService)
 			handler := NewCreditHistoryHandler(mockService)
-			// Create Request
 			req := httptest.NewRequest("GET", "/credit-history", nil)
-			// Add Query Params
 			q := req.URL.Query()
 			for k, v := range tc.queryParams {
 				q.Add(k, v)
 			}
 			req.URL.RawQuery = q.Encode()
-			// Add Context
 			ctx := req.Context()
 			if tc.user != nil {
 				ctx = context.WithValue(ctx, appcontext.UserContextKey, tc.user)
@@ -147,10 +152,8 @@ func TestHandleGetCreditHistory(t *testing.T) {
 				ctx = context.WithValue(ctx, appcontext.UserProfileContextKey, tc.profile)
 			}
 			req = req.WithContext(ctx)
-			// Execute
 			w := httptest.NewRecorder()
 			handler.HandleGetCreditHistory(w, req)
-			// Assert
 			assert.Equal(t, tc.expectedStatus, w.Code)
 			mockService.AssertExpectations(t)
 		})

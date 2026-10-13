@@ -18,7 +18,7 @@ export async function resetCredits(
 }
 
 /**
- * Cancels a reservation by setting its status to 'DENIED'.
+ * Cancels a reservation by setting its status to 'CANCELLED'.
  *
  * @param supabaseAdmin - The Supabase admin client.
  * @param reservationId - The ID of the reservation to cancel.
@@ -28,7 +28,7 @@ export async function cancelReservation(
   supabaseAdmin: SupabaseClient,
   reservationId: string
 ): Promise<void> {
-  await supabaseAdmin.from("reservations").update({ status: "DENIED" }).eq("id", reservationId);
+  await supabaseAdmin.from("reservations").update({ status: "CANCELLED" }).eq("id", reservationId);
 }
 
 /**
@@ -36,7 +36,7 @@ export async function cancelReservation(
  *
  * @param supabaseAdmin - The Supabase admin client.
  * @param userId - The ID of the user.
- * @returns A promise that resolves when all pending reservations are denied.
+ * @returns A promise that resolves when all pending reservations are cancelled.
  */
 export async function clearPendingReservations(
   supabaseAdmin: SupabaseClient,
@@ -44,7 +44,7 @@ export async function clearPendingReservations(
 ): Promise<void> {
   await supabaseAdmin
     .from("reservations")
-    .update({ status: "DENIED" })
+    .update({ status: "CANCELLED" })
     .eq("user_id", userId)
     .eq("status", "PENDING");
 }

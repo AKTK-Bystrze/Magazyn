@@ -21,8 +21,10 @@ export interface CartItem {
  */
 export interface CartState {
   items: CartItem[];
-  startDate: string | null; // YYYY-MM-DD format
-  endDate: string | null; // YYYY-MM-DD format
+  /** Selected start date (YYYY-MM-DD format) */
+  startDate: string | null;
+  /** Selected end date (YYYY-MM-DD format) */
+  endDate: string | null;
 }
 
 /**

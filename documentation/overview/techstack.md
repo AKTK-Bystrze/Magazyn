@@ -28,7 +28,7 @@ This document outlines the architecture for a public-facing Rental Application. 
 - **Language:** Go (Golang).
 - **Role:** Stateless Business Logic.
 - **API:** Exposes REST endpoints (e.g., `POST /rent`, `GET /availability`).
-- **Email:** Uses Gmail SMTP (with App Password) to send transactional emails (Rental Confirmations).
+- **Email:** Uses Noop Email Service (mock implementation) for transactional emails (Rental Confirmations).
 - **Auth Middleware:** Verifies Supabase JWTs. The Go backend trusts the token issued by Supabase Cloud to identify the user.
 
 ### 3. Infrastructure & Data (Supabase Cloud)
@@ -69,7 +69,7 @@ Instead of self-hosting complex services, we connect to the managed Supabase Clo
 
 ### 5. External Services
 
-- **Email:** Gmail SMTP (Credentials injected via ENV variables in Go container).
+- **Email:** Email Service (Noop mock implementation for transactional notifications).
 
 ## Architecture Diagram
 
@@ -90,7 +90,7 @@ flowchart TD
     end
 
     Browser(("User Browser"))
-    Gmail["Gmail SMTP"]
+    Email["Email Service (Noop)"]
 
     Browser -->|HTTPS / 443| Caddy
     Caddy -->|/api/*| GoApp
@@ -98,7 +98,7 @@ flowchart TD
 
     GoApp -->|SQL Queries| DB
     GoApp -->|Verify JWT| Auth
-    GoApp -->|Send Email| Gmail
+    GoApp -->|Send Email| Email
 
     Browser -->|Login / Admin Uploads| Auth
     Browser -->|Login / Admin Uploads| Storage
@@ -114,7 +114,7 @@ flowchart TD
 ## Implementation Roadmap
 
 - **Auth Migration:** Remove passwordless package from Go. Implement Supabase Auth UI in React.
-- **Caddyfile Setup:** Configure Caddy to proxy `localhost:3000` (Astro) and `localhost:8080` (Go).
+- **Caddyfile Setup:** Configure Caddy to proxy `localhost:4321` (Astro) and `localhost:8080` (Go).
 - **Database Connection:** Update Go ENV variables to point to the remote Supabase Postgres connection string.
 - **RLS Policies:** Set up Supabase Storage policies:
   - `bucket_id = 'rentals'`, `operation = SELECT`, `auth.role() = 'anon'` (Public Read).

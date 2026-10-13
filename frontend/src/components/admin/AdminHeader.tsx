@@ -57,7 +57,6 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
-          {/* Mobile Sidebar */}
           <SheetHeader className="sr-only">
             <SheetTitle>Menu Nawigacji</SheetTitle>
             <SheetDescription>
@@ -72,7 +71,6 @@ export function AdminHeader({ user, currentPath }: AdminHeaderProps) {
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar Toggle */}
       <Button
         size="icon"
         variant="outline"

@@ -1,4 +1,4 @@
-// It supports DEBUG, INFO, WARN, and ERROR levels and automatically includes user information from the request context.
+// Package logger provides structured logging with slog and request context enrichment.
 package logger
 
 import (
@@ -10,16 +10,6 @@ import (
 
 	"magazyn/backend/internal/appcontext"
 	model "magazyn/backend/internal/types"
-)
-
-type LogLevel string
-
-// Log level constants for filtering and categorizing log messages.
-const (
-	DEBUG LogLevel = "DEBUG"
-	INFO  LogLevel = "INFO"
-	WARN  LogLevel = "WARN"
-	ERROR LogLevel = "ERROR"
 )
 
 type Logger struct {
@@ -40,9 +30,7 @@ func init() {
 		levelVar: lvl,
 	}
 }
-func GetLogger() *Logger {
-	return defaultLogger
-}
+
 func SetMinLevel(levelStr string) {
 	level := strings.ToUpper(levelStr)
 	switch level {
@@ -62,7 +50,6 @@ func getUsernameFromContext(ctx context.Context) string {
 	if ctx == nil {
 		return "[UNAUTHENTICATED]"
 	}
-	// Try to get user profile from context (set by middleware)
 	profile := ctx.Value(appcontext.UserProfileContextKey)
 	if profile != nil {
 		userProfile, ok := profile.(*model.PublicProfilesSelect)
@@ -70,12 +57,10 @@ func getUsernameFromContext(ctx context.Context) string {
 			return userProfile.Username
 		}
 	}
-	// Fallback: check if there's a user in context at all
 	user := ctx.Value(appcontext.UserContextKey)
 	if user == nil {
 		return "[UNAUTHENTICATED]"
 	}
-	// If we have a user but no profile, return a generic authenticated marker
 	return "[AUTHENTICATED]"
 }
 func getContextAttrs(ctx context.Context) []slog.Attr {
@@ -124,7 +109,6 @@ func (l *Logger) Errorf(ctx context.Context, format string, args ...interface{})
 	l.logWithCtx(ctx, slog.LevelError, fmt.Sprintf(format, args...))
 }
 
-// Convenience functions for the default logger
 // Debug logs a debug message using the default logger
 func Debug(ctx context.Context, message string) {
 	defaultLogger.Debug(ctx, message)

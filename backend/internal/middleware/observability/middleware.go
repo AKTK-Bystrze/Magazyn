@@ -1,3 +1,4 @@
+// Package observability provides middleware for distributed tracing and error tracking integration.
 package observability
 
 import (
@@ -11,6 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// ObservabilityMiddleware injects request trace IDs and attaches tracing contexts to Sentry.
 func ObservabilityMiddleware(next http.Handler) http.Handler {
 	sentryHandler := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,
@@ -20,15 +22,11 @@ func ObservabilityMiddleware(next http.Handler) http.Handler {
 		if traceID == "" {
 			traceID = uuid.New().String()
 		}
-		// Add to response headers for client tracking
 		w.Header().Set("X-Trace-Id", traceID)
-		// Create context with trace_id
 		ctx := context.WithValue(r.Context(), appcontext.TraceIDContextKey, traceID)
-		// Attach trace_id to the active Sentry span if present
 		if span := sentry.SpanFromContext(ctx); span != nil {
 			span.SetTag("trace_id", traceID)
 		}
-		// Execute next handler
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}))
 }

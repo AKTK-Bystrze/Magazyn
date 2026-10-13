@@ -1,3 +1,4 @@
+// Package equipment provides HTTP handlers for equipment inventory, types, and availability.
 package equipment
 
 import (
@@ -13,13 +14,17 @@ import (
 	"magazyn/backend/internal/validation"
 )
 
+// EquipmentHandler handles HTTP endpoints for managing equipment inventory.
 type EquipmentHandler struct {
 	service equipmentservice.EquipmentService
 }
 
+// NewEquipmentHandler creates a new instance of EquipmentHandler.
 func NewEquipmentHandler(s equipmentservice.EquipmentService) *EquipmentHandler {
 	return &EquipmentHandler{service: s}
 }
+
+// HandleList lists equipment items with optional filtering and pagination.
 func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -28,7 +33,6 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	query := types.EquipmentListQuery{}
-	// Parse query params
 	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
 		if err := validation.ValidateUUID(typeID); err != nil {
@@ -54,24 +58,20 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	if inc := r.URL.Query().Get("include_archived"); inc == "true" {
 		query.IncludeArchived = true
 	}
-	// Parse availability date range parameters
 	if availFrom := r.URL.Query().Get("available_from"); availFrom != "" {
 		query.AvailableFrom = &availFrom
 	}
 	if availTo := r.URL.Query().Get("available_to"); availTo != "" {
 		query.AvailableTo = &availTo
 	}
-	// DEBUG: Log all incoming query parameters
 	logger.Infof(ctx, "[DEBUG] HandleList - Raw URL Query: %s", r.URL.RawQuery)
 	logger.Infof(ctx, "[DEBUG] HandleList - Query params: Page=%d, PerPage=%d, TypeID=%v, Status=%v, Search=%v, AvailableFrom=%v, AvailableTo=%v",
 		query.Page, query.PerPage, query.TypeID, query.Status, query.Search, query.AvailableFrom, query.AvailableTo)
-	// Validate that both availability dates are provided together
 	if (query.AvailableFrom != nil) != (query.AvailableTo != nil) {
 		common.RespondError(ctx, w, http.StatusBadRequest,
 			"Both available_from and available_to must be provided together")
 		return
 	}
-	// Validate date format and logical ordering
 	if query.AvailableFrom != nil && query.AvailableTo != nil {
 		logger.Infof(ctx, "HandleList - Availability filter active: from=%s, to=%s", *query.AvailableFrom, *query.AvailableTo)
 		if !isValidISODate(*query.AvailableFrom) {
@@ -93,7 +93,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	response, err := h.service.List(ctx, userID, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleList error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)
@@ -102,7 +102,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 // GetByID handles get equipment details
 func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := r.PathValue("id") // Go 1.22+
+	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
@@ -206,11 +206,13 @@ func (h *EquipmentHandler) HandleCheckAvailability(w http.ResponseWriter, r *htt
 	response, err := h.service.CheckAvailability(ctx, id, query)
 	if err != nil {
 		logger.Errorf(ctx, "HandleCheckAvailability error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
+
+// HandleListEquipmentTypes retrieves all available equipment categories/types.
 func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -221,36 +223,13 @@ func (h *EquipmentHandler) HandleListEquipmentTypes(w http.ResponseWriter, r *ht
 	response, err := h.service.ListEquipmentTypes(ctx)
 	if err != nil {
 		logger.Errorf(ctx, "HandleListEquipmentTypes error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, "Internal Server Error")
+		common.RespondWithError(ctx, w, err)
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
-func (h *EquipmentHandler) HandleCreateEquipmentType(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userID := common.GetUserIDFromContext(r)
-	if userID == "" {
-		common.RespondUnauthorized(ctx, w)
-		return
-	}
-	var cmd types.CreateEquipmentTypeRequest
-	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-	// Validation (simple check)
-	if cmd.Name == "" {
-		common.RespondError(ctx, w, http.StatusBadRequest, "Name is required")
-		return
-	}
-	response, err := h.service.CreateEquipmentType(ctx, cmd)
-	if err != nil {
-		logger.Errorf(ctx, "HandleCreateEquipmentType error: %v", err)
-		common.RespondError(ctx, w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	common.RespondJSON(ctx, w, http.StatusCreated, response)
-}
+
+// HandleCreateMaintenanceLog records a maintenance or service event for an equipment item.
 func (h *EquipmentHandler) HandleCreateMaintenanceLog(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)

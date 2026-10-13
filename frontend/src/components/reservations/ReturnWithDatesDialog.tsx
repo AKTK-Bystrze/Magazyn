@@ -160,7 +160,6 @@ export function ReturnWithDatesDialog({
         </DialogHeader>
 
         <div className="py-4 space-y-6">
-          {/* Modify Dates Checkbox */}
           <div className="flex items-start space-x-2">
             <Checkbox
               id="modify-dates"
@@ -179,7 +178,6 @@ export function ReturnWithDatesDialog({
             </div>
           </div>
 
-          {/* Date Picker Section */}
           {modifyDates && (
             <div className="space-y-6 pt-2 border-t">
               <DateRangePicker
@@ -212,7 +210,6 @@ export function ReturnWithDatesDialog({
             </div>
           )}
 
-          {/* Final Status Warning */}
           <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <AlertDescription className="text-amber-800 dark:text-amber-300">
@@ -220,7 +217,6 @@ export function ReturnWithDatesDialog({
             </AlertDescription>
           </Alert>
 
-          {/* API Error */}
           {apiError && (
             <Alert className="border-destructive bg-destructive/10">
               <AlertDescription className="text-destructive">{apiError}</AlertDescription>

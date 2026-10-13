@@ -12,7 +12,8 @@ export type MaintenanceLog = {
   newStatus: Enums<"equipment_status">;
   notes: string | null;
   adminId: string | null;
-  adminUsername: string | null; // from admin_id → profiles.username
+  /** Username of the administrator joined from profiles table */
+  adminUsername: string | null;
   createdAt: string;
 };
 
@@ -20,7 +21,8 @@ export type MaintenanceLog = {
  * Command to create maintenance log (POST /equipment/:id/maintenance-logs)
  */
 export type CreateMaintenanceLogCommand = {
-  notes?: string; // optional but recommended, max 1000 chars
+  /** Maintenance notes or observations */
+  notes?: string;
 };
 
 /**

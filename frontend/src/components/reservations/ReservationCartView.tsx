@@ -143,7 +143,7 @@ export function ReservationCartView({
         ...breakdown,
         itemCosts: breakdown.itemCosts.map((item) => ({ ...item, totalCost: 0 })),
         totalCreditCost: 0,
-        remainingBalance: breakdown.currentBalance, // No deduction for free
+        remainingBalance: breakdown.currentBalance,
         isFreeReservation: true,
       };
     }
@@ -295,7 +295,6 @@ export function ReservationCartView({
         )}
       </div>
 
-      {/* Admin User Selector */}
       {isAdmin && !isEmpty && (
         <section className="bg-card rounded-lg border shadow-sm p-6">
           <h2 className="text-lg font-semibold mb-4">Utwórz Rezerwację Dla</h2>
@@ -342,7 +341,6 @@ export function ReservationCartView({
           </Alert>
         )}
 
-        {/* Availability Errors Display */}
         {!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0 && (
           <Alert
             className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
@@ -379,7 +377,6 @@ export function ReservationCartView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Dates & Cart Items (2/3 width) */}
         <div className="lg:col-span-2 space-y-8">
           {!isEmpty && (
             <section className="bg-card rounded-lg border shadow-sm p-6">
@@ -402,7 +399,6 @@ export function ReservationCartView({
           </section>
         </div>
 
-        {/* Right Column: Cost & Actions (1/3 width) */}
         {!isEmpty && (
           <div className="space-y-6">
             <CostEstimator

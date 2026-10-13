@@ -19,7 +19,6 @@ import (
 	supa "github.com/supabase-community/supabase-go"
 )
 
-// Test Fixture
 type creditTestFixture struct {
 	t          *testing.T
 	svc        credit.CreditHistoryService
@@ -40,10 +39,8 @@ func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 	}
 	client, err := supa.NewClient(supabaseURL, supabaseKey, nil)
 	require.NoError(t, err)
-	// Setup repositories
 	creditRepo := supabase.NewCreditHistoryRepository(client, supabaseURL, supabaseKey)
 	userRepo := supabase.NewUserRepository(client, supabaseURL, supabaseKey, supabaseKey)
-	// Create service
 	svc := credit.NewCreditHistoryService(creditRepo, userRepo)
 	fixture := &creditTestFixture{
 		t:       t,
@@ -51,7 +48,6 @@ func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 		client:  client,
 		cleanup: []func(){},
 	}
-	// Get test users
 	fixture.setupTestUsers(appState)
 	return fixture
 }
@@ -68,7 +64,6 @@ func (f *creditTestFixture) setupTestUsers(appState *config.AppState) {
 	require.NoError(f.t, err)
 	require.NoError(f.t, json.Unmarshal(data, &profiles))
 	require.True(f.t, len(profiles) >= 2, "Need at least 2 test users")
-	// First user is regular user, find admin
 	f.testUserID = profiles[0].ID
 	for _, p := range profiles {
 		if p.Role == "admin" || p.Role == "superadmin" {
@@ -77,7 +72,7 @@ func (f *creditTestFixture) setupTestUsers(appState *config.AppState) {
 		}
 	}
 	if f.adminID == "" {
-		f.adminID = profiles[1].ID // Fallback
+		f.adminID = profiles[1].ID
 	}
 }
 func (f *creditTestFixture) teardown() {
@@ -104,24 +99,20 @@ func (f *creditTestFixture) createTestCreditEntry(userID string, amount int32, r
 	})
 }
 
-// P2.1: CreditHistoryService Integration Tests
 // TestGetCreditHistory_OwnHistory_ReturnsPaginated verifies that a user
 // can fetch their own credit history with pagination.
 func TestGetCreditHistory_OwnHistory_ReturnsPaginated(t *testing.T) {
 	fixture := setupCreditTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	// Arrange: Create some credit history entries for test user
 	fixture.createTestCreditEntry(fixture.testUserID, 100, "work_credit")
 	fixture.createTestCreditEntry(fixture.testUserID, -50, "reservation_charge")
 	fixture.createTestCreditEntry(fixture.testUserID, 75, "admin_adjustment")
-	// Act: Fetch own history (page 1, 10 per page)
 	query := types.GetCreditHistoryQuery{
 		Page:    1,
 		PerPage: 10,
 	}
-	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
-	// Assert
+	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.GreaterOrEqual(t, len(resp.CreditHistory), 3, "Should have at least 3 test entries")
@@ -131,24 +122,21 @@ func TestGetCreditHistory_OwnHistory_ReturnsPaginated(t *testing.T) {
 	assert.GreaterOrEqual(t, resp.CurrentBalance, int32(0), "Balance should be non-negative")
 	t.Logf("✓ User fetched own history: %d entries, balance: %d", len(resp.CreditHistory), resp.CurrentBalance)
 }
+
 func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	fixture := setupCreditTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	// Arrange: Create credit history for test user
 	fixture.createTestCreditEntry(fixture.testUserID, 200, "admin_adjustment")
-	// Act: Admin fetches other user's history
 	targetUserID := fixture.testUserID
 	query := types.GetCreditHistoryQuery{
 		UserID:  &targetUserID,
 		Page:    1,
 		PerPage: 25,
 	}
-	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.adminID)
-	// Assert
+	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.adminID, "admin")
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
-	// Verify at least one entry matches our test data
 	found := false
 	for _, entry := range resp.CreditHistory {
 		if entry.Reason == "admin_adjustment" && entry.Amount == 200 {
@@ -165,11 +153,11 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 		t.Logf("✓ Admin successfully viewed other user's history: %d entries", len(resp.CreditHistory))
 	}
 }
+
 func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 	fixture := setupCreditTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	// Arrange: Create multiple entries (at least 15)
 	for i := 0; i < 15; i++ {
 		fixture.createTestCreditEntry(
 			fixture.testUserID,
@@ -177,7 +165,6 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 			"work_credit",
 		)
 	}
-	// Act: Test different page sizes
 	testCases := []struct {
 		perPage  int
 		expected int
@@ -192,7 +179,7 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 				Page:    1,
 				PerPage: tc.perPage,
 			}
-			resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
+			resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
 			require.NoError(t, err)
 			assert.Equal(t, tc.perPage, resp.Pagination.PerPage)
 			assert.LessOrEqual(t, len(resp.CreditHistory), tc.perPage,
@@ -201,17 +188,16 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 		})
 	}
 }
+
 func TestGetCreditHistory_InvalidPerPage_ReturnsError(t *testing.T) {
 	fixture := setupCreditTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	// Act: Try invalid per_page value (15 is not in allowed list: 10, 25, 50, 100)
 	query := types.GetCreditHistoryQuery{
 		Page:    1,
-		PerPage: 15, // Invalid
+		PerPage: 15,
 	}
-	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID)
-	// Assert
+	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "Invalid per_page value")

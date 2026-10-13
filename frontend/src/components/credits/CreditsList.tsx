@@ -16,6 +16,7 @@ import { CREDIT_REQUEST_STATUS } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SuperAdminCreditReview } from "./SuperAdminCreditReview";
 import { CreditRequestDetailsDialog } from "./CreditRequestDetailsDialog";
+import { useTableSort } from "@/lib/hooks/useTableSort";
 
 interface Props {
   isSuperAdmin: boolean;
@@ -31,17 +32,6 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
   const [detailsItem, setDetailsItem] = useState<CreditRequest | null>(null);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(
-    null
-  );
-
-  const requestSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
 
   const load = async () => {
     setLoading(true);
@@ -116,23 +106,13 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
     return matchesStatus && matchesSearch;
   });
 
-  const sortedData = [...filteredData].sort((a: any, b: any) => {
-    if (!sortConfig) return 0;
-    let aValue = a[sortConfig.key];
-    let bValue = b[sortConfig.key];
-
-    if (sortConfig.key === "userHelpedId") {
-      aValue = a.userHelpedId ? usersMap[a.userHelpedId] || a.userHelpedId : "";
-      bValue = b.userHelpedId ? usersMap[b.userHelpedId] || b.userHelpedId : "";
-    }
-
-    if (aValue < bValue) {
-      return sortConfig.direction === "asc" ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortConfig.direction === "asc" ? 1 : -1;
-    }
-    return 0;
+  const { sortConfig, requestSort, sortedData } = useTableSort(filteredData, {
+    getValue: (item, key) => {
+      if (key === "userHelpedId") {
+        return item.userHelpedId ? usersMap[item.userHelpedId] || item.userHelpedId : "";
+      }
+      return item[key as keyof CreditRequest];
+    },
   });
 
   if (loading) {

@@ -37,7 +37,7 @@ export function CostEstimator({
         ...breakdown,
         itemCosts: breakdown.itemCosts.map((item) => ({ ...item, totalCost: 0 })),
         totalCreditCost: 0,
-        remainingBalance: breakdown.currentBalance, // No deduction for free
+        remainingBalance: breakdown.currentBalance,
         isFreeReservation: true,
       };
     }

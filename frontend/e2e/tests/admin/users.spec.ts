@@ -26,7 +26,6 @@ test.describe("Admin User Management", () => {
     }
     targetUserId = data.user.id;
 
-    // Ensure profile exists matching the auth user
     const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
       id: targetUserId,
       email: targetUserEmail,
@@ -53,40 +52,26 @@ test.describe("Admin User Management", () => {
   test("should list, search, and edit user details", async ({ superAdminPage }) => {
     const adminUsersPage = new AdminUsersPage(superAdminPage);
 
-    // 1. Navigate to admin users page
     await adminUsersPage.goto();
     await expect(adminUsersPage.getUsersTable()).toBeVisible();
 
-    // 2. Verify table columns (mobile viewport shows: Nazwa użytkownika, Rola)
     await expect(
       superAdminPage.getByRole("columnheader", { name: "Nazwa użytkownika" })
     ).toBeVisible();
     await expect(superAdminPage.getByRole("columnheader", { name: "Rola" })).toBeVisible();
 
-    // 3. Search Interaction
     await adminUsersPage.searchUser(targetUserEmail);
 
-    // Verify the user row is visible
-    // The edit button ID contains the email, confirming the row is for our user
     const editButton = superAdminPage.getByTestId(TEST_IDS.adminUserRowEdit(targetUserEmail));
     await expect(editButton).toBeVisible();
 
-    // 4. Edit Flow
     await adminUsersPage.openEditModal(targetUserEmail);
-
-    // Change Role: User -> Admin
     await adminUsersPage.updateUserRole("admin");
-
-    // Toggle Status: Active -> Inactive (assuming it starts active)
     await adminUsersPage.setUserStatus(false);
-
     await adminUsersPage.saveChanges();
 
-    // 5. Verification
-    // Assert success via alert
     await expect(superAdminPage.getByTestId(TEST_IDS.ADMIN_SUCCESS_ALERT)).toBeVisible();
 
-    // Verify updates in the user row
     const userRow = superAdminPage.getByRole("row").filter({ hasText: targetUserEmail });
     await expect(userRow).toContainText(/admin/i);
     await expect(userRow).toContainText(/Wyłączony/i);

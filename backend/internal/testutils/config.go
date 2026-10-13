@@ -22,13 +22,6 @@ var TestClient *supabase.Client
 func SetupIntegrationTest() (*config.AppState, error) {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(filename)
-	// Assuming this file is in backend/internal/testutils/
-	// Project structure:
-	// e:\bystrze\Magazyn\backend\internal\testutils\config.go
-	// e:\bystrze\Magazyn\.env.test
-	// relative path: ../../../.env.test (testutils -> internal -> backend -> Magazyn)
-	// Try loading .env.test first (for testing), then .env as fallback
-	// godotenv.Load does NOT override existing env vars
 	envTestPath := filepath.Join(dir, "../../../.env.test")
 	envPath := filepath.Join(dir, "../../../.env")
 	loaded := false
@@ -43,7 +36,6 @@ func SetupIntegrationTest() (*config.AppState, error) {
 		logger.Infof(context.Background(), "Warning: No .env file found at %s or %s. Relying on process environment.", envTestPath, envPath)
 	}
 	url := os.Getenv("PUBLIC_SUPABASE_URL")
-	// Prefer Service Role Key for tests to create/delete users
 	key := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if key == "" {
 		logger.Info(context.Background(), "SUPABASE_SERVICE_ROLE_KEY not found. Using Anon Key. Admin operations may fail.")
@@ -60,7 +52,7 @@ func SetupIntegrationTest() (*config.AppState, error) {
 		Config: &config.Config{
 			SupabaseURL: url,
 			SupabaseKey: key,
-			Port:        "8080", // Default test port
+			Port:        "8080",
 		},
 		SupabaseClient: client,
 	}
@@ -71,10 +63,6 @@ func CreateTestUser(email, password string) (*types.User, error) {
 	if TestAppState == nil || TestAppState.SupabaseClient == nil {
 		return nil, fmt.Errorf("TestAppState not initialized")
 	}
-	// Note: Without Service Role Key, this might fail or require email confirmation
-	// AdminCreateUser is ideal but depends on permissions.
-	// If fallback to SignUp, email confirmation prevents immediate login.
-	// ctx := context.Background()
 	params := types.AdminCreateUserRequest{
 		Email:        email,
 		Password:     &password,

@@ -8,8 +8,10 @@ export interface EquipmentSearchParams {
   status?: EquipmentStatus;
   page: number;
   perPage: number;
-  availableFrom?: string; // ISO date string YYYY-MM-DD
-  availableTo?: string; // ISO date string YYYY-MM-DD
+  /** Availability start date filter (ISO format: YYYY-MM-DD) */
+  availableFrom?: string;
+  /** Availability end date filter (ISO format: YYYY-MM-DD) */
+  availableTo?: string;
 }
 
 /**
@@ -19,7 +21,8 @@ export interface EquipmentSearchParams {
 export type EquipmentType = {
   id: string;
   name: string;
-  creditCostPerDay: number; // from equipment_types.credit_cost_per_day
+  /** Base cost in credits per day */
+  creditCostPerDay: number;
   createdAt: string;
 };
 
@@ -45,16 +48,18 @@ export type UpdateEquipmentTypeCommand = {
  */
 export type Equipment = {
   id: string;
-  internalId: string; // from equipment.internal_id
-  typeId: string; // from equipment.type_id
-  typeName: string; // from equipment_types.name (JOIN)
+  /** Unique inventory identifier */
+  internalId: string;
+  typeId: string;
+  typeName: string;
   name: string | null;
   description: string | null;
   status: Enums<"equipment_status">;
-  creditCostPerDay: number; // from equipment_types.credit_cost_per_day (JOIN)
-  imageUrl: string | null; // from equipment.image_path (transformed to URL)
-  isFavorite: boolean; // calculated field
-  isArchived: boolean; // from equipment.is_archived
+  /** Cost in credits per day joined from equipment type */
+  creditCostPerDay: number;
+  imageUrl: string | null;
+  isFavorite: boolean;
+  isArchived: boolean;
   createdAt: string;
   updatedAt: string | null;
 };
@@ -89,7 +94,9 @@ export type EquipmentAvailability = {
   isAvailable: boolean;
   conflictingReservations: Array<{
     id: string;
-    startDate: string; // YYYY-MM-DD
+    /** Reservation start date (YYYY-MM-DD) */
+    startDate: string;
+    /** Reservation end date (YYYY-MM-DD) */
     endDate: string;
     status: Enums<"reservation_status">;
   }>;
@@ -103,8 +110,8 @@ export type CreateEquipmentCommand = {
   typeId: string;
   name?: string;
   description?: string;
-  status?: Enums<"equipment_status">; // defaults to 'ok'
-  imagePath?: string; // path in Supabase storage
+  status?: Enums<"equipment_status">;
+  imagePath?: string;
 };
 
 /**
@@ -133,7 +140,7 @@ export type EquipmentReservationHistoryItem = {
   username: string;
   startDate: string;
   endDate: string;
-  status: "PENDING" | "RENTED" | "RETURNED" | "DENIED";
+  status: "PENDING" | "RENTED" | "RETURNED" | "CANCELLED";
   creditCost: number;
   createdAt: string;
 };
