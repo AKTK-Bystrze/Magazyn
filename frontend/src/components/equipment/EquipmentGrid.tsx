@@ -46,7 +46,7 @@ export function EquipmentGrid({
   }
 
   if (error) {
-    logger.error("EquipmentSearchContainer Error:", error);
+    logger.error("EquipmentSearchContainer Error:", { error: error.message });
     return (
       <div
         className="flex flex-col items-center justify-center p-12 text-center text-destructive bg-destructive/10 rounded-lg"

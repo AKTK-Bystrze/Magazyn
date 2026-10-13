@@ -23,7 +23,10 @@ export function createSupabaseServerClient(request: Request, cookies: AstroCooki
     },
     cookies: {
       getAll() {
-        return parseCookieHeader(request.headers.get("Cookie") ?? "");
+        return parseCookieHeader(request.headers.get("Cookie") ?? "").map(({ name, value }) => ({
+          name,
+          value: value ?? "",
+        }));
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {

@@ -13,7 +13,7 @@ export const equipmentDTOSchema = z
     name: z.string().nullable(),
     description: z.string().nullable(),
     status: z.enum(["ok", "broken", "blocked"], {
-      errorMap: () => ({ message: 'Status must be "ok", "broken" or "blocked"' }),
+      message: 'Status must be "ok", "broken" or "blocked"',
     }),
     credit_cost_per_day: z.number().int().min(0, "Credit cost must be non-negative"),
     image_url: z.string().nullable(),

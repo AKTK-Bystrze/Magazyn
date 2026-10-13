@@ -21,6 +21,16 @@ interface AuthFixtures {
   adminPage: Page;
   /** Pre-authenticated page with SUPER ADMIN session */
   superAdminPage: Page;
+  /** Dedicated test equipment for this worker (created/cleaned per test) */
+  testEquipment: { id: string; typeId: string; name: string }[];
+  /** Cleanup fixture (no return value) */
+  userCleanup: void;
+}
+
+/** Worker-scoped fixtures (shared across tests in same worker) */
+interface WorkerFixtures {
+  /** Worker index for parallel test isolation */
+  workerIndex: number;
   /** Supabase admin client for test setup/teardown */
   supabaseAdmin: SupabaseClient;
   /** Test user information (id and email) */
@@ -29,16 +39,6 @@ interface AuthFixtures {
   adminUser: { id: string; email: string };
   /** Super Admin user information (id and email) */
   superAdminUser: { id: string; email: string };
-  /** Dedicated test equipment for this worker (created/cleaned per test) */
-  testEquipment: { id: string; typeId: string; name: string }[];
-  /** Worker-scoped cleanup fixture (no return value) */
-  userCleanup: void;
-}
-
-/** Worker-scoped fixtures (shared across tests in same worker) */
-interface WorkerFixtures {
-  /** Worker index for parallel test isolation */
-  workerIndex: number;
 }
 
 export function createSupabaseAdmin(): SupabaseClient {
