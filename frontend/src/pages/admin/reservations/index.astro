@@ -21,7 +21,6 @@ if (!isAdmin) {
 
 <AdminLayout title="Zarządzanie Rezerwacjami | Magazyn Admin">
   <div class="space-y-6">
-    <!-- Header -->
     <div>
       <h1 class="text-3xl font-bold tracking-tight">Zarządzanie Rezerwacjami</h1>
       <p class="text-muted-foreground mt-1">
@@ -29,7 +28,6 @@ if (!isAdmin) {
       </p>
     </div>
 
-    <!-- Reservation List (Admin Mode) -->
     <ReservationListContainer
       mode="admin"
       currentUserId={user.id}

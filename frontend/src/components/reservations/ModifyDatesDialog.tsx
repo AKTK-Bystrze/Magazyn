@@ -168,7 +168,6 @@ export function ModifyDatesDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Date Range Picker */}
           <DateRangePicker
             startDate={startDate}
             endDate={endDate}
@@ -180,7 +179,6 @@ export function ModifyDatesDialog({
             allowPastDates={true}
           />
 
-          {/* Credit Adjustment Preview */}
           {datesChanged && startDate && endDate && (
             <CreditAdjustmentPreview
               originalDates={{
@@ -194,12 +192,10 @@ export function ModifyDatesDialog({
             />
           )}
 
-          {/* Credit Adjustment Info */}
           {datesChanged && startDate && endDate && (
             <SignificantExtensionWarning creditAdjustment={adjustmentInfo.adjustment} />
           )}
 
-          {/* API Error */}
           {apiError && (
             <Alert className="border-destructive bg-destructive/10">
               <AlertDescription className="text-destructive">{apiError}</AlertDescription>

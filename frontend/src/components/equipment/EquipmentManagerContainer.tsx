@@ -170,7 +170,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
       } catch (err) {
         const message = err instanceof Error ? err.message : "Nie udało się zarchiwizować";
         setArchiveError(message);
-        throw err; // Re-throw so dialog can handle it
+        throw err;
       }
     },
     [archiveEquipment]
@@ -190,7 +190,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
 
   return (
     <div className={`space-y-6 ${className ?? ""}`} data-testid="equipment-manager-container">
-      {/* Header with Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{UI.PAGE_TITLE}</h1>
@@ -206,7 +205,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         </Button>
       </div>
 
-      {/* Success Message */}
       {successMessage && (
         <Alert
           className="border-green-500 bg-green-50 dark:bg-green-950"
@@ -219,7 +217,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         </Alert>
       )}
 
-      {/* Error Message */}
       {(error || errorMessage) && (
         <Alert
           className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
@@ -230,7 +227,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         </Alert>
       )}
 
-      {/* Filters */}
       <FilterSidebar
         filters={filters}
         types={equipmentTypes}
@@ -240,7 +236,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         showDates={false}
       />
 
-      {/* Equipment Table */}
       <EquipmentTable
         equipment={equipment}
         isLoading={isLoading}
@@ -249,14 +244,12 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         onArchive={handleArchiveClick}
       />
 
-      {/* Intersection Observer Target */}
       <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
         {isFetchingNextPage && (
           <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
         )}
       </div>
 
-      {/* Add Equipment Dialog */}
       <AddEquipmentDialog
         isOpen={isAddDialogOpen}
         isSubmitting={isMutating}
@@ -265,7 +258,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         onSubmit={handleAddSubmit}
       />
 
-      {/* Edit Equipment Dialog */}
       <EditEquipmentDialog
         isOpen={isEditDialogOpen}
         equipment={selectedEquipment}
@@ -274,7 +266,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         onSubmit={handleEditSubmit}
       />
 
-      {/* Confirm Archive Dialog */}
       <ConfirmArchiveDialog
         isOpen={isArchiveDialogOpen}
         equipment={selectedEquipment}
@@ -284,7 +275,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         onConfirm={handleArchiveConfirm}
       />
 
-      {/* Equipment Details Sheet */}
       <EquipmentDetailsSheet
         isOpen={isDetailsSheetOpen}
         equipment={selectedEquipment}

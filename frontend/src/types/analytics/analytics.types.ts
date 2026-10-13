@@ -4,7 +4,7 @@ import type { Enums } from "../../db/database.types";
  * Single day availability status (GET /calendar/availability)
  */
 export type CalendarDay = {
-  date: string; // YYYY-MM-DD
+  date: string;
   equipmentId: string;
   equipmentName: string;
   isAvailable: boolean;
@@ -31,7 +31,7 @@ export type EquipmentStats = {
   equipmentType: string;
   totalReservations: number;
   totalDaysRented: number;
-  utilizationRate: number; // 0.0 to 1.0
+  utilizationRate: number;
   topRenters: TopRenter[];
 };
 
@@ -52,5 +52,5 @@ export type UserStats = {
  */
 export type AnalyticsPeriod = {
   year: number;
-  month: number | null; // 1-12, null for entire year
+  month: number | null;
 };

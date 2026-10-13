@@ -46,7 +46,6 @@ func (r *authRepository) CreateUser(ctx context.Context, email, password string)
 	if r.serviceKey == "" {
 		return nil, fmt.Errorf("service key is empty")
 	}
-	// Create a new client with the service key
 	adminClient, err := supabase.NewClient(r.supabaseURL, r.serviceKey, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create admin client: %w", err)

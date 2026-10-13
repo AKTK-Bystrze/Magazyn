@@ -31,7 +31,6 @@ export function UserSidebar({ currentPath, className, onNavigate }: UserSidebarP
     <div className={cn("pb-12 h-full border-r bg-sidebar", className)} data-testid="sidebar">
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
-          {/* Logo / Brand */}
           <div className="mb-2 px-4 flex items-center gap-2">
             <img
               src="/logo-bystrze-kolor.png"
@@ -46,7 +45,6 @@ export function UserSidebar({ currentPath, className, onNavigate }: UserSidebarP
             <h2 className="text-lg font-semibold tracking-tight">Magazyn</h2>
           </div>
 
-          {/* Navigation Items */}
           <div className="space-y-1">
             {USER_NAV_ITEMS.map((item) => (
               <a

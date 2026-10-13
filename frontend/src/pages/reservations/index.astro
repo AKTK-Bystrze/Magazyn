@@ -23,7 +23,6 @@ const initialScope = scopeParam === "all" ? "all" : "my";
 
 <AppLayout title="Rezerwacje | Magazyn">
   <div class="container mx-auto py-8 px-4 max-w-7xl">
-    <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <h1 class="text-3xl font-bold tracking-tight">Rezerwacje</h1>
       <a href={ROUTES.PUBLIC.EQUIPMENT}>
@@ -31,7 +30,6 @@ const initialScope = scopeParam === "all" ? "all" : "my";
       </a>
     </div>
 
-    <!-- Success Message from Redirect -->
     {
       success && (
         <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
@@ -43,7 +41,6 @@ const initialScope = scopeParam === "all" ? "all" : "my";
       )
     }
 
-    <!-- Reservation List -->
     <ReservationListContainer
       mode="user"
       currentUserId={user.id}

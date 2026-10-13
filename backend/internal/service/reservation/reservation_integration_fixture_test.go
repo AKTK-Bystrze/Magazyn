@@ -50,9 +50,7 @@ func initializeFixture(t *testing.T, fixture *dateTestFixture, client *supa.Clie
 	require.NotEmpty(t, eqTypes)
 	fixture.typeID = eqTypes[0].ID
 	fixture.costPerDay = eqTypes[0].CreditCostPerDay
-	// Create unique equipment
 	createUniqueEquipment(t, fixture)
-	// Setup users
 	setupTestUsers(t, fixture)
 }
 func createUniqueEquipment(t *testing.T, fixture *dateTestFixture) {
@@ -89,7 +87,6 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	}
 	fixture.testUserID = profiles[0].ID
 	fixture.testUser2ID = profiles[1].ID
-	// Reset credits to known state
 	initialBalance := int32(100000)
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUserID).Execute()
 	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUser2ID).Execute()

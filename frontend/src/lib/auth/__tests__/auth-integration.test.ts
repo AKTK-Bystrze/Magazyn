@@ -172,7 +172,7 @@ describe("Auth Integration Tests", () => {
         mockUser,
         validSession,
         "/login",
-        maliciousRedirect, // Malicious redirect param
+        maliciousRedirect,
         "http://localhost:4321"
       );
 

@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Helper to create handler with mock service
 func createTestHandler() (*auth.AuthHandler, *serviceMocks.MockAuthService) {
 	mockService := new(serviceMocks.MockAuthService)
 	h := auth.NewAuthHandler(mockService)
@@ -86,11 +85,8 @@ func TestHandleGetSession_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-// Validation tests for request body parsing
 func TestHandleLogin_Validation(t *testing.T) {
-	h, _ := createTestHandler() // Mock not needed for validation early exits
-	// Note: HTTP method validation (405 for GET) is now handled by the Go 1.22+ router
-	// with route patterns like "POST /auth/login", so we don't test it at handler level
+	h, _ := createTestHandler()
 	t.Run("returns 400 for invalid JSON", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewBufferString("invalid"))
 		w := httptest.NewRecorder()

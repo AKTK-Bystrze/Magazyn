@@ -100,7 +100,6 @@ export function AdjustCreditsDialog({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          {/* Amount Field */}
           <div className="grid gap-2">
             <Label htmlFor={amountId}>Kwota</Label>
             <Input
@@ -116,7 +115,6 @@ export function AdjustCreditsDialog({
             />
           </div>
 
-          {/* Reason Field */}
           <div className="grid gap-2">
             <Label htmlFor={reasonId}>Powód (wymagany)</Label>
             <Input
@@ -128,7 +126,6 @@ export function AdjustCreditsDialog({
             />
           </div>
 
-          {/* Description Field */}
           <div className="grid gap-2">
             <Label htmlFor={descriptionId}>Dodatkowe notatki (opcjonalnie)</Label>
             <Textarea
@@ -142,7 +139,6 @@ export function AdjustCreditsDialog({
             />
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive">
               <AlertCircle className={ICON_SIZE_SM} />

@@ -52,7 +52,7 @@ export function UserSelector({
   disabled = false,
 }: UserSelectorProps) {
   const { data, isLoading, error } = useUsers({
-    initialFilters: { perPage: 100 }, // Fetch more users for selection
+    initialFilters: { perPage: 100 },
   });
 
   const users = React.useMemo(() => data?.users ?? [], [data?.users]);
@@ -139,7 +139,6 @@ export function UserSelector({
         </SelectContent>
       </Select>
 
-      {/* Show selected user's credit balance */}
       {selectedUser && (
         <p className="text-sm text-muted-foreground flex items-center gap-1">
           <CreditCard className="h-4 w-4" />

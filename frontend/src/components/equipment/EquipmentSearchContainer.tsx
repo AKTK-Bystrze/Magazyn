@@ -134,7 +134,6 @@ export function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContai
         </div>
       </div>
 
-      {/* Desktop Sidebar */}
       <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6">
         <div className="sticky top-6">
           <h2 className="text-xl font-bold mb-4">Filtry</h2>
@@ -147,9 +146,7 @@ export function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContai
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col">
-        {/* Results Header (Desktop) */}
         <div className="hidden lg:flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Inwentarz Sprzętu</h1>
           <div className="flex items-center gap-4">
@@ -187,7 +184,6 @@ export function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContai
           />
         </div>
 
-        {/* Intersection Observer Target */}
         <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
           {isFetchingNextPage && (
             <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
@@ -203,7 +199,6 @@ export function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContai
         }}
       />
 
-      {/* Equipment Details Sheet */}
       <EquipmentDetailsSheet
         isOpen={isDetailsOpen}
         equipment={selectedEquipment}

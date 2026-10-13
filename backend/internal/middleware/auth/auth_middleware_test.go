@@ -39,8 +39,6 @@ func TestAuthMiddleware_HeaderValidation(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 		assert.Contains(t, w.Body.String(), "Invalid authorization header format")
 	})
-	// ... (Include other validation tests if desired, but for brevity/cleanliness focusing on key ones for now given overwrite)
-	// I'll keep the main ones.
 }
 func TestAuthMiddleware_Logic(t *testing.T) {
 	setupMocks := func() *serviceMocks.MockAuthRepository {
@@ -58,7 +56,6 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 			Role:      "user",
 			IsEnabled: true,
 		}
-		// Expectations
 		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
 		mockRepo.On("GetProfile", mock.Anything, userID.String(), token).Return(profile, nil)
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +107,7 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 			t.Error("Next should not be called")
 		})
 		middleware := NewAuthMiddleware(mockRepo)(next)
-		req := httptest.NewRequest(http.MethodGet, "/protected", nil) // Not /auth/session
+		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
 		middleware.ServeHTTP(w, req)
@@ -133,10 +130,10 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		mockRepo.On("GetUser", mock.Anything, token).Return(user, nil)
 		mockRepo.On("GetProfile", mock.Anything, userID.String(), token).Return(profile, nil)
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK) // Success
+			w.WriteHeader(http.StatusOK)
 		})
 		middleware := NewAuthMiddleware(mockRepo)(next)
-		req := httptest.NewRequest(http.MethodGet, "/auth/session", nil) // Target /auth/session
+		req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		w := httptest.NewRecorder()
 		middleware.ServeHTTP(w, req)

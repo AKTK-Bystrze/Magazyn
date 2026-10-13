@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// We mock the repository
 type mockCreditRequestRepo struct {
 	data map[string]*types.CreditRequestDTO
 }

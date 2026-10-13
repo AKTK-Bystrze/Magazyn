@@ -21,12 +21,10 @@ type ReservationService interface {
 	GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error)
 	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string, role string) (*types.CreateReservationsResponse, error)
 	Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error)
-	// BulkUpdate updates multiple reservations (Admin only)
 	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error)
 	GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error)
 }
 
-// Reservation Service Implementation
 type reservationService struct {
 	repo          repository.ReservationRepository
 	equipmentRepo repository.EquipmentRepository
@@ -51,9 +49,6 @@ func NewReservationService(
 
 func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery, userID string, role string) (*types.ReservationListResponse, error) {
 	logger.Infof(ctx, "Listing reservations - Page: %d, PerPage: %d", query.Page, query.PerPage)
-	// Apply ownership filter based on scope
-	// scope="all" → show all reservations (any authenticated user)
-	// scope="my" or empty → show only user's own reservations
 	if query.Scope != nil && *query.Scope == "all" {
 		query.BypassRLS = true
 		if query.UserID != nil && role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
@@ -67,7 +62,6 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 		logger.Errorf(ctx, "Failed to list reservations: %v", err)
 		return nil, types.NewInternalError("Failed to list reservations", err)
 	}
-	// Calculate pagination
 	totalPages := 0
 	if query.PerPage > 0 {
 		totalPages = int((total + int64(query.PerPage) - 1) / int64(query.PerPage))
@@ -104,7 +98,6 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	if isFreeReservation && role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
 		return nil, types.NewForbiddenError("Only admins can create free reservations")
 	}
-	// 1. Validation & Cost Calculation (Read-Only)
 	totalCost := int32(0)
 	costMap := make(map[int]int32)
 	for i, req := range cmd.Reservations {
@@ -151,7 +144,6 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 			})
 		}
 	}
-	// Send Email (Async)
 	go func() {
 		bgCtx := context.WithoutCancel(ctx)
 		profile, _ := s.userRepo.GetByID(bgCtx, targetUserID)
@@ -203,9 +195,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	var creditAdjustment int32
 	var newBalance int32
 	var latestUpdatedAt *string
-	// Check if this is a full cancellation
 	isCancelling := cmd.Status != nil && (*cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled)
-	// Handle Date Change
 	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
 	if datesChanging {
 		start := current.StartDate
@@ -216,7 +206,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		if cmd.EndDate != nil {
 			end = *cmd.EndDate
 		}
-		// Check availability
 		conflicts, err := s.repo.GetOverlappingReservations(ctx, current.EquipmentID, start, end, &id)
 		if err != nil {
 			return nil, err
@@ -233,7 +222,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			creditAdjustment = result.CreditAdjustment
 			newBalance = result.NewBalance
 			latestUpdatedAt = &result.UpdatedAt
-			// Log successful credit adjustment
 			if result.CreditAdjustment != 0 {
 				if result.CreditAdjustment > 0 {
 					logger.Infof(ctx, "Refunded %d credits for shortening reservation %s", result.CreditAdjustment, id)
@@ -241,7 +229,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 					logger.Infof(ctx, "Charged %d credits for extending reservation %s", -result.CreditAdjustment, id)
 				}
 			}
-			// Update our local 'current' variable so we know dates were already updated
 			current.StartDate = start
 			current.EndDate = end
 		} else {
@@ -250,11 +237,9 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			needsUpdate = true
 		}
 	}
-	// Handle Status Change
 	if cmd.Status != nil && *cmd.Status != current.Status {
 		updateData.Status = cmd.Status
 		needsUpdate = true
-		// If cancelling (DENIED or CANCELLED), do a FULL refund
 		if isCancelling {
 			if current.IsFree {
 				logger.Infof(ctx, "Skipping refund for free reservation %s", id)
@@ -306,7 +291,6 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			UpdatedAt:   latestUpdatedAt,
 		}
 	}
-	// Calculate credit cost for the response
 	eq, _ := s.equipmentRepo.GetByID(ctx, updated.EquipmentID)
 	var creditCost int32
 	if eq != nil {

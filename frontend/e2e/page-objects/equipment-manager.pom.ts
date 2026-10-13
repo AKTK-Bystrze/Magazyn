@@ -143,7 +143,6 @@ export class EquipmentManagerPage {
     await expect(actionsMenu).toBeVisible();
     await actionsMenu.click();
 
-    // Wait for the menu to open (Radix UI portal) and animation to finish
     await expect(this.page.getByRole("menu")).toBeVisible();
     await this.page.waitForTimeout(E2E_CONFIG.TIMEOUT.ACTION);
   }
@@ -198,11 +197,9 @@ export class EquipmentManagerPage {
   async verifyActionsPresent(id: string) {
     await this.openActionsMenu(id);
 
-    // Verify options are visible
     await expect(this.page.getByTestId(TEST_IDS.equipmentEditBtn(id))).toBeVisible();
     await expect(this.page.getByTestId(TEST_IDS.equipmentArchiveBtn(id))).toBeVisible();
 
-    // Close menu
     await this.page.keyboard.press("Escape");
   }
 

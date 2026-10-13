@@ -10,7 +10,6 @@ const user = Astro.locals.user;
 <BaseLayout title="Zaloguj się | Wynajem Sprzętu">
   <main class="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
     <div class="max-w-md w-full space-y-8 text-center">
-      <!-- Icon -->
       <div class="flex justify-center">
         <div class="rounded-full bg-yellow-100 dark:bg-yellow-900/20 p-6">
           <svg
@@ -29,7 +28,6 @@ const user = Astro.locals.user;
         </div>
       </div>
 
-      <!-- Title -->
       <div class="space-y-2">
         <h1 class="text-3xl font-bold tracking-tight text-foreground">Witaj</h1>
         <p class="text-sm text-muted-foreground">
@@ -37,7 +35,6 @@ const user = Astro.locals.user;
         </p>
       </div>
 
-      <!-- Message -->
       <div class="bg-card border border-border rounded-lg p-6 space-y-4 text-left">
         <div class="space-y-2">
           <h2 class="font-semibold text-lg text-foreground">Co się dzieje?</h2>
@@ -64,7 +61,6 @@ const user = Astro.locals.user;
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="flex flex-col gap-3">
         <button
           id="refresh-status-btn"
@@ -76,7 +72,6 @@ const user = Astro.locals.user;
         <Button variant="ghost" id="logout-btn" className="mt-4"> Powrót do logowania </Button>
       </div>
 
-      <!-- Status message -->
       <div id="status-message" class="hidden">
         <p class="text-sm text-muted-foreground"></p>
       </div>

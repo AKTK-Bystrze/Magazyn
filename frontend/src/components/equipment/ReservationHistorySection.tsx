@@ -68,7 +68,6 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
     <div className="space-y-3">
       {reservations.map((reservation) => (
         <div key={reservation.id} className="rounded-lg border bg-card p-3 space-y-2">
-          {/* Header: User and Status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
@@ -79,7 +78,6 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
             </Badge>
           </div>
 
-          {/* Dates */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
             <span>
@@ -88,7 +86,6 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
             </span>
           </div>
 
-          {/* Credits */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <CreditCard className="h-4 w-4" />
