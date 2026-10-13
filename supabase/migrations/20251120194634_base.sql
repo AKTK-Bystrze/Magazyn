@@ -7,9 +7,9 @@ CREATE EXTENSION IF NOT EXISTS "btree_gist" WITH SCHEMA extensions;
 
 -- ENUMS
 CREATE TYPE user_role AS ENUM ('user', 'admin', 'super_admin');
-CREATE TYPE reservation_status AS ENUM ('PENDING', 'RENTED', 'RETURNED', 'DENIED');
+CREATE TYPE reservation_status AS ENUM ('PENDING', 'RENTED', 'RETURNED', 'CANCELLED');
 CREATE TYPE equipment_status AS ENUM ('ok', 'broken', 'blocked');
-CREATE TYPE credit_request_status AS ENUM ('PENDING', 'APPROVED', 'DENIED');
+CREATE TYPE credit_request_status AS ENUM ('awaiting', 'approved', 'rejected', 'approved with changes');
 CREATE TYPE credit_transaction_reason AS ENUM ('reservation_charge', 'reservation_refund', 'reservation_adjustment', 'admin_adjustment', 'work_credit');
 
 -- TABLES
@@ -86,7 +86,7 @@ CREATE TABLE credit_requests (
   user_id UUID NOT NULL REFERENCES profiles(id),
   amount INTEGER NOT NULL CHECK (amount > 0),
   description TEXT NOT NULL,
-  status credit_request_status NOT NULL DEFAULT 'PENDING',
+  status credit_request_status NOT NULL DEFAULT 'awaiting',
   admin_id UUID REFERENCES profiles(id),
   admin_note TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

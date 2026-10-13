@@ -75,7 +75,7 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	json.Unmarshal(dataBefore, &historyBefore)
 	historyCountBefore := len(historyBefore)
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr(constants.ReservationStatusDenied),
+		Status: stringPtr(constants.ReservationStatusCancelled),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUserID, "user")
 	require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	assert.Greater(t, historyCountAfter, historyCountBefore, "No credit_history entry created")
 	t.Logf("✓ Credit history logged (%d -> %d entries)", historyCountBefore, historyCountAfter)
 }
-func TestRefundCredits_DeniedReservation_RefundsCorrectly(t *testing.T) {
+func TestRefundCredits_CancelledReservation_RefundsCorrectly(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
@@ -102,7 +102,7 @@ func TestRefundCredits_DeniedReservation_RefundsCorrectly(t *testing.T) {
 	require.NoError(t, err)
 	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr(constants.ReservationStatusDenied),
+		Status: stringPtr(constants.ReservationStatusCancelled),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
@@ -110,7 +110,7 @@ func TestRefundCredits_DeniedReservation_RefundsCorrectly(t *testing.T) {
 	refundAmount := balanceAfter - balanceAfterCreate
 	expectedRefund := 5 * fixture.costPerDay
 	assert.Equal(t, expectedRefund, refundAmount)
-	t.Logf("✓ Admin denial refunded %d credits", refundAmount)
+	t.Logf("✓ Admin cancellation refunded %d credits", refundAmount)
 }
 
 // TestUpdateAudit_StatusChange_CreatesAuditEntry verifies that updating
@@ -203,7 +203,7 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	balance2After := fixture.getUserBalance(fixture.testUser2ID)
 	updateCmd := types.BulkUpdateReservationsCommand{
 		ReservationIDs: []string{res1ID, res2ID},
-		Status:         constants.ReservationStatusDenied,
+		Status:         constants.ReservationStatusCancelled,
 	}
 	resp, err := fixture.svc.BulkUpdate(ctx, updateCmd, fixture.testUser2ID)
 	require.NoError(t, err)

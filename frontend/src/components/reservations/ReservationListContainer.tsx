@@ -217,7 +217,7 @@ function ReservationListContainerInner({
       } else {
         const result = await bulkUpdateStatus({
           reservationIds: targets.map((t) => t.id),
-          status: "DENIED",
+          status: "CANCELLED",
         });
 
         setSuccessMessage(

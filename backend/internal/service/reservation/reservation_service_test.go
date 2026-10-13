@@ -527,9 +527,9 @@ func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
 		},
 	}
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	deniedStatus := constants.ReservationStatusDenied
+	cancelledStatus := constants.ReservationStatusCancelled
 	cmd := types.UpdateReservationCommand{
-		Status: &deniedStatus,
+		Status: &cancelledStatus,
 	}
 	name := "Test Equipment"
 	equipment := &types.PublicEquipmentSelect{
@@ -552,7 +552,7 @@ func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
 	updatedRes := &types.PublicReservationsSelect{
 		ID:          reservationID,
 		EquipmentID: "eq-1",
-		Status:      constants.ReservationStatusDenied,
+		Status:      constants.ReservationStatusCancelled,
 		StartDate:   "2025-01-01",
 		EndDate:     "2025-01-03",
 	}
@@ -562,7 +562,7 @@ func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, int32(30), result.CreditAdjustment)
 	assert.Equal(t, int32(150), result.RemainingBalance)
-	assert.Equal(t, constants.ReservationStatusDenied, result.Status)
+	assert.Equal(t, constants.ReservationStatusCancelled, result.Status)
 	mockRepo.AssertExpectations(t)
 	mockEquipRepo.AssertExpectations(t)
 	mockUserRepo.AssertExpectations(t)
@@ -584,9 +584,9 @@ func TestUpdate_CancelRefund_EquipmentLookupError(t *testing.T) {
 		},
 	}
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	deniedStatus := constants.ReservationStatusDenied
+	cancelledStatus := constants.ReservationStatusCancelled
 	cmd := types.UpdateReservationCommand{
-		Status: &deniedStatus,
+		Status: &cancelledStatus,
 	}
 	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(nil, assert.AnError)
 	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
@@ -613,9 +613,9 @@ func TestUpdate_CancelRefund_EquipmentTypeLookupError(t *testing.T) {
 		},
 	}
 	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	deniedStatus := constants.ReservationStatusDenied
+	cancelledStatus := constants.ReservationStatusCancelled
 	cmd := types.UpdateReservationCommand{
-		Status: &deniedStatus,
+		Status: &cancelledStatus,
 	}
 	name := "Test Equipment"
 	equipment := &types.PublicEquipmentSelect{

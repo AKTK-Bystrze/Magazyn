@@ -15,7 +15,7 @@ export const RESERVATION_STATUS = {
   PENDING: "PENDING",
   RENTED: "RENTED",
   RETURNED: "RETURNED",
-  DENIED: "DENIED",
+  CANCELLED: "CANCELLED",
 } as const;
 
 export type ReservationStatus = (typeof RESERVATION_STATUS)[keyof typeof RESERVATION_STATUS];
@@ -27,7 +27,7 @@ export const RESERVATION_STATUS_LABELS: Record<string, string> = {
   PENDING: "W trakcie",
   RENTED: "Wypożyczona",
   RETURNED: "Zwrócona",
-  DENIED: "Anulowana",
+  CANCELLED: "Anulowana",
   ALL: "Wszystkie statusy",
 };
 
@@ -42,7 +42,7 @@ export const RESERVATION_STATUS_VARIANTS: Record<
   PENDING: "default",
   RENTED: "secondary",
   RETURNED: "outline",
-  DENIED: "destructive",
+  CANCELLED: "destructive",
 };
 
 /**
@@ -53,7 +53,7 @@ export const RESERVATION_FILTER_OPTIONS = [
   { value: "PENDING", label: "W trakcie" },
   { value: "RENTED", label: "Wypożyczona" },
   { value: "RETURNED", label: "Zwrócona" },
-  { value: "DENIED", label: "Anulowana" },
+  { value: "CANCELLED", label: "Anulowana" },
 ] as const;
 
 /**

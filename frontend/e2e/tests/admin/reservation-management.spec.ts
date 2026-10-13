@@ -64,7 +64,7 @@ test.describe.serial("Admin Reservation Management", () => {
   });
 
   /**
-   * Scenario: Admin creates reservation for user and denies it
+   * Scenario: Admin creates reservation for user and cancels it
    *
    * Steps:
    * 1. Login as Admin.
@@ -73,10 +73,10 @@ test.describe.serial("Admin Reservation Management", () => {
    * 4. Checkout.
    * 5. Verify success.
    * 6. Go to All Reservations.
-   * 7. Find the reservation and mark as Denied.
+   * 7. Find the reservation and mark as Cancelled.
    * 8. Verify status.
    */
-  test("Happy Path: Admin creates reservation for user and denies it", async ({
+  test("Happy Path: Admin creates reservation for user and cancels it", async ({
     adminPage,
     testUser,
     testEquipment,
@@ -115,7 +115,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
-    await expect(statusBadge).toContainText(/Anulowana|Denied/i);
+    await expect(statusBadge).toContainText(/Anulowana|Cancelled/i);
   });
 
   /**
@@ -249,7 +249,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
-    await expect(statusBadge).toContainText(/Anulowana|Denied/i);
+    await expect(statusBadge).toContainText(/Anulowana|Cancelled/i);
 
     const { data: profileAfter } = await supabaseAdmin
       .from("profiles")

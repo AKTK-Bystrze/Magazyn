@@ -140,7 +140,7 @@ export type EquipmentReservationHistoryItem = {
   username: string;
   startDate: string;
   endDate: string;
-  status: "PENDING" | "RENTED" | "RETURNED" | "DENIED";
+  status: "PENDING" | "RENTED" | "RETURNED" | "CANCELLED";
   creditCost: number;
   createdAt: string;
 };

@@ -188,7 +188,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		}
 	}
 	if cmd.Status != nil && *cmd.Status != current.Status {
-		if !isAdmin && *cmd.Status != constants.ReservationStatusDenied && *cmd.Status != constants.ReservationStatusReturned {
+		if !isAdmin && *cmd.Status != constants.ReservationStatusCancelled && *cmd.Status != constants.ReservationStatusReturned {
 			return nil, types.NewValidationError("Users can only cancel or return pending reservations", nil)
 		}
 	}
@@ -197,7 +197,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	var creditAdjustment int32
 	var newBalance int32
 	var latestUpdatedAt *string
-	isCancelling := cmd.Status != nil && (*cmd.Status == constants.ReservationStatusDenied || *cmd.Status == constants.ReservationStatusCancelled)
+	isCancelling := cmd.Status != nil && *cmd.Status == constants.ReservationStatusCancelled
 	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
 	if datesChanging {
 		start := current.StartDate

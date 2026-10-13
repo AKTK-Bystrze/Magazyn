@@ -68,7 +68,7 @@ export function ReservationStatusActions({
   const userBalance = isOwner ? currentUserBalance : (ownerProfile?.creditBalance ?? 0);
 
   const handleCancelClick = () => {
-    setTargetStatus("DENIED");
+    setTargetStatus("CANCELLED");
     setCancelDialogOpen(true);
   };
 
@@ -86,7 +86,7 @@ export function ReservationStatusActions({
   };
 
   const handleCancelConfirm = async () => {
-    await onStatusChange("DENIED");
+    await onStatusChange("CANCELLED");
     setCancelDialogOpen(false);
   };
 
@@ -156,7 +156,7 @@ export function ReservationStatusActions({
               <DropdownMenuItem
                 key={status}
                 onClick={() => handleAdminStatusClick(status)}
-                variant={status === "DENIED" ? "destructive" : "default"}
+                variant={status === "CANCELLED" ? "destructive" : "default"}
               >
                 {RESERVATION_STATUS_LABELS[status]}
               </DropdownMenuItem>
@@ -169,7 +169,7 @@ export function ReservationStatusActions({
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}
         reservation={reservation}
-        targetStatus="DENIED"
+        targetStatus="CANCELLED"
         onConfirm={handleCancelConfirm}
         isSubmitting={isUpdating}
         mode="cancel"

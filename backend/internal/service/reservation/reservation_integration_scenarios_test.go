@@ -68,7 +68,7 @@ func TestTS1_ReservationLifecycle_Full(t *testing.T) {
 	balanceAfterExtend2 := fixture.getUserBalance(fixture.testUserID)
 	assert.Equal(t, 5*fixture.costPerDay, balanceAfterExtend1-balanceAfterExtend2, "Extending by 5 days should charge 5x costPerDay")
 	t.Logf("✓ Step 14: Extended by 5 days, charged %d credits", 5*fixture.costPerDay)
-	cancelStatus := constants.ReservationStatusDenied
+	cancelStatus := constants.ReservationStatusCancelled
 	_, err = fixture.svc.Update(ctx, resID, types.UpdateReservationCommand{Status: &cancelStatus}, fixture.testUserID, "user")
 	require.NoError(t, err)
 	balanceAfterCancel := fixture.getUserBalance(fixture.testUserID)

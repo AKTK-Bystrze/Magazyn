@@ -26,7 +26,7 @@ function getStatusVariant(status: string): "default" | "secondary" | "destructiv
       return "secondary";
     case "PENDING":
       return "outline";
-    case "DENIED":
+    case "CANCELLED":
       return "destructive";
     default:
       return "outline";
@@ -44,8 +44,8 @@ function getStatusLabel(status: string): string {
       return "Returned";
     case "PENDING":
       return "Pending";
-    case "DENIED":
-      return "Denied";
+    case "CANCELLED":
+      return "Cancelled";
     default:
       return status;
   }

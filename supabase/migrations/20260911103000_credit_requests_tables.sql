@@ -12,8 +12,7 @@ CREATE TABLE credit_requests (
     credits_value INT NOT NULL CHECK (credits_value > 0),
     requestor_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
     user_helped_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'awaiting'
-           CHECK (status IN ('awaiting', 'approved', 'rejected', 'approved with changes')),
+    status credit_request_status NOT NULL DEFAULT 'awaiting',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
