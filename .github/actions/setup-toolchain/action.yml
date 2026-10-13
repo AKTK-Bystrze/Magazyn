@@ -9,7 +9,7 @@
 # INPUTS:
 #   - go-mod-path: Path to go.mod (default: backend/go.mod)
 #   - go-sum-path: Path to go.sum (default: backend/go.sum)
-#   - node-version: Node.js version (default: 20)
+#   - node-version: Node.js version (default: 22)
 #   - package-lock-path: Path to package-lock.json (default: frontend/package-lock.json)
 #
 # =============================================================================
@@ -29,7 +29,7 @@ inputs:
   node-version:
     description: Node.js version
     required: false
-    default: '20'
+    default: '22'
   package-lock-path:
     description: Path to package-lock.json
     required: false
