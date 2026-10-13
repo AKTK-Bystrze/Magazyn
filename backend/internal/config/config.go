@@ -1,8 +1,10 @@
-// It loads environment variables, initializes the Supabase client, and provides application state management.
+// Package config loads environment variables, initializes the Supabase client, and provides application state management.
 package config
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -12,20 +14,31 @@ import (
 	"github.com/supabase-community/supabase-go"
 )
 
+// Config holds application configuration settings loaded from environment variables.
 type Config struct {
-	SupabaseURL        string   // URL of the Supabase project
-	SupabaseKey        string   // Supabase anon/public key for client operations
-	SupabaseServiceKey string   // Supabase service role key - used ONLY for Auth Admin API and tests
-	Port               string   // HTTP server port
-	LogLevel           string   // Logging verbosity: DEBUG, INFO, WARN, or ERROR
-	CORSAllowedOrigins []string // List of allowed CORS origins for cross-origin requests
-	AppURL             string   // Application base URL for magic link redirects and email links
+	// SupabaseURL is the URL of the Supabase project.
+	SupabaseURL string
+	// SupabaseKey is the Supabase anon/public key for client operations.
+	SupabaseKey string
+	// SupabaseServiceKey is the Supabase service role key used only for Auth Admin API and tests.
+	SupabaseServiceKey string
+	// Port is the HTTP server port.
+	Port string
+	// LogLevel is the logging verbosity: DEBUG, INFO, WARN, or ERROR.
+	LogLevel string
+	// CORSAllowedOrigins lists allowed CORS origins for cross-origin requests.
+	CORSAllowedOrigins []string
+	// AppURL is the application base URL for magic link redirects and email links.
+	AppURL string
 }
+
+// AppState bundles the runtime configuration and active Supabase client.
 type AppState struct {
 	Config         *Config
 	SupabaseClient *supabase.Client
 }
 
+// LoadConfig reads configuration from the environment and initializes application state.
 func LoadConfig() (*AppState, error) {
 	envPath := os.Getenv("ENV_FILE_PATH")
 	if envPath == "" {
@@ -70,13 +83,13 @@ func LoadConfig() (*AppState, error) {
 	}
 	if cfg.SupabaseURL == "" || cfg.SupabaseKey == "" {
 		logger.Error(context.Background(), "PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
-		os.Exit(1)
+		return nil, errors.New("PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
 	}
-	logger.Info(context.Background(), "?? Using Anon Key with JWT forwarding - RLS policies enforced per user")
+	logger.Info(context.Background(), "Using Anon Key with JWT forwarding - RLS policies enforced per user")
 	client, err := supabase.NewClient(cfg.SupabaseURL, cfg.SupabaseKey, nil)
 	if err != nil {
 		logger.Errorf(context.Background(), "Failed to initialize Supabase client: %v", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("failed to initialize Supabase client: %w", err)
 	}
 	return &AppState{
 		Config:         cfg,

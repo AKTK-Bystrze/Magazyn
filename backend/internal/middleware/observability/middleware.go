@@ -1,3 +1,4 @@
+// Package observability provides middleware for distributed tracing and error tracking integration.
 package observability
 
 import (
@@ -11,6 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// ObservabilityMiddleware injects request trace IDs and attaches tracing contexts to Sentry.
 func ObservabilityMiddleware(next http.Handler) http.Handler {
 	sentryHandler := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,

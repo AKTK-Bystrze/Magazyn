@@ -41,14 +41,8 @@ type MaintenanceLogDTO struct {
 	CreatedAt      string  `json:"created_at"`
 }
 type EquipmentListResponse struct {
-	Equipment  []EquipmentDTO     `json:"equipment"`
-	Pagination PaginationResponse `json:"pagination"`
-}
-type PaginationResponse struct {
-	Page       int `json:"page"`
-	PerPage    int `json:"per_page"`
-	TotalItems int `json:"total_items"`
-	TotalPages int `json:"total_pages"`
+	Equipment  []EquipmentDTO `json:"equipment"`
+	Pagination Pagination     `json:"pagination"`
 }
 type AvailabilityResponse struct {
 	EquipmentID             string                   `json:"equipment_id"`
@@ -60,9 +54,6 @@ type ConflictingReservation struct {
 	StartDate string `json:"start_date"`
 	EndDate   string `json:"end_date"`
 	Status    string `json:"status"`
-}
-type MessageResponse struct {
-	Message string `json:"message"`
 }
 
 // Command Models - Request Validation
@@ -99,20 +90,6 @@ type AvailabilityQuery struct {
 	EndDate   string `json:"end_date"`
 }
 
-// Error Response
-// ErrorResponse represents standardized error response
-type ErrorResponse struct {
-	Error   string      `json:"error"`
-	Code    string      `json:"code,omitempty"`
-	Details interface{} `json:"details,omitempty"`
-}
-
-// Equipment Type DTOs
-// CreateEquipmentTypeRequest represents the payload for creating a new equipment type
-type CreateEquipmentTypeRequest struct {
-	Name             string `json:"name" validate:"required,max=100"`
-	CreditCostPerDay int32  `json:"credit_cost_per_day" validate:"required,min=0"`
-}
 type EquipmentTypeListResponse struct {
 	EquipmentTypes []PublicEquipmentTypesSelect `json:"equipment_types"`
 }

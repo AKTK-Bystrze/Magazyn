@@ -214,21 +214,6 @@ type auditRaw struct {
 	} `json:"profiles"`
 }
 
-func (r *reservationRepository) CreateReservation(ctx context.Context, reservation types.PublicReservationsInsert) (*types.PublicReservationsSelect, error) {
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("reservations").
-		Insert(reservation, false, "", "", "").
-		Single().
-		Execute()
-	if err != nil {
-		return nil, err
-	}
-	var created types.PublicReservationsSelect
-	if err := json.Unmarshal(data, &created); err != nil {
-		return nil, err
-	}
-	return &created, nil
-}
 func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, userID string, totalCost int32, isFree bool, createdByUserID string, reservations []types.CreateReservationItem) ([]string, int32, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	params := map[string]interface{}{
@@ -341,17 +326,6 @@ func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids 
 	}
 	return &result, nil
 }
-func (r *reservationRepository) BulkUpdateReservations(ctx context.Context, ids []string, status string) error {
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	updateData := types.PublicReservationsUpdate{
-		Status: &status,
-	}
-	_, _, err := client.From("reservations").
-		Update(updateData, "", "").
-		In("id", ids).
-		Execute()
-	return err
-}
 func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	qb := client.From("reservations").
@@ -404,27 +378,6 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 		OverdueReservations: oCount,
 		ActiveToday:         aCount,
 	}, nil
-}
-func (r *reservationRepository) GetReservationsInRange(ctx context.Context, rangeStart string, rangeEnd string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
-	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	qb := client.From("reservations").
-		Select("*", "exact", false).
-		Lte("start_date", rangeEnd).
-		Gte("end_date", rangeStart).
-		Neq("status", constants.ReservationStatusDenied).
-		Neq("status", "CANCELLED")
-	if equipmentID != nil {
-		qb = qb.Eq("equipment_id", *equipmentID)
-	}
-	data, _, err := qb.Execute()
-	if err != nil {
-		return nil, err
-	}
-	var reservations []types.PublicReservationsSelect
-	if err := json.Unmarshal(data, &reservations); err != nil {
-		return nil, err
-	}
-	return reservations, nil
 }
 func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID string, amount int32) error {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)

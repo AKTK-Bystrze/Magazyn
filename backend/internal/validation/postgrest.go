@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/types"
@@ -48,25 +47,6 @@ func ValidateUUID(id string) error {
 	}
 	return nil
 }
-func ValidateISODate(date string) error {
-	if date == "" {
-		return types.NewValidationError("Date cannot be empty", nil)
-	}
-	if len(date) != constants.DateLengthISO {
-		return types.NewValidationError(
-			fmt.Sprintf("Date must be %d characters in ISO format (YYYY-MM-DD)", constants.DateLengthISO),
-			map[string]interface{}{"length": len(date)},
-		)
-	}
-	_, err := time.Parse(constants.DateFormatISO, date)
-	if err != nil {
-		return types.NewValidationError(
-			"Invalid date format, expected YYYY-MM-DD",
-			map[string]string{"date": date, "error": err.Error()},
-		)
-	}
-	return nil
-}
 func ValidateEnum(value string, allowedValues []string) error {
 	if value == "" {
 		return types.NewValidationError("Enum value cannot be empty", nil)
@@ -83,15 +63,6 @@ func ValidateEnum(value string, allowedValues []string) error {
 			"allowed": allowedValues,
 		},
 	)
-}
-func ValidateInt32Range(value, min, max int32) error {
-	if value < min || value > max {
-		return types.NewValidationError(
-			fmt.Sprintf("Value %d is out of range [%d, %d]", value, min, max),
-			map[string]int32{"value": value, "min": min, "max": max},
-		)
-	}
-	return nil
 }
 func ValidateStringLength(str string, minLength, maxLength int) error {
 	length := len(str)

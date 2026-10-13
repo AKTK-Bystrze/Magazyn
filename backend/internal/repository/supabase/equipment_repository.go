@@ -204,9 +204,6 @@ func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
 		Execute()
 	return err
 }
-func (r *equipmentRepository) GetTypeForEquipment(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error) {
-	return r.GetTypeByID(ctx, typeID)
-}
 func (r *equipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentID string) ([]types.PublicMaintenanceLogsSelect, error) {
 	data, _, err := r.client.From("maintenance_logs").
 		Select("*", "exact", false).

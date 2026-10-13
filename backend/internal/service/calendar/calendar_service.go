@@ -19,13 +19,11 @@ type CalendarService interface {
 // Calendar Service Implementation
 type calendarService struct {
 	calendarRepo repository.CalendarRepository
-	typeRepo     repository.EquipmentTypeRepository
 }
 
-func NewCalendarService(calendarRepo repository.CalendarRepository, typeRepo repository.EquipmentTypeRepository) CalendarService {
+func NewCalendarService(calendarRepo repository.CalendarRepository) CalendarService {
 	return &calendarService{
 		calendarRepo: calendarRepo,
-		typeRepo:     typeRepo,
 	}
 }
 func (s *calendarService) GetCalendarAvailability(ctx context.Context, query types.CalendarAvailabilityQuery) (*types.CalendarAvailabilityResponse, error) {
