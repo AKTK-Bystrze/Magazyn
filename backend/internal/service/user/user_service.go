@@ -12,11 +12,17 @@ import (
 
 // UserService defines operations for user profile management.
 type UserService interface {
+	// GetProfile retrieves a single user profile by ID.
 	GetProfile(ctx context.Context, id string) (*types.UserResponse, error)
+	// ListUsers retrieves a paginated list of users with optional filters.
 	ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error)
+	// ListPublicUsers retrieves a paginated list of public user profiles.
 	ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error)
+	// CreateUser creates a new user profile with the given inputs.
 	CreateUser(ctx context.Context, req types.CreateUserRequest) (*types.UserResponse, error)
+	// UpdateUser updates an existing user profile with the given inputs.
 	UpdateUser(ctx context.Context, id string, req types.UpdateUserRequest) (*types.UserResponse, error)
+	// BulkAdjustCredits adjusts credit balance for multiple users and records history.
 	BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error
 }
 
@@ -137,6 +143,7 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 	if req.CreditBalance != nil {
 		creditBalance = *req.CreditBalance
 	}
+	// TODO: Application is not using password - replace with proper OTP/invite creation flow
 	tempPassword := "TempPass123!@"
 	authUser, err := s.authRepo.CreateUser(ctx, req.Email, tempPassword)
 	if err != nil {

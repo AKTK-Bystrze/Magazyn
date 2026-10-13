@@ -14,13 +14,21 @@ import (
 
 // EquipmentService defines operations for equipment management
 type EquipmentService interface {
+	// List retrieves a paginated list of equipment items with availability and favorite metadata
 	List(ctx context.Context, userID string, query types.EquipmentListQuery) (*types.EquipmentListResponse, error)
+	// GetByID retrieves detailed equipment information including maintenance logs
 	GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error)
+	// Create creates new equipment with the given parameters
 	Create(ctx context.Context, cmd types.CreateEquipmentCommand, adminID string) (*types.EquipmentDTO, error)
+	// Update updates equipment fields
 	Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error)
+	// Archive soft-deletes equipment by setting is_archived = true
 	Archive(ctx context.Context, id string) error
+	// CheckAvailability checks if equipment is available for a given date range
 	CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error)
+	// ListEquipmentTypes retrieves all equipment types
 	ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error)
+	// CreateMaintenanceLog adds a maintenance log entry for equipment
 	CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error)
 }
 

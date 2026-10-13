@@ -48,7 +48,9 @@ func NewReservationService(
 }
 
 func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery, userID string, role string) (*types.ReservationListResponse, error) {
-	logger.Infof(ctx, "Listing reservations - Page: %d, PerPage: %d", query.Page, query.PerPage)
+	// Apply ownership filter based on scope:
+	// scope="all" -> show all reservations (any authenticated user)
+	// scope="my" or empty -> show only user's own reservations
 	if query.Scope != nil && *query.Scope == "all" {
 		query.BypassRLS = true
 		if query.UserID != nil && role != auth.RoleAdmin && role != auth.RoleSuperAdmin {

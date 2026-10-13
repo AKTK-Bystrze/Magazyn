@@ -8,7 +8,9 @@ export interface EquipmentSearchParams {
   status?: EquipmentStatus;
   page: number;
   perPage: number;
+  /** Availability start date filter (ISO format: YYYY-MM-DD) */
   availableFrom?: string;
+  /** Availability end date filter (ISO format: YYYY-MM-DD) */
   availableTo?: string;
 }
 
@@ -19,6 +21,7 @@ export interface EquipmentSearchParams {
 export type EquipmentType = {
   id: string;
   name: string;
+  /** Base cost in credits per day */
   creditCostPerDay: number;
   createdAt: string;
 };
@@ -45,12 +48,14 @@ export type UpdateEquipmentTypeCommand = {
  */
 export type Equipment = {
   id: string;
+  /** Unique inventory identifier */
   internalId: string;
   typeId: string;
   typeName: string;
   name: string | null;
   description: string | null;
   status: Enums<"equipment_status">;
+  /** Cost in credits per day joined from equipment type */
   creditCostPerDay: number;
   imageUrl: string | null;
   isFavorite: boolean;
@@ -89,7 +94,9 @@ export type EquipmentAvailability = {
   isAvailable: boolean;
   conflictingReservations: Array<{
     id: string;
+    /** Reservation start date (YYYY-MM-DD) */
     startDate: string;
+    /** Reservation end date (YYYY-MM-DD) */
     endDate: string;
     status: Enums<"reservation_status">;
   }>;

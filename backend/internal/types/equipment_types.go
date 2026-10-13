@@ -11,6 +11,7 @@ type EquipmentDTO struct {
 	Status           string  `json:"status"`
 	CreditCostPerDay int32   `json:"credit_cost_per_day"`
 	ImageURL         *string `json:"image_url"`
+	// IsFavorite indicates if equipment is favorited (populated only in list view)
 	IsFavorite       *bool   `json:"is_favorite,omitempty"`
 	IsArchived       bool    `json:"is_archived"`
 	CreatedAt        string  `json:"created_at"`
@@ -80,7 +81,9 @@ type EquipmentListQuery struct {
 	Search          *string `json:"search"`
 	Status          *string `json:"status"`
 	IncludeArchived bool    `json:"include_archived"`
+	// AvailableFrom is the ISO start date filter (YYYY-MM-DD)
 	AvailableFrom   *string `json:"available_from"`
+	// AvailableTo is the ISO end date filter (YYYY-MM-DD)
 	AvailableTo     *string `json:"available_to"`
 }
 type AvailabilityQuery struct {

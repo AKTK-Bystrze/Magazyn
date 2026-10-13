@@ -29,6 +29,7 @@ export function createProxyHandler(opts: ProxyOptions) {
     }
 
     try {
+      // Interpolate dynamic segments from Astro params (e.g. [id])
       const resolvedPath = opts.path.replace(/\[(\w+)\]/g, (_, key) => params[key] ?? "");
       const backendUrl = new URL(`${BACKEND_URL}${resolvedPath}`);
 
@@ -56,6 +57,7 @@ export function createProxyHandler(opts: ProxyOptions) {
       const response = await fetch(backendUrl.toString(), fetchOpts);
       const responseText = await response.text();
 
+      // Forward headers from backend, defaulting to application/json if none provided
       const responseContentType = response.headers.get("Content-Type") || "application/json";
 
       return new Response(responseText, {
@@ -67,6 +69,7 @@ export function createProxyHandler(opts: ProxyOptions) {
       return new Response(
         JSON.stringify({ error: "Internal Server Error", code: "INTERNAL_ERROR" }),
         {
+          // 502 Bad Gateway since this is an upstream proxy error
           status: 502,
           headers: { "Content-Type": "application/json" },
         }

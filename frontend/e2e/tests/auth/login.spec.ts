@@ -32,6 +32,9 @@ test.describe("Login Page", () => {
    * Verifies the full user flow of requesting a magic link and successfully authenticating.
    */
   test("should successfully log in via email magic link", async ({ page, testUser }) => {
+    // Note: Requesting `testUser` fixture is necessary to ensure the user exists in DB before we request
+    // a magic link. Previously, missing this fixture caused backend errors, which manifested as
+    // e2e resource exhaustion and timeouts rather than clear test failures.
     const testEmail = testUser.email;
 
     await clearMailbox(testEmail);
@@ -47,6 +50,7 @@ test.describe("Login Page", () => {
 
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
 
+    // Instead of relying on Radix Dropdown UI on mobile which is flaky, use the backend logout directly
     await page.request.post("/api/auth/logout");
     await page.context().clearCookies();
     await page.evaluate(() => localStorage.clear());

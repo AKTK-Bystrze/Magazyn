@@ -11,9 +11,12 @@ export type Reservation = {
   equipmentId: string;
   equipmentName: string;
   equipmentType: string;
+  /** Reservation start date (YYYY-MM-DD) */
   startDate: string;
+  /** Reservation end date (YYYY-MM-DD) */
   endDate: string;
   status: Enums<"reservation_status">;
+  /** Calculated total credit cost */
   creditCost: number;
   createdAt: string;
   updatedAt: string | null;
@@ -50,7 +53,9 @@ export type ReservationDetail = Reservation & {
  */
 export type CreateReservationItem = {
   equipmentId: string;
+  /** Reservation start date (YYYY-MM-DD) */
   startDate: string;
+  /** Reservation end date (YYYY-MM-DD) */
   endDate: string;
 };
 
@@ -59,7 +64,9 @@ export type CreateReservationItem = {
  */
 export type CreateReservationsCommand = {
   reservations: CreateReservationItem[];
+  /** Optional user ID, admin only (for creating on behalf of others) */
   userId?: string;
+  /** Optional flag, admin only (for creating free reservations) */
   freeReservation?: boolean;
 };
 
@@ -99,6 +106,7 @@ export type UpdateReservationResponse = {
   endDate: string;
   status: Enums<"reservation_status">;
   creditCost: number;
+  /** Net credit adjustment: positive indicates additional charge, negative indicates refund */
   creditAdjustment: number;
   remainingBalance: number;
   updatedAt: string;
@@ -213,7 +221,9 @@ export type CreditAdjustmentInfo = {
   newDays: number;
   originalCost: number;
   newCost: number;
+  /** Net credit adjustment: positive indicates a refund to user, negative indicates additional charge */
   adjustment: number;
+  /** User's projected balance after applying the adjustment */
   newBalance: number;
   isSignificantExtension: boolean;
 };
@@ -223,6 +233,8 @@ export type CreditAdjustmentInfo = {
  * Subset of UpdateReservationCommand focused on dates
  */
 export type ModifyDatesCommand = {
+  /** New reservation start date (YYYY-MM-DD) */
   startDate: string;
+  /** New reservation end date (YYYY-MM-DD) */
   endDate: string;
 };

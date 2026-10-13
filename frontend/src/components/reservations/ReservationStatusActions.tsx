@@ -61,6 +61,7 @@ export function ReservationStatusActions({
     queryKey: ["user", reservation.userId],
     queryFn: () => usersApi.getById(reservation.userId),
     enabled: needsOwnerProfile,
+    // Always fetch fresh balance when dialog opens
     staleTime: 0,
   });
 
