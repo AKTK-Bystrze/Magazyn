@@ -75,13 +75,13 @@ export const reservationsApi = {
 
   /**
    * Cancels a reservation (user action)
-   * Sets status to DENIED and triggers refund
+   * Sets status to CANCELLED and triggers refund
    *
    * @param id - Reservation ID
    * @returns Updated reservation with refund info
    */
   cancel: async (id: string): Promise<UpdateReservationResponse> => {
-    return reservationsApi.update(id, { status: "DENIED" });
+    return reservationsApi.update(id, { status: "CANCELLED" });
   },
 
   /**

@@ -317,8 +317,6 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     { scope: "worker" },
   ],
 
-  // Worker-scoped cleanup: Clear pending reservations for all test users
-  // This prevents test state pollution across tests in the same worker
   userCleanup: async ({ supabaseAdmin, testUser, adminUser, superAdminUser }, use) => {
     await use();
     console.log("[CLEANUP] Clearing pending reservations for test users...");

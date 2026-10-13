@@ -34,7 +34,7 @@ func TestLogin_Integration(t *testing.T) {
 	t.Run("sends magic link to valid email", func(t *testing.T) {
 		_, err := service.Login(context.Background(), "test_integration@example.com")
 		if err != nil {
-			if assert.Error(t, err) { // It returns error, let's check it
+			if assert.Error(t, err) {
 				t.Logf("Skipping TestLogin_Integration due to API error (likely env config): %v", err)
 				t.Skip("Skipping test due to Supabase 400 error (configuration/permissions)")
 			}
@@ -50,7 +50,6 @@ func TestGetSession_Integration(t *testing.T) {
 	appURL := os.Getenv("PUBLIC_APP_URL")
 	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 	service := auth.NewAuthService(repo)
-	// Create a unique user for this test
 	email := fmt.Sprintf("test_session_%d@example.com", time.Now().Unix())
 	password := "testRequest123!"
 	user, err := testutils.CreateTestUser(email, password)

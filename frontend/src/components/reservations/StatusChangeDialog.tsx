@@ -83,7 +83,7 @@ export function StatusChangeDialog({
           confirmButton: UI.CONFIRM_STATUS_CHANGE_BUTTON,
           cancelButton: UI.CANCEL_CHANGE,
           variant: "default" as const,
-          showRefund: targetStatus === "DENIED",
+          showRefund: targetStatus === "CANCELLED",
         };
       default:
         return null;
@@ -101,8 +101,7 @@ export function StatusChangeDialog({
           <DialogDescription>{content.message}</DialogDescription>
         </DialogHeader>
 
-        {/* Warning for cancel/denied */}
-        {(mode === "cancel" || (mode === "admin_change" && targetStatus === "DENIED")) && (
+        {(mode === "cancel" || (mode === "admin_change" && targetStatus === "CANCELLED")) && (
           <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
             <AlertTriangle className={ICON_SIZE_SM + " text-amber-600"} />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
@@ -111,7 +110,6 @@ export function StatusChangeDialog({
           </Alert>
         )}
 
-        {/* Refund information */}
         {content.showRefund && (
           <div className="bg-muted rounded-lg p-4">
             <div className="flex justify-between items-center">

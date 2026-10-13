@@ -33,7 +33,6 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	query := types.EquipmentListQuery{}
-	// Parse query params
 	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
 		if err := validation.ValidateUUID(typeID); err != nil {
@@ -59,24 +58,20 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	if inc := r.URL.Query().Get("include_archived"); inc == "true" {
 		query.IncludeArchived = true
 	}
-	// Parse availability date range parameters
 	if availFrom := r.URL.Query().Get("available_from"); availFrom != "" {
 		query.AvailableFrom = &availFrom
 	}
 	if availTo := r.URL.Query().Get("available_to"); availTo != "" {
 		query.AvailableTo = &availTo
 	}
-	// DEBUG: Log all incoming query parameters
 	logger.Infof(ctx, "[DEBUG] HandleList - Raw URL Query: %s", r.URL.RawQuery)
 	logger.Infof(ctx, "[DEBUG] HandleList - Query params: Page=%d, PerPage=%d, TypeID=%v, Status=%v, Search=%v, AvailableFrom=%v, AvailableTo=%v",
 		query.Page, query.PerPage, query.TypeID, query.Status, query.Search, query.AvailableFrom, query.AvailableTo)
-	// Validate that both availability dates are provided together
 	if (query.AvailableFrom != nil) != (query.AvailableTo != nil) {
 		common.RespondError(ctx, w, http.StatusBadRequest,
 			"Both available_from and available_to must be provided together")
 		return
 	}
-	// Validate date format and logical ordering
 	if query.AvailableFrom != nil && query.AvailableTo != nil {
 		logger.Infof(ctx, "HandleList - Availability filter active: from=%s, to=%s", *query.AvailableFrom, *query.AvailableTo)
 		if !isValidISODate(*query.AvailableFrom) {
@@ -107,7 +102,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 // GetByID handles get equipment details
 func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := r.PathValue("id") // Go 1.22+
+	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return

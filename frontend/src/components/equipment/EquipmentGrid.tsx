@@ -65,7 +65,6 @@ export function EquipmentGrid({
         data-testid="equipment-grid-empty"
       >
         <div className="rounded-full bg-muted p-4 mb-4">
-          {/* Icon placeholder */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

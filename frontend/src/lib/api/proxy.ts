@@ -81,7 +81,8 @@ export function createProxyHandler(opts: ProxyOptions) {
       return new Response(
         JSON.stringify({ error: "Internal Server Error", code: "INTERNAL_ERROR" }),
         {
-          status: 502, // Using 502 Bad Gateway since this is a proxy error
+          // 502 Bad Gateway since this is an upstream proxy error
+          status: 502,
           headers: { "Content-Type": "application/json" },
         }
       );

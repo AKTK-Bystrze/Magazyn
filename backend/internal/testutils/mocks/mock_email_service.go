@@ -12,7 +12,6 @@ type MockEmailService struct {
 	mock.Mock
 }
 
-// Ensure mock implements interface
 var _ email.Service = (*MockEmailService)(nil)
 
 func (m *MockEmailService) SendReservationConfirmation(ctx context.Context, emailAddr string, details map[string]interface{}) error {

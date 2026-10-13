@@ -94,7 +94,6 @@ export function ReservationDetailsView({
 
   return (
     <div className="space-y-6">
-      {/* Header with back button */}
       <div className="flex items-center justify-between gap-4">
         <a
           href={ROUTES.PROTECTED.RESERVATIONS}
@@ -106,7 +105,6 @@ export function ReservationDetailsView({
         <StatusBadge status={reservation.status} />
       </div>
 
-      {/* Equipment Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{reservation.equipmentName}</h1>
         <p className="text-muted-foreground text-lg mt-1">
@@ -114,13 +112,11 @@ export function ReservationDetailsView({
         </p>
       </div>
 
-      {/* Reservation Information Card */}
       <Card>
         <CardHeader>
           <CardTitle>{UI.RESERVATION_INFO}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* User info (admin view or not owner) */}
           {(isAdmin || !isOwner) && (
             <div className="flex items-start gap-3">
               <User className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
@@ -131,7 +127,6 @@ export function ReservationDetailsView({
             </div>
           )}
 
-          {/* Date range */}
           <div className="flex items-start gap-3">
             <Calendar className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
             <div className="flex-1">
@@ -148,7 +143,6 @@ export function ReservationDetailsView({
             </div>
           </div>
 
-          {/* Credit cost */}
           <div className="flex items-start gap-3">
             <CreditCard className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
             <div className="flex-1">
@@ -157,7 +151,6 @@ export function ReservationDetailsView({
             </div>
           </div>
 
-          {/* Created at */}
           <div className="flex items-start gap-3">
             <Clock className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
             <div className="flex-1">
@@ -168,7 +161,6 @@ export function ReservationDetailsView({
         </CardContent>
       </Card>
 
-      {/* Status Actions */}
       <ReservationStatusActions
         reservation={reservation}
         currentUserId={currentUserId}
@@ -178,7 +170,6 @@ export function ReservationDetailsView({
         isUpdating={isUpdating}
       />
 
-      {/* Audit History */}
       <ReservationAuditTimeline auditTrail={reservation.auditTrail} />
     </div>
   );

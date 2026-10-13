@@ -46,7 +46,6 @@ export async function logout(page: Page): Promise<void> {
 
   await logoutBtn.click();
 
-  // Wait for redirect to login page
   await page.waitForURL("**/login");
 }
 

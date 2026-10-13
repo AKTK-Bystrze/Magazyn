@@ -11,7 +11,7 @@ export type SessionInfo = {
   role: Enums<"user_role">;
   creditBalance: number;
   isEnabled: boolean;
-  expiresAt: string; // ISO 8601
+  expiresAt: string;
 };
 
 /**
@@ -42,8 +42,8 @@ export type UserProfile = {
   email: string;
   username: string;
   role: Enums<"user_role">;
-  creditBalance: number; // from profiles.credit_balance
-  createdAt: string; // from profiles.created_at (ISO 8601)
+  creditBalance: number;
+  createdAt: string;
   updatedAt: string | null;
 };
 
@@ -91,7 +91,7 @@ export type CreateUserCommand = {
   email: string;
   username: string;
   role: Enums<"user_role">;
-  creditBalance?: number; // optional, defaults to 0
+  creditBalance?: number;
 };
 
 /**

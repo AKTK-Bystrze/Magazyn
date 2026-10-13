@@ -13,7 +13,6 @@ type MockEquipmentRepository struct {
 	mock.Mock
 }
 
-// Ensure mock implements interface
 var _ repository.EquipmentRepository = (*MockEquipmentRepository)(nil)
 
 func (m *MockEquipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {

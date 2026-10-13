@@ -87,7 +87,6 @@ export function ConfirmArchiveDialog({
         </DialogHeader>
 
         <div className="py-4 space-y-4">
-          {/* Equipment Info */}
           <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">{UI.INTERNAL_ID}:</span>
@@ -105,7 +104,6 @@ export function ConfirmArchiveDialog({
             )}
           </div>
 
-          {/* Error Alert */}
           {displayError && (
             <Alert className="border-destructive/50 text-destructive">
               <AlertTriangle className={ICON_SIZE_MD} />

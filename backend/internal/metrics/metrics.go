@@ -32,7 +32,6 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 		Help: "Current number of active reservations today",
 	})
 	prometheus.MustRegister(pendingReservations, overdueReservations, activeTodayReservations)
-	// Start a background goroutine to update the metrics
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
@@ -47,7 +46,7 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 				activeTodayReservations.Set(float64(stats.ActiveToday))
 			}
 		}
-		updateMetrics() // Initial execution
+		updateMetrics()
 		for {
 			select {
 			case <-ticker.C:
@@ -57,7 +56,6 @@ func StartMetricsServer(ctx context.Context, repo repository.ReservationReposito
 			}
 		}
 	}(ctx)
-	// Metrics Server on a separate internal port
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.Handler())
 	metricsServer := &http.Server{

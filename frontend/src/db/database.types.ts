@@ -499,7 +499,7 @@ export type Database = {
         | "admin_adjustment"
         | "work_credit";
       equipment_status: "ok" | "broken" | "blocked";
-      reservation_status: "PENDING" | "RENTED" | "RETURNED" | "DENIED" | "CANCELLED";
+      reservation_status: "PENDING" | "RENTED" | "RETURNED" | "CANCELLED";
       user_role: "user" | "admin" | "super_admin";
     };
     CompositeTypes: {
@@ -631,7 +631,7 @@ export const Constants = {
         "work_credit",
       ],
       equipment_status: ["ok", "broken", "blocked"],
-      reservation_status: ["PENDING", "RENTED", "RETURNED", "DENIED", "CANCELLED"],
+      reservation_status: ["PENDING", "RENTED", "RETURNED", "CANCELLED"],
       user_role: ["user", "admin", "super_admin"],
     },
   },

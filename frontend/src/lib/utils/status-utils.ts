@@ -5,7 +5,7 @@ import type { Enums } from "@/db/database.types";
  * Configuration for available status actions based on role and current status
  */
 export type StatusActionConfig = {
-  /** Whether user can cancel (change to DENIED) */
+  /** Whether user can cancel (change to CANCELLED) */
   canCancel: boolean;
   /** Whether user can mark as returned */
   canMarkReturned: boolean;
@@ -84,12 +84,12 @@ export function getAvailableTransitions(
 
   switch (currentStatus) {
     case RESERVATION_STATUS.PENDING:
-      return [RESERVATION_STATUS.RENTED, RESERVATION_STATUS.RETURNED, RESERVATION_STATUS.DENIED];
+      return [RESERVATION_STATUS.RENTED, RESERVATION_STATUS.RETURNED, RESERVATION_STATUS.CANCELLED];
     case RESERVATION_STATUS.RENTED:
       return [RESERVATION_STATUS.RETURNED];
     case RESERVATION_STATUS.RETURNED:
-    case RESERVATION_STATUS.DENIED:
-      return []; // Final states
+    case RESERVATION_STATUS.CANCELLED:
+      return [];
     default:
       return [];
   }
@@ -102,5 +102,5 @@ export function getAvailableTransitions(
  * @returns True if status is final
  */
 export function isStatusFinal(status: Enums<"reservation_status">): boolean {
-  return status === RESERVATION_STATUS.RETURNED || status === RESERVATION_STATUS.DENIED;
+  return status === RESERVATION_STATUS.RETURNED || status === RESERVATION_STATUS.CANCELLED;
 }

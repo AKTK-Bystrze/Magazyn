@@ -21,7 +21,7 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 		t.Logf("Warning: Could not load config via LoadConfig: %v", err)
 	}
 	supabaseURL := os.Getenv("PUBLIC_SUPABASE_URL")
-	supabaseKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY") // Use service role for cleanup/setup
+	supabaseKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if supabaseURL == "" || supabaseKey == "" {
 		if appState != nil && appState.Config != nil {
 			supabaseURL = appState.Config.SupabaseURL
@@ -44,7 +44,7 @@ func setupIntegrationTest(t *testing.T) (reservation.ReservationService, config.
 	} else {
 		conf = config.Config{
 			SupabaseURL: supabaseURL,
-			SupabaseKey: supabaseKey, // This might be service key, careful
+			SupabaseKey: supabaseKey,
 		}
 	}
 	return svc, conf, client
