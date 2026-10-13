@@ -149,7 +149,7 @@ func TestRequireRoles(t *testing.T) {
 		middleware := RequireRoles("ADMIN")(next)
 		profile := &types.PublicProfilesSelect{
 			ID:        "admin-123",
-			Role:      "admin", // lowercase in DB
+			Role:      "admin",
 			IsEnabled: true,
 		}
 		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
@@ -167,7 +167,7 @@ func TestRequireRoles_EdgeCases(t *testing.T) {
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			nextCalled = true
 		})
-		middleware := RequireRoles()(next) // No roles specified
+		middleware := RequireRoles()(next)
 		profile := &types.PublicProfilesSelect{
 			ID:        "admin-123",
 			Role:      "admin",

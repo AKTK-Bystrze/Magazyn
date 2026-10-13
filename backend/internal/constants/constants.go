@@ -21,8 +21,6 @@ const (
 	ReservationStatusRented = "RENTED"
 	// ReservationStatusReturned indicates equipment is returned and reservation is complete.
 	ReservationStatusReturned = "RETURNED"
-	// ReservationStatusDenied indicates reservation was denied by an administrator.
-	ReservationStatusDenied = "DENIED"
 	// ReservationStatusCancelled indicates reservation was cancelled.
 	ReservationStatusCancelled = "CANCELLED"
 )
@@ -100,7 +98,6 @@ var ValidReservationStatuses = []string{
 	ReservationStatusPending,
 	ReservationStatusRented,
 	ReservationStatusReturned,
-	ReservationStatusDenied,
 	ReservationStatusCancelled,
 }
 

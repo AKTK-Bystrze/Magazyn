@@ -60,7 +60,6 @@ export function CreditAdjustmentPreview({
 
   return (
     <div className="space-y-4">
-      {/* Date Comparison */}
       <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Calendar className={ICON_SIZE_SM} />
@@ -68,7 +67,6 @@ export function CreditAdjustmentPreview({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
-          {/* Original Dates */}
           <div className="text-sm">
             <div className="text-muted-foreground mb-1">Oryginalne</div>
             <div className="font-medium">
@@ -79,12 +77,10 @@ export function CreditAdjustmentPreview({
             </div>
           </div>
 
-          {/* Arrow */}
           <div className="flex justify-center">
             <ArrowRight className="h-5 w-5 text-muted-foreground" />
           </div>
 
-          {/* New Dates */}
           <div className="text-sm">
             <div className="text-muted-foreground mb-1">Nowe</div>
             <div className="font-medium">
@@ -97,12 +93,10 @@ export function CreditAdjustmentPreview({
         </div>
       </div>
 
-      {/* Credit Adjustment */}
       <Alert className={adjustment !== 0 ? "border-2" : ""} data-testid="credit-adjustment">
         <Coins className={ICON_SIZE_SM} />
         <AlertDescription>
           <div className="space-y-2">
-            {/* Adjustment Amount */}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Korekta Godzinek:</span>
               <span className={`text-sm font-bold ${adjustmentColor}`}>
@@ -110,19 +104,16 @@ export function CreditAdjustmentPreview({
               </span>
             </div>
 
-            {/* Current Balance */}
             <div className="flex justify-between items-center text-xs">
               <span className="text-muted-foreground">Aktualne Saldo:</span>
               <span>{currentBalance} godzinek</span>
             </div>
 
-            {/* New Balance */}
             <div className="flex justify-between items-center pt-2 border-t">
               <span className="text-sm font-medium">Nowe Saldo:</span>
               <span className={`text-sm font-bold ${balanceColor}`}>{newBalance} godzinek</span>
             </div>
 
-            {/* Insufficient Credits Warning */}
             {newBalance < 0 && (
               <div className="text-xs text-red-600 dark:text-red-400 mt-2 flex items-start gap-1">
                 <span>⚠️</span>

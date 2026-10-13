@@ -20,7 +20,7 @@ export async function getUserSession(accessToken: string): Promise<SessionInfo |
     const response = await fetch(url, {
       method: "GET",
       headers,
-      cache: "no-store", // Ensure we don't get cached stale responses
+      cache: "no-store",
     });
 
     if (!response.ok) {

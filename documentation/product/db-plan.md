@@ -15,13 +15,15 @@ Custom enumerated types to ensure data consistency.
   - `RENTED`
   - `RETURNED`
   - `DENIED`
+  - `CANCELLED`
 - **equipment_status**:
   - `ok`
   - `broken`
 - **credit_request_status**:
-  - `PENDING`
-  - `APPROVED`
-  - `DENIED`
+  - `awaiting`
+  - `approved`
+  - `rejected`
+  - `approved with changes`
 - **credit_transaction_reason**:
   - `reservation_charge`
   - `reservation_refund`
@@ -90,8 +92,9 @@ Booking records linking users to equipment for specific dates.
 | `equipment_id` | `uuid`               | `FK -> equipment.id`, `NOT NULL`  | `ON DELETE RESTRICT` |
 | `start_date`   | `date`               | `NOT NULL`                        |                      |
 | `end_date`     | `date`               | `NOT NULL`                        |                      |
-| `status`       | `reservation_status` | `NOT NULL`, `DEFAULT 'PENDING'`   |                      |
-| `created_at`   | `timestamptz`        | `NOT NULL`, `DEFAULT now()`       |                      |
+| `status`       | `reservation_status` | `NOT NULL`, `DEFAULT 'PENDING'`   |                                     |
+| `is_free`      | `boolean`            | `NOT NULL`, `DEFAULT false`       | Free reservation without cost       |
+| `created_at`   | `timestamptz`        | `NOT NULL`, `DEFAULT now()`       |                                     |
 | `updated_at`   | `timestamptz`        |                                   |                      |
 
 **Constraints:**
@@ -120,17 +123,29 @@ Immutable ledger of all credit transactions.
 
 Requests for credits (e.g., for volunteer work) requiring approval.
 
-| Column        | Data Type               | Constraints                       | Description       |
-| ------------- | ----------------------- | --------------------------------- | ----------------- |
-| `id`          | `uuid`                  | `PK`, `DEFAULT gen_random_uuid()` |                   |
-| `user_id`     | `uuid`                  | `FK -> profiles.id`, `NOT NULL`   | Requester         |
-| `amount`      | `integer`               | `NOT NULL`, `CHECK (value > 0)`   | Requested amount  |
-| `description` | `text`                  | `NOT NULL`                        | Work description  |
-| `status`      | `credit_request_status` | `NOT NULL`, `DEFAULT 'PENDING'`   |                   |
-| `admin_id`    | `uuid`                  | `FK -> profiles.id`               | Approver/Denier   |
-| `admin_note`  | `text`                  |                                   | Optional feedback |
-| `created_at`  | `timestamptz`           | `NOT NULL`, `DEFAULT now()`       |                   |
-| `updated_at`  | `timestamptz`           |                                   |                   |
+| Column           | Data Type     | Constraints                                         | Description                     |
+| ---------------- | ------------- | --------------------------------------------------- | ------------------------------- |
+| `id`             | `uuid`        | `PK`, `DEFAULT gen_random_uuid()`                   |                                 |
+| `title`          | `varchar`     | `NOT NULL`                                          | Title of task                   |
+| `description`    | `text`        |                                                     | Work description                |
+| `credits_value`  | `integer`     | `NOT NULL`, `CHECK (credits_value > 0)`             | Requested amount                |
+| `requestor_id`   | `uuid`        | `FK -> profiles.id`                                 | Requester                       |
+| `user_helped_id` | `uuid`        | `FK -> profiles.id`                                 | Member assisted (optional)      |
+| `status`         | `varchar`     | `NOT NULL`, `DEFAULT 'awaiting'`                    | awaiting/approved/rejected/...  |
+| `created_at`     | `timestamptz` | `NOT NULL`, `DEFAULT now()`                         |                                 |
+| `updated_at`     | `timestamptz` |                                                     |                                 |
+
+### `credit_request_helpers`
+
+Helpers associated with a credit request.
+
+| Column              | Data Type | Constraints                                         | Description                     |
+| ------------------- | --------- | --------------------------------------------------- | ------------------------------- |
+| `credit_request_id` | `uuid`    | `FK -> credit_requests.id ON DELETE CASCADE`       | Primary key component           |
+| `user_id`           | `uuid`    | `FK -> profiles.id ON DELETE SET NULL`              | Primary key component           |
+
+**Constraints:**
+- `PRIMARY KEY (credit_request_id, user_id)`
 
 ### `maintenance_logs`
 

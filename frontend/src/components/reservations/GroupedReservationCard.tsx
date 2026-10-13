@@ -56,7 +56,6 @@ export function GroupedReservationCard({
       className="w-full max-w-full overflow-hidden transition-shadow hover:shadow-md border-l-[16px] border-l-indigo-500 bg-indigo-50/10 dark:bg-indigo-950/10"
       data-testid={`reservation-row-${group.groupKey}`}
     >
-      {/* Header - Clickable to expand/collapse */}
       <CardHeader
         className="cursor-pointer select-none p-4 sm:p-6 bg-muted/10 hover:bg-muted/30 transition-colors"
         onClick={onToggle}
@@ -71,7 +70,6 @@ export function GroupedReservationCard({
           </div>
 
           <div className="flex flex-col gap-3 flex-1 min-w-0">
-            {/* User Row */}
             <div className="flex items-center justify-between gap-2 min-w-0">
               <div className="flex items-center gap-2 min-w-0">
                 <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -83,7 +81,6 @@ export function GroupedReservationCard({
               <StatusBadge status={group.status} />
             </div>
 
-            {/* Dates Row */}
             <div className="flex items-start justify-between gap-2 min-w-0">
               <div className="flex items-start gap-2 flex-1 min-w-0">
                 <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
@@ -103,7 +100,6 @@ export function GroupedReservationCard({
               </div>
             </div>
 
-            {/* Equipment list */}
             <div className="flex items-center justify-between gap-2 min-w-0">
               <div className="text-sm text-muted-foreground break-words line-clamp-2 flex-1">
                 {group.items.map((item, index) => (
@@ -128,10 +124,8 @@ export function GroupedReservationCard({
         </div>
       </CardHeader>
 
-      {/* Expanded Content */}
       {isExpanded && (
         <CardContent className="pt-6 space-y-4">
-          {/* Bulk Actions */}
           {showActions && (canBulkModify || canBulkReturn) && (
             <div className="flex flex-wrap gap-2 pb-4 border-b">
               {canBulkModify && (
@@ -176,7 +170,6 @@ export function GroupedReservationCard({
             </div>
           )}
 
-          {/* Individual Items */}
           <div className="space-y-3">
             {group.items.map((item) => {
               const itemIsOwn = currentUserId ? item.userId === currentUserId : false;

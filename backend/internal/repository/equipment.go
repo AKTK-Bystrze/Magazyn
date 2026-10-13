@@ -7,6 +7,7 @@ import (
 )
 
 type EquipmentRepository interface {
+	// List retrieves a paginated list of equipment matching the query filters.
 	List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error)
 	// GetByID retrieves a single equipment by ID
 	GetByID(ctx context.Context, id string) (*types.PublicEquipmentSelect, error)

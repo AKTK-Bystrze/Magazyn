@@ -2,8 +2,8 @@
  * Pagination query parameters
  */
 export type PaginationParams = {
-  page?: number; // default: 1
-  perPage?: number; // default: 25, allowed: 10/25/50/100
+  page?: number;
+  perPage?: number;
 };
 
 /**

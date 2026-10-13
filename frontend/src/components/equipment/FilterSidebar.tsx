@@ -73,7 +73,7 @@ export function FilterSidebar({
       if (searchValue !== (filters.search || "")) {
         onFilterChange("search", searchValue || undefined);
       }
-    }, 400); // 400ms debounce
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [searchValue, filters.search, onFilterChange]);

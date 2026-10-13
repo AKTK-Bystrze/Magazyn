@@ -6,16 +6,19 @@ import type { Enums } from "../../db/database.types";
  */
 export type Reservation = {
   id: string;
-  userId: string; // from reservations.user_id
-  username: string; // from profiles.username (JOIN)
-  equipmentId: string; // from reservations.equipment_id
-  equipmentName: string; // from equipment.name (JOIN)
-  equipmentType: string; // from equipment_types.name (JOIN)
-  startDate: string; // from reservations.start_date (YYYY-MM-DD)
-  endDate: string; // from reservations.end_date
+  userId: string;
+  username: string;
+  equipmentId: string;
+  equipmentName: string;
+  equipmentType: string;
+  /** Reservation start date (YYYY-MM-DD) */
+  startDate: string;
+  /** Reservation end date (YYYY-MM-DD) */
+  endDate: string;
   status: Enums<"reservation_status">;
-  creditCost: number; // calculated field
-  createdAt: string; // ISO 8601
+  /** Calculated total credit cost */
+  creditCost: number;
+  createdAt: string;
   updatedAt: string | null;
 };
 
@@ -32,7 +35,7 @@ export type ReservationAuditEntry = {
   startDate: string;
   endDate: string;
   status: Enums<"reservation_status">;
-  changedByUsername: string | null; // from changed_by_user_id → profiles.username
+  changedByUsername: string | null;
   createdAt: string;
 };
 
@@ -40,8 +43,8 @@ export type ReservationAuditEntry = {
  * Reservation with complete audit trail (GET /reservations/:id)
  */
 export type ReservationDetail = Reservation & {
-  userEmail: string; // from profiles.email
-  equipmentInternalId: string; // from equipment.internal_id
+  userEmail: string;
+  equipmentInternalId: string;
   auditTrail: ReservationAuditEntry[];
 };
 
@@ -50,7 +53,9 @@ export type ReservationDetail = Reservation & {
  */
 export type CreateReservationItem = {
   equipmentId: string;
-  startDate: string; // YYYY-MM-DD
+  /** Reservation start date (YYYY-MM-DD) */
+  startDate: string;
+  /** Reservation end date (YYYY-MM-DD) */
   endDate: string;
 };
 
@@ -59,8 +64,10 @@ export type CreateReservationItem = {
  */
 export type CreateReservationsCommand = {
   reservations: CreateReservationItem[];
-  userId?: string; // optional, admin only (for creating on behalf of others)
-  freeReservation?: boolean; // optional, admin only (for creating free reservations)
+  /** Optional user ID, admin only (for creating on behalf of others) */
+  userId?: string;
+  /** Optional flag, admin only (for creating free reservations) */
+  freeReservation?: boolean;
 };
 
 /**
@@ -99,7 +106,8 @@ export type UpdateReservationResponse = {
   endDate: string;
   status: Enums<"reservation_status">;
   creditCost: number;
-  creditAdjustment: number; // positive = charge, negative = refund
+  /** Net credit adjustment: positive indicates additional charge, negative indicates refund */
+  creditAdjustment: number;
   remainingBalance: number;
   updatedAt: string;
 };
@@ -193,15 +201,15 @@ export type ReservationListResponse = {
  * Used for collapsing reservations created on the same date range
  */
 export type GroupedReservation = {
-  groupKey: string; // `${userId}-${startDate}-${endDate}`
+  groupKey: string;
   userId: string;
   username: string;
   startDate: string;
   endDate: string;
-  status: string; // Aggregated: same status or "MIXED"
-  totalCreditCost: number; // Sum of all items
-  items: ReservationListItem[]; // Individual reservations
-  createdAt: string; // Earliest created_at
+  status: string;
+  totalCreditCost: number;
+  items: ReservationListItem[];
+  createdAt: string;
 };
 
 /**
@@ -213,8 +221,10 @@ export type CreditAdjustmentInfo = {
   newDays: number;
   originalCost: number;
   newCost: number;
-  adjustment: number; // positive = refund, negative = charge
-  newBalance: number; // user's balance after adjustment
+  /** Net credit adjustment: positive indicates a refund to user, negative indicates additional charge */
+  adjustment: number;
+  /** User's projected balance after applying the adjustment */
+  newBalance: number;
   isSignificantExtension: boolean;
 };
 
@@ -223,6 +233,8 @@ export type CreditAdjustmentInfo = {
  * Subset of UpdateReservationCommand focused on dates
  */
 export type ModifyDatesCommand = {
-  startDate: string; // YYYY-MM-DD
-  endDate: string; // YYYY-MM-DD
+  /** New reservation start date (YYYY-MM-DD) */
+  startDate: string;
+  /** New reservation end date (YYYY-MM-DD) */
+  endDate: string;
 };

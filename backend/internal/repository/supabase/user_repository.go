@@ -31,7 +31,6 @@ func NewUserRepository(client *supabase.Client, url string, key string, serviceK
 }
 func (r *userRepository) List(ctx context.Context, page, perPage int, role, search string) ([]types.PublicProfilesSelect, int64, error) {
 	offset := (page - 1) * perPage
-	// Use authenticated client for RLS enforcement
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	query := client.From(constants.TableProfiles).Select("*", "exact", false)
 	if role != "" {
@@ -42,13 +41,11 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 		filter := fmt.Sprintf("username.ilike.%%%s%%,email.ilike.%%%s%%", searchTerm, searchTerm)
 		query = query.Or(filter, "")
 	}
-	// Pagination
 	query = query.Range(offset, offset+perPage-1, "")
 	data, count, err := query.Execute()
 	if err != nil {
 		return nil, 0, err
 	}
-	// Debug logging
 	if len(data) > 0 {
 		logger.Debugf(ctx, "Repo List Raw JSON (len=%d): %s", len(data), string(data))
 	}
@@ -149,20 +146,15 @@ func (r *userRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []
 		"p_reason":      reason,
 		"p_description": description,
 	}
-	// Log the RPC call parameters for debugging
 	logger.Debugf(ctx, "BulkAdjustCredits RPC params: user_ids=%v, admin_id=%s, amount=%d, reason=%s, description=%s",
 		userIDs, adminID, amount, reason, description)
-	// Use authenticated client - RLS policies map permissions
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	jsonStr := client.Rpc("bulk_adjust_user_credits", "", params)
-	// Log the raw RPC response
 	logger.Debugf(ctx, "BulkAdjustCredits RPC response: %q", jsonStr)
-	// For void-returning functions, empty string or "null" is success
 	if jsonStr == "" || jsonStr == "null" {
 		logger.Infof(ctx, "BulkAdjustCredits RPC completed successfully for %d users", len(userIDs))
 		return nil
 	}
-	// Check for error in response (Supabase returns error as JSON with "message" field)
 	var rawResponse map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err == nil {
 		if msg, ok := rawResponse["message"]; ok {
@@ -174,7 +166,6 @@ func (r *userRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []
 			return types.NewInternalError(fmt.Sprintf("RPC Error (code %v): %v", code, rawResponse), nil)
 		}
 	}
-	// If we got here with a non-empty response that's not an error, log it and proceed
 	logger.Debugf(ctx, "BulkAdjustCredits RPC returned non-error response: %s", jsonStr)
 	return nil
 }

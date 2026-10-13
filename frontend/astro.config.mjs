@@ -4,7 +4,6 @@ import node from "@astrojs/node";
 import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-// https://astro.build/config
 export default defineConfig({
   output: "server", // CRITICAL: Required for SSR middleware to run on page requests
   integrations: [react()],

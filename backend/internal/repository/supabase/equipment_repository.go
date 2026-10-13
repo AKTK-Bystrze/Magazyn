@@ -31,7 +31,6 @@ func NewEquipmentRepository(client *supabase.Client, supabaseURL, supabaseKey st
 }
 func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	// Build base query with all filters
 	baseQuery := client.From("equipment").
 		Select("*", "exact", false).
 		Order("created_at", &postgrest.OrderOpts{Ascending: false})
@@ -48,7 +47,6 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 		searchTerm := validation.SanitizeSearchTerm(*query.Search)
 		baseQuery = baseQuery.Or(fmt.Sprintf("name.ilike.%%%s%%,description.ilike.%%%s%%", searchTerm, searchTerm), "")
 	}
-	// Filter by availability - get equipment IDs to exclude
 	var conflictIDs []string
 	if query.AvailableFrom != nil && query.AvailableTo != nil {
 		ids, err := r.GetEquipmentIDsWithConflicts(ctx, *query.AvailableFrom, *query.AvailableTo)
@@ -59,9 +57,6 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 		logger.Debugf(ctx, "Availability filter: %s to %s, found %d conflicting equipment IDs: %v",
 			*query.AvailableFrom, *query.AvailableTo, len(conflictIDs), conflictIDs)
 	}
-	// NOTE: The Supabase Go client doesn't support NOT IN filter properly,
-	// so we'll filter the results in Go after fetching
-	// Get all matching equipment first
 	countData, _, err := baseQuery.Execute()
 	if err != nil {
 		return nil, 0, err
@@ -70,7 +65,6 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	if err := json.Unmarshal(countData, &allItems); err != nil {
 		return nil, 0, err
 	}
-	// Filter out unavailable equipment in Go
 	var filteredItems []types.PublicEquipmentSelect
 	conflictSet := make(map[string]bool)
 	for _, id := range conflictIDs {
@@ -86,7 +80,6 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 			len(allItems)-len(filteredItems), len(filteredItems))
 	}
 	totalItems := int64(len(filteredItems))
-	// Apply pagination to filtered results
 	offset := (query.Page - 1) * query.PerPage
 	endIndex := offset + query.PerPage
 	if len(filteredItems) > 0 {
@@ -178,11 +171,10 @@ func (r *equipmentRepository) Update(ctx context.Context, id string, equipment t
 		}
 		return nil, err
 	}
-	// Check if empty response (means ID not found or RLS blocked)
 	if len(data) == 0 {
 		return nil, types.NewNotFoundError("Equipment", id)
 	}
-	var updated types.PublicEquipmentSelect // Single() returns object
+	var updated types.PublicEquipmentSelect
 	if err := json.Unmarshal(data, &updated); err != nil {
 		var updatedArr []types.PublicEquipmentSelect
 		if err2 := json.Unmarshal(data, &updatedArr); err2 == nil && len(updatedArr) > 0 {
@@ -284,8 +276,6 @@ func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, eq
 }
 func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error) {
 	logger.Debugf(ctx, "GetEquipmentIDsWithConflicts called with: startDate=%s, endDate=%s", startDate, endDate)
-	// Use admin client to bypass RLS - we need to see ALL reservations, not just the user's
-	// RLS policies now allow seeing all reservations
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	data, _, err := adminClient.From("reservations").
 		Select("equipment_id, start_date, end_date, status", "exact", false).
@@ -308,7 +298,6 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 		return nil, err
 	}
 	logger.Debugf(ctx, "Found %d overlapping reservations: %+v", len(reservations), reservations)
-	// Deduplicate equipment IDs
 	seen := make(map[string]bool)
 	var ids []string
 	for _, r := range reservations {
@@ -379,7 +368,6 @@ func (r *equipmentRepository) CreateMaintenanceLog(ctx context.Context, equipmen
 	return &log, nil
 }
 
-// Helper to check for unique violation
 func isUniqueViolation(err error) bool {
 	return err != nil && (strings.Contains(err.Error(), "duplicate key value") || strings.Contains(err.Error(), "23505"))
 }

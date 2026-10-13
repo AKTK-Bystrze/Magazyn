@@ -7,6 +7,7 @@ import (
 )
 
 type UserRepository interface {
+	// List retrieves a paginated list of user profiles with optional role and search filtering
 	List(ctx context.Context, page, perPage int, role, search string) ([]types.PublicProfilesSelect, int64, error)
 	// GetByID retrieves a single user profile by ID
 	GetByID(ctx context.Context, id string) (*types.PublicProfilesSelect, error)

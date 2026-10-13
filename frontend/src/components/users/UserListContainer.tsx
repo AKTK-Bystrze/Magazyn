@@ -157,7 +157,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
 
   return (
     <div className="space-y-6" data-testid="user-list-container">
-      {/* Header with Create Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Zarządzaj Użytkownikami</h1>
@@ -188,7 +187,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         )}
       </div>
 
-      {/* Success Message */}
       {successMessage && (
         <Alert
           className="border-green-500 bg-green-50 dark:bg-green-950"
@@ -201,7 +199,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         </Alert>
       )}
 
-      {/* Error Message */}
       {(error || errorMessage) && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
@@ -209,14 +206,12 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         </Alert>
       )}
 
-      {/* Filters */}
       <UserFilters
         filters={filters}
         onFilterChange={setFilter}
         onReset={hasActiveFilters ? resetFilters : undefined}
       />
 
-      {/* User Table */}
       <UserTable
         users={data?.users ?? []}
         isLoading={isLoading}
@@ -227,14 +222,12 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         onToggleSelectAll={handleToggleSelectAll}
       />
 
-      {/* Intersection Observer Target */}
       <div ref={observerTarget} className="h-10 w-full mt-4 flex items-center justify-center">
         {isFetchingNextPage && (
           <span className="text-sm text-muted-foreground">Ładowanie kolejnych...</span>
         )}
       </div>
 
-      {/* Create User Dialog */}
       {isSuperAdmin && (
         <CreateUserDialog
           isOpen={createDialogOpen}
@@ -244,7 +237,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         />
       )}
 
-      {/* Edit User Dialog */}
       {isSuperAdmin && (
         <EditUserDialog
           isOpen={editDialogOpen}
@@ -255,7 +247,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         />
       )}
 
-      {/* Adjust Credits Dialog */}
       {isSuperAdmin && (
         <AdjustCreditsDialog
           isOpen={adjustCreditsOpen}

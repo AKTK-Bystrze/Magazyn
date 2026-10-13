@@ -137,7 +137,7 @@ export const AuthListener: React.FC = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [isRedirectInProgress]); // Add dependency
+  }, [isRedirectInProgress]);
 
   return null;
 };

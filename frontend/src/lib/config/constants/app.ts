@@ -32,7 +32,7 @@ export const ICON_SIZE_LG = "h-6 w-6";
 
 export const SKELETON_ROW_COUNT = 5;
 
-export const MODAL_BACKDROP_OPACITY = "50"; // as in bg-black/50
+export const MODAL_BACKDROP_OPACITY = "50";
 export const MODAL_MAX_HEIGHT = "90vh";
 
 export const MAX_SEARCH_LENGTH = 255;
@@ -59,3 +59,4 @@ export const MESSAGE_AUTO_DISMISS_MS = 5000;
 
 /** 1 minute stale time */
 export const QUERY_STALE_TIME_MS = 1000 * 60;
+export const QUERY_STALE_TIME = QUERY_STALE_TIME_MS;

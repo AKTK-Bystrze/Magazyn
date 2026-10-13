@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { CREDIT_HISTORY_UI_STRINGS, SKELETON_ROW_COUNT } from "@/lib/config/constants";
 import type { CreditHistoryItem } from "@/types";
 import { format } from "date-fns";
+import { useTableSort } from "@/lib/hooks/useTableSort";
 
 /**
  * Props for CreditHistoryTable component
@@ -28,34 +29,9 @@ interface CreditHistoryTableProps {
  * Presentational component to display credit history in a table
  */
 export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps) {
-  const [sortConfig, setSortConfig] = React.useState<{
-    key: string;
-    direction: "asc" | "desc";
-  } | null>(null);
-
-  const requestSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedData = React.useMemo(() => {
-    const sortableItems = [...data];
-    if (sortConfig !== null) {
-      sortableItems.sort((a: any, b: any) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [data, sortConfig]);
+  const { sortConfig, requestSort, sortedData } = useTableSort(data, {
+    getValue: (item, key) => item[key as keyof CreditHistoryItem],
+  });
 
   if (isLoading) {
     return (

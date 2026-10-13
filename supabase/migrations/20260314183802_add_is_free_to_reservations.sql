@@ -97,7 +97,7 @@ BEGIN
         END IF;
 
         -- Skip refunds for free reservations
-        IF p_status = 'DENIED' AND v_reservation.status != 'DENIED' AND NOT v_reservation.is_free THEN
+        IF p_status = 'CANCELLED' AND v_reservation.status != 'CANCELLED' AND NOT v_reservation.is_free THEN
             SELECT et.credit_cost_per_day INTO v_credit_per_day 
             FROM equipment e 
             JOIN equipment_types et ON e.type_id = et.id 

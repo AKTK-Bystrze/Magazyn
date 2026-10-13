@@ -21,15 +21,35 @@ Backend rules and guidelines (e.g. testing, docker, db migrations) are maintaine
 
 ## 🔄 Application Flows
 
-- [Authentication Flow](app-flows/auth-flow.md) - Login/logout process
-- [Reservation Flow](app-flows/reservation-flow.md) - Equipment reservation process
-- [Reservation Request Flow](app-flows/reservation-request-flow.md) - Request handling
+- [Authentication Flow](flows/auth-flow.md) - Login/logout process
+- [Reservation Flow](flows/reservation-flow.md) - Equipment reservation process
+- [Reservation Request Flow](flows/reservation-request-flow.md) - Request handling
+
+---
+
+## 📐 Architecture & Overview
+
+- [High-Level Architecture](overview/high-level-architecture.md) - Main components and data flows
+- [Detailed Architecture](overview/detailed-architecture.md) - Layer breakdown, middleware, and patterns
+- [API Documentation](overview/api.md) - REST API routes and BFF proxy endpoints
+- [Technology Stack](overview/techstack.md) - Tech stack and architectural decisions
+- [Project Structure](overview/project_structure.md) - Monorepo directory structure
+- [Conventional Commits](overview/conventional-commits.md) - Commit message standards
+
+---
+
+## 📄 Product Requirements
+
+- [Product Requirements Document (PRD)](product/prd/index.md) - Core user stories and requirements
+- [UI Architecture Plan](product/ui-plan.md) - Frontend view layout and UI design
+- [API Plan](product/api-plan.md) - Initial endpoint specifications
+- [Database Schema Plan](product/db-plan.md) - Initial DB schema design
 
 ---
 
 ## 🗄️ Database
 
-- [Database Documentation](database/db-doc.md) - Schema documentation
+- [Database Documentation](database/db-doc.md) - Authoritative schema documentation and RPCs
 
 ---
 

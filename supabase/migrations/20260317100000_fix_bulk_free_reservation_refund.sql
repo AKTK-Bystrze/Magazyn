@@ -11,7 +11,7 @@ BEGIN
         IF v_reservation.id IS NULL THEN v_skipped_ids := array_append(v_skipped_ids, v_res_id); CONTINUE; END IF;
 
         -- Skip refunds for free reservations
-        IF p_status = 'DENIED' AND v_reservation.status != 'DENIED' AND NOT v_reservation.is_free THEN
+        IF p_status = 'CANCELLED' AND v_reservation.status != 'CANCELLED' AND NOT v_reservation.is_free THEN
             SELECT et.credit_cost_per_day INTO v_credit_per_day FROM equipment e JOIN equipment_types et ON e.type_id = et.id WHERE e.id = v_reservation.equipment_id;
             v_days := (v_reservation.end_date - v_reservation.start_date) + 1; v_refund_amount := v_days * v_credit_per_day;
             IF v_refund_amount > 0 THEN

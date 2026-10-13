@@ -51,7 +51,6 @@ func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	role := r.URL.Query().Get("role")
 	search := r.URL.Query().Get("search")
-	// Validate search length
 	if search != "" {
 		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
 			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
@@ -71,7 +70,6 @@ func (h *UserHandler) HandleListPublicUsers(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	page, perPage := common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	search := r.URL.Query().Get("search")
-	// Validate search length
 	if search != "" {
 		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
 			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
@@ -131,7 +129,6 @@ func (h *UserHandler) HandleBulkAdjustCredits(w http.ResponseWriter, r *http.Req
 		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	// Manual validation
 	if len(req.UserIDs) == 0 {
 		common.RespondError(ctx, w, http.StatusBadRequest, "user_ids must not be empty")
 		return
@@ -145,7 +142,6 @@ func (h *UserHandler) HandleBulkAdjustCredits(w http.ResponseWriter, r *http.Req
 		common.RespondUnauthorized(ctx, w)
 		return
 	}
-	// Log the incoming request for debugging
 	logger.Infof(ctx, "Bulk adjusting credits for %d users by %d (reason: %s)", len(req.UserIDs), req.Amount, req.Reason)
 	logger.Debugf(ctx, "BulkAdjustCredits request: user_ids=%v, amount=%d, reason=%s, description=%s",
 		req.UserIDs, req.Amount, req.Reason, req.Description)
