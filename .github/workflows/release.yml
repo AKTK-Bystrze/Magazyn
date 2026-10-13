@@ -73,7 +73,20 @@ jobs:
         with:
           version: latest
 
+      - name: Check Remote Test Environment
+        id: check_remote
+        run: |
+          if [ -n "$PUBLIC_SUPABASE_URL" ] && [ -n "$PUBLIC_SUPABASE_ANON_KEY" ] && curl -s -f -o /dev/null --connect-timeout 5 --max-time 10 "${PUBLIC_SUPABASE_URL}/rest/v1/?apikey=${PUBLIC_SUPABASE_ANON_KEY}"; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Remote test environment is available." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Remote Test Environment Unavailable::Remote test environment at '${PUBLIC_SUPABASE_URL:-<not set>}' is unavailable. Skipping DB migrations and E2E tests, proceeding with release."
+            echo "⚠️ **Remote test environment is NOT available.** Skipping DB migrations and E2E tests. Proceeding with release." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Configure Supabase Project
+        if: steps.check_remote.outputs.available == 'true'
         run: |
           if [ -z "$PUBLIC_SUPABASE_URL" ]; then
             echo "ERROR: PUBLIC_SUPABASE_URL is empty. Make sure TEST_SUPABASE_URL secret is configured."
@@ -103,6 +116,7 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
       - name: Push Migrations to Test DB
+        if: steps.check_remote.outputs.available == 'true'
         run: |
           PROJECT_REF=$(cat supabase/.temp/project-ref)
           DB_URL=$(cat supabase/.temp/db-url | cut -d'=' -f2-)
@@ -117,9 +131,11 @@ jobs:
         run: npm ci
 
       - name: Setup Playwright
+        if: steps.check_remote.outputs.available == 'true'
         uses: ./.github/actions/setup-playwright
 
       - name: Deploy E2E Stack
+        if: steps.check_remote.outputs.available == 'true'
         uses: ./.github/actions/deploy-e2e-stack
         with:
           supabase-url: ${{ env.PUBLIC_SUPABASE_URL }}
@@ -127,6 +143,7 @@ jobs:
           supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Run E2E Tests
+        if: steps.check_remote.outputs.available == 'true'
         working-directory: ./frontend
         run: |
           set -e
@@ -137,7 +154,7 @@ jobs:
           exit $E2E_EXIT_CODE
 
       - name: Capture Service Logs on Failure
-        if: failure()
+        if: failure() && steps.check_remote.outputs.available == 'true'
         working-directory: ./infra
         run: |
           echo "=================================================="
@@ -164,7 +181,7 @@ jobs:
           echo "=================================================="
 
       - name: Upload Playwright Report
-        if: always()
+        if: always() && steps.check_remote.outputs.available == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
@@ -172,7 +189,7 @@ jobs:
           retention-days: 14
 
       - name: Cleanup Services
-        if: always()
+        if: always() && steps.check_remote.outputs.available == 'true'
         working-directory: ./infra
         run: |
           echo "Stopping and removing containers..."
