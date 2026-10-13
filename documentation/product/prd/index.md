@@ -64,7 +64,7 @@ User stories are organized by functional area in the `stories/` directory:
   - US-046: Handle Reservation Conflict
   - US-050: Handle Concurrent Reservation Attempts
 
-- **[Reservation Management Stories](./stories/reservations_management.md)** - List, Details, Modify, Cancel
+- **[Reservation Management Stories](./stories/done/reservation_management.md)** - List, Details, Modify, Cancel
   - US-014: View Reservation List
   - US-015: View Reservation Details
   - US-016: Modify Reservation Dates
@@ -74,7 +74,7 @@ User stories are organized by functional area in the `stories/` directory:
   - US-047: Handle Date Modification Warning
 
 ### Calendar Views
-- **[Calendar Stories](./stories/calendar.md)** - General and Item-Specific Availability
+- **[Calendar Stories](./stories/extra/calendar.md)** - General and Item-Specific Availability
   - US-018: View Calendar - All Reservations
   - US-019: View Calendar - Item Specific
 
@@ -90,12 +90,12 @@ User stories are organized by functional area in the `stories/` directory:
   - US-028: Admin - Bulk Status Changes
   - US-048: Handle Bulk Operation Errors
 
-- **[Analytics Stories](./stories/analytics.md)** - Dashboard, Item Statistics
+- **[Analytics Stories](./stories/extra/analytics.md)** - Dashboard, Item Statistics
   - US-033: Admin - View Analytics Dashboard
   - US-034: Admin - View Item Analytics
 
 ### Super Admin Features
-- **[Super Admin Stories](./stories/super_admin.md)** - User Management
+- **[Super Admin Stories](./stories/done/super_admin.md)** - User Management
   - US-035: SuperAdmin - Create User Account
   - US-036: SuperAdmin - View All Users
   - US-037: SuperAdmin - Edit User Profile
@@ -108,5 +108,5 @@ User stories are organized by functional area in the `stories/` directory:
 
 ## Navigation
 
-- [← Back to Documentation](../README.md)
+- [← Back to Documentation](../../README.md)
 - [Product Overview →](./overview.md)
