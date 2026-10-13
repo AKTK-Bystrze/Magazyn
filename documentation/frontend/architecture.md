@@ -14,7 +14,7 @@ The Astro SSR layer proxies requests to the Go backend to keep JWTs secure in HT
 **Full Request Chain**:
 1. User Action → React Component Handler
 2. Custom Hook (e.g., `useEquipmentList`)
-3. API Module → API Client (`src/lib/api.ts`)
+3. API Module → API Client (`src/lib/api/`)
 4. **Frontend API Proxy** (`/pages/api/*`): Extracts `locals.accessToken` via middleware.
 5. **Go Backend**: Proxy forwards request with `Authorization: Bearer <token>`. Returns `snake_case` JSON.
 6. **Transformer Layer**: Zod validation + transforms to `camelCase`.
@@ -43,5 +43,5 @@ The Astro SSR layer proxies requests to the Go backend to keep JWTs secure in HT
 - **RedirectManager (`src/lib/auth/redirect-manager.ts`)**: Central source of truth.
   - API: `getRedirectForAuthState(user, sessionInfo, currentPath, redirectParam, origin)`
   - **Access Matrix**:
-    - **Disabled Users**: Can access `/account-disabled` and `/api/auth/session`. All other pages redirect to `/account-disabled`. Other API routes return 403.
+    - **Disabled Users**: Can access `/account-disabled` and `/auth/session`. All other pages redirect to `/account-disabled`. Other API routes return 403.
     - **Enabled Users**: `super_admin`/`admin` → `/admin`, `user` → `/dashboard`. Unauthenticated users attempting protected routes go to `/login?redirect=<path>`.

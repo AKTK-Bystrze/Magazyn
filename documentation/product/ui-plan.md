@@ -4,15 +4,15 @@
 
 The application follows a **multi-layout, feature-based architecture** built with Astro (SSR) and React.
 
-*   **Shell Application**: The root HTML structure varies by user role (Guest, User, Admin) but shares a common responsive Top Navigation Bar.
+*   **Shell Application**: The root HTML structure varies by user role using dedicated layouts (`BaseLayout.astro`, `AppLayout.astro`, `AdminLayout.astro`, `AuthLayout.astro`) with a common header (`UserHeader`) and responsive sidebar (`UserSidebar`).
 *   **State Management Strategy**:
     *   **Server State**: `TanStack Query` handles API data fetching, caching, and invalidation.
-    *   **Global UI State**: `Nano Stores` manages persistent UI elements like the "Credit Balance" requiring cross-component access.
+    *   **Global UI State**: React State & Context combined with TanStack Query cache manage persistent UI elements like user credits and profile state.
     *   **Session State**: `sessionStorage` preserves the "Reservation Cart" during the booking flow.
 *   **Visual Language**: Implemented using `Shadcn/UI` + `Tailwind CSS`. The aesthetic focuses on "Premium Utility"—clean lines, high contrast for status indicators, and mobile-optimized touch targets.
 *   **Feedback Systems**:
-    *   **Toasts (`sonner`)**: For non-blocking success/error messages (e.g., "Added to cart").
-    *   **Modals**: For blocking interactions (e.g., "Confirm Cancellation").
+    *   **Alerts & Inline Status**: Non-blocking contextual feedback and status banners for operation success/errors.
+    *   **Modals / Dialogs**: For blocking interactions (e.g., "Confirm Cancellation", "Edit User").
     *   **Skeletons**: providing perceived performance during data loading.
 
 ## 2. View List
@@ -69,15 +69,18 @@ The application follows a **multi-layout, feature-based architecture** built wit
 
 ## 4. Layout and Navigation Structure
 
-### Top Navigation Bar (Global)
-*   **Left**: Brand Logo (Links to Dashboard).
-*   **Center (Desktop)**:
-    *   User: Equipment | Reservations | Credits
-    *   Admin: Overview | Reservations | Inventory | Users | Stats
-*   **Right**:
-    *   **Credit Balance Badge**: (e.g., "50 💎") - Always visible.
-    *   **User Avatar/Menu**: Dropdown for "Profile" and "Logout".
-*   **Mobile Behavior**: Center links collapse into a Hamburger Menu. Credit balance remains visible in the header.
+### Header & Navigation Structure
+*   **Header (`UserHeader.tsx`)**:
+    *   **Left**: Brand Logo & Application Title (links to Dashboard) and mobile sidebar hamburger trigger.
+    *   **Right**:
+        *   Theme toggle button (`ThemeToggle.tsx`).
+        *   User dropdown menu (`UserMenu.tsx`) displaying current user avatar, username, and "Logout" action.
+*   **Sidebar (`UserSidebar.tsx`)**:
+    *   Desktop persistent sidebar and mobile slide-out drawer sheet.
+    *   Role-tailored navigation items:
+        *   **User Navigation**: Equipment Browse, My Reservations, Credits History.
+        *   **Admin Navigation**: Admin Dashboard, Reservations Management, Equipment Inventory, User Management, Analytics.
+    *   Always-visible credit balance badge in the user summary footer.
 
 ### Navigation Logic
 *   **Smart Redirects**:
