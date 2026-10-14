@@ -1,3 +1,10 @@
+## [0.3.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.3.0...v0.3.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **reservations:** translate cancelled status to Anulowano and align docs ([#226](https://github.com/AKTK-Bystrze/Magazyn/issues/226)) ([12b55f9](https://github.com/AKTK-Bystrze/Magazyn/commit/12b55f9c14555a0f7c7275857f763976ba604277))
+
 # [0.3.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.2.1...v0.3.0) (2026-10-14)
 
 
