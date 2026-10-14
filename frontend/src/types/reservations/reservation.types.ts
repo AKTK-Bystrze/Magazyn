@@ -141,7 +141,13 @@ export type ReservationDashboardSummary = {
 /**
  * Sort options for reservation list
  */
-export type ReservationSortOption = "created_desc" | "date_asc" | "date_desc";
+export type ReservationSortOption =
+  | "created_desc"
+  | "created_asc"
+  | "start_date_asc"
+  | "start_date_desc"
+  | "end_date_asc"
+  | "end_date_desc";
 
 /**
  * Filter state for reservation list view
@@ -152,7 +158,11 @@ export type ReservationFilterState = {
   perPage: number;
   status: Enums<"reservation_status"> | "ALL";
   sort: ReservationSortOption;
-  query?: string;
+  search?: string;
+  userId?: string;
+  typeId?: string;
+  startDateFrom?: string;
+  startDateTo?: string;
   scope: "my" | "all";
 };
 

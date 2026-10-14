@@ -54,9 +54,6 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 	// scope="my" or empty -> show only user's own reservations
 	if query.Scope != nil && *query.Scope == "all" {
 		query.BypassRLS = true
-		if query.UserID != nil && role != auth.RoleAdmin && role != auth.RoleSuperAdmin {
-			query.UserID = nil
-		}
 	} else if userID != "" {
 		query.UserID = &userID
 	}

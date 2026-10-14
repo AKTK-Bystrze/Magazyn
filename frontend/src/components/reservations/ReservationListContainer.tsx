@@ -277,7 +277,11 @@ function ReservationListContainerInner({
   );
 
   const hasActiveFilters =
-    filters.status !== DEFAULT_STATUS_FILTER || filters.sort !== DEFAULT_SORT_OPTION;
+    filters.status !== DEFAULT_STATUS_FILTER ||
+    filters.sort !== DEFAULT_SORT_OPTION ||
+    Boolean(filters.search) ||
+    Boolean(filters.userId) ||
+    Boolean(filters.typeId);
 
   const showActions = mode === "admin" || filters.scope === "my";
 
@@ -334,6 +338,7 @@ function ReservationListContainerInner({
           mode={mode}
           scope={filters.scope}
           currentUserId={currentUserId}
+          sort={filters.sort}
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}

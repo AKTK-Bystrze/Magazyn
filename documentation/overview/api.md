@@ -50,7 +50,7 @@ The backend registers routes directly on standard `net/http` ServeMux (no `/api/
 │   └── POST /equipment/{id}/maintenance-logs    # Auth: add maintenance log entry
 │
 ├── /reservations
-│   ├── GET  /reservations                       # Auth: list reservations (scope=my or scope=all, filters, pagination)
+│   ├── GET  /reservations                       # Auth: list reservations (scope=my or scope=all; filters: search, user_id, type_id, status, dates, sort; pagination)
 │   ├── POST /reservations                       # Auth: create atomic reservation(s) & deduct credits
 │   ├── GET  /reservations/dashboard             # Admin, SuperAdmin: reservation dashboard statistics
 │   ├── PATCH /reservations/bulk                 # Admin, SuperAdmin: bulk update reservation statuses
@@ -89,7 +89,8 @@ Astro server-side endpoints proxy incoming browser requests to the Go backend (`
 | `/api/users/me` | `GET` | `/users/me` | Current user profile |
 | `/api/users/credits` | `GET` | `/users/credits` | Credit leaderboard |
 | `/api/users/bulk-adjust-credits` | `POST` | `/users/bulk-adjust-credits` | SuperAdmin bulk credit adjustments |
-| `/api/users/[id]` | `GET`, `PATCH` | `/users/{id}` (or `/users/public`) | User by ID or public users |
+| `/api/users/public` | `GET` | `/users/public` | List public user profiles (with query forwarding) |
+| `/api/users/[id]` | `GET`, `PATCH` | `/users/{id}` | User by ID |
 | `/api/equipment-types` | `GET` | `/equipment-types` | Equipment categories |
 | `/api/equipment` | `GET`, `POST` | `/equipment` | List equipment (`GET`), create (`POST`) |
 | `/api/equipment/[id]` | `GET`, `PATCH`, `DELETE` | `/equipment/{id}` | Equipment details, update, archive |

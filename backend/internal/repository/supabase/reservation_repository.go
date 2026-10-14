@@ -4,13 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 
+	postgrest "github.com/supabase-community/postgrest-go"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -46,19 +49,106 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	if query.StartDateTo != nil && *query.StartDateTo != "" {
 		qb = qb.Lte("start_date", *query.StartDateTo)
 	}
+	if query.TypeID != nil && *query.TypeID != "" {
+		typeEqData, _, err := client.From("equipment").
+			Select("id", "exact", false).
+			Eq("type_id", *query.TypeID).
+			Execute()
+		if err != nil {
+			return nil, 0, err
+		}
+		var typeEqList []struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(typeEqData, &typeEqList); err != nil {
+			return nil, 0, err
+		}
+		if len(typeEqList) == 0 {
+			return []types.ReservationListItem{}, 0, nil
+		}
+		typeEqIDs := make([]string, len(typeEqList))
+		for i, e := range typeEqList {
+			typeEqIDs[i] = e.ID
+		}
+		qb = qb.In("equipment_id", typeEqIDs)
+	}
+	if query.Search != nil && *query.Search != "" {
+		searchTerm := validation.SanitizeSearchTerm(*query.Search)
+		eqData, _, err := client.From("equipment").
+			Select("id", "exact", false).
+			Or(fmt.Sprintf("name.ilike.%%%s%%,internal_id.ilike.%%%s%%", searchTerm, searchTerm), "").
+			Limit(50, "").
+			Execute()
+		if err != nil {
+			return nil, 0, err
+		}
+		var matchedEqs []struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(eqData, &matchedEqs); err != nil {
+			return nil, 0, err
+		}
+
+		userData, _, err := client.From("profiles").
+			Select("id", "exact", false).
+			Or(fmt.Sprintf("username.ilike.%%%s%%", searchTerm), "").
+			Limit(50, "").
+			Execute()
+		if err != nil {
+			return nil, 0, err
+		}
+		var matchedUsers []struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(userData, &matchedUsers); err != nil {
+			return nil, 0, err
+		}
+
+		hasEq := len(matchedEqs) > 0
+		hasUsers := len(matchedUsers) > 0
+		if !hasEq && !hasUsers {
+			return []types.ReservationListItem{}, 0, nil
+		}
+
+		eqIDs := make([]string, len(matchedEqs))
+		for i, e := range matchedEqs {
+			eqIDs[i] = e.ID
+		}
+		userIDs := make([]string, len(matchedUsers))
+		for i, u := range matchedUsers {
+			userIDs[i] = u.ID
+		}
+
+		if hasEq && hasUsers {
+			qb = qb.Or(fmt.Sprintf("equipment_id.in.(%s),user_id.in.(%s)", strings.Join(eqIDs, ","), strings.Join(userIDs, ",")), "")
+		} else if hasEq {
+			qb = qb.In("equipment_id", eqIDs)
+		} else {
+			qb = qb.In("user_id", userIDs)
+		}
+	}
 	offset := (query.Page - 1) * query.PerPage
-	countData, _, err := qb.Execute()
-	if err != nil {
-		return nil, 0, err
-	}
-	var countHolder []interface{}
-	if err := json.Unmarshal(countData, &countHolder); err != nil {
-		return nil, 0, err
-	}
-	totalItems := int64(len(countHolder))
 	qb = qb.Range(offset, offset+query.PerPage-1, "")
-	qb = qb.Order("created_at", nil)
-	data, _, err := qb.Execute()
+
+	sortCol := "created_at"
+	ascending := false
+	isDateSort := false
+	if query.Sort != nil && *query.Sort != "" {
+		sortVal := *query.Sort
+		ascending = strings.HasSuffix(sortVal, "_asc")
+		if strings.HasPrefix(sortVal, "start_date") {
+			sortCol = "start_date"
+			isDateSort = true
+		} else if strings.HasPrefix(sortVal, "end_date") {
+			sortCol = "end_date"
+			isDateSort = true
+		}
+	}
+	qb = qb.Order(sortCol, &postgrest.OrderOpts{Ascending: ascending})
+	if isDateSort {
+		qb = qb.Order("created_at", &postgrest.OrderOpts{Ascending: false})
+	}
+	data, totalItems, err := qb.Execute()
 	if err != nil {
 		return nil, 0, err
 	}

@@ -60,9 +60,12 @@ export const RESERVATION_FILTER_OPTIONS = [
  * Sort options for reservation lists
  */
 export const RESERVATION_SORT_OPTIONS = [
-  { value: "created_desc", label: "Najnowsze" },
-  { value: "date_asc", label: "Data rozpoczęcia (rosnąco)" },
-  { value: "date_desc", label: "Data rozpoczęcia (malejąco)" },
+  { value: "created_desc", label: "Data utworzenia: najnowsze" },
+  { value: "created_asc", label: "Data utworzenia: najstarsze" },
+  { value: "start_date_asc", label: "Data rozpoczęcia: rosnąco" },
+  { value: "start_date_desc", label: "Data rozpoczęcia: malejąco" },
+  { value: "end_date_asc", label: "Data zakończenia: rosnąco" },
+  { value: "end_date_desc", label: "Data zakończenia: malejąco" },
 ] as const;
 
 export const DEFAULT_STATUS_FILTER = "ALL";

@@ -11,10 +11,18 @@
   - Start and end dates
   - Status (PENDING, RENTED, RETURNED, CANCELLED)
   - Credit cost
-- Reservations are sorted by date (most recent first)
-- User can filter by status
+- Reservations can be sorted dynamically by:
+  - Creation date (`created_desc`, `created_asc`)
+  - Start date (`start_date_asc`, `start_date_desc`)
+  - End date (`end_date_asc`, `end_date_desc`)
+- User can filter reservations independently of user role:
+  - Free-text string search (matches equipment name, internal ID, and member username)
+  - Member / user filter (available to all users when viewing all reservations: `scope=all`)
+  - Equipment type filter (dropdown of equipment categories)
+  - Status filter (`ALL`, `PENDING`, `RENTED`, `RETURNED`, `CANCELLED`)
 - List supports pagination (10, 25, 50, 100 items per page)
 - User can click on reservation to view details
+- Reset button clears all active filters back to defaults
 
 ---
 

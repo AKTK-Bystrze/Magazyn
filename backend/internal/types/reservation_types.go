@@ -116,6 +116,9 @@ type ReservationListQuery struct {
 	Status        *string `json:"status"`
 	UserID        *string `json:"user_id"`
 	EquipmentID   *string `json:"equipment_id"`
+	TypeID        *string `json:"type_id"`
+	Search        *string `json:"search"`
+	Sort          *string `json:"sort"`
 	StartDateFrom *string `json:"start_date_from"`
 	StartDateTo   *string `json:"start_date_to"`
 	Scope         *string `json:"scope"`

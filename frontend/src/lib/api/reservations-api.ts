@@ -38,8 +38,24 @@ export const reservationsApi = {
       params.status = filters.status;
     }
 
-    if (filters.query) {
-      params.search = filters.query;
+    if (filters.search) {
+      params.search = filters.search;
+    }
+
+    if (filters.userId) {
+      params.user_id = filters.userId;
+    }
+
+    if (filters.typeId) {
+      params.type_id = filters.typeId;
+    }
+
+    if (filters.startDateFrom) {
+      params.start_date_from = filters.startDateFrom;
+    }
+
+    if (filters.startDateTo) {
+      params.start_date_to = filters.startDateTo;
     }
 
     const { data } = await api.get<unknown>("/api/reservations", params);
