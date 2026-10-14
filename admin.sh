@@ -6,20 +6,26 @@ set -euo pipefail
 # Single entry point for deployment, diagnostics, disaster recovery, and backups
 # ==============================================================================
 
-# Self-isolation mechanism: copy executing script to /tmp to prevent
-# corruption when switching git tags/branches.
+# Self-isolation mechanism: copy executing script and helpers to /tmp
+# to prevent corruption or disappearance when switching git tags/branches.
 if [ "${ADMIN_ISOLATED:-false}" != "true" ] && [ -n "${TMPDIR:-/tmp}" ]; then
-  TMP_SCRIPT=$(mktemp /tmp/magazyn-admin-XXXXXX.sh)
-  cp "$0" "$TMP_SCRIPT"
-  chmod +x "$TMP_SCRIPT"
+  TMP_DIR=$(mktemp -d /tmp/magazyn-admin-XXXXXX)
+  cp "$0" "${TMP_DIR}/admin.sh"
+  mkdir -p "${TMP_DIR}/infra"
+  if [ -d "$(dirname "$0")/infra" ]; then
+    cp -r "$(dirname "$0")/infra"/* "${TMP_DIR}/infra/" 2>/dev/null || true
+  fi
+  chmod +x "${TMP_DIR}/admin.sh"
   export ADMIN_ISOLATED=true
+  export ADMIN_TMP_DIR="${TMP_DIR}"
   export ORIGINAL_SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-  exec "$TMP_SCRIPT" "$@"
+  exec "${TMP_DIR}/admin.sh" "$@"
 fi
 
 SCRIPT_DIR="${ORIGINAL_SCRIPT_DIR:-$(dirname "$(realpath "$0")")}"
 cd "${SCRIPT_DIR}"
 ROOT_DIR="${SCRIPT_DIR}"
+HELPER_DIR="${ADMIN_TMP_DIR:-${ROOT_DIR}}"
 
 # ANSI Colors
 GREEN='\033[0;32m'
@@ -63,16 +69,16 @@ load_env() {
 }
 
 cmd_doctor() {
-  bash "${ROOT_DIR}/infra/doctor.sh"
+  bash "${HELPER_DIR}/infra/doctor.sh"
 }
 
 cmd_sanity() {
-  bash "${ROOT_DIR}/infra/sanity_check.sh"
+  bash "${HELPER_DIR}/infra/sanity_check.sh"
 }
 
 cmd_backup() {
   local tag="${1:-}"
-  bash "${ROOT_DIR}/infra/backups/backup_db.sh" "${tag}"
+  bash "${HELPER_DIR}/infra/backups/backup_db.sh" "${tag}"
 }
 
 cmd_restore() {
@@ -83,7 +89,7 @@ cmd_restore() {
     ls -1t "${ROOT_DIR}/infra/backups/daily"/public-rollback-*.sql.gz 2>/dev/null || echo "No daily snapshots found."
     read -p "Enter snapshot file path to restore: " snapshot
   fi
-  bash "${ROOT_DIR}/infra/backups/restore_db.sh" "$@" "${snapshot}"
+  bash "${HELPER_DIR}/infra/backups/restore_db.sh" "$@" "${snapshot}"
 }
 
 cmd_status() {
@@ -178,7 +184,7 @@ cmd_deploy() {
 
   # Step 2: Database snapshot
   info "Step 2/6: Creating pre-deployment database backup..."
-  bash "${ROOT_DIR}/infra/backups/backup_db.sh" "${target_tag}" || {
+  bash "${HELPER_DIR}/infra/backups/backup_db.sh" "${target_tag}" || {
     show_error_guidance "pre-deploy database backup"
     exit 1
   }
@@ -189,6 +195,12 @@ cmd_deploy() {
     show_error_guidance "git checkout ${target_tag}"
     exit 1
   }
+
+  # Ensure admin.sh exists in target repo after deployment
+  if [ ! -f "${ROOT_DIR}/admin.sh" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
+    cp "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
+    chmod +x "${ROOT_DIR}/admin.sh"
+  fi
 
   # Step 4: Build container images BEFORE migrating database
   info "Step 4/6: Building Docker container images (build-first safety)..."
@@ -232,7 +244,7 @@ cmd_deploy() {
 
   # Sanity Check
   info "Running post-deploy sanity check..."
-  if ! bash "${ROOT_DIR}/infra/sanity_check.sh"; then
+  if ! bash "${HELPER_DIR}/infra/sanity_check.sh"; then
     echo ""
     warn "Post-deployment sanity check reported warnings or failed."
     warn "The new containers are currently online. If you need to revert, run:"
@@ -310,11 +322,17 @@ cmd_rollback() {
 
   # Step 1: Restore DB
   info "Step 1/3: Restoring database snapshot..."
-  bash "${ROOT_DIR}/infra/backups/restore_db.sh" --yes --no-restart "${snapshot_file}"
+  bash "${HELPER_DIR}/infra/backups/restore_db.sh" --yes --no-restart "${snapshot_file}"
 
   # Step 2: Checkout Git Tag
   info "Step 2/3: Checking out git tag: ${target_tag}..."
   git checkout "${target_tag}"
+
+  # Ensure admin.sh exists in target repo after rollback
+  if [ ! -f "${ROOT_DIR}/admin.sh" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
+    cp "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
+    chmod +x "${ROOT_DIR}/admin.sh"
+  fi
 
   # Step 3: Rebuild and Restart Containers
   info "Step 3/3: Rebuilding and restarting containers..."
@@ -323,7 +341,7 @@ cmd_rollback() {
   docker compose up -d --build --wait
 
   # Verify with sanity
-  bash "${ROOT_DIR}/infra/sanity_check.sh" || true
+  bash "${HELPER_DIR}/infra/sanity_check.sh" || true
 
   echo ""
   echo -e "${GREEN}${BOLD}Rollback to ${target_tag} complete!${NC}"
