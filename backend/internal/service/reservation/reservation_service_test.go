@@ -2,6 +2,7 @@ package reservation_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"magazyn/backend/internal/auth"
@@ -247,6 +248,42 @@ func TestList_PaginationCalculation(t *testing.T) {
 	result, err := svc.List(ctx, query, "", "")
 	assert.NoError(t, err)
 	assert.Equal(t, 5, result.Pagination.TotalPages)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestList_DatabaseEnumError_ReturnsValidationError(t *testing.T) {
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+	query := types.ReservationListQuery{
+		Page:    1,
+		PerPage: 10,
+	}
+	dbErr := errors.New("(22P02) invalid input value for enum reservation_status: \"FOOBAR\"")
+	mockRepo.On("GetReservations", ctx, query).Return(nil, int64(0), dbErr)
+	result, err := svc.List(ctx, query, "", "")
+	assert.Nil(t, result)
+	require.Error(t, err)
+	valErr, ok := err.(*types.ValidationError)
+	assert.True(t, ok, "Expected *types.ValidationError but got %T", err)
+	assert.Equal(t, "VALIDATION_ERROR", valErr.Code)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestList_DatabaseInternalError_ReturnsInternalError(t *testing.T) {
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+	query := types.ReservationListQuery{
+		Page:    1,
+		PerPage: 10,
+	}
+	dbErr := errors.New("connection refused")
+	mockRepo.On("GetReservations", ctx, query).Return(nil, int64(0), dbErr)
+	result, err := svc.List(ctx, query, "", "")
+	assert.Nil(t, result)
+	require.Error(t, err)
+	intErr, ok := err.(*types.InternalError)
+	assert.True(t, ok, "Expected *types.InternalError but got %T", err)
+	assert.Equal(t, "INTERNAL_ERROR", intErr.Code)
 	mockRepo.AssertExpectations(t)
 }
 
