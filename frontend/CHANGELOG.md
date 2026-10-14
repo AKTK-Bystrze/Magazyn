@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.3.1...v0.4.0) (2026-10-14)
+
+
+### Features
+
+* **infra:** unified admin cockpit, deployment hardening, and disaster recovery suite ([#227](https://github.com/AKTK-Bystrze/Magazyn/issues/227)) ([2e8b458](https://github.com/AKTK-Bystrze/Magazyn/commit/2e8b458511e092db379247a3bb29c17426ae582f))
+
 ## [0.3.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.3.0...v0.3.1) (2026-10-14)
 
 
