@@ -30,11 +30,18 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       containerClassName,
       className,
       disabled,
+      onKeyDown,
       ...props
     },
     ref
   ) => {
     const [searchValue, setSearchValue] = React.useState(externalValue);
+    const onSearchChangeRef = React.useRef(onSearchChange);
+    const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    React.useEffect(() => {
+      onSearchChangeRef.current = onSearchChange;
+    });
 
     React.useEffect(() => {
       setSearchValue(externalValue);
@@ -43,12 +50,28 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     React.useEffect(() => {
       if (searchValue === externalValue) return;
 
-      const timer = setTimeout(() => {
-        onSearchChange(searchValue);
+      timerRef.current = setTimeout(() => {
+        onSearchChangeRef.current(searchValue);
       }, SEARCH_DEBOUNCE_MS);
 
-      return () => clearTimeout(timer);
-    }, [searchValue, externalValue, onSearchChange]);
+      return () => {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+      };
+    }, [searchValue, externalValue]);
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && searchValue !== externalValue) {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        onSearchChangeRef.current(searchValue);
+      }
+      onKeyDown?.(e);
+    };
 
     return (
       <div className={cn("relative flex items-center w-full", containerClassName)}>
@@ -64,6 +87,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           type="search"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           className={cn("pl-9", className)}
           {...props}
