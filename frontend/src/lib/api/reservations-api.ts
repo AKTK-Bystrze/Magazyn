@@ -88,7 +88,7 @@ export const reservationsApi = {
    * Bulk update reservation statuses (admin only)
    *
    * @param command - Bulk update command
-   * @returns Summary of successful and failed updates
+   * @returns Summary of updated count and refund count
    */
   bulkUpdate: async (command: BulkUpdateReservationsCommand): Promise<BulkStatusUpdateResponse> => {
     const body = {

@@ -2,7 +2,11 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, User, CreditCard } from "lucide-react";
 import { formatDateLocalized } from "@/lib/utils/date-utils";
-import { EQUIPMENT_MANAGER_UI_STRINGS } from "@/lib/config/constants";
+import {
+  EQUIPMENT_MANAGER_UI_STRINGS,
+  RESERVATION_STATUS_LABELS,
+  RESERVATION_STATUS_VARIANTS,
+} from "@/lib/config/constants";
 import type { EquipmentReservationHistoryItem } from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
@@ -19,36 +23,14 @@ interface ReservationHistorySectionProps {
  * Returns badge variant based on reservation status
  */
 function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "RENTED":
-      return "default";
-    case "RETURNED":
-      return "secondary";
-    case "PENDING":
-      return "outline";
-    case "CANCELLED":
-      return "destructive";
-    default:
-      return "outline";
-  }
+  return RESERVATION_STATUS_VARIANTS[status] ?? "outline";
 }
 
 /**
  * Returns human-readable status label
  */
 function getStatusLabel(status: string): string {
-  switch (status) {
-    case "RENTED":
-      return "Rented";
-    case "RETURNED":
-      return "Returned";
-    case "PENDING":
-      return "Pending";
-    case "CANCELLED":
-      return "Cancelled";
-    default:
-      return status;
-  }
+  return RESERVATION_STATUS_LABELS[status] ?? status;
 }
 
 /**

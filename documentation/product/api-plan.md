@@ -1,5 +1,10 @@
 # REST API Plan
 
+> [!NOTE] Historical Design Document
+> This document represents the initial architecture planning phase and contains draft proposals.
+> For the current and authoritative API specification, refer to [API Overview](../overview/api.md).
+> For the current database schema, refer to [Database Documentation](../database/db-doc.md).
+
 This document defines the REST API for the Equipment Rental System. The API is implemented in Go and consumed by an Astro/React frontend.
 
 ## 1. Resources

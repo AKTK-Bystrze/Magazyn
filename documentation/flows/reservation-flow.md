@@ -70,8 +70,7 @@ Statuses are defined in `backend/internal/constants/constants.go`:
 | `PENDING` | Reservation created, awaiting equipment pickup |
 | `RENTED` | Equipment currently with user |
 | `RETURNED` | Equipment returned, reservation complete |
-| `DENIED` | Reservation denied by admin or cancelled by user |
-| `CANCELLED` | Reservation cancelled |
+| `CANCELLED` | Reservation cancelled by user or admin, credits refunded |
 
 ### Status Transition Diagram
 
@@ -80,12 +79,10 @@ stateDiagram-v2
     [*] --> PENDING: Create Reservation
     
     PENDING --> RENTED: Admin Approves / Pickup
-    PENDING --> DENIED: User Cancels
-    PENDING --> CANCELLED: Admin Cancels
+    PENDING --> CANCELLED: User or Admin Cancels
     
     RENTED --> RETURNED: Equipment Returned
     
-    DENIED --> [*]
     CANCELLED --> [*]
     RETURNED --> [*]
 ```
@@ -94,8 +91,8 @@ stateDiagram-v2
 
 | Actor | From Status | Allowed Transitions |
 |-------|-------------|---------------------|
-| User | `PENDING` | → `DENIED` (cancel own) |
-| Admin | `PENDING` | → `RENTED`, `DENIED`, `CANCELLED` |
+| User | `PENDING` | → `CANCELLED` (cancel own) |
+| Admin | `PENDING` | → `RENTED`, `CANCELLED` |
 | Admin | `RENTED` | → `RETURNED` |
 
 > [!IMPORTANT]
@@ -157,13 +154,13 @@ flowchart TD
     D -->|Yes| F{Status = PENDING?}
     F -->|No| G[403 Cannot Modify]
     F -->|Yes| H{New Status?}
-    H -->|DENIED only| I[Allow Cancel]
+    H -->|CANCELLED| I[Allow Cancel]
     H -->|Other| J[400 Validation Error]
 ```
 
-### Status Change to DENIED/CANCELLED (Cancellation)
+### Status Change to CANCELLED (Cancellation)
 
-When status changes to `DENIED` or `CANCELLED`:
+When status changes to `CANCELLED`:
 
 1. Fetch equipment details
 2. Fetch equipment type for cost calculation
@@ -191,7 +188,7 @@ When dates are modified:
 |-----------|---------------|
 | Equipment not found | `Equipment {id} not found` |
 | Equipment archived/broken | `Equipment {name} is not available` |
-| User tries non-DENIED status | `Users can only cancel pending reservations` |
+| User tries non-cancellation status | `Users can only cancel or return pending reservations` |
 
 ### Authorization Errors (HTTP 403)
 

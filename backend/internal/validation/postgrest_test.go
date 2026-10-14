@@ -102,14 +102,14 @@ func TestValidateUUID_InvalidFormat_ReturnsError(t *testing.T) {
 	}
 }
 func TestValidateEnum_AllowedValue_ReturnsNil(t *testing.T) {
-	allowedStatuses := []string{"PENDING", "APPROVED", "DENIED"}
+	allowedStatuses := []string{"PENDING", "RENTED", "RETURNED", "CANCELLED"}
 	tests := []struct {
 		name  string
 		value string
 	}{
 		{"first value", "PENDING"},
-		{"middle value", "APPROVED"},
-		{"last value", "DENIED"},
+		{"middle value", "RENTED"},
+		{"last value", "CANCELLED"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -119,7 +119,7 @@ func TestValidateEnum_AllowedValue_ReturnsNil(t *testing.T) {
 	}
 }
 func TestValidateEnum_DisallowedValue_ReturnsError(t *testing.T) {
-	allowedStatuses := []string{"PENDING", "APPROVED", "DENIED"}
+	allowedStatuses := []string{"PENDING", "RENTED", "RETURNED", "CANCELLED"}
 	tests := []struct {
 		name  string
 		value string
@@ -128,7 +128,7 @@ func TestValidateEnum_DisallowedValue_ReturnsError(t *testing.T) {
 		{"wrong case", "pending"},
 		{"invalid value", "INVALID"},
 		{"partial match", "PEND"},
-		{"similar value", "APPROVED_EXTRA"},
+		{"similar value", "RENTED_EXTRA"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

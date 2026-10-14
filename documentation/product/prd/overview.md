@@ -93,7 +93,7 @@ The new system addresses these issues by providing:
 
   3.3.2 Credits are deducted immediately when a PENDING reservation is created.
 
-  3.3.3 Credits are refunded when a reservation status changes to DENIED.
+  3.3.3 Credits are refunded when a reservation status changes to CANCELLED.
 
   3.3.4 When reservation dates are modified, credits are automatically recalculated and adjusted.
 
@@ -231,24 +231,24 @@ The new system addresses these issues by providing:
 
 - Cancelled items immediately become available
 - Credits refunded immediately
-- Reservation status changes to DENIED
+- Reservation status changes to CANCELLED
 
   3.5.8 Reservation status workflow:
 
 - PENDING: Initial status, credits deducted
 - RENTED: Admin confirms rental has started
 - RETURNED: Admin confirms equipment returned
-- DENIED: Reservation cancelled or rejected, credits refunded
+- CANCELLED: Reservation cancelled or rejected, credits refunded
 
-  3.5.9 Users can only change their own PENDING reservations to DENIED (cancellation).
+  3.5.9 Users can only change their own PENDING reservations to CANCELLED (cancellation).
 
-  3.5.10 Administrators can change any reservation status (except final states RETURNED and DENIED).
+  3.5.10 Administrators can change any reservation status (except final states RETURNED and CANCELLED).
 
   3.5.11 Reservation list displays:
 
 - All user's reservations (for regular users)
 - All reservations (for admins, with user information)
-- Filtering by status (PENDING, RENTED, RETURNED, DENIED)
+- Filtering by status (PENDING, RENTED, RETURNED, CANCELLED)
 - Sorting by date
 - Pagination support
 

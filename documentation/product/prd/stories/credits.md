@@ -35,8 +35,8 @@
 - User can submit the request
 - System validates that requested amount is a positive number
 - System displays confirmation message after submission
-- Request appears in user's credit history with PENDING status
-- User receives notification when request is approved or denied
+- Request appears in user's credit requests list with awaiting status
+- User receives notification when request is approved or rejected
 
 ---
 

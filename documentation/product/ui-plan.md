@@ -96,7 +96,7 @@ The application follows a **multi-layout, feature-based architecture** built wit
     *   *Pending*: Yellow/Orange bg.
     *   *Rented*: Blue bg.
     *   *Returned/Ok*: Green bg.
-    *   *Broken/Denied*: Red/Destructive bg.
+    *   *Broken/Cancelled*: Red/Destructive bg.
 *   **`ReservationCard`**: Summary view showing Date Range (formatted "Mon, Jan 1 - Wed, Jan 3"), Item List, and Total Cost.
 *   **`AvailabilityCalendar`**:
     *   *Desktop*: Month view with colored cells.

@@ -115,7 +115,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
-    await expect(statusBadge).toContainText(/Anulowana|Cancelled/i);
+    await expect(statusBadge).toContainText(/Anulowan[ao]|Cancelled/i);
   });
 
   /**
@@ -249,7 +249,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
-    await expect(statusBadge).toContainText(/Anulowana|Cancelled/i);
+    await expect(statusBadge).toContainText(/Anulowan[ao]|Cancelled/i);
 
     const { data: profileAfter } = await supabaseAdmin
       .from("profiles")
