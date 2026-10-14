@@ -33,7 +33,7 @@
 - Admin can access all reservations list (same view as regular users with "All Reservations" tab)
 - Admin has **action buttons visible** on all reservations (unlike regular users who have read-only access)
 - Admin can modify any reservation:
-  - Change status (PENDING → RETURNED, or PENDING → DENIED)
+  - Change status (PENDING → RENTED, RETURNED, or CANCELLED)
   - Modify dates
   - Cancel reservation
 - List displays:

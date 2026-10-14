@@ -54,9 +54,9 @@
 
 **Acceptance Criteria:**
 
-- Admin can change status of any reservation (except final states RETURNED and DENIED)
+- Admin can change status of any reservation (except final states RETURNED and CANCELLED)
 - Admin can change RENTED to RETURNED
-- Admin can change PENDING to DENIED
+- Admin can change PENDING to CANCELLED
 - Status changes are saved immediately
 - **Status changes are automatically logged in audit trail**
 - Status change history is recorded

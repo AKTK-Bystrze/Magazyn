@@ -129,30 +129,13 @@ export type BulkStatusUpdateResponse = {
 };
 
 /**
- * Overdue reservation item
- */
-export type OverdueItem = {
-  reservationId: string;
-  userId: string;
-  username: string;
-  userEmail: string;
-  equipmentId: string;
-  equipmentName: string;
-  endDate: string;
-  daysOverdue: number;
-  status: Enums<"reservation_status">;
-};
-
-/**
  * Admin dashboard summary (GET /reservations/dashboard)
+ * Matches backend ReservationDashboardSummary DTO
  */
 export type ReservationDashboardSummary = {
-  summary: {
-    pendingCount: number;
-    overdueCount: number;
-    todayCount: number;
-  };
-  overdueItems: OverdueItem[];
+  pending_reservations: number;
+  overdue_reservations: number;
+  active_today: number;
 };
 
 /**

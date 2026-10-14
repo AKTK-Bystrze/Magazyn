@@ -51,7 +51,7 @@
   - Email address
   - Credit balance
   - User role
-  - Account status (active/inactive)
+  - Account status (enabled/disabled)
 - Changes to credit balance are logged in user's credit history
 - Changes are saved immediately
 - Updated information appears in user list
