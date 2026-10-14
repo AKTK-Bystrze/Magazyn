@@ -1,5 +1,10 @@
 # Database Schema Plan
 
+> [!NOTE] Historical Design Document
+> This document represents the initial architecture planning phase and contains draft proposals.
+> For the current and authoritative database specification, refer to [Database Documentation](../database/db-doc.md).
+> For the current API endpoints, refer to [API Overview](../overview/api.md).
+
 This document outlines the database schema for the Equipment Rental System, designed for PostgreSQL on Supabase.
 
 ## 1. Enums

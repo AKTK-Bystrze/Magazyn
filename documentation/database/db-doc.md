@@ -13,7 +13,6 @@ This document reflects the current state of the database schema as of the latest
 - `PENDING`
 - `RENTED`
 - `RETURNED`
-- `DENIED`
 - `CANCELLED`
 
 ### equipment_status
@@ -103,7 +102,7 @@ Requests submitted by users to earn credits for club service or helping others.
 - `credits_value` (integer, not null, check: credits_value > 0)
 - `requestor_id` (uuid, foreign key to profiles)
 - `user_helped_id` (uuid, foreign key to profiles, nullable)
-- `status` (varchar(50), not null, default: 'awaiting', check: in 'awaiting', 'approved', 'rejected', 'approved with changes')
+- `status` (credit_request_status, not null, default: 'awaiting')
 - `created_at` (timestamptz)
 - `updated_at` (timestamptz)
 
@@ -179,7 +178,7 @@ Modifies reservation date ranges, checks conflicts, and atomically recalculates/
 - **Returns**: JSONB (updated reservation details and new balance)
 
 ### bulk_update_reservations_status
-Updates multiple reservation statuses atomically, refunding credits if reservations are denied (skipping refunds for free reservations).
+Updates multiple reservation statuses atomically, refunding credits if reservations are cancelled (skipping refunds for free reservations).
 - **Parameters**:
   - `p_reservation_ids` (UUID[])
   - `p_status` (TEXT)

@@ -9,7 +9,7 @@
 - Reservation list displays:
   - Equipment name and type
   - Start and end dates
-  - Status (PENDING, RENTED, RETURNED, DENIED)
+  - Status (PENDING, RENTED, RETURNED, CANCELLED)
   - Credit cost
 - Reservations are sorted by date (most recent first)
 - User can filter by status
@@ -140,11 +140,11 @@
 - User can cancel only their own PENDING reservations
 - User can access cancel option from reservation details page
 - System displays confirmation dialog before cancellation
-- Upon confirmation, reservation status changes to DENIED
+- Upon confirmation, reservation status changes to CANCELLED
 - Credits are refunded immediately
 - Cancelled item immediately becomes available for other users
 - User sees updated credit balance
-- Cancelled reservation appears in history with DENIED status
+- Cancelled reservation appears in history with CANCELLED status
 
 ---
 

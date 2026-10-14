@@ -27,22 +27,6 @@ export type EquipmentType = {
 };
 
 /**
- * Command to create equipment type (POST /equipment-types)
- */
-export type CreateEquipmentTypeCommand = {
-  name: string;
-  creditCostPerDay: number;
-};
-
-/**
- * Command to update equipment type (PATCH /equipment-types/:id)
- */
-export type UpdateEquipmentTypeCommand = {
-  name?: string;
-  creditCostPerDay?: number;
-};
-
-/**
  * Equipment item with type information
  * Combines data from equipment and equipment_types tables
  */

@@ -15,7 +15,7 @@
   - Name
   - Type
   - Description
-  - Status (ok/broken)
+  - Status (ok/broken/blocked)
   - Credit cost per day
   - Image (or placeholder if no image)
   - Maintenance history (if available)

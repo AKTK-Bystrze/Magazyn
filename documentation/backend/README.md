@@ -27,14 +27,18 @@ token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
 ### Auth Access Control Table
 | Endpoint Pattern | Required Roles | Special Rules |
 |-----------------|----------------|---------------|
+| `GET /health` | Public | Unauthenticated health check. |
+| `POST /auth/login` | Public | Unauthenticated login. |
 | `GET /auth/session` | Any authenticated | **Only** endpoint accessible by disabled users. |
 | `POST /auth/logout` | Any authenticated | Must be enabled. |
-| `GET /equipment`, `GET /equipment/{id}`, `GET /equipment-types` | Any authenticated | Must be enabled. |
+| `GET /users/me`, `GET /users/public`, `GET /users/credits` | Any authenticated | Must be enabled. |
+| `GET /users`, `GET /users/{id}` | `admin`, `super_admin` | Must be enabled. |
+| `POST /users`, `PATCH /users/{id}`, `POST /users/bulk-adjust-credits` | `super_admin` | Must be enabled. |
+| `GET /equipment`, `GET /equipment/{id}`, `GET /equipment/{id}/availability`, `GET /equipment-types`, `POST /equipment/{id}/maintenance-logs` | Any authenticated | Must be enabled. |
 | `POST /equipment`, `PATCH /equipment/{id}`, `DELETE /equipment/{id}` | `admin`, `super_admin` | Must be enabled. |
 | `GET /reservations`, `POST /reservations`, `GET /reservations/{id}`, `PATCH /reservations/{id}` | Any authenticated | Must be enabled. |
 | `GET /reservations/dashboard`, `PATCH /reservations/bulk` | `admin`, `super_admin` | Must be enabled. |
-| `GET /users`, `GET /users/{id}` | `admin`, `super_admin` | Must be enabled. |
-| `POST /users`, `PATCH /users/{id}`, `POST /users/bulk-adjust-credits` | `super_admin` | Must be enabled. |
+| `GET /calendar/availability` | Any authenticated | Must be enabled. |
 | `GET /credits/history`, `GET /credits/requests`, `POST /credits/requests`, `PUT /credits/requests/{id}` | Any authenticated | Must be enabled. |
 | `PATCH /credits/requests/{id}/status` | `super_admin` | Must be enabled. |
 | `GET /analytics/*` | `admin`, `super_admin` | Must be enabled. |
