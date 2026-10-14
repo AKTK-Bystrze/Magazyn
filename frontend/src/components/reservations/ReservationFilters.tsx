@@ -7,15 +7,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, X } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
+import { X } from "lucide-react";
 import {
   RESERVATION_FILTER_OPTIONS,
   RESERVATION_SORT_OPTIONS,
   ICON_SIZE_SM,
   DEFAULT_STATUS_FILTER,
   DEFAULT_SORT_OPTION,
-  SEARCH_DEBOUNCE_MS,
 } from "@/lib/config/constants";
 import type { ReservationFilterState, ReservationSortOption } from "@/types";
 import type { Enums } from "@/db/database.types";
@@ -44,13 +43,6 @@ interface ReservationFiltersProps {
  * @param onReset - Callback to reset all filters
  */
 export function ReservationFilters({ filters, onFilterChange, onReset }: ReservationFiltersProps) {
-  const [isMounted, setIsMounted] = React.useState(false);
-  const [searchValue, setSearchValue] = React.useState(filters.search || "");
-
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   const { data: equipmentTypes = [] } = useEquipmentTypes();
   const { data: publicUsersData } = useQuery({
     queryKey: ["users", "public"],
@@ -61,57 +53,23 @@ export function ReservationFilters({ filters, onFilterChange, onReset }: Reserva
 
   const publicUsers = publicUsersData?.users ?? [];
 
-  const prevFilterSearch = React.useRef(filters.search || "");
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchValue !== (filters.search || "")) {
-        prevFilterSearch.current = searchValue;
-        onFilterChange("search", searchValue || undefined);
-      }
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [searchValue, filters.search, onFilterChange]);
-
-  React.useEffect(() => {
-    const current = filters.search || "";
-    if (prevFilterSearch.current !== current) {
-      prevFilterSearch.current = current;
-      setSearchValue(current);
-    }
-  }, [filters.search]);
-
-  const handleReset = React.useCallback(() => {
-    setSearchValue("");
-    prevFilterSearch.current = "";
-    onReset();
-  }, [onReset]);
-
   const hasActiveFilters =
     filters.status !== DEFAULT_STATUS_FILTER ||
     filters.sort !== DEFAULT_SORT_OPTION ||
-    Boolean(searchValue || filters.search) ||
+    Boolean(filters.search) ||
     Boolean(filters.userId) ||
     Boolean(filters.typeId);
 
   return (
-    <div
-      className="flex flex-wrap items-center gap-3"
-      data-testid="reservation-filters"
-      data-hydrated={isMounted ? "true" : undefined}
-    >
-      <div className="relative flex-1 min-w-[200px] max-w-xs">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <Input
-          type="search"
-          placeholder="Szukaj sprzętu lub użytkownika..."
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          className="pl-8 h-9"
-          data-testid="reservation-search-input"
-        />
-      </div>
+    <div className="flex flex-wrap items-center gap-3" data-testid="reservation-filters">
+      <SearchInput
+        placeholder="Szukaj sprzętu lub użytkownika..."
+        value={filters.search}
+        onSearchChange={(val) => onFilterChange("search", val || undefined)}
+        containerClassName="flex-1 min-w-[200px] max-w-xs"
+        className="h-9"
+        data-testid="reservation-search-input"
+      />
 
       <div className="flex items-center gap-2">
         <label htmlFor="type-filter" className="text-sm font-medium sr-only">
@@ -210,7 +168,7 @@ export function ReservationFilters({ filters, onFilterChange, onReset }: Reserva
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleReset}
+          onClick={onReset}
           className="flex items-center gap-1 h-9"
           data-testid="reset-filters-button"
         >

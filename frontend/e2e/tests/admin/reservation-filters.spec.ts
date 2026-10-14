@@ -6,9 +6,7 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
 
     await adminPage.goto("/admin/reservations");
 
-    const filtersContainer = adminPage.locator(
-      '[data-testid="reservation-filters"][data-hydrated="true"]'
-    );
+    const filtersContainer = adminPage.getByTestId("reservation-filters");
     await expect(filtersContainer).toBeVisible({ timeout: 15000 });
 
     const searchInput = adminPage.getByTestId("reservation-search-input");
@@ -33,9 +31,7 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
 
     await adminPage.goto("/admin/reservations");
 
-    const filtersContainer = adminPage.locator(
-      '[data-testid="reservation-filters"][data-hydrated="true"]'
-    );
+    const filtersContainer = adminPage.getByTestId("reservation-filters");
     await expect(filtersContainer).toBeVisible({ timeout: 15000 });
 
     // On admin/reservations, scope defaults to "all"
@@ -49,9 +45,7 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
 
     await adminPage.goto("/admin/reservations");
 
-    const filtersContainer = adminPage.locator(
-      '[data-testid="reservation-filters"][data-hydrated="true"]'
-    );
+    const filtersContainer = adminPage.getByTestId("reservation-filters");
     await expect(filtersContainer).toBeVisible({ timeout: 15000 });
 
     const statusTrigger = adminPage.locator("#status-filter");

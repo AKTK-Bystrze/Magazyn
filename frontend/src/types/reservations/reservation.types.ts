@@ -161,8 +161,6 @@ export type ReservationFilterState = {
   search?: string;
   userId?: string;
   typeId?: string;
-  startDateFrom?: string;
-  startDateTo?: string;
   scope: "my" | "all";
 };
 

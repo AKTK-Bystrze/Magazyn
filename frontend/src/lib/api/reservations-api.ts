@@ -50,14 +50,6 @@ export const reservationsApi = {
       params.type_id = filters.typeId;
     }
 
-    if (filters.startDateFrom) {
-      params.start_date_from = filters.startDateFrom;
-    }
-
-    if (filters.startDateTo) {
-      params.start_date_to = filters.startDateTo;
-    }
-
     const { data } = await api.get<unknown>("/api/reservations", params);
     return transformReservationListResponse(data);
   },

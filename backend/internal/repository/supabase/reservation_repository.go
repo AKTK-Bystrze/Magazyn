@@ -30,6 +30,20 @@ func NewReservationRepository(client *supabase.Client, url string, key string) r
 		supabaseKey: key,
 	}
 }
+func unmarshalIDs(data []byte) ([]string, error) {
+	var records []struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(data, &records); err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(records))
+	for i, r := range records {
+		ids[i] = r.ID
+	}
+	return ids, nil
+}
+
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
@@ -57,18 +71,12 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 		if err != nil {
 			return nil, 0, err
 		}
-		var typeEqList []struct {
-			ID string `json:"id"`
-		}
-		if err := json.Unmarshal(typeEqData, &typeEqList); err != nil {
+		typeEqIDs, err := unmarshalIDs(typeEqData)
+		if err != nil {
 			return nil, 0, err
 		}
-		if len(typeEqList) == 0 {
+		if len(typeEqIDs) == 0 {
 			return []types.ReservationListItem{}, 0, nil
-		}
-		typeEqIDs := make([]string, len(typeEqList))
-		for i, e := range typeEqList {
-			typeEqIDs[i] = e.ID
 		}
 		qb = qb.In("equipment_id", typeEqIDs)
 	}
@@ -82,10 +90,8 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 		if err != nil {
 			return nil, 0, err
 		}
-		var matchedEqs []struct {
-			ID string `json:"id"`
-		}
-		if err := json.Unmarshal(eqData, &matchedEqs); err != nil {
+		eqIDs, err := unmarshalIDs(eqData)
+		if err != nil {
 			return nil, 0, err
 		}
 
@@ -97,26 +103,15 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 		if err != nil {
 			return nil, 0, err
 		}
-		var matchedUsers []struct {
-			ID string `json:"id"`
-		}
-		if err := json.Unmarshal(userData, &matchedUsers); err != nil {
+		userIDs, err := unmarshalIDs(userData)
+		if err != nil {
 			return nil, 0, err
 		}
 
-		hasEq := len(matchedEqs) > 0
-		hasUsers := len(matchedUsers) > 0
+		hasEq := len(eqIDs) > 0
+		hasUsers := len(userIDs) > 0
 		if !hasEq && !hasUsers {
 			return []types.ReservationListItem{}, 0, nil
-		}
-
-		eqIDs := make([]string, len(matchedEqs))
-		for i, e := range matchedEqs {
-			eqIDs[i] = e.ID
-		}
-		userIDs := make([]string, len(matchedUsers))
-		for i, u := range matchedUsers {
-			userIDs[i] = u.ID
 		}
 
 		if hasEq && hasUsers {
