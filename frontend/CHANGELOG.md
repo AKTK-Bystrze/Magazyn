@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.2.0...v0.2.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **infra:** update caddy healthcheck to query internal metrics endpoint ([#223](https://github.com/AKTK-Bystrze/Magazyn/issues/223)) ([58923cc](https://github.com/AKTK-Bystrze/Magazyn/commit/58923ccb061f66fc8648a397148eae0fc250695b))
+
 # [0.2.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.1.0...v0.2.0) (2026-10-13)
 
 
