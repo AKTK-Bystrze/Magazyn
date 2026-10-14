@@ -91,47 +91,20 @@ if [ -z "$ACCESS_TOKEN" ]; then
 fi
 ok "Successfully logged in and retrieved JWT access token"
 
-# Read Equipment
-info "Querying equipment list (GET ${API_BASE}/equipment)..."
-EQ_RESP=$(curl -s -w "\n%{http_code}" -m 5 ${CURL_INSECURE} \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-  "${API_BASE}/equipment" 2>/dev/null || echo -e "\n000")
-
-EQ_STATUS=$(echo "${EQ_RESP}" | tail -n 1)
-if [ "$EQ_STATUS" = "200" ]; then
-  ok "Equipment list retrieved successfully (HTTP 200)"
-else
-  fail "Failed to retrieve equipment (HTTP ${EQ_STATUS})"
-  exit 1
-fi
-
-# Read Credits History
-info "Querying credit history (GET ${API_BASE}/credits/history)..."
-CRED_RESP=$(curl -s -w "\n%{http_code}" -m 5 ${CURL_INSECURE} \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-  "${API_BASE}/credits/history" 2>/dev/null || echo -e "\n000")
-
-CRED_STATUS=$(echo "${CRED_RESP}" | tail -n 1)
-if [ "$CRED_STATUS" = "200" ]; then
-  ok "Credit history retrieved successfully (HTTP 200)"
-else
-  fail "Failed to retrieve credit history (HTTP ${CRED_STATUS})"
-  exit 1
-fi
-
-# Read User Profile
-info "Querying user profile (GET ${API_BASE}/users/me)..."
-ME_RESP=$(curl -s -w "\n%{http_code}" -m 5 ${CURL_INSECURE} \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-  "${API_BASE}/users/me" 2>/dev/null || echo -e "\n000")
-
-ME_STATUS=$(echo "${ME_RESP}" | tail -n 1)
-if [ "$ME_STATUS" = "200" ]; then
-  ok "User profile retrieved successfully (HTTP 200)"
-else
-  fail "Failed to retrieve user profile (HTTP ${ME_STATUS})"
-  exit 1
-fi
+# Verify Authenticated Endpoints (equipment, credits history, user profile)
+for ep in "equipment" "credits/history" "users/me"; do
+  info "Querying ${ep} (GET ${API_BASE}/${ep})..."
+  RESP=$(curl -s -w "\n%{http_code}" -m 5 ${CURL_INSECURE} \
+    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+    "${API_BASE}/${ep}" 2>/dev/null || echo -e "\n000")
+  STATUS=$(echo "${RESP}" | tail -n 1)
+  if [ "$STATUS" = "200" ]; then
+    ok "${ep} retrieved successfully (HTTP 200)"
+  else
+    fail "Failed to retrieve ${ep} (HTTP ${STATUS})"
+    exit 1
+  fi
+done
 
 # Logout session
 info "Revoking session (POST ${API_BASE}/auth/logout)..."

@@ -29,34 +29,13 @@ SNAPSHOT_ARG=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -y|--yes)
-      AUTO_CONFIRM=true
-      shift
-      ;;
-    --no-restart)
-      RESTART_CONTAINERS=false
-      shift
-      ;;
-    -h|--help)
-      show_help
-      exit 0
-      ;;
-    -*)
-      echo "Unknown option: $1" >&2
-      show_help
-      exit 1
-      ;;
-    *)
-      if [ -z "$SNAPSHOT_ARG" ]; then
-        SNAPSHOT_ARG="$1"
-      else
-        echo "Unexpected argument: $1" >&2
-        show_help
-        exit 1
-      fi
-      shift
-      ;;
+    -y|--yes)     AUTO_CONFIRM=true ;;
+    --no-restart) RESTART_CONTAINERS=false ;;
+    -h|--help)    show_help; exit 0 ;;
+    -*)           echo "Unknown option: $1" >&2; show_help; exit 1 ;;
+    *)            SNAPSHOT_ARG="$1" ;;
   esac
+  shift
 done
 
 if [ -z "$SNAPSHOT_ARG" ]; then

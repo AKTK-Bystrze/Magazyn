@@ -46,8 +46,7 @@ fi
 # 2. Disk Space Check
 info "Checking disk space..."
 if command -v df >/dev/null 2>&1; then
-  AVAIL_KB=$(df -k "${ROOT_DIR}" | awk 'NR==2 {print $4}')
-  AVAIL_MB=$((AVAIL_KB / 1024))
+  AVAIL_MB=$(df -m "${ROOT_DIR}" | awk 'NR==2 {print $4}')
   if [ "$AVAIL_MB" -lt 3000 ]; then
     warn "Low disk space: ${AVAIL_MB} MB available (recommended: >= 3000 MB). Run './admin.sh prune' to free space."
   else

@@ -44,19 +44,11 @@ fail() { echo -e "  [${RED}FAIL${NC}] $1"; }
 info() { echo -e "${BLUE}==>${NC} $1"; }
 
 show_error_guidance() {
-  local failed_step="$1"
   echo ""
-  echo -e "${RED}${BOLD}====================================================================${NC}"
-  echo -e "${RED}${BOLD} [ERROR] Action failed at: ${failed_step}${NC}"
-  echo -e "${RED}${BOLD}====================================================================${NC}"
-  echo "Suggested recovery steps:"
-  echo "  1. Check system diagnostics:    ./admin.sh doctor"
-  echo "  2. Inspect container logs:      cd infra && docker compose logs --tail=50"
-  echo "  3. Roll back to safe state:     ./admin.sh rollback"
+  fail "Action failed at: $1"
+  echo "Suggested recovery: 1) ./admin.sh doctor  2) docker compose logs --tail=50  3) ./admin.sh rollback"
+  echo -e "Refer to Playbook: ${CYAN}documentation/operations/recovery_playbook.md${NC}"
   echo ""
-  echo -e "Refer to the Disaster Recovery Playbook:"
-  echo -e "  ${CYAN}documentation/operations/recovery_playbook.md${NC}"
-  echo -e "${RED}${BOLD}====================================================================${NC}"
 }
 
 load_env() {
@@ -133,26 +125,13 @@ cmd_deploy() {
 
   # Auto-discovery if tag not provided
   if [ -z "$target_tag" ]; then
-    echo "Fetching tags from remote..."
     git fetch --tags -f >/dev/null 2>&1 || true
-    echo ""
     echo "Available release tags:"
-    local tags
-    tags=($(git tag -l --sort=-v:refname | head -n 10))
-    if [ ${#tags[@]} -eq 0 ]; then
-      fail "No git tags found in repository. Push tags or specify a commit/branch."
-      exit 1
-    fi
-    for i in "${!tags[@]}"; do
-      echo "  $((i+1))) ${tags[$i]}"
+    PS3="Select tag [number or name]: "
+    select tag in $(git tag -l --sort=-v:refname | head -n 10); do
+      target_tag="${tag:-$REPLY}"
+      break
     done
-    echo ""
-    read -p "Select a tag number or type a tag name: " selection
-    if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#tags[@]} ]; then
-      target_tag="${tags[$((selection-1))]}"
-    else
-      target_tag="${selection}"
-    fi
   fi
 
   [ -n "$target_tag" ] || { fail "Target tag cannot be empty"; exit 1; }
@@ -273,38 +252,22 @@ cmd_rollback() {
   # Discover tags if not given
   if [ -z "$target_tag" ] || [ "$target_tag" = "-y" ] || [ "$target_tag" = "--yes" ]; then
     echo "Available previous release tags:"
-    local tags
-    tags=($(git tag -l --sort=-v:refname | head -n 10))
-    for i in "${!tags[@]}"; do
-      echo "  $((i+1))) ${tags[$i]}"
+    PS3="Select tag to roll back to: "
+    select tag in $(git tag -l --sort=-v:refname | head -n 10); do
+      target_tag="${tag:-$REPLY}"
+      break
     done
-    read -p "Select tag to roll back to: " selection
-    if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#tags[@]} ]; then
-      target_tag="${tags[$((selection-1))]}"
-    else
-      target_tag="${selection}"
-    fi
   fi
 
   # Discover snapshots if not given
   if [ -z "$snapshot_file" ] || [ "$snapshot_file" = "-y" ] || [ "$snapshot_file" = "--yes" ]; then
     echo ""
     echo "Available backup snapshots:"
-    local snaps
-    snaps=($(ls -1t "${ROOT_DIR}/infra/backups/daily"/public-rollback-*.sql.gz 2>/dev/null || true))
-    if [ ${#snaps[@]} -eq 0 ]; then
-      fail "No snapshots found in ${ROOT_DIR}/infra/backups/daily."
-      exit 1
-    fi
-    for i in "${!snaps[@]}"; do
-      echo "  $((i+1))) $(basename "${snaps[$i]}")"
+    PS3="Select snapshot to restore: "
+    select snap in "${ROOT_DIR}/infra/backups/daily"/public-rollback-*.sql.gz; do
+      snapshot_file="${snap:-$REPLY}"
+      break
     done
-    read -p "Select snapshot to restore: " s_sel
-    if [[ "$s_sel" =~ ^[0-9]+$ ]] && [ "$s_sel" -ge 1 ] && [ "$s_sel" -le ${#snaps[@]} ]; then
-      snapshot_file="${snaps[$((s_sel-1))]}"
-    else
-      snapshot_file="${s_sel}"
-    fi
   fi
 
   echo ""
@@ -350,33 +313,30 @@ cmd_rollback() {
 }
 
 show_menu() {
-  clear 2>/dev/null || true
-  echo -e "${CYAN}${BOLD}==============================================${NC}"
-  echo -e "${CYAN}${BOLD}           Magazyn Admin Cockpit              ${NC}"
-  echo -e "${CYAN}${BOLD}==============================================${NC}"
-  echo "  1) Deploy release tag"
-  echo "  2) Rollback release (revert tag & restore DB)"
-  echo "  3) Run system diagnostics (doctor)"
-  echo "  4) Run sanity check"
-  echo "  5) Create database backup snapshot"
-  echo "  6) Restore database from snapshot"
-  echo "  7) View system status & container health"
-  echo "  8) Prune unused Docker images (free disk)"
-  echo "  q) Exit"
-  echo "----------------------------------------------"
-  read -p "Select an option [1-8, q]: " choice
-  case "$choice" in
-    1) cmd_deploy ;;
-    2) cmd_rollback ;;
-    3) cmd_doctor ;;
-    4) cmd_sanity ;;
-    5) cmd_backup ;;
-    6) cmd_restore ;;
-    7) cmd_status ;;
-    8) cmd_prune ;;
-    q|Q) exit 0 ;;
-    *) echo "Invalid option"; sleep 1; show_menu ;;
-  esac
+  echo -e "${CYAN}${BOLD}=== Magazyn Admin Cockpit ===${NC}"
+  PS3="Select an option [1-9]: "
+  select opt in "Deploy release tag" \
+                "Rollback release" \
+                "Run system diagnostics (doctor)" \
+                "Run sanity check" \
+                "Create database backup snapshot" \
+                "Restore database from snapshot" \
+                "View system status" \
+                "Prune unused Docker images" \
+                "Exit"; do
+    case "$REPLY" in
+      1) cmd_deploy; break ;;
+      2) cmd_rollback; break ;;
+      3) cmd_doctor; break ;;
+      4) cmd_sanity; break ;;
+      5) cmd_backup; break ;;
+      6) cmd_restore; break ;;
+      7) cmd_status; break ;;
+      8) cmd_prune; break ;;
+      9|q|Q) exit 0 ;;
+      *) echo "Invalid option" ;;
+    esac
+  done
 }
 
 show_help() {
