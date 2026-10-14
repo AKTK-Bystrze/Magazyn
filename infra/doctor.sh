@@ -9,9 +9,9 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-ok() { echo -e "  [${GREEN}OK${NC}] $1"; }
+ok()   { echo -e "  [${GREEN}OK${NC}] $1"; }
 warn() { echo -e "  [${YELLOW}WARN${NC}] $1"; }
 fail() { echo -e "  [${RED}FAIL${NC}] $1"; }
 info() { echo -e "${BLUE}==>${NC} $1"; }
@@ -49,7 +49,7 @@ if command -v df >/dev/null 2>&1; then
   AVAIL_KB=$(df -k "${ROOT_DIR}" | awk 'NR==2 {print $4}')
   AVAIL_MB=$((AVAIL_KB / 1024))
   if [ "$AVAIL_MB" -lt 3000 ]; then
-    warn "Low disk space: ${AVAIL_MB} MB available (recommended: >= 3000 MB). Consider pruning old docker images."
+    warn "Low disk space: ${AVAIL_MB} MB available (recommended: >= 3000 MB). Run './admin.sh prune' to free space."
   else
     ok "Sufficient disk space: ${AVAIL_MB} MB available"
   fi
@@ -82,24 +82,34 @@ else
   warn "Skipping database ping (Docker or DB_CONNECTION_STRING missing)"
 fi
 
-# 5. Service Containers & Health
+# 5. Service Containers & Ingress Health
 info "Checking running containers and endpoints..."
 cd "${ROOT_DIR}/infra"
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   docker compose ps || true
 
-  # Check Backend health
+  CADDY_PORT="${CADDY_PORT:-20164}"
+
+  # Backend health check (direct port 8080, Caddy /api/health, or Docker internal health)
   if curl -s -f -m 3 http://localhost:8080/health >/dev/null 2>&1; then
-    ok "Backend container health endpoint (http://localhost:8080/health) is OK"
+    ok "Backend responsive on http://localhost:8080/health"
+  elif curl -k -s -f -m 3 "https://localhost:${CADDY_PORT}/api/health" >/dev/null 2>&1; then
+    ok "Backend responsive via Caddy proxy (https://localhost:${CADDY_PORT}/api/health)"
+  elif [ "$(docker inspect -f '{{.State.Health.Status}}' magazyn-backend 2>/dev/null)" = "healthy" ]; then
+    ok "Backend container internal health is healthy"
   else
-    warn "Backend container health endpoint is not responding on :8080"
+    warn "Backend container health endpoint is not responding"
   fi
 
-  # Check Caddy metrics
-  if curl -s -f -m 3 http://localhost:2019/metrics >/dev/null 2>&1; then
-    ok "Caddy metrics endpoint (http://localhost:2019/metrics) is OK"
+  # Frontend / Caddy proxy check
+  if curl -k -s -m 3 "https://localhost:${CADDY_PORT}/login" >/dev/null 2>&1; then
+    ok "Caddy & Frontend responsive (https://localhost:${CADDY_PORT}/login)"
+  elif curl -s -f -m 3 http://localhost:4321 >/dev/null 2>&1; then
+    ok "Frontend responsive on port 4321"
+  elif [ "$(docker inspect -f '{{.State.Health.Status}}' magazyn-caddy 2>/dev/null)" = "healthy" ]; then
+    ok "Caddy container internal health is healthy"
   else
-    warn "Caddy metrics endpoint is not responding on :2019"
+    warn "Caddy reverse proxy is not responding"
   fi
 fi
 

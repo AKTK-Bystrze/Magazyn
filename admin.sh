@@ -100,6 +100,7 @@ cmd_status() {
   echo ""
 
   info "Docker Containers:"
+  load_env
   cd "${ROOT_DIR}/infra"
   docker compose ps || true
   echo ""
