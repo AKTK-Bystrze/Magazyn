@@ -2,8 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-ROOT_DIR="$(realpath "${SCRIPT_DIR}/../..")"
-cd "${SCRIPT_DIR}"
+ROOT_DIR="${MAGAZYN_ROOT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || realpath "${SCRIPT_DIR}/../..")}"
+BACKUPS_DIR="${ROOT_DIR}/infra/backups"
+cd "${BACKUPS_DIR}"
 
 if [ ! -f "${ROOT_DIR}/.env" ]; then
   echo "Error: .env not found at ${ROOT_DIR}/.env" >&2
@@ -20,8 +21,8 @@ TAG_ARG="${1:-}"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 PREFIX="${TAG_ARG:+${TAG_ARG}-}"
 DAY_OF_WEEK=$(date +%u) # 1-7 (Monday-Sunday)
-DAILY_DIR="${SCRIPT_DIR}/daily"
-WEEKLY_DIR="${SCRIPT_DIR}/weekly"
+DAILY_DIR="${BACKUPS_DIR}/daily"
+WEEKLY_DIR="${BACKUPS_DIR}/weekly"
 
 mkdir -p "${DAILY_DIR}" "${WEEKLY_DIR}"
 
@@ -59,9 +60,9 @@ docker run --rm -i --network host postgres:17.6 pg_dump \
 safe_chown "${PUBLIC_FILE}" "${AUTH_FILE}"
 
 echo "Update latest pointers for future DR scripts..."
-cp -f "${PUBLIC_FILE}" "${SCRIPT_DIR}/latest-public-rollback.sql.gz"
-cp -f "${AUTH_FILE}" "${SCRIPT_DIR}/latest-public-auth.sql.gz"
-safe_chown "${SCRIPT_DIR}/latest-public-rollback.sql.gz" "${SCRIPT_DIR}/latest-public-auth.sql.gz"
+cp -f "${PUBLIC_FILE}" "${BACKUPS_DIR}/latest-public-rollback.sql.gz"
+cp -f "${AUTH_FILE}" "${BACKUPS_DIR}/latest-public-auth.sql.gz"
+safe_chown "${BACKUPS_DIR}/latest-public-rollback.sql.gz" "${BACKUPS_DIR}/latest-public-auth.sql.gz"
 
 echo "Rotating Daily backups (keeping 7)..."
 ls -1t "${DAILY_DIR}"/public-rollback-*.sql.gz 2>/dev/null | tail -n +8 | xargs rm -f 2>/dev/null || true

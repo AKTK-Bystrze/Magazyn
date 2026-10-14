@@ -2,8 +2,9 @@
 set -euo pipefail
 
 SCRIPT_PATH="$(dirname "$(realpath "$0")")"
-ROOT_DIR="$(realpath "${SCRIPT_PATH}/../..")"
-cd "${SCRIPT_PATH}"
+ROOT_DIR="${MAGAZYN_ROOT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || realpath "${SCRIPT_PATH}/../..")}"
+BACKUPS_DIR="${ROOT_DIR}/infra/backups"
+cd "${BACKUPS_DIR}"
 
 show_help() {
   cat << 'EOF'
@@ -111,7 +112,7 @@ docker run --rm -i --network host postgres:17.6 psql \
   --single-transaction \
   --variable ON_ERROR_STOP=1 \
   --dbname "${DB_CONNECTION_STRING}" \
-  < <(cat "${SCRIPT_PATH}/clear_schemas.sql" && gunzip -c "${SNAPSHOT_FILE}")
+  < <(cat "${BACKUPS_DIR}/clear_schemas.sql" && gunzip -c "${SNAPSHOT_FILE}")
 
 if [ "$RESTART_CONTAINERS" = true ]; then
   echo "Restarting application containers..."

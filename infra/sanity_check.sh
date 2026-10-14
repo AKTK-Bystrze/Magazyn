@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-ROOT_DIR="$(realpath "${SCRIPT_DIR}/..")"
+ROOT_DIR="${MAGAZYN_ROOT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || realpath "${SCRIPT_DIR}/..")}"
 
 # Colors
 GREEN='\033[0;32m'

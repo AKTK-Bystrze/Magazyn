@@ -19,12 +19,14 @@ if [ "${ADMIN_ISOLATED:-false}" != "true" ] && [ -n "${TMPDIR:-/tmp}" ]; then
   export ADMIN_ISOLATED=true
   export ADMIN_TMP_DIR="${TMP_DIR}"
   export ORIGINAL_SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+  export MAGAZYN_ROOT_DIR="${ORIGINAL_SCRIPT_DIR}"
   exec "${TMP_DIR}/admin.sh" "$@"
 fi
 
-SCRIPT_DIR="${ORIGINAL_SCRIPT_DIR:-$(dirname "$(realpath "$0")")}"
+SCRIPT_DIR="${MAGAZYN_ROOT_DIR:-${ORIGINAL_SCRIPT_DIR:-$(dirname "$(realpath "$0")")}}"
 cd "${SCRIPT_DIR}"
 ROOT_DIR="${SCRIPT_DIR}"
+export MAGAZYN_ROOT_DIR="${ROOT_DIR}"
 HELPER_DIR="${ADMIN_TMP_DIR:-${ROOT_DIR}}"
 
 # ANSI Colors
