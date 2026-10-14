@@ -34,21 +34,17 @@ echo "=============================================="
 # 1. Determine reachable API endpoint
 info "Detecting API ingress endpoint..."
 API_BASE=""
-CURL_INSECURE=""
+CURL_OPTS=()
 
 if curl -s -f -m 3 http://localhost:8080/health >/dev/null 2>&1; then
   API_BASE="http://localhost:8080"
   ok "Connected directly to Backend at ${API_BASE}"
 elif curl -k -s -f -m 3 "https://localhost:${CADDY_PORT}/api/health" >/dev/null 2>&1; then
   API_BASE="https://localhost:${CADDY_PORT}/api"
-  CURL_INSECURE="-k"
-  ok "Connected via Caddy reverse proxy at ${API_BASE}"
-elif curl -k -s -f -m 3 "https://localhost/api/health" >/dev/null 2>&1; then
-  API_BASE="https://localhost/api"
-  CURL_INSECURE="-k"
+  CURL_OPTS=(-k)
   ok "Connected via Caddy reverse proxy at ${API_BASE}"
 else
-  fail "Could not reach health check on http://localhost:8080/health or via Caddy (:20164 / :443)"
+  fail "Could not reach health check on http://localhost:8080/health or via Caddy (:${CADDY_PORT})"
   exit 1
 fi
 
@@ -66,16 +62,21 @@ if [ -z "$TEST_EMAIL" ] || [ -z "$TEST_PASSWORD" ]; then
 fi
 
 info "Authenticating test user (${TEST_EMAIL}) against Supabase Auth..."
+# NOTE: AUTH_URL intentionally uses PUBLIC_SUPABASE_URL (not INTERNAL_SUPABASE_URL) because
+# this script runs on the host, not inside a Docker container.
 AUTH_URL="${PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password"
-AUTH_PAYLOAD="{\"email\":\"${TEST_EMAIL}\",\"password\":\"${TEST_PASSWORD}\"}"
+AUTH_PAYLOAD=$(jq -n --arg email "${TEST_EMAIL}" --arg password "${TEST_PASSWORD}" \
+  '{"email":$email,"password":$password}')
 
-AUTH_RESP=$(curl -s -w "\n%{http_code}" -X POST "${AUTH_URL}" \
+TMP_BODY=$(mktemp)
+HTTP_STATUS=$(curl -s -m 10 -X POST "${AUTH_URL}" \
   -H "apikey: ${PUBLIC_SUPABASE_ANON_KEY}" \
   -H "Content-Type: application/json" \
-  -d "${AUTH_PAYLOAD}" 2>/dev/null || echo -e "\n000")
-
-HTTP_STATUS=$(echo "${AUTH_RESP}" | tail -n 1)
-BODY=$(echo "${AUTH_RESP}" | sed '$d')
+  -d "${AUTH_PAYLOAD}" \
+  -o "${TMP_BODY}" \
+  -w "%{http_code}" 2>/dev/null || echo "000")
+BODY=$(cat "${TMP_BODY}")
+rm -f "${TMP_BODY}"
 
 if [ "$HTTP_STATUS" != "200" ]; then
   fail "Authentication failed for ${TEST_EMAIL} (HTTP ${HTTP_STATUS})"
@@ -94,10 +95,13 @@ ok "Successfully logged in and retrieved JWT access token"
 # Verify Authenticated Endpoints (equipment, credits history, user profile)
 for ep in "equipment" "credits/history" "users/me"; do
   info "Querying ${ep} (GET ${API_BASE}/${ep})..."
-  RESP=$(curl -s -w "\n%{http_code}" -m 5 ${CURL_INSECURE} \
+  TMP_EP=$(mktemp)
+  STATUS=$(curl -s -m 5 "${CURL_OPTS[@]}" \
     -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-    "${API_BASE}/${ep}" 2>/dev/null || echo -e "\n000")
-  STATUS=$(echo "${RESP}" | tail -n 1)
+    -o "${TMP_EP}" \
+    -w "%{http_code}" \
+    "${API_BASE}/${ep}" 2>/dev/null || echo "000")
+  rm -f "${TMP_EP}"
   if [ "$STATUS" = "200" ]; then
     ok "${ep} retrieved successfully (HTTP 200)"
   else
@@ -108,7 +112,7 @@ done
 
 # Logout session
 info "Revoking session (POST ${API_BASE}/auth/logout)..."
-curl -s -m 5 -X POST ${CURL_INSECURE} \
+curl -s -m 5 -X POST "${CURL_OPTS[@]}" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   "${API_BASE}/auth/logout" >/dev/null 2>&1 || true
 ok "Session logged out cleanly"

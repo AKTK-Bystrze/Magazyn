@@ -28,6 +28,8 @@ services:
       start_period: 10s
     networks:
       - magazyn-network
+    # journald driver requires Linux with systemd. For local dev on macOS/Windows,
+    # override with docker-compose.override.yml using driver: "json-file".
     logging:
       driver: "journald"
       options:

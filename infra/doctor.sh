@@ -70,46 +70,33 @@ fi
 
 # 4. Database Connection Check
 info "Checking PostgreSQL database connectivity..."
-if [ -n "${DB_CONNECTION_STRING:-}" ] && command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
-  if docker run --rm --network host postgres:17.6 pg_isready -d "${DB_CONNECTION_STRING}" >/dev/null 2>&1; then
-    ok "Database connection successful"
+if [ -n "${DB_CONNECTION_STRING:-}" ]; then
+  DB_HOST=$(echo "${DB_CONNECTION_STRING}" | sed 's|.*@\([^:/]*\).*|\1|')
+  DB_PORT=$(echo "${DB_CONNECTION_STRING}" | sed 's|.*:\([0-9]*\)/.*|\1|')
+  if nc -z -w3 "${DB_HOST}" "${DB_PORT}" 2>/dev/null; then
+    ok "Database port reachable at ${DB_HOST}:${DB_PORT}"
   else
-    fail "Database is unreachable via DB_CONNECTION_STRING"
+    fail "Database is unreachable at ${DB_HOST}:${DB_PORT}"
     HAS_ERRORS=1
   fi
 else
-  warn "Skipping database ping (Docker or DB_CONNECTION_STRING missing)"
+  warn "Skipping database ping (DB_CONNECTION_STRING not set)"
 fi
 
-# 5. Service Containers & Ingress Health
+# 5. Service Containers & Health Status
 info "Checking running containers and endpoints..."
 cd "${ROOT_DIR}/infra"
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   docker compose ps || true
 
-  CADDY_PORT="${CADDY_PORT:-20164}"
-
-  # Backend health check (direct port 8080, Caddy /api/health, or Docker internal health)
-  if curl -s -f -m 3 http://localhost:8080/health >/dev/null 2>&1; then
-    ok "Backend responsive on http://localhost:8080/health"
-  elif curl -k -s -f -m 3 "https://localhost:${CADDY_PORT}/api/health" >/dev/null 2>&1; then
-    ok "Backend responsive via Caddy proxy (https://localhost:${CADDY_PORT}/api/health)"
-  elif [ "$(docker inspect -f '{{.State.Health.Status}}' magazyn-backend 2>/dev/null)" = "healthy" ]; then
-    ok "Backend container internal health is healthy"
-  else
-    warn "Backend container health endpoint is not responding"
-  fi
-
-  # Frontend / Caddy proxy check
-  if curl -k -s -m 3 "https://localhost:${CADDY_PORT}/login" >/dev/null 2>&1; then
-    ok "Caddy & Frontend responsive (https://localhost:${CADDY_PORT}/login)"
-  elif curl -s -f -m 3 http://localhost:4321 >/dev/null 2>&1; then
-    ok "Frontend responsive on port 4321"
-  elif [ "$(docker inspect -f '{{.State.Health.Status}}' magazyn-caddy 2>/dev/null)" = "healthy" ]; then
-    ok "Caddy container internal health is healthy"
-  else
-    warn "Caddy reverse proxy is not responding"
-  fi
+  for svc in magazyn-backend magazyn-caddy; do
+    health=$(docker inspect -f '{{.State.Health.Status}}' "${svc}" 2>/dev/null || echo "not found")
+    case "$health" in
+      healthy)   ok "${svc} is healthy" ;;
+      not\ found) warn "${svc} container not found" ;;
+      *)         warn "${svc} health status: ${health}" ;;
+    esac
+  done
 fi
 
 echo "=============================================="

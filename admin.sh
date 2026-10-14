@@ -43,12 +43,23 @@ warn() { echo -e "  [${YELLOW}WARN${NC}] $1"; }
 fail() { echo -e "  [${RED}FAIL${NC}] $1"; }
 info() { echo -e "${BLUE}==>${NC} $1"; }
 
-show_error_guidance() {
-  echo ""
-  fail "Action failed at: $1"
-  echo "Suggested recovery: 1) ./admin.sh doctor  2) docker compose logs --tail=50  3) ./admin.sh rollback"
-  echo -e "Refer to Playbook: ${CYAN}documentation/operations/recovery_playbook.md${NC}"
-  echo ""
+pick_tag() {
+  git fetch --tags -f >/dev/null 2>&1 || true
+  echo "Available release tags:"
+  PS3="Select tag [number or name]: "
+  select tag in $(git tag -l --sort=-v:refname | head -n 10); do
+    echo "${tag:-$REPLY}"
+    return
+  done
+}
+
+pick_snapshot() {
+  echo "Available backup snapshots:"
+  PS3="Select snapshot to restore: "
+  select snap in "${ROOT_DIR}/infra/backups/daily"/public-rollback-*.sql.gz; do
+    echo "${snap:-$REPLY}"
+    return
+  done
 }
 
 load_env() {
@@ -125,13 +136,7 @@ cmd_deploy() {
 
   # Auto-discovery if tag not provided
   if [ -z "$target_tag" ]; then
-    git fetch --tags -f >/dev/null 2>&1 || true
-    echo "Available release tags:"
-    PS3="Select tag [number or name]: "
-    select tag in $(git tag -l --sort=-v:refname | head -n 10); do
-      target_tag="${tag:-$REPLY}"
-      break
-    done
+    target_tag=$(pick_tag)
   fi
 
   [ -n "$target_tag" ] || { fail "Target tag cannot be empty"; exit 1; }
@@ -140,12 +145,12 @@ cmd_deploy() {
 
   # Step 1: Pre-flight checks
   info "Step 1/6: Running pre-flight diagnostics..."
-  git fetch --tags -f || { show_error_guidance "git fetch --tags"; exit 1; }
+  git fetch --tags -f || { fail "git fetch --tags failed"; exit 1; }
 
   if ! git rev-parse -q --verify "refs/tags/${target_tag}^{commit}" >/dev/null 2>&1; then
     if ! git rev-parse -q --verify "${target_tag}^{commit}" >/dev/null 2>&1; then
       fail "Target tag/commit '${target_tag}' does not exist in git."
-      show_error_guidance "tag validation"; exit 1;
+      exit 1
     fi
   fi
 
@@ -166,16 +171,13 @@ cmd_deploy() {
   # Step 2: Database snapshot
   info "Step 2/6: Creating pre-deployment database backup..."
   bash "${HELPER_DIR}/infra/backups/backup_db.sh" "${target_tag}" || {
-    show_error_guidance "pre-deploy database backup"
+    fail "Pre-deploy database backup failed"
     exit 1
   }
 
   # Step 3: Switch repository tag
   info "Step 3/6: Checking out ${target_tag}..."
-  git checkout "${target_tag}" || {
-    show_error_guidance "git checkout ${target_tag}"
-    exit 1
-  }
+  git checkout "${target_tag}" || { fail "git checkout ${target_tag} failed"; exit 1; }
 
   # Ensure admin.sh exists in target repo after deployment
   if [ ! -f "${ROOT_DIR}/admin.sh" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
@@ -190,7 +192,6 @@ cmd_deploy() {
   if ! docker compose build; then
     fail "Docker build failed! Database was NOT modified."
     git checkout "${CURRENT_TAG}" 2>/dev/null || true
-    show_error_guidance "docker compose build"
     exit 1
   fi
 
@@ -206,7 +207,6 @@ cmd_deploy() {
     fail "Database migration failed!"
     echo "Your previous containers are still running. If DB requires restoration, run:"
     echo "  ./admin.sh rollback ${CURRENT_TAG}"
-    show_error_guidance "database migration"
     exit 1
   fi
 
@@ -216,7 +216,6 @@ cmd_deploy() {
   export MAGAZYN_VERSION="${target_tag}"
   docker compose up -d --wait || {
     fail "Containers failed to report healthy within timeout."
-    show_error_guidance "docker compose up --wait"
     exit 1
   }
 
@@ -251,23 +250,13 @@ cmd_rollback() {
 
   # Discover tags if not given
   if [ -z "$target_tag" ] || [ "$target_tag" = "-y" ] || [ "$target_tag" = "--yes" ]; then
-    echo "Available previous release tags:"
-    PS3="Select tag to roll back to: "
-    select tag in $(git tag -l --sort=-v:refname | head -n 10); do
-      target_tag="${tag:-$REPLY}"
-      break
-    done
+    target_tag=$(pick_tag)
   fi
 
   # Discover snapshots if not given
   if [ -z "$snapshot_file" ] || [ "$snapshot_file" = "-y" ] || [ "$snapshot_file" = "--yes" ]; then
     echo ""
-    echo "Available backup snapshots:"
-    PS3="Select snapshot to restore: "
-    select snap in "${ROOT_DIR}/infra/backups/daily"/public-rollback-*.sql.gz; do
-      snapshot_file="${snap:-$REPLY}"
-      break
-    done
+    snapshot_file=$(pick_snapshot)
   fi
 
   echo ""
@@ -306,7 +295,11 @@ cmd_rollback() {
   docker compose up -d --build --wait
 
   # Verify with sanity
-  bash "${HELPER_DIR}/infra/sanity_check.sh" || true
+  if ! bash "${HELPER_DIR}/infra/sanity_check.sh"; then
+    echo ""
+    warn "Post-rollback sanity check failed. The rollback completed but the system may not be fully healthy."
+    warn "Run './admin.sh doctor' to investigate, or check container logs for details."
+  fi
 
   echo ""
   echo -e "${GREEN}${BOLD}Rollback to ${target_tag} complete!${NC}"
