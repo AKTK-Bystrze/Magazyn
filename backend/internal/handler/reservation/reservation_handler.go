@@ -11,6 +11,7 @@ import (
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/service/reservation"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 // ReservationHandler handles HTTP endpoints for reservations.
@@ -35,6 +36,10 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 	query := types.ReservationListQuery{}
 	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	if status := r.URL.Query().Get("status"); status != "" {
+		if err := validation.ValidateEnum(status, constants.ValidReservationStatuses); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid reservation status")
+			return
+		}
 		query.Status = &status
 	}
 	if qUserID := r.URL.Query().Get("user_id"); qUserID != "" {
@@ -50,6 +55,10 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		query.StartDateTo = &end
 	}
 	if scope := r.URL.Query().Get("scope"); scope != "" {
+		if scope != "all" && scope != "my" {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid scope: must be 'all' or 'my'")
+			return
+		}
 		query.Scope = &scope
 	}
 	logger.Debugf(ctx, "Reservations list - Role: %s, Scope: %v, UserID: %s", role, query.Scope, userID)
@@ -130,6 +139,12 @@ func (h *ReservationHandler) HandleUpdate(w http.ResponseWriter, r *http.Request
 		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+	if cmd.Status != nil && *cmd.Status != "" {
+		if err := validation.ValidateEnum(*cmd.Status, constants.ValidReservationStatuses); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid reservation status")
+			return
+		}
+	}
 	response, err := h.service.Update(ctx, id, cmd, userID, role)
 	if err != nil {
 		logger.Errorf(ctx, "Update error: %v", err)
@@ -150,6 +165,10 @@ func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Req
 	var cmd types.BulkUpdateReservationsCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
 		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if err := validation.ValidateEnum(cmd.Status, constants.ValidReservationStatuses); err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid reservation status")
 		return
 	}
 	adminID := common.GetUserIDFromContext(r)

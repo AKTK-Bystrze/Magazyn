@@ -5,6 +5,7 @@ package reservation
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"magazyn/backend/internal/auth"
@@ -62,6 +63,9 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 	items, total, err := s.repo.GetReservations(ctx, query)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to list reservations: %v", err)
+		if strings.Contains(err.Error(), "22P02") || strings.Contains(err.Error(), "invalid input value for enum") || strings.Contains(err.Error(), "invalid input syntax") {
+			return nil, types.NewValidationError("Invalid reservation filter", map[string]interface{}{"error": err.Error()})
+		}
 		return nil, types.NewInternalError("Failed to list reservations", err)
 	}
 	totalPages := 0
