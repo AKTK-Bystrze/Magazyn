@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.4.2...v0.5.0) (2026-10-14)
+
+
+### Features
+
+* **reservations:** add search, user, type filters and multi-date sorting ([#230](https://github.com/AKTK-Bystrze/Magazyn/issues/230)) ([#233](https://github.com/AKTK-Bystrze/Magazyn/issues/233)) ([a8f50ab](https://github.com/AKTK-Bystrze/Magazyn/commit/a8f50ab211776a375d76f7d3ba93401487d7bf44))
+
 ## [0.4.2](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.4.1...v0.4.2) (2026-10-14)
 
 
