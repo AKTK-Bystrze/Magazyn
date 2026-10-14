@@ -8,7 +8,6 @@
 [![Docker](https://img.shields.io/badge/Docker-24.0-blue.svg)](https://www.docker.com/)
 [![Caddy](https://img.shields.io/badge/Caddy-2.6-blue.svg)](https://caddyserver.com/)
 
-
 ## 📋 Table of Contents
 
 - [About](#about)
@@ -47,12 +46,12 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 
 ## 🛠 Tech Stack & Architecture
 
-| Layer | Technology |
-|-------|------------|
+| Layer        | Technology                                               |
+| ------------ | -------------------------------------------------------- |
 | **Frontend** | Astro 5 (SSR) + React 19 + TypeScript 5 + TanStack Query |
-| **Backend** | Go (net/http) + Email Service (Noop) |
-| **Database** | Supabase (PostgreSQL + Auth + Storage) |
-| **Deploy** | Docker Compose + Caddy |
+| **Backend**  | Go (net/http) + Email Service (Noop)                     |
+| **Database** | Supabase (PostgreSQL + Auth + Storage)                   |
+| **Deploy**   | Docker Compose + Caddy                                   |
 
 ### 📐 Architecture Diagrams
 
@@ -67,13 +66,12 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 
 ### 🤖 AI Tooling Directories
 
-| Directory | Purpose |
-|-----------|---------|
+| Directory | Purpose                                                        |
+| --------- | -------------------------------------------------------------- |
 | `.agent/` | AI coding assistant configuration (rules, commands, workflows) |
-| `.ai/` | AI-generated content (issue drafts, prompts, context files) |
+| `.ai/`    | AI-generated content (issue drafts, prompts, context files)    |
 
 > These directories are used by AI coding assistants (Cursor, Windsurf, etc.) and are not part of the application runtime.
-
 
 ## 🚀 Getting Started
 
@@ -116,7 +114,6 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
    reuse seed.sql from supabase/seed.sql to create super admin user. Just replace email and role. Email is used to send magic link
 
-
 > [!TIP]
 > See [documentation/frontend/testing.md](documentation/frontend/testing.md) for E2E testing guidelines and CI simulation setup.
 
@@ -140,7 +137,6 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
    Copy the API URL and Anon Key from the output to your `.env` file.
 
-
 3. **Configure environment variables**
 
    Copy `.env.example` to `.env`:
@@ -152,8 +148,6 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
    See [`.env.example`](.env.example) for all configuration options.
 
-
-
 4. **Start development server**
 
    ```bash
@@ -162,7 +156,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
    The application will be available at `http://localhost:4321`
 
-4. **Start Go backend** (in separate terminal)
+5. **Start Go backend** (in separate terminal)
 
    ```bash
    cd backend
@@ -177,11 +171,12 @@ The application uses passwordless authentication via Magic Links. During local d
 
 1. Navigate to the login page: [http://localhost:4321/login](http://localhost:4321/login)
 2. Enter one of the pre-seeded test accounts:
-   * **Admin User**: `admin@example.com`
-   * **Standard User**: `user@example.com`
+   - **Admin User**: `admin@example.com`
+   - **Standard User**: `user@example.com`
 3. Click **"Send Magic Link"**.
 4. Open the local email inbox (Mailpit/Inbucket): [http://127.0.0.1:54324](http://127.0.0.1:54324)
 5. Open the latest email and click the login link to authenticate.
+
 ### Database Setup for Development
 
 Populate your local Supabase database with test users and sample data:
@@ -202,6 +197,7 @@ npx supabase db seed
 End-to-end tests use **Playwright** and support both Docker and local environments.
 
 **A: Quick Start (Docker):**
+
 ```bash
 cd infra && docker compose --env-file ../.env up -d --build
 cd ../frontend && npm run e2e
@@ -215,9 +211,11 @@ You can simulate the exact GitHub Actions CI environment locally using the provi
 # Run the complete E2E simulation
 ./run-e2e.sh
 ```
-*(On Windows, execute this script using Git Bash).*
+
+_(On Windows, execute this script using Git Bash)._
 
 **Key Features:**
+
 - **Auto-created users**: Test users are automatically managed by fixtures.
 - **Hybrid Strategy**: Uses shared users for performance and isolated resources for reliability.
 - **Visuals**: Runs on mobile viewport (Pixel 5).
@@ -264,6 +262,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 **Format**: `<type>(<scope>): <description>`
 
 **Common types:**
+
 - `feat:` - New feature (minor version bump)
 - `fix:` - Bug fix (patch version bump)
 - `docs:` - Documentation changes (no release)
@@ -271,18 +270,18 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 - `test:` - Test changes (no release)
 - `chore:` - Maintenance tasks (no release)
 
-
 📚 **[See detailed commit type guide →](documentation/overview/conventional-commits.md)**
 
 **Enforcement:**
+
 - **CI**: PR titles validated automatically on every PR
 - **Local**: Commits validated via commitlint with husky hooks
 
 **Documentation:**
 
 - [Documentation Index](documentation/README.md)
+- [Operations & Recovery Playbook](documentation/operations/recovery_playbook.md)
 - [Product Requirements Document](documentation/product/prd/index.md)
 - [Technology Stack & Architecture](documentation/overview/techstack.md)
 - [Database Schema Plan](documentation/database/db-doc.md)
 - [Conventional Commits Guide](documentation/overview/conventional-commits.md)
-
