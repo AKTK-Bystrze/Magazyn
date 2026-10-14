@@ -4,10 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(dirname $(realpath ${0}))"
 cd "${SCRIPT_DIR}"
 
-TARGET_TAG="${1}"
+TARGET_TAG="${1:-}"
 [ -n "${TARGET_TAG}" ] || { echo "You have to specify tag of target release as an argument"; exit 1; }
 
-git fetch --tags
+git fetch --tags -f
 
 CURRENT_TAG="$(git describe --tags --abbrev=0 2>/dev/null)"
 [ -n "${CURRENT_TAG}" ] || { echo "Not on a tagged commit. Return to the commit of last release."; exit 1; }
@@ -26,10 +26,16 @@ bash ./infra/backups/backup_db.sh "${TARGET_TAG}"
 git checkout "${TARGET_TAG}"
 
 set -a
-source .env
+source <(sed 's/\r$//' .env)
 set +a
 
-npx supabase db push
+# Push database migrations using containerized Supabase CLI
+docker run --rm \
+  -v "${SCRIPT_DIR}:/app" \
+  -w /app \
+  node:22-alpine \
+  npx --yes supabase db push --yes --db-url "${DB_CONNECTION_STRING}"
+
 cd ./infra/
 export MAGAZYN_VERSION="${TARGET_TAG}"
 docker compose build
