@@ -27,7 +27,7 @@ export const RESERVATION_STATUS_LABELS: Record<string, string> = {
   PENDING: "W trakcie",
   RENTED: "Wypożyczona",
   RETURNED: "Zwrócona",
-  CANCELLED: "Anulowana",
+  CANCELLED: "Anulowano",
   ALL: "Wszystkie statusy",
 };
 
@@ -53,7 +53,7 @@ export const RESERVATION_FILTER_OPTIONS = [
   { value: "PENDING", label: "W trakcie" },
   { value: "RENTED", label: "Wypożyczona" },
   { value: "RETURNED", label: "Zwrócona" },
-  { value: "CANCELLED", label: "Anulowana" },
+  { value: "CANCELLED", label: "Anulowano" },
 ] as const;
 
 /**
