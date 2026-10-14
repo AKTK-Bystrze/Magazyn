@@ -43,10 +43,39 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		query.Status = &status
 	}
 	if qUserID := r.URL.Query().Get("user_id"); qUserID != "" {
+		if err := validation.ValidateUUID(qUserID); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid user_id format")
+			return
+		}
 		query.UserID = &qUserID
 	}
 	if eqID := r.URL.Query().Get("equipment_id"); eqID != "" {
+		if err := validation.ValidateUUID(eqID); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment_id format")
+			return
+		}
 		query.EquipmentID = &eqID
+	}
+	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
+		if err := validation.ValidateUUID(typeID); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid type_id format")
+			return
+		}
+		query.TypeID = &typeID
+	}
+	if search := r.URL.Query().Get("search"); search != "" {
+		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
+			return
+		}
+		query.Search = &search
+	}
+	if sort := r.URL.Query().Get("sort"); sort != "" {
+		if err := validation.ValidateEnum(sort, constants.ValidReservationSorts); err != nil {
+			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid sort option")
+			return
+		}
+		query.Sort = &sort
 	}
 	if start := r.URL.Query().Get("start_date_from"); start != "" {
 		query.StartDateFrom = &start

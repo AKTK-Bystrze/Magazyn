@@ -154,7 +154,11 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
   );
 
   const resetFilters = React.useCallback(() => {
-    setFilters({ ...DEFAULT_FILTERS, ...initialFilters });
+    setFilters((prev) => ({
+      ...DEFAULT_FILTERS,
+      ...initialFilters,
+      scope: prev.scope,
+    }));
   }, [initialFilters]);
 
   const cancelReservation = React.useCallback(

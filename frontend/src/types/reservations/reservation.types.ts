@@ -138,10 +138,8 @@ export type ReservationDashboardSummary = {
   active_today: number;
 };
 
-/**
- * Sort options for reservation list
- */
-export type ReservationSortOption = "created_desc" | "date_asc" | "date_desc";
+import type { ReservationSortOption } from "@/lib/config/constants/reservation/status";
+export type { ReservationSortOption };
 
 /**
  * Filter state for reservation list view
@@ -152,7 +150,9 @@ export type ReservationFilterState = {
   perPage: number;
   status: Enums<"reservation_status"> | "ALL";
   sort: ReservationSortOption;
-  query?: string;
+  search?: string;
+  userId?: string;
+  typeId?: string;
   scope: "my" | "all";
 };
 

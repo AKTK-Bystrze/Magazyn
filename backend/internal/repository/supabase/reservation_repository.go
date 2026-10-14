@@ -4,13 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 
+	postgrest "github.com/supabase-community/postgrest-go"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -27,6 +30,22 @@ func NewReservationRepository(client *supabase.Client, url string, key string) r
 		supabaseKey: key,
 	}
 }
+
+// unmarshalIDs extracts ID strings from raw JSON records containing an "id" field.
+func unmarshalIDs(data []byte) ([]string, error) {
+	var records []struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(data, &records); err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(records))
+	for i, r := range records {
+		ids[i] = r.ID
+	}
+	return ids, nil
+}
+
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
@@ -46,19 +65,87 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	if query.StartDateTo != nil && *query.StartDateTo != "" {
 		qb = qb.Lte("start_date", *query.StartDateTo)
 	}
+	if query.TypeID != nil && *query.TypeID != "" {
+		typeEqData, _, err := client.From("equipment").
+			Select("id", "exact", false).
+			Eq("type_id", *query.TypeID).
+			Execute()
+		if err != nil {
+			return nil, 0, err
+		}
+		typeEqIDs, err := unmarshalIDs(typeEqData)
+		if err != nil {
+			return nil, 0, err
+		}
+		if len(typeEqIDs) == 0 {
+			return []types.ReservationListItem{}, 0, nil
+		}
+		qb = qb.In("equipment_id", typeEqIDs)
+	}
+	if query.Search != nil && *query.Search != "" {
+		searchTerm := validation.SanitizeSearchTerm(*query.Search)
+		eqData, _, err := client.From("equipment").
+			Select("id", "exact", false).
+			Or(fmt.Sprintf("name.ilike.%%%s%%,internal_id.ilike.%%%s%%", searchTerm, searchTerm), "").
+			Limit(50, "").
+			Execute()
+		if err != nil {
+			return nil, 0, err
+		}
+		eqIDs, err := unmarshalIDs(eqData)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		userData, _, err := client.From("profiles").
+			Select("id", "exact", false).
+			Or(fmt.Sprintf("username.ilike.%%%s%%", searchTerm), "").
+			Limit(50, "").
+			Execute()
+		if err != nil {
+			return nil, 0, err
+		}
+		userIDs, err := unmarshalIDs(userData)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		hasEq := len(eqIDs) > 0
+		hasUsers := len(userIDs) > 0
+		if !hasEq && !hasUsers {
+			return []types.ReservationListItem{}, 0, nil
+		}
+
+		if hasEq && hasUsers {
+			qb = qb.Or(fmt.Sprintf("equipment_id.in.(%s),user_id.in.(%s)", strings.Join(eqIDs, ","), strings.Join(userIDs, ",")), "")
+		} else if hasEq {
+			qb = qb.In("equipment_id", eqIDs)
+		} else {
+			qb = qb.In("user_id", userIDs)
+		}
+	}
 	offset := (query.Page - 1) * query.PerPage
-	countData, _, err := qb.Execute()
-	if err != nil {
-		return nil, 0, err
-	}
-	var countHolder []interface{}
-	if err := json.Unmarshal(countData, &countHolder); err != nil {
-		return nil, 0, err
-	}
-	totalItems := int64(len(countHolder))
 	qb = qb.Range(offset, offset+query.PerPage-1, "")
-	qb = qb.Order("created_at", nil)
-	data, _, err := qb.Execute()
+
+	sortCol := "created_at"
+	ascending := false
+	isDateSort := false
+	if query.Sort != nil && *query.Sort != "" {
+		sortVal := *query.Sort
+		ascending = strings.HasSuffix(sortVal, "_asc")
+		if strings.HasPrefix(sortVal, "start_date") {
+			sortCol = "start_date"
+			isDateSort = true
+		} else if strings.HasPrefix(sortVal, "end_date") {
+			sortCol = "end_date"
+			isDateSort = true
+		}
+	}
+	qb = qb.Order(sortCol, &postgrest.OrderOpts{Ascending: ascending})
+	if isDateSort {
+		qb = qb.Order("created_at", &postgrest.OrderOpts{Ascending: false})
+	}
+	data, totalItems, err := qb.Execute()
 	if err != nil {
 		return nil, 0, err
 	}

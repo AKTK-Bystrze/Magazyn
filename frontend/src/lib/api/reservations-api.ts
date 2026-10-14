@@ -27,20 +27,16 @@ export const reservationsApi = {
    * @returns Paginated reservation list
    */
   list: async (filters: Partial<ReservationFilterState>): Promise<ReservationListResponse> => {
-    const params: Record<string, string | number | undefined> = {
+    const params = {
       page: filters.page,
       per_page: filters.perPage,
       sort: filters.sort,
       scope: filters.scope,
+      status: filters.status !== "ALL" ? filters.status : undefined,
+      search: filters.search,
+      user_id: filters.userId,
+      type_id: filters.typeId,
     };
-
-    if (filters.status && filters.status !== "ALL") {
-      params.status = filters.status;
-    }
-
-    if (filters.query) {
-      params.search = filters.query;
-    }
 
     const { data } = await api.get<unknown>("/api/reservations", params);
     return transformReservationListResponse(data);

@@ -60,11 +60,38 @@ export const RESERVATION_FILTER_OPTIONS = [
  * Sort options for reservation lists
  */
 export const RESERVATION_SORT_OPTIONS = [
-  { value: "created_desc", label: "Najnowsze" },
-  { value: "date_asc", label: "Data rozpoczęcia (rosnąco)" },
-  { value: "date_desc", label: "Data rozpoczęcia (malejąco)" },
+  { value: "created_desc", label: "Data utworzenia: najnowsze" },
+  { value: "created_asc", label: "Data utworzenia: najstarsze" },
+  { value: "start_date_asc", label: "Data rozpoczęcia: rosnąco" },
+  { value: "start_date_desc", label: "Data rozpoczęcia: malejąco" },
+  { value: "end_date_asc", label: "Data zakończenia: rosnąco" },
+  { value: "end_date_desc", label: "Data zakończenia: malejąco" },
 ] as const;
+
+export type ReservationSortOption = (typeof RESERVATION_SORT_OPTIONS)[number]["value"];
 
 export const DEFAULT_STATUS_FILTER = "ALL";
 export const DEFAULT_SORT_OPTION = "created_desc";
 export const MIXED_STATUS = "MIXED";
+
+/**
+ * Checks whether any reservation filters or non-default sort are currently active.
+ *
+ * @param filters - The current reservation filter state
+ * @returns True if any filter differs from default or has a value
+ */
+export function hasActiveReservationFilters(filters: {
+  status: string;
+  sort: string;
+  search?: string;
+  userId?: string;
+  typeId?: string;
+}): boolean {
+  return (
+    filters.status !== DEFAULT_STATUS_FILTER ||
+    filters.sort !== DEFAULT_SORT_OPTION ||
+    Boolean(filters.search) ||
+    Boolean(filters.userId) ||
+    Boolean(filters.typeId)
+  );
+}

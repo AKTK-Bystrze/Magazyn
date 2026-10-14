@@ -37,6 +37,7 @@ bystrze_sprzet
 .env
 .env.*
 !.env.example
+*docker-compose.override.yml
 
 # Supabase
 supabase/.branches

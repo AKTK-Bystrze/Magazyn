@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Package } from "lucide-react";
 import { ICON_SIZE_LG } from "@/lib/config/constants";
 import { groupReservationsByDateRange } from "@/lib/utils/group-reservations";
-import type { ReservationListItem } from "@/types";
+import type { ReservationListItem, ReservationSortOption } from "@/types";
 
 interface ReservationCardListProps {
   reservations: ReservationListItem[];
@@ -14,6 +14,7 @@ interface ReservationCardListProps {
   mode: "user" | "admin";
   scope: "my" | "all";
   currentUserId?: string;
+  sort?: ReservationSortOption;
   fetchNextPage: () => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
@@ -38,6 +39,7 @@ export function ReservationCardList({
   mode,
   scope,
   currentUserId,
+  sort,
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
@@ -70,7 +72,10 @@ export function ReservationCardList({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const groups = React.useMemo(() => groupReservationsByDateRange(reservations), [reservations]);
+  const groups = React.useMemo(
+    () => groupReservationsByDateRange(reservations, sort),
+    [reservations, sort]
+  );
 
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups((prev) => {

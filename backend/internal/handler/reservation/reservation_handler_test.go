@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"magazyn/backend/internal/appcontext"
@@ -174,4 +175,105 @@ func TestHandleBulkUpdate_InvalidStatus_ReturnsBadRequest(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	mockSvc.AssertNotCalled(t, "BulkUpdate")
+}
+
+func TestHandleList_InvalidSort_ReturnsBadRequest(t *testing.T) {
+	mockSvc := new(MockReservationService)
+	h := handler.NewReservationHandler(mockSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/reservations?sort=invalid_sort", nil)
+	req = withUserContext(req, "user-1", auth.RoleUser)
+	rec := httptest.NewRecorder()
+
+	h.HandleList(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	var resp map[string]string
+	err := json.NewDecoder(rec.Body).Decode(&resp)
+	assert.NoError(t, err)
+	assert.Equal(t, "Invalid sort option", resp["error"])
+	mockSvc.AssertNotCalled(t, "List")
+}
+
+func TestHandleList_SearchTooLong_ReturnsBadRequest(t *testing.T) {
+	mockSvc := new(MockReservationService)
+	h := handler.NewReservationHandler(mockSvc)
+
+	longSearch := strings.Repeat("a", constants.MaxSearchLength+1)
+	req := httptest.NewRequest(http.MethodGet, "/reservations?search="+longSearch, nil)
+	req = withUserContext(req, "user-1", auth.RoleUser)
+	rec := httptest.NewRecorder()
+
+	h.HandleList(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	var resp map[string]string
+	err := json.NewDecoder(rec.Body).Decode(&resp)
+	assert.NoError(t, err)
+	assert.Contains(t, resp["error"], "Search term too long")
+	mockSvc.AssertNotCalled(t, "List")
+}
+
+func TestHandleList_InvalidUUIDs_ReturnsBadRequest(t *testing.T) {
+	t.Run("invalid user_id", func(t *testing.T) {
+		mockSvc := new(MockReservationService)
+		h := handler.NewReservationHandler(mockSvc)
+		req := httptest.NewRequest(http.MethodGet, "/reservations?user_id=invalid-uuid", nil)
+		req = withUserContext(req, "user-1", auth.RoleUser)
+		rec := httptest.NewRecorder()
+		h.HandleList(rec, req)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("invalid equipment_id", func(t *testing.T) {
+		mockSvc := new(MockReservationService)
+		h := handler.NewReservationHandler(mockSvc)
+		req := httptest.NewRequest(http.MethodGet, "/reservations?equipment_id=invalid-uuid", nil)
+		req = withUserContext(req, "user-1", auth.RoleUser)
+		rec := httptest.NewRecorder()
+		h.HandleList(rec, req)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("invalid type_id", func(t *testing.T) {
+		mockSvc := new(MockReservationService)
+		h := handler.NewReservationHandler(mockSvc)
+		req := httptest.NewRequest(http.MethodGet, "/reservations?type_id=invalid-uuid", nil)
+		req = withUserContext(req, "user-1", auth.RoleUser)
+		rec := httptest.NewRecorder()
+		h.HandleList(rec, req)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+}
+
+func TestHandleList_AllFiltersValid_CallsService(t *testing.T) {
+	mockSvc := new(MockReservationService)
+	h := handler.NewReservationHandler(mockSvc)
+
+	validUUID1 := "00000000-0000-0000-0000-000000000001"
+	validUUID2 := "00000000-0000-0000-0000-000000000002"
+	validUUID3 := "00000000-0000-0000-0000-000000000003"
+	expectedSearch := "kajak"
+	expectedSort := "start_date_asc"
+
+	mockSvc.On("List", mock.Anything, mock.MatchedBy(func(q types.ReservationListQuery) bool {
+		return q.UserID != nil && *q.UserID == validUUID1 &&
+			q.EquipmentID != nil && *q.EquipmentID == validUUID2 &&
+			q.TypeID != nil && *q.TypeID == validUUID3 &&
+			q.Search != nil && *q.Search == expectedSearch &&
+			q.Sort != nil && *q.Sort == expectedSort
+	}), "user-1", auth.RoleUser).Return(&types.ReservationListResponse{
+		Reservations: []types.ReservationListItem{},
+		Pagination:   types.Pagination{Page: 1, PerPage: 25, TotalItems: 0, TotalPages: 0},
+	}, nil)
+
+	url := "/reservations?user_id=" + validUUID1 + "&equipment_id=" + validUUID2 + "&type_id=" + validUUID3 + "&search=" + expectedSearch + "&sort=" + expectedSort
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req = withUserContext(req, "user-1", auth.RoleUser)
+	rec := httptest.NewRecorder()
+
+	h.HandleList(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	mockSvc.AssertExpectations(t)
 }

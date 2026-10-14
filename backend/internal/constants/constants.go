@@ -101,6 +101,16 @@ var ValidReservationStatuses = []string{
 	ReservationStatusCancelled,
 }
 
+// ValidReservationSorts lists all valid sort options for listing reservations.
+var ValidReservationSorts = []string{
+	"created_desc",
+	"created_asc",
+	"start_date_asc",
+	"start_date_desc",
+	"end_date_asc",
+	"end_date_desc",
+}
+
 // Input length constraints.
 const (
 	// MaxSearchLength is the maximum character length for search queries.

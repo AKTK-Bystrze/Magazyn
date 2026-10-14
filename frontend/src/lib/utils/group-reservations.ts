@@ -1,4 +1,4 @@
-import type { ReservationListItem, GroupedReservation } from "@/types";
+import type { ReservationListItem, GroupedReservation, ReservationSortOption } from "@/types";
 import { MIXED_STATUS } from "@/lib/config/constants";
 
 /**
@@ -6,10 +6,12 @@ import { MIXED_STATUS } from "@/lib/config/constants";
  * Reservations with the same userId, startDate, and endDate are collapsed into a single group.
  *
  * @param reservations - Flat list of reservation items
- * @returns Array of grouped reservations
+ * @param sortOption - Active sort option (defaults to 'created_desc')
+ * @returns Array of grouped reservations sorted according to sortOption
  */
 export function groupReservationsByDateRange(
-  reservations: ReservationListItem[]
+  reservations: ReservationListItem[],
+  sortOption: ReservationSortOption = "created_desc"
 ): GroupedReservation[] {
   const groupMap = new Map<string, ReservationListItem[]>();
 
@@ -46,5 +48,15 @@ export function groupReservationsByDateRange(
     });
   }
 
-  return groups.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const isAsc = sortOption.endsWith("_asc");
+  const field = sortOption.startsWith("start_date")
+    ? "startDate"
+    : sortOption.startsWith("end_date")
+      ? "endDate"
+      : "createdAt";
+
+  return groups.sort((a, b) => {
+    const cmp = a[field].localeCompare(b[field]) || a.createdAt.localeCompare(b.createdAt);
+    return isAsc ? cmp : -cmp;
+  });
 }

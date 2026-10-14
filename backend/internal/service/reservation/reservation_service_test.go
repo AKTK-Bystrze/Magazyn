@@ -218,6 +218,26 @@ func TestList_ScopeAll_BypassesRLS(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+func TestList_ScopeAll_PreservesUserID_ForRegularUser(t *testing.T) {
+	mockRepo, _, _, _, svc := setupTestService()
+	ctx := context.Background()
+	scope := "all"
+	targetUserID := "target-user-456"
+	query := types.ReservationListQuery{
+		Page:    1,
+		PerPage: 25,
+		Scope:   &scope,
+		UserID:  &targetUserID,
+	}
+	expectedQuery := query
+	expectedQuery.BypassRLS = true
+	mockRepo.On("GetReservations", ctx, expectedQuery).Return([]types.ReservationListItem{}, int64(0), nil)
+	result, err := svc.List(ctx, query, "user-123", auth.RoleUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	mockRepo.AssertExpectations(t)
+}
+
 func TestList_DefaultScope_RestrictsToUserID(t *testing.T) {
 	mockRepo, _, _, _, svc := setupTestService()
 	ctx := context.Background()
