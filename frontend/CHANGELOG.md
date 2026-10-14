@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.4.0...v0.4.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **reservations:** validate status filter and map db enum errors ([#228](https://github.com/AKTK-Bystrze/Magazyn/issues/228)) ([8ffa45b](https://github.com/AKTK-Bystrze/Magazyn/commit/8ffa45b064964923315a0ae4a916968e9d6ea535))
+
 # [0.4.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.3.1...v0.4.0) (2026-10-14)
 
 
