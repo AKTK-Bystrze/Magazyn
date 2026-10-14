@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { FilterSidebar } from "../FilterSidebar";
-import { EQUIPMENT_FILTER_UI_STRINGS } from "@/lib/config/constants";
+import { EQUIPMENT_FILTER_UI_STRINGS, SEARCH_DEBOUNCE_MS } from "@/lib/config/constants";
 import type { EquipmentSearchParams, EquipmentType } from "@/types";
 
 const mockTypes: EquipmentType[] = [
@@ -93,7 +93,7 @@ describe("FilterSidebar", () => {
     expect(onFilterChange).not.toHaveBeenCalled();
 
     act(() => {
-      vi.advanceTimersByTime(400);
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
     });
 
     expect(onFilterChange).toHaveBeenCalledWith("search", "raki");

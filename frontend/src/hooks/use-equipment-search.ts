@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { EquipmentSearchParams, EquipmentStatus } from "@/types";
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from "@/lib/config/constants";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 import { getTodayAsString } from "@/lib/utils/date-utils";
 
 export function useEquipmentSearch() {
@@ -49,20 +49,9 @@ export function useEquipmentSearch() {
     [updateUrl]
   );
 
-  const [debouncedFilters, setDebouncedFilters] = useState(filters);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedFilters(filters);
-      updateUrl(filters);
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [filters, updateUrl]);
-
   return {
     filters,
-    activeFilters: debouncedFilters,
+    activeFilters: filters,
     updateFilter,
   };
 }

@@ -99,8 +99,7 @@ describe("useEquipmentSearch", () => {
     );
   });
 
-  it("should debounce activeFilters for search query", async () => {
-    vi.useFakeTimers();
+  it("should update activeFilters immediately without redundant debounce", () => {
     const { result } = renderHook(() => useEquipmentSearch());
 
     act(() => {
@@ -108,15 +107,7 @@ describe("useEquipmentSearch", () => {
     });
 
     expect(result.current.filters.search).toBe("fast typing");
-    expect(result.current.activeFilters.search).toBeUndefined();
-
-    act(() => {
-      vi.advanceTimersByTime(300);
-    });
-
     expect(result.current.activeFilters.search).toBe("fast typing");
-
-    vi.useRealTimers();
   });
 
   it("should properly handle status enum values", () => {
