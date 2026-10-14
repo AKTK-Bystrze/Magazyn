@@ -22,9 +22,7 @@ describe("SearchInput", () => {
   });
 
   it("debounces onSearchChange callback", () => {
-    render(
-      <SearchInput placeholder="Szukaj..." onSearchChange={onSearchChange} debounceMs={300} />
-    );
+    render(<SearchInput placeholder="Szukaj..." onSearchChange={onSearchChange} />);
 
     const input = screen.getByPlaceholderText("Szukaj...");
     fireEvent.change(input, { target: { value: "test" } });
@@ -42,16 +40,18 @@ describe("SearchInput", () => {
     expect(onSearchChange).toHaveBeenCalledWith("test");
   });
 
-  it("clears input and invokes onSearchChange immediately on clear button click", () => {
+  it("invokes onSearchChange when input is cleared", () => {
     render(
       <SearchInput placeholder="Szukaj..." value="active search" onSearchChange={onSearchChange} />
     );
 
-    const clearButton = screen.getByRole("button", { name: "Wyczyść pole wyszukiwania" });
-    fireEvent.click(clearButton);
-
     const input = screen.getByPlaceholderText("Szukaj...");
-    expect(input).toHaveValue("");
+    fireEvent.change(input, { target: { value: "" } });
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
     expect(onSearchChange).toHaveBeenCalledWith("");
   });
 

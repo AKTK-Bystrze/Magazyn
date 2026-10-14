@@ -45,13 +45,6 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
     [onFilterChange]
   );
 
-  const handleSearchChange = React.useCallback(
-    (value: string) => {
-      onFilterChange("search", value || undefined);
-    },
-    [onFilterChange]
-  );
-
   const hasActiveFilters =
     filters.role !== DEFAULT_ROLE_FILTER || (filters.search && filters.search.length > 0);
 
@@ -60,7 +53,7 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
       <SearchInput
         placeholder="Szukaj po nazwie użytkownika lub e-mailu..."
         value={filters.search ?? ""}
-        onSearchChange={handleSearchChange}
+        onSearchChange={(val) => onFilterChange("search", val || undefined)}
         aria-label="Szukaj użytkowników"
         maxLength={MAX_SEARCH_LENGTH}
         data-testid="admin-search-input"
