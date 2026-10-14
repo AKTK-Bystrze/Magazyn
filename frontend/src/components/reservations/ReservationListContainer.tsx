@@ -14,8 +14,7 @@ import { AlertCircle, CheckCircle2, LayoutGrid, List } from "lucide-react";
 import {
   ICON_SIZE_SM,
   MESSAGE_AUTO_DISMISS_MS,
-  DEFAULT_STATUS_FILTER,
-  DEFAULT_SORT_OPTION,
+  hasActiveReservationFilters,
 } from "@/lib/config/constants";
 import type { ReservationListItem, ReservationListProps, UpdateReservationCommand } from "@/types";
 import { useQuery } from "@tanstack/react-query";
@@ -276,12 +275,7 @@ function ReservationListContainerInner({
     [setFilter]
   );
 
-  const hasActiveFilters =
-    filters.status !== DEFAULT_STATUS_FILTER ||
-    filters.sort !== DEFAULT_SORT_OPTION ||
-    Boolean(filters.search) ||
-    Boolean(filters.userId) ||
-    Boolean(filters.typeId);
+  const hasActiveFilters = hasActiveReservationFilters(filters);
 
   const showActions = mode === "admin" || filters.scope === "my";
 

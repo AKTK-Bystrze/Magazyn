@@ -14,7 +14,7 @@ import {
   RESERVATION_SORT_OPTIONS,
   ICON_SIZE_SM,
   DEFAULT_STATUS_FILTER,
-  DEFAULT_SORT_OPTION,
+  hasActiveReservationFilters,
 } from "@/lib/config/constants";
 import type { ReservationFilterState, ReservationSortOption } from "@/types";
 import type { Enums } from "@/db/database.types";
@@ -53,12 +53,7 @@ export function ReservationFilters({ filters, onFilterChange, onReset }: Reserva
 
   const publicUsers = publicUsersData?.users ?? [];
 
-  const hasActiveFilters =
-    filters.status !== DEFAULT_STATUS_FILTER ||
-    filters.sort !== DEFAULT_SORT_OPTION ||
-    Boolean(filters.search) ||
-    Boolean(filters.userId) ||
-    Boolean(filters.typeId);
+  const hasActiveFilters = hasActiveReservationFilters(filters);
 
   return (
     <div className="flex flex-wrap items-center gap-3" data-testid="reservation-filters">

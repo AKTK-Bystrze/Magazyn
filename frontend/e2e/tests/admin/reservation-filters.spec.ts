@@ -12,15 +12,12 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
     const searchInput = adminPage.getByTestId("reservation-search-input");
     await expect(searchInput).toBeVisible();
 
-    // Verify search input accepts text
     await searchInput.fill("NonExistentEquipmentXYZ123");
     await expect(searchInput).toHaveValue("NonExistentEquipmentXYZ123");
 
-    // Verify reset button appears when a filter is active
     const resetButton = adminPage.getByTestId("reset-filters-button");
     await expect(resetButton).toBeVisible({ timeout: 10000 });
 
-    // Click reset and verify search is cleared
     await resetButton.click();
     await expect(searchInput).toHaveValue("");
     await expect(resetButton).not.toBeVisible();
@@ -34,7 +31,6 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
     const filtersContainer = adminPage.getByTestId("reservation-filters");
     await expect(filtersContainer).toBeVisible({ timeout: 15000 });
 
-    // On admin/reservations, scope defaults to "all"
     const userTrigger = adminPage.locator("#user-filter");
     await expect(userTrigger).toBeVisible({ timeout: 15000 });
     await expect(userTrigger).toContainText(/Wszyscy użytkownicy/i);

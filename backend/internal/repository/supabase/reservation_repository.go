@@ -30,6 +30,8 @@ func NewReservationRepository(client *supabase.Client, url string, key string) r
 		supabaseKey: key,
 	}
 }
+
+// unmarshalIDs extracts ID strings from raw JSON records containing an "id" field.
 func unmarshalIDs(data []byte) ([]string, error) {
 	var records []struct {
 		ID string `json:"id"`

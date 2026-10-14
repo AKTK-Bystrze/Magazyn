@@ -48,10 +48,10 @@ func NewReservationService(
 	}
 }
 
-func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery, userID string, role string) (*types.ReservationListResponse, error) {
-	// Apply ownership filter based on scope:
-	// scope="all" -> show all reservations (any authenticated user)
-	// scope="my" or empty -> show only user's own reservations
+// List retrieves a paginated list of reservations based on query filters and scope.
+// When scope="all", RLS is bypassed to allow any authenticated user to browse all reservations.
+// When scope="my" (or empty), results are scoped to the caller's userID.
+func (s *reservationService) List(ctx context.Context, query types.ReservationListQuery, userID string, _ string) (*types.ReservationListResponse, error) {
 	if query.Scope != nil && *query.Scope == "all" {
 		query.BypassRLS = true
 	} else if userID != "" {

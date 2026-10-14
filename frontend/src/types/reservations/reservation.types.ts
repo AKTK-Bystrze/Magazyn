@@ -138,16 +138,8 @@ export type ReservationDashboardSummary = {
   active_today: number;
 };
 
-/**
- * Sort options for reservation list
- */
-export type ReservationSortOption =
-  | "created_desc"
-  | "created_asc"
-  | "start_date_asc"
-  | "start_date_desc"
-  | "end_date_asc"
-  | "end_date_desc";
+import type { ReservationSortOption } from "@/lib/config/constants/reservation/status";
+export type { ReservationSortOption };
 
 /**
  * Filter state for reservation list view
