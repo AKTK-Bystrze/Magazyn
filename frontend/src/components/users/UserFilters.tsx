@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -8,10 +8,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import {
   ICON_SIZE_SM,
-  SEARCH_DEBOUNCE_MS,
   MAX_SEARCH_LENGTH,
   USER_ROLE_FILTER_OPTIONS,
   DEFAULT_ROLE_FILTER,
@@ -39,24 +38,6 @@ interface UserFiltersProps {
  * @param onReset - Optional callback to reset filters
  */
 export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersProps) {
-  const [searchValue, setSearchValue] = React.useState(filters.search ?? "");
-  const searchInputId = React.useId();
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchValue !== filters.search) {
-        onFilterChange("search", searchValue || undefined);
-      }
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [searchValue, filters.search, onFilterChange]);
-
-  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
-    setSearchValue(value);
-  }, []);
-
   const handleRoleChange = React.useCallback(
     (value: string) => {
       onFilterChange("role", value as UserFilterState["role"]);
@@ -64,33 +45,20 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
     [onFilterChange]
   );
 
-  const handleReset = React.useCallback(() => {
-    setSearchValue("");
-    onReset?.();
-  }, [onReset]);
-
   const hasActiveFilters =
     filters.role !== DEFAULT_ROLE_FILTER || (filters.search && filters.search.length > 0);
 
   return (
     <div className="flex flex-col sm:flex-row gap-4">
-      <div className="relative flex-1 max-w-md">
-        <Search
-          className={`absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground ${ICON_SIZE_SM}`}
-          aria-hidden="true"
-        />
-        <Input
-          id={searchInputId}
-          type="search"
-          placeholder="Szukaj po nazwie użytkownika lub e-mailu..."
-          value={searchValue}
-          onChange={handleSearchChange}
-          className="pl-10"
-          aria-label="Szukaj użytkowników"
-          maxLength={MAX_SEARCH_LENGTH}
-          data-testid="admin-search-input"
-        />
-      </div>
+      <SearchInput
+        placeholder="Szukaj po nazwie użytkownika lub e-mailu..."
+        value={filters.search ?? ""}
+        onSearchChange={(val) => onFilterChange("search", val || undefined)}
+        aria-label="Szukaj użytkowników"
+        maxLength={MAX_SEARCH_LENGTH}
+        data-testid="admin-search-input"
+        containerClassName="flex-1 max-w-md"
+      />
 
       <Select value={filters.role} onValueChange={handleRoleChange}>
         <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filtruj według roli">
@@ -109,7 +77,7 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleReset}
+          onClick={onReset}
           className="flex items-center gap-1"
           aria-label="Resetuj filtry"
         >

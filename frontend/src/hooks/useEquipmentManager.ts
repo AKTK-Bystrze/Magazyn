@@ -124,16 +124,7 @@ export function useEquipmentManager(
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: QUERY_KEYS.list(filters),
-    queryFn: ({ pageParam = 1 }) => {
-      const params = {
-        search: filters.search,
-        type_id: filters.typeId,
-        status: filters.status,
-        page: pageParam,
-        perPage: filters.perPage,
-      };
-      return equipmentApi.list(params);
-    },
+    queryFn: ({ pageParam = 1 }) => equipmentApi.list({ ...filters, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam,
     enabled,

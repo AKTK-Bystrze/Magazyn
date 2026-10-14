@@ -1,7 +1,7 @@
 import * as React from "react";
 import { type EquipmentSearchParams, type EquipmentType } from "@/types";
 import type { DateRangeValidationErrors } from "@/types/reservation-cart.types";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -37,8 +37,6 @@ export function FilterSidebar({
   showDates = true,
   orientation = "vertical",
 }: FilterSidebarProps) {
-  const [searchValue, setSearchValue] = React.useState(filters.search || "");
-
   const [dateValidationErrors, setDateValidationErrors] = React.useState<DateRangeValidationErrors>(
     {
       startDate: null,
@@ -67,20 +65,6 @@ export function FilterSidebar({
 
     setDateValidationErrors(errors);
   }, [filters.availableFrom, filters.availableTo]);
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchValue !== (filters.search || "")) {
-        onFilterChange("search", searchValue || undefined);
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [searchValue, filters.search, onFilterChange]);
-
-  React.useEffect(() => {
-    setSearchValue(filters.search || "");
-  }, [filters.search]);
 
   const handleStartDateChange = (date: string) => {
     onFilterChange("availableFrom", date || undefined);
@@ -124,11 +108,11 @@ export function FilterSidebar({
 
       <div className={isHorizontal ? "flex-1 min-w-[200px]" : "space-y-2"}>
         <Label htmlFor="search">Szukaj</Label>
-        <Input
+        <SearchInput
           id="search"
           placeholder={EQUIPMENT_FILTER_UI_STRINGS.SEARCH_PLACEHOLDER}
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
+          value={filters.search || ""}
+          onSearchChange={(val) => onFilterChange("search", val || undefined)}
         />
       </div>
 

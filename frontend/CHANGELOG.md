@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.4.1...v0.4.2) (2026-10-14)
+
+
+### Bug Fixes
+
+* **equipment:** fix equipment type filter in admin manager ([#229](https://github.com/AKTK-Bystrze/Magazyn/issues/229)) ([#232](https://github.com/AKTK-Bystrze/Magazyn/issues/232)) ([d738839](https://github.com/AKTK-Bystrze/Magazyn/commit/d738839bc10a01f3c16e863c0cb7aabb860bc198))
+
 ## [0.4.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.4.0...v0.4.1) (2026-10-14)
 
 
