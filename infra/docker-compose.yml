@@ -31,10 +31,9 @@ services:
     networks:
       - magazyn-network
     logging:
-      driver: "json-file"
+      driver: "journald"
       options:
-        max-size: "10m"
-        max-file: "3"
+        tag: "{{.Name}}"
 
   frontend:
     image: magazyn-frontend:${MAGAZYN_VERSION:-latest}
@@ -79,10 +78,9 @@ services:
     networks:
       - magazyn-network
     logging:
-      driver: "json-file"
+      driver: "journald"
       options:
-        max-size: "10m"
-        max-file: "3"
+        tag: "{{.Name}}"
 
   caddy:
     image: caddy:alpine
@@ -118,10 +116,9 @@ services:
     networks:
       - magazyn-network
     logging:
-      driver: "json-file"
+      driver: "journald"
       options:
-        max-size: "10m"
-        max-file: "3"
+        tag: "{{.Name}}"
 
 volumes:
   caddy_data:
