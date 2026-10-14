@@ -58,8 +58,12 @@ func LoadConfig() (*AppState, error) {
 			logger.Infof(context.Background(), "Loaded .env from %s", envPath)
 		}
 	}
+	supabaseURL := os.Getenv("INTERNAL_SUPABASE_URL")
+	if supabaseURL == "" {
+		supabaseURL = os.Getenv("PUBLIC_SUPABASE_URL")
+	}
 	cfg := &Config{
-		SupabaseURL:        os.Getenv("PUBLIC_SUPABASE_URL"),
+		SupabaseURL:        supabaseURL,
 		SupabaseKey:        os.Getenv("PUBLIC_SUPABASE_ANON_KEY"),
 		SupabaseServiceKey: os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
 		Port:               os.Getenv("PORT"),
@@ -82,8 +86,8 @@ func LoadConfig() (*AppState, error) {
 		cfg.LogLevel = "INFO"
 	}
 	if cfg.SupabaseURL == "" || cfg.SupabaseKey == "" {
-		logger.Error(context.Background(), "PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
-		return nil, errors.New("PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
+		logger.Error(context.Background(), "PUBLIC_SUPABASE_URL (or INTERNAL_SUPABASE_URL) and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
+		return nil, errors.New("PUBLIC_SUPABASE_URL (or INTERNAL_SUPABASE_URL) and PUBLIC_SUPABASE_ANON_KEY must be set in environment variables")
 	}
 	logger.Info(context.Background(), "Using Anon Key with JWT forwarding - RLS policies enforced per user")
 	client, err := supabase.NewClient(cfg.SupabaseURL, cfg.SupabaseKey, nil)
