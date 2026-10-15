@@ -255,6 +255,6 @@ func (h *EquipmentHandler) HandleCreateMaintenanceLog(w http.ResponseWriter, r *
 	common.RespondJSON(ctx, w, http.StatusCreated, response)
 }
 func isValidISODate(dateStr string) bool {
-	_, err := time.Parse("2006-01-02", dateStr)
+	_, err := time.Parse(constants.DateFormatISO, dateStr)
 	return err == nil
 }

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { User } from "@supabase/supabase-js";
-import { setAuthCookie, hasAuthCookie } from "@/lib/auth/cookie-utils";
 import { getUserSession } from "@/lib/auth/session-utils";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { isSafeRedirect } from "@/lib/auth/url-utils";
@@ -20,27 +19,8 @@ const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
 describe("Auth Integration Tests", () => {
-  let mockCookie = "";
-
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCookie = "";
-
-    Object.defineProperty(document, "cookie", {
-      get: () => mockCookie,
-      set: (value: string) => {
-        if (value.includes("max-age=0")) {
-          const cookieName = value.split("=")[0];
-          mockCookie = mockCookie
-            .split("; ")
-            .filter((c) => !c.startsWith(cookieName))
-            .join("; ");
-        } else {
-          mockCookie = value;
-        }
-      },
-      configurable: true,
-    });
   });
 
   describe("Login Flow Integration", () => {
@@ -64,9 +44,6 @@ describe("Auth Integration Tests", () => {
 
       const session = await getUserSession("mock-access-token");
       expect(session).toEqual(mockSession);
-
-      setAuthCookie("mock-access-token");
-      expect(hasAuthCookie()).toBe(true);
 
       const mockUser = { id: "user-123", email: "test@example.com" } as unknown as User;
       const redirect = RedirectManager.getRedirectForAuthState(
@@ -135,8 +112,6 @@ describe("Auth Integration Tests", () => {
       const session = await getUserSession("admin-token");
       expect(session?.role).toBe("super_admin");
 
-      setAuthCookie("admin-token");
-
       const mockUser = { id: "admin-789", email: "admin@example.com" } as unknown as User;
       const redirect = RedirectManager.getRedirectForAuthState(
         mockUser,
@@ -147,7 +122,6 @@ describe("Auth Integration Tests", () => {
       );
 
       expect(redirect).toBe("/admin");
-      expect(hasAuthCookie()).toBe(true);
     });
   });
 

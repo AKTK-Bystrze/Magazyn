@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"sort"
-	"time"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 
 	"github.com/supabase-community/supabase-go"
 )
@@ -23,7 +23,7 @@ func NewCalendarRepository(client *supabase.Client) repository.CalendarRepositor
 	}
 }
 func (r *calendarRepository) GetEquipmentForCalendar(ctx context.Context, equipmentID *string) ([]types.PublicEquipmentSelect, error) {
-	qb := r.client.From("equipment").
+	qb := r.client.From(constants.TableEquipment).
 		Select("*", "exact", false).
 		Eq("is_archived", "false")
 	if equipmentID != nil && *equipmentID != "" {
@@ -41,7 +41,7 @@ func (r *calendarRepository) GetEquipmentForCalendar(ctx context.Context, equipm
 	return equipment, nil
 }
 func (r *calendarRepository) GetReservationsInDateRange(ctx context.Context, startDate string, endDate string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
-	qb := r.client.From("reservations").
+	qb := r.client.From(constants.TableReservations).
 		Select("*", "exact", false).
 		Lte("start_date", endDate).
 		Gte("end_date", startDate).
@@ -70,7 +70,7 @@ func NewAnalyticsRepository(client *supabase.Client) repository.AnalyticsReposit
 	}
 }
 func (r *analyticsRepository) GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) ([]types.PublicAnalyticsEquipmentStatsSelect, error) {
-	qb := r.client.From("analytics_equipment_stats").
+	qb := r.client.From(constants.ViewAnalyticsEquipmentStats).
 		Select("*", "exact", false)
 	if query.EquipmentID != nil && *query.EquipmentID != "" {
 		qb = qb.Eq("equipment_id", *query.EquipmentID)
@@ -86,7 +86,7 @@ func (r *analyticsRepository) GetEquipmentStats(ctx context.Context, query types
 	return stats, nil
 }
 func (r *analyticsRepository) GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) ([]types.PublicAnalyticsUserStatsSelect, error) {
-	data, _, err := r.client.From("analytics_user_stats").
+	data, _, err := r.client.From(constants.ViewAnalyticsUserStats).
 		Select("*", "exact", false).
 		Execute()
 	if err != nil {
@@ -99,7 +99,7 @@ func (r *analyticsRepository) GetUserStats(ctx context.Context, query types.Anal
 	return stats, nil
 }
 func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equipmentID string, limit int) ([]types.TopRenterDTO, error) {
-	data, _, err := r.client.From("reservations").
+	data, _, err := r.client.From(constants.TableReservations).
 		Select("user_id, profiles!user_id(username), start_date, end_date", "exact", false).
 		Eq("equipment_id", equipmentID).
 		In("status", []string{constants.ReservationStatusRented, constants.ReservationStatusReturned}).
@@ -129,7 +129,7 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 			}
 		}
 		userStats[res.UserID].ReservationCount++
-		userStats[res.UserID].DaysRented += calculateDays(res.StartDate, res.EndDate)
+		userStats[res.UserID].DaysRented += validation.CalculateDays(res.StartDate, res.EndDate)
 	}
 	result := make([]types.TopRenterDTO, 0, len(userStats))
 	for _, stats := range userStats {
@@ -144,7 +144,7 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 	return result, nil
 }
 func (r *analyticsRepository) GetFavoriteEquipmentTypeForUser(ctx context.Context, userID string) (*string, error) {
-	data, _, err := r.client.From("reservations").
+	data, _, err := r.client.From(constants.TableReservations).
 		Select("equipment:equipment_id(type_id, equipment_types:type_id(name))", "exact", false).
 		Eq("user_id", userID).
 		In("status", []string{constants.ReservationStatusRented, constants.ReservationStatusReturned}).
@@ -185,19 +185,4 @@ func (r *analyticsRepository) GetFavoriteEquipmentTypeForUser(ctx context.Contex
 	}
 	typeName := typeNames[favoriteTypeID]
 	return &typeName, nil
-}
-func calculateDays(startDate, endDate string) int {
-	start, err := time.Parse(constants.DateFormatISO, startDate)
-	if err != nil {
-		return 1
-	}
-	end, err := time.Parse(constants.DateFormatISO, endDate)
-	if err != nil {
-		return 1
-	}
-	days := int(end.Sub(start).Hours()/24) + 1
-	if days < 1 {
-		return 1
-	}
-	return days
 }

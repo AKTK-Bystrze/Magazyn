@@ -31,7 +31,7 @@ func NewEquipmentRepository(client *supabase.Client, supabaseURL, supabaseKey st
 }
 func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	baseQuery := client.From("equipment").
+	baseQuery := client.From(constants.TableEquipment).
 		Select("*", "exact", false).
 		Order("created_at", &postgrest.OrderOpts{Ascending: false})
 	if !query.IncludeArchived {
@@ -98,7 +98,7 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 }
 func (r *equipmentRepository) GetByID(ctx context.Context, id string) (*types.PublicEquipmentSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("equipment").
+	data, _, err := client.From(constants.TableEquipment).
 		Select("*", "exact", false).
 		Eq("id", id).
 		Single().
@@ -114,7 +114,7 @@ func (r *equipmentRepository) GetByID(ctx context.Context, id string) (*types.Pu
 }
 func (r *equipmentRepository) GetTypeByID(ctx context.Context, typeID string) (*types.PublicEquipmentTypesSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("equipment_types").
+	data, _, err := client.From(constants.TableEquipmentTypes).
 		Select("*", "exact", false).
 		Eq("id", typeID).
 		Single().
@@ -129,7 +129,7 @@ func (r *equipmentRepository) GetTypeByID(ctx context.Context, typeID string) (*
 	return &item, nil
 }
 func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID string, internalID string) (bool, error) {
-	data, _, err := r.client.From("equipment").
+	data, _, err := r.client.From(constants.TableEquipment).
 		Select("id", "exact", false).
 		Eq("type_id", typeID).
 		Eq("internal_id", internalID).
@@ -142,7 +142,7 @@ func (r *equipmentRepository) GetInternalIDCheck(ctx context.Context, typeID str
 }
 func (r *equipmentRepository) Create(ctx context.Context, equipment types.PublicEquipmentInsert) (*types.PublicEquipmentSelect, error) {
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := adminClient.From("equipment").
+	data, _, err := adminClient.From(constants.TableEquipment).
 		Insert(equipment, false, "", "representation", "").
 		Single().
 		Execute()
@@ -160,7 +160,7 @@ func (r *equipmentRepository) Create(ctx context.Context, equipment types.Public
 }
 func (r *equipmentRepository) Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error) {
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := adminClient.From("equipment").
+	data, _, err := adminClient.From(constants.TableEquipment).
 		Update(equipment, "", "representation").
 		Eq("id", id).
 		Single().
@@ -190,7 +190,7 @@ func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
 	updateData := types.PublicEquipmentUpdate{
 		IsArchived: &archived,
 	}
-	_, _, err := adminClient.From("equipment").
+	_, _, err := adminClient.From(constants.TableEquipment).
 		Update(updateData, "", "").
 		Eq("id", id).
 		Execute()
@@ -199,7 +199,7 @@ func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
 func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	desc := true
-	data, _, err := adminClient.From("maintenance_logs").
+	data, _, err := adminClient.From(constants.TableMaintenanceLogs).
 		Select("*, admin:profiles!admin_id(username)", "exact", false).
 		Eq("equipment_id", equipmentID).
 		Order("created_at", &postgrest.OrderOpts{Ascending: !desc}).
@@ -227,7 +227,7 @@ func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, e
 }
 func (r *equipmentRepository) GetActiveReservations(ctx context.Context, equipmentID string) ([]types.PublicReservationsSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("reservations").
+	data, _, err := client.From(constants.TableReservations).
 		Select("*", "exact", false).
 		Eq("equipment_id", equipmentID).
 		In("status", []string{constants.ReservationStatusPending, constants.ReservationStatusRented}).
@@ -243,7 +243,7 @@ func (r *equipmentRepository) GetActiveReservations(ctx context.Context, equipme
 }
 func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.PublicReservationsSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("reservations").
+	data, _, err := client.From(constants.TableReservations).
 		Select("id, start_date, end_date, status", "exact", false).
 		Eq("equipment_id", equipmentID).
 		Lte("start_date", end).
@@ -262,7 +262,7 @@ func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, eq
 func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, startDate, endDate string) ([]string, error) {
 	logger.Debugf(ctx, "GetEquipmentIDsWithConflicts called with: startDate=%s, endDate=%s", startDate, endDate)
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := adminClient.From("reservations").
+	data, _, err := adminClient.From(constants.TableReservations).
 		Select("equipment_id, start_date, end_date, status", "exact", false).
 		Lte("start_date", endDate).
 		Gte("end_date", startDate).
@@ -296,7 +296,7 @@ func (r *equipmentRepository) GetEquipmentIDsWithConflicts(ctx context.Context, 
 }
 func (r *equipmentRepository) GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("reservations").
+	data, _, err := client.From(constants.TableReservations).
 		Select("equipment_id", "exact", false).
 		Eq("user_id", userID).
 		In("status", []string{constants.ReservationStatusRented, constants.ReservationStatusReturned}).

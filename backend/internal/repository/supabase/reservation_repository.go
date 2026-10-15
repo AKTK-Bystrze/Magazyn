@@ -49,7 +49,7 @@ func unmarshalIDs(data []byte) ([]string, error) {
 func (r *reservationRepository) GetReservations(ctx context.Context, query types.ReservationListQuery) ([]types.ReservationListItem, int64, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
-	qb := client.From("reservations").Select(selectStr, "exact", false)
+	qb := client.From(constants.TableReservations).Select(selectStr, "exact", false)
 	if query.Status != nil && *query.Status != "" {
 		qb = qb.Eq("status", *query.Status)
 	}
@@ -66,7 +66,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 		qb = qb.Lte("start_date", *query.StartDateTo)
 	}
 	if query.TypeID != nil && *query.TypeID != "" {
-		typeEqData, _, err := client.From("equipment").
+		typeEqData, _, err := client.From(constants.TableEquipment).
 			Select("id", "exact", false).
 			Eq("type_id", *query.TypeID).
 			Execute()
@@ -84,7 +84,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	}
 	if query.Search != nil && *query.Search != "" {
 		searchTerm := validation.SanitizeSearchTerm(*query.Search)
-		eqData, _, err := client.From("equipment").
+		eqData, _, err := client.From(constants.TableEquipment).
 			Select("id", "exact", false).
 			Or(fmt.Sprintf("name.ilike.%%%s%%,internal_id.ilike.%%%s%%", searchTerm, searchTerm), "").
 			Limit(50, "").
@@ -97,7 +97,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 			return nil, 0, err
 		}
 
-		userData, _, err := client.From("profiles").
+		userData, _, err := client.From(constants.TableProfiles).
 			Select("id", "exact", false).
 			Or(fmt.Sprintf("username.ilike.%%%s%%", searchTerm), "").
 			Limit(50, "").
@@ -159,7 +159,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 		if item.IsFree {
 			creditCost = 0
 		} else {
-			days := calculateDays(item.StartDate, item.EndDate)
+			days := validation.CalculateDays(item.StartDate, item.EndDate)
 			creditCost = int32(days) * item.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
 		}
 		result[i] = types.ReservationListItem{
@@ -183,7 +183,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 func (r *reservationRepository) GetReservationByID(ctx context.Context, id string) (*types.ReservationDetail, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	selectStr := "*, profiles!user_id(username, email), equipment(name, internal_id, equipment_types(name, credit_cost_per_day))"
-	data, _, err := client.From("reservations").
+	data, _, err := client.From(constants.TableReservations).
 		Select(selectStr, "exact", false).
 		Eq("id", id).
 		Single().
@@ -203,7 +203,7 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 	if raw.IsFree {
 		creditCost = 0
 	} else {
-		days := calculateDays(raw.StartDate, raw.EndDate)
+		days := validation.CalculateDays(raw.StartDate, raw.EndDate)
 		creditCost = int32(days) * raw.Equipment.EquipmentType.CreditCostPerDay //nolint:gosec // days is bounded
 	}
 	detail := &types.ReservationDetail{
@@ -231,7 +231,7 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 func (r *reservationRepository) getAuditTrail(ctx context.Context, reservationID string) ([]types.ReservationAuditEntry, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	selectStr := "*, profiles!changed_by_user_id(username)"
-	data, _, err := client.From("reservation_history").
+	data, _, err := client.From(constants.TableReservationHistory).
 		Select(selectStr, "exact", false).
 		Eq("reservation_id", reservationID).
 		Order("created_at", nil).
@@ -400,7 +400,7 @@ func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids 
 }
 func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, equipmentID string, startDate string, endDate string, excludeReservationID *string) ([]types.PublicReservationsSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	qb := client.From("reservations").
+	qb := client.From(constants.TableReservations).
 		Select("*", "exact", false).
 		Eq("equipment_id", equipmentID).
 		Lte("start_date", endDate).
@@ -421,12 +421,12 @@ func (r *reservationRepository) GetOverlappingReservations(ctx context.Context, 
 }
 func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	_, pCount, err := client.From("reservations").Select("*", "exact", true).Eq("status", constants.ReservationStatusPending).Execute()
+	_, pCount, err := client.From(constants.TableReservations).Select("*", "exact", true).Eq("status", constants.ReservationStatusPending).Execute()
 	if err != nil {
 		return nil, err
 	}
-	now := time.Now().Format("2006-01-02")
-	_, oCount, err := client.From("reservations").
+	now := time.Now().Format(constants.DateFormatISO)
+	_, oCount, err := client.From(constants.TableReservations).
 		Select("*", "exact", true).
 		Eq("status", constants.ReservationStatusRented).
 		Lt("end_date", now).
@@ -434,7 +434,7 @@ func (r *reservationRepository) GetDashboardStats(ctx context.Context) (*types.R
 	if err != nil {
 		return nil, err
 	}
-	_, aCount, err := client.From("reservations").
+	_, aCount, err := client.From(constants.TableReservations).
 		Select("*", "exact", true).
 		Eq("status", constants.ReservationStatusRented).
 		Lte("start_date", now).
@@ -455,8 +455,8 @@ func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID
 		"p_reservation_id": reservationID,
 		"p_amount":         amount,
 	}
-	_ = client.Rpc("refund_reservation_credits", "", params)
-	return nil
+	jsonStr := client.Rpc("refund_reservation_credits", "", params)
+	return parseRPCVoidResponse(jsonStr)
 }
 func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)

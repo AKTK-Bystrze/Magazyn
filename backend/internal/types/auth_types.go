@@ -6,12 +6,6 @@ type User struct {
 	Email string
 }
 
-// Session represents an authenticated session with an access token.
-type Session struct {
-	AccessToken string
-	User        User
-}
-
 // LoginRequest contains the user's email address to initiate magic link authentication.
 type LoginRequest struct {
 	Email string `json:"email"`

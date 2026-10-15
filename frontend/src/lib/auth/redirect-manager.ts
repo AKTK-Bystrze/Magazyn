@@ -2,7 +2,7 @@ import type { User } from "@supabase/supabase-js";
 import type { SessionInfo } from "../../types";
 import { ROUTES } from "../config/routes";
 import { validateRedirectUrl } from "./url-utils";
-import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from "./roles";
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE, isAdmin } from "./roles";
 import { USER_ROLE } from "@/lib/config/constants/user/role";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
@@ -79,9 +79,7 @@ export class RedirectManager {
 }
 
 function isRedirectAllowedForRole(path: string, role: string | undefined): boolean {
-  return (
-    !path.startsWith(ROUTES.PROTECTED.ADMIN) || role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE
-  );
+  return !path.startsWith(ROUTES.PROTECTED.ADMIN) || isAdmin(role);
 }
 
 /**

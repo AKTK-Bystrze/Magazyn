@@ -30,19 +30,7 @@ export function CostEstimator({
     if (!startDate || !endDate || items.length === 0) {
       return null;
     }
-    const breakdown = calculateCost(items, startDate, endDate, currentCreditBalance);
-
-    if (isFreeReservation && breakdown) {
-      return {
-        ...breakdown,
-        itemCosts: breakdown.itemCosts.map((item) => ({ ...item, totalCost: 0 })),
-        totalCreditCost: 0,
-        remainingBalance: breakdown.currentBalance,
-        isFreeReservation: true,
-      };
-    }
-
-    return breakdown;
+    return calculateCost(items, startDate, endDate, currentCreditBalance, isFreeReservation);
   }, [items, startDate, endDate, currentCreditBalance, isFreeReservation]);
 
   if (!costBreakdown) {

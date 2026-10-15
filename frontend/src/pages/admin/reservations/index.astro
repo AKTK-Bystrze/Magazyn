@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import { ReservationListContainer } from "@/components/reservations/ReservationListContainer";
 import { ROUTES } from "@/lib/config/routes";
+import { isAdmin } from "@/lib/auth/roles";
 
 const { user, sessionInfo } = Astro.locals;
 
@@ -13,8 +14,7 @@ if (!user || !sessionInfo) {
   );
 }
 
-const isAdmin = sessionInfo.role === "admin" || sessionInfo.role === "super_admin";
-if (!isAdmin) {
+if (!isAdmin(sessionInfo.role)) {
   return Astro.redirect(ROUTES.PROTECTED.DASHBOARD);
 }
 ---

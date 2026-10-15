@@ -51,5 +51,3 @@ export const CORE_UI_STRINGS = {
   LOADING: "Ładowanie...",
   SAVING: "Zapisywanie...",
 } as const;
-
-export type CoreUIStringKey = keyof typeof CORE_UI_STRINGS;

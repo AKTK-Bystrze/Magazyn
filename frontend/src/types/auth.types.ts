@@ -18,7 +18,7 @@ export type SessionInfo = {
  * Login request body
  * POST /auth/login
  */
-export type LoginRequest = {
+export type LoginRequestDTO = {
   email: string;
 };
 
@@ -26,12 +26,9 @@ export type LoginRequest = {
  * Login response body
  * POST /auth/login
  */
-export type LoginResponse = {
+export type LoginResponseDTO = {
   message: string;
 };
-
-export type LoginRequestDTO = LoginRequest;
-export type LoginResponseDTO = LoginResponse;
 
 /**
  * User profile with credit balance

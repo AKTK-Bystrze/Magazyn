@@ -71,23 +71,6 @@ export type CreateReservationsCommand = {
 };
 
 /**
- * Response after creating reservations (POST /reservations)
- */
-export type CreateReservationsResponse = {
-  reservations: Array<{
-    id: string;
-    equipmentId: string;
-    equipmentName: string;
-    startDate: string;
-    endDate: string;
-    status: Enums<"reservation_status">;
-    creditCost: number;
-  }>;
-  totalCreditCost: number;
-  remainingBalance: number;
-};
-
-/**
  * Command to update reservation (PATCH /reservations/:id)
  */
 export type UpdateReservationCommand = {
@@ -126,16 +109,6 @@ export type BulkUpdateReservationsCommand = {
 export type BulkStatusUpdateResponse = {
   updated_count: number;
   refund_count: number;
-};
-
-/**
- * Admin dashboard summary (GET /reservations/dashboard)
- * Matches backend ReservationDashboardSummary DTO
- */
-export type ReservationDashboardSummary = {
-  pending_reservations: number;
-  overdue_reservations: number;
-  active_today: number;
 };
 
 import type { ReservationSortOption } from "@/lib/config/constants/reservation/status";
@@ -209,15 +182,4 @@ export type CreditAdjustmentInfo = {
   /** User's projected balance after applying the adjustment */
   newBalance: number;
   isSignificantExtension: boolean;
-};
-
-/**
- * Date modification command for API
- * Subset of UpdateReservationCommand focused on dates
- */
-export type ModifyDatesCommand = {
-  /** New reservation start date (YYYY-MM-DD) */
-  startDate: string;
-  /** New reservation end date (YYYY-MM-DD) */
-  endDate: string;
 };

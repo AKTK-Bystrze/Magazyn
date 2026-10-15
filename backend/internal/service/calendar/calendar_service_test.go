@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"magazyn/backend/internal/repository"
+	"magazyn/backend/internal/testutils"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
@@ -46,7 +47,7 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 			Days:        3,
 		}
 		equipment := []types.PublicEquipmentSelect{
-			{ID: "eq-uuid-1", InternalID: "K-01", Name: stringPtr("Red Kayak")},
+			{ID: "eq-uuid-1", InternalID: "K-01", Name: testutils.StringPtr("Red Kayak")},
 		}
 		reservations := []types.PublicReservationsSelect{
 			{
@@ -122,7 +123,7 @@ func TestGetCalendarAvailability_MultiDayReservation(t *testing.T) {
 		Days:      5,
 	}
 	equipment := []types.PublicEquipmentSelect{
-		{ID: "eq-uuid-1", InternalID: "K-01", Name: stringPtr("Kayak")},
+		{ID: "eq-uuid-1", InternalID: "K-01", Name: testutils.StringPtr("Kayak")},
 	}
 	reservations := []types.PublicReservationsSelect{
 		{
@@ -143,8 +144,4 @@ func TestGetCalendarAvailability_MultiDayReservation(t *testing.T) {
 	assert.False(t, result.Calendar[2].IsAvailable)
 	assert.False(t, result.Calendar[3].IsAvailable)
 	assert.True(t, result.Calendar[4].IsAvailable)
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

@@ -36,12 +36,6 @@ type PublicEquipmentTypesSelect struct {
 	ID               string `json:"id"`
 	Name             string `json:"name"`
 }
-type PublicEquipmentTypesInsert struct {
-	CreatedAt        *string `json:"created_at,omitempty"`
-	CreditCostPerDay int32   `json:"credit_cost_per_day"`
-	ID               *string `json:"id,omitempty"`
-	Name             string  `json:"name"`
-}
 type PublicEquipmentSelect struct {
 	CreatedAt   string  `json:"created_at"`
 	Description *string `json:"description"`
@@ -107,16 +101,6 @@ type PublicCreditHistorySelect struct {
 	ID            string  `json:"id"`
 	Reason        string  `json:"reason"`
 	ReservationID *string `json:"reservation_id"`
-	UserID        string  `json:"user_id"`
-}
-type PublicCreditHistoryInsert struct {
-	AuthorID      *string `json:"author_id,omitempty"`
-	Amount        int32   `json:"amount"`
-	CreatedAt     *string `json:"created_at,omitempty"`
-	Description   *string `json:"description,omitempty"`
-	ID            *string `json:"id,omitempty"`
-	Reason        string  `json:"reason"`
-	ReservationID *string `json:"reservation_id,omitempty"`
 	UserID        string  `json:"user_id"`
 }
 type PublicMaintenanceLogsSelect struct {

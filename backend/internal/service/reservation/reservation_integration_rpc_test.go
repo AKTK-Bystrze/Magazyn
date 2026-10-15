@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/testutils"
 	"magazyn/backend/internal/types"
 	"testing"
 
@@ -75,7 +76,7 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	json.Unmarshal(dataBefore, &historyBefore)
 	historyCountBefore := len(historyBefore)
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr(constants.ReservationStatusCancelled),
+		Status: testutils.StringPtr(constants.ReservationStatusCancelled),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUserID, "user")
 	require.NoError(t, err)
@@ -102,7 +103,7 @@ func TestRefundCredits_CancelledReservation_RefundsCorrectly(t *testing.T) {
 	require.NoError(t, err)
 	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr(constants.ReservationStatusCancelled),
+		Status: testutils.StringPtr(constants.ReservationStatusCancelled),
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
@@ -134,7 +135,7 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	auditCountBefore := len(auditBefore)
 	t.Logf("Audit entries before: %d", auditCountBefore)
 	updateCmd := types.UpdateReservationCommand{
-		Status: stringPtr(constants.ReservationStatusRented),
+		Status: testutils.StringPtr(constants.ReservationStatusRented),
 	}
 	resp, err := fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
@@ -221,8 +222,4 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 	assert.Equal(t, expectedRefund1, refund1, "User1 refund mismatch")
 	assert.Equal(t, expectedRefund2, refund2, "User2 refund mismatch")
 	t.Logf("✓ Bulk denial refunded: User1=%d, User2=%d credits", refund1, refund2)
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

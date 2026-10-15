@@ -231,4 +231,23 @@ test.describe("Reservation Creation", () => {
       timeout: 3000,
     });
   });
+
+  /**
+   * Test: Super admin can access and see free reservation toggle in checkout.
+   *
+   * Verifies super_admin role permissions in reservation checkout.
+   */
+  test("Authorization: Super admin can access free reservation toggle", async ({
+    superAdminPage,
+    testEquipment,
+  }) => {
+    const [equip1] = testEquipment;
+
+    await addToCart(superAdminPage, equip1.id);
+    await goToCart(superAdminPage);
+
+    await expect(superAdminPage.getByTestId("free-reservation-checkbox")).toBeVisible({
+      timeout: 5000,
+    });
+  });
 });

@@ -17,8 +17,6 @@ export const EQUIPMENT_STATUS = {
   BLOCKED: "blocked",
 } as const;
 
-export type EquipmentStatus = (typeof EQUIPMENT_STATUS)[keyof typeof EQUIPMENT_STATUS];
-
 /**
  * Human-readable labels for equipment statuses
  */
@@ -28,15 +26,3 @@ export const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
   blocked: "Zablokowane",
   ALL: "Wszystkie statusy",
 };
-
-/**
- * Equipment status filter options for equipment lists (including 'ALL')
- */
-export const EQUIPMENT_STATUS_FILTER_OPTIONS = [
-  { value: "ALL", label: "Wszystkie statusy" },
-  { value: "ok", label: "OK" },
-  { value: "broken", label: "Zepsute" },
-  { value: "blocked", label: "Zablokowane" },
-] as const;
-
-export const DEFAULT_EQUIPMENT_STATUS_FILTER = "ALL";

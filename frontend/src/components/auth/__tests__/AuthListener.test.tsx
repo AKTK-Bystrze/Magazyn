@@ -7,10 +7,6 @@ vi.mock("@/lib/auth/session-utils", () => ({
   getUserSession: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/role-utils", () => ({
-  getDefaultRouteForUser: vi.fn(),
-}));
-
 vi.mock("@/lib/auth/redirect-manager", () => ({
   RedirectManager: {
     getRedirectForAuthState: vi.fn(),
@@ -32,7 +28,6 @@ vi.mock("@/lib/supabase", () => ({
 
 import { AuthListener } from "../AuthListener";
 import { getUserSession } from "@/lib/auth/session-utils";
-import { getDefaultRouteForUser } from "@/lib/auth/role-utils";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { supabase } from "@/lib/supabase";
 
@@ -119,7 +114,6 @@ describe("AuthListener", () => {
       error: null,
     });
     vi.mocked(getUserSession).mockResolvedValue(null);
-    vi.mocked(getDefaultRouteForUser).mockReturnValue("/dashboard");
 
     vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue(null);
   });

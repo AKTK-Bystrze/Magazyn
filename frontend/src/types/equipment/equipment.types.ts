@@ -67,8 +67,6 @@ export type EquipmentSearchItem = {
   isFavorite?: boolean;
 };
 
-export type EquipmentListItem = EquipmentSearchItem;
-
 /**
  * Equipment availability check response (GET /equipment/:id/availability)
  */

@@ -4,7 +4,6 @@ package auth
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/handler/common"
@@ -16,20 +15,17 @@ import (
 func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				logger.Warn(r.Context(), "Authorization header required but missing")
-				common.RespondError(r.Context(), w, http.StatusUnauthorized, "Authorization header required")
+			token, err := common.ExtractBearerToken(r)
+			if err != nil {
+				if err.Error() == "authorization header required" {
+					logger.Warn(r.Context(), "Authorization header required but missing")
+					common.RespondError(r.Context(), w, http.StatusUnauthorized, "Authorization header required")
+				} else {
+					logger.Warnf(r.Context(), "Invalid authorization header format: %v", err)
+					common.RespondError(r.Context(), w, http.StatusUnauthorized, "Invalid authorization header format")
+				}
 				return
 			}
-			logger.Debugf(r.Context(), "Auth Middleware: Received Header len=%d", len(authHeader))
-			parts := strings.Split(authHeader, " ")
-			if len(parts) != 2 || parts[0] != "Bearer" {
-				logger.Warnf(r.Context(), "Invalid authorization header format - parts: %d, prefix: %s", len(parts), parts[0])
-				common.RespondError(r.Context(), w, http.StatusUnauthorized, "Invalid authorization header format")
-				return
-			}
-			token := parts[1]
 			user, err := repo.GetUser(r.Context(), token)
 			if err != nil {
 				logger.Errorf(r.Context(), "Token verification failed: %v", err)

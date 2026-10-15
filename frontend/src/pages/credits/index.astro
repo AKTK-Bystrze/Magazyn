@@ -4,6 +4,7 @@ export const prerender = false;
 import AppLayout from "@/layouts/AppLayout.astro";
 import { CreditsTabs } from "@/components/credits/CreditsTabs";
 import { ROUTES } from "@/lib/config/routes";
+import { isSuperAdmin } from "@/lib/auth/roles";
 
 const { user, sessionInfo } = Astro.locals;
 
@@ -12,8 +13,6 @@ if (!user || !sessionInfo) {
     `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(ROUTES.PROTECTED.CREDITS)}`
   );
 }
-
-const isSuperAdmin = sessionInfo.role === "super_admin";
 ---
 
 <AppLayout title="Godzinki | Magazyn">
@@ -25,6 +24,6 @@ const isSuperAdmin = sessionInfo.role === "super_admin";
       </p>
     </div>
 
-    <CreditsTabs client:load userId={user.id} isSuperAdmin={isSuperAdmin} />
+    <CreditsTabs client:load userId={user.id} isSuperAdmin={isSuperAdmin(sessionInfo.role)} />
   </div>
 </AppLayout>

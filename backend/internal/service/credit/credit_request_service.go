@@ -6,6 +6,7 @@ import (
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 type CreditRequestService interface {
@@ -23,21 +24,10 @@ func NewCreditRequestService(repo repository.CreditRequestRepository) CreditRequ
 	return &creditRequestService{repo: repo}
 }
 func (s *creditRequestService) ListRequests(ctx context.Context, page, perPage int) (*types.CreditRequestListResponse, error) {
-	if page < 1 {
-		page = constants.DefaultPage
-	}
-	if perPage <= 0 {
-		perPage = constants.DefaultPerPage
-	}
-	isAllowed := false
-	for _, val := range constants.AllowedPerPageValues {
-		if perPage == val {
-			isAllowed = true
-			break
-		}
-	}
-	if !isAllowed {
-		return nil, types.NewValidationError("Invalid per_page value. Allowed: 10, 25, 50, 100", map[string]int{"per_page": perPage})
+	var err error
+	page, perPage, err = validation.ValidatePagination(page, perPage)
+	if err != nil {
+		return nil, err
 	}
 	items, total, err := s.repo.ListRequests(ctx, page, perPage)
 	if err != nil {

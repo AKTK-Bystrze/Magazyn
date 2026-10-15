@@ -5,10 +5,10 @@ import (
 	"math"
 
 	"magazyn/backend/internal/auth"
-	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 // CreditHistoryService defines operations for querying credit history.
@@ -31,23 +31,9 @@ func NewCreditHistoryService(creditRepo repository.CreditHistoryRepository, user
 
 func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string, userRole string) (*types.CreditHistoryResponse, error) {
 	logger.Infof(ctx, "Fetching credit history (reqUser: %s) - Page: %d, PerPage: %d", requestingUserID, query.Page, query.PerPage)
-	page := query.Page
-	if page < 1 {
-		page = constants.DefaultPage
-	}
-	perPage := query.PerPage
-	if perPage <= 0 {
-		perPage = constants.DefaultPerPage
-	}
-	isAllowed := false
-	for _, val := range constants.AllowedPerPageValues {
-		if perPage == val {
-			isAllowed = true
-			break
-		}
-	}
-	if !isAllowed {
-		return nil, types.NewValidationError("Invalid per_page value. Allowed: 10, 25, 50, 100", map[string]int{"per_page": perPage})
+	page, perPage, err := validation.ValidatePagination(query.Page, query.PerPage)
+	if err != nil {
+		return nil, err
 	}
 	targetUserID := requestingUserID
 	if query.UserID != nil && *query.UserID != "" {

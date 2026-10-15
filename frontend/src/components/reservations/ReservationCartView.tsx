@@ -131,24 +131,13 @@ export function ReservationCartView({
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
       return null;
     }
-    const breakdown = calculateCartCost(
+    return calculateCartCost(
       cartState.items,
       cartState.startDate,
       cartState.endDate,
-      effectiveCreditBalance
+      effectiveCreditBalance,
+      Boolean(isAdmin && isFreeReservation)
     );
-
-    if (isAdmin && isFreeReservation && breakdown) {
-      return {
-        ...breakdown,
-        itemCosts: breakdown.itemCosts.map((item) => ({ ...item, totalCost: 0 })),
-        totalCreditCost: 0,
-        remainingBalance: breakdown.currentBalance,
-        isFreeReservation: true,
-      };
-    }
-
-    return breakdown;
   }, [
     cartState.items,
     cartState.startDate,

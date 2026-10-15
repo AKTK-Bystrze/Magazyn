@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 
@@ -25,7 +26,7 @@ func NewEquipmentTypeRepository(client *supabase.Client, supabaseURL, supabaseKe
 }
 func (r *equipmentTypeRepository) ListAll(ctx context.Context) ([]types.PublicEquipmentTypesSelect, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("equipment_types").
+	data, _, err := client.From(constants.TableEquipmentTypes).
 		Select("*", "exact", false).
 		Order("name", nil).
 		Execute()
@@ -37,20 +38,6 @@ func (r *equipmentTypeRepository) ListAll(ctx context.Context) ([]types.PublicEq
 		return nil, err
 	}
 	return types, nil
-}
-func (r *equipmentTypeRepository) Create(ctx context.Context, et types.PublicEquipmentTypesInsert) (*types.PublicEquipmentTypesSelect, error) {
-	data, _, err := r.client.From("equipment_types").
-		Insert(et, false, "", "representation", "").
-		Single().
-		Execute()
-	if err != nil {
-		return nil, err
-	}
-	var created types.PublicEquipmentTypesSelect
-	if err := json.Unmarshal(data, &created); err != nil {
-		return nil, err
-	}
-	return &created, nil
 }
 func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []string) (map[string]types.PublicEquipmentTypesSelect, error) {
 	if len(ids) == 0 {
@@ -65,7 +52,7 @@ func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []strin
 		}
 	}
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	data, _, err := client.From("equipment_types").
+	data, _, err := client.From(constants.TableEquipmentTypes).
 		Select("*", "exact", false).
 		In("id", uniqueIDs).
 		Execute()

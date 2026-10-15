@@ -1,6 +1,6 @@
 -- Migration: Logic and RLS
 -- Description: Trigger Functions, Triggers, and RLS Policies
--- Note: Helper functions (is_admin, is_super_admin, is_enabled, get_user_role) are in base.sql
+-- Note: Helper functions (is_admin, is_super_admin, is_enabled) are in base.sql
 
 -- =====================================================
 -- TRIGGER FUNCTIONS (with SET search_path for security)

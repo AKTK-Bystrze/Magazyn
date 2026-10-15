@@ -8,8 +8,8 @@ export type Database = {
     Tables: {
       credit_history: {
         Row: {
-          admin_id: string | null;
           amount: number;
+          author_id: string | null;
           created_at: string;
           description: string | null;
           id: string;
@@ -18,8 +18,8 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          admin_id?: string | null;
           amount: number;
+          author_id?: string | null;
           created_at?: string;
           description?: string | null;
           id?: string;
@@ -28,8 +28,8 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          admin_id?: string | null;
           amount?: number;
+          author_id?: string | null;
           created_at?: string;
           description?: string | null;
           id?: string;
@@ -39,15 +39,15 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "credit_history_admin_id_fkey";
-            columns: ["admin_id"];
+            foreignKeyName: "credit_history_author_id_fkey";
+            columns: ["author_id"];
             isOneToOne: false;
             referencedRelation: "analytics_user_stats";
             referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: "credit_history_admin_id_fkey";
-            columns: ["admin_id"];
+            foreignKeyName: "credit_history_author_id_fkey";
+            columns: ["author_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -289,6 +289,7 @@ export type Database = {
           credit_balance: number;
           email: string;
           id: string;
+          is_enabled: boolean;
           role: Database["public"]["Enums"]["user_role"];
           updated_at: string | null;
           username: string;
@@ -298,6 +299,7 @@ export type Database = {
           credit_balance?: number;
           email: string;
           id: string;
+          is_enabled?: boolean;
           role?: Database["public"]["Enums"]["user_role"];
           updated_at?: string | null;
           username: string;
@@ -307,6 +309,7 @@ export type Database = {
           credit_balance?: number;
           email?: string;
           id?: string;
+          is_enabled?: boolean;
           role?: Database["public"]["Enums"]["user_role"];
           updated_at?: string | null;
           username?: string;

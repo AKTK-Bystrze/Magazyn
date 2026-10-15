@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateCart } from "./cart-validation";
+import { validateCart, calculateCost } from "./cart-validation";
 import type {
   CartState,
   CostBreakdown,
@@ -91,5 +91,51 @@ describe("validateCart", () => {
     const result = validateCart(noDates, allAvailable, sufficientCredits, false);
 
     expect(result.isValid).toBe(false);
+  });
+});
+
+describe("calculateCost", () => {
+  const items = [
+    {
+      equipmentId: "eq-1",
+      name: "Camera A",
+      typeName: "Camera",
+      description: null,
+      creditCostPerDay: 10,
+      imageUrl: null,
+    },
+    {
+      equipmentId: "eq-2",
+      name: "Tripod",
+      typeName: "Support",
+      description: null,
+      creditCostPerDay: 5,
+      imageUrl: null,
+    },
+  ];
+
+  it("calculates cost accurately for normal reservations", () => {
+    // 3 days inclusive (Jan 10 to Jan 12)
+    const breakdown = calculateCost(items, "2025-01-10", "2025-01-12", 100, false);
+
+    expect(breakdown.itemCosts).toHaveLength(2);
+    expect(breakdown.itemCosts[0].totalCost).toBe(30); // 10 * 3
+    expect(breakdown.itemCosts[1].totalCost).toBe(15); // 5 * 3
+    expect(breakdown.totalCreditCost).toBe(45);
+    expect(breakdown.currentBalance).toBe(100);
+    expect(breakdown.remainingBalance).toBe(55);
+    expect(breakdown.isFreeReservation).toBeUndefined();
+  });
+
+  it("calculates cost as 0 for free reservations", () => {
+    const breakdown = calculateCost(items, "2025-01-10", "2025-01-12", 20, true);
+
+    expect(breakdown.itemCosts).toHaveLength(2);
+    expect(breakdown.itemCosts[0].totalCost).toBe(0);
+    expect(breakdown.itemCosts[1].totalCost).toBe(0);
+    expect(breakdown.totalCreditCost).toBe(0);
+    expect(breakdown.currentBalance).toBe(20);
+    expect(breakdown.remainingBalance).toBe(20);
+    expect(breakdown.isFreeReservation).toBe(true);
   });
 });
