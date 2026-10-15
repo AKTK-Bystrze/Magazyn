@@ -5,15 +5,18 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
     test.setTimeout(60000);
 
     await adminPage.goto("/admin/reservations");
+    await adminPage.waitForFunction(() => !document.querySelector("astro-island[ssr]"));
 
     const filtersContainer = adminPage.getByTestId("reservation-filters");
     await expect(filtersContainer).toBeVisible({ timeout: 15000 });
+    await expect(adminPage.getByLabel("Użytkownik")).toBeVisible({ timeout: 15000 });
 
     const searchInput = adminPage.getByTestId("reservation-search-input");
     await expect(searchInput).toBeVisible();
 
     await searchInput.fill("NonExistentEquipmentXYZ123");
     await expect(searchInput).toHaveValue("NonExistentEquipmentXYZ123");
+    await searchInput.press("Enter");
 
     const resetButton = adminPage.getByTestId("reset-filters-button");
     await expect(resetButton).toBeVisible({ timeout: 10000 });

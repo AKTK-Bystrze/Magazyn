@@ -1,4 +1,3 @@
-import * as React from "react";
 import type { CartItem as CartItemType } from "@/types/reservation-cart.types";
 import { CartItem } from "./CartItem";
 import { ShoppingCart } from "lucide-react";

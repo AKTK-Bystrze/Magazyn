@@ -21,8 +21,6 @@ type EquipmentRepository interface {
 	Update(ctx context.Context, id string, equipment types.PublicEquipmentUpdate) (*types.PublicEquipmentSelect, error)
 	// Archive sets the is_archived flag to true
 	Archive(ctx context.Context, id string) error
-	// GetMaintenanceLogs retrieves maintenance logs for equipment
-	GetMaintenanceLogs(ctx context.Context, equipmentID string) ([]types.PublicMaintenanceLogsSelect, error)
 	// GetMaintenanceLogsWithAdmin retrieves logs joined with admin profile
 	GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]MaintenanceLogWithAdmin, error)
 	// GetActiveReservations checks for active reservations for equipment

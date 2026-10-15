@@ -61,20 +61,20 @@ Magazyn/frontend/
 The `public/` folder contains static assets that are served directly without processing:
 
 - **Favicon**: `favicon.png` is linked in `BaseLayout.astro`
-- **Brand Assets**: 
+- **Brand Assets**:
   - `logo-bystrze-kolor.png` - Color logo for light theme
   - `bystrze-logo-czarno-biale.png` - Black & white logo for dark theme
   - Theme switching is handled via Tailwind's `dark:` variant (e.g., `class="block dark:hidden"`)
 - **Placeholders**: Static SVG placeholders for missing images
 
 **Theme-Aware Asset Pattern:**
+
 ```html
 <!-- Light theme logo -->
 <img src="/logo-bystrze-kolor.png" class="block dark:hidden" />
 <!-- Dark theme logo -->
 <img src="/bystrze-logo-czarno-biale.png" class="hidden dark:block" />
 ```
-
 
 ---
 
@@ -139,16 +139,15 @@ Magazyn/supabase/
 ├── migrations/            # Versioned SQL migration files
 │   ├── 20251120194634_initial_schema.sql
 │   └── ...
-│   └── 20251224133000_fix_rls_recursion.sql
-├── functions/             # Optional: SQL functions / triggers
-└── schema.sql             # Optional: current schema dump
+└── seed.sql               # Database seed data for local development
 ```
 
 ### Notes
 
 - Central place for all DB schema changes.
 - Ensures trackable evolution of the Supabase Postgres instance.
-- RLS and storage policies also belong here when possible.
+- RLS and storage policies also belong here.
+- Handled directly via Supabase CLI (`npx supabase db ...`).
 
 ---
 
@@ -179,29 +178,14 @@ This file prevents configuration drift and onboarding pain.
 
 ---
 
-## 🛠️ Optional Enhancements
+## 🛠️ Operational Tooling
 
-### `Makefile`
+Operational and administration tasks are managed via `admin.sh`:
 
-Define commands for developers:
+- `./admin.sh backup` — Run database backups
+- `./admin.sh check` — Run system and environment sanity checks
 
-```
-make dev
-make build
-make up
-make db-migrate
-```
-
-### `scripts/`
-
-Useful for automation:
-
-```
-scripts/
-├── migrate.sh
-├── seed.sh
-└── reset-db.sh
-```
+_(Note: Root `Makefile` and `scripts/` directory were planned enhancements not present in the repository; project tasks are run directly via `npm` / `go` CLI or `admin.sh`)._
 
 ---
 

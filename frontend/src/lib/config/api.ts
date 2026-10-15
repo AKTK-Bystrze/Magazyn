@@ -35,20 +35,3 @@ export const BACKEND_URL =
 export const DEFAULT_HEADERS = {
   "Content-Type": "application/json",
 } as const;
-
-/**
- * Builds headers object with Authorization token
- *
- * @param token - Access token to include in Authorization header
- * @returns Headers object with Content-Type and Authorization
- *
- * @example
- * const headers = getAuthHeaders(session.access_token);
- * // Returns: { 'Content-Type': 'application/json', 'Authorization': 'Bearer token...' }
- */
-export function getAuthHeaders(token: string): Record<string, string> {
-  return {
-    ...DEFAULT_HEADERS,
-    Authorization: `Bearer ${token}`,
-  };
-}

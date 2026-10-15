@@ -3,7 +3,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Astro](https://img.shields.io/badge/Astro-5.16-orange.svg)](https://astro.build/)
 [![React](https://img.shields.io/badge/React-19.0-blue.svg)](https://reactjs.org/)
-[![Go](https://img.shields.io/badge/Go-1.22-blue.svg)](https://golang.org/)
+[![Go](https://img.shields.io/badge/Go-1.25.0-blue.svg)](https://golang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-1.22-blue.svg)](https://supabase.com/)
 [![Docker](https://img.shields.io/badge/Docker-24.0-blue.svg)](https://www.docker.com/)
 [![Caddy](https://img.shields.io/badge/Caddy-2.6-blue.svg)](https://caddyserver.com/)
@@ -11,12 +11,10 @@
 ## 📋 Table of Contents
 
 - [About](#about)
-- [Tech Stack](#tech-stack)
+- [Tech Stack](#tech-stack--architecture)
+- [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Available Scripts](#available-scripts)
-- [Project Scope](#project-scope)
-- [Project Status](#project-status)
-- [License](#license)
 
 ## 📖 About
 
@@ -122,6 +120,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
 1. **Install dependencies**
 
    ```bash
+   cd frontend
    npm install
    ```
 
@@ -151,6 +150,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
 4. **Start development server**
 
    ```bash
+   cd frontend
    npm run dev
    ```
 
@@ -238,14 +238,17 @@ go test -tags=integration ./...
 
 ## 📜 Available Scripts
 
-| Script            | Description                                 |
-| ----------------- | ------------------------------------------- |
-| `npm run dev`     | Start Astro development server on port 4321 |
-| `npm start`       | Alias for `npm run dev`                     |
-| `npm run build`   | Build production-ready application          |
-| `npm run preview` | Preview production build locally            |
-| `npm run astro`   | Run Astro CLI commands                      |
-| `npm run prepare` | Set up Husky git hooks (runs automatically) |
+| Script                           | Description                                 |
+| -------------------------------- | ------------------------------------------- |
+| `cd frontend && npm run dev`     | Start Astro development server on port 4321 |
+| `cd frontend && npm start`       | Alias for `npm run dev`                     |
+| `cd frontend && npm run build`   | Run production Astro/Vite build             |
+| `cd frontend && npm run preview` | Preview production build locally            |
+| `cd frontend && npm test run`    | Run Vitest unit & component test suite      |
+| `cd frontend && npm run lint`    | Run ESLint                                  |
+| `cd frontend && npm run e2e`     | Run Playwright E2E tests                    |
+| `cd frontend && npm run astro`   | Run Astro CLI commands                      |
+| `cd frontend && npm run prepare` | Set up Husky git hooks (runs automatically) |
 
 ### Git Hooks
 

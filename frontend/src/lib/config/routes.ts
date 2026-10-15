@@ -58,26 +58,6 @@ export type ProtectedRoute = (typeof ROUTES.PROTECTED)[keyof typeof ROUTES.PROTE
 export type AppRoute = PublicRoute | ProtectedRoute;
 
 /**
- * Checks if a route is public (doesn't require authentication)
- *
- * @param path - The path to check
- * @returns true if the path is a public route
- */
-export function isPublicRoute(path: string): path is PublicRoute {
-  return Object.values(ROUTES.PUBLIC).includes(path as PublicRoute);
-}
-
-/**
- * Checks if a route requires authentication
- *
- * @param path - The path to check
- * @returns true if the path is a protected route
- */
-export function isProtectedRoute(path: string): path is ProtectedRoute {
-  return Object.values(ROUTES.PROTECTED).includes(path as ProtectedRoute);
-}
-
-/**
  * Gets all valid routes in the application
  *
  * @returns Array of all registered routes

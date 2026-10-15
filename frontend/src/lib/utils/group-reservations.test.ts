@@ -16,7 +16,6 @@ describe("groupReservationsByDateRange", () => {
     creditCost: 10,
     createdAt: "2026-05-01T10:00:00Z",
     updatedAt: null,
-    isFree: false,
   };
 
   it("groups items with same user and dates", () => {

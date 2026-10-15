@@ -8,7 +8,7 @@
  *   - '@/lib/config/constants/equipment' (domain-specific)
  *   - '@/lib/config/constants/user' (domain-specific)
  *
- * @deprecated Import from '@/lib/config/constants' instead
+ * @deprecated Import domain-specific constants from '@/lib/config/constants/reservation', '@/lib/config/constants/equipment', etc.
  * @module lib/config/constants.ts
  */
 

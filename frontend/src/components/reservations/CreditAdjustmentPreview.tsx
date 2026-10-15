@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowRight, Calendar, Coins } from "lucide-react";
 import { formatCreditAdjustment } from "@/lib/utils/credit-utils";

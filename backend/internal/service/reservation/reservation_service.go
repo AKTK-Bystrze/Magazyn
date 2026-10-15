@@ -171,7 +171,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 func (s *reservationService) Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error) {
 	status := "unknown"
 	if cmd.Status != nil {
-		status = string(*cmd.Status)
+		status = *cmd.Status
 	}
 	logger.Infof(ctx, "Updating reservation %s to status %s", id, status)
 	current, err := s.repo.GetReservationByID(ctx, id)

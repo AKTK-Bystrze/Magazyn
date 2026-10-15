@@ -1,4 +1,3 @@
-import * as React from "react";
 import type { GroupedReservation, ReservationListItem } from "@/types";
 import { RESERVATION_STATUS } from "@/lib/config/constants";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";

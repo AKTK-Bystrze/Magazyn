@@ -2,7 +2,8 @@ import type { User } from "@supabase/supabase-js";
 import type { SessionInfo } from "../../types";
 import { ROUTES } from "../config/routes";
 import { validateRedirectUrl } from "./url-utils";
-import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from "./roles";
+import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from "./roles";
+import { USER_ROLE } from "@/lib/config/constants/user/role";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
@@ -105,7 +106,7 @@ export function getDefaultRouteForUser(user: User | null, sessionInfo: SessionIn
     case SUPER_ADMIN_ROLE:
     case ADMIN_ROLE:
       return ROUTES.PROTECTED.ADMIN;
-    case USER_ROLE:
+    case USER_ROLE.USER:
       return ROUTES.PROTECTED.DASHBOARD;
     default:
       logger.warn(`⚠️ Unknown role: ${role}, defaulting to dashboard`);

@@ -196,21 +196,6 @@ func (r *equipmentRepository) Archive(ctx context.Context, id string) error {
 		Execute()
 	return err
 }
-func (r *equipmentRepository) GetMaintenanceLogs(ctx context.Context, equipmentID string) ([]types.PublicMaintenanceLogsSelect, error) {
-	data, _, err := r.client.From("maintenance_logs").
-		Select("*", "exact", false).
-		Eq("equipment_id", equipmentID).
-		Order("created_at", nil).
-		Execute()
-	if err != nil {
-		return nil, err
-	}
-	var logs []types.PublicMaintenanceLogsSelect
-	if err := json.Unmarshal(data, &logs); err != nil {
-		return nil, err
-	}
-	return logs, nil
-}
 func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	desc := true

@@ -1,4 +1,4 @@
-# Project B: Technology Stack & Architecture
+# Magazyn: Technology Stack & Architecture
 
 ## Overview
 
@@ -27,8 +27,8 @@ This document outlines the architecture for a public-facing Rental Application. 
 
 - **Language:** Go (Golang).
 - **Role:** Stateless Business Logic.
-- **API:** Exposes REST endpoints (e.g., `POST /rent`, `GET /availability`).
-- **Email:** Uses Noop Email Service (mock implementation) for transactional emails (Rental Confirmations).
+- **API:** Exposes REST endpoints (e.g., `POST /reservations`, `GET /equipment/{id}/availability`, `GET /calendar/availability`).
+- **Email:** Uses Noop Email Service (mock implementation) for transactional emails (Reservation Confirmations).
 - **Auth Middleware:** Verifies Supabase JWTs. The Go backend trusts the token issued by Supabase Cloud to identify the user.
 
 ### 3. Infrastructure & Data (Supabase Cloud)
@@ -49,7 +49,7 @@ Instead of self-hosting complex services, we connect to the managed Supabase Clo
 
 **Storage (Supabase Storage):**
 
-- **Usage:** Storing Rental Item images.
+- **Usage:** Storing Equipment images in the `equipment` bucket.
 - **Policies:**
   - **Read:** Publicly accessible.
   - **Write:** Restricted to Admin users only via RLS.
@@ -113,9 +113,9 @@ flowchart TD
 
 ## Implementation Roadmap
 
-- **Auth Migration:** Remove passwordless package from Go. Implement Supabase Auth UI in React.
-- **Caddyfile Setup:** Configure Caddy to proxy `localhost:4321` (Astro) and `localhost:8080` (Go).
-- **Database Connection:** Update Go ENV variables to point to the remote Supabase Postgres connection string.
-- **RLS Policies:** Set up Supabase Storage policies:
-  - `bucket_id = 'rentals'`, `operation = SELECT`, `auth.role() = 'anon'` (Public Read).
-  - `bucket_id = 'rentals'`, `operation = INSERT/UPDATE/DELETE`, `auth.jwt().role = 'service_role'` OR custom admin flag (Admin Write).
+- [x] **Auth Migration:** Removed passwordless package from Go. Implemented Supabase Auth UI in React.
+- [x] **Caddyfile Setup:** Configured Caddy to proxy `localhost:4321` (Astro) and `localhost:8080` (Go).
+- [x] **Database Connection:** Updated Go ENV variables to point to Supabase Postgres connection.
+- [x] **RLS Policies:** Set up Supabase Storage policies for `equipment` bucket:
+  - `bucket_id = 'equipment'`, `operation = SELECT`, `auth.role() = 'anon'` (Public Read).
+  - `bucket_id = 'equipment'`, `operation = INSERT/UPDATE/DELETE`, `auth.jwt().role = 'service_role'` OR custom admin flag (Admin Write).

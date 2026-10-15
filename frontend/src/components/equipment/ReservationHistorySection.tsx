@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, User, CreditCard } from "lucide-react";
 import { formatDateLocalized } from "@/lib/utils/date-utils";

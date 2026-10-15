@@ -3,6 +3,7 @@
 A dense, precise reference for backend architecture, security, and conventions.
 
 ## 1. Architecture & Layers
+
 The backend uses a strict **Layered Architecture** with Constructor Injection.
 
 - **`cmd/api/main.go`**: Entry point. Bootstraps config, instantiates repositories/services/handlers, wires dependencies, and mounts standard `net/http` `ServeMux` routes.
@@ -12,12 +13,15 @@ The backend uses a strict **Layered Architecture** with Constructor Injection.
 - **`internal/types/`**: Domain types and DTOs shared across layers.
 
 ## 2. Authentication & Authorization
+
 - **Middleware Flow**: Requests pass through `cors` -> `auth` -> `rbac`.
 - **`auth_middleware.go`**: Validates JWTs received in the `Authorization: Bearer` header. Extracts user info via `gotrue-go` and injects contexts.
 - **Roles**: Enforced using `rbac_middleware.go` wrappers on routes (e.g., `RequireRoles(auth.RoleAdmin)`).
 
 ### Context Key Access Pattern
+
 Extract context values in handlers using these explicit type assertions:
+
 ```go
 user    := r.Context().Value(appcontext.UserContextKey).(*types.User)
 profile := r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
@@ -25,27 +29,29 @@ token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
 ```
 
 ### Auth Access Control Table
-| Endpoint Pattern | Required Roles | Special Rules |
-|-----------------|----------------|---------------|
-| `GET /health` | Public | Unauthenticated health check. |
-| `POST /auth/login` | Public | Unauthenticated login. |
-| `GET /auth/session` | Any authenticated | **Only** endpoint accessible by disabled users. |
-| `POST /auth/logout` | Any authenticated | Must be enabled. |
-| `GET /users/me`, `GET /users/public`, `GET /users/credits` | Any authenticated | Must be enabled. |
-| `GET /users`, `GET /users/{id}` | `admin`, `super_admin` | Must be enabled. |
-| `POST /users`, `PATCH /users/{id}`, `POST /users/bulk-adjust-credits` | `super_admin` | Must be enabled. |
-| `GET /equipment`, `GET /equipment/{id}`, `GET /equipment/{id}/availability`, `GET /equipment-types`, `POST /equipment/{id}/maintenance-logs` | Any authenticated | Must be enabled. |
-| `POST /equipment`, `PATCH /equipment/{id}`, `DELETE /equipment/{id}` | `admin`, `super_admin` | Must be enabled. |
-| `GET /reservations`, `POST /reservations`, `GET /reservations/{id}`, `PATCH /reservations/{id}` | Any authenticated | Must be enabled. |
-| `GET /reservations/dashboard`, `PATCH /reservations/bulk` | `admin`, `super_admin` | Must be enabled. |
-| `GET /calendar/availability` | Any authenticated | Must be enabled. |
-| `GET /credits/history`, `GET /credits/requests`, `POST /credits/requests`, `PUT /credits/requests/{id}` | Any authenticated | Must be enabled. |
-| `PATCH /credits/requests/{id}/status` | `super_admin` | Must be enabled. |
-| `GET /analytics/*` | `admin`, `super_admin` | Must be enabled. |
+
+| Endpoint Pattern                                                                                                                             | Required Roles         | Special Rules                                   |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------- |
+| `GET /health`                                                                                                                                | Public                 | Unauthenticated health check.                   |
+| `POST /auth/login`                                                                                                                           | Public                 | Unauthenticated login.                          |
+| `GET /auth/session`                                                                                                                          | Any authenticated      | **Only** endpoint accessible by disabled users. |
+| `POST /auth/logout`                                                                                                                          | Any authenticated      | Must be enabled.                                |
+| `GET /users/me`, `GET /users/public`, `GET /users/credits`                                                                                   | Any authenticated      | Must be enabled.                                |
+| `GET /users`, `GET /users/{id}`                                                                                                              | `admin`, `super_admin` | Must be enabled.                                |
+| `POST /users`, `PATCH /users/{id}`, `POST /users/bulk-adjust-credits`                                                                        | `super_admin`          | Must be enabled.                                |
+| `GET /equipment`, `GET /equipment/{id}`, `GET /equipment/{id}/availability`, `GET /equipment-types`, `POST /equipment/{id}/maintenance-logs` | Any authenticated      | Must be enabled.                                |
+| `POST /equipment`, `PATCH /equipment/{id}`, `DELETE /equipment/{id}`                                                                         | `admin`, `super_admin` | Must be enabled.                                |
+| `GET /reservations`, `POST /reservations`, `GET /reservations/{id}`, `PATCH /reservations/{id}`                                              | Any authenticated      | Must be enabled.                                |
+| `GET /reservations/dashboard`, `PATCH /reservations/bulk`                                                                                    | `admin`, `super_admin` | Must be enabled.                                |
+| `GET /calendar/availability`                                                                                                                 | Any authenticated      | Must be enabled.                                |
+| `GET /credits/history`, `GET /credits/requests`, `POST /credits/requests`, `PUT /credits/requests/{id}`                                      | Any authenticated      | Must be enabled.                                |
+| `PATCH /credits/requests/{id}/status`                                                                                                        | `super_admin`          | Must be enabled.                                |
+| `GET /analytics/*`                                                                                                                           | `admin`, `super_admin` | Must be enabled.                                |
 
 ## 3. Database & Supabase Interaction
+
 - **Clients**: Uses `supabase-go` (for PostgREST data fetching) and `gotrue-go` (for Auth operations).
-- **Service Role vs Anon Key**: 
+- **Service Role vs Anon Key**:
   - Standard operations use the user's JWT + Anon Key to leverage Supabase Row Level Security (RLS).
   - Privileged backend operations use the `SUPABASE_SERVICE_ROLE_KEY` (e.g., bypassing RLS to create users).
 - **Atomic Operations**: Complex multi-table mutations are implemented as PostgreSQL Stored Procedures and called via Supabase RPC.
@@ -53,6 +59,7 @@ token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
 ## 4. Input Validation & Security
 
 **Checklist for new endpoints:**
+
 1. UUID parameters validated?
 2. Dates validated?
 3. Enums validated against constants?
@@ -60,16 +67,18 @@ token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
 5. Search strings sanitized before PostgREST ILIKE?
 
 ### Validation API Surface (`internal/validation`)
+
 - `SanitizeSearchTerm(term string) string` - Escapes `, . ( ) = * !` to prevent PostgREST injection. **CRITICAL: use for all `ILIKE` inputs.**
 - `ValidateUUID(id string) error` - Ensures valid 8-4-4-4-12 UUID format.
-- `ValidateISODate(date string) error` - Ensures YYYY-MM-DD.
 - `ValidateEnum(val string, allowed []string) error` - e.g., `validation.ValidateEnum(status, constants.ValidEquipmentStatuses)`.
 - `ValidateStringLength(str string, min, max int) error` - e.g., `validation.ValidateStringLength(search, 0, constants.MaxSearchLength)`.
+  _(Note: Dates are validated and parsed using Go's standard `time.Parse(constants.DateFormatISO, ...)`)._
 
 ## 5. Coding Standards
+
 - **File Naming**: `snake_case.go` for all files. Test files suffix with `_test.go` or `_integration_test.go`.
-- **Error Handling**: 
-  1. Repositories wrap low-level errors (`fmt.Errorf("...: %w", err)`). 
-  2. Services return structured types like `types.NewNotFoundError("message")`. 
+- **Error Handling**:
+  1. Repositories wrap low-level errors (`fmt.Errorf("...: %w", err)`).
+  2. Services return structured types like `types.NewNotFoundError("message")`.
   3. Handlers map domain errors to standard HTTP status codes via `http_utils.go`.
 - **Contexts**: `context.Context` must be passed down from handlers to all service and repository functions for cancellation tracking and context injection.

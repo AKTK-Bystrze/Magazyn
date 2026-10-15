@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { UserFilters } from "../UserFilters";
 import { DEFAULT_ROLE_FILTER } from "@/lib/config/constants";
 import type { UserFilterState } from "@/types";

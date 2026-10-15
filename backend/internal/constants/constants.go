@@ -5,9 +5,6 @@ package constants
 // Database table names to avoid hardcoded strings.
 const (
 	TableProfiles        = "profiles"
-	TableEquipment       = "equipment"
-	TableReservations    = "reservations"
-	TableEquipmentTypes  = "equipment_types"
 	TableMaintenanceLogs = "maintenance_logs"
 	TableCreditHistory   = "credit_history"
 	TableCreditRequests  = "credit_requests"

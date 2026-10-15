@@ -12,7 +12,6 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, email string) (*types.LoginResponse, error)
-	VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.SessionResponse, error)
 	Logout(ctx context.Context, accessToken string) error
 	GetSession(ctx context.Context, userID string, userToken string) (*types.SessionResponse, error)
 }
@@ -33,27 +32,6 @@ func (s *authService) Login(ctx context.Context, email string) (*types.LoginResp
 	}
 	return &types.LoginResponse{
 		Message: "Magic link sent to your email",
-	}, nil
-}
-func (s *authService) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.SessionResponse, error) {
-	logger.Infof(ctx, "Verifying OTP for email domain: %s, type: %s", emailDomain(email), otpType)
-	session, err := s.repo.VerifyOTP(ctx, email, token, otpType)
-	if err != nil {
-		return nil, err
-	}
-	profile, err := s.repo.GetProfile(ctx, session.User.ID, session.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-	expiresAt := time.Now().Add(2 * time.Hour).Format(time.RFC3339)
-	return &types.SessionResponse{
-		UserID:        session.User.ID,
-		Email:         session.User.Email,
-		Username:      profile.Username,
-		Role:          string(profile.Role),
-		CreditBalance: profile.CreditBalance,
-		IsEnabled:     profile.IsEnabled,
-		ExpiresAt:     expiresAt,
 	}, nil
 }
 func (s *authService) Logout(ctx context.Context, accessToken string) error {

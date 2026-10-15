@@ -50,7 +50,6 @@ export type Equipment = {
 
 /**
  * Equipment in search results (GET /equipment)
- * Matches the structure defined in .ai/equipment-view-implementation-plan.md
  */
 export type EquipmentSearchItem = {
   id: string;

@@ -33,11 +33,3 @@ func (m *MockAuthService) GetSession(ctx context.Context, userID string, userTok
 	}
 	return args.Get(0).(*types.SessionResponse), args.Error(1)
 }
-
-func (m *MockAuthService) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.SessionResponse, error) {
-	args := m.Called(ctx, email, token, otpType)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.SessionResponse), args.Error(1)
-}
