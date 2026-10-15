@@ -8,7 +8,7 @@ import { ReservationStatusActions } from "./ReservationStatusActions";
 import { ReservationAuditTimeline } from "./ReservationAuditTimeline";
 import { ArrowLeft, Calendar, CreditCard, User, Clock, AlertTriangle } from "lucide-react";
 import { useReservationDetail } from "@/hooks/useReservationDetail";
-import { formatDate, calculateDays, formatDateLocalized } from "@/lib/utils/date-utils";
+import { formatDate, calculateDays } from "@/lib/utils/date-utils";
 import { ICON_SIZE_SM, RESERVATION_STATUS_VIEW_UI_STRINGS as UI } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
 import type { Enums } from "@/db/database.types";
@@ -155,7 +155,7 @@ export function ReservationDetailsView({
             <Clock className={ICON_SIZE_SM + " text-muted-foreground mt-0.5"} />
             <div className="flex-1">
               <p className="font-medium">{UI.CREATED_AT}</p>
-              <p className="text-sm">{formatDateLocalized(reservation.createdAt)}</p>
+              <p className="text-sm">{formatDate(reservation.createdAt)}</p>
             </div>
           </div>
         </CardContent>

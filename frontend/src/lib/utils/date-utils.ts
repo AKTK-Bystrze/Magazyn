@@ -51,15 +51,6 @@ export function formatDate(date: string | Date): string {
 }
 
 /**
- * Formats a date string for localized display
- * Alias for formatDate (standard DD/MM/YYYY format)
- *
- * @param date - Date string or Date object
- * @returns Formatted date string (e.g., "15/01/2024")
- */
-export const formatDateLocalized = formatDate;
-
-/**
  * Formats a date string or Date object to DD/MM/YYYY HH:mm format
  *
  * @param date - Date string (ISO 8601) or Date object

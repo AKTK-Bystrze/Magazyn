@@ -80,10 +80,8 @@ export function calculateCost(
     totalCost: isFreeReservation ? 0 : item.creditCostPerDay * days,
   }));
 
-  const totalCreditCost = isFreeReservation
-    ? 0
-    : itemCosts.reduce((sum, item) => sum + item.totalCost, 0);
-  const remainingBalance = isFreeReservation ? currentBalance : currentBalance - totalCreditCost;
+  const totalCreditCost = itemCosts.reduce((sum, item) => sum + item.totalCost, 0);
+  const remainingBalance = currentBalance - totalCreditCost;
 
   return {
     itemCosts,

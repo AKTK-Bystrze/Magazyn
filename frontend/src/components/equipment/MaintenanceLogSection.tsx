@@ -8,7 +8,7 @@ import {
   EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_MANAGER_UI_STRINGS,
 } from "@/lib/config/constants";
-import { formatDateLocalized } from "@/lib/utils/date-utils";
+import { formatDate } from "@/lib/utils/date-utils";
 import type { MaintenanceLog, CreateMaintenanceLogCommand } from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
@@ -161,7 +161,7 @@ export function MaintenanceLogSection({
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{log.adminUsername ? `przez ${log.adminUsername}` : "System"}</span>
-                  <span>{formatDateLocalized(log.createdAt)}</span>
+                  <span>{formatDate(log.createdAt)}</span>
                 </div>
               </div>
             </div>

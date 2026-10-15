@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   formatDate,
-  formatDateLocalized,
   formatDateTime,
   calculateDays,
   formatRelativeTime,
@@ -23,13 +22,6 @@ describe("date-utils", () => {
 
     it("handles invalid date strings gracefully", () => {
       expect(formatDate("invalid-date")).toBe("invalid-date");
-    });
-  });
-
-  describe("formatDateLocalized", () => {
-    it("acts as an alias for formatDate", () => {
-      expect(formatDateLocalized("2024-03-22")).toBe(formatDate("2024-03-22"));
-      expect(formatDateLocalized("2024-03-22")).toBe("22/03/2024");
     });
   });
 

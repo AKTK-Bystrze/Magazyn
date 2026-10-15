@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RoleBadge } from "./RoleBadge";
 import { Pencil } from "lucide-react";
 import { ICON_SIZE_SM, SKELETON_ROW_COUNT } from "@/lib/config/constants";
-import { formatDateLocalized } from "@/lib/utils/date-utils";
+import { formatDate } from "@/lib/utils/date-utils";
 import { useTableSort } from "@/lib/hooks/useTableSort";
 import type { UserListItem } from "@/types";
 
@@ -224,7 +224,7 @@ export function UserTable({
                   )}
                 </TableCell>
                 <TableCell className="hidden xl:table-cell text-muted-foreground">
-                  {formatDateLocalized(user.createdAt)}
+                  {formatDate(user.createdAt)}
                 </TableCell>
                 {isSuperAdmin && (
                   <TableCell>

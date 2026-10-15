@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, User, CreditCard } from "lucide-react";
-import { formatDateLocalized } from "@/lib/utils/date-utils";
+import { formatDate } from "@/lib/utils/date-utils";
 import {
   EQUIPMENT_MANAGER_UI_STRINGS,
   RESERVATION_STATUS_LABELS,
@@ -62,8 +62,7 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
             <span>
-              {formatDateLocalized(reservation.startDate)} →{" "}
-              {formatDateLocalized(reservation.endDate)}
+              {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
             </span>
           </div>
 
@@ -73,7 +72,7 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
               <span>{reservation.creditCost} credits</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              {formatDateLocalized(reservation.createdAt)}
+              {formatDate(reservation.createdAt)}
             </span>
           </div>
         </div>

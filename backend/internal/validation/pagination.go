@@ -1,6 +1,8 @@
 package validation
 
 import (
+	"slices"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/types"
 )
@@ -16,14 +18,7 @@ func ValidatePagination(page, perPage int) (int, int, error) {
 	if perPage <= 0 {
 		perPage = constants.DefaultPerPage
 	}
-	isAllowed := false
-	for _, val := range constants.AllowedPerPageValues {
-		if perPage == val {
-			isAllowed = true
-			break
-		}
-	}
-	if !isAllowed {
+	if !slices.Contains(constants.AllowedPerPageValues, perPage) {
 		return page, perPage, types.NewValidationError("Invalid per_page value. Allowed: 10, 25, 50, 100", map[string]int{"per_page": perPage})
 	}
 	return page, perPage, nil

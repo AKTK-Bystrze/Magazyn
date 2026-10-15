@@ -33,47 +33,36 @@ export async function handleFetchError(response: Response): Promise<never> {
   throw error;
 }
 
+async function request<T>(method: string, url: string, data?: unknown): Promise<{ data: T }> {
+  const headers = await buildHeaders();
+  const init: RequestInit = {
+    method,
+    headers,
+    credentials: "include",
+    ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
+  };
+
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    await handleFetchError(response);
+  }
+
+  const text = await response.text();
+  const resData = text ? JSON.parse(text) : undefined;
+  return { data: resData as T };
+}
+
 /**
  * Generic API client wrapper around fetch
  * Automatically handles headers and error parsing
  */
 export const api = {
-  /**
-   * Performs a POST request
-   * @param url - Endpoint URL
-   * @param data - Request body data
-   * @returns Response data wrapped in an object
-   */
-  post: async <T>(url: string, data: unknown): Promise<{ data: T }> => {
-    const headers = await buildHeaders();
+  post: <T>(url: string, data: unknown): Promise<{ data: T }> => request<T>("POST", url, data),
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      await handleFetchError(response);
-    }
-
-    const resData = await response.json();
-    return { data: resData };
-  },
-
-  /**
-   * Performs a GET request
-   * @param url - Endpoint URL
-   * @param params - Optional query parameters
-   * @returns Response data wrapped in an object
-   */
-  get: async <T>(
+  get: <T>(
     url: string,
     params?: Record<string, string | number | boolean | undefined | null>
   ): Promise<{ data: T }> => {
-    const headers = await buildHeaders();
-
     const queryParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -82,95 +71,13 @@ export const api = {
         }
       });
     }
-
     const queryString = queryParams.toString();
-    const fullUrl = queryString ? `${url}?${queryString}` : url;
-
-    const response = await fetch(fullUrl, {
-      method: "GET",
-      headers,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      await handleFetchError(response);
-    }
-
-    const resData = await response.json();
-    return { data: resData };
+    return request<T>("GET", queryString ? `${url}?${queryString}` : url);
   },
 
-  /**
-   * Performs a PATCH request
-   *
-   * @param url - Endpoint URL
-   * @param data - Request body data
-   * @returns Response data wrapped in an object
-   */
-  patch: async <T>(url: string, data: unknown): Promise<{ data: T }> => {
-    const headers = await buildHeaders();
+  patch: <T>(url: string, data: unknown): Promise<{ data: T }> => request<T>("PATCH", url, data),
 
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
+  put: <T>(url: string, data: unknown): Promise<{ data: T }> => request<T>("PUT", url, data),
 
-    if (!response.ok) {
-      await handleFetchError(response);
-    }
-
-    const resData = await response.json();
-    return { data: resData };
-  },
-
-  /**
-   * Performs a PUT request
-   *
-   * @param url - Endpoint URL
-   * @param data - Request body data
-   * @returns Response data wrapped in an object
-   */
-  put: async <T>(url: string, data: unknown): Promise<{ data: T }> => {
-    const headers = await buildHeaders();
-
-    const response = await fetch(url, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      await handleFetchError(response);
-    }
-
-    const resData = await response.json();
-    return { data: resData };
-  },
-
-  /**
-   * Performs a DELETE request
-   *
-   * @param url - Endpoint URL
-   * @returns Response data wrapped in an object (may be empty)
-   */
-  delete: async <T = void>(url: string): Promise<{ data: T }> => {
-    const headers = await buildHeaders();
-
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      await handleFetchError(response);
-    }
-
-    const text = await response.text();
-    const resData = text ? JSON.parse(text) : undefined;
-    return { data: resData as T };
-  },
+  delete: <T = void>(url: string): Promise<{ data: T }> => request<T>("DELETE", url),
 };
