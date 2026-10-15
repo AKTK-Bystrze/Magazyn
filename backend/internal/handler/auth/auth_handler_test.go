@@ -84,6 +84,20 @@ func TestHandleGetSession_Success(t *testing.T) {
 	assert.Equal(t, "testuser", resp.Username)
 	mockService.AssertExpectations(t)
 }
+func TestHandleGetSession_ProfileNotFound(t *testing.T) {
+	h, mockService := createTestHandler()
+	userID := uuid.New()
+	user := &types.User{ID: userID.String(), Email: "user@example.com"}
+	mockService.On("GetSession", mock.Anything, userID.String(), mock.Anything).Return(nil, types.NewNotFoundError("Profile", userID.String()))
+	req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
+	req.Header.Set("Authorization", "Bearer test-token")
+	ctx := context.WithValue(req.Context(), appcontext.UserContextKey, user)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+	h.HandleGetSession(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	mockService.AssertExpectations(t)
+}
 
 func TestHandleLogin_Validation(t *testing.T) {
 	h, _ := createTestHandler()

@@ -60,13 +60,15 @@ export { calculateDays } from "@/lib/utils/date-utils";
  * @param startDate - The start date in YYYY-MM-DD format
  * @param endDate - The end date in YYYY-MM-DD format
  * @param currentBalance - User's current credit balance
+ * @param isFreeReservation - Whether this is a free reservation (zero cost override)
  * @returns Cost breakdown with item costs and remaining balance
  */
 export function calculateCost(
   items: CartItem[],
   startDate: string,
   endDate: string,
-  currentBalance: number
+  currentBalance: number,
+  isFreeReservation = false
 ): CostBreakdown {
   const days = calculateDays(startDate, endDate);
 
@@ -75,17 +77,20 @@ export function calculateCost(
     name: item.name,
     days,
     creditCostPerDay: item.creditCostPerDay,
-    totalCost: item.creditCostPerDay * days,
+    totalCost: isFreeReservation ? 0 : item.creditCostPerDay * days,
   }));
 
-  const totalCreditCost = itemCosts.reduce((sum, item) => sum + item.totalCost, 0);
-  const remainingBalance = currentBalance - totalCreditCost;
+  const totalCreditCost = isFreeReservation
+    ? 0
+    : itemCosts.reduce((sum, item) => sum + item.totalCost, 0);
+  const remainingBalance = isFreeReservation ? currentBalance : currentBalance - totalCreditCost;
 
   return {
     itemCosts,
     totalCreditCost,
     currentBalance,
     remainingBalance,
+    ...(isFreeReservation ? { isFreeReservation: true } : {}),
   };
 }
 

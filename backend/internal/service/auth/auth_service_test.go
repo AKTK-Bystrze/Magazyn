@@ -4,47 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-type MockAuthRepository struct {
-	mock.Mock
-}
-
-func (m *MockAuthRepository) SendMagicLink(ctx context.Context, email string) error {
-	args := m.Called(ctx, email)
-	return args.Error(0)
-}
-func (m *MockAuthRepository) Logout(ctx context.Context, token string) error {
-	args := m.Called(ctx, token)
-	return args.Error(0)
-}
-func (m *MockAuthRepository) GetUser(ctx context.Context, token string) (*types.User, error) {
-	args := m.Called(ctx, token)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.User), args.Error(1)
-}
-func (m *MockAuthRepository) GetProfile(ctx context.Context, userID string, token string) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, userID, token)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-func (m *MockAuthRepository) CreateUser(ctx context.Context, email, password string) (*types.User, error) {
-	args := m.Called(ctx, email, password)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.User), args.Error(1)
-}
 func TestAuthService_Login(t *testing.T) {
-	mockRepo := new(MockAuthRepository)
+	mockRepo := new(mocks.MockAuthRepository)
 	service := NewAuthService(mockRepo)
 	ctx := context.Background()
 	email := "test@example.com"
@@ -54,7 +21,7 @@ func TestAuthService_Login(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestAuthService_GetSession(t *testing.T) {
-	mockRepo := new(MockAuthRepository)
+	mockRepo := new(mocks.MockAuthRepository)
 	service := NewAuthService(mockRepo)
 	ctx := context.Background()
 	userID := "user-123"
@@ -76,11 +43,12 @@ func TestAuthService_GetSession(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestAuthService_GetSession_ProfileNotFound(t *testing.T) {
-	mockRepo := new(MockAuthRepository)
+	mockRepo := new(mocks.MockAuthRepository)
 	service := NewAuthService(mockRepo)
 	ctx := context.Background()
-	mockRepo.On("GetProfile", ctx, "user-123", "token").Return(nil, types.ErrProfileNotFound)
+	notFoundErr := types.NewNotFoundError("Profile", "user-123")
+	mockRepo.On("GetProfile", ctx, "user-123", "token").Return(nil, notFoundErr)
 	_, err := service.GetSession(ctx, "user-123", "token")
 	assert.Error(t, err)
-	assert.Equal(t, types.ErrProfileNotFound, err)
+	assert.Equal(t, notFoundErr, err)
 }

@@ -19,6 +19,21 @@ async function buildHeaders(): Promise<Record<string, string>> {
 }
 
 /**
+ * Handles non-OK fetch responses by extracting error details and throwing an Error.
+ *
+ * @param response - The failed Response object
+ * @throws Error with response message, status, and details
+ */
+export async function handleFetchError(response: Response): Promise<never> {
+  const errorData = await response.json().catch(() => ({ error: "Network error" }));
+  const message = errorData?.message || errorData?.error || "An error occurred";
+  const error = new Error(message);
+  (error as Error & { status?: number; details?: unknown }).status = response.status;
+  (error as Error & { status?: number; details?: unknown }).details = errorData?.details;
+  throw error;
+}
+
+/**
  * Generic API client wrapper around fetch
  * Automatically handles headers and error parsing
  */
@@ -40,12 +55,7 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Network error" }));
-      const message = errorData.message || errorData.error || "An error occurred";
-      const error = new Error(message);
-      (error as Error & { status?: number; details?: unknown }).status = response.status;
-      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
-      throw error;
+      await handleFetchError(response);
     }
 
     const resData = await response.json();
@@ -83,12 +93,7 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Network error" }));
-      const message = errorData.message || errorData.error || "An error occurred";
-      const error = new Error(message);
-      (error as Error & { status?: number; details?: unknown }).status = response.status;
-      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
-      throw error;
+      await handleFetchError(response);
     }
 
     const resData = await response.json();
@@ -113,12 +118,7 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Network error" }));
-      const message = errorData.message || errorData.error || "An error occurred";
-      const error = new Error(message);
-      (error as Error & { status?: number; details?: unknown }).status = response.status;
-      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
-      throw error;
+      await handleFetchError(response);
     }
 
     const resData = await response.json();
@@ -143,12 +143,7 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Network error" }));
-      const message = errorData.message || errorData.error || "An error occurred";
-      const error = new Error(message);
-      (error as Error & { status?: number; details?: unknown }).status = response.status;
-      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
-      throw error;
+      await handleFetchError(response);
     }
 
     const resData = await response.json();
@@ -171,12 +166,7 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Network error" }));
-      const message = errorData.message || errorData.error || "An error occurred";
-      const error = new Error(message);
-      (error as Error & { status?: number; details?: unknown }).status = response.status;
-      (error as Error & { status?: number; details?: unknown }).details = errorData.details;
-      throw error;
+      await handleFetchError(response);
     }
 
     const text = await response.text();

@@ -150,12 +150,3 @@ CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
   SELECT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin');
 $$;
-
--- Get current user's role
-CREATE OR REPLACE FUNCTION public.get_user_role()
-RETURNS user_role LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public AS $body$
-DECLARE user_role_value user_role;
-BEGIN
-  SELECT role INTO user_role_value FROM profiles WHERE id = auth.uid();
-  RETURN user_role_value;
-END; $body$;

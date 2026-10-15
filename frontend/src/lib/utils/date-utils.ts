@@ -29,18 +29,57 @@ export function getTodayAsString(): string {
 }
 
 /**
- * Formats a date string to dd.mm format
+ * Formats a date string or Date object to DD/MM/YYYY format
  * Single source of truth for date formatting
  *
- * @param dateString - Date in YYYY-MM-DD format
- * @returns Formatted date string (e.g., "11.12")
+ * @param date - Date in YYYY-MM-DD format, ISO string, or Date object
+ * @returns Formatted date string (e.g., "11/12/2024")
  */
-export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
+export function formatDate(date: string | Date): string {
+  try {
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) {
+      return typeof date === "string" ? date : "";
+    }
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return typeof date === "string" ? date : "";
+  }
+}
+
+/**
+ * Formats a date string for localized display
+ * Alias for formatDate (standard DD/MM/YYYY format)
+ *
+ * @param date - Date string or Date object
+ * @returns Formatted date string (e.g., "15/01/2024")
+ */
+export const formatDateLocalized = formatDate;
+
+/**
+ * Formats a date string or Date object to DD/MM/YYYY HH:mm format
+ *
+ * @param date - Date string (ISO 8601) or Date object
+ * @returns Formatted date-time string (e.g., "15/01/2024 14:30")
+ */
+export function formatDateTime(date: string | Date): string {
+  try {
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) {
+      return typeof date === "string" ? date : "";
+    }
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  } catch {
+    return typeof date === "string" ? date : "";
+  }
 }
 
 /**
@@ -58,26 +97,6 @@ export function calculateDays(startDate: string, endDate: string): number {
 }
 
 /**
- * Formats a date string for localized display
- * Used for user-facing date displays in tables and cards
- *
- * @param dateString - ISO 8601 date string
- * @param locale - Locale string (default: 'en-US')
- * @returns Formatted date string (e.g., "Jan 15, 2024")
- */
-export function formatDateLocalized(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch {
-    return dateString;
-  }
-}
-
-/**
  * Formats a date string as relative time
  * Used for audit trails and activity logs
  *
@@ -87,6 +106,9 @@ export function formatDateLocalized(dateString: string): string {
 export function formatRelativeTime(dateString: string): string {
   try {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffSec = Math.floor(diffMs / 1000);

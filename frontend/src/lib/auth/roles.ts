@@ -32,7 +32,21 @@ export const ADMIN_ROLE = USER_ROLES.ADMIN;
 export const SUPER_ADMIN_ROLE = USER_ROLES.SUPER_ADMIN;
 
 /**
- * Union type of all possible user roles
+ * Checks if a role has administrator privileges (admin or super_admin).
+ *
+ * @param role - Role string to check (e.g. from sessionInfo.role)
+ * @returns True if the role is ADMIN or SUPER_ADMIN
  */
-export type UserRole =
-  typeof ADMIN_ROLE | typeof SUPER_ADMIN_ROLE | typeof USER_ROLES.USER | string;
+export function isAdmin(role?: string | null): boolean {
+  return role === ADMIN_ROLE || role === SUPER_ADMIN_ROLE;
+}
+
+/**
+ * Checks if a role has super administrator privileges.
+ *
+ * @param role - Role string to check (e.g. from sessionInfo.role)
+ * @returns True if the role is SUPER_ADMIN
+ */
+export function isSuperAdmin(role?: string | null): boolean {
+  return role === SUPER_ADMIN_ROLE;
+}

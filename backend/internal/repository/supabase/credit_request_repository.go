@@ -207,15 +207,3 @@ func (r *creditRequestRepository) GetLeaderboard(ctx context.Context) ([]types.U
 	}
 	return result, nil
 }
-func parseRPCVoidResponse(jsonStr string) error {
-	if jsonStr == "" || jsonStr == "null" {
-		return nil
-	}
-	var rawResponse map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err == nil {
-		if msg, ok := rawResponse["message"]; ok {
-			return types.NewInternalError(fmt.Sprintf("RPC Error: %v", msg), nil)
-		}
-	}
-	return nil
-}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
 
@@ -92,7 +93,7 @@ func (r *authRepository) GetProfile(ctx context.Context, userID string, token st
 	if err != nil {
 		return nil, fmt.Errorf("failed to create authenticated client: %w", err)
 	}
-	data, _, err := clientWithAuth.From("profiles").
+	data, _, err := clientWithAuth.From(constants.TableProfiles).
 		Select("*", "exact", false).
 		Eq("id", userID).
 		Execute()

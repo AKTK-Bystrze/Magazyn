@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/testutils"
 	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
@@ -22,13 +23,6 @@ func (m *MockEquipmentTypeRepository) ListAll(ctx context.Context) ([]types.Publ
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]types.PublicEquipmentTypesSelect), args.Error(1)
-}
-func (m *MockEquipmentTypeRepository) Create(ctx context.Context, et types.PublicEquipmentTypesInsert) (*types.PublicEquipmentTypesSelect, error) {
-	args := m.Called(ctx, et)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicEquipmentTypesSelect), args.Error(1)
 }
 func (m *MockEquipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []string) (map[string]types.PublicEquipmentTypesSelect, error) {
 	args := m.Called(ctx, ids)
@@ -91,7 +85,7 @@ func TestCreateEquipment_Success(t *testing.T) {
 	cmd := types.CreateEquipmentCommand{
 		InternalID: "K-01",
 		TypeID:     "type-uuid",
-		Name:       stringPtr("Kayak"),
+		Name:       testutils.StringPtr("Kayak"),
 	}
 	mockRepo.On("GetTypeByID", ctx, "type-uuid").Return(&types.PublicEquipmentTypesSelect{
 		Name:             "Water Equipment",
@@ -102,7 +96,7 @@ func TestCreateEquipment_Success(t *testing.T) {
 		ID:         "eq-uuid",
 		InternalID: "K-01",
 		TypeID:     "type-uuid",
-		Name:       stringPtr("Kayak"),
+		Name:       testutils.StringPtr("Kayak"),
 		Status:     constants.EquipmentStatusOK,
 	}, nil)
 	result, err := service.Create(ctx, cmd, "admin-id")
@@ -172,8 +166,4 @@ func TestCheckAvailability_Available(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, result.IsAvailable)
 	assert.Empty(t, result.ConflictingReservations)
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

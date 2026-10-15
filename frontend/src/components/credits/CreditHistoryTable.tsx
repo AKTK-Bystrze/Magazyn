@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CREDIT_HISTORY_UI_STRINGS, SKELETON_ROW_COUNT } from "@/lib/config/constants";
 import type { CreditHistoryItem } from "@/types";
-import { format } from "date-fns";
+import { formatDateTime } from "@/lib/utils/date-utils";
 import { useTableSort } from "@/lib/hooks/useTableSort";
 
 /**
@@ -195,9 +195,7 @@ function CreditHistoryRow({ item, index }: { item: CreditHistoryItem; index: num
 
   return (
     <TableRow data-testid={`credit-history-row-${index}`}>
-      <TableCell className="whitespace-nowrap">
-        {format(new Date(item.createdAt), "dd/MM/yyyy HH:mm")}
-      </TableCell>
+      <TableCell className="whitespace-nowrap">{formatDateTime(item.createdAt)}</TableCell>
       <TableCell className="whitespace-nowrap">
         {item.description ? (
           <Tooltip open={isOpen} onOpenChange={setIsOpen}>

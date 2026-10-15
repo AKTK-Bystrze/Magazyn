@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
@@ -14,6 +13,7 @@ import (
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/service/email"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 // ReservationService defines operations for managing reservations.
@@ -116,7 +116,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 			if err != nil {
 				return nil, types.NewInternalError("failed to fetch equipment type", err)
 			}
-			days := s.calculateDays(req.StartDate, req.EndDate)
+			days := int32(validation.CalculateDays(req.StartDate, req.EndDate)) //nolint:gosec // days is bounded by date range
 			cost := days * eqType.CreditCostPerDay
 			totalCost += cost
 			costMap[i] = cost
@@ -257,7 +257,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 					logger.Errorf(ctx, "Refund failed: equipment type %s not found: %v", eq.TypeID, errType)
 					return nil, fmt.Errorf("refund failed: equipment type %s not found: %w", eq.TypeID, errType)
 				}
-				days := s.calculateDays(current.StartDate, current.EndDate)
+				days := int32(validation.CalculateDays(current.StartDate, current.EndDate)) //nolint:gosec // days is bounded by date range
 				refundAmount := days * eqType.CreditCostPerDay
 				if refundAmount > 0 {
 					if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
@@ -299,7 +299,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	if eq != nil {
 		eqType, _ := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
 		if eqType != nil {
-			days := s.calculateDays(updated.StartDate, updated.EndDate)
+			days := int32(validation.CalculateDays(updated.StartDate, updated.EndDate)) //nolint:gosec // days is bounded by date range
 			creditCost = days * eqType.CreditCostPerDay
 		}
 	}
@@ -320,16 +320,6 @@ func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdat
 }
 func (s *reservationService) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
 	return s.repo.GetDashboardStats(ctx)
-}
-func (s *reservationService) calculateDays(start, end string) int32 {
-	layout := constants.DateFormatISO
-	t1, _ := time.Parse(layout, start)
-	t2, _ := time.Parse(layout, end)
-	days := int32(t2.Sub(t1).Hours() / 24)
-	if days < 0 {
-		return 0
-	}
-	return days + 1
 }
 func safeString(s *string) string {
 	if s == nil {

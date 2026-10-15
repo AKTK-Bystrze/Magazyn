@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -88,6 +87,3 @@ func NewInternalError(message string, err error) *InternalError {
 		},
 	}
 }
-
-// ErrProfileNotFound indicates that a user profile was not found in the database
-var ErrProfileNotFound = errors.New("profile not found")

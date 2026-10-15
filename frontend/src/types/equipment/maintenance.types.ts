@@ -1,5 +1,4 @@
 import type { Enums } from "../../db/database.types";
-import type { Equipment } from "./equipment.types";
 
 /**
  * Equipment maintenance record
@@ -23,11 +22,4 @@ export type MaintenanceLog = {
 export type CreateMaintenanceLogCommand = {
   /** Maintenance notes or observations */
   notes?: string;
-};
-
-/**
- * Equipment details with maintenance logs (GET /equipment/:id)
- */
-export type EquipmentDetail = Equipment & {
-  maintenanceLogs: MaintenanceLog[];
 };

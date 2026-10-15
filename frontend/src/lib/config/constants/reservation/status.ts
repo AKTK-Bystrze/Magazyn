@@ -18,8 +18,6 @@ export const RESERVATION_STATUS = {
   CANCELLED: "CANCELLED",
 } as const;
 
-export type ReservationStatus = (typeof RESERVATION_STATUS)[keyof typeof RESERVATION_STATUS];
-
 /**
  * Human-readable labels for reservation statuses
  */

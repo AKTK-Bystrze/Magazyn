@@ -41,6 +41,5 @@ type MaintenanceLogWithAdmin struct {
 }
 type EquipmentTypeRepository interface {
 	ListAll(ctx context.Context) ([]types.PublicEquipmentTypesSelect, error)
-	Create(ctx context.Context, et types.PublicEquipmentTypesInsert) (*types.PublicEquipmentTypesSelect, error)
 	GetTypesByIDs(ctx context.Context, ids []string) (map[string]types.PublicEquipmentTypesSelect, error)
 }
