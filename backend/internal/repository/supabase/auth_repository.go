@@ -66,23 +66,6 @@ func (r *authRepository) CreateUser(ctx context.Context, email, password string)
 		Email: user.Email,
 	}, nil
 }
-func (r *authRepository) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.Session, error) {
-	resp, err := r.client.Auth.VerifyForUser(gotruetypes.VerifyForUserRequest{
-		Email: email,
-		Token: token,
-		Type:  gotruetypes.VerificationType(otpType),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &types.Session{
-		AccessToken: resp.AccessToken,
-		User: types.User{
-			ID:    resp.User.ID.String(),
-			Email: resp.User.Email,
-		},
-	}, nil
-}
 func (r *authRepository) Logout(ctx context.Context, token string) error {
 	return r.client.Auth.WithToken(token).Logout()
 }

@@ -68,20 +68,3 @@ export function formatCreditAdjustment(adjustment: number): string {
   }
   return "No change";
 }
-
-/**
- * Determines if user has sufficient credits for an adjustment
- * Used to validate date extensions that require additional credits
- *
- * @param adjustment - Credit adjustment amount (negative = charge)
- * @param currentBalance - User's current credit balance
- * @returns True if user has sufficient credits
- */
-export function hasSufficientCredits(adjustment: number, currentBalance: number): boolean {
-  if (adjustment >= 0) {
-    return true;
-  }
-
-  const newBalance = currentBalance + adjustment;
-  return newBalance >= 0;
-}

@@ -1,4 +1,3 @@
-import * as React from "react";
 import { type EquipmentSearchItem } from "@/types";
 import { EquipmentCard } from "./EquipmentCard";
 import { Skeleton } from "@/components/ui/skeleton";

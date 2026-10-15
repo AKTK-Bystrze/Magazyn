@@ -1,4 +1,3 @@
-import * as React from "react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ReservationDetailsView } from "./ReservationDetailsView";
 

@@ -3,6 +3,8 @@
 .DS_Store
 Thumbs.db
 *.log
+/.ai
+/.agents
 
 # Editors
 /.vscode

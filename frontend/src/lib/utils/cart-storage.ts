@@ -100,11 +100,3 @@ export function loadFilterDatesFromStorage(): {
     return null;
   }
 }
-
-/**
- * Clears filter dates from sessionStorage
- * Called after dates are applied to cart to prevent stale data
- */
-export function clearFilterDatesFromStorage(): void {
-  sessionStorage.removeItem(FILTER_DATES_STORAGE_KEY);
-}

@@ -22,13 +22,6 @@ func (m *MockAuthRepository) Logout(ctx context.Context, token string) error {
 	args := m.Called(ctx, token)
 	return args.Error(0)
 }
-func (m *MockAuthRepository) VerifyOTP(ctx context.Context, email, token, otpType string) (*types.Session, error) {
-	args := m.Called(ctx, email, token, otpType)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.Session), args.Error(1)
-}
 func (m *MockAuthRepository) GetUser(ctx context.Context, token string) (*types.User, error) {
 	args := m.Called(ctx, token)
 	if args.Get(0) == nil {

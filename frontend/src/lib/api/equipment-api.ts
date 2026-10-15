@@ -115,7 +115,6 @@ export const equipmentApi = {
   /**
    * Get equipment details with maintenance logs
    * Returns both equipment data and maintenance logs from a single API call
-   * per the equipment-details-reuse-guide.md
    *
    * @param id - Equipment ID
    * @returns Promise with equipment details and maintenance logs
@@ -166,7 +165,6 @@ export const equipmentApi = {
   /**
    * Get reservation history for equipment
    * Uses GET /reservations?equipment_id={id}&scope=all instead of separate endpoint
-   * per the equipment-details-reuse-guide.md
    *
    * @param equipmentId - Equipment ID
    * @returns Promise with array of reservation history items

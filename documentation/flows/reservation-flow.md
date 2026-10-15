@@ -28,11 +28,13 @@ flowchart TD
 ## Cost Calculation
 
 ### Formula
+
 ```
 Cost = Days × CreditCostPerDay (from EquipmentType)
 ```
 
 ### Day Calculation Logic
+
 Located in `backend/internal/service/reservation/reservation_service.go`:
 
 ```go
@@ -40,7 +42,7 @@ func (s *reservationService) calculateDays(start, end string) int32 {
     layout := "2006-01-02"
     t1, _ := time.Parse(layout, start)
     t2, _ := time.Parse(layout, end)
-    
+
     days := int32(t2.Sub(t1).Hours() / 24)
     if days < 1 { days = 1 } // Minimum 1 day
     return days + 1
@@ -48,16 +50,18 @@ func (s *reservationService) calculateDays(start, end string) int32 {
 ```
 
 **Rules:**
+
 - Dates are in `YYYY-MM-DD` format
 - Minimum charge is **1 day**
 - Total includes both start and end date (`days + 1`)
 - Cost per day is defined per `EquipmentType`, not per individual equipment
 
 ### Example
-| Start Date | End Date | Days | Cost/Day | Total Cost |
-|------------|----------|------|----------|------------|
-| 2025-01-01 | 2025-01-03 | 3 | 5 credits | 15 credits |
-| 2025-01-05 | 2025-01-05 | 1 | 5 credits | 5 credits |
+
+| Start Date | End Date   | Days | Cost/Day  | Total Cost |
+| ---------- | ---------- | ---- | --------- | ---------- |
+| 2025-01-01 | 2025-01-03 | 3    | 5 credits | 15 credits |
+| 2025-01-05 | 2025-01-05 | 1    | 5 credits | 5 credits  |
 
 ---
 
@@ -65,11 +69,11 @@ func (s *reservationService) calculateDays(start, end string) int32 {
 
 Statuses are defined in `backend/internal/constants/constants.go`:
 
-| Status | Description |
-|--------|-------------|
-| `PENDING` | Reservation created, awaiting equipment pickup |
-| `RENTED` | Equipment currently with user |
-| `RETURNED` | Equipment returned, reservation complete |
+| Status      | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `PENDING`   | Reservation created, awaiting equipment pickup           |
+| `RENTED`    | Equipment currently with user                            |
+| `RETURNED`  | Equipment returned, reservation complete                 |
 | `CANCELLED` | Reservation cancelled by user or admin, credits refunded |
 
 ### Status Transition Diagram
@@ -77,26 +81,26 @@ Statuses are defined in `backend/internal/constants/constants.go`:
 ```mermaid
 stateDiagram-v2
     [*] --> PENDING: Create Reservation
-    
+
     PENDING --> RENTED: Admin Approves / Pickup
     PENDING --> CANCELLED: User or Admin Cancels
-    
+
     RENTED --> RETURNED: Equipment Returned
-    
+
     CANCELLED --> [*]
     RETURNED --> [*]
 ```
 
 ### Permission-Based Transitions
 
-| Actor | From Status | Allowed Transitions |
-|-------|-------------|---------------------|
-| User | `PENDING` | → `CANCELLED` (cancel own) |
-| Admin | `PENDING` | → `RENTED`, `CANCELLED` |
-| Admin | `RENTED` | → `RETURNED` |
+| Actor | From Status | Allowed Transitions                                 |
+| ----- | ----------- | --------------------------------------------------- |
+| User  | `PENDING`   | → `CANCELLED` (cancel own), `RETURNED` (return own) |
+| Admin | `PENDING`   | → `RENTED`, `CANCELLED`                             |
+| Admin | `RENTED`    | → `RETURNED`                                        |
 
 > [!IMPORTANT]
-> Users can only modify their **own PENDING** reservations. Non-pending reservations are immutable for regular users.
+> Users can only modify their **own PENDING** reservations (transitioning to `CANCELLED` or `RETURNED`). Non-pending reservations are immutable for regular users.
 
 ---
 
@@ -154,7 +158,7 @@ flowchart TD
     D -->|Yes| F{Status = PENDING?}
     F -->|No| G[403 Cannot Modify]
     F -->|Yes| H{New Status?}
-    H -->|CANCELLED| I[Allow Cancel]
+    H -->|CANCELLED or RETURNED| I[Allow Status Change]
     H -->|Other| J[400 Validation Error]
 ```
 
@@ -184,27 +188,27 @@ When dates are modified:
 
 ### Validation Errors (HTTP 400)
 
-| Condition | Error Message |
-|-----------|---------------|
-| Equipment not found | `Equipment {id} not found` |
-| Equipment archived/broken | `Equipment {name} is not available` |
+| Condition                          | Error Message                                          |
+| ---------------------------------- | ------------------------------------------------------ |
+| Equipment not found                | `Equipment {id} not found`                             |
+| Equipment archived/broken          | `Equipment {name} is not available`                    |
 | User tries non-cancellation status | `Users can only cancel or return pending reservations` |
 
 ### Authorization Errors (HTTP 403)
 
-| Condition | Error Message |
-|-----------|---------------|
+| Condition                      | Error Message                                  |
+| ------------------------------ | ---------------------------------------------- |
 | User views other's reservation | `You are not allowed to view this reservation` |
-| User modifies non-own | `Not allowed` |
-| User modifies non-pending | `Cannot modify non-pending reservation` |
+| User modifies non-own          | `Not allowed`                                  |
+| User modifies non-pending      | `Cannot modify non-pending reservation`        |
 
 ### Conflict Errors (HTTP 409)
 
-| Condition | Error Message |
-|-----------|---------------|
-| Insufficient credits | `Reservation failed: Insufficient credits` |
+| Condition               | Error Message                                              |
+| ----------------------- | ---------------------------------------------------------- |
+| Insufficient credits    | `Reservation failed: Insufficient credits`                 |
 | Date overlap (creation) | `Reservation failed: Conflict detected for equipment {id}` |
-| Date overlap (update) | `Dates not available` |
+| Date overlap (update)   | `Dates not available`                                      |
 
 ### Database-Level Failures
 
@@ -214,11 +218,11 @@ The RPC function uses `SECURITY DEFINER` and PostgreSQL transactions to ensure:
 - **Isolation:** Row-level locking prevents concurrent balance modifications
 - **Consistency:** Rollback on any failure
 
-| Exception | Behavior |
-|-----------|----------|
-| `User not found` | Transaction rolls back |
+| Exception              | Behavior               |
+| ---------------------- | ---------------------- |
+| `User not found`       | Transaction rolls back |
 | `Insufficient credits` | Transaction rolls back |
-| `Conflict detected` | Transaction rolls back |
+| `Conflict detected`    | Transaction rolls back |
 
 ### Refund Failure Handling
 
@@ -241,33 +245,33 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 
 ### `create_reservation_atomic`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `p_user_id` | UUID | User creating reservations |
-| `p_total_cost` | INTEGER | Pre-calculated total credit cost |
-| `p_is_free` | BOOLEAN | Whether reservations are free (charges 0 credits) |
-| `p_created_by_user_id` | UUID | Creator/actor user ID |
-| `p_reservations` | JSONB | Array of `{equipment_id, start_date, end_date}` |
+| Parameter              | Type    | Description                                       |
+| ---------------------- | ------- | ------------------------------------------------- |
+| `p_user_id`            | UUID    | User creating reservations                        |
+| `p_total_cost`         | INTEGER | Pre-calculated total credit cost                  |
+| `p_is_free`            | BOOLEAN | Whether reservations are free (charges 0 credits) |
+| `p_created_by_user_id` | UUID    | Creator/actor user ID                             |
+| `p_reservations`       | JSONB   | Array of `{equipment_id, start_date, end_date}`   |
 
 **Returns:** `{reservation_ids: UUID[], new_balance: INTEGER}`
 
 ### `modify_reservation_dates_with_credits`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `p_reservation_id` | UUID | Reservation being modified |
+| Parameter              | Type | Description                  |
+| ---------------------- | ---- | ---------------------------- |
+| `p_reservation_id`     | UUID | Reservation being modified   |
 | `p_changed_by_user_id` | UUID | User requesting modification |
-| `p_new_start_date` | DATE | New start date |
-| `p_new_end_date` | DATE | New end date |
+| `p_new_start_date`     | DATE | New start date               |
+| `p_new_end_date`       | DATE | New end date                 |
 
 **Returns:** JSONB object containing updated reservation fields, cost differences, and new balance
 
 ### `refund_reservation_credits`
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `p_reservation_id` | UUID | Reservation to refund |
-| `p_amount` | INTEGER | Credit amount to refund |
+| Parameter          | Type    | Description             |
+| ------------------ | ------- | ----------------------- |
+| `p_reservation_id` | UUID    | Reservation to refund   |
+| `p_amount`         | INTEGER | Credit amount to refund |
 
 **Returns:** void
 
@@ -275,10 +279,10 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 
 ## Related Files
 
-| File | Purpose |
-|------|---------|
-| `backend/internal/service/reservation/reservation_service.go` | Business logic |
-| `backend/internal/repository/supabase/reservation_repository.go` | Repository implementation |
-| `backend/internal/constants/constants.go` | Status constants |
+| File                                                                 | Purpose                                       |
+| -------------------------------------------------------------------- | --------------------------------------------- |
+| `backend/internal/service/reservation/reservation_service.go`        | Business logic                                |
+| `backend/internal/repository/supabase/reservation_repository.go`     | Repository implementation                     |
+| `backend/internal/constants/constants.go`                            | Status constants                              |
 | `supabase/migrations/20260314183802_add_is_free_to_reservations.sql` | Atomic reservation RPCs and `is_free` support |
-| `backend/internal/service/email/email_service.go` | Email service (Noop implementation) |
+| `backend/internal/service/email/email_service.go`                    | Email service (Noop implementation)           |

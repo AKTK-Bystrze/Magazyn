@@ -34,13 +34,6 @@ func (m *MockAuthRepository) CreateUser(ctx context.Context, email, password str
 	}
 	return args.Get(0).(*types.User), args.Error(1)
 }
-func (m *MockAuthRepository) VerifyOTP(ctx context.Context, email, token string, otpType string) (*types.Session, error) {
-	args := m.Called(ctx, email, token, otpType)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.Session), args.Error(1)
-}
 func (m *MockAuthRepository) GetProfile(ctx context.Context, userID string, token string) (*types.PublicProfilesSelect, error) {
 	args := m.Called(ctx, userID, token)
 	if args.Get(0) == nil {

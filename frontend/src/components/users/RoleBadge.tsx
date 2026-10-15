@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { USER_ROLE_LABELS, USER_ROLE_VARIANTS } from "@/lib/config/constants";
 import type { Enums } from "@/db/database.types";

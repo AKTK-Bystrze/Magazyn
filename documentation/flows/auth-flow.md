@@ -10,13 +10,13 @@ Magazyn uses **Supabase Auth** for identity management with **JWT tokens** for A
 
 ### Key Components
 
-| Layer | Component | Responsibility |
-|-------|-----------|----------------|
-| **Frontend (SSR)** | Astro Middleware | Session validation, token forwarding, route protection |
-| **Frontend (Client)** | AuthListener | Auth state changes, client redirects (@supabase/ssr auto-cookies) |
-| **Backend** | Auth Middleware | JWT validation, user context injection |
-| **Backend** | RBAC Middleware | Role-based endpoint protection |
-| **Supabase** | Auth Service | User identity, JWT issuance, magic links |
+| Layer                 | Component        | Responsibility                                                    |
+| --------------------- | ---------------- | ----------------------------------------------------------------- |
+| **Frontend (SSR)**    | Astro Middleware | Session validation, token forwarding, route protection            |
+| **Frontend (Client)** | AuthListener     | Auth state changes, client redirects (@supabase/ssr auto-cookies) |
+| **Backend**           | Auth Middleware  | JWT validation, user context injection                            |
+| **Backend**           | RBAC Middleware  | Role-based endpoint protection                                    |
+| **Supabase**          | Auth Service     | User identity, JWT issuance, magic links                          |
 
 ---
 
@@ -102,7 +102,7 @@ Fetched from Go backend at `/auth/session`:
 ```typescript
 interface SessionInfo {
   userId: string;
-  role: 'user' | 'admin' | 'super_admin';
+  role: "user" | "admin" | "super_admin";
   isEnabled: boolean;
   creditBalance: number;
   username: string;
@@ -115,13 +115,13 @@ interface SessionInfo {
 
 **Managed automatically by `@supabase/ssr`**:
 
-| Attribute | Value | Purpose |
-|-----------|-------|---------|
-| Name | `sb-<project-ref>-auth-token` | Access token (auto-managed) |
-| Name | `sb-<project-ref>-auth-token-code-verifier` | PKCE verifier (temporary) |
-| Path | `/` | Site-wide availability |
-| SameSite | Lax | CSRF protection |
-| HttpOnly | No | Allows client-side refresh |
+| Attribute | Value                                       | Purpose                     |
+| --------- | ------------------------------------------- | --------------------------- |
+| Name      | `sb-<project-ref>-auth-token`               | Access token (auto-managed) |
+| Name      | `sb-<project-ref>-auth-token-code-verifier` | PKCE verifier (temporary)   |
+| Path      | `/`                                         | Site-wide availability      |
+| SameSite  | Lax                                         | CSRF protection             |
+| HttpOnly  | No                                          | Allows client-side refresh  |
 
 > **Note**: Cookies are automatically set by `createBrowserClient()` and read by `createServerClient()` from `@supabase/ssr`.
 
@@ -132,6 +132,7 @@ interface SessionInfo {
 ### 1. Route Protection (Frontend)
 
 **Astro Middleware** (`src/middleware/index.ts`):
+
 - Validates auth cookie/session
 - Fetches `sessionInfo` from backend
 - Delegates to `RedirectManager` for routing decisions
@@ -140,6 +141,7 @@ interface SessionInfo {
 ### 2. API Protection (Frontend)
 
 All `/api/*` routes (except `/api/auth/*`) require authentication:
+
 ```typescript
 if (!context.locals.user) {
   throw ApiErrors.unauthorized("Authentication required");
@@ -152,6 +154,7 @@ if (sessionInfo && !sessionInfo.isEnabled) {
 ### 3. JWT Validation (Backend)
 
 **Auth Middleware** (`internal/middleware/auth/`):
+
 - Extracts Bearer token from `Authorization` header
 - Validates token with Supabase
 - Fetches user profile with RLS
@@ -160,6 +163,7 @@ if (sessionInfo && !sessionInfo.isEnabled) {
 ### 4. Role-Based Access (Backend)
 
 **RBAC Middleware**:
+
 ```go
 // Protect admin endpoints
 router.Use(authMiddleware, RequireRoles("admin", "super_admin"))
@@ -171,15 +175,16 @@ router.Use(authMiddleware, RequireRoles("admin", "super_admin"))
 
 Centralized in `RedirectManager` class with loop prevention:
 
-| User State | Current Path | Action |
-|------------|--------------|--------|
-| Unauthenticated | Any | → `/login?redirect=<path>` |
-| Disabled | Any | → `/account-disabled` |
-| Enabled | `/login` | → Default route (role-based) |
-| Enabled | `/` | → `/admin` or `/dashboard` |
-| Enabled | Valid page | Continue |
+| User State      | Current Path | Action                       |
+| --------------- | ------------ | ---------------------------- |
+| Unauthenticated | Any          | → `/login?redirect=<path>`   |
+| Disabled        | Any          | → `/account-disabled`        |
+| Enabled         | `/login`     | → Default route (role-based) |
+| Enabled         | `/`          | → `/admin` or `/dashboard`   |
+| Enabled         | Valid page   | Continue                     |
 
 **Default Routes by Role**:
+
 - `admin` / `super_admin` → `/admin`
 - `user` → `/dashboard`
 
@@ -198,7 +203,7 @@ Centralized in `RedirectManager` class with loop prevention:
 3. **Redirect Validation**
    - Same-origin only
    - Whitelist-based path validation
-   - Loop detection (max 3 redirects in 5s)
+   - Deterministic DAG structure prevents redirect loops without artificial throttle counters
 
 4. **Disabled User Handling**
    - Blocked at both frontend and backend layers

@@ -1,5 +1,4 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { Database } from "../../db/database.types";
+import { USER_ROLE as USER_ROLES } from "@/lib/config/constants/user/role";
 
 /**
  * User Role Constants
@@ -10,7 +9,8 @@ import type { Database } from "../../db/database.types";
  * @module lib/auth/roles
  *
  * @example
- * import { ADMIN_ROLE, SUPER_ADMIN_ROLE, USER_ROLE } from '@/lib/auth/roles';
+ * import { ADMIN_ROLE, SUPER_ADMIN_ROLE } from '@/lib/auth/roles';
+ * import { USER_ROLE } from '@/lib/config/constants/user/role';
  *
  * // Use in comparisons
  * if (sessionInfo.role === ADMIN_ROLE) { ... }
@@ -20,12 +20,10 @@ import type { Database } from "../../db/database.types";
  *   case SUPER_ADMIN_ROLE:
  *   case ADMIN_ROLE:
  *     return '/admin';
- *   case USER_ROLE:
+ *   case USER_ROLE.USER:
  *     return '/dashboard';
  * }
  */
-
-import { USER_ROLE as USER_ROLES } from "@/lib/config/constants/user/role";
 
 /** Regular admin role - has access to admin panel */
 export const ADMIN_ROLE = USER_ROLES.ADMIN;
@@ -33,58 +31,8 @@ export const ADMIN_ROLE = USER_ROLES.ADMIN;
 /** Super admin role - has full system access including user management */
 export const SUPER_ADMIN_ROLE = USER_ROLES.SUPER_ADMIN;
 
-/** Standard user role - has access to user dashboard only */
-export const STANDARD_USER_ROLE = USER_ROLES.USER;
-
-/**
- * Standard user role string - has access to user dashboard only.
- * @deprecated Use STANDARD_USER_ROLE or USER_ROLE.USER to avoid naming collision.
- */
-export const USER_ROLE = USER_ROLES.USER;
-
 /**
  * Union type of all possible user roles
  */
-export type UserRole = typeof ADMIN_ROLE | typeof SUPER_ADMIN_ROLE | typeof USER_ROLE | string;
-
-/**
- * Fetches the user's role from the profiles table
- *
- * Note: This function queries the database directly. For most use cases,
- * prefer using sessionInfo.role from the backend which is already cached.
- *
- * @param supabase - Supabase client instance
- * @param userId - The user's ID
- * @returns The user's role string, or null if not found
- */
-export async function getUserRole(
-  supabase: SupabaseClient<Database>,
-  userId: string
-): Promise<string | null> {
-  const { data, error } = await supabase.from("profiles").select("role").eq("id", userId).single();
-
-  if (error || !data) return null;
-  return data.role;
-}
-
-/**
- * Checks if a user has one of the allowed roles
- *
- * Note: This function queries the database. For most use cases,
- * prefer using hasRole() from role-utils.ts with sessionInfo.
- *
- * @param supabase - Supabase client instance
- * @param user - The user object
- * @param allowedRoles - Array of role strings to check against
- * @returns true if the user has one of the allowed roles
- */
-export async function requireRole(
-  supabase: SupabaseClient<Database>,
-  user: User,
-  allowedRoles: string[]
-): Promise<boolean> {
-  if (!user) return false;
-
-  const role = await getUserRole(supabase, user.id);
-  return role ? allowedRoles.includes(role) : false;
-}
+export type UserRole =
+  typeof ADMIN_ROLE | typeof SUPER_ADMIN_ROLE | typeof USER_ROLES.USER | string;

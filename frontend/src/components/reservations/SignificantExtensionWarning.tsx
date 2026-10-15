@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { pluralize } from "@/lib/utils/text-utils";

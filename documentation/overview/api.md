@@ -73,7 +73,7 @@ The backend registers routes directly on standard `net/http` ServeMux (no `/api/
     └── GET  /analytics/user-stats               # Admin, SuperAdmin: user activity statistics
 ```
 
-*Note: Prometheus metrics are served on an internal HTTP server on port `:9091` (`/metrics`).*
+_Note: Prometheus metrics are served on an internal HTTP server on port `:9091` (`/metrics`)._
 
 ---
 
@@ -81,32 +81,32 @@ The backend registers routes directly on standard `net/http` ServeMux (no `/api/
 
 Astro server-side endpoints proxy incoming browser requests to the Go backend (`BACKEND_URL`):
 
-| Astro Route | Methods | Backend Target | Description |
-|---|---|---|---|
-| `/api/auth/login` | `POST` | `/auth/login` | Login handler |
-| `/api/auth/logout` | `POST` | Local / Backend | Clear session cookies & sign out |
-| `/api/users` | `GET`, `POST` | `/users` | List users (`GET`), create user (`POST`) |
-| `/api/users/me` | `GET` | `/users/me` | Current user profile |
-| `/api/users/credits` | `GET` | `/users/credits` | Credit leaderboard |
-| `/api/users/bulk-adjust-credits` | `POST` | `/users/bulk-adjust-credits` | SuperAdmin bulk credit adjustments |
-| `/api/users/public` | `GET` | `/users/public` | List public user profiles (with query forwarding) |
-| `/api/users/[id]` | `GET`, `PATCH` | `/users/{id}` | User by ID |
-| `/api/equipment-types` | `GET` | `/equipment-types` | Equipment categories |
-| `/api/equipment` | `GET`, `POST` | `/equipment` | List equipment (`GET`), create (`POST`) |
-| `/api/equipment/[id]` | `GET`, `PATCH`, `DELETE` | `/equipment/{id}` | Equipment details, update, archive |
-| `/api/equipment/[id]/availability` | `GET` | `/equipment/{id}/availability` | Item date availability check |
-| `/api/equipment/[id]/maintenance-logs` | `POST` | `/equipment/{id}/maintenance-logs` | Add maintenance log |
-| `/api/reservations` | `GET`, `POST` | `/reservations` | List reservations (`GET`), create (`POST`) |
-| `/api/reservations/dashboard` | `GET` | `/reservations/dashboard` | Admin dashboard stats |
-| `/api/reservations/bulk` | `PATCH` | `/reservations/bulk` | Bulk reservation status updates |
-| `/api/reservations/[id]` | `GET`, `PATCH` | `/reservations/{id}` | Get reservation (`GET`), update/cancel (`PATCH`) |
-| `/api/credits/history` | `GET` | `/credits/history` | Credit history ledger |
-| `/api/credits/requests` | `GET`, `POST` | `/credits/requests` | List requests (`GET`), create request (`POST`) |
-| `/api/credits/requests/[id]` | `PUT` | `/credits/requests/{id}` | Update credit request |
-| `/api/credits/requests/[id]/status` | `PATCH` | `/credits/requests/{id}/status` | SuperAdmin review/status change |
-| `/api/calendar/availability` | `GET` | `/calendar/availability` | Calendar view availability |
-| `/api/analytics/equipment-stats` | `GET` | `/analytics/equipment-stats` | Equipment analytics view |
-| `/api/analytics/user-stats` | `GET` | `/analytics/user-stats` | User activity analytics view |
+| Astro Route                            | Methods                  | Backend Target                     | Description                                       |
+| -------------------------------------- | ------------------------ | ---------------------------------- | ------------------------------------------------- |
+| `/api/auth/login`                      | `POST`                   | `/auth/login`                      | Login handler                                     |
+| `/api/auth/logout`                     | `POST`                   | Local / Backend                    | Clear session cookies & sign out                  |
+| `/api/users`                           | `GET`, `POST`            | `/users`                           | List users (`GET`), create user (`POST`)          |
+| `/api/users/me`                        | `GET`                    | `/users/me`                        | Current user profile                              |
+| `/api/users/credits`                   | `GET`                    | `/users/credits`                   | Credit leaderboard                                |
+| `/api/users/bulk-adjust-credits`       | `POST`                   | `/users/bulk-adjust-credits`       | SuperAdmin bulk credit adjustments                |
+| `/api/users/public`                    | `GET`                    | `/users/public`                    | List public user profiles (with query forwarding) |
+| `/api/users/[id]`                      | `GET`, `PATCH`           | `/users/{id}`                      | User by ID                                        |
+| `/api/equipment-types`                 | `GET`                    | `/equipment-types`                 | Equipment categories                              |
+| `/api/equipment`                       | `GET`, `POST`            | `/equipment`                       | List equipment (`GET`), create (`POST`)           |
+| `/api/equipment/[id]`                  | `GET`, `PATCH`, `DELETE` | `/equipment/{id}`                  | Equipment details, update, archive                |
+| `/api/equipment/[id]/availability`     | `GET`                    | `/equipment/{id}/availability`     | Item date availability check                      |
+| `/api/equipment/[id]/maintenance-logs` | `POST`                   | `/equipment/{id}/maintenance-logs` | Add maintenance log                               |
+| `/api/reservations`                    | `GET`, `POST`            | `/reservations`                    | List reservations (`GET`), create (`POST`)        |
+| `/api/reservations/dashboard`          | `GET`                    | `/reservations/dashboard`          | Admin dashboard stats                             |
+| `/api/reservations/bulk`               | `PATCH`                  | `/reservations/bulk`               | Bulk reservation status updates                   |
+| `/api/reservations/[id]`               | `GET`, `PATCH`           | `/reservations/{id}`               | Get reservation (`GET`), update/cancel (`PATCH`)  |
+| `/api/credits/history`                 | `GET`                    | `/credits/history`                 | Credit history ledger                             |
+| `/api/credits/requests`                | `GET`, `POST`            | `/credits/requests`                | List requests (`GET`), create request (`POST`)    |
+| `/api/credits/requests/[id]`           | `PUT`                    | `/credits/requests/{id}`           | Update credit request                             |
+| `/api/credits/requests/[id]/status`    | `PATCH`                  | `/credits/requests/{id}/status`    | SuperAdmin review/status change                   |
+| `/api/calendar/availability`           | `GET`                    | `/calendar/availability`           | Calendar view availability                        |
+| `/api/analytics/equipment-stats`       | `GET`                    | `/analytics/equipment-stats`       | Equipment analytics view                          |
+| `/api/analytics/user-stats`            | `GET`                    | `/analytics/user-stats`            | User activity analytics view                      |
 
 ---
 
@@ -117,11 +117,19 @@ Frontend components interact with the API using a typed architecture:
 1. **Client API Modules** (`frontend/src/lib/api/`):
    - `auth.ts`: Authentication routines
    - `equipment-api.ts`: Equipment queries, mutations, maintenance logs
-   - `reservations-api.ts`: Reservation lifecycle (create, list, update, bulk)
+   - `reservations-api.ts`: Reservation lifecycle (list, getById, update, cancel, bulkUpdate; note that reservation creation is invoked directly from `ReservationCartView.tsx` via `fetch('/api/reservations')`)
    - `users-api.ts`: User management, profile, bulk credit adjustments
    - `credits-api.ts`: Credit history queries
    - `credit-requests-api.ts`: Credit requests and reviews
 2. **React Query Hooks** (`frontend/src/hooks/`):
-   - Data fetching hooks (e.g., `useAvailabilityCheck`, `useEquipmentFilter`, `useTableSort`) wrap API calls with `@tanstack/react-query` for automatic caching and state invalidation.
+   - Data fetching hooks wrap API calls with `@tanstack/react-query` for caching and state invalidation:
+     - `useEquipmentManager`: Equipment inventory, search, and admin mutations
+     - `useReservations`: User and admin reservation queries and bulk updates
+     - `useAvailabilityCheck`: Real-time equipment availability validation
+     - `useCreditHistory`: Credit ledger transactions and balance queries
+     - `useEquipmentDetails`: Single equipment item retrieval with status
+     - `useReservationDetail`: Single reservation inspection and history
+     - `useUsers`: User accounts and credit management
+   - _(Note: `useTableSort` is located in `frontend/src/lib/hooks/useTableSort.ts` and is a client-side table sorting utility hook, not a React Query data-fetching hook)._
 3. **Data Transformers** (`frontend/src/lib/transformers/`):
    - Bidirectional mapping between backend `snake_case` DTOs and frontend `camelCase` domain models.

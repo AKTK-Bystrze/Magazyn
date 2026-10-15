@@ -6,7 +6,7 @@ This playbook provides actionable, step-by-step procedures for administering, de
 
 ## 1. Quick Start: The Admin Cockpit (`./admin.sh`)
 
-All routine and emergency administrative tasks are unified under [`admin.sh`](file:///E:/bystrze/Magazyn/admin.sh).
+All routine and emergency administrative tasks are unified under [`admin.sh`](../../admin.sh).
 
 ### Interactive Mode (Recommended for Newcomers)
 
@@ -57,7 +57,7 @@ This presents an interactive menu that automatically discovers available Git rel
 **Symptom**: `docker compose build` fails with an out-of-disk error (`no space left on device`) or a TypeScript/Go compilation error.
 
 - **Impact**: **Zero downtime / Zero database corruption**.
-- **Reason**: [`admin.sh`](file:///E:/bystrze/Magazyn/admin.sh) builds container images **before** pushing database migrations. The database has not been touched, and your previous containers remain online.
+- **Reason**: [`admin.sh`](../../admin.sh) builds container images **before** pushing database migrations. The database has not been touched, and your previous containers remain online.
 - **Resolution**:
   1. Free disk space on the host:
      ```bash
@@ -93,7 +93,7 @@ This presents an interactive menu that automatically discovers available Git rel
 
 ### Scenario C: Post-Deployment Sanity Check Reports Failure
 
-**Symptom**: Deployment completes, but [`infra/sanity_check.sh`](file:///E:/bystrze/Magazyn/infra/sanity_check.sh) reports a failed health check or authenticated read error.
+**Symptom**: Deployment completes, but [`infra/sanity_check.sh`](../../infra/sanity_check.sh) reports a failed health check or authenticated read error.
 
 - **Policy**: Sanity test failures **do not** trigger automated rollbacks. This allows you to inspect logs and distinguish between test credential expiration vs an actual application issue.
 - **Resolution**:
@@ -149,10 +149,10 @@ If the server machine is wiped or being migrated to a new host:
 
 Every helper script in `infra/` is designed as a standalone, single-responsibility tool that can be invoked directly outside `admin.sh`:
 
-| Script                                                                                  | Purpose                                      | Key Flags / Arguments                                                            |
-| :-------------------------------------------------------------------------------------- | :------------------------------------------- | :------------------------------------------------------------------------------- |
-| [`admin.sh`](file:///E:/bystrze/Magazyn/admin.sh)                                       | Central admin cockpit & orchestrator         | `deploy`, `rollback`, `doctor`, `sanity`, `backup`, `restore`, `status`, `prune` |
-| [`infra/doctor.sh`](file:///E:/bystrze/Magazyn/infra/doctor.sh)                         | Validates `.env`, disk space, Docker, and DB | No arguments. Returns exit code `0` (pass) or `1` (fail).                        |
-| [`infra/sanity_check.sh`](file:///E:/bystrze/Magazyn/infra/sanity_check.sh)             | Tests public endpoints & read-only auth flow | Uses credentials from `.env`. Returns `0` (pass) or `1` (fail).                  |
-| [`infra/backups/backup_db.sh`](file:///E:/bystrze/Magazyn/infra/backups/backup_db.sh)   | Dumps `public` and `auth` schemas to gzip    | `[TAG_LABEL]` (optional label prepended to filename).                            |
-| [`infra/backups/restore_db.sh`](file:///E:/bystrze/Magazyn/infra/backups/restore_db.sh) | Drops schemas and restores from snapshot     | `[-y                                                                             | --yes]`(bypass prompt),`[--no-restart]`, `<PATH_TO_GZ>`. |
+| Script                                                             | Purpose                                      | Key Flags / Arguments                                                            |
+| :----------------------------------------------------------------- | :------------------------------------------- | :------------------------------------------------------------------------------- |
+| [`admin.sh`](../../admin.sh)                                       | Central admin cockpit & orchestrator         | `deploy`, `rollback`, `doctor`, `sanity`, `backup`, `restore`, `status`, `prune` |
+| [`infra/doctor.sh`](../../infra/doctor.sh)                         | Validates `.env`, disk space, Docker, and DB | No arguments. Returns exit code `0` (pass) or `1` (fail).                        |
+| [`infra/sanity_check.sh`](../../infra/sanity_check.sh)             | Tests public endpoints & read-only auth flow | Uses credentials from `.env`. Returns `0` (pass) or `1` (fail).                  |
+| [`infra/backups/backup_db.sh`](../../infra/backups/backup_db.sh)   | Dumps `public` and `auth` schemas to gzip    | `[TAG_LABEL]` (optional label prepended to filename).                            |
+| [`infra/backups/restore_db.sh`](../../infra/backups/restore_db.sh) | Drops schemas and restores from snapshot     | `[-y \| --yes]` (bypass prompt), `[--no-restart]`, `<PATH_TO_GZ>`.               |

@@ -1,4 +1,3 @@
-import * as React from "react";
 import type { CartItem } from "@/types/reservation-cart.types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";

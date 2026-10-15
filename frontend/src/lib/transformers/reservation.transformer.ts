@@ -1,12 +1,10 @@
 import type {
   CreateReservationsCommand,
-  CreateReservationItem,
   ReservationListItem,
   ReservationListResponse,
   ReservationDetail,
   ReservationAuditEntry,
   UpdateReservationCommand,
-  BulkUpdateReservationsCommand,
 } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/config/constants";
 
@@ -26,20 +24,6 @@ export function transformCreateReservationsCommand(command: CreateReservationsCo
     })),
     ...(command.userId && { user_id: command.userId }),
     ...(command.freeReservation !== undefined && { free_reservation: command.freeReservation }),
-  };
-}
-
-/**
- * Transforms a single reservation item from frontend to backend format
- *
- * @param item - Frontend reservation item with camelCase fields
- * @returns Backend-compatible object with snake_case fields
- */
-export function transformCreateReservationItem(item: CreateReservationItem): unknown {
-  return {
-    equipment_id: item.equipmentId,
-    start_date: item.startDate,
-    end_date: item.endDate,
   };
 }
 
@@ -198,10 +182,4 @@ export function transformReservationDetail(data: unknown): ReservationDetail {
     equipmentInternalId: dto.equipment_internal_id,
     auditTrail: (dto.audit_trail || []).map(transformAuditEntry),
   };
-}
-
-export function transformBulkUpdateCommand(
-  cmd: BulkUpdateReservationsCommand
-): Record<string, unknown> {
-  return { reservation_ids: cmd.reservationIds, status: cmd.status };
 }

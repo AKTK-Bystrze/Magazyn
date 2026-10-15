@@ -106,7 +106,7 @@ export type UpdateReservationResponse = {
   endDate: string;
   status: Enums<"reservation_status">;
   creditCost: number;
-  /** Net credit adjustment: positive indicates additional charge, negative indicates refund */
+  /** Net credit adjustment: positive indicates refund (credit added), negative indicates additional charge (credit deducted) */
   creditAdjustment: number;
   remainingBalance: number;
   updatedAt: string;
