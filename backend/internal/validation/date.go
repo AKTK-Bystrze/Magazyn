@@ -1,9 +1,11 @@
 package validation
 
 import (
+	"fmt"
 	"time"
 
 	"magazyn/backend/internal/constants"
+	"magazyn/backend/internal/types"
 )
 
 // CalculateDays returns the inclusive number of days between two ISO date strings (YYYY-MM-DD).
@@ -22,4 +24,15 @@ func CalculateDays(startDate, endDate string) int {
 		return 0
 	}
 	return int(end.Sub(start).Hours()/24) + 1
+}
+
+// ValidateISODate verifies that a date string matches the ISO date format (YYYY-MM-DD).
+func ValidateISODate(dateStr string) error {
+	if _, err := time.Parse(constants.DateFormatISO, dateStr); err != nil {
+		return types.NewValidationError(
+			fmt.Sprintf("Invalid date format '%s', expected YYYY-MM-DD", dateStr),
+			map[string]string{"date": dateStr},
+		)
+	}
+	return nil
 }

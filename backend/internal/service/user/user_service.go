@@ -4,10 +4,10 @@ import (
 	"context"
 	"math"
 
-	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 // UserService defines operations for user profile management.
@@ -55,14 +55,10 @@ func (s *userService) GetProfile(ctx context.Context, id string) (*types.UserRes
 	return s.mapToUserResponse(profile), nil
 }
 func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error) {
-	if page < 1 {
-		page = constants.DefaultPage
-	}
-	if perPage < 1 {
-		perPage = constants.DefaultPerPage
-	}
-	if perPage > constants.MaxPerPage {
-		perPage = constants.MaxPerPage
+	var err error
+	page, perPage, err = validation.ValidatePagination(page, perPage)
+	if err != nil {
+		return nil, err
 	}
 	logger.Infof(ctx, "Listing users - Page: %d, PerPage: %d, Role: %s, Search: %s", page, perPage, role, search)
 	profiles, totalItems, err := s.repo.List(ctx, page, perPage, role, search)
@@ -89,14 +85,10 @@ func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, se
 	}, nil
 }
 func (s *userService) ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error) {
-	if page < 1 {
-		page = constants.DefaultPage
-	}
-	if perPage < 1 {
-		perPage = constants.DefaultPerPage
-	}
-	if perPage > constants.MaxPerPage {
-		perPage = constants.MaxPerPage
+	var err error
+	page, perPage, err = validation.ValidatePagination(page, perPage)
+	if err != nil {
+		return nil, err
 	}
 	logger.Infof(ctx, "Listing public users - Page: %d, PerPage: %d, Search: %s", page, perPage, search)
 	profiles, totalItems, err := s.repo.List(ctx, page, perPage, "", search)

@@ -29,7 +29,7 @@ func NewCreditRequestRepository(client *supabase.Client, url, key string) reposi
 func (r *creditRequestRepository) ListRequests(ctx context.Context, page, perPage int) ([]types.CreditRequestDTO, int64, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	query := client.From(constants.TableCreditRequests).
-		Select("*, helpers:credit_request_helpers(user_id)", "exact", false)
+		Select(fmt.Sprintf("*, helpers:%s(user_id)", constants.TableCreditRequestHelpers), "exact", false)
 	offset := (page - 1) * perPage
 	query = query.Range(offset, offset+perPage-1, "")
 	query = query.Order("created_at", &postgrest.OrderOpts{Ascending: false})
@@ -78,7 +78,7 @@ func (r *creditRequestRepository) ListRequests(ctx context.Context, page, perPag
 func (r *creditRequestRepository) GetByID(ctx context.Context, id string) (*types.CreditRequestDTO, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	data, _, err := client.From(constants.TableCreditRequests).
-		Select("*, helpers:credit_request_helpers(user_id)", "exact", false).
+		Select(fmt.Sprintf("*, helpers:%s(user_id)", constants.TableCreditRequestHelpers), "exact", false).
 		Eq("id", id).
 		Single().
 		Execute()

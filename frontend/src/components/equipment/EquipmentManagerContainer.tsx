@@ -10,11 +10,9 @@ import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
-import {
-  ICON_SIZE_SM,
-  MESSAGE_AUTO_DISMISS_MS,
-  EQUIPMENT_MANAGER_UI_STRINGS,
-} from "@/lib/config/constants";
+import { ICON_SIZE_SM, EQUIPMENT_MANAGER_UI_STRINGS } from "@/lib/config/constants";
+import { useInfiniteScrollTrigger } from "@/lib/hooks/useInfiniteScrollTrigger";
+import { useDismissibleMessage } from "@/lib/hooks/useDismissibleMessage";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import type {
   EquipmentSearchItem,
@@ -55,24 +53,11 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     isFetchingNextPage,
   } = useEquipmentManager();
 
-  const observerTarget = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const observerTarget = useInfiniteScrollTrigger<HTMLDivElement>({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
@@ -88,23 +73,8 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     }
   }, [error]);
 
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useDismissibleMessage();
   const [archiveError, setArchiveError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  React.useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
 
   const handleAddClick = React.useCallback(() => {
     setIsAddDialogOpen(true);
@@ -120,7 +90,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
       setSuccessMessage(UI.CREATED_SUCCESS);
       setIsAddDialogOpen(false);
     },
-    [createEquipment]
+    [createEquipment, setSuccessMessage]
   );
 
   const handleEditClick = React.useCallback((item: EquipmentSearchItem) => {
@@ -140,7 +110,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
       setIsEditDialogOpen(false);
       setSelectedEquipment(null);
     },
-    [updateEquipment]
+    [updateEquipment, setSuccessMessage]
   );
 
   const handleViewDetails = React.useCallback((item: EquipmentSearchItem) => {
@@ -173,7 +143,7 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         throw err;
       }
     },
-    [archiveEquipment]
+    [archiveEquipment, setSuccessMessage]
   );
 
   const handleFilterChange = React.useCallback(
@@ -217,13 +187,13 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         </Alert>
       )}
 
-      {(error || errorMessage) && (
+      {error && (
         <Alert
           className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
           data-testid="admin-error-alert"
         >
           <AlertCircle className={ICON_SIZE_SM} />
-          <AlertDescription>{errorMessage || error?.message || "Wystąpił błąd"}</AlertDescription>
+          <AlertDescription>{error.message || "Wystąpił błąd"}</AlertDescription>
         </Alert>
       )}
 

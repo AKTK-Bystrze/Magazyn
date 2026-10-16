@@ -1,26 +1,20 @@
 import * as React from "react";
-import { supabase } from "@/lib/supabase";
 import { useReservationCart } from "@/hooks/useReservationCart";
 import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck";
-import { validateCart } from "@/lib/utils/cart-validation";
+import { useCartCheckout } from "@/hooks/useCartCheckout";
+import { validateCart, calculateCost as calculateCartCost } from "@/lib/utils/cart-validation";
 import { CartItemList } from "./CartItemList";
 import { DateRangePicker } from "./DateRangePicker";
 import { CostEstimator } from "./CostEstimator";
 import { ConfirmationModal } from "./ConfirmationModal";
+import { AdminReservationDelegateSection } from "./AdminReservationDelegateSection";
+import { CartAvailabilityAlerts } from "./CartAvailabilityAlerts";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Trash2, CheckCircle2 } from "lucide-react";
-import type { CreateReservationsCommand, UserListItem } from "@/types";
+import { Trash2, CheckCircle2 } from "lucide-react";
+import type { UserListItem } from "@/types";
 import type { AvailabilityCheckResult } from "@/types/reservation-cart.types";
-import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
 import { CLEAR_CART_CONFIRM_TIMEOUT_MS } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
-import { UserSelector } from "@/components/admin/UserSelector";
-import { QueryProvider } from "@/components/providers/QueryProvider";
-import { calculateCost as calculateCartCost } from "@/lib/utils/cart-validation";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Props for ReservationCartView component
@@ -44,18 +38,6 @@ interface ReservationCartViewProps {
  * Main checkout view for completing equipment reservations.
  * Displays cart items, date selection, cost estimation, and confirmation flow.
  * In admin mode, allows creating reservations for other users.
- *
- * @param props - Component props
- * @returns Reservation checkout interface
- *
- * @example
- * ```tsx
- * // User checkout
- * <ReservationCartView initialCreditBalance={100} />
- *
- * // Admin checkout
- * <ReservationCartView initialCreditBalance={0} isAdmin />
- * ```
  */
 export function ReservationCartView({
   initialCreditBalance,
@@ -75,38 +57,12 @@ export function ReservationCartView({
   );
 
   const [isConfirmationOpen, setIsConfirmationOpen] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [availabilityResult, setAvailabilityResult] = React.useState<AvailabilityCheckResult>({
     isAllAvailable: true,
     unavailableItems: [],
   });
 
-  const [submissionError, setSubmissionError] = React.useState<string | null>(null);
   const [clearCartPending, setClearCartPending] = React.useState(false);
-  const errorContainerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    setAvailabilityResult({ isAllAvailable: true, unavailableItems: [] });
-    setSubmissionError(null);
-  }, [cartState.startDate, cartState.endDate, cartState.items]);
-
-  React.useEffect(() => {
-    if (
-      (!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0) ||
-      submissionError
-    ) {
-      setTimeout(() => {
-        errorContainerRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }, 50);
-    }
-  }, [
-    availabilityResult.isAllAvailable,
-    availabilityResult.unavailableItems.length,
-    submissionError,
-  ]);
 
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
     initialSelectedUserId ?? null
@@ -116,10 +72,22 @@ export function ReservationCartView({
   );
   const [isFreeReservation, setIsFreeReservation] = React.useState(false);
 
-  /**
-   * Handler for admin user selection.
-   * Updates both the user ID and their credit balance.
-   */
+  const { isSubmitting, submissionError, setSubmissionError, submitReservation } = useCartCheckout({
+    cartState,
+    clearCart,
+    isAdmin,
+    selectedUserId,
+    isFreeReservation,
+    setIsFreeReservation,
+    successRedirectPath,
+    onSuccess: () => setIsConfirmationOpen(false),
+  });
+
+  React.useEffect(() => {
+    setAvailabilityResult({ isAllAvailable: true, unavailableItems: [] });
+    setSubmissionError(null);
+  }, [cartState.startDate, cartState.endDate, cartState.items, setSubmissionError]);
+
   const handleUserSelect = React.useCallback((user: UserListItem) => {
     setSelectedUserId(user.id);
     setSelectedUserCreditBalance(user.creditBalance);
@@ -182,76 +150,9 @@ export function ReservationCartView({
   };
 
   const handleConfirmReservation = async () => {
-    if (!cartState.startDate || !cartState.endDate) return;
-
-    setIsSubmitting(true);
-    setSubmissionError(null);
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const command: CreateReservationsCommand = {
-        reservations: cartState.items.map((item) => ({
-          equipmentId: item.equipmentId,
-          startDate: cartState.startDate!,
-          endDate: cartState.endDate!,
-        })),
-        ...(isAdmin && selectedUserId && { userId: selectedUserId }),
-        ...(isAdmin && isFreeReservation && { freeReservation: true }),
-      };
-
-      const backendCommand = transformCreateReservationsCommand(command);
-
-      const response = await fetch("/api/reservations", {
-        method: "POST",
-        headers,
-        body: JSON.stringify(backendCommand),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        let errorMessage = errorData.message || errorData.error || "Failed to create reservation";
-
-        cartState.items.forEach((item) => {
-          if (errorMessage.includes(item.equipmentId)) {
-            errorMessage = errorMessage.replace(item.equipmentId, `"${item.name}"`);
-          }
-        });
-
-        if (errorMessage.includes("Conflict detected")) {
-          errorMessage = errorMessage.replace(
-            "Conflict detected for equipment",
-            "This equipment is already reserved:"
-          );
-        }
-
-        throw new Error(errorMessage);
-      }
-
-      await response.json();
-
-      clearCart();
-      setIsFreeReservation(false);
+    const success = await submitReservation();
+    if (!success) {
       setIsConfirmationOpen(false);
-
-      window.location.href = `${successRedirectPath}?success=true`;
-    } catch (error) {
-      logger.error("Reservation failed:", { error });
-      setSubmissionError(error instanceof Error ? error.message : "An unexpected error occurred");
-      setIsConfirmationOpen(false);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -285,85 +186,18 @@ export function ReservationCartView({
       </div>
 
       {isAdmin && !isEmpty && (
-        <section className="bg-card rounded-lg border shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Utwórz Rezerwację Dla</h2>
-          <QueryProvider>
-            <UserSelector
-              selectedUserId={selectedUserId}
-              onSelect={handleUserSelect}
-              label="Wybierz użytkownika dla tej rezerwacji"
-            />
-          </QueryProvider>
-          {!selectedUserId && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Musisz wybrać użytkownika przed dokończeniem rezerwacji.
-            </p>
-          )}
-
-          <div className="mt-6 flex items-center space-x-2 border-t pt-4">
-            <Checkbox
-              id="free-reservation"
-              checked={isFreeReservation}
-              onCheckedChange={(checked) => setIsFreeReservation(checked === true)}
-              data-testid="free-reservation-checkbox"
-            />
-            <Label htmlFor="free-reservation" className="cursor-pointer font-medium">
-              Utwórz jako Darmową Rezerwację
-            </Label>
-          </div>
-          {isFreeReservation && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Ta rezerwacja nie obciąży konta użytkownika godzinkami.
-            </p>
-          )}
-        </section>
+        <AdminReservationDelegateSection
+          selectedUserId={selectedUserId}
+          onSelectUser={handleUserSelect}
+          isFreeReservation={isFreeReservation}
+          onToggleFreeReservation={setIsFreeReservation}
+        />
       )}
 
-      <div ref={errorContainerRef} className="empty:hidden space-y-4">
-        {submissionError && (
-          <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
-            <AlertCircle className="h-4 w-4" />
-            <h5 className="mb-1 font-medium leading-none tracking-tight">
-              Rezerwacja Nie Powiodła Się
-            </h5>
-            <AlertDescription>{submissionError}</AlertDescription>
-          </Alert>
-        )}
-
-        {!availabilityResult.isAllAvailable && availabilityResult.unavailableItems.length > 0 && (
-          <Alert
-            className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive"
-            data-testid="error-reservation-conflict"
-          >
-            <AlertCircle className="h-4 w-4" />
-            <h5 className="mb-1 font-medium leading-none tracking-tight">
-              Wykryto Problemy z Dostępnością
-            </h5>
-            <AlertDescription>
-              <ul className="list-disc pl-5 mt-2 space-y-2">
-                {availabilityResult.unavailableItems.map((item) => (
-                  <li key={item.equipmentId}>
-                    <strong>{item.name}</strong>: {item.reason}
-                    {item.conflictingReservations && item.conflictingReservations.length > 0 && (
-                      <div className="mt-1 text-sm">
-                        <span className="font-medium">Konfliktujące rezerwacje:</span>
-                        <ul className="list-none pl-4 mt-1 space-y-1">
-                          {item.conflictingReservations.map((conflict, idx) => (
-                            <li key={idx} className="text-xs">
-                              • {conflict.startDate} do {conflict.endDate}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-2 text-sm">Proszę usunąć te przedmioty lub zmienić daty.</p>
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
+      <CartAvailabilityAlerts
+        submissionError={submissionError}
+        availabilityResult={availabilityResult}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">

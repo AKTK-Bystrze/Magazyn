@@ -11,20 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   EQUIPMENT_STATUS,
-  EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_VALIDATION_MESSAGES,
   EQUIPMENT_MANAGER_UI_STRINGS,
 } from "@/lib/config/constants";
 import type { UpdateEquipmentCommand, EquipmentSearchItem } from "@/types";
 import type { Enums } from "@/db/database.types";
+import { EquipmentFormFields } from "./EquipmentFormFields";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
 const VALIDATION = EQUIPMENT_VALIDATION_MESSAGES;
@@ -189,60 +182,18 @@ export function EditEquipmentDialog({
               </p>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor={nameFieldId}>{UI.FORM_NAME}</Label>
-              <Input
-                id={nameFieldId}
-                type="text"
-                placeholder={UI.FORM_NAME_PLACEHOLDER}
-                value={formData.name}
-                onChange={handleInputChange("name")}
-                aria-invalid={!!errors.name}
-                aria-describedby={errors.name ? `${nameFieldId}-error` : undefined}
-                disabled={isSubmitting}
-                maxLength={200}
-                data-testid="equipment-form-name-input"
-              />
-              {errors.name && (
-                <p id={`${nameFieldId}-error`} className="text-sm text-destructive">
-                  {errors.name}
-                </p>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor={descriptionFieldId}>{UI.FORM_DESCRIPTION}</Label>
-              <Input
-                id={descriptionFieldId}
-                type="text"
-                placeholder={UI.FORM_DESCRIPTION_PLACEHOLDER}
-                value={formData.description}
-                onChange={handleInputChange("description")}
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor={statusFieldId}>{UI.FORM_STATUS}</Label>
-              <Select
-                value={formData.status}
-                onValueChange={handleStatusChange}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id={statusFieldId}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={EQUIPMENT_STATUS.OK}>{EQUIPMENT_STATUS_LABELS.ok}</SelectItem>
-                  <SelectItem value={EQUIPMENT_STATUS.BROKEN}>
-                    {EQUIPMENT_STATUS_LABELS.broken}
-                  </SelectItem>
-                  <SelectItem value={EQUIPMENT_STATUS.BLOCKED}>
-                    {EQUIPMENT_STATUS_LABELS.blocked}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <EquipmentFormFields
+              name={formData.name}
+              description={formData.description}
+              status={formData.status}
+              errors={errors}
+              isSubmitting={isSubmitting}
+              onInputChange={handleInputChange}
+              onStatusChange={handleStatusChange}
+              nameFieldId={nameFieldId}
+              descriptionFieldId={descriptionFieldId}
+              statusFieldId={statusFieldId}
+            />
 
             {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>
