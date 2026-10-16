@@ -46,6 +46,26 @@ export function ReservationActionMenu({
     item.status === RESERVATION_STATUS.PENDING || item.status === RESERVATION_STATUS.RENTED;
   const hasActions = (canModify && (onModify || onCancel)) || (canReturn && onReturn);
 
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onViewDetails(item);
+  };
+
+  const handleModify = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onModify?.(item);
+  };
+
+  const handleReturn = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onReturn?.(item);
+  };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCancel?.(item);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -60,7 +80,7 @@ export function ReservationActionMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onViewDetails(item)}>
+        <DropdownMenuItem onClick={handleViewDetails}>
           <Eye className={ICON_SIZE_SM + " mr-2"} />
           Szczegóły
         </DropdownMenuItem>
@@ -69,14 +89,14 @@ export function ReservationActionMenu({
           <>
             <DropdownMenuSeparator />
             {canModify && onModify && (
-              <DropdownMenuItem onClick={() => onModify(item)}>
+              <DropdownMenuItem onClick={handleModify}>
                 <Edit2 className={ICON_SIZE_SM + " mr-2"} />
                 Zmień daty
               </DropdownMenuItem>
             )}
             {canReturn && onReturn && (
               <DropdownMenuItem
-                onClick={() => onReturn(item)}
+                onClick={handleReturn}
                 className="text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400"
                 data-testid="return-reservation-button"
               >
@@ -86,7 +106,7 @@ export function ReservationActionMenu({
             )}
             {canModify && onCancel && (
               <DropdownMenuItem
-                onClick={() => onCancel(item)}
+                onClick={handleCancel}
                 className="text-destructive focus:text-destructive"
                 data-testid="cancel-reservation-button"
               >

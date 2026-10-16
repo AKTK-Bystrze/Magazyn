@@ -76,8 +76,9 @@ describe("ReservationTableRow", () => {
     expect(screen.getByText(/testuser\s*\(Ty\)/)).toBeInTheDocument();
   });
 
-  it("triggers onViewDetails callback when row is clicked", () => {
+  it("triggers onViewDetails callback when row is clicked, but not when action menu is used", () => {
     const onViewDetails = vi.fn();
+    const onCancel = vi.fn();
     renderInTable(
       <ReservationTableRow
         item={mockItem}
@@ -85,9 +86,24 @@ describe("ReservationTableRow", () => {
         mode="user"
         scope="my"
         onViewDetails={onViewDetails}
+        onCancel={onCancel}
       />
     );
 
+    // Interacting with action menu trigger does not trigger row's onViewDetails
+    const triggers = screen.getAllByTestId("reservation-action-menu-trigger");
+    fireEvent.click(triggers[0]);
+    expect(onViewDetails).not.toHaveBeenCalled();
+
+    // Click cancel button inside menu if open
+    const cancelButton = screen.queryByTestId("cancel-reservation-button");
+    if (cancelButton) {
+      fireEvent.click(cancelButton);
+      expect(onCancel).toHaveBeenCalledWith(mockItem);
+      expect(onViewDetails).not.toHaveBeenCalled();
+    }
+
+    // Clicking the row itself should trigger onViewDetails
     const row = screen.getByTestId(`reservation-row-${mockItem.id}`);
     fireEvent.click(row);
     expect(onViewDetails).toHaveBeenCalledWith(mockItem);
