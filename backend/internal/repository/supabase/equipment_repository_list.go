@@ -70,15 +70,12 @@ func filterAndPaginateEquipment(ctx context.Context, allItems []types.PublicEqui
 	}
 	totalItems := int64(len(filteredItems))
 	offset := (query.Page - 1) * query.PerPage
-	endIndex := offset + query.PerPage
 	if len(filteredItems) > 0 {
 		logger.Debugf(ctx, "List result: %d items. First: %v (%s), Last: %v (%s)",
 			len(filteredItems), filteredItems[0].Name, filteredItems[0].CreatedAt,
 			filteredItems[len(filteredItems)-1].Name, filteredItems[len(filteredItems)-1].CreatedAt)
 	}
-	if endIndex > len(filteredItems) {
-		endIndex = len(filteredItems)
-	}
+	endIndex := min(offset+query.PerPage, len(filteredItems))
 	if offset >= len(filteredItems) {
 		return []types.PublicEquipmentSelect{}, totalItems
 	}

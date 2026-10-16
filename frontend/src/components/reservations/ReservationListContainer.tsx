@@ -192,13 +192,11 @@ function ReservationListContainerInner({
       {dialogReservation && (
         <ModifyDatesDialog
           open={modifyDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) setModifyDialogOpen(false);
-          }}
+          onOpenChange={setModifyDialogOpen}
           reservation={dialogReservation}
           reservations={batchReservations}
           onConfirm={async ({ startDate, endDate }) => {
-            await handleModifyDatesConfirm(new Date(startDate), new Date(endDate));
+            await handleModifyDatesConfirm(startDate, endDate);
           }}
           isSubmitting={isMutating}
           currentUserBalance={currentUserBalance}
@@ -208,9 +206,7 @@ function ReservationListContainerInner({
       {dialogReservation && (
         <ReturnWithDatesDialog
           open={returnDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) setReturnDialogOpen(false);
-          }}
+          onOpenChange={setReturnDialogOpen}
           reservation={dialogReservation}
           reservations={batchReservations}
           onConfirm={handleReturnConfirm}

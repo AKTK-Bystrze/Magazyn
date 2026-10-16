@@ -6,6 +6,7 @@ import (
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 func (r *reservationRepository) GetReservationByID(ctx context.Context, id string) (*types.ReservationDetail, error) {
@@ -27,7 +28,7 @@ func (r *reservationRepository) GetReservationByID(ctx context.Context, id strin
 	if err != nil {
 		return nil, err
 	}
-	creditCost := calculateReservationCreditCost(raw.StartDate, raw.EndDate, raw.Equipment.EquipmentType.CreditCostPerDay, raw.IsFree)
+	creditCost := validation.CalculateReservationCost(raw.StartDate, raw.EndDate, raw.Equipment.EquipmentType.CreditCostPerDay, raw.IsFree)
 	detail := &types.ReservationDetail{
 		ReservationListItem: types.ReservationListItem{
 			ID:            raw.ID,

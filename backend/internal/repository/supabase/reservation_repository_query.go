@@ -137,7 +137,7 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	}
 	result := make([]types.ReservationListItem, len(rawItems))
 	for i, item := range rawItems {
-		creditCost := calculateReservationCreditCost(item.StartDate, item.EndDate, item.Equipment.EquipmentType.CreditCostPerDay, item.IsFree)
+		creditCost := validation.CalculateReservationCost(item.StartDate, item.EndDate, item.Equipment.EquipmentType.CreditCostPerDay, item.IsFree)
 		result[i] = types.ReservationListItem{
 			ID:            item.ID,
 			UserID:        item.UserID,

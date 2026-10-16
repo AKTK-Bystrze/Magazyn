@@ -10,7 +10,7 @@ import { MESSAGE_AUTO_DISMISS_MS } from "@/lib/config/constants";
  */
 export function useDismissibleMessage(
   timeoutMs: number = MESSAGE_AUTO_DISMISS_MS
-): [string | null, React.Dispatch<React.SetStateAction<string | null>>, () => void] {
+): [string | null, React.Dispatch<React.SetStateAction<string | null>>] {
   const [message, setMessage] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -23,13 +23,5 @@ export function useDismissibleMessage(
     return () => clearTimeout(timer);
   }, [message, timeoutMs]);
 
-  const clearMessage = React.useCallback(() => {
-    setMessage(null);
-  }, []);
-
-  const setMessageCallback = React.useCallback((action: React.SetStateAction<string | null>) => {
-    setMessage(action);
-  }, []);
-
-  return [message, setMessageCallback, clearMessage];
+  return [message, setMessage];
 }

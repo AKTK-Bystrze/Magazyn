@@ -11,8 +11,6 @@ export interface CartAvailabilityAlertsProps {
   submissionError: string | null;
   /** Result of equipment availability pre-check */
   availabilityResult: AvailabilityCheckResult;
-  /** Optional external ref to attach to the container element */
-  errorContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 /**
@@ -22,10 +20,8 @@ export interface CartAvailabilityAlertsProps {
 export function CartAvailabilityAlerts({
   submissionError,
   availabilityResult,
-  errorContainerRef,
 }: CartAvailabilityAlertsProps) {
   const localRef = React.useRef<HTMLDivElement>(null);
-  const targetRef = errorContainerRef || localRef;
 
   React.useEffect(() => {
     if (
@@ -33,7 +29,7 @@ export function CartAvailabilityAlerts({
       submissionError
     ) {
       setTimeout(() => {
-        targetRef.current?.scrollIntoView({
+        localRef.current?.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
@@ -43,18 +39,17 @@ export function CartAvailabilityAlerts({
     availabilityResult.isAllAvailable,
     availabilityResult.unavailableItems.length,
     submissionError,
-    targetRef,
   ]);
 
   if (
     !submissionError &&
     (availabilityResult.isAllAvailable || availabilityResult.unavailableItems.length === 0)
   ) {
-    return <div ref={targetRef} className="empty:hidden" />;
+    return null;
   }
 
   return (
-    <div ref={targetRef} className="space-y-4">
+    <div ref={localRef} className="space-y-4">
       {submissionError && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className="h-4 w-4" />

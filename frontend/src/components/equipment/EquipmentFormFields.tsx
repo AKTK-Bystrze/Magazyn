@@ -37,12 +37,6 @@ export interface EquipmentFormFieldsProps {
   ) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   /** Status select change handler */
   onStatusChange: (value: string) => void;
-  /** Optional custom ID for name field */
-  nameFieldId?: string;
-  /** Optional custom ID for description field */
-  descriptionFieldId?: string;
-  /** Optional custom ID for status field */
-  statusFieldId?: string;
 }
 
 /**
@@ -57,17 +51,10 @@ export function EquipmentFormFields({
   isSubmitting,
   onInputChange,
   onStatusChange,
-  nameFieldId: customNameId,
-  descriptionFieldId: customDescId,
-  statusFieldId: customStatusId,
 }: EquipmentFormFieldsProps) {
-  const generatedNameId = React.useId();
-  const generatedDescId = React.useId();
-  const generatedStatusId = React.useId();
-
-  const nameFieldId = customNameId || generatedNameId;
-  const descriptionFieldId = customDescId || generatedDescId;
-  const statusFieldId = customStatusId || generatedStatusId;
+  const nameFieldId = React.useId();
+  const descriptionFieldId = React.useId();
+  const statusFieldId = React.useId();
 
   return (
     <>

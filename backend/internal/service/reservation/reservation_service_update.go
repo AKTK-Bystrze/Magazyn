@@ -8,6 +8,7 @@ import (
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 func (s *reservationService) Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error) {
@@ -124,15 +125,11 @@ func (s *reservationService) validateUpdatePermissions(current *types.Reservatio
 	if !isAdmin && !isOwner {
 		return types.NewForbiddenError("Not allowed")
 	}
-	if !isAdmin {
-		if current.Status != constants.ReservationStatusPending {
-			return types.NewForbiddenError("Cannot modify non-pending reservation")
-		}
+	if !isAdmin && current.Status != constants.ReservationStatusPending {
+		return types.NewForbiddenError("Cannot modify non-pending reservation")
 	}
-	if cmd.Status != nil && *cmd.Status != current.Status {
-		if !isAdmin && *cmd.Status != constants.ReservationStatusCancelled && *cmd.Status != constants.ReservationStatusReturned {
-			return types.NewValidationError("Users can only cancel or return pending reservations", nil)
-		}
+	if !isAdmin && cmd.Status != nil && *cmd.Status != current.Status && *cmd.Status != constants.ReservationStatusCancelled && *cmd.Status != constants.ReservationStatusReturned {
+		return types.NewValidationError("Users can only cancel or return pending reservations", nil)
 	}
 	return nil
 }
@@ -152,7 +149,7 @@ func (s *reservationService) handleCancellationRefund(ctx context.Context, curre
 		logger.Errorf(ctx, "Refund failed: equipment type %s not found: %v", eq.TypeID, errType)
 		return 0, 0, fmt.Errorf("refund failed: equipment type %s not found: %w", eq.TypeID, errType)
 	}
-	refundAmount := CalculateReservationCost(current.StartDate, current.EndDate, eqType.CreditCostPerDay, current.IsFree)
+	refundAmount := validation.CalculateReservationCost(current.StartDate, current.EndDate, eqType.CreditCostPerDay, current.IsFree)
 	if refundAmount <= 0 {
 		return 0, 0, nil
 	}
@@ -178,5 +175,5 @@ func (s *reservationService) recalculateCreditCost(ctx context.Context, equipmen
 	if eqType == nil {
 		return 0
 	}
-	return CalculateReservationCost(startDate, endDate, eqType.CreditCostPerDay, false)
+	return validation.CalculateReservationCost(startDate, endDate, eqType.CreditCostPerDay, false)
 }

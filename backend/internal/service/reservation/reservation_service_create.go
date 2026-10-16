@@ -8,6 +8,7 @@ import (
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
 func (s *reservationService) Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string, role string) (*types.CreateReservationsResponse, error) {
@@ -21,7 +22,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 		return nil, types.NewForbiddenError("Only admins can create free reservations")
 	}
 	totalCost := int32(0)
-	costMap := make(map[int]int32)
+	costs := make([]int32, len(cmd.Reservations))
 	for i, req := range cmd.Reservations {
 		eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
 		if err != nil {
@@ -35,13 +36,11 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 			if err != nil {
 				return nil, types.NewInternalError("failed to fetch equipment type", err)
 			}
-			cost := CalculateReservationCost(req.StartDate, req.EndDate, eqType.CreditCostPerDay, false)
+			cost := validation.CalculateReservationCost(req.StartDate, req.EndDate, eqType.CreditCostPerDay, false)
 			totalCost += cost
-			costMap[i] = cost
+			costs[i] = cost
 			logger.Infof(ctx, "Reservation Item: EqID=%s, TypeID=%s, CostPerDay=%d, ItemCost=%d",
 				req.EquipmentID, eq.TypeID, eqType.CreditCostPerDay, cost)
-		} else {
-			costMap[i] = 0
 		}
 	}
 	if isFreeReservation {
@@ -51,18 +50,17 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	if err != nil {
 		return nil, types.NewConflictError("Reservation failed: "+err.Error(), nil)
 	}
-	var succeeded []types.ReservationListItem
-	for i, req := range cmd.Reservations {
-		if i < len(reservationIDs) {
-			succeeded = append(succeeded, types.ReservationListItem{
-				ID:          reservationIDs[i],
-				UserID:      targetUserID,
-				EquipmentID: req.EquipmentID,
-				StartDate:   req.StartDate,
-				EndDate:     req.EndDate,
-				Status:      constants.ReservationStatusPending,
-				CreditCost:  costMap[i],
-			})
+	count := min(len(cmd.Reservations), len(reservationIDs))
+	succeeded := make([]types.ReservationListItem, count)
+	for i := 0; i < count; i++ {
+		succeeded[i] = types.ReservationListItem{
+			ID:          reservationIDs[i],
+			UserID:      targetUserID,
+			EquipmentID: cmd.Reservations[i].EquipmentID,
+			StartDate:   cmd.Reservations[i].StartDate,
+			EndDate:     cmd.Reservations[i].EndDate,
+			Status:      constants.ReservationStatusPending,
+			CreditCost:  costs[i],
 		}
 	}
 	go s.sendReservationConfirmationAsync(ctx, targetUserID, succeeded, totalCost, newBalance)

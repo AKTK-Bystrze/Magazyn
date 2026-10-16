@@ -17,10 +17,10 @@ import type { ReservationListItem } from "@/types";
 export interface ReservationActionMenuProps {
   /** The reservation item to perform actions on */
   item: ReservationListItem;
-  /** Current view mode */
-  mode: "user" | "admin";
-  /** Current scope */
-  scope: "my" | "all";
+  /** Optional view mode */
+  mode?: "user" | "admin";
+  /** Optional scope */
+  scope?: "my" | "all";
   /** Callback to view reservation details */
   onViewDetails: (item: ReservationListItem) => void;
   /** Optional callback to modify reservation dates */
@@ -33,12 +33,9 @@ export interface ReservationActionMenuProps {
 
 /**
  * Dropdown action menu for a reservation item.
- * Encapsulates permissions (canModify, canReturn, showActions) and action triggers.
  */
 export function ReservationActionMenu({
   item,
-  mode,
-  scope,
   onViewDetails,
   onModify,
   onCancel,
@@ -47,27 +44,7 @@ export function ReservationActionMenu({
   const canModify = item.status === RESERVATION_STATUS.PENDING;
   const canReturn =
     item.status === RESERVATION_STATUS.PENDING || item.status === RESERVATION_STATUS.RENTED;
-  const showActions = mode === "admin" || scope === "my";
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onViewDetails(item);
-  };
-
-  const handleModify = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onModify?.(item);
-  };
-
-  const handleReturn = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onReturn?.(item);
-  };
-
-  const handleCancel = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onCancel?.(item);
-  };
+  const hasActions = (canModify && (onModify || onCancel)) || (canReturn && onReturn);
 
   return (
     <DropdownMenu>
@@ -83,23 +60,23 @@ export function ReservationActionMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleViewDetails}>
+        <DropdownMenuItem onClick={() => onViewDetails(item)}>
           <Eye className={ICON_SIZE_SM + " mr-2"} />
           Szczegóły
         </DropdownMenuItem>
 
-        {showActions && (canModify || canReturn) && (
+        {hasActions && (
           <>
             <DropdownMenuSeparator />
             {canModify && onModify && (
-              <DropdownMenuItem onClick={handleModify}>
+              <DropdownMenuItem onClick={() => onModify(item)}>
                 <Edit2 className={ICON_SIZE_SM + " mr-2"} />
                 Zmień daty
               </DropdownMenuItem>
             )}
             {canReturn && onReturn && (
               <DropdownMenuItem
-                onClick={handleReturn}
+                onClick={() => onReturn(item)}
                 className="text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400"
                 data-testid="return-reservation-button"
               >
@@ -109,7 +86,7 @@ export function ReservationActionMenu({
             )}
             {canModify && onCancel && (
               <DropdownMenuItem
-                onClick={handleCancel}
+                onClick={() => onCancel(item)}
                 className="text-destructive focus:text-destructive"
                 data-testid="cancel-reservation-button"
               >

@@ -57,10 +57,6 @@ export function EditEquipmentDialog({
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  const nameFieldId = React.useId();
-  const descriptionFieldId = React.useId();
-  const statusFieldId = React.useId();
-
   React.useEffect(() => {
     if (isOpen && equipment) {
       setFormData({
@@ -190,9 +186,6 @@ export function EditEquipmentDialog({
               isSubmitting={isSubmitting}
               onInputChange={handleInputChange}
               onStatusChange={handleStatusChange}
-              nameFieldId={nameFieldId}
-              descriptionFieldId={descriptionFieldId}
-              statusFieldId={statusFieldId}
             />
 
             {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}

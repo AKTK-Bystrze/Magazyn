@@ -50,7 +50,7 @@ export interface UseReservationDialogsReturn {
   handleModifyDatesAll: (reservations: ReservationListItem[]) => void;
   handleReturnAll: (reservations: ReservationListItem[]) => void;
   handleCancelDialogClose: () => void;
-  handleModifyDatesConfirm: (start: Date, end: Date) => Promise<void>;
+  handleModifyDatesConfirm: (startDate: string, endDate: string) => Promise<void>;
   handleReturnConfirm: (command: UpdateReservationCommand) => Promise<void>;
   handleCancelConfirm: () => Promise<void>;
 }
@@ -132,7 +132,7 @@ export function useReservationDialogs({
   }, []);
 
   const handleModifyDatesConfirm = React.useCallback(
-    async (start: Date, end: Date) => {
+    async (startDate: string, endDate: string) => {
       const targets =
         batchReservations.length > 0
           ? batchReservations
@@ -142,10 +142,7 @@ export function useReservationDialogs({
       if (targets.length === 0) return;
 
       try {
-        const command = {
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-        };
+        const command = { startDate, endDate };
 
         if (targets.length === 1) {
           await updateReservation(targets[0].id, command);

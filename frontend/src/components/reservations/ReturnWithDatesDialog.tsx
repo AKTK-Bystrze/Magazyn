@@ -104,7 +104,7 @@ export function ReturnWithDatesDialog({
     }
 
     setValidationErrors(errors);
-    return Object.keys(errors).every((k) => errors[k as keyof typeof errors] === null);
+    return !errors.startDate && !errors.endDate;
   };
 
   const handleConfirm = async () => {
@@ -132,12 +132,17 @@ export function ReturnWithDatesDialog({
     }
   };
 
-  React.useEffect(() => {
-    if (modifyDates && startDate && endDate) {
-      setValidationErrors({ startDate: null, endDate: null });
-      setApiError(null);
-    }
-  }, [startDate, endDate, modifyDates]);
+  const handleStartDateChange = React.useCallback((date: string | null) => {
+    setStartDate(date);
+    setValidationErrors({ startDate: null, endDate: null });
+    setApiError(null);
+  }, []);
+
+  const handleEndDateChange = React.useCallback((date: string | null) => {
+    setEndDate(date);
+    setValidationErrors({ startDate: null, endDate: null });
+    setApiError(null);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -172,8 +177,8 @@ export function ReturnWithDatesDialog({
                 reservation={reservation}
                 startDate={startDate}
                 endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
+                onStartDateChange={handleStartDateChange}
+                onEndDateChange={handleEndDateChange}
                 validationErrors={validationErrors}
                 datesChanged={datesChanged}
                 totalCost={totalCost}

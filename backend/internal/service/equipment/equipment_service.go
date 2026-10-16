@@ -170,3 +170,63 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 	url := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", projectURL, constants.StorageBucket, *imagePath)
 	return &url
 }
+
+func (s *equipmentService) CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error) {
+	_, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, types.NewNotFoundError("Equipment", id)
+	}
+	conflicts, err := s.repo.GetConflictingReservations(ctx, id, query.StartDate, query.EndDate)
+	if err != nil {
+		return nil, err
+	}
+	conflictDTOs := make([]types.ConflictingReservation, len(conflicts))
+	for i, c := range conflicts {
+		conflictDTOs[i] = types.ConflictingReservation{
+			ID:        c.ID,
+			StartDate: c.StartDate,
+			EndDate:   c.EndDate,
+			Status:    c.Status,
+		}
+	}
+	return &types.AvailabilityResponse{
+		EquipmentID:             id,
+		IsAvailable:             len(conflicts) == 0,
+		ConflictingReservations: conflictDTOs,
+	}, nil
+}
+
+func (s *equipmentService) ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error) {
+	typesList, err := s.typeRepo.ListAll(ctx)
+	if err != nil {
+		logger.Errorf(ctx, "Failed to fetch equipment types: %v", err)
+		return nil, types.NewInternalError("Failed to fetch equipment types", err)
+	}
+	return &types.EquipmentTypeListResponse{
+		EquipmentTypes: typesList,
+	}, nil
+}
+
+func (s *equipmentService) CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error) {
+	eq, err := s.repo.GetByID(ctx, equipmentID)
+	if err != nil {
+		return nil, types.NewNotFoundError("Equipment", equipmentID)
+	}
+	log, err := s.repo.CreateMaintenanceLog(ctx, equipmentID, eq.Status, eq.Status, notes, userID)
+	if err != nil {
+		logger.Errorf(ctx, "Failed to create maintenance log: %v", err)
+		return nil, types.NewInternalError("Failed to create maintenance log", err)
+	}
+	authorUsername := ""
+	if user, err := s.userRepo.GetByID(ctx, userID); err == nil && user != nil {
+		authorUsername = user.Username
+	}
+	return &types.MaintenanceLogDTO{
+		ID:             log.ID,
+		PreviousStatus: log.PreviousStatus,
+		NewStatus:      log.NewStatus,
+		Notes:          log.Notes,
+		AdminUsername:  authorUsername,
+		CreatedAt:      log.CreatedAt,
+	}, nil
+}

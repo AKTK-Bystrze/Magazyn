@@ -17,7 +17,13 @@ import {
 } from "@/lib/config/constants";
 import type { CreateUserCommand } from "@/types";
 import type { Enums } from "@/db/database.types";
-import { UserFormFields } from "./UserFormFields";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
  * Props for CreateUserDialog component
@@ -154,41 +160,87 @@ export function CreateUserDialog({
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <UserFormFields
-              email={formData.email}
-              role={formData.role}
-              creditBalance={formData.creditBalance}
-              errors={errors}
-              isSubmitting={isSubmitting}
-              onInputChange={handleInputChange}
-              onRoleChange={handleRoleChange}
-              emailId={emailId}
-              roleId={roleId}
-              creditsId={creditsId}
-              emailRequired
-              roleRequired
-            >
-              <div className="grid gap-2">
-                <Label htmlFor={usernameId}>
-                  Nazwa użytkownika <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id={usernameId}
-                  type="text"
-                  placeholder="jan_kowalski"
-                  value={formData.username}
-                  onChange={handleInputChange("username")}
-                  aria-invalid={!!errors.username}
-                  aria-describedby={errors.username ? `${usernameId}-error` : undefined}
-                  disabled={isSubmitting}
-                />
-                {errors.username && (
-                  <p id={`${usernameId}-error`} className="text-sm text-destructive">
-                    {errors.username}
-                  </p>
-                )}
-              </div>
-            </UserFormFields>
+            <div className="grid gap-2">
+              <Label htmlFor={emailId}>
+                Email <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id={emailId}
+                type="email"
+                placeholder="user@example.com"
+                value={formData.email}
+                onChange={handleInputChange("email")}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? `${emailId}-error` : undefined}
+                disabled={isSubmitting}
+              />
+              {errors.email && (
+                <p id={`${emailId}-error`} className="text-sm text-destructive">
+                  {errors.email}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor={usernameId}>
+                Nazwa użytkownika <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id={usernameId}
+                type="text"
+                placeholder="jan_kowalski"
+                value={formData.username}
+                onChange={handleInputChange("username")}
+                aria-invalid={!!errors.username}
+                aria-describedby={errors.username ? `${usernameId}-error` : undefined}
+                disabled={isSubmitting}
+              />
+              {errors.username && (
+                <p id={`${usernameId}-error`} className="text-sm text-destructive">
+                  {errors.username}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor={roleId}>
+                Rola <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.role}
+                onValueChange={handleRoleChange}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id={roleId}>
+                  <SelectValue placeholder="Wybierz rolę" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={USER_ROLE.USER}>Użytkownik</SelectItem>
+                  <SelectItem value={USER_ROLE.ADMIN}>Administrator</SelectItem>
+                  <SelectItem value={USER_ROLE.SUPER_ADMIN}>Super Administrator</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor={creditsId}>Początkowe Saldo Godzinek</Label>
+              <Input
+                id={creditsId}
+                type="number"
+                min="0"
+                placeholder="0"
+                value={formData.creditBalance}
+                onChange={handleInputChange("creditBalance")}
+                aria-invalid={!!errors.creditBalance}
+                aria-describedby={errors.creditBalance ? `${creditsId}-error` : undefined}
+                disabled={isSubmitting}
+              />
+              {errors.creditBalance && (
+                <p id={`${creditsId}-error`} className="text-sm text-destructive">
+                  {errors.creditBalance}
+                </p>
+              )}
+            </div>
 
             {errors.form && <p className="text-sm text-destructive">{errors.form}</p>}
           </div>

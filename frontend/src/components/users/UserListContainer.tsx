@@ -61,7 +61,6 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   }, [data?.users]);
 
   const [successMessage, setSuccessMessage] = useDismissibleMessage();
-  const [errorMessage] = useDismissibleMessage();
 
   const handleCreateClick = React.useCallback(() => {
     setCreateDialogOpen(true);
@@ -174,10 +173,10 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         </Alert>
       )}
 
-      {(error || errorMessage) && (
+      {error && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
-          <AlertDescription>{errorMessage || error?.message || "Wystąpił błąd"}</AlertDescription>
+          <AlertDescription>{error.message || "Wystąpił błąd"}</AlertDescription>
         </Alert>
       )}
 

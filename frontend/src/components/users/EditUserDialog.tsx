@@ -16,9 +16,15 @@ import {
   USER_VALIDATION_PATTERNS,
 } from "@/lib/config/constants";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { UserListItem, UpdateUserCommand } from "@/types";
 import type { Enums } from "@/db/database.types";
-import { UserFormFields } from "./UserFormFields";
 
 /**
  * Props for EditUserDialog component
@@ -185,21 +191,65 @@ export function EditUserDialog({
               </p>
             </div>
 
-            <UserFormFields
-              email={formData.email}
-              role={formData.role}
-              creditBalance={formData.creditBalance}
-              errors={errors}
-              isSubmitting={isSubmitting}
-              onInputChange={handleInputChange}
-              onRoleChange={handleRoleChange}
-              emailId={emailId}
-              roleId={roleId}
-              creditsId={creditsId}
-              creditLabel="Stan Konta (Kredyty)"
-              creditHelpText="Zmiany stanu konta są logowane w historii kredytów użytkownika"
-              roleTestId="admin-user-role-select"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor={emailId}>Email</Label>
+              <Input
+                id={emailId}
+                type="email"
+                placeholder="user@example.com"
+                value={formData.email}
+                onChange={handleInputChange("email")}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? `${emailId}-error` : undefined}
+                disabled={isSubmitting}
+              />
+              {errors.email && (
+                <p id={`${emailId}-error`} className="text-sm text-destructive">
+                  {errors.email}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor={roleId}>Rola</Label>
+              <Select
+                value={formData.role}
+                onValueChange={handleRoleChange}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id={roleId} data-testid="admin-user-role-select">
+                  <SelectValue placeholder="Wybierz rolę" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={USER_ROLE.USER}>Użytkownik</SelectItem>
+                  <SelectItem value={USER_ROLE.ADMIN}>Administrator</SelectItem>
+                  <SelectItem value={USER_ROLE.SUPER_ADMIN}>Super Administrator</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor={creditsId}>Stan Konta (Kredyty)</Label>
+              <Input
+                id={creditsId}
+                type="number"
+                min="0"
+                placeholder="0"
+                value={formData.creditBalance}
+                onChange={handleInputChange("creditBalance")}
+                aria-invalid={!!errors.creditBalance}
+                aria-describedby={errors.creditBalance ? `${creditsId}-error` : undefined}
+                disabled={isSubmitting}
+              />
+              {errors.creditBalance && (
+                <p id={`${creditsId}-error`} className="text-sm text-destructive">
+                  {errors.creditBalance}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Zmiany stanu konta są logowane w historii kredytów użytkownika
+              </p>
+            </div>
 
             <div className="grid gap-2">
               <Label>Status Konta</Label>

@@ -25,24 +25,20 @@ func (r *reservationRepository) CreateReservationsAtomic(ctx context.Context, us
 	var result struct {
 		ReservationIDs []string `json:"reservation_ids"`
 		NewBalance     int32    `json:"new_balance"`
+		Message        *string  `json:"message"`
+		Error          *string  `json:"error"`
 	}
 	if jsonStr == "" {
 		return nil, 0, types.NewInternalError("RPC returned empty response", nil)
 	}
-	var rawResponse map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
+	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		return nil, 0, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
 	}
-	if msg, ok := rawResponse["message"]; ok {
-		if _, hasIDs := rawResponse["reservation_ids"]; !hasIDs {
-			return nil, 0, types.NewConflictError(fmt.Sprintf("%v", msg), nil)
-		}
+	if result.Message != nil && len(result.ReservationIDs) == 0 {
+		return nil, 0, types.NewConflictError(*result.Message, nil)
 	}
-	if errVal, ok := rawResponse["error"]; ok {
-		return nil, 0, types.NewInternalError(fmt.Sprintf("RPC Error: %v", errVal), nil)
-	}
-	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
-		return nil, 0, types.NewInternalError("RPC failed to map result: "+jsonStr, err)
+	if result.Error != nil {
+		return nil, 0, types.NewInternalError(fmt.Sprintf("RPC Error: %s", *result.Error), nil)
 	}
 	return result.ReservationIDs, result.NewBalance, nil
 }

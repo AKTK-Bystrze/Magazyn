@@ -22,7 +22,7 @@ describe("CartAvailabilityAlerts", () => {
 
     expect(screen.queryByText("Rezerwacja Nie Powiodła Się")).not.toBeInTheDocument();
     expect(screen.queryByText("Wykryto Problemy z Dostępnością")).not.toBeInTheDocument();
-    expect(container.firstChild).toHaveClass("empty:hidden");
+    expect(container.firstChild).toBeNull();
   });
 
   it("renders submission error alert when submissionError is provided", () => {

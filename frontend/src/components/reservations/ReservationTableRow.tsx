@@ -15,10 +15,10 @@ export interface ReservationTableRowProps {
   showUserColumn: boolean;
   /** Current authenticated user's ID for highlighting "(Ty)" */
   currentUserId?: string;
-  /** View mode: 'user' or 'admin' */
-  mode: "user" | "admin";
-  /** View scope: 'my' or 'all' */
-  scope: "my" | "all";
+  /** Optional view mode */
+  mode?: "user" | "admin";
+  /** Optional view scope */
+  scope?: "my" | "all";
   /** Callback to view reservation details */
   onViewDetails: (item: ReservationListItem) => void;
   /** Optional callback to modify reservation */
@@ -45,8 +45,6 @@ export function ReservationTableRow({
   item,
   showUserColumn,
   currentUserId,
-  mode,
-  scope,
   onViewDetails,
   onModify,
   onCancel,
@@ -59,8 +57,6 @@ export function ReservationTableRow({
   const actionMenu = (
     <ReservationActionMenu
       item={item}
-      mode={mode}
-      scope={scope}
       onViewDetails={onViewDetails}
       onModify={onModify}
       onCancel={onCancel}

@@ -94,9 +94,7 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].ReservationCount > result[j].ReservationCount
 	})
-	if len(result) > limit {
-		result = result[:limit]
-	}
+	result = result[:min(len(result), limit)]
 	return result, nil
 }
 

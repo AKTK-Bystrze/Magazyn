@@ -72,9 +72,6 @@ export function AddEquipmentDialog({
 
   const internalIdFieldId = React.useId();
   const typeIdFieldId = React.useId();
-  const nameFieldId = React.useId();
-  const descriptionFieldId = React.useId();
-  const statusFieldId = React.useId();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -244,9 +241,6 @@ export function AddEquipmentDialog({
               isSubmitting={isSubmitting}
               onInputChange={handleInputChange}
               onStatusChange={handleStatusChange}
-              nameFieldId={nameFieldId}
-              descriptionFieldId={descriptionFieldId}
-              statusFieldId={statusFieldId}
             />
 
             {errors.form && (

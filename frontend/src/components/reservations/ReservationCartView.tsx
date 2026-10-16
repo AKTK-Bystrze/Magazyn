@@ -1,20 +1,25 @@
 import * as React from "react";
 import { useReservationCart } from "@/hooks/useReservationCart";
 import { useAvailabilityCheck } from "@/hooks/useAvailabilityCheck";
-import { useCartCheckout } from "@/hooks/useCartCheckout";
 import { validateCart, calculateCost as calculateCartCost } from "@/lib/utils/cart-validation";
 import { CartItemList } from "./CartItemList";
 import { DateRangePicker } from "./DateRangePicker";
 import { CostEstimator } from "./CostEstimator";
 import { ConfirmationModal } from "./ConfirmationModal";
-import { AdminReservationDelegateSection } from "./AdminReservationDelegateSection";
 import { CartAvailabilityAlerts } from "./CartAvailabilityAlerts";
+import { UserSelector } from "@/components/admin/UserSelector";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Trash2, CheckCircle2 } from "lucide-react";
-import type { UserListItem } from "@/types";
+import type { UserListItem, CreateReservationsCommand } from "@/types";
 import type { AvailabilityCheckResult } from "@/types/reservation-cart.types";
 import { CLEAR_CART_CONFIRM_TIMEOUT_MS } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
+import { supabase } from "@/lib/supabase";
+import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
+import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
  * Props for ReservationCartView component
@@ -72,16 +77,75 @@ export function ReservationCartView({
   );
   const [isFreeReservation, setIsFreeReservation] = React.useState(false);
 
-  const { isSubmitting, submissionError, setSubmissionError, submitReservation } = useCartCheckout({
-    cartState,
-    clearCart,
-    isAdmin,
-    selectedUserId,
-    isFreeReservation,
-    setIsFreeReservation,
-    successRedirectPath,
-    onSuccess: () => setIsConfirmationOpen(false),
-  });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submissionError, setSubmissionError] = React.useState<string | null>(null);
+
+  const submitReservation = async (): Promise<boolean> => {
+    if (!cartState.startDate || !cartState.endDate) return false;
+
+    setIsSubmitting(true);
+    setSubmissionError(null);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const command: CreateReservationsCommand = {
+        reservations: cartState.items.map((item) => ({
+          equipmentId: item.equipmentId,
+          startDate: cartState.startDate!,
+          endDate: cartState.endDate!,
+        })),
+        ...(isAdmin && selectedUserId && { userId: selectedUserId }),
+        ...(isAdmin && isFreeReservation && { freeReservation: true }),
+      };
+
+      const response = await fetch("/api/reservations", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(transformCreateReservationsCommand(command)),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        let errorMessage = errorData.message || errorData.error || "Failed to create reservation";
+
+        cartState.items.forEach((item) => {
+          if (errorMessage.includes(item.equipmentId)) {
+            errorMessage = errorMessage.replace(item.equipmentId, `"${item.name}"`);
+          }
+        });
+
+        if (errorMessage.includes("Conflict detected")) {
+          errorMessage = errorMessage.replace(
+            "Conflict detected for equipment",
+            "This equipment is already reserved:"
+          );
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      await response.json();
+      clearCart();
+      setIsFreeReservation(false);
+      setIsConfirmationOpen(false);
+
+      window.location.href = `${successRedirectPath}?success=true`;
+      return true;
+    } catch (error) {
+      logger.error("Reservation failed:", { error });
+      setSubmissionError(error instanceof Error ? error.message : "An unexpected error occurred");
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   React.useEffect(() => {
     setAvailabilityResult({ isAllAvailable: true, unavailableItems: [] });
@@ -186,12 +250,38 @@ export function ReservationCartView({
       </div>
 
       {isAdmin && !isEmpty && (
-        <AdminReservationDelegateSection
-          selectedUserId={selectedUserId}
-          onSelectUser={handleUserSelect}
-          isFreeReservation={isFreeReservation}
-          onToggleFreeReservation={setIsFreeReservation}
-        />
+        <section className="bg-card rounded-lg border shadow-sm p-6">
+          <h2 className="text-lg font-semibold mb-4">Utwórz Rezerwację Dla</h2>
+          <QueryProvider>
+            <UserSelector
+              selectedUserId={selectedUserId}
+              onSelect={handleUserSelect}
+              label="Wybierz użytkownika dla tej rezerwacji"
+            />
+          </QueryProvider>
+          {!selectedUserId && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Musisz wybrać użytkownika przed dokończeniem rezerwacji.
+            </p>
+          )}
+
+          <div className="mt-6 flex items-center space-x-2 border-t pt-4">
+            <Checkbox
+              id="free-reservation"
+              checked={isFreeReservation}
+              onCheckedChange={(checked) => setIsFreeReservation(checked === true)}
+              data-testid="free-reservation-checkbox"
+            />
+            <Label htmlFor="free-reservation" className="cursor-pointer font-medium">
+              Utwórz jako Darmową Rezerwację
+            </Label>
+          </div>
+          {isFreeReservation && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Ta rezerwacja nie obciąży konta użytkownika godzinkami.
+            </p>
+          )}
+        </section>
       )}
 
       <CartAvailabilityAlerts

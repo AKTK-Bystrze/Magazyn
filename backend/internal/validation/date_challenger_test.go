@@ -90,3 +90,9 @@ func TestAdversarial_CalculateDays(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateReservationCost(t *testing.T) {
+	assert.Equal(t, int32(0), validation.CalculateReservationCost("2026-10-15", "2026-10-25", 50, true))
+	assert.Equal(t, int32(30), validation.CalculateReservationCost("2026-10-15", "2026-10-17", 10, false))
+	assert.Equal(t, int32(0), validation.CalculateReservationCost("2026-10-25", "2026-10-15", 50, false))
+}

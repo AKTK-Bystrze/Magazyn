@@ -42,7 +42,7 @@ func parseEquipmentListQuery(r *http.Request) (types.EquipmentListQuery, error) 
 	if (query.AvailableFrom != nil) != (query.AvailableTo != nil) {
 		return query, types.NewValidationError("Both available_from and available_to must be provided together", nil)
 	}
-	if query.AvailableFrom != nil && query.AvailableTo != nil {
+	if query.AvailableFrom != nil {
 		if err := validation.ValidateISODate(*query.AvailableFrom); err != nil {
 			return query, types.NewValidationError("Invalid available_from date format, expected YYYY-MM-DD", nil)
 		}

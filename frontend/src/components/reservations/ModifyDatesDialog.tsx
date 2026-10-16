@@ -106,7 +106,7 @@ export function ModifyDatesDialog({
     }
 
     setValidationErrors(errors);
-    return !Object.values(errors).some((error) => error !== null);
+    return !errors.startDate && !errors.endDate;
   };
 
   const handleConfirm = async () => {
@@ -137,12 +137,17 @@ export function ModifyDatesDialog({
     }
   };
 
-  React.useEffect(() => {
-    if (startDate && endDate) {
-      setValidationErrors({ startDate: null, endDate: null });
-      setApiError(null);
-    }
-  }, [startDate, endDate]);
+  const handleStartDateChange = React.useCallback((date: string | null) => {
+    setStartDate(date);
+    setValidationErrors({ startDate: null, endDate: null });
+    setApiError(null);
+  }, []);
+
+  const handleEndDateChange = React.useCallback((date: string | null) => {
+    setEndDate(date);
+    setValidationErrors({ startDate: null, endDate: null });
+    setApiError(null);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -160,8 +165,8 @@ export function ModifyDatesDialog({
             reservation={reservation}
             startDate={startDate}
             endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
             validationErrors={validationErrors}
             datesChanged={datesChanged}
             totalCost={totalCost}

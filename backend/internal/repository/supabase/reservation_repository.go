@@ -3,7 +3,6 @@ package supabase
 import (
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
-	"magazyn/backend/internal/validation"
 
 	"github.com/supabase-community/supabase-go"
 )
@@ -57,12 +56,4 @@ type auditRaw struct {
 	Profile struct {
 		Username string `json:"username"`
 	} `json:"profiles"`
-}
-
-func calculateReservationCreditCost(startDate, endDate string, creditCostPerDay int32, isFree bool) int32 {
-	if isFree {
-		return 0
-	}
-	days := validation.CalculateDays(startDate, endDate)
-	return int32(days) * creditCostPerDay //nolint:gosec // days is bounded
 }
