@@ -25,155 +25,109 @@ func setupTestService() (*mocks.MockReservationRepository, *mocks.MockEquipmentR
 	return mockRepo, mockEquipRepo, mockUserRepo, mockEmailService, svc
 }
 
-func TestGetByID_OwnerCanView(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	userID := "user-123"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:     reservationID,
-			UserID: userID,
-			Status: constants.ReservationStatusPending,
-		},
+func TestGetByID(t *testing.T) {
+	tests := []struct {
+		name        string
+		requestUser string
+		role        string
+		wantErr     bool
+	}{
+		{"OwnerCanView", "user-123", auth.RoleUser, false},
+		{"NonOwnerForbidden", "user-999", auth.RoleUser, true},
+		{"AdminCanViewAny", "admin-999", auth.RoleAdmin, false},
+		{"SuperAdminCanViewAny", "superadmin-999", auth.RoleSuperAdmin, false},
 	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	result, err := svc.GetByID(ctx, reservationID, userID, auth.RoleUser)
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, reservationID, result.ID)
-	mockRepo.AssertExpectations(t)
-}
-func TestGetByID_NonOwnerForbidden(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	ownerID := "user-123"
-	requestingUserID := "user-999"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:     reservationID,
-			UserID: ownerID,
-			Status: constants.ReservationStatusPending,
-		},
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo, _, _, _, svc := setupTestService()
+			ctx := context.Background()
+			reservationID := "res-456"
+			reservation := &types.ReservationDetail{
+				ReservationListItem: types.ReservationListItem{
+					ID:     reservationID,
+					UserID: "user-123",
+					Status: constants.ReservationStatusPending,
+				},
+			}
+			mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+			result, err := svc.GetByID(ctx, reservationID, tt.requestUser, tt.role)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+				assert.IsType(t, &types.ForbiddenError{}, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, reservationID, result.ID)
+			}
+			mockRepo.AssertExpectations(t)
+		})
 	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	result, err := svc.GetByID(ctx, reservationID, requestingUserID, auth.RoleUser)
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ForbiddenError{}, err)
-	mockRepo.AssertExpectations(t)
-}
-func TestGetByID_AdminCanViewAny(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	ownerID := "user-123"
-	adminID := "admin-999"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:     reservationID,
-			UserID: ownerID,
-			Status: constants.ReservationStatusPending,
-		},
-	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	result, err := svc.GetByID(ctx, reservationID, adminID, auth.RoleAdmin)
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, reservationID, result.ID)
-	mockRepo.AssertExpectations(t)
-}
-func TestGetByID_SuperAdminCanViewAny(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	ownerID := "user-123"
-	superAdminID := "superadmin-999"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:     reservationID,
-			UserID: ownerID,
-			Status: constants.ReservationStatusPending,
-		},
-	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	result, err := svc.GetByID(ctx, reservationID, superAdminID, auth.RoleSuperAdmin)
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, reservationID, result.ID)
-	mockRepo.AssertExpectations(t)
 }
 
-func TestUpdate_UserCannotUpdateOthers(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	ownerID := "user-123"
-	requestingUserID := "user-999"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:     reservationID,
-			UserID: ownerID,
-			Status: constants.ReservationStatusPending,
-		},
-	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	cmd := types.UpdateReservationCommand{}
-	result, err := svc.Update(ctx, reservationID, cmd, requestingUserID, auth.RoleUser)
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ForbiddenError{}, err)
-	assert.Contains(t, err.Error(), "Not allowed")
-	mockRepo.AssertExpectations(t)
-}
-func TestUpdate_UserCannotModifyNonPending(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	userID := "user-123"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:     reservationID,
-			UserID: userID,
-			Status: constants.ReservationStatusRented,
-		},
-	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	cmd := types.UpdateReservationCommand{}
-	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ForbiddenError{}, err)
-	assert.Contains(t, err.Error(), "Cannot modify non-pending reservation")
-	mockRepo.AssertExpectations(t)
-}
-func TestUpdate_UserCanOnlyCancelOrReturn(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	userID := "user-123"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:          reservationID,
-			UserID:      userID,
-			Status:      constants.ReservationStatusPending,
-			EquipmentID: "eq-1",
-			StartDate:   "2025-01-01",
-			EndDate:     "2025-01-03",
-		},
-	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+func TestUpdate_UserRestrictions(t *testing.T) {
 	rentedStatus := constants.ReservationStatusRented
-	cmd := types.UpdateReservationCommand{
-		Status: &rentedStatus,
+	tests := []struct {
+		name       string
+		reqUser    string
+		initStatus string
+		cmd        types.UpdateReservationCommand
+		errCheck   func(t *testing.T, err error)
+	}{
+		{
+			name:       "CannotUpdateOthers",
+			reqUser:    "user-999",
+			initStatus: constants.ReservationStatusPending,
+			cmd:        types.UpdateReservationCommand{},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ForbiddenError{}, err)
+				assert.Contains(t, err.Error(), "Not allowed")
+			},
+		},
+		{
+			name:       "CannotModifyNonPending",
+			reqUser:    "user-123",
+			initStatus: constants.ReservationStatusRented,
+			cmd:        types.UpdateReservationCommand{},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ForbiddenError{}, err)
+				assert.Contains(t, err.Error(), "Cannot modify non-pending reservation")
+			},
+		},
+		{
+			name:       "CanOnlyCancelOrReturn",
+			reqUser:    "user-123",
+			initStatus: constants.ReservationStatusPending,
+			cmd:        types.UpdateReservationCommand{Status: &rentedStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ValidationError{}, err)
+				assert.Contains(t, err.Error(), "Users can only cancel or return")
+			},
+		},
 	}
-	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ValidationError{}, err)
-	assert.Contains(t, err.Error(), "Users can only cancel or return")
-	mockRepo.AssertExpectations(t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo, _, _, _, svc := setupTestService()
+			ctx := context.Background()
+			reservationID := "res-456"
+			reservation := &types.ReservationDetail{
+				ReservationListItem: types.ReservationListItem{
+					ID:          reservationID,
+					UserID:      "user-123",
+					Status:      tt.initStatus,
+					EquipmentID: "eq-1",
+					StartDate:   "2025-01-01",
+					EndDate:     "2025-01-03",
+				},
+			}
+			mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+			result, err := svc.Update(ctx, reservationID, tt.cmd, tt.reqUser, auth.RoleUser)
+			assert.Error(t, err)
+			assert.Nil(t, result)
+			tt.errCheck(t, err)
+			mockRepo.AssertExpectations(t)
+		})
+	}
 }
 
 func TestList_Success(t *testing.T) {
@@ -200,59 +154,42 @@ func TestList_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestList_ScopeAll_BypassesRLS(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	scope := "all"
-	query := types.ReservationListQuery{
-		Page:    1,
-		PerPage: 25,
-		Scope:   &scope,
-	}
-	expectedQuery := query
-	expectedQuery.BypassRLS = true
-	mockRepo.On("GetReservations", ctx, expectedQuery).Return([]types.ReservationListItem{}, int64(0), nil)
-	result, err := svc.List(ctx, query, "user-123", "user")
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestList_ScopeAll_PreservesUserID_ForRegularUser(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	scope := "all"
-	targetUserID := "target-user-456"
-	query := types.ReservationListQuery{
-		Page:    1,
-		PerPage: 25,
-		Scope:   &scope,
-		UserID:  &targetUserID,
-	}
-	expectedQuery := query
-	expectedQuery.BypassRLS = true
-	mockRepo.On("GetReservations", ctx, expectedQuery).Return([]types.ReservationListItem{}, int64(0), nil)
-	result, err := svc.List(ctx, query, "user-123", auth.RoleUser)
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestList_DefaultScope_RestrictsToUserID(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	query := types.ReservationListQuery{
-		Page:    1,
-		PerPage: 25,
-	}
+func TestList_ScopeFiltering(t *testing.T) {
+	scopeAll := "all"
+	targetID := "target-user-456"
 	userID := "user-123"
-	expectedQuery := query
-	expectedQuery.UserID = &userID
-	mockRepo.On("GetReservations", ctx, expectedQuery).Return([]types.ReservationListItem{}, int64(0), nil)
-	result, err := svc.List(ctx, query, userID, "user")
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	mockRepo.AssertExpectations(t)
+	tests := []struct {
+		name          string
+		query         types.ReservationListQuery
+		expectedQuery types.ReservationListQuery
+	}{
+		{
+			name:          "ScopeAll_BypassesRLS",
+			query:         types.ReservationListQuery{Page: 1, PerPage: 25, Scope: &scopeAll},
+			expectedQuery: types.ReservationListQuery{Page: 1, PerPage: 25, Scope: &scopeAll, BypassRLS: true},
+		},
+		{
+			name:          "ScopeAll_PreservesUserID",
+			query:         types.ReservationListQuery{Page: 1, PerPage: 25, Scope: &scopeAll, UserID: &targetID},
+			expectedQuery: types.ReservationListQuery{Page: 1, PerPage: 25, Scope: &scopeAll, UserID: &targetID, BypassRLS: true},
+		},
+		{
+			name:          "DefaultScope_RestrictsToUserID",
+			query:         types.ReservationListQuery{Page: 1, PerPage: 25},
+			expectedQuery: types.ReservationListQuery{Page: 1, PerPage: 25, UserID: &userID},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo, _, _, _, svc := setupTestService()
+			ctx := context.Background()
+			mockRepo.On("GetReservations", ctx, tt.expectedQuery).Return([]types.ReservationListItem{}, int64(0), nil)
+			result, err := svc.List(ctx, tt.query, userID, auth.RoleUser)
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			mockRepo.AssertExpectations(t)
+		})
+	}
 }
 
 func TestList_PaginationCalculation(t *testing.T) {
@@ -271,119 +208,95 @@ func TestList_PaginationCalculation(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestList_DatabaseEnumError_ReturnsValidationError(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	query := types.ReservationListQuery{
-		Page:    1,
-		PerPage: 10,
-	}
-	dbErr := errors.New("(22P02) invalid input value for enum reservation_status: \"FOOBAR\"")
-	mockRepo.On("GetReservations", ctx, query).Return(nil, int64(0), dbErr)
-	result, err := svc.List(ctx, query, "", "")
-	assert.Nil(t, result)
-	require.Error(t, err)
-	valErr, ok := err.(*types.ValidationError)
-	assert.True(t, ok, "Expected *types.ValidationError but got %T", err)
-	assert.Equal(t, "VALIDATION_ERROR", valErr.Code)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestList_DatabaseInternalError_ReturnsInternalError(t *testing.T) {
-	mockRepo, _, _, _, svc := setupTestService()
-	ctx := context.Background()
-	query := types.ReservationListQuery{
-		Page:    1,
-		PerPage: 10,
-	}
-	dbErr := errors.New("connection refused")
-	mockRepo.On("GetReservations", ctx, query).Return(nil, int64(0), dbErr)
-	result, err := svc.List(ctx, query, "", "")
-	assert.Nil(t, result)
-	require.Error(t, err)
-	intErr, ok := err.(*types.InternalError)
-	assert.True(t, ok, "Expected *types.InternalError but got %T", err)
-	assert.Equal(t, "INTERNAL_ERROR", intErr.Code)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestCreate_EquipmentNotFound_ValidationError(t *testing.T) {
-	_, mockEquipRepo, _, _, svc := setupTestService()
-	ctx := context.Background()
-	cmd := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: "nonexistent-eq",
-				StartDate:   "2025-01-01",
-				EndDate:     "2025-01-03",
+func TestList_DatabaseErrors(t *testing.T) {
+	tests := []struct {
+		name     string
+		dbErr    error
+		errCheck func(t *testing.T, err error)
+	}{
+		{
+			name:  "EnumError_ReturnsValidationError",
+			dbErr: errors.New("(22P02) invalid input value for enum reservation_status: \"FOOBAR\""),
+			errCheck: func(t *testing.T, err error) {
+				valErr, ok := err.(*types.ValidationError)
+				assert.True(t, ok, "Expected *types.ValidationError but got %T", err)
+				assert.Equal(t, "VALIDATION_ERROR", valErr.Code)
+			},
+		},
+		{
+			name:  "InternalError_ReturnsInternalError",
+			dbErr: errors.New("connection refused"),
+			errCheck: func(t *testing.T, err error) {
+				intErr, ok := err.(*types.InternalError)
+				assert.True(t, ok, "Expected *types.InternalError but got %T", err)
+				assert.Equal(t, "INTERNAL_ERROR", intErr.Code)
 			},
 		},
 	}
-	mockEquipRepo.On("GetByID", ctx, "nonexistent-eq").Return(nil, types.NewNotFoundError("Equipment", "nonexistent-eq"))
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ValidationError{}, err)
-	assert.Contains(t, err.Error(), "not found")
-	mockEquipRepo.AssertExpectations(t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo, _, _, _, svc := setupTestService()
+			ctx := context.Background()
+			query := types.ReservationListQuery{Page: 1, PerPage: 10}
+			mockRepo.On("GetReservations", ctx, query).Return(nil, int64(0), tt.dbErr)
+			result, err := svc.List(ctx, query, "", "")
+			assert.Nil(t, result)
+			require.Error(t, err)
+			tt.errCheck(t, err)
+			mockRepo.AssertExpectations(t)
+		})
+	}
 }
 
-func TestCreate_EquipmentArchived_ValidationError(t *testing.T) {
-	_, mockEquipRepo, _, _, svc := setupTestService()
-	ctx := context.Background()
-	cmd := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: "eq-archived",
-				StartDate:   "2025-01-01",
-				EndDate:     "2025-01-03",
-			},
+func TestCreate_EquipmentUnavailable(t *testing.T) {
+	name := "Equipment"
+	tests := []struct {
+		name       string
+		eqID       string
+		equipMock  *types.PublicEquipmentSelect
+		equipErr   error
+		errContain string
+	}{
+		{
+			name:       "NotFound",
+			eqID:       "nonexistent-eq",
+			equipMock:  nil,
+			equipErr:   types.NewNotFoundError("Equipment", "nonexistent-eq"),
+			errContain: "not found",
+		},
+		{
+			name:       "Archived",
+			eqID:       "eq-archived",
+			equipMock:  &types.PublicEquipmentSelect{ID: "eq-archived", Name: &name, TypeID: "type-1", Status: constants.EquipmentStatusOK, IsArchived: true},
+			equipErr:   nil,
+			errContain: "not available",
+		},
+		{
+			name:       "Broken",
+			eqID:       "eq-broken",
+			equipMock:  &types.PublicEquipmentSelect{ID: "eq-broken", Name: &name, TypeID: "type-1", Status: constants.EquipmentStatusBroken, IsArchived: false},
+			equipErr:   nil,
+			errContain: "not available",
 		},
 	}
-	name := "Archived Equipment"
-	equipment := &types.PublicEquipmentSelect{
-		ID:         "eq-archived",
-		Name:       &name,
-		TypeID:     "type-1",
-		Status:     constants.EquipmentStatusOK,
-		IsArchived: true,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, mockEquipRepo, _, _, svc := setupTestService()
+			ctx := context.Background()
+			cmd := types.CreateReservationsCommand{
+				Reservations: []types.CreateReservationItem{
+					{EquipmentID: tt.eqID, StartDate: "2025-01-01", EndDate: "2025-01-03"},
+				},
+			}
+			mockEquipRepo.On("GetByID", ctx, tt.eqID).Return(tt.equipMock, tt.equipErr)
+			result, err := svc.Create(ctx, cmd, "user-123", "user")
+			assert.Error(t, err)
+			assert.Nil(t, result)
+			assert.IsType(t, &types.ValidationError{}, err)
+			assert.Contains(t, err.Error(), tt.errContain)
+			mockEquipRepo.AssertExpectations(t)
+		})
 	}
-	mockEquipRepo.On("GetByID", ctx, "eq-archived").Return(equipment, nil)
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ValidationError{}, err)
-	assert.Contains(t, err.Error(), "not available")
-	mockEquipRepo.AssertExpectations(t)
-}
-
-func TestCreate_EquipmentBroken_ValidationError(t *testing.T) {
-	_, mockEquipRepo, _, _, svc := setupTestService()
-	ctx := context.Background()
-	cmd := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: "eq-broken",
-				StartDate:   "2025-01-01",
-				EndDate:     "2025-01-03",
-			},
-		},
-	}
-	name := "Broken Equipment"
-	equipment := &types.PublicEquipmentSelect{
-		ID:         "eq-broken",
-		Name:       &name,
-		TypeID:     "type-1",
-		Status:     constants.EquipmentStatusBroken,
-		IsArchived: false,
-	}
-	mockEquipRepo.On("GetByID", ctx, "eq-broken").Return(equipment, nil)
-	result, err := svc.Create(ctx, cmd, "user-123", "user")
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.IsType(t, &types.ValidationError{}, err)
-	assert.Contains(t, err.Error(), "not available")
-	mockEquipRepo.AssertExpectations(t)
 }
 
 func TestCreate_FreeReservation_ForbiddenForUser(t *testing.T) {
@@ -624,69 +537,61 @@ func TestUpdate_CancelRefundsCreditsAndGetsNewBalance(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 	mockUserRepo.AssertExpectations(t)
 }
-func TestUpdate_CancelRefund_EquipmentLookupError(t *testing.T) {
-	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
-	ctx := context.Background()
-	userID := "user-123"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:          reservationID,
-			UserID:      userID,
-			Status:      constants.ReservationStatusPending,
-			EquipmentID: "eq-1",
-			StartDate:   "2025-01-01",
-			EndDate:     "2025-01-03",
-			IsFree:      false,
-		},
-	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	cancelledStatus := constants.ReservationStatusCancelled
-	cmd := types.UpdateReservationCommand{
-		Status: &cancelledStatus,
-	}
-	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(nil, assert.AnError)
-	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
-	require.Error(t, err)
-	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "refund failed: equipment eq-1 not found")
-	mockRepo.AssertExpectations(t)
-	mockEquipRepo.AssertExpectations(t)
-}
-func TestUpdate_CancelRefund_EquipmentTypeLookupError(t *testing.T) {
-	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
-	ctx := context.Background()
-	userID := "user-123"
-	reservationID := "res-456"
-	reservation := &types.ReservationDetail{
-		ReservationListItem: types.ReservationListItem{
-			ID:          reservationID,
-			UserID:      userID,
-			Status:      constants.ReservationStatusPending,
-			EquipmentID: "eq-1",
-			StartDate:   "2025-01-01",
-			EndDate:     "2025-01-03",
-			IsFree:      false,
-		},
-	}
-	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
-	cancelledStatus := constants.ReservationStatusCancelled
-	cmd := types.UpdateReservationCommand{
-		Status: &cancelledStatus,
-	}
+func TestUpdate_CancelRefund_LookupErrors(t *testing.T) {
 	name := "Test Equipment"
-	equipment := &types.PublicEquipmentSelect{
-		ID:     "eq-1",
-		Name:   &name,
-		TypeID: "type-1",
-		Status: constants.EquipmentStatusOK,
+	tests := []struct {
+		name       string
+		setupMocks func(ctx context.Context, equipRepo *mocks.MockEquipmentRepository)
+		errContain string
+	}{
+		{
+			name: "EquipmentLookupError",
+			setupMocks: func(ctx context.Context, equipRepo *mocks.MockEquipmentRepository) {
+				equipRepo.On("GetByID", ctx, "eq-1").Return(nil, assert.AnError)
+			},
+			errContain: "refund failed: equipment eq-1 not found",
+		},
+		{
+			name: "EquipmentTypeLookupError",
+			setupMocks: func(ctx context.Context, equipRepo *mocks.MockEquipmentRepository) {
+				equipRepo.On("GetByID", ctx, "eq-1").Return(&types.PublicEquipmentSelect{
+					ID:     "eq-1",
+					Name:   &name,
+					TypeID: "type-1",
+					Status: constants.EquipmentStatusOK,
+				}, nil)
+				equipRepo.On("GetTypeByID", ctx, "type-1").Return(nil, assert.AnError)
+			},
+			errContain: "refund failed: equipment type type-1 not found",
+		},
 	}
-	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
-	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(nil, assert.AnError)
-	result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
-	require.Error(t, err)
-	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "refund failed: equipment type type-1 not found")
-	mockRepo.AssertExpectations(t)
-	mockEquipRepo.AssertExpectations(t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+			ctx := context.Background()
+			userID := "user-123"
+			reservationID := "res-456"
+			reservation := &types.ReservationDetail{
+				ReservationListItem: types.ReservationListItem{
+					ID:          reservationID,
+					UserID:      userID,
+					Status:      constants.ReservationStatusPending,
+					EquipmentID: "eq-1",
+					StartDate:   "2025-01-01",
+					EndDate:     "2025-01-03",
+					IsFree:      false,
+				},
+			}
+			mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+			cancelledStatus := constants.ReservationStatusCancelled
+			cmd := types.UpdateReservationCommand{Status: &cancelledStatus}
+			tt.setupMocks(ctx, mockEquipRepo)
+			result, err := svc.Update(ctx, reservationID, cmd, userID, auth.RoleUser)
+			require.Error(t, err)
+			assert.Nil(t, result)
+			assert.Contains(t, err.Error(), tt.errContain)
+			mockRepo.AssertExpectations(t)
+			mockEquipRepo.AssertExpectations(t)
+		})
+	}
 }

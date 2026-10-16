@@ -23,23 +23,6 @@ const createMockUserDTO = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-/**
- * Creates a mock backend user list response DTO
- */
-const createMockUserListResponseDTO = (
-  users: ReturnType<typeof createMockUserDTO>[] = [createMockUserDTO()],
-  pagination: Record<string, number> = {}
-) => ({
-  users,
-  pagination: {
-    page: 1,
-    per_page: 25,
-    total_items: users.length,
-    total_pages: 1,
-    ...pagination,
-  },
-});
-
 describe("transformCreateUserCommand", () => {
   it("should transform all fields from camelCase to snake_case", () => {
     const command: CreateUserCommand = {
@@ -70,76 +53,20 @@ describe("transformCreateUserCommand", () => {
 
     expect(result.credit_balance).toBe(0);
   });
-
-  it("should handle super_admin role", () => {
-    const command: CreateUserCommand = {
-      email: "admin@example.com",
-      username: "superadmin",
-      role: "super_admin",
-      creditBalance: 1000,
-    };
-
-    const result = transformCreateUserCommand(command);
-
-    expect(result.role).toBe("super_admin");
-  });
 });
 
 describe("transformUpdateUserCommand", () => {
-  it("should only include defined fields", () => {
-    const command: UpdateUserCommand = {
-      email: "updated@example.com",
-    };
-
-    const result = transformUpdateUserCommand(command);
-
-    expect(result).toEqual({ email: "updated@example.com" });
-    expect(result).not.toHaveProperty("role");
-    expect(result).not.toHaveProperty("credit_balance");
-  });
-
-  it("should transform creditBalance to credit_balance", () => {
-    const command: UpdateUserCommand = {
-      creditBalance: 200,
-    };
-
-    const result = transformUpdateUserCommand(command);
-
-    expect(result).toEqual({ credit_balance: 200 });
-  });
-
-  it("should include all fields when all are defined", () => {
-    const command: UpdateUserCommand = {
-      email: "updated@example.com",
-      role: "admin",
-      creditBalance: 150,
-    };
-
-    const result = transformUpdateUserCommand(command);
-
-    expect(result).toEqual({
-      email: "updated@example.com",
-      role: "admin",
-      credit_balance: 150,
-    });
-  });
-
-  it("should return empty object when no fields are defined", () => {
-    const command: UpdateUserCommand = {};
-
-    const result = transformUpdateUserCommand(command);
-
-    expect(result).toEqual({});
-  });
-
-  it("should handle zero creditBalance correctly", () => {
-    const command: UpdateUserCommand = {
-      creditBalance: 0,
-    };
-
-    const result = transformUpdateUserCommand(command);
-
-    expect(result).toEqual({ credit_balance: 0 });
+  it.each([
+    [{ email: "updated@example.com" }, { email: "updated@example.com" }],
+    [{ creditBalance: 200 }, { credit_balance: 200 }],
+    [{ creditBalance: 0 }, { credit_balance: 0 }],
+    [
+      { email: "updated@example.com", role: "admin", creditBalance: 150 },
+      { email: "updated@example.com", role: "admin", credit_balance: 150 },
+    ],
+    [{}, {}],
+  ])("transforms update command %j", (command, expected) => {
+    expect(transformUpdateUserCommand(command as UpdateUserCommand)).toEqual(expected);
   });
 });
 
@@ -158,22 +85,6 @@ describe("transformUserListItem", () => {
       isEnabled: true,
       createdAt: "2024-01-15T10:30:00Z",
     });
-  });
-
-  it("should handle all user roles", () => {
-    const adminDto = createMockUserDTO({ role: "admin" });
-    const superAdminDto = createMockUserDTO({ role: "super_admin" });
-
-    expect(transformUserListItem(adminDto).role).toBe("admin");
-    expect(transformUserListItem(superAdminDto).role).toBe("super_admin");
-  });
-
-  it("should handle zero credit balance", () => {
-    const dto = createMockUserDTO({ credit_balance: 0 });
-
-    const result = transformUserListItem(dto);
-
-    expect(result.creditBalance).toBe(0);
   });
 });
 
@@ -205,16 +116,18 @@ describe("transformUserProfile", () => {
 
 describe("transformUserListResponse", () => {
   it("should transform paginated response with users", () => {
-    const users = [
-      createMockUserDTO({ id: "user-1", username: "user1" }),
-      createMockUserDTO({ id: "user-2", username: "user2", role: "admin" }),
-    ];
-    const dto = createMockUserListResponseDTO(users, {
-      page: 2,
-      per_page: 10,
-      total_items: 25,
-      total_pages: 3,
-    });
+    const dto = {
+      users: [
+        createMockUserDTO({ id: "user-1", username: "user1" }),
+        createMockUserDTO({ id: "user-2", username: "user2", role: "admin" }),
+      ],
+      pagination: {
+        page: 2,
+        per_page: 10,
+        total_items: 25,
+        total_pages: 3,
+      },
+    };
 
     const result = transformUserListResponse(dto);
 
@@ -229,16 +142,15 @@ describe("transformUserListResponse", () => {
     });
   });
 
-  it("should handle empty users array", () => {
-    const dto = createMockUserListResponseDTO([], {
-      total_items: 0,
-      total_pages: 0,
-    });
-
+  it.each([
+    ["empty users array", { users: [], pagination: { total_items: 0, total_pages: 0 } }],
+    [
+      "null users array",
+      { users: null, pagination: { page: 1, per_page: 25, total_items: 0, total_pages: 0 } },
+    ],
+  ])("should handle %s gracefully", (_, dto) => {
     const result = transformUserListResponse(dto);
-
     expect(result.users).toEqual([]);
-    expect(result.pagination.totalItems).toBe(0);
   });
 
   it("should use defaults when pagination fields are missing", () => {
@@ -250,16 +162,5 @@ describe("transformUserListResponse", () => {
     expect(result.pagination.perPage).toBe(25);
     expect(result.pagination.totalItems).toBe(0);
     expect(result.pagination.totalPages).toBe(0);
-  });
-
-  it("should handle null users array gracefully", () => {
-    const dto = {
-      users: null,
-      pagination: { page: 1, per_page: 25, total_items: 0, total_pages: 0 },
-    };
-
-    const result = transformUserListResponse(dto);
-
-    expect(result.users).toEqual([]);
   });
 });

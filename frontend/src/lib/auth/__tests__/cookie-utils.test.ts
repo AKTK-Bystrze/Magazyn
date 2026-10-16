@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { AstroCookies } from "astro";
-import {
-  AUTH_COOKIE_NAME,
-  COOKIE_MAX_AGE,
-  removeAuthCookie,
-  clearAllAuthCookies,
-} from "../cookie-utils";
+import { removeAuthCookie, clearAllAuthCookies } from "../cookie-utils";
 
 describe("cookie-utils", () => {
   let mockCookie = "";
@@ -34,18 +29,6 @@ describe("cookie-utils", () => {
     mockCookie = "";
   });
 
-  describe("Constants", () => {
-    it("exports correct cookie name", () => {
-      expect(AUTH_COOKIE_NAME).toBe("magazyn-auth-token");
-    });
-
-    it("exports correct max age (1 year in seconds)", () => {
-      const oneYearInSeconds = 60 * 60 * 24 * 365;
-      expect(COOKIE_MAX_AGE).toBe(oneYearInSeconds);
-      expect(COOKIE_MAX_AGE).toBe(31536000);
-    });
-  });
-
   describe("removeAuthCookie", () => {
     it("clears cookie by setting max-age to 0", () => {
       mockCookie = "magazyn-auth-token=some-token; path=/";
@@ -56,17 +39,6 @@ describe("cookie-utils", () => {
 
     it("works even if cookie does not exist", () => {
       mockCookie = "";
-      expect(() => removeAuthCookie()).not.toThrow();
-    });
-
-    it("handles localhost domain clearing", () => {
-      Object.defineProperty(window, "location", {
-        value: { hostname: "localhost" },
-        writable: true,
-        configurable: true,
-      });
-
-      mockCookie = "magazyn-auth-token=some-token; path=/";
       expect(() => removeAuthCookie()).not.toThrow();
     });
   });

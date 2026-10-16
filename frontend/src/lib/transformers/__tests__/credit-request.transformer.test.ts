@@ -109,8 +109,8 @@ describe("credit-request.transformer", () => {
     });
   });
 
-  describe("transformCreateCommand", () => {
-    it("should map fields to snake_case payload", () => {
+  describe("command transformers", () => {
+    it("should map create command to snake_case payload", () => {
       const cmd: CreateCreditRequestCommand = {
         title: "Clean workshop",
         description: "Help sweep floors",
@@ -119,9 +119,7 @@ describe("credit-request.transformer", () => {
         helpers: ["u-helper1"],
       };
 
-      const result = transformCreateCommand(cmd);
-
-      expect(result).toEqual({
+      expect(transformCreateCommand(cmd)).toEqual({
         title: "Clean workshop",
         description: "Help sweep floors",
         credits_value: 15,
@@ -129,25 +127,8 @@ describe("credit-request.transformer", () => {
         helpers: ["u-helper1"],
       });
     });
-  });
 
-  describe("transformUpdateCommand", () => {
-    it("should map userHelpedId to snake_case user_helped_id for backend API", () => {
-      const cmd: UpdateCreditRequestCommand = {
-        userHelpedId: "u-helped-123",
-        creditsValue: 20,
-      };
-
-      const result = transformUpdateCommand(cmd);
-
-      expect(result).toEqual({
-        user_helped_id: "u-helped-123",
-        credits_value: 20,
-      });
-      expect(result).not.toHaveProperty("userHelpedId");
-    });
-
-    it("should map all optional fields correctly when present", () => {
+    it("should map update command optional fields correctly", () => {
       const cmd: UpdateCreditRequestCommand = {
         title: "Updated Title",
         description: "Updated Desc",
@@ -165,19 +146,16 @@ describe("credit-request.transformer", () => {
         user_helped_id: "u-helped",
         helpers: ["h1", "h2"],
       });
+      expect(result).not.toHaveProperty("userHelpedId");
     });
-  });
 
-  describe("transformReviewCommand", () => {
-    it("should map status and optional fields", () => {
+    it("should map review command status and optional fields", () => {
       const cmd: ReviewCreditRequestCommand = {
         status: "approved",
         creditsValue: 25,
       };
 
-      const result = transformReviewCommand(cmd);
-
-      expect(result).toEqual({
+      expect(transformReviewCommand(cmd)).toEqual({
         status: "approved",
         credits_value: 25,
       });

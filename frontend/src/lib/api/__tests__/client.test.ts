@@ -58,50 +58,20 @@ describe("API client error handling", () => {
   });
 
   describe("api methods error handling consolidation", () => {
-    it("api.post propagates handled fetch error", async () => {
+    it.each([
+      ["get", () => api.get("/test")],
+      ["post", () => api.post("/test", {})],
+      ["patch", () => api.patch("/test", {})],
+      ["put", () => api.put("/test", {})],
+      ["delete", () => api.delete("/test")],
+    ])("api.%s propagates handled fetch error", async (_, call) => {
       global.fetch = vi
         .fn()
         .mockResolvedValue(
-          new Response(JSON.stringify({ message: "Validation failed" }), { status: 422 })
+          new Response(JSON.stringify({ error: "Operation failed" }), { status: 400 })
         );
 
-      await expect(api.post("/test", {})).rejects.toThrow("Validation failed");
-    });
-
-    it("api.get propagates handled fetch error", async () => {
-      global.fetch = vi
-        .fn()
-        .mockResolvedValue(new Response(JSON.stringify({ error: "Not Found" }), { status: 404 }));
-
-      await expect(api.get("/test")).rejects.toThrow("Not Found");
-    });
-
-    it("api.patch propagates handled fetch error", async () => {
-      global.fetch = vi
-        .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify({ message: "Conflict detected" }), { status: 409 })
-        );
-
-      await expect(api.patch("/test", {})).rejects.toThrow("Conflict detected");
-    });
-
-    it("api.put propagates handled fetch error", async () => {
-      global.fetch = vi
-        .fn()
-        .mockResolvedValue(new Response(JSON.stringify({ message: "Forbidden" }), { status: 403 }));
-
-      await expect(api.put("/test", {})).rejects.toThrow("Forbidden");
-    });
-
-    it("api.delete propagates handled fetch error", async () => {
-      global.fetch = vi
-        .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify({ error: "Internal Error" }), { status: 500 })
-        );
-
-      await expect(api.delete("/test")).rejects.toThrow("Internal Error");
+      await expect(call()).rejects.toThrow("Operation failed");
     });
   });
 });

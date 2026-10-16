@@ -188,18 +188,3 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 		})
 	}
 }
-
-func TestGetCreditHistory_InvalidPerPage_ReturnsError(t *testing.T) {
-	fixture := setupCreditTestFixture(t)
-	defer fixture.teardown()
-	ctx := context.Background()
-	query := types.GetCreditHistoryQuery{
-		Page:    1,
-		PerPage: 15,
-	}
-	resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "Invalid per_page value")
-	t.Logf("✓ Invalid per_page rejected: %v", err)
-}

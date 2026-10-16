@@ -9,58 +9,28 @@ import (
 )
 
 func TestHasRole(t *testing.T) {
-	t.Run("returns false for nil profile", func(t *testing.T) {
-		assert.False(t, HasRole(nil, RoleUser))
-	})
-	t.Run("returns true for matching role", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "admin"}
-		assert.True(t, HasRole(profile, RoleAdmin))
-	})
-	t.Run("returns false for non-matching role", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "user"}
-		assert.False(t, HasRole(profile, RoleAdmin))
-	})
-	t.Run("returns true for one of multiple allowed roles", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "admin"}
-		assert.True(t, HasRole(profile, RoleUser, RoleAdmin, RoleSuperAdmin))
-	})
-	t.Run("case insensitive comparison", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "ADMIN"}
-		assert.True(t, HasRole(profile, "admin"))
-	})
-	t.Run("returns true for exact match super_admin", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "super_admin"}
-		assert.True(t, HasRole(profile, RoleSuperAdmin))
-	})
-	t.Run("returns false for empty allowed roles", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "admin"}
-		assert.False(t, HasRole(profile))
-	})
-	t.Run("returns false when profile role is empty", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: ""}
-		assert.False(t, HasRole(profile, RoleAdmin))
-	})
-	t.Run("handles whitespace in role", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "Admin"}
-		assert.True(t, HasRole(profile, "ADMIN"))
-	})
-}
-func TestRoleConstants(t *testing.T) {
-	assert.Equal(t, "user", RoleUser, "RoleUser should be 'user'")
-	assert.Equal(t, "admin", RoleAdmin, "RoleAdmin should be 'admin'")
-	assert.Equal(t, "super_admin", RoleSuperAdmin, "RoleSuperAdmin should be 'super_admin'")
-}
-func TestHasRole_EdgeCases(t *testing.T) {
-	t.Run("single role match in list of many", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "user"}
-		assert.True(t, HasRole(profile, "admin", "super_admin", "user"))
-	})
-	t.Run("no match in list of many", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "guest"}
-		assert.False(t, HasRole(profile, RoleUser, RoleAdmin, RoleSuperAdmin))
-	})
-	t.Run("duplicate roles in allowed list", func(t *testing.T) {
-		profile := &types.PublicProfilesSelect{Role: "admin"}
-		assert.True(t, HasRole(profile, RoleAdmin, RoleAdmin, RoleAdmin))
-	})
+	tests := []struct {
+		name     string
+		profile  *types.PublicProfilesSelect
+		allowed  []string
+		expected bool
+	}{
+		{"returns false for nil profile", nil, []string{RoleUser}, false},
+		{"returns true for matching role", &types.PublicProfilesSelect{Role: "admin"}, []string{RoleAdmin}, true},
+		{"returns false for non-matching role", &types.PublicProfilesSelect{Role: "user"}, []string{RoleAdmin}, false},
+		{"returns true for one of multiple allowed roles", &types.PublicProfilesSelect{Role: "admin"}, []string{RoleUser, RoleAdmin, RoleSuperAdmin}, true},
+		{"case insensitive comparison", &types.PublicProfilesSelect{Role: "ADMIN"}, []string{"admin"}, true},
+		{"returns true for exact match super_admin", &types.PublicProfilesSelect{Role: "super_admin"}, []string{RoleSuperAdmin}, true},
+		{"returns false for empty allowed roles", &types.PublicProfilesSelect{Role: "admin"}, nil, false},
+		{"returns false when profile role is empty", &types.PublicProfilesSelect{Role: ""}, []string{RoleAdmin}, false},
+		{"handles whitespace in role", &types.PublicProfilesSelect{Role: "Admin"}, []string{"ADMIN"}, true},
+		{"single role match in list of many", &types.PublicProfilesSelect{Role: "user"}, []string{"admin", "super_admin", "user"}, true},
+		{"no match in list of many", &types.PublicProfilesSelect{Role: "guest"}, []string{RoleUser, RoleAdmin, RoleSuperAdmin}, false},
+		{"duplicate roles in allowed list", &types.PublicProfilesSelect{Role: "admin"}, []string{RoleAdmin, RoleAdmin, RoleAdmin}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, HasRole(tt.profile, tt.allowed...))
+		})
+	}
 }

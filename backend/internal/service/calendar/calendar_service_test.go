@@ -99,49 +99,46 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		assert.NotNil(t, result)
 		assert.Len(t, result.Calendar, 30)
 	})
-}
-func TestGetCalendarAvailability_InvalidDateFormat(t *testing.T) {
-	mockCalendarRepo := new(MockCalendarRepository)
-	service := NewCalendarService(mockCalendarRepo)
-	ctx := context.Background()
-	invalidDate := "invalid-date"
-	query := types.CalendarAvailabilityQuery{
-		StartDate: &invalidDate,
-		Days:      7,
-	}
-	_, err := service.GetCalendarAvailability(ctx, query)
-	assert.Error(t, err)
-	assert.IsType(t, &types.ValidationError{}, err)
-}
-func TestGetCalendarAvailability_MultiDayReservation(t *testing.T) {
-	mockCalendarRepo := new(MockCalendarRepository)
-	service := NewCalendarService(mockCalendarRepo)
-	ctx := context.Background()
-	startDate := "2025-12-01"
-	query := types.CalendarAvailabilityQuery{
-		StartDate: &startDate,
-		Days:      5,
-	}
-	equipment := []types.PublicEquipmentSelect{
-		{ID: "eq-uuid-1", InternalID: "K-01", Name: testutils.StringPtr("Kayak")},
-	}
-	reservations := []types.PublicReservationsSelect{
-		{
-			ID:          "res-1",
-			EquipmentID: "eq-uuid-1",
-			StartDate:   "2025-12-02",
-			EndDate:     "2025-12-04",
-			Status:      "RENTED",
-		},
-	}
-	mockCalendarRepo.On("GetEquipmentForCalendar", ctx, (*string)(nil)).Return(equipment, nil)
-	mockCalendarRepo.On("GetReservationsInDateRange", ctx, "2025-12-01", "2025-12-05", (*string)(nil)).Return(reservations, nil)
-	result, err := service.GetCalendarAvailability(ctx, query)
-	assert.NoError(t, err)
-	assert.Len(t, result.Calendar, 5)
-	assert.True(t, result.Calendar[0].IsAvailable)
-	assert.False(t, result.Calendar[1].IsAvailable)
-	assert.False(t, result.Calendar[2].IsAvailable)
-	assert.False(t, result.Calendar[3].IsAvailable)
-	assert.True(t, result.Calendar[4].IsAvailable)
+	t.Run("invalid date format returns validation error", func(t *testing.T) {
+		service := NewCalendarService(new(MockCalendarRepository))
+		invalidDate := "invalid-date"
+		_, err := service.GetCalendarAvailability(context.Background(), types.CalendarAvailabilityQuery{
+			StartDate: &invalidDate,
+			Days:      7,
+		})
+		assert.Error(t, err)
+		assert.IsType(t, &types.ValidationError{}, err)
+	})
+	t.Run("multi day reservation marks range unavailable", func(t *testing.T) {
+		mockCalendarRepo := new(MockCalendarRepository)
+		service := NewCalendarService(mockCalendarRepo)
+		ctx := context.Background()
+		startDate := "2025-12-01"
+		query := types.CalendarAvailabilityQuery{
+			StartDate: &startDate,
+			Days:      5,
+		}
+		equipment := []types.PublicEquipmentSelect{
+			{ID: "eq-uuid-1", InternalID: "K-01", Name: testutils.StringPtr("Kayak")},
+		}
+		reservations := []types.PublicReservationsSelect{
+			{
+				ID:          "res-1",
+				EquipmentID: "eq-uuid-1",
+				StartDate:   "2025-12-02",
+				EndDate:     "2025-12-04",
+				Status:      "RENTED",
+			},
+		}
+		mockCalendarRepo.On("GetEquipmentForCalendar", ctx, (*string)(nil)).Return(equipment, nil)
+		mockCalendarRepo.On("GetReservationsInDateRange", ctx, "2025-12-01", "2025-12-05", (*string)(nil)).Return(reservations, nil)
+		result, err := service.GetCalendarAvailability(ctx, query)
+		assert.NoError(t, err)
+		assert.Len(t, result.Calendar, 5)
+		assert.True(t, result.Calendar[0].IsAvailable)
+		assert.False(t, result.Calendar[1].IsAvailable)
+		assert.False(t, result.Calendar[2].IsAvailable)
+		assert.False(t, result.Calendar[3].IsAvailable)
+		assert.True(t, result.Calendar[4].IsAvailable)
+	})
 }

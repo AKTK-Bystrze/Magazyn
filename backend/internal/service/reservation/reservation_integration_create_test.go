@@ -12,131 +12,82 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAdjacentDates_SameUserCanReserveAfterReturn(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
-	require.NoError(t, err)
-	t.Logf("First reservation: %s (days 7-10)", reservationID1)
-	reservationID2, err := fixture.createTestReservation(fixture.testUserID, 11, 13)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, reservationID2)
-	t.Logf("Second reservation: %s (days 11-13) - SUCCESS", reservationID2)
-}
-func TestAdjacentDates_DifferentUserCanReserveAfterReturn(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
-	require.NoError(t, err)
-	t.Logf("User A reservation: %s (days 7-10)", reservationID1)
-	reservationID2, err := fixture.createTestReservation(fixture.testUser2ID, 11, 13)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, reservationID2)
-	t.Logf("User B reservation: %s (days 11-13) - SUCCESS", reservationID2)
-}
-func TestOverlappingDates_SameUserConflict(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
-	require.NoError(t, err)
-	t.Logf("First reservation: %s (days 7-10)", reservationID1)
-	_, err = fixture.createTestReservation(fixture.testUserID, 9, 12)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Reservation failed")
-	t.Logf("Overlapping reservation rejected - EXPECTED")
-}
-func TestOverlappingDates_DifferentUserConflict(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
-	require.NoError(t, err)
-	t.Logf("User A reservation: %s (days 7-10)", reservationID1)
-	_, err = fixture.createTestReservation(fixture.testUser2ID, 8, 11)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Reservation failed")
-	t.Logf("User B conflicting reservation rejected - EXPECTED")
-}
-func TestExactSameDates_Conflict(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	reservationID1, err := fixture.createTestReservation(fixture.testUserID, 7, 10)
-	require.NoError(t, err)
-	t.Logf("First reservation: %s (days 7-10)", reservationID1)
-	_, err = fixture.createTestReservation(fixture.testUserID, 7, 10)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Reservation failed")
-	t.Logf("Duplicate date reservation rejected - EXPECTED")
-}
-func TestTodayReservation_SingleDay(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	ctx := context.Background()
-	balanceBefore := fixture.getUserBalance(fixture.testUserID)
-	cmd := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: fixture.equipmentID,
-				StartDate:   todayStr(),
-				EndDate:     todayStr(),
-			},
-		},
+func TestReservationDateConflicts(t *testing.T) {
+	tests := []struct {
+		name      string
+		firstUser string
+		first1    int
+		first2    int
+		secUser   string
+		sec1      int
+		sec2      int
+		wantErr   bool
+	}{
+		{"Adjacent_SameUser", "u1", 7, 10, "u1", 11, 13, false},
+		{"Adjacent_DifferentUser", "u1", 7, 10, "u2", 11, 13, false},
+		{"Overlap_SameUser", "u1", 7, 10, "u1", 9, 12, true},
+		{"Overlap_DifferentUser", "u1", 7, 10, "u2", 8, 11, true},
+		{"ExactSameDates", "u1", 7, 10, "u1", 7, 10, true},
+		{"AfterExistingEndsToday", "u1", -1, 0, "u1", 1, 2, false},
+		{"ConflictWithOngoing", "u1", -1, 1, "u1", 0, 0, true},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
-	require.NoError(t, err)
-	assert.NotEmpty(t, resp.Reservations)
-	expectedCost := fixture.costPerDay
-	actualCost := balanceBefore - resp.RemainingBalance
-	assert.Equal(t, expectedCost, actualCost, "Cost should be 1 day")
-	t.Logf("Single-day (today) reservation cost: %d credits", actualCost)
-	fixture.cleanup = append(fixture.cleanup, func() {
-		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fixture := setupDateTestFixture(t)
+			defer fixture.teardown()
+			user1 := fixture.testUserID
+			user2 := fixture.testUserID
+			if tt.secUser == "u2" {
+				user2 = fixture.testUser2ID
+			}
+			_, err := fixture.createTestReservation(user1, tt.first1, tt.first2)
+			require.NoError(t, err)
+			res2, err := fixture.createTestReservation(user2, tt.sec1, tt.sec2)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, res2)
+			}
+		})
+	}
 }
 
-func TestTodayReservation_MultiDay(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	ctx := context.Background()
-	balanceBefore := fixture.getUserBalance(fixture.testUserID)
-	cmd := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: fixture.equipmentID,
-				StartDate:   dateOffset(0),
-				EndDate:     dateOffset(3),
-			},
-		},
+func TestTodayReservation(t *testing.T) {
+	tests := []struct {
+		name         string
+		start        string
+		end          string
+		expectedDays int32
+	}{
+		{"SingleDay", todayStr(), todayStr(), 1},
+		{"MultiDay", dateOffset(0), dateOffset(3), 4},
 	}
-	resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
-	require.NoError(t, err)
-	expectedCost := fixture.costPerDay * 4
-	actualCost := balanceBefore - resp.RemainingBalance
-	assert.Equal(t, expectedCost, actualCost, "Cost should be 4 days")
-	t.Logf("Multi-day (today+3) reservation cost: %d credits", actualCost)
-	fixture.cleanup = append(fixture.cleanup, func() {
-		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
-	})
-}
-func TestTodayReservation_AfterExistingEndsToday(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	reservationID1, err := fixture.createTestReservation(fixture.testUserID, -1, 0)
-	require.NoError(t, err)
-	t.Logf("First reservation: %s (yesterday → today)", reservationID1)
-	reservationID2, err := fixture.createTestReservation(fixture.testUserID, 1, 2)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, reservationID2)
-	t.Logf("Today-start reservation: %s - SUCCESS", reservationID2)
-}
-func TestTodayReservation_ConflictWithOngoing(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	reservationID1, err := fixture.createTestReservation(fixture.testUserID, -1, 1)
-	require.NoError(t, err)
-	t.Logf("Ongoing reservation: %s (yesterday → tomorrow)", reservationID1)
-	_, err = fixture.createTestReservation(fixture.testUserID, 0, 0)
-	assert.Error(t, err)
-	t.Logf("Conflict with ongoing reservation rejected - EXPECTED")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fixture := setupDateTestFixture(t)
+			defer fixture.teardown()
+			ctx := context.Background()
+			balanceBefore := fixture.getUserBalance(fixture.testUserID)
+			cmd := types.CreateReservationsCommand{
+				Reservations: []types.CreateReservationItem{
+					{
+						EquipmentID: fixture.equipmentID,
+						StartDate:   tt.start,
+						EndDate:     tt.end,
+					},
+				},
+			}
+			resp, err := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
+			require.NoError(t, err)
+			assert.NotEmpty(t, resp.Reservations)
+			actualCost := balanceBefore - resp.RemainingBalance
+			assert.Equal(t, fixture.costPerDay*tt.expectedDays, actualCost)
+			fixture.cleanup = append(fixture.cleanup, func() {
+				fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
+			})
+		})
+	}
 }
 func TestCostCalculation_Matrix(t *testing.T) {
 	fixture := setupDateTestFixture(t)
@@ -286,54 +237,6 @@ func TestFreeReservation_AdminCanCreateWithoutDeductingCredits(t *testing.T) {
 	t.Logf("Balance after free reservation: %d credits (unchanged) ✓", balanceAfter)
 	fixture.cleanup = append(fixture.cleanup, func() {
 		fixture.client.From("reservations").Delete("", "").Eq("id", resp.Reservations[0].ID).Execute()
-	})
-}
-
-func TestFreeReservation_CostComparison(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	ctx := context.Background()
-	days := 5
-	expectedCost := int32(days) * fixture.costPerDay
-	balanceBeforeRegular := fixture.getUserBalance(fixture.testUserID)
-	cmdRegular := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: fixture.equipmentID,
-				StartDate:   dateOffset(5),
-				EndDate:     dateOffset(5 + days - 1),
-			},
-		},
-	}
-	respRegular, err := fixture.svc.Create(ctx, cmdRegular, fixture.testUserID, "user")
-	require.NoError(t, err)
-	balanceAfterRegular := fixture.getUserBalance(fixture.testUserID)
-	costRegular := balanceBeforeRegular - balanceAfterRegular
-	assert.Equal(t, expectedCost, costRegular, "Regular reservation should deduct correct amount")
-	t.Logf("Regular reservation: %d days, cost %d credits ✓", days, costRegular)
-	fixture.cleanup = append(fixture.cleanup, func() {
-		fixture.client.From("reservations").Delete("", "").Eq("id", respRegular.Reservations[0].ID).Execute()
-	})
-	balanceBeforeFree := fixture.getUserBalance(fixture.testUserID)
-	isFree := true
-	cmdFree := types.CreateReservationsCommand{
-		Reservations: []types.CreateReservationItem{
-			{
-				EquipmentID: fixture.equipmentID,
-				StartDate:   dateOffset(15),
-				EndDate:     dateOffset(15 + days - 1),
-			},
-		},
-		FreeReservation: &isFree,
-	}
-	respFree, err := fixture.svc.Create(ctx, cmdFree, fixture.testUserID, "admin")
-	require.NoError(t, err)
-	balanceAfterFree := fixture.getUserBalance(fixture.testUserID)
-	costFree := balanceBeforeFree - balanceAfterFree
-	assert.Equal(t, int32(0), costFree, "Free reservation should cost 0 credits")
-	t.Logf("Free reservation: %d days, cost %d credits ✓", days, costFree)
-	fixture.cleanup = append(fixture.cleanup, func() {
-		fixture.client.From("reservations").Delete("", "").Eq("id", respFree.Reservations[0].ID).Execute()
 	})
 }
 

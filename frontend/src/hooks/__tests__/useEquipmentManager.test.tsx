@@ -15,23 +15,18 @@ vi.mock("@/lib/api/equipment-api", () => ({
   },
 }));
 
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
 
-  return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-  };
-}
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 describe("useEquipmentManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    queryClient.clear();
 
     vi.mocked(equipmentApi.list).mockResolvedValue({
       equipment: [
@@ -61,9 +56,7 @@ describe("useEquipmentManager", () => {
   });
 
   it("should fetch equipment with default filters", async () => {
-    const { result } = renderHook(() => useEquipmentManager(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHook(() => useEquipmentManager(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -80,9 +73,7 @@ describe("useEquipmentManager", () => {
   });
 
   it("should pass typeId to equipmentApi.list when typeId filter is set (Fix #229)", async () => {
-    const { result } = renderHook(() => useEquipmentManager(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHook(() => useEquipmentManager(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -105,9 +96,7 @@ describe("useEquipmentManager", () => {
   });
 
   it("should reset page to 1 when search filter changes", async () => {
-    const { result } = renderHook(() => useEquipmentManager(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHook(() => useEquipmentManager(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -137,9 +126,7 @@ describe("useEquipmentManager", () => {
   });
 
   it("should reset all filters to default when resetFilters is called", async () => {
-    const { result } = renderHook(() => useEquipmentManager(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHook(() => useEquipmentManager(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);

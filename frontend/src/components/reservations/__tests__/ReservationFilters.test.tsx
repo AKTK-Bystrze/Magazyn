@@ -63,14 +63,16 @@ describe("ReservationFilters", () => {
     expect(screen.getByText("Data utworzenia: najnowsze")).toBeInTheDocument();
   });
 
-  it("shows user filter when scope is 'all'", () => {
-    renderComponent({ ...defaultFilters, scope: "all" });
-    expect(screen.getByText("Wszyscy użytkownicy")).toBeInTheDocument();
-  });
-
-  it("does not show user filter when scope is 'my'", () => {
-    renderComponent({ ...defaultFilters, scope: "my" });
-    expect(screen.queryByText("Wszyscy użytkownicy")).not.toBeInTheDocument();
+  it.each([
+    ["all", true],
+    ["my", false],
+  ])("user filter visibility when scope is %s", (scope, visible) => {
+    renderComponent({ ...defaultFilters, scope: scope as "all" | "my" });
+    if (visible) {
+      expect(screen.getByText("Wszyscy użytkownicy")).toBeInTheDocument();
+    } else {
+      expect(screen.queryByText("Wszyscy użytkownicy")).not.toBeInTheDocument();
+    }
   });
 
   it("triggers onFilterChange with debounced search input", () => {

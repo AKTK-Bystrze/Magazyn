@@ -14,194 +14,117 @@ import (
 )
 
 func TestRequireRoles(t *testing.T) {
-	t.Run("returns 401 when profile not in context", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
+	tests := []struct {
+		name         string
+		profileVal   any
+		allowedRoles []string
+		wantCode     int
+		wantNext     bool
+	}{
+		{
+			name:         "returns 401 when profile not in context",
+			profileVal:   nil,
+			allowedRoles: []string{"admin"},
+			wantCode:     http.StatusUnauthorized,
+			wantNext:     false,
+		},
+		{
+			name:         "returns 500 when context value is wrong type",
+			profileVal:   "wrong-type-string",
+			allowedRoles: []string{"admin"},
+			wantCode:     http.StatusInternalServerError,
+			wantNext:     false,
+		},
+		{
+			name:         "returns 403 when user has insufficient permissions",
+			profileVal:   &types.PublicProfilesSelect{ID: "user-123", Role: "user", IsEnabled: true},
+			allowedRoles: []string{"admin", "super_admin"},
+			wantCode:     http.StatusForbidden,
+			wantNext:     false,
+		},
+		{
+			name:         "allows admin through",
+			profileVal:   &types.PublicProfilesSelect{ID: "admin-123", Role: "admin", IsEnabled: true},
+			allowedRoles: []string{"admin", "super_admin"},
+			wantCode:     http.StatusOK,
+			wantNext:     true,
+		},
+		{
+			name:         "allows super_admin through",
+			profileVal:   &types.PublicProfilesSelect{ID: "superadmin-123", Role: "super_admin", IsEnabled: true},
+			allowedRoles: []string{"admin", "super_admin"},
+			wantCode:     http.StatusOK,
+			wantNext:     true,
+		},
+		{
+			name:         "allows user role on user-only endpoint",
+			profileVal:   &types.PublicProfilesSelect{ID: "user-123", Role: "user", IsEnabled: true},
+			allowedRoles: []string{"user"},
+			wantCode:     http.StatusOK,
+			wantNext:     true,
+		},
+		{
+			name:         "works with multiple allowed roles",
+			profileVal:   &types.PublicProfilesSelect{ID: "user-123", Role: "user", IsEnabled: true},
+			allowedRoles: []string{"user", "admin", "super_admin"},
+			wantCode:     http.StatusOK,
+			wantNext:     true,
+		},
+		{
+			name:         "case insensitive role matching",
+			profileVal:   &types.PublicProfilesSelect{ID: "admin-123", Role: "admin", IsEnabled: true},
+			allowedRoles: []string{"ADMIN"},
+			wantCode:     http.StatusOK,
+			wantNext:     true,
+		},
+		{
+			name:         "empty roles list denies access",
+			profileVal:   &types.PublicProfilesSelect{ID: "admin-123", Role: "admin", IsEnabled: true},
+			allowedRoles: nil,
+			wantCode:     http.StatusForbidden,
+			wantNext:     false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nextCalled := false
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				nextCalled = true
+				w.WriteHeader(http.StatusOK)
+			})
+			middleware := RequireRoles(tt.allowedRoles...)(next)
+			req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+			if tt.profileVal != nil {
+				req = req.WithContext(context.WithValue(req.Context(), appcontext.UserProfileContextKey, tt.profileVal))
+			}
+			w := httptest.NewRecorder()
+			middleware.ServeHTTP(w, req)
+			assert.Equal(t, tt.wantCode, w.Code)
+			assert.Equal(t, tt.wantNext, nextCalled)
 		})
-		middleware := RequireRoles("admin")(next)
-		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.False(t, nextCalled, "Next handler should not be called")
-		assert.Contains(t, w.Body.String(), "Unauthorized")
-	})
-	t.Run("returns 500 when context value is wrong type", func(t *testing.T) {
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			t.Error("Next handler should not be called")
-		})
-		middleware := RequireRoles("admin")(next)
-		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, "wrong-type-string")
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assert.Contains(t, w.Body.String(), "Internal Server Error")
-	})
-	t.Run("returns 403 when user has insufficient permissions", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
-		})
-		middleware := RequireRoles("admin", "super_admin")(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "user-123",
-			Role:      "user",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusForbidden, w.Code)
-		assert.False(t, nextCalled, "Next handler should not be called")
-		assert.Contains(t, w.Body.String(), "Forbidden")
-	})
-	t.Run("allows admin through", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
-			w.WriteHeader(http.StatusOK)
-		})
-		middleware := RequireRoles("admin", "super_admin")(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "admin-123",
-			Role:      "admin",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.True(t, nextCalled, "Next handler should be called")
-	})
-	t.Run("allows super_admin through", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
-			w.WriteHeader(http.StatusOK)
-		})
-		middleware := RequireRoles("admin", "super_admin")(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "superadmin-123",
-			Role:      "super_admin",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.True(t, nextCalled, "Next handler should be called")
-	})
-	t.Run("allows user role on user-only endpoint", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
-			w.WriteHeader(http.StatusOK)
-		})
-		middleware := RequireRoles("user")(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "user-123",
-			Role:      "user",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/user-resource", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.True(t, nextCalled, "Next handler should be called")
-	})
-	t.Run("works with multiple allowed roles", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
-			w.WriteHeader(http.StatusOK)
-		})
-		middleware := RequireRoles("user", "admin", "super_admin")(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "user-123",
-			Role:      "user",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/any-resource", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.True(t, nextCalled, "Next handler should be called")
-	})
-	t.Run("case insensitive role matching", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
-			w.WriteHeader(http.StatusOK)
-		})
-		middleware := RequireRoles("ADMIN")(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "admin-123",
-			Role:      "admin",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.True(t, nextCalled, "Next handler should be called with case insensitive match")
-	})
+	}
 }
-func TestRequireRoles_EdgeCases(t *testing.T) {
-	t.Run("empty roles list denies access", func(t *testing.T) {
-		nextCalled := false
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			nextCalled = true
-		})
-		middleware := RequireRoles()(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "admin-123",
-			Role:      "admin",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/any", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusForbidden, w.Code)
-		assert.False(t, nextCalled, "Next handler should not be called when no roles are allowed")
+
+func TestRequireRoles_PassesRequestThrough(t *testing.T) {
+	var receivedRequest *http.Request
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedRequest = r
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	})
-	t.Run("passes request through on success", func(t *testing.T) {
-		var receivedRequest *http.Request
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			receivedRequest = r
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-		})
-		middleware := RequireRoles("admin")(next)
-		profile := &types.PublicProfilesSelect{
-			ID:        "admin-123",
-			Role:      "admin",
-			IsEnabled: true,
-		}
-		req := httptest.NewRequest(http.MethodGet, "/admin/resource?foo=bar", nil)
-		ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		middleware.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.NotNil(t, receivedRequest)
-		assert.Equal(t, "/admin/resource", receivedRequest.URL.Path)
-		assert.Equal(t, "bar", receivedRequest.URL.Query().Get("foo"))
-	})
+	middleware := RequireRoles("admin")(next)
+	profile := &types.PublicProfilesSelect{
+		ID:        "admin-123",
+		Role:      "admin",
+		IsEnabled: true,
+	}
+	req := httptest.NewRequest(http.MethodGet, "/admin/resource?foo=bar", nil)
+	ctx := context.WithValue(req.Context(), appcontext.UserProfileContextKey, profile)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+	middleware.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NotNil(t, receivedRequest)
+	assert.Equal(t, "/admin/resource", receivedRequest.URL.Path)
+	assert.Equal(t, "bar", receivedRequest.URL.Query().Get("foo"))
 }

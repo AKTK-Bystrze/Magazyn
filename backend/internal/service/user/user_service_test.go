@@ -12,51 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockUserRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) List(ctx context.Context, page, perPage int, role, search string) ([]types.PublicProfilesSelect, int64, error) {
-	args := m.Called(ctx, page, perPage, role, search)
-	if args.Get(0) == nil {
-		return nil, args.Get(1).(int64), args.Error(2)
-	}
-	return args.Get(0).([]types.PublicProfilesSelect), args.Get(1).(int64), args.Error(2)
-}
-func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, email)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-func (m *MockUserRepository) Create(ctx context.Context, profile types.PublicProfilesInsert) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, profile)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-func (m *MockUserRepository) Update(ctx context.Context, id string, profile types.PublicProfilesUpdate) (*types.PublicProfilesSelect, error) {
-	args := m.Called(ctx, id, profile)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.PublicProfilesSelect), args.Error(1)
-}
-func (m *MockUserRepository) BulkAdjustCreditsAtomic(ctx context.Context, userIDs []string, adminID string, amount int32, reason string, description string) error {
-	args := m.Called(ctx, userIDs, adminID, amount, reason, description)
-	return args.Error(0)
-}
 func TestGetProfile_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -76,7 +33,7 @@ func TestGetProfile_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestGetProfile_NotFound(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -89,7 +46,7 @@ func TestGetProfile_NotFound(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestListUsers_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -111,7 +68,7 @@ func TestListUsers_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestCreateUser_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -149,7 +106,7 @@ func TestCreateUser_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestCreateUser_AuthFailure(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -172,7 +129,7 @@ func TestCreateUser_AuthFailure(t *testing.T) {
 	mockAuthRepo.AssertExpectations(t)
 }
 func TestCreateUser_EmailConflict(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -191,7 +148,7 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestCreateUser_UsernameConflict(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -213,7 +170,7 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestUpdateUser_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
@@ -235,7 +192,7 @@ func TestUpdateUser_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 func TestBulkAdjustCredits_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
+	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()

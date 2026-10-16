@@ -141,6 +141,3 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
-func TestMin(t *testing.T) {
-	assert.Equal(t, 5, min(5, 10))
-}

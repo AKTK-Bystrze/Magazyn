@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { groupReservationsByDateRange } from "./group-reservations";
-import type { ReservationListItem } from "@/types";
+import type { ReservationListItem, ReservationSortOption } from "@/types";
 
 describe("groupReservationsByDateRange", () => {
   const baseItem: ReservationListItem = {
@@ -37,7 +37,10 @@ describe("groupReservationsByDateRange", () => {
     expect(groups[0].totalCreditCost).toBe(15);
   });
 
-  it("sorts groups by created_desc by default", () => {
+  it.each<[ReservationSortOption, string, string]>([
+    ["created_desc", "res-2", "res-1"],
+    ["created_asc", "res-1", "res-2"],
+  ])("sorts groups by %s", (sortOrder, firstId, secondId) => {
     const items: ReservationListItem[] = [
       {
         ...baseItem,
@@ -55,32 +58,9 @@ describe("groupReservationsByDateRange", () => {
       },
     ];
 
-    const groups = groupReservationsByDateRange(items, "created_desc");
-    expect(groups[0].items[0].id).toBe("res-2");
-    expect(groups[1].items[0].id).toBe("res-1");
-  });
-
-  it("sorts groups by created_asc", () => {
-    const items: ReservationListItem[] = [
-      {
-        ...baseItem,
-        id: "res-1",
-        startDate: "2026-06-01",
-        endDate: "2026-06-05",
-        createdAt: "2026-05-01T10:00:00Z",
-      },
-      {
-        ...baseItem,
-        id: "res-2",
-        startDate: "2026-07-01",
-        endDate: "2026-07-05",
-        createdAt: "2026-05-10T10:00:00Z",
-      },
-    ];
-
-    const groups = groupReservationsByDateRange(items, "created_asc");
-    expect(groups[0].items[0].id).toBe("res-1");
-    expect(groups[1].items[0].id).toBe("res-2");
+    const groups = groupReservationsByDateRange(items, sortOrder);
+    expect(groups[0].items[0].id).toBe(firstId);
+    expect(groups[1].items[0].id).toBe(secondId);
   });
 
   it("sorts groups by start_date_asc and start_date_desc", () => {

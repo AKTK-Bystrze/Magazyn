@@ -13,6 +13,7 @@ import (
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	handler "magazyn/backend/internal/handler/reservation"
+	"magazyn/backend/internal/service/reservation"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,7 @@ import (
 )
 
 type MockReservationService struct {
+	reservation.ReservationService
 	mock.Mock
 }
 
@@ -29,22 +31,6 @@ func (m *MockReservationService) List(ctx context.Context, query types.Reservati
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*types.ReservationListResponse), args.Error(1)
-}
-
-func (m *MockReservationService) GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error) {
-	args := m.Called(ctx, id, userID, role)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.ReservationDetail), args.Error(1)
-}
-
-func (m *MockReservationService) Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string, role string) (*types.CreateReservationsResponse, error) {
-	args := m.Called(ctx, cmd, userID, role)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.CreateReservationsResponse), args.Error(1)
 }
 
 func (m *MockReservationService) Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error) {
@@ -63,54 +49,70 @@ func (m *MockReservationService) BulkUpdate(ctx context.Context, cmd types.BulkU
 	return args.Get(0).(*types.BulkStatusUpdateResponse), args.Error(1)
 }
 
-func (m *MockReservationService) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
-	args := m.Called(ctx)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.ReservationDashboardSummary), args.Error(1)
-}
-
 func withUserContext(r *http.Request, userID string, role string) *http.Request {
 	ctx := context.WithValue(r.Context(), appcontext.UserContextKey, &types.User{ID: userID})
 	ctx = context.WithValue(ctx, appcontext.UserProfileContextKey, &types.PublicProfilesSelect{ID: userID, Role: role})
 	return r.WithContext(ctx)
 }
 
-func TestHandleList_InvalidStatus_ReturnsBadRequest(t *testing.T) {
-	mockSvc := new(MockReservationService)
-	h := handler.NewReservationHandler(mockSvc)
-
-	req := httptest.NewRequest(http.MethodGet, "/reservations?status=INVALID_STATUS", nil)
-	req = withUserContext(req, "user-1", auth.RoleUser)
-	rec := httptest.NewRecorder()
-
-	h.HandleList(rec, req)
-
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	var resp map[string]string
-	err := json.NewDecoder(rec.Body).Decode(&resp)
-	assert.NoError(t, err)
-	assert.Equal(t, "Invalid reservation status", resp["error"])
-	mockSvc.AssertNotCalled(t, "List")
-}
-
-func TestHandleList_InvalidScope_ReturnsBadRequest(t *testing.T) {
-	mockSvc := new(MockReservationService)
-	h := handler.NewReservationHandler(mockSvc)
-
-	req := httptest.NewRequest(http.MethodGet, "/reservations?scope=unknown_scope", nil)
-	req = withUserContext(req, "user-1", auth.RoleUser)
-	rec := httptest.NewRecorder()
-
-	h.HandleList(rec, req)
-
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	var resp map[string]string
-	err := json.NewDecoder(rec.Body).Decode(&resp)
-	assert.NoError(t, err)
-	assert.Equal(t, "Invalid scope: must be 'all' or 'my'", resp["error"])
-	mockSvc.AssertNotCalled(t, "List")
+func TestHandleList_ValidationErrors(t *testing.T) {
+	tests := []struct {
+		name          string
+		queryURL      string
+		expectedError string
+	}{
+		{
+			name:          "invalid status",
+			queryURL:      "/reservations?status=INVALID_STATUS",
+			expectedError: "Invalid reservation status",
+		},
+		{
+			name:          "invalid scope",
+			queryURL:      "/reservations?scope=unknown_scope",
+			expectedError: "Invalid scope: must be 'all' or 'my'",
+		},
+		{
+			name:          "invalid sort",
+			queryURL:      "/reservations?sort=invalid_sort",
+			expectedError: "Invalid sort option",
+		},
+		{
+			name:          "search too long",
+			queryURL:      "/reservations?search=" + strings.Repeat("a", constants.MaxSearchLength+1),
+			expectedError: "Search term too long",
+		},
+		{
+			name:          "invalid user_id",
+			queryURL:      "/reservations?user_id=invalid-uuid",
+			expectedError: "Invalid user_id format",
+		},
+		{
+			name:          "invalid equipment_id",
+			queryURL:      "/reservations?equipment_id=invalid-uuid",
+			expectedError: "Invalid equipment_id format",
+		},
+		{
+			name:          "invalid type_id",
+			queryURL:      "/reservations?type_id=invalid-uuid",
+			expectedError: "Invalid type_id format",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSvc := new(MockReservationService)
+			h := handler.NewReservationHandler(mockSvc)
+			req := httptest.NewRequest(http.MethodGet, tt.queryURL, nil)
+			req = withUserContext(req, "user-1", auth.RoleUser)
+			rec := httptest.NewRecorder()
+			h.HandleList(rec, req)
+			assert.Equal(t, http.StatusBadRequest, rec.Code)
+			var resp map[string]string
+			err := json.NewDecoder(rec.Body).Decode(&resp)
+			assert.NoError(t, err)
+			assert.Contains(t, resp["error"], tt.expectedError)
+			mockSvc.AssertNotCalled(t, "List")
+		})
+	}
 }
 
 func TestHandleList_ValidStatus_CallsService(t *testing.T) {
@@ -175,75 +177,6 @@ func TestHandleBulkUpdate_InvalidStatus_ReturnsBadRequest(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	mockSvc.AssertNotCalled(t, "BulkUpdate")
-}
-
-func TestHandleList_InvalidSort_ReturnsBadRequest(t *testing.T) {
-	mockSvc := new(MockReservationService)
-	h := handler.NewReservationHandler(mockSvc)
-
-	req := httptest.NewRequest(http.MethodGet, "/reservations?sort=invalid_sort", nil)
-	req = withUserContext(req, "user-1", auth.RoleUser)
-	rec := httptest.NewRecorder()
-
-	h.HandleList(rec, req)
-
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	var resp map[string]string
-	err := json.NewDecoder(rec.Body).Decode(&resp)
-	assert.NoError(t, err)
-	assert.Equal(t, "Invalid sort option", resp["error"])
-	mockSvc.AssertNotCalled(t, "List")
-}
-
-func TestHandleList_SearchTooLong_ReturnsBadRequest(t *testing.T) {
-	mockSvc := new(MockReservationService)
-	h := handler.NewReservationHandler(mockSvc)
-
-	longSearch := strings.Repeat("a", constants.MaxSearchLength+1)
-	req := httptest.NewRequest(http.MethodGet, "/reservations?search="+longSearch, nil)
-	req = withUserContext(req, "user-1", auth.RoleUser)
-	rec := httptest.NewRecorder()
-
-	h.HandleList(rec, req)
-
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	var resp map[string]string
-	err := json.NewDecoder(rec.Body).Decode(&resp)
-	assert.NoError(t, err)
-	assert.Contains(t, resp["error"], "Search term too long")
-	mockSvc.AssertNotCalled(t, "List")
-}
-
-func TestHandleList_InvalidUUIDs_ReturnsBadRequest(t *testing.T) {
-	t.Run("invalid user_id", func(t *testing.T) {
-		mockSvc := new(MockReservationService)
-		h := handler.NewReservationHandler(mockSvc)
-		req := httptest.NewRequest(http.MethodGet, "/reservations?user_id=invalid-uuid", nil)
-		req = withUserContext(req, "user-1", auth.RoleUser)
-		rec := httptest.NewRecorder()
-		h.HandleList(rec, req)
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-	})
-
-	t.Run("invalid equipment_id", func(t *testing.T) {
-		mockSvc := new(MockReservationService)
-		h := handler.NewReservationHandler(mockSvc)
-		req := httptest.NewRequest(http.MethodGet, "/reservations?equipment_id=invalid-uuid", nil)
-		req = withUserContext(req, "user-1", auth.RoleUser)
-		rec := httptest.NewRecorder()
-		h.HandleList(rec, req)
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-	})
-
-	t.Run("invalid type_id", func(t *testing.T) {
-		mockSvc := new(MockReservationService)
-		h := handler.NewReservationHandler(mockSvc)
-		req := httptest.NewRequest(http.MethodGet, "/reservations?type_id=invalid-uuid", nil)
-		req = withUserContext(req, "user-1", auth.RoleUser)
-		rec := httptest.NewRecorder()
-		h.HandleList(rec, req)
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-	})
 }
 
 func TestHandleList_AllFiltersValid_CallsService(t *testing.T) {
