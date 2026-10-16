@@ -1,33 +1,11 @@
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { RedirectManager } from "../redirect-manager";
-import type { User } from "@supabase/supabase-js";
+import { createMockUser, createMockSessionInfo } from "@/test/fixtures/auth-fixtures";
 import type { SessionInfo } from "../../../types";
 
 describe("redirect-manager", () => {
   const origin = "http://localhost:4321";
-
-  const createMockUser = (overrides: Partial<User> = {}): User =>
-    ({
-      id: "test-user-id",
-      email: "test@example.com",
-      app_metadata: {},
-      user_metadata: {},
-      aud: "authenticated",
-      created_at: "2024-01-01T00:00:00Z",
-      ...overrides,
-    }) as User;
-
-  const createMockSessionInfo = (overrides: Partial<SessionInfo> = {}): SessionInfo => ({
-    userId: "test-user-id",
-    email: "test@example.com",
-    username: "testuser",
-    isEnabled: true,
-    role: "user",
-    creditBalance: 100,
-    expiresAt: "2025-12-31T00:00:00Z",
-    ...overrides,
-  });
 
   beforeEach(() => {
     vi.spyOn(logger, "warn").mockImplementation(() => {});
@@ -75,7 +53,7 @@ describe("redirect-manager", () => {
     });
 
     describe("Enabled Users on Account-Disabled Page", () => {
-      it.each([
+      it.each<[string, SessionInfo["role"], string]>([
         ["user", "user", "/dashboard"],
         ["admin", "admin", "/admin"],
         ["super admin", "super_admin", "/admin"],
@@ -94,7 +72,7 @@ describe("redirect-manager", () => {
     });
 
     describe("Enabled Users on Login Page", () => {
-      it.each([
+      it.each<[string, SessionInfo["role"], string | null, string]>([
         ["regular user to dashboard", "user", null, "/dashboard"],
         ["admin to admin", "admin", null, "/admin"],
         ["safe redirect parameter", "user", "/dashboard", "/dashboard"],

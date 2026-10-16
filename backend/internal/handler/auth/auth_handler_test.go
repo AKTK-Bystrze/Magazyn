@@ -2,14 +2,13 @@ package auth_test
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/handler/auth"
+	"magazyn/backend/internal/testutils"
 	serviceMocks "magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
@@ -86,7 +85,6 @@ func TestHandleLogout_Success(t *testing.T) {
 
 func TestHandleGetSession(t *testing.T) {
 	userID := uuid.New()
-	user := &types.User{ID: userID.String(), Email: "user@example.com"}
 	tests := []struct {
 		name     string
 		mockRet  *types.SessionResponse
@@ -108,9 +106,8 @@ func TestHandleGetSession(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			h, mockService := createTestHandler()
 			mockService.On("GetSession", mock.Anything, userID.String(), mock.Anything).Return(tt.mockRet, tt.mockErr)
-			req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
+			req := testutils.NewAuthenticatedRequest(http.MethodGet, "/auth/session", nil, userID.String(), "")
 			req.Header.Set("Authorization", "Bearer test-token")
-			req = req.WithContext(context.WithValue(req.Context(), appcontext.UserContextKey, user))
 			w := httptest.NewRecorder()
 			h.HandleGetSession(w, req)
 			assert.Equal(t, tt.wantCode, w.Code)

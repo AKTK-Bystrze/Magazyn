@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen, fireEvent, act } from "@testing-library/react";
+import { renderWithQueryClient, createTestQueryClient } from "@/test/test-utils";
 import { ReservationFilters } from "../ReservationFilters";
 import type { ReservationFilterState } from "@/types";
 
@@ -26,9 +26,7 @@ vi.mock("@/lib/api/users-api", () => ({
 }));
 
 describe("ReservationFilters", () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+  const queryClient = createTestQueryClient();
 
   const defaultFilters: ReservationFilterState = {
     page: 1,
@@ -47,10 +45,9 @@ describe("ReservationFilters", () => {
   });
 
   const renderComponent = (filters: ReservationFilterState = defaultFilters) => {
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <ReservationFilters filters={filters} onFilterChange={onFilterChange} onReset={onReset} />
-      </QueryClientProvider>
+    return renderWithQueryClient(
+      <ReservationFilters filters={filters} onFilterChange={onFilterChange} onReset={onReset} />,
+      queryClient
     );
   };
 

@@ -1,51 +1,13 @@
 import * as React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Calendar, X, CornerDownLeft, Eye, Edit2 } from "lucide-react";
-import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
+import { Calendar } from "lucide-react";
 import type { ReservationListItem } from "@/types";
-import { formatDate } from "@/lib/utils/date-utils";
 import { useTableSort } from "@/lib/hooks/useTableSort";
+import { useInfiniteScrollTrigger } from "@/lib/hooks/useInfiniteScrollTrigger";
+import { ReservationTableHeader } from "./ReservationTableHeader";
+import { ReservationTableRow } from "./ReservationTableRow";
 
-/**
- * Props for the ReservationTable component
- */
-interface ReservationTableProps {
-  reservations: ReservationListItem[];
-  isLoading: boolean;
-  hasFilters: boolean;
-  mode: "user" | "admin";
-  scope: "my" | "all";
-  currentUserId?: string;
-  onModify?: (reservation: ReservationListItem) => void;
-  onCancel?: (reservation: ReservationListItem) => void;
-  onReturn?: (reservation: ReservationListItem) => void;
-  onViewDetails: (reservation: ReservationListItem) => void;
-  fetchNextPage: () => void;
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
-}
-
-import { StatusBadge } from "./StatusBadge";
-
-/**
- * Loading skeleton row component
- */
 function SkeletonRow() {
   return (
     <TableRow>
@@ -77,15 +39,11 @@ function SkeletonRow() {
   );
 }
 
-/**
- * Empty state component when no reservations are found
- */
 function EmptyState({ hasFilters }: { hasFilters: boolean }) {
   const title = hasFilters ? "Brak rezerwacji spełniających kryteria" : "Brak rezerwacji";
   const description = hasFilters
     ? "Spróbuj zmienić filtry wyszukiwania."
     : "Twoje rezerwacje pojawią się tutaj.";
-
   return (
     <TableRow>
       <TableCell colSpan={8} className="h-32 text-center">
@@ -102,7 +60,27 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
 }
 
 /**
- * Data table displaying reservation list with columns for equipment, status, dates, and actions
+ * Props for the ReservationTable component
+ */
+interface ReservationTableProps {
+  reservations: ReservationListItem[];
+  isLoading: boolean;
+  hasFilters: boolean;
+  mode: "user" | "admin";
+  scope: "my" | "all";
+  currentUserId?: string;
+  onModify?: (reservation: ReservationListItem) => void;
+  onCancel?: (reservation: ReservationListItem) => void;
+  onReturn?: (reservation: ReservationListItem) => void;
+  onViewDetails: (reservation: ReservationListItem) => void;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+}
+
+/**
+ * Data table displaying reservation list with columns for equipment, status, dates, and actions.
+ * Supports sorting, infinite scrolling, responsive mobile and desktop rows, and action menus.
  */
 export function ReservationTable({
   reservations,
@@ -119,44 +97,11 @@ export function ReservationTable({
   hasNextPage,
   isFetchingNextPage,
 }: ReservationTableProps) {
-  const observerTarget = React.useRef<HTMLTableRowElement>(null);
-
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handleModify = (item: ReservationListItem) => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onModify?.(item);
-  };
-
-  const handleCancel = (item: ReservationListItem) => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onCancel?.(item);
-  };
-
-  const handleReturn = (item: ReservationListItem) => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onReturn?.(item);
-  };
-
-  const handleViewDetails = (item: ReservationListItem) => (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onViewDetails(item);
-  };
+  const observerTarget = useInfiniteScrollTrigger<HTMLTableRowElement>({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const {
     sortConfig,
@@ -171,93 +116,14 @@ export function ReservationTable({
 
   const showUserColumn = mode === "admin" || scope === "all";
 
-  const formatDateMobile = (dateStr: string) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
-  };
-
-  const renderSortIndicator = (key: string) => {
-    if (sortConfig?.key === key) {
-      return sortConfig.direction === "asc" ? " ↑" : " ↓";
-    }
-    return "";
-  };
-
   return (
     <div className="rounded-md border overflow-x-auto bg-card w-full max-w-full mt-6">
       <Table>
-        <TableHeader>
-          <TableRow>
-            {showUserColumn && (
-              <TableHead
-                className="md:hidden cursor-pointer"
-                onClick={() => requestSort("username")}
-              >
-                Użytkownik{renderSortIndicator("username")}
-              </TableHead>
-            )}
-            <TableHead className="md:hidden cursor-pointer" onClick={() => requestSort("dates")}>
-              Daty{renderSortIndicator("dates")}
-            </TableHead>
-            <TableHead
-              className="md:hidden cursor-pointer"
-              onClick={() => requestSort("equipmentName")}
-            >
-              Sprzęt{renderSortIndicator("equipmentName")}
-            </TableHead>
-            <TableHead className="md:hidden cursor-pointer" onClick={() => requestSort("status")}>
-              Status{renderSortIndicator("status")}
-            </TableHead>
-            <TableHead className="md:hidden w-[50px]"></TableHead>
-
-            <TableHead
-              className="hidden md:table-cell cursor-pointer"
-              onClick={() => requestSort("equipmentName")}
-            >
-              Sprzęt{renderSortIndicator("equipmentName")}
-            </TableHead>
-            <TableHead
-              className="hidden md:table-cell cursor-pointer"
-              onClick={() => requestSort("equipmentType")}
-            >
-              Typ{renderSortIndicator("equipmentType")}
-            </TableHead>
-            <TableHead
-              className="hidden md:table-cell cursor-pointer"
-              onClick={() => requestSort("status")}
-            >
-              Status{renderSortIndicator("status")}
-            </TableHead>
-            <TableHead
-              className="hidden md:table-cell cursor-pointer"
-              onClick={() => requestSort("startDate")}
-            >
-              Od{renderSortIndicator("startDate")}
-            </TableHead>
-            <TableHead
-              className="hidden md:table-cell cursor-pointer"
-              onClick={() => requestSort("endDate")}
-            >
-              Do{renderSortIndicator("endDate")}
-            </TableHead>
-            <TableHead
-              className="hidden md:table-cell text-right cursor-pointer"
-              onClick={() => requestSort("creditCost")}
-            >
-              Koszt{renderSortIndicator("creditCost")}
-            </TableHead>
-            {showUserColumn && (
-              <TableHead
-                className="hidden xl:table-cell cursor-pointer"
-                onClick={() => requestSort("username")}
-              >
-                Użytkownik{renderSortIndicator("username")}
-              </TableHead>
-            )}
-            <TableHead className="hidden md:table-cell w-[70px]">Akcje</TableHead>
-          </TableRow>
-        </TableHeader>
+        <ReservationTableHeader
+          showUserColumn={showUserColumn}
+          sortConfig={sortConfig}
+          requestSort={requestSort}
+        />
         <TableBody>
           {isLoading ? (
             Array.from({ length: 5 }).map((_, index) => <SkeletonRow key={`skeleton-${index}`} />)
@@ -265,135 +131,18 @@ export function ReservationTable({
             <EmptyState hasFilters={hasFilters} />
           ) : (
             <>
-              {sortedReservations.map((item) => {
-                const canModify = item.status === RESERVATION_STATUS.PENDING;
-                const canReturn =
-                  item.status === RESERVATION_STATUS.PENDING ||
-                  item.status === RESERVATION_STATUS.RENTED;
-                const showActions = mode === "admin" || scope === "my";
-
-                const ActionMenu = () => (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-8 w-8"
-                        data-testid="reservation-action-menu-trigger"
-                      >
-                        <MoreHorizontal className={ICON_SIZE_SM} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleViewDetails(item)}>
-                        <Eye className={ICON_SIZE_SM + " mr-2"} />
-                        Szczegóły
-                      </DropdownMenuItem>
-
-                      {showActions && (canModify || canReturn) && (
-                        <>
-                          <DropdownMenuSeparator />
-                          {canModify && onModify && (
-                            <DropdownMenuItem onClick={handleModify(item)}>
-                              <Edit2 className={ICON_SIZE_SM + " mr-2"} />
-                              Zmień daty
-                            </DropdownMenuItem>
-                          )}
-                          {canReturn && onReturn && (
-                            <DropdownMenuItem
-                              onClick={handleReturn(item)}
-                              className="text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400"
-                              data-testid="return-reservation-button"
-                            >
-                              <CornerDownLeft className={ICON_SIZE_SM + " mr-2"} />
-                              Zwróć
-                            </DropdownMenuItem>
-                          )}
-                          {canModify && onCancel && (
-                            <DropdownMenuItem
-                              onClick={handleCancel(item)}
-                              className="text-destructive focus:text-destructive"
-                              data-testid="cancel-reservation-button"
-                            >
-                              <X className={ICON_SIZE_SM + " mr-2"} />
-                              Anuluj
-                            </DropdownMenuItem>
-                          )}
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                );
-
-                return (
-                  <TableRow
-                    key={item.id}
-                    className="hover:bg-muted/50 cursor-pointer"
-                    onClick={handleViewDetails(item)}
-                    data-testid={`reservation-row-${item.id}`}
-                  >
-                    {showUserColumn && (
-                      <TableCell className="md:hidden truncate max-w-[100px] text-sm">
-                        {item.username}
-                      </TableCell>
-                    )}
-                    <TableCell className="md:hidden whitespace-nowrap text-sm">
-                      {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
-                    </TableCell>
-                    <TableCell className="md:hidden font-medium truncate max-w-[120px]">
-                      {item.equipmentName}
-                    </TableCell>
-                    <TableCell className="md:hidden">
-                      <StatusBadge
-                        status={item.status}
-                        className="whitespace-nowrap text-xs"
-                        data-testid={`reservation-status-${item.id}`}
-                      />
-                    </TableCell>
-                    <TableCell className="md:hidden text-right">
-                      <ActionMenu />
-                    </TableCell>
-
-                    <TableCell className="hidden md:table-cell">
-                      <div
-                        className="font-medium truncate max-w-[200px]"
-                        title={item.equipmentName}
-                      >
-                        {item.equipmentName}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-[150px]">
-                      {item.equipmentType}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <StatusBadge
-                        status={item.status}
-                        className="whitespace-nowrap"
-                        data-testid={`reservation-status-${item.id}`}
-                      />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell whitespace-nowrap">
-                      {formatDate(item.startDate)}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell whitespace-nowrap">
-                      {formatDate(item.endDate)}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-right font-medium">
-                      {item.creditCost}
-                    </TableCell>
-                    {showUserColumn && (
-                      <TableCell className="hidden xl:table-cell truncate max-w-[150px]">
-                        {item.username}
-                        {item.userId === currentUserId && " (Ty)"}
-                      </TableCell>
-                    )}
-                    <TableCell className="hidden md:table-cell">
-                      <ActionMenu />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {sortedReservations.map((item) => (
+                <ReservationTableRow
+                  key={item.id}
+                  item={item}
+                  showUserColumn={showUserColumn}
+                  currentUserId={currentUserId}
+                  onViewDetails={onViewDetails}
+                  onModify={onModify}
+                  onCancel={onCancel}
+                  onReturn={onReturn}
+                />
+              ))}
 
               <TableRow ref={observerTarget}>
                 <TableCell

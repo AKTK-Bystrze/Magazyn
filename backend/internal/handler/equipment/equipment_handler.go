@@ -4,9 +4,7 @@ package equipment
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
-	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	equipmentservice "magazyn/backend/internal/service/equipment"
@@ -32,63 +30,10 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		common.RespondUnauthorized(ctx, w)
 		return
 	}
-	query := types.EquipmentListQuery{}
-	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
-	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
-		if err := validation.ValidateUUID(typeID); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid type_id format")
-			return
-		}
-		query.TypeID = &typeID
-	}
-	if status := r.URL.Query().Get("status"); status != "" {
-		if err := validation.ValidateEnum(status, constants.ValidEquipmentStatuses); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment status")
-			return
-		}
-		query.Status = &status
-	}
-	if search := r.URL.Query().Get("search"); search != "" {
-		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
-			return
-		}
-		query.Search = &search
-	}
-	if inc := r.URL.Query().Get("include_archived"); inc == "true" {
-		query.IncludeArchived = true
-	}
-	if availFrom := r.URL.Query().Get("available_from"); availFrom != "" {
-		query.AvailableFrom = &availFrom
-	}
-	if availTo := r.URL.Query().Get("available_to"); availTo != "" {
-		query.AvailableTo = &availTo
-	}
-	logger.Infof(ctx, "[DEBUG] HandleList - Raw URL Query: %s", r.URL.RawQuery)
-	logger.Infof(ctx, "[DEBUG] HandleList - Query params: Page=%d, PerPage=%d, TypeID=%v, Status=%v, Search=%v, AvailableFrom=%v, AvailableTo=%v",
-		query.Page, query.PerPage, query.TypeID, query.Status, query.Search, query.AvailableFrom, query.AvailableTo)
-	if (query.AvailableFrom != nil) != (query.AvailableTo != nil) {
-		common.RespondError(ctx, w, http.StatusBadRequest,
-			"Both available_from and available_to must be provided together")
+	query, err := parseEquipmentListQuery(r)
+	if err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, err.Error())
 		return
-	}
-	if query.AvailableFrom != nil && query.AvailableTo != nil {
-		logger.Infof(ctx, "HandleList - Availability filter active: from=%s, to=%s", *query.AvailableFrom, *query.AvailableTo)
-		if !isValidISODate(*query.AvailableFrom) {
-			common.RespondError(ctx, w, http.StatusBadRequest,
-				"Invalid available_from date format, expected YYYY-MM-DD")
-			return
-		}
-		if !isValidISODate(*query.AvailableTo) {
-			common.RespondError(ctx, w, http.StatusBadRequest,
-				"Invalid available_to date format, expected YYYY-MM-DD")
-			return
-		}
-		if *query.AvailableFrom > *query.AvailableTo {
-			common.RespondError(ctx, w, http.StatusBadRequest,
-				"available_from must be before or equal to available_to")
-			return
-		}
 	}
 	response, err := h.service.List(ctx, userID, query)
 	if err != nil {
@@ -99,7 +44,7 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
-// GetByID handles get equipment details
+// HandleGetByID handles get equipment details
 func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
@@ -119,7 +64,7 @@ func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request)
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
-// Create handles creating new equipment
+// HandleCreate handles creating new equipment
 func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -140,7 +85,7 @@ func (h *EquipmentHandler) HandleCreate(w http.ResponseWriter, r *http.Request) 
 	common.RespondJSON(ctx, w, http.StatusCreated, response)
 }
 
-// Update handles updating equipment
+// HandleUpdate handles updating equipment
 func (h *EquipmentHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -166,7 +111,7 @@ func (h *EquipmentHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) 
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
-// Archive handles archiving equipment
+// HandleArchive handles archiving equipment
 func (h *EquipmentHandler) HandleArchive(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
@@ -187,7 +132,7 @@ func (h *EquipmentHandler) HandleArchive(w http.ResponseWriter, r *http.Request)
 	common.RespondJSON(ctx, w, http.StatusOK, map[string]string{"message": "Equipment archived successfully"})
 }
 
-// CheckAvailability handles availability check
+// HandleCheckAvailability handles availability check
 func (h *EquipmentHandler) HandleCheckAvailability(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
@@ -253,8 +198,4 @@ func (h *EquipmentHandler) HandleCreateMaintenanceLog(w http.ResponseWriter, r *
 		return
 	}
 	common.RespondJSON(ctx, w, http.StatusCreated, response)
-}
-func isValidISODate(dateStr string) bool {
-	_, err := time.Parse(constants.DateFormatISO, dateStr)
-	return err == nil
 }

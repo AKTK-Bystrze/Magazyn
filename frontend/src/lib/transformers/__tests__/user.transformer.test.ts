@@ -7,21 +7,7 @@ import {
   transformUserListResponse,
 } from "../user.transformer";
 import type { CreateUserCommand, UpdateUserCommand } from "@/types";
-
-/**
- * Creates a mock backend user DTO (snake_case format)
- */
-const createMockUserDTO = (overrides: Record<string, unknown> = {}) => ({
-  id: "user-uuid-123",
-  email: "test@example.com",
-  username: "testuser",
-  role: "user",
-  credit_balance: 100,
-  created_at: "2024-01-15T10:30:00Z",
-  updated_at: "2024-06-20T14:45:00Z",
-  is_enabled: true,
-  ...overrides,
-});
+import { createMockUserDTO } from "@/test/fixtures/user-fixtures";
 
 describe("transformCreateUserCommand", () => {
   it("should transform all fields from camelCase to snake_case", () => {

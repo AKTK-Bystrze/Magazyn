@@ -11,18 +11,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
+  USER_ROLE,
+  USER_VALIDATION_MESSAGES,
+  USER_VALIDATION_PATTERNS,
+} from "@/lib/config/constants";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  USER_ROLE,
-  USER_VALIDATION_MESSAGES,
-  USER_VALIDATION_PATTERNS,
-} from "@/lib/config/constants";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { UserListItem, UpdateUserCommand } from "@/types";
 import type { Enums } from "@/db/database.types";
 

@@ -33,21 +33,9 @@ flowchart TD
 Cost = Days × CreditCostPerDay (from EquipmentType)
 ```
 
-### Day Calculation Logic
+### Day and Cost Calculation Logic
 
-Located in `backend/internal/service/reservation/reservation_service.go`:
-
-```go
-func (s *reservationService) calculateDays(start, end string) int32 {
-    layout := "2006-01-02"
-    t1, _ := time.Parse(layout, start)
-    t2, _ := time.Parse(layout, end)
-
-    days := int32(t2.Sub(t1).Hours() / 24)
-    if days < 1 { days = 1 } // Minimum 1 day
-    return days + 1
-}
-```
+Day calculation is located in `backend/internal/validation/date.go`:
 
 **Rules:**
 
@@ -106,6 +94,8 @@ stateDiagram-v2
 
 ## Create Reservation Flow
 
+The creation pipeline is orchestrated by `backend/internal/service/reservation/reservation_service_create.go` and executed via `backend/internal/repository/supabase/reservation_repository_rpc.go` (`CreateReservationsAtomic`).
+
 ### Step-by-Step Process
 
 1. **Target User Resolution**
@@ -146,6 +136,8 @@ stateDiagram-v2
 ---
 
 ## Update Reservation Flow
+
+The update, date modification, and cancellation lifecycle is orchestrated by `backend/internal/service/reservation/reservation_service_update.go` and executed via `backend/internal/repository/supabase/reservation_repository_rpc.go` (`ModifyReservationDatesWithCredits`, `RefundCredits`).
 
 ### Authorization Checks
 
@@ -279,10 +271,22 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 
 ## Related Files
 
-| File                                                                 | Purpose                                       |
-| -------------------------------------------------------------------- | --------------------------------------------- |
-| `backend/internal/service/reservation/reservation_service.go`        | Business logic                                |
-| `backend/internal/repository/supabase/reservation_repository.go`     | Repository implementation                     |
-| `backend/internal/constants/constants.go`                            | Status constants                              |
+| File | Purpose |
+| :--- | :--- |
+| `backend/internal/service/reservation/reservation_service.go` | Main service interface, constructor, list, get, and bulk updates |
+| `backend/internal/service/reservation/reservation_service_create.go` | Reservation creation validation, pricing orchestration, and atomic RPC dispatch |
+| `backend/internal/service/reservation/reservation_service_update.go` | Reservation update, date conflict checks, cancellation, and refund logic |
+| `backend/internal/service/reservation/pricing.go` | Pure pricing calculations (`CalculateReservationCost`) |
+| `backend/internal/validation/date.go` | Inclusive date span calculation (`CalculateDays`) and ISO validation |
+| `backend/internal/repository/supabase/reservation_repository_rpc.go` | Atomic PostgreSQL stored procedure wrappers (`create_reservation_atomic`, `modify_reservation_dates_with_credits`, `refund_reservation_credits`) |
+| `backend/internal/repository/supabase/reservation_repository_query.go` | Filtered list retrieval and RLS bypass logic |
+| `backend/internal/repository/supabase/reservation_repository_detail.go` | Detailed queries joining user profiles and equipment |
+| `backend/internal/repository/supabase/reservation_repository_stats.go` | Aggregates for dashboard statistics |
+| `backend/internal/handler/reservation/reservation_query.go` | Query parameter extraction and validation binder |
+| `backend/internal/handler/reservation/reservation_admin_handler.go` | Dedicated administrative handlers for dashboard metrics and bulk actions |
+| `backend/internal/constants/constants.go` | Status constants and date formats |
 | `supabase/migrations/20260314183802_add_is_free_to_reservations.sql` | Atomic reservation RPCs and `is_free` support |
-| `backend/internal/service/email/email_service.go`                    | Email service (Noop implementation)           |
+| `backend/internal/service/email/email_service.go` | Email service (Noop implementation) |
+| `frontend/src/hooks/useCartCheckout.ts` | Frontend cart checkout mutation and credit sufficiency checks |
+| `frontend/src/hooks/useReservationDateAdjustment.ts` | Frontend date adjustment mutation and range validation |
+| `frontend/src/hooks/useReservationDialogs.ts` | Frontend modal dialog state management |

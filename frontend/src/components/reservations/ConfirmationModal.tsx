@@ -1,16 +1,9 @@
 import * as React from "react";
 import type { CartItem, CostBreakdown } from "@/types/reservation-cart.types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { X, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils/date-utils";
-import {
-  ICON_SIZE_SM,
-  Z_INDEX_MODAL_BACKDROP,
-  Z_INDEX_MODAL_CONTENT,
-  MODAL_BACKDROP_OPACITY,
-  MODAL_MAX_HEIGHT,
-} from "@/lib/config/constants";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -24,8 +17,8 @@ interface ConfirmationModalProps {
 }
 
 /**
- * Confirmation modal for reservation creation
- * Displays summary and handles final submission
+ * Confirmation modal for reservation creation.
+ * Displays summary and handles final submission using standard Shadcn Dialog.
  */
 export function ConfirmationModal({
   isOpen,
@@ -37,61 +30,25 @@ export function ConfirmationModal({
   costBreakdown,
   isSubmitting,
 }: ConfirmationModalProps) {
-  React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isSubmitting) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen, isSubmitting, onClose]);
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center"
-      style={{ zIndex: Z_INDEX_MODAL_BACKDROP }}
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isSubmitting) {
+          onClose();
+        }
+      }}
     >
-      <div
-        className="absolute inset-0"
-        style={{ backgroundColor: `rgba(0, 0, 0, ${parseInt(MODAL_BACKDROP_OPACITY) / 100})` }}
-        onClick={isSubmitting ? undefined : onClose}
-      />
-
-      <Card
-        className="relative w-full max-w-2xl overflow-y-auto m-4"
-        style={{
-          zIndex: Z_INDEX_MODAL_CONTENT,
-          maxHeight: MODAL_MAX_HEIGHT,
-        }}
+      <DialogContent
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         data-testid="reservation-confirmation-modal"
+        showCloseButton={!isSubmitting}
       >
-        <CardHeader className="border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Potwierdź Rezerwację</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              disabled={isSubmitting}
-              aria-label="Zamknij okno"
-            >
-              <X className={ICON_SIZE_SM} />
-            </Button>
-          </div>
-        </CardHeader>
+        <DialogHeader className="border-b pb-4">
+          <DialogTitle className="text-2xl font-bold">Potwierdź Rezerwację</DialogTitle>
+        </DialogHeader>
 
-        <CardContent className="pt-6 space-y-6">
+        <div className="space-y-6 pt-2">
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Szczegóły Rezerwacji</h3>
             <div className="bg-muted p-4 rounded-lg space-y-2">
@@ -248,8 +205,8 @@ export function ConfirmationModal({
               )}
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

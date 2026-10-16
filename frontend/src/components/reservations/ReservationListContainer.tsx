@@ -1,6 +1,8 @@
 import * as React from "react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { useReservations } from "@/hooks/useReservations";
+import { useReservationDialogs } from "@/hooks/useReservationDialogs";
+import { useDismissibleMessage } from "@/lib/hooks/useDismissibleMessage";
 import { ReservationCardList } from "./ReservationCardList";
 import { ReservationTable } from "./ReservationTable";
 import { ReservationFilters } from "./ReservationFilters";
@@ -11,18 +13,12 @@ import { ReturnWithDatesDialog } from "./ReturnWithDatesDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, LayoutGrid, List } from "lucide-react";
-import {
-  ICON_SIZE_SM,
-  MESSAGE_AUTO_DISMISS_MS,
-  hasActiveReservationFilters,
-} from "@/lib/config/constants";
-import type { ReservationListItem, ReservationListProps, UpdateReservationCommand } from "@/types";
-import { useQuery } from "@tanstack/react-query";
-import { usersApi } from "@/lib/api/users-api";
+import { ICON_SIZE_SM, hasActiveReservationFilters } from "@/lib/config/constants";
+import type { ReservationListItem, ReservationListProps } from "@/types";
 
 /**
- * Inner component that uses the useReservations hook
- * Wrapped by QueryProvider in the exported component
+ * Inner component that uses the useReservations and useReservationDialogs hooks.
+ * Wrapped by QueryProvider in the exported component.
  */
 function ReservationListContainerInner({
   mode,
@@ -46,216 +42,39 @@ function ReservationListContainerInner({
     isFetchingNextPage,
   } = useReservations({ initialFilters });
 
-  const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
-  const [modifyDialogOpen, setModifyDialogOpen] = React.useState(false);
-  const [returnDialogOpen, setReturnDialogOpen] = React.useState(false);
-  const [selectedReservation, setSelectedReservation] = React.useState<ReservationListItem | null>(
-    null
-  );
-  const [batchReservations, setBatchReservations] = React.useState<ReservationListItem[]>([]);
-
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-
+  const [successMessage, setSuccessMessage] = useDismissibleMessage();
+  const [errorMessage, setErrorMessage] = useDismissibleMessage();
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
-  React.useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  React.useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
-
-  const dialogReservation = selectedReservation || batchReservations[0];
-  const isOwner = dialogReservation?.userId === currentUserId;
-  const needsOwnerProfile =
-    !isOwner && !!dialogReservation && (modifyDialogOpen || returnDialogOpen);
-
-  const { data: ownerProfile } = useQuery({
-    queryKey: ["user", dialogReservation?.userId],
-    queryFn: () => usersApi.getById(dialogReservation!.userId),
-    enabled: needsOwnerProfile,
-    staleTime: 0,
+  const {
+    cancelDialogOpen,
+    modifyDialogOpen,
+    setModifyDialogOpen,
+    returnDialogOpen,
+    setReturnDialogOpen,
+    selectedReservation,
+    batchReservations,
+    dialogReservation,
+    currentUserBalance,
+    handleModify,
+    handleReturn,
+    handleCancelClick,
+    handleCancelAll,
+    handleModifyDatesAll,
+    handleReturnAll,
+    handleCancelDialogClose,
+    handleModifyDatesConfirm,
+    handleReturnConfirm,
+    handleCancelConfirm,
+  } = useReservationDialogs({
+    currentUserId,
+    sessionUserBalance,
+    updateReservation,
+    cancelReservation,
+    bulkUpdateStatus,
+    setSuccessMessage,
+    setErrorMessage,
   });
-
-  const currentUserBalance = isOwner ? sessionUserBalance : (ownerProfile?.creditBalance ?? 0);
-
-  const handleModify = React.useCallback((reservation: ReservationListItem) => {
-    setSelectedReservation(reservation);
-    setModifyDialogOpen(true);
-  }, []);
-
-  const handleReturn = React.useCallback((reservation: ReservationListItem) => {
-    setSelectedReservation(reservation);
-    setReturnDialogOpen(true);
-  }, []);
-
-  const handleModifyDatesConfirm = React.useCallback(
-    async (start: Date, end: Date) => {
-      const targets =
-        batchReservations.length > 0
-          ? batchReservations
-          : selectedReservation
-            ? [selectedReservation]
-            : [];
-      if (targets.length === 0) return;
-
-      try {
-        const command = {
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-        };
-
-        if (targets.length === 1) {
-          await updateReservation(targets[0].id, command);
-          setSuccessMessage(
-            `Daty rezerwacji dla "${targets[0].equipmentName}" zaktualizowane pomyślnie.`
-          );
-        } else {
-          const results = await Promise.allSettled(
-            targets.map((target) => updateReservation(target.id, command))
-          );
-          const successful = results.filter((r) => r.status === "fulfilled").length;
-
-          if (successful === targets.length) {
-            setSuccessMessage(`${successful} rezerwacji zaktualizowano pomyślnie.`);
-          } else {
-            setSuccessMessage(
-              `${successful} zaktualizowano. ${targets.length - successful} nie powiodło się.`
-            );
-          }
-        }
-
-        setModifyDialogOpen(false);
-        setSelectedReservation(null);
-        setBatchReservations([]);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Nie udało się zaktualizować dat";
-        setErrorMessage(message);
-      }
-    },
-    [selectedReservation, batchReservations, updateReservation]
-  );
-
-  const handleReturnConfirm = React.useCallback(
-    async (command: UpdateReservationCommand) => {
-      const targets =
-        batchReservations.length > 0
-          ? batchReservations
-          : selectedReservation
-            ? [selectedReservation]
-            : [];
-      if (targets.length === 0) return;
-
-      try {
-        if (targets.length === 1) {
-          await updateReservation(targets[0].id, command);
-          setSuccessMessage(`Sprzęt "${targets[0].equipmentName}" oznaczony jako zwrócony.`);
-        } else {
-          const hasDateChange = !!(command.startDate || command.endDate);
-
-          if (hasDateChange) {
-            const results = await Promise.allSettled(
-              targets.map((target) => updateReservation(target.id, command))
-            );
-            const successful = results.filter((r) => r.status === "fulfilled").length;
-
-            setSuccessMessage(
-              `${successful} elementów zaktualizowano i zwrócono. ${targets.length - successful} nie powiodło się.`
-            );
-          } else {
-            const result = await bulkUpdateStatus({
-              reservationIds: targets.map((t) => t.id),
-              status: "RETURNED",
-            });
-
-            setSuccessMessage(`${result.updated_count} elementów oznaczono jako zwrócone.`);
-          }
-        }
-
-        setReturnDialogOpen(false);
-        setSelectedReservation(null);
-        setBatchReservations([]);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Nie udało się zwrócić sprzętu";
-        setErrorMessage(message);
-      }
-    },
-    [selectedReservation, batchReservations, updateReservation, bulkUpdateStatus]
-  );
-
-  const handleCancelClick = React.useCallback((reservation: ReservationListItem) => {
-    setSelectedReservation(reservation);
-    setBatchReservations([]);
-    setCancelDialogOpen(true);
-  }, []);
-
-  const handleCancelConfirm = React.useCallback(async () => {
-    const targets =
-      batchReservations.length > 0
-        ? batchReservations
-        : selectedReservation
-          ? [selectedReservation]
-          : [];
-
-    if (targets.length === 0) return;
-
-    try {
-      if (targets.length === 1) {
-        await cancelReservation(targets[0].id);
-        setSuccessMessage(
-          `Rezerwacja "${targets[0].equipmentName}" została anulowana. Godzinki zostały zwrócone.`
-        );
-      } else {
-        const result = await bulkUpdateStatus({
-          reservationIds: targets.map((t) => t.id),
-          status: "CANCELLED",
-        });
-
-        setSuccessMessage(
-          `${result.updated_count} rezerwacji anulowano. ${result.refund_count} zwrotów godzinek przetworzono.`
-        );
-      }
-
-      setCancelDialogOpen(false);
-      setSelectedReservation(null);
-      setBatchReservations([]);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Nie udało się anulować rezerwacji";
-      setErrorMessage(message);
-    }
-  }, [selectedReservation, batchReservations, cancelReservation, bulkUpdateStatus]);
-
-  const handleCancelDialogClose = React.useCallback(() => {
-    setCancelDialogOpen(false);
-    setSelectedReservation(null);
-    setBatchReservations([]);
-  }, []);
-
-  const handleCancelAll = React.useCallback((reservations: ReservationListItem[]) => {
-    setBatchReservations(reservations);
-    setSelectedReservation(null);
-    setCancelDialogOpen(true);
-  }, []);
-
-  const handleModifyDatesAll = React.useCallback((reservations: ReservationListItem[]) => {
-    setBatchReservations(reservations);
-    setSelectedReservation(null);
-    setModifyDialogOpen(true);
-  }, []);
-
-  const handleReturnAll = React.useCallback((reservations: ReservationListItem[]) => {
-    setBatchReservations(reservations);
-    setSelectedReservation(null);
-    setReturnDialogOpen(true);
-  }, []);
 
   const handleViewDetails = React.useCallback((reservation: ReservationListItem) => {
     window.location.href = `/reservations/${reservation.id}`;
@@ -276,7 +95,6 @@ function ReservationListContainerInner({
   );
 
   const hasActiveFilters = hasActiveReservationFilters(filters);
-
   const showActions = mode === "admin" || filters.scope === "my";
 
   return (
@@ -374,13 +192,11 @@ function ReservationListContainerInner({
       {dialogReservation && (
         <ModifyDatesDialog
           open={modifyDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) setModifyDialogOpen(false);
-          }}
+          onOpenChange={setModifyDialogOpen}
           reservation={dialogReservation}
           reservations={batchReservations}
           onConfirm={async ({ startDate, endDate }) => {
-            await handleModifyDatesConfirm(new Date(startDate), new Date(endDate));
+            await handleModifyDatesConfirm(startDate, endDate);
           }}
           isSubmitting={isMutating}
           currentUserBalance={currentUserBalance}
@@ -390,9 +206,7 @@ function ReservationListContainerInner({
       {dialogReservation && (
         <ReturnWithDatesDialog
           open={returnDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) setReturnDialogOpen(false);
-          }}
+          onOpenChange={setReturnDialogOpen}
           reservation={dialogReservation}
           reservations={batchReservations}
           onConfirm={handleReturnConfirm}
@@ -405,11 +219,8 @@ function ReservationListContainerInner({
 }
 
 /**
- * Main reservation list container with QueryProvider wrapper
- * Handles data fetching, filtering, pagination, and actions
- *
- * @param mode - 'user' for user view, 'admin' for admin view
- * @param initialFilters - Optional initial filter values
+ * Main reservation list container with QueryProvider wrapper.
+ * Handles data fetching, filtering, pagination, and actions.
  */
 export function ReservationListContainer(props: ReservationListProps) {
   return (

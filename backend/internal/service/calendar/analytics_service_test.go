@@ -4,52 +4,15 @@ import (
 	"context"
 	"testing"
 
-	"magazyn/backend/internal/repository"
+	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
-
-// MockAnalyticsRepository is a mock implementation of AnalyticsRepository
-type MockAnalyticsRepository struct {
-	mock.Mock
-}
-
-func (m *MockAnalyticsRepository) GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) ([]types.PublicAnalyticsEquipmentStatsSelect, error) {
-	args := m.Called(ctx, query)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]types.PublicAnalyticsEquipmentStatsSelect), args.Error(1)
-}
-func (m *MockAnalyticsRepository) GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) ([]types.PublicAnalyticsUserStatsSelect, error) {
-	args := m.Called(ctx, query)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]types.PublicAnalyticsUserStatsSelect), args.Error(1)
-}
-func (m *MockAnalyticsRepository) GetTopRentersForEquipment(ctx context.Context, equipmentID string, limit int) ([]types.TopRenterDTO, error) {
-	args := m.Called(ctx, equipmentID, limit)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]types.TopRenterDTO), args.Error(1)
-}
-func (m *MockAnalyticsRepository) GetFavoriteEquipmentTypeForUser(ctx context.Context, userID string) (*string, error) {
-	args := m.Called(ctx, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*string), args.Error(1)
-}
-
-var _ repository.AnalyticsRepository = (*MockAnalyticsRepository)(nil)
 
 func TestGetEquipmentStats_Success(t *testing.T) {
 	t.Run("returns equipment stats with top renters", func(t *testing.T) {
-		mockAnalyticsRepo := new(MockAnalyticsRepository)
+		mockAnalyticsRepo := new(mocks.MockAnalyticsRepository)
 		service := NewAnalyticsService(mockAnalyticsRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
@@ -86,7 +49,7 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 		mockAnalyticsRepo.AssertExpectations(t)
 	})
 	t.Run("returns empty stats when no equipment found", func(t *testing.T) {
-		mockAnalyticsRepo := new(MockAnalyticsRepository)
+		mockAnalyticsRepo := new(mocks.MockAnalyticsRepository)
 		service := NewAnalyticsService(mockAnalyticsRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
@@ -97,7 +60,7 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 		assert.Empty(t, result.EquipmentStats)
 	})
 	t.Run("includes period in response", func(t *testing.T) {
-		mockAnalyticsRepo := new(MockAnalyticsRepository)
+		mockAnalyticsRepo := new(mocks.MockAnalyticsRepository)
 		service := NewAnalyticsService(mockAnalyticsRepo)
 		ctx := context.Background()
 		year := 2025
@@ -112,7 +75,7 @@ func TestGetEquipmentStats_Success(t *testing.T) {
 }
 func TestGetUserStats_Success(t *testing.T) {
 	t.Run("returns user stats with favorite equipment type", func(t *testing.T) {
-		mockAnalyticsRepo := new(MockAnalyticsRepository)
+		mockAnalyticsRepo := new(mocks.MockAnalyticsRepository)
 		service := NewAnalyticsService(mockAnalyticsRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
@@ -147,7 +110,7 @@ func TestGetUserStats_Success(t *testing.T) {
 		mockAnalyticsRepo.AssertExpectations(t)
 	})
 	t.Run("handles nil favorite equipment type", func(t *testing.T) {
-		mockAnalyticsRepo := new(MockAnalyticsRepository)
+		mockAnalyticsRepo := new(mocks.MockAnalyticsRepository)
 		service := NewAnalyticsService(mockAnalyticsRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}
@@ -171,7 +134,7 @@ func TestGetUserStats_Success(t *testing.T) {
 		assert.Nil(t, result.UserStats[0].FavoriteEquipmentType)
 	})
 	t.Run("returns empty stats when no users found", func(t *testing.T) {
-		mockAnalyticsRepo := new(MockAnalyticsRepository)
+		mockAnalyticsRepo := new(mocks.MockAnalyticsRepository)
 		service := NewAnalyticsService(mockAnalyticsRepo)
 		ctx := context.Background()
 		query := types.AnalyticsPeriodQuery{}

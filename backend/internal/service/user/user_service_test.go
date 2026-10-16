@@ -12,11 +12,16 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestGetProfile_Success(t *testing.T) {
+func setupUserServiceTest() (*mocks.MockUserRepository, *mocks.MockAuthRepository, UserService, context.Context) {
 	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)
 	ctx := context.Background()
+	return mockRepo, mockAuthRepo, service, ctx
+}
+
+func TestGetProfile_Success(t *testing.T) {
+	mockRepo, _, service, ctx := setupUserServiceTest()
 	id := "user-123"
 	email := "test@example.com"
 	role := "user"
@@ -32,11 +37,9 @@ func TestGetProfile_Success(t *testing.T) {
 	assert.Equal(t, email, resp.Email)
 	mockRepo.AssertExpectations(t)
 }
+
 func TestGetProfile_NotFound(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, _, service, ctx := setupUserServiceTest()
 	id := "unknown"
 	mockRepo.On("GetByID", ctx, id).Return(nil, types.NewNotFoundError("User", id))
 	resp, err := service.GetProfile(ctx, id)
@@ -45,11 +48,9 @@ func TestGetProfile_NotFound(t *testing.T) {
 	assert.IsType(t, &types.NotFoundError{}, err)
 	mockRepo.AssertExpectations(t)
 }
+
 func TestListUsers_Success(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, _, service, ctx := setupUserServiceTest()
 	page := 1
 	perPage := 10
 	role := "admin"
@@ -67,11 +68,9 @@ func TestListUsers_Success(t *testing.T) {
 	assert.Equal(t, int(2), resp.Pagination.TotalItems)
 	mockRepo.AssertExpectations(t)
 }
+
 func TestCreateUser_Success(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, mockAuthRepo, service, ctx := setupUserServiceTest()
 	email := "new@example.com"
 	username := "newuser"
 	role := auth.RoleUser
@@ -105,11 +104,9 @@ func TestCreateUser_Success(t *testing.T) {
 	assert.Equal(t, credit, resp.CreditBalance)
 	mockRepo.AssertExpectations(t)
 }
+
 func TestCreateUser_AuthFailure(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, mockAuthRepo, service, ctx := setupUserServiceTest()
 	email := "fail@example.com"
 	req := types.CreateUserRequest{
 		Email:    email,
@@ -128,11 +125,9 @@ func TestCreateUser_AuthFailure(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	mockAuthRepo.AssertExpectations(t)
 }
+
 func TestCreateUser_EmailConflict(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, _, service, ctx := setupUserServiceTest()
 	email := "existing@example.com"
 	req := types.CreateUserRequest{
 		Email:    email,
@@ -147,11 +142,9 @@ func TestCreateUser_EmailConflict(t *testing.T) {
 	assert.Contains(t, err.Error(), "email already exists")
 	mockRepo.AssertExpectations(t)
 }
+
 func TestCreateUser_UsernameConflict(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, _, service, ctx := setupUserServiceTest()
 	username := "existinguser"
 	req := types.CreateUserRequest{
 		Email:    "new@example.com",
@@ -169,11 +162,9 @@ func TestCreateUser_UsernameConflict(t *testing.T) {
 	assert.Contains(t, err.Error(), "username already exists")
 	mockRepo.AssertExpectations(t)
 }
+
 func TestUpdateUser_Success(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, _, service, ctx := setupUserServiceTest()
 	id := "user-123"
 	role := auth.RoleAdmin
 	req := types.UpdateUserRequest{
@@ -191,11 +182,9 @@ func TestUpdateUser_Success(t *testing.T) {
 	assert.Equal(t, role, resp.Role)
 	mockRepo.AssertExpectations(t)
 }
+
 func TestBulkAdjustCredits_Success(t *testing.T) {
-	mockRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
-	service := NewUserService(mockRepo, mockAuthRepo)
-	ctx := context.Background()
+	mockRepo, _, service, ctx := setupUserServiceTest()
 	adminID := "admin-123"
 	userIDs := []string{"user-1", "user-2"}
 	amount := int32(100)

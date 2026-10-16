@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Filter, LayoutGrid, List } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { useInfiniteScrollTrigger } from "@/lib/hooks/useInfiniteScrollTrigger";
 import type { EquipmentSearchItem } from "@/types";
 
 /**
@@ -35,8 +36,6 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
   );
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
-  const observerTarget = React.useRef<HTMLDivElement>(null);
-
   const { data: types = [] } = useEquipmentTypes();
 
   const {
@@ -48,22 +47,11 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
     isFetchingNextPage,
   } = useInfiniteEquipmentList(activeFilters);
 
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const observerTarget = useInfiniteScrollTrigger<HTMLDivElement>({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const equipment = React.useMemo(() => {
     return equipmentData?.pages.flatMap((page) => page.equipment) ?? [];

@@ -1,5 +1,7 @@
 import type { CreditAdjustmentInfo } from "@/types/reservations/reservation.types";
 
+export type { CreditAdjustmentInfo };
+
 /**
  * Calculates whether a date extension is considered "significant"
  * A significant extension meets either of these criteria:

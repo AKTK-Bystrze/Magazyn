@@ -82,3 +82,38 @@ token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
   2. Services return structured types like `types.NewNotFoundError("message")`.
   3. Handlers map domain errors to standard HTTP status codes via `http_utils.go`.
 - **Contexts**: `context.Context` must be passed down from handlers to all service and repository functions for cancellation tracking and context injection.
+
+## 6. Test Infrastructure & Centralized Mocks
+
+Test scaffolding is centralized under `backend/internal/testutils/` to ensure consistency and eliminate duplicate mock implementations:
+
+- Centralized Mocks (`internal/testutils/mocks/`)
+- Context & Request Helpers (`internal/testutils/helpers.go`)
+
+## 7. Extension Points
+
+### 7.1 Adding a New Domain Entity
+1. **Types**: Define database entity models and API DTOs in `internal/types/`.
+2. **Repository**: Declare the interface in `internal/repository/{domain}.go` and implement it in `internal/repository/supabase/{domain}_repository.go`.
+3. **Service**: Define business interfaces and logic in `internal/service/{domain}/`.
+4. **Handler**: Create HTTP transport handlers and query binders in `internal/handler/{domain}/`, mapping domain errors via `http_utils.go`.
+5. **Wireup**: Register dependencies via constructor injection in `cmd/api/main.go` and mount routes on `http.ServeMux`.
+
+### 7.2 Adding a New Database Stored Procedure / RPC
+1. **Migration**: Create a versioned migration in `supabase/migrations/YYYYMMDDHHMMSS_name.sql` using PostgreSQL transactions and `SECURITY DEFINER`.
+2. **Parameters & Results**: Define request/response DTOs in `internal/types/`.
+3. **Repository RPC Wrapper**: Implement the execution call in `internal/repository/supabase/{domain}_repository_rpc.go`.
+4. **Service Integration**: Invoke the repository method inside the appropriate sub-service (e.g. `reservation_service_create.go`), handling transaction rollback and domain errors.
+5. **Mock Scaffolding**: Mirror the method signature on the relevant mock in `internal/testutils/mocks/`.
+
+### 7.3 Adding a Notification Channel
+1. **Interface**: Implement or extend the notification provider in `internal/service/email/`.
+2. **Injection**: Pass the notification provider into the target service constructor in `cmd/api/main.go`.
+3. **Detached Execution**: Dispatch notifications asynchronously using detached contexts (`context.WithoutCancel(ctx)`) so client disconnections do not abort notifications.
+
+## 8. Cross-References
+
+- [API Reference Documentation](../overview/api.md) — REST routes, query contracts, and BFF proxying.
+- [Database Schema & RPC Documentation](../database/db-doc.md) — Stored procedures, tables, triggers, and RLS policies.
+- [Reservation Workflow](../flows/reservation-flow.md) — End-to-end lifecycle, status state machine, and pricing calculations.
+- [Detailed Architecture](../overview/detailed-architecture.md) — Monorepo layers, middleware, and Mermaid architecture diagrams.

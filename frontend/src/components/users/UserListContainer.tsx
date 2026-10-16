@@ -9,7 +9,9 @@ import { AdjustCreditsDialog } from "./AdjustCreditsDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, UserPlus, Coins } from "lucide-react";
-import { ICON_SIZE_SM, MESSAGE_AUTO_DISMISS_MS, DEFAULT_ROLE_FILTER } from "@/lib/config/constants";
+import { ICON_SIZE_SM, DEFAULT_ROLE_FILTER } from "@/lib/config/constants";
+import { useInfiniteScrollTrigger } from "@/lib/hooks/useInfiniteScrollTrigger";
+import { useDismissibleMessage } from "@/lib/hooks/useDismissibleMessage";
 import type { UserListItem, CreateUserCommand, UpdateUserCommand } from "@/types";
 
 /**
@@ -41,24 +43,11 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     isFetchingNextPage,
   } = useUsers();
 
-  const observerTarget = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const observerTarget = useInfiniteScrollTrigger<HTMLDivElement>({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
@@ -71,22 +60,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
     setSelectedIds([]);
   }, [data?.users]);
 
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), MESSAGE_AUTO_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  React.useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => setErrorMessage(null), MESSAGE_AUTO_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
+  const [successMessage, setSuccessMessage] = useDismissibleMessage();
 
   const handleCreateClick = React.useCallback(() => {
     setCreateDialogOpen(true);
@@ -102,7 +76,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       setSuccessMessage(`Użytkownik "${user.username}" został pomyślnie utworzony.`);
       setCreateDialogOpen(false);
     },
-    [createUser]
+    [createUser, setSuccessMessage]
   );
 
   const handleEditClick = React.useCallback((user: UserListItem) => {
@@ -122,7 +96,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       setEditDialogOpen(false);
       setSelectedUser(null);
     },
-    [updateUser]
+    [updateUser, setSuccessMessage]
   );
 
   const handleToggleSelect = React.useCallback((id: string) => {
@@ -149,7 +123,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       setAdjustCreditsOpen(false);
       setSelectedIds([]);
     },
-    [bulkAdjustCredits, selectedIds.length]
+    [bulkAdjustCredits, selectedIds.length, setSuccessMessage]
   );
 
   const hasActiveFilters =
@@ -199,10 +173,10 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         </Alert>
       )}
 
-      {(error || errorMessage) && (
+      {error && (
         <Alert className="border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive">
           <AlertCircle className={ICON_SIZE_SM} />
-          <AlertDescription>{errorMessage || error?.message || "Wystąpił błąd"}</AlertDescription>
+          <AlertDescription>{error.message || "Wystąpił błąd"}</AlertDescription>
         </Alert>
       )}
 

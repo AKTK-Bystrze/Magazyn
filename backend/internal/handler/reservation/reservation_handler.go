@@ -33,62 +33,10 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 		common.RespondUnauthorized(ctx, w)
 		return
 	}
-	query := types.ReservationListQuery{}
-	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
-	if status := r.URL.Query().Get("status"); status != "" {
-		if err := validation.ValidateEnum(status, constants.ValidReservationStatuses); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid reservation status")
-			return
-		}
-		query.Status = &status
-	}
-	if qUserID := r.URL.Query().Get("user_id"); qUserID != "" {
-		if err := validation.ValidateUUID(qUserID); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid user_id format")
-			return
-		}
-		query.UserID = &qUserID
-	}
-	if eqID := r.URL.Query().Get("equipment_id"); eqID != "" {
-		if err := validation.ValidateUUID(eqID); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment_id format")
-			return
-		}
-		query.EquipmentID = &eqID
-	}
-	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
-		if err := validation.ValidateUUID(typeID); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid type_id format")
-			return
-		}
-		query.TypeID = &typeID
-	}
-	if search := r.URL.Query().Get("search"); search != "" {
-		if err := validation.ValidateStringLength(search, 0, constants.MaxSearchLength); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Search term too long (max 100 characters)")
-			return
-		}
-		query.Search = &search
-	}
-	if sort := r.URL.Query().Get("sort"); sort != "" {
-		if err := validation.ValidateEnum(sort, constants.ValidReservationSorts); err != nil {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid sort option")
-			return
-		}
-		query.Sort = &sort
-	}
-	if start := r.URL.Query().Get("start_date_from"); start != "" {
-		query.StartDateFrom = &start
-	}
-	if end := r.URL.Query().Get("start_date_to"); end != "" {
-		query.StartDateTo = &end
-	}
-	if scope := r.URL.Query().Get("scope"); scope != "" {
-		if scope != "all" && scope != "my" {
-			common.RespondError(ctx, w, http.StatusBadRequest, "Invalid scope: must be 'all' or 'my'")
-			return
-		}
-		query.Scope = &scope
+	query, err := parseReservationListQuery(r)
+	if err != nil {
+		common.RespondError(ctx, w, http.StatusBadRequest, err.Error())
+		return
 	}
 	logger.Debugf(ctx, "Reservations list - Role: %s, Scope: %v, UserID: %s", role, query.Scope, userID)
 	response, err := h.service.List(ctx, query, userID, role)

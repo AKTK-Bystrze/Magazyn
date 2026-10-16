@@ -11,16 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DateRangePicker } from "./DateRangePicker";
-import { CreditAdjustmentPreview } from "./CreditAdjustmentPreview";
-import { SignificantExtensionWarning } from "./SignificantExtensionWarning";
 import { Loader2, AlertTriangle } from "lucide-react";
-import { calculateDays } from "@/lib/utils/date-utils";
-import { calculateCreditAdjustment } from "@/lib/utils/credit-utils";
 import { RESERVATION_DATE_MODIFICATION_UI_STRINGS as UI } from "@/lib/config/constants";
 import type { Reservation } from "@/types";
 import type { DateRangeValidationErrors } from "@/types/reservation-cart.types";
 import type { UpdateReservationCommand } from "@/types/reservations/reservation.types";
+import { useReservationDateAdjustment } from "@/hooks/useReservationDateAdjustment";
+import { ReservationDateAdjustmentFields } from "./ReservationDateAdjustmentFields";
 
 interface ReturnWithDatesDialogProps {
   open: boolean;
@@ -34,7 +31,7 @@ interface ReturnWithDatesDialogProps {
 
 /**
  * Dialog for marking a reservation as RETURNED with optional date modification.
- * Combines status change confirmation with optional date picker.
+ * Combines status change confirmation with optional date picker and credit adjustment.
  *
  * @param open - Dialog open state
  * @param onOpenChange - Callback when dialog open state changes
@@ -72,23 +69,14 @@ export function ReturnWithDatesDialog({
     }
   }, [open, reservation]);
 
-  const originalDays = calculateDays(reservation.startDate, reservation.endDate);
-  const newDays = startDate && endDate ? calculateDays(startDate, endDate) : originalDays;
-
-  const totalCost = reservations?.length
-    ? reservations.reduce((sum, r) => sum + r.creditCost, 0)
-    : reservation.creditCost;
-
-  const creditPerDay = totalCost / originalDays;
-
-  const adjustmentInfo = calculateCreditAdjustment(
-    originalDays,
-    newDays,
-    creditPerDay,
-    currentUserBalance
-  );
-
-  const datesChanged = startDate !== reservation.startDate || endDate !== reservation.endDate;
+  const { newDays, totalCost, creditPerDay, adjustmentInfo, datesChanged } =
+    useReservationDateAdjustment({
+      reservation,
+      reservations,
+      startDate,
+      endDate,
+      currentUserBalance,
+    });
 
   const validate = (): boolean => {
     if (!modifyDates) return true;
@@ -116,7 +104,7 @@ export function ReturnWithDatesDialog({
     }
 
     setValidationErrors(errors);
-    return Object.keys(errors).every((k) => errors[k as keyof typeof errors] === null);
+    return !errors.startDate && !errors.endDate;
   };
 
   const handleConfirm = async () => {
@@ -144,12 +132,17 @@ export function ReturnWithDatesDialog({
     }
   };
 
-  React.useEffect(() => {
-    if (modifyDates && startDate && endDate) {
-      setValidationErrors({ startDate: null, endDate: null });
-      setApiError(null);
-    }
-  }, [startDate, endDate, modifyDates]);
+  const handleStartDateChange = React.useCallback((date: string | null) => {
+    setStartDate(date);
+    setValidationErrors({ startDate: null, endDate: null });
+    setApiError(null);
+  }, []);
+
+  const handleEndDateChange = React.useCallback((date: string | null) => {
+    setEndDate(date);
+    setValidationErrors({ startDate: null, endDate: null });
+    setApiError(null);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,33 +173,20 @@ export function ReturnWithDatesDialog({
 
           {modifyDates && (
             <div className="space-y-6 pt-2 border-t">
-              <DateRangePicker
+              <ReservationDateAdjustmentFields
+                reservation={reservation}
                 startDate={startDate}
                 endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
+                onStartDateChange={handleStartDateChange}
+                onEndDateChange={handleEndDateChange}
                 validationErrors={validationErrors}
-                title={null}
-                compact={true}
-                allowPastDates={true}
+                datesChanged={datesChanged}
+                totalCost={totalCost}
+                newDays={newDays}
+                creditPerDay={creditPerDay}
+                currentUserBalance={currentUserBalance}
+                adjustmentInfo={adjustmentInfo}
               />
-
-              {datesChanged && startDate && endDate && (
-                <>
-                  <CreditAdjustmentPreview
-                    originalDates={{
-                      startDate: reservation.startDate,
-                      endDate: reservation.endDate,
-                    }}
-                    newDates={{ startDate, endDate }}
-                    originalCreditCost={totalCost}
-                    newCreditCost={newDays * creditPerDay}
-                    currentBalance={currentUserBalance}
-                  />
-
-                  <SignificantExtensionWarning creditAdjustment={adjustmentInfo.adjustment} />
-                </>
-              )}
             </div>
           )}
 
