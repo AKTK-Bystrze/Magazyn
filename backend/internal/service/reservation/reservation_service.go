@@ -95,7 +95,6 @@ func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdat
 func (s *reservationService) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {
 	return s.repo.GetDashboardStats(ctx)
 }
-
 func safeString(s *string) string {
 	if s == nil {
 		return ""
