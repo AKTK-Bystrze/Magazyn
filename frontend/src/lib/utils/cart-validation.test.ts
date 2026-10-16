@@ -53,28 +53,19 @@ describe("validateCart", () => {
     remainingBalance: 90,
   };
 
-  it("returns invalid when remainingBalance < 0 and isFreeReservation is false", () => {
-    const result = validateCart(validCartState, allAvailable, insufficientCredits, false);
-
-    expect(result.isValid).toBe(false);
-    expect(result.errors.creditBalance).not.toBeNull();
-  });
-
-  it("returns valid when remainingBalance < 0 but isFreeReservation is true", () => {
-    const result = validateCart(validCartState, allAvailable, insufficientCredits, true);
-
-    expect(result.isValid).toBe(true);
-    expect(result.errors.creditBalance).toBeNull();
-  });
-
-  it("returns valid when credits are sufficient regardless of isFreeReservation", () => {
-    const resultPaid = validateCart(validCartState, allAvailable, sufficientCredits, false);
-    const resultFree = validateCart(validCartState, allAvailable, sufficientCredits, true);
-
-    expect(resultPaid.isValid).toBe(true);
-    expect(resultPaid.errors.creditBalance).toBeNull();
-    expect(resultFree.isValid).toBe(true);
-    expect(resultFree.errors.creditBalance).toBeNull();
+  it.each([
+    ["insufficient credits and paid reservation", insufficientCredits, false, false],
+    ["insufficient credits and free reservation", insufficientCredits, true, true],
+    ["sufficient credits and paid reservation", sufficientCredits, false, true],
+    ["sufficient credits and free reservation", sufficientCredits, true, true],
+  ])("validates %s", (_, credits, isFree, expectedValid) => {
+    const result = validateCart(validCartState, allAvailable, credits, isFree);
+    expect(result.isValid).toBe(expectedValid);
+    if (expectedValid) {
+      expect(result.errors.creditBalance).toBeNull();
+    } else {
+      expect(result.errors.creditBalance).not.toBeNull();
+    }
   });
 
   it("returns invalid when cart is empty", () => {

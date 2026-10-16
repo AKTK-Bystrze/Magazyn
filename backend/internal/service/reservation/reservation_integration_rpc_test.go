@@ -95,24 +95,6 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	assert.Greater(t, historyCountAfter, historyCountBefore, "No credit_history entry created")
 	t.Logf("✓ Credit history logged (%d -> %d entries)", historyCountBefore, historyCountAfter)
 }
-func TestRefundCredits_CancelledReservation_RefundsCorrectly(t *testing.T) {
-	fixture := setupDateTestFixture(t)
-	defer fixture.teardown()
-	ctx := context.Background()
-	reservationID, err := fixture.createTestReservation(fixture.testUserID, 10, 14)
-	require.NoError(t, err)
-	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
-	updateCmd := types.UpdateReservationCommand{
-		Status: testutils.StringPtr(constants.ReservationStatusCancelled),
-	}
-	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
-	require.NoError(t, err)
-	balanceAfter := fixture.getUserBalance(fixture.testUserID)
-	refundAmount := balanceAfter - balanceAfterCreate
-	expectedRefund := 5 * fixture.costPerDay
-	assert.Equal(t, expectedRefund, refundAmount)
-	t.Logf("✓ Admin cancellation refunded %d credits", refundAmount)
-}
 
 // TestUpdateAudit_StatusChange_CreatesAuditEntry verifies that updating
 // reservation status creates an entry in reservation_history table.

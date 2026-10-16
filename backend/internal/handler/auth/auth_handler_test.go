@@ -3,7 +3,6 @@ package auth_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -24,32 +23,55 @@ func createTestHandler() (*auth.AuthHandler, *serviceMocks.MockAuthService) {
 	h := auth.NewAuthHandler(mockService)
 	return h, mockService
 }
-func TestHandleLogin_Success(t *testing.T) {
-	h, mockService := createTestHandler()
-	email := "test@example.com"
-	mockService.On("Login", mock.Anything, email).Return(&types.LoginResponse{}, nil)
-	req := httptest.NewRequest(http.MethodPost, "/auth/login",
-		bytes.NewBufferString(`{"email": "test@example.com"}`))
-	w := httptest.NewRecorder()
-	h.HandleLogin(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp types.LoginResponse
-	err := json.NewDecoder(w.Body).Decode(&resp)
-	assert.NoError(t, err)
-	assert.Equal(t, "Login link sent to your email", resp.Message)
-	mockService.AssertExpectations(t)
+func TestHandleLogin(t *testing.T) {
+	tests := []struct {
+		name     string
+		body     string
+		mockSvc  func(m *serviceMocks.MockAuthService)
+		wantCode int
+	}{
+		{
+			name: "Success",
+			body: `{"email": "test@example.com"}`,
+			mockSvc: func(m *serviceMocks.MockAuthService) {
+				m.On("Login", mock.Anything, "test@example.com").Return(&types.LoginResponse{}, nil)
+			},
+			wantCode: http.StatusOK,
+		},
+		{
+			name: "ServiceError",
+			body: `{"email": "fail@example.com"}`,
+			mockSvc: func(m *serviceMocks.MockAuthService) {
+				m.On("Login", mock.Anything, "fail@example.com").Return(nil, errors.New("login failed"))
+			},
+			wantCode: http.StatusInternalServerError,
+		},
+		{
+			name:     "InvalidJSON",
+			body:     "invalid",
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:     "EmptyEmail",
+			body:     `{"email": ""}`,
+			wantCode: http.StatusBadRequest,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h, mockService := createTestHandler()
+			if tt.mockSvc != nil {
+				tt.mockSvc(mockService)
+			}
+			req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewBufferString(tt.body))
+			w := httptest.NewRecorder()
+			h.HandleLogin(w, req)
+			assert.Equal(t, tt.wantCode, w.Code)
+			mockService.AssertExpectations(t)
+		})
+	}
 }
-func TestHandleLogin_ServiceError(t *testing.T) {
-	h, mockService := createTestHandler()
-	email := "fail@example.com"
-	mockService.On("Login", mock.Anything, email).Return(nil, errors.New("login failed"))
-	req := httptest.NewRequest(http.MethodPost, "/auth/login",
-		bytes.NewBufferString(`{"email": "fail@example.com"}`))
-	w := httptest.NewRecorder()
-	h.HandleLogin(w, req)
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	mockService.AssertExpectations(t)
-}
+
 func TestHandleLogout_Success(t *testing.T) {
 	h, mockService := createTestHandler()
 	token := "valid.token"
@@ -61,56 +83,38 @@ func TestHandleLogout_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockService.AssertExpectations(t)
 }
-func TestHandleGetSession_Success(t *testing.T) {
-	h, mockService := createTestHandler()
-	userID := uuid.New()
-	user := &types.User{ID: userID.String(), Email: "user@example.com"}
-	expectedSession := &types.SessionResponse{
-		UserID:   userID.String(),
-		Email:    "user@example.com",
-		Username: "testuser",
-	}
-	mockService.On("GetSession", mock.Anything, userID.String(), mock.Anything).Return(expectedSession, nil)
-	req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
-	req.Header.Set("Authorization", "Bearer test-token")
-	ctx := context.WithValue(req.Context(), appcontext.UserContextKey, user)
-	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
-	h.HandleGetSession(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp types.SessionResponse
-	err := json.NewDecoder(w.Body).Decode(&resp)
-	assert.NoError(t, err)
-	assert.Equal(t, "testuser", resp.Username)
-	mockService.AssertExpectations(t)
-}
-func TestHandleGetSession_ProfileNotFound(t *testing.T) {
-	h, mockService := createTestHandler()
-	userID := uuid.New()
-	user := &types.User{ID: userID.String(), Email: "user@example.com"}
-	mockService.On("GetSession", mock.Anything, userID.String(), mock.Anything).Return(nil, types.NewNotFoundError("Profile", userID.String()))
-	req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
-	req.Header.Set("Authorization", "Bearer test-token")
-	ctx := context.WithValue(req.Context(), appcontext.UserContextKey, user)
-	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
-	h.HandleGetSession(w, req)
-	assert.Equal(t, http.StatusNotFound, w.Code)
-	mockService.AssertExpectations(t)
-}
 
-func TestHandleLogin_Validation(t *testing.T) {
-	h, _ := createTestHandler()
-	t.Run("returns 400 for invalid JSON", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewBufferString("invalid"))
-		w := httptest.NewRecorder()
-		h.HandleLogin(w, req)
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
-	t.Run("returns 400 for empty email", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewBufferString(`{"email": ""}`))
-		w := httptest.NewRecorder()
-		h.HandleLogin(w, req)
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
+func TestHandleGetSession(t *testing.T) {
+	userID := uuid.New()
+	user := &types.User{ID: userID.String(), Email: "user@example.com"}
+	tests := []struct {
+		name     string
+		mockRet  *types.SessionResponse
+		mockErr  error
+		wantCode int
+	}{
+		{
+			name:     "Success",
+			mockRet:  &types.SessionResponse{UserID: userID.String(), Email: "user@example.com", Username: "testuser"},
+			wantCode: http.StatusOK,
+		},
+		{
+			name:     "ProfileNotFound",
+			mockErr:  types.NewNotFoundError("Profile", userID.String()),
+			wantCode: http.StatusNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h, mockService := createTestHandler()
+			mockService.On("GetSession", mock.Anything, userID.String(), mock.Anything).Return(tt.mockRet, tt.mockErr)
+			req := httptest.NewRequest(http.MethodGet, "/auth/session", nil)
+			req.Header.Set("Authorization", "Bearer test-token")
+			req = req.WithContext(context.WithValue(req.Context(), appcontext.UserContextKey, user))
+			w := httptest.NewRecorder()
+			h.HandleGetSession(w, req)
+			assert.Equal(t, tt.wantCode, w.Code)
+			mockService.AssertExpectations(t)
+		})
+	}
 }

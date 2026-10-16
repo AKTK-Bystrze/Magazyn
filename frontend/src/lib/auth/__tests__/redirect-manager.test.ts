@@ -36,287 +36,104 @@ describe("redirect-manager", () => {
 
   describe("RedirectManager.getRedirectForAuthState", () => {
     describe("Unauthenticated Users", () => {
-      it("redirects unauthenticated user to login with return URL", () => {
-        const result = RedirectManager.getRedirectForAuthState(null, null, "/admin", null, origin);
-        expect(result).toBe("/login?redirect=%2Fadmin");
-      });
-
-      it("redirects unauthenticated user to login from root", () => {
-        const result = RedirectManager.getRedirectForAuthState(null, null, "/", null, origin);
-        expect(result).toBe("/login");
-      });
-
-      it("does not redirect unauthenticated user already on login", () => {
-        const result = RedirectManager.getRedirectForAuthState(null, null, "/login", null, origin);
-        expect(result).toBeNull();
+      it.each([
+        ["/admin", "/login?redirect=%2Fadmin"],
+        ["/", "/login"],
+        ["/login", null],
+      ])("from %s redirects to %s", (path, expected) => {
+        expect(RedirectManager.getRedirectForAuthState(null, null, path, null, origin)).toBe(
+          expected
+        );
       });
     });
 
     describe("Disabled Users", () => {
-      const disabledSessionInfo = createMockSessionInfo({ isEnabled: false });
-
-      it("redirects disabled user to account-disabled page", () => {
-        const user = createMockUser();
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          disabledSessionInfo,
+      it.each([
+        [
+          "user on /dashboard",
+          createMockSessionInfo({ isEnabled: false }),
           "/dashboard",
-          null,
-          origin
-        );
-        expect(result).toBe("/account-disabled");
-      });
-
-      it("does not redirect disabled user already on account-disabled", () => {
-        const user = createMockUser();
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          disabledSessionInfo,
+          "/account-disabled",
+        ],
+        [
+          "user on /account-disabled",
+          createMockSessionInfo({ isEnabled: false }),
           "/account-disabled",
           null,
-          origin
-        );
-        expect(result).toBeNull();
-      });
-
-      it("redirects disabled admin to account-disabled (role ignored)", () => {
-        const user = createMockUser();
-        const disabledAdmin = createMockSessionInfo({ isEnabled: false, role: "admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          disabledAdmin,
+        ],
+        [
+          "admin on /admin",
+          createMockSessionInfo({ isEnabled: false, role: "admin" }),
           "/admin",
-          null,
-          origin
-        );
-        expect(result).toBe("/account-disabled");
-      });
-
-      it("prevents redirect loop for disabled user", () => {
-        const user = createMockUser();
-        const disabledSessionInfo = createMockSessionInfo({ isEnabled: false });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          disabledSessionInfo,
           "/account-disabled",
-          null,
-          origin
-        );
-        expect(result).toBeNull();
+        ],
+      ])("%s redirects to %s", (_, session, path, expected) => {
+        expect(
+          RedirectManager.getRedirectForAuthState(createMockUser(), session, path, null, origin)
+        ).toBe(expected);
       });
     });
 
     describe("Enabled Users on Account-Disabled Page", () => {
-      it("redirects enabled user away from account-disabled page", () => {
-        const user = createMockUser();
-        const enabledUser = createMockSessionInfo({ isEnabled: true, role: "user" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          enabledUser,
-          "/account-disabled",
-          null,
-          origin
-        );
-        expect(result).toBe("/dashboard");
-      });
-
-      it("redirects enabled admin away from account-disabled page", () => {
-        const user = createMockUser();
-        const enabledAdmin = createMockSessionInfo({ isEnabled: true, role: "admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          enabledAdmin,
-          "/account-disabled",
-          null,
-          origin
-        );
-        expect(result).toBe("/admin");
-      });
-
-      it("redirects enabled super admin away from account-disabled page", () => {
-        const user = createMockUser();
-        const enabledSuperAdmin = createMockSessionInfo({ isEnabled: true, role: "super_admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          enabledSuperAdmin,
-          "/account-disabled",
-          null,
-          origin
-        );
-        expect(result).toBe("/admin");
+      it.each([
+        ["user", "user", "/dashboard"],
+        ["admin", "admin", "/admin"],
+        ["super admin", "super_admin", "/admin"],
+      ])("redirects enabled %s away to %s", (_, role, expected) => {
+        const session = createMockSessionInfo({ isEnabled: true, role });
+        expect(
+          RedirectManager.getRedirectForAuthState(
+            createMockUser(),
+            session,
+            "/account-disabled",
+            null,
+            origin
+          )
+        ).toBe(expected);
       });
     });
 
     describe("Enabled Users on Login Page", () => {
-      it("redirects authenticated regular user from login to dashboard", () => {
+      it.each([
+        ["regular user to dashboard", "user", null, "/dashboard"],
+        ["admin to admin", "admin", null, "/admin"],
+        ["safe redirect parameter", "user", "/dashboard", "/dashboard"],
+        ["sanitizes unsafe redirect parameter", "user", "https://evil.com", "/dashboard"],
+        ["ignores redirect pointing back to login", "admin", "/login", "/admin"],
+        ["blocks admin redirect for regular user", "user", "/admin", "/dashboard"],
+        ["allows admin redirect for admin user", "admin", "/admin", "/admin"],
+      ])("%s", (_, role, redirectParam, expected) => {
         const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "user" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/login",
-          null,
-          origin
-        );
-        expect(result).toBe("/dashboard");
-      });
-
-      it("redirects authenticated admin from login to admin", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/login",
-          null,
-          origin
-        );
-        expect(result).toBe("/admin");
-      });
-
-      it("uses safe redirect parameter when provided", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "user" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/login",
-          "/dashboard",
-          origin
-        );
-        expect(result).toBe("/dashboard");
-      });
-
-      it("sanitizes unsafe redirect parameter", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "user" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/login",
-          "https://evil.com",
-          origin
-        );
-        expect(result).toBe("/dashboard");
-      });
-
-      it("ignores redirect parameter pointing back to login", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/login",
-          "/login",
-          origin
-        );
-        expect(result).toBe("/admin");
-      });
-
-      it("blocks admin redirect to admin for regular user", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "user" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/login",
-          "/admin",
-          origin
-        );
-        expect(result).toBe("/dashboard");
-      });
-
-      it("allows admin redirect to admin for admin user", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/login",
-          "/admin",
-          origin
-        );
-        expect(result).toBe("/admin");
+        const sessionInfo = createMockSessionInfo({ role });
+        expect(
+          RedirectManager.getRedirectForAuthState(
+            user,
+            sessionInfo,
+            "/login",
+            redirectParam,
+            origin
+          )
+        ).toBe(expected);
       });
     });
 
     describe("Root Path Redirects", () => {
-      it("redirects regular user from root to dashboard", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "user" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
+      it.each([
+        ["regular user from root", createMockSessionInfo({ role: "user" }), "/", "/dashboard"],
+        ["admin from root", createMockSessionInfo({ role: "admin" }), "/", "/admin"],
+        ["super admin from root", createMockSessionInfo({ role: "super_admin" }), "/", "/admin"],
+        [
+          "disabled user from root",
+          createMockSessionInfo({ isEnabled: false }),
           "/",
-          null,
-          origin
-        );
-        expect(result).toBe("/dashboard");
-      });
-
-      it("redirects admin from root to admin page", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/",
-          null,
-          origin
-        );
-        expect(result).toBe("/admin");
-      });
-
-      it("redirects super admin from root to admin page", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "super_admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/",
-          null,
-          origin
-        );
-        expect(result).toBe("/admin");
-      });
-
-      it("redirects disabled user from root to account-disabled", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ isEnabled: false });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/",
-          null,
-          origin
-        );
-        expect(result).toBe("/account-disabled");
-      });
-
-      it("does not redirect user already on valid page", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "user" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/dashboard",
-          null,
-          origin
-        );
-        expect(result).toBeNull();
-      });
-
-      it("does not redirect admin already on valid page", () => {
-        const user = createMockUser();
-        const sessionInfo = createMockSessionInfo({ role: "admin" });
-        const result = RedirectManager.getRedirectForAuthState(
-          user,
-          sessionInfo,
-          "/admin",
-          null,
-          origin
-        );
-        expect(result).toBeNull();
+          "/account-disabled",
+        ],
+        ["user on valid page", createMockSessionInfo({ role: "user" }), "/dashboard", null],
+        ["admin on valid page", createMockSessionInfo({ role: "admin" }), "/admin", null],
+      ])("%s", (_, session, path, expected) => {
+        expect(
+          RedirectManager.getRedirectForAuthState(createMockUser(), session, path, null, origin)
+        ).toBe(expected);
       });
     });
 
@@ -333,12 +150,6 @@ describe("redirect-manager", () => {
       });
 
       it("handles user with null sessionInfo", () => {
-        const user = createMockUser();
-        const result = RedirectManager.getRedirectForAuthState(user, null, "/login", null, origin);
-        expect(result).toBe("/login");
-      });
-
-      it("handles enabled user with null sessionInfo on login page", () => {
         const user = createMockUser();
         const result = RedirectManager.getRedirectForAuthState(user, null, "/login", null, origin);
         expect(result).toBe("/login");

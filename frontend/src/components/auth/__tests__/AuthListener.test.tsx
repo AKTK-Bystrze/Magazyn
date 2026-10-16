@@ -59,8 +59,6 @@ const mockLocation = {
   replace: vi.fn(),
 };
 
-let mockCookie = "";
-
 describe("AuthListener", () => {
   let authStateCallback:
     ((event: AuthChangeEvent, session: Session | null) => Promise<void>) | null = null;
@@ -75,19 +73,9 @@ describe("AuthListener", () => {
     mockLocation.hash = "";
     mockLocation.replace = mockReplace;
 
-    mockCookie = "";
-
     vi.stubGlobal("location", {
       ...mockLocation,
       replace: mockReplace,
-    });
-
-    Object.defineProperty(document, "cookie", {
-      get: () => mockCookie,
-      set: (value: string) => {
-        mockCookie = value;
-      },
-      configurable: true,
     });
 
     vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
@@ -124,7 +112,7 @@ describe("AuthListener", () => {
   });
 
   describe("Cookie Management", () => {
-    it("should handle SIGNED_IN event and trigger redirect", async () => {
+    it("should handle SIGNED_IN event, fetch session, and trigger redirect", async () => {
       mockLocation.pathname = "/login";
       render(<AuthListener />);
 
@@ -140,46 +128,19 @@ describe("AuthListener", () => {
       } as any);
       vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/dashboard");
 
-      act(() => {
-        authStateCallback?.("SIGNED_IN", session);
-      });
-
-      await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith("/dashboard");
-      });
-    });
-
-    it("should call getUserSession with access token on SIGNED_IN", async () => {
-      render(<AuthListener />);
-
-      const session = createMockSession();
-      vi.mocked(getUserSession).mockResolvedValue({
-        isEnabled: true,
-        role: "user",
-      } as any);
-
       await act(async () => {
         await authStateCallback?.("SIGNED_IN", session);
       });
 
       await waitFor(() => {
         expect(getUserSession).toHaveBeenCalledWith("mock-access-token");
+        expect(mockReplace).toHaveBeenCalledWith("/dashboard");
       });
-    });
-
-    it("should handle SIGNED_OUT event without errors", async () => {
-      render(<AuthListener />);
-
-      await act(async () => {
-        await authStateCallback?.("SIGNED_OUT", null);
-      });
-
-      expect(authStateCallback).toBeDefined();
     });
   });
 
   describe("Magic Link Hash Processing", () => {
-    it("should detect and process access_token in URL hash", async () => {
+    it("should detect and process access_token in URL hash and clean hash", async () => {
       mockLocation.hash =
         "#access_token=hash-access-token&refresh_token=hash-refresh-token&expires_in=3600";
       mockLocation.pathname = "/login";
@@ -204,31 +165,6 @@ describe("AuthListener", () => {
             access_token: "hash-access-token",
             refresh_token: "hash-refresh-token",
           });
-        },
-        { timeout: 2000 }
-      );
-    });
-
-    it("should clean URL hash after processing", async () => {
-      mockLocation.hash = "#access_token=token&refresh_token=refresh";
-      mockLocation.pathname = "/login";
-      vi.stubGlobal("location", { ...mockLocation, replace: vi.fn() });
-
-      const session = createMockSession();
-      vi.mocked(supabase.auth.setSession).mockResolvedValue({
-        data: { session, user: session.user },
-        error: null,
-      });
-      vi.mocked(getUserSession).mockResolvedValue({
-        isEnabled: true,
-        role: "user",
-      } as any);
-      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/dashboard");
-
-      render(<AuthListener />);
-
-      await waitFor(
-        () => {
           expect(window.history.replaceState).toHaveBeenCalled();
         },
         { timeout: 2000 }

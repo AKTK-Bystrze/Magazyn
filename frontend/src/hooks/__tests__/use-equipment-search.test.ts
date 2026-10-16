@@ -74,6 +74,7 @@ describe("useEquipmentSearch", () => {
     });
 
     expect(result.current.filters.search).toBe("hammer");
+    expect(result.current.activeFilters.search).toBe("hammer");
     expect(result.current.filters.page).toBe(1);
 
     expect(mockReplaceState).toHaveBeenCalledWith(
@@ -97,17 +98,6 @@ describe("useEquipmentSearch", () => {
       "",
       "/equipment?page=3&available_from=2024-01-01&available_to=2024-01-01"
     );
-  });
-
-  it("should update activeFilters immediately without redundant debounce", () => {
-    const { result } = renderHook(() => useEquipmentSearch());
-
-    act(() => {
-      result.current.updateFilter("search", "fast typing");
-    });
-
-    expect(result.current.filters.search).toBe("fast typing");
-    expect(result.current.activeFilters.search).toBe("fast typing");
   });
 
   it("should properly handle status enum values", () => {

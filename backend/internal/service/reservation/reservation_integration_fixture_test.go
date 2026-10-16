@@ -142,6 +142,3 @@ func (f *dateTestFixture) getUserBalance(userID string) int32 {
 	require.NotEmpty(f.t, profiles)
 	return profiles[0].CreditBalance
 }
-func dateStringPtr(s string) *string {
-	return &s
-}
