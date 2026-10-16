@@ -15,9 +15,26 @@ flowchart TB
             AstroMiddleware["Middleware<br/>• Auth Check<br/>• Session Mgmt<br/>• Route Protection"]
         end
 
-        subgraph ReactLayer["React Layer"]
-            Components["Components<br/>• Equipment Search<br/>• Reservation Cart<br/>• Calendar<br/>• Admin Tables"]
-            Hooks["Custom Hooks<br/>• useEquipmentSearch<br/>• useDebounce"]
+        subgraph ReactLayer["React Layer (Decomposed SRP)"]
+            subgraph Containers["Containers"]
+                ReservationListContainer["ReservationListContainer"]
+                EquipmentManagerContainer["EquipmentManagerContainer"]
+                UserListContainer["UserListContainer"]
+            end
+            subgraph Islands["Presentation Islands"]
+                ReservationTable["ReservationTable"]
+                ReservationCartView["ReservationCartView"]
+            end
+            subgraph Subcomponents["Subcomponents & Form Fields"]
+                ReservationRow["ReservationTableRow<br/>ReservationTableHeader<br/>ReservationActionMenu"]
+                CartSub["CartAvailabilityAlerts<br/>AdminReservationDelegate"]
+                FormFields["EquipmentFormFields<br/>UserFormFields<br/>ReservationDateAdjustmentFields"]
+            end
+            subgraph HooksLayer["Custom Hooks"]
+                QueryHooks["Query Hooks<br/>• useEquipmentSearch<br/>• useTableSort"]
+                MutationHooks["Mutation Hooks<br/>• useCartCheckout<br/>• useReservationDateAdjustment"]
+                UIHooks["UI Hooks<br/>• useReservationDialogs<br/>• useInfiniteScrollTrigger<br/>• useDismissibleMessage"]
+            end
             Query["TanStack Query<br/>Server State Cache"]
         end
 
@@ -39,28 +56,29 @@ flowchart TB
             CORSMiddleware["CORS"]
         end
 
-        subgraph HandlerLayer["Handler Layer"]
-            AuthHandler["Auth Handler<br/>• Login<br/>• Logout<br/>• Session"]
-            EquipmentHandler["Equipment Handler<br/>• List<br/>• Details<br/>• CRUD"]
-            ReservationHandler["Reservation Handler<br/>• Create<br/>• Update<br/>• List"]
-            UserHandler["User Handler<br/>• Profile<br/>• List<br/>• Update"]
-            CreditHandler["Credit Handler<br/>• History<br/>• Requests"]
+        subgraph HandlerLayer["Handler Layer & Binders"]
+            AuthHandler["Auth Handler<br/>• Login • Logout • Session"]
+            EquipmentHandler["Equipment Handler<br/>• equipment_query.go<br/>• equipment_maintenance_handler.go"]
+            ReservationHandler["Reservation Handler<br/>• reservation_query.go<br/>• reservation_admin_handler.go"]
+            UserHandler["User Handler<br/>• Profile • List • Update"]
+            CreditHandler["Credit Handler<br/>• History • Requests"]
         end
 
-        subgraph ServiceLayer["Service Layer (Business Logic)"]
+        subgraph ServiceLayer["Service Layer (Decomposed Sub-Services)"]
             AuthService["Auth Service"]
-            EquipmentService["Equipment Service<br/>• Availability Check<br/>• Favorites Sorting<br/>• Status Change Logging"]
-            ReservationService["Reservation Service<br/>• Credit Validation<br/>• Conflict Check<br/>• Email Notifications"]
+            EquipmentService["Equipment Service<br/>• mutation • availability<br/>• maintenance • types"]
+            ReservationService["Reservation Service<br/>• create • update • pricing.go<br/>• List / GetByID / Bulk"]
             UserService["User Service"]
-            CreditService["Credit Service<br/>• Transaction Log<br/>• Balance Update"]
+            CreditService["Credit Service<br/>• Transaction Log • Balance Update"]
         end
 
-        subgraph RepositoryLayer["Repository Layer"]
+        subgraph RepositoryLayer["Repository Layer (SRP & RPC Boundaries)"]
             AuthRepo["Auth Repository"]
-            EquipmentRepo["Equipment Repository"]
-            ReservationRepo["Reservation Repository"]
+            EquipmentRepo["Equipment Repository<br/>• list • availability<br/>• favorites • maintenance"]
+            ReservationRepo["Reservation Repository<br/>• query • detail • stats<br/>• reservation_repository_rpc.go"]
             UserRepo["User Repository"]
             CreditRepo["Credit Repository"]
+            AnalyticsRepo["Analytics Repository<br/>(Decoupled from Calendar)"]
         end
 
         SupabaseGoClient["Supabase Go Client<br/>(PostgreSQL Adapter)"]
@@ -87,7 +105,7 @@ flowchart TB
 
         subgraph DBLogic["Database Logic"]
             Triggers["Triggers<br/>• log_reservation_change<br/>• update_updated_at"]
-            StoredProcs["Stored Procedures (RPC)<br/>• create_reservation_atomic<br/>• refund_reservation_credits"]
+            StoredProcs["Stored Procedures (RPC)<br/>• create_reservation_atomic<br/>• modify_reservation_dates_with_credits<br/>• refund_reservation_credits"]
             RLS["RLS Policies<br/>• User sees own data<br/>• Admin sees all"]
         end
     end
@@ -101,9 +119,12 @@ flowchart TB
     Browser -->|"HTTPS"| Pages
     Pages --> AstroMiddleware
     AstroMiddleware --> Layouts
-    Layouts --> Components
-    Components --> Hooks
-    Hooks --> Query
+    Layouts --> Containers
+    Containers --> Islands
+    Islands --> Subcomponents
+    Containers --> HooksLayer
+    Islands --> HooksLayer
+    HooksLayer --> Query
     Query --> APIProxies
     APIProxies --> Transformers
     Transformers --> JWTMiddleware
@@ -129,12 +150,14 @@ flowchart TB
     ReservationService --> CreditService
     UserService --> UserRepo
     CreditService --> CreditRepo
+    CreditService --> AnalyticsRepo
 
     AuthRepo --> SupabaseGoClient
     EquipmentRepo --> SupabaseGoClient
     ReservationRepo --> SupabaseGoClient
     UserRepo --> SupabaseGoClient
     CreditRepo --> SupabaseGoClient
+    AnalyticsRepo --> SupabaseGoClient
 
     SupabaseGoClient --> Profiles
     SupabaseGoClient --> EquipmentTypes
@@ -165,10 +188,10 @@ flowchart TB
     classDef externalStyle fill:#ffccbc,stroke:#d84315,stroke-width:2px
 
     class Browser clientStyle
-    class Pages,Layouts,AstroMiddleware,Components,Hooks,Query,APIProxies,Transformers,Validators,SupabaseClient frontendStyle
+    class Pages,Layouts,AstroMiddleware,ReservationListContainer,EquipmentManagerContainer,UserListContainer,ReservationTable,ReservationCartView,ReservationRow,CartSub,FormFields,QueryHooks,MutationHooks,UIHooks,Query,APIProxies,Transformers,Validators,SupabaseClient frontendStyle
     class JWTMiddleware,RBACMiddleware,CORSMiddleware,AuthHandler,EquipmentHandler,ReservationHandler,UserHandler,CreditHandler backendStyle
     class AuthService,EquipmentService,ReservationService,UserService,CreditService backendStyle
-    class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,SupabaseGoClient,EmailService backendStyle
+    class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,AnalyticsRepo,SupabaseGoClient,EmailService backendStyle
     class Profiles,EquipmentTypes,Equipment,Reservations,CreditHistory,CreditRequests dbStyle
     class ReservationHistory,MaintenanceLogs,Triggers,StoredProcs,RLS dbStyle
     class SupabaseAuth,SupabaseStorage,Email externalStyle
@@ -189,8 +212,14 @@ flowchart TB
 
 #### React Layer
 
-- **Components**: Interactive UI elements (client:load, client:visible)
-- **Custom Hooks**: Reusable stateful logic
+- **Components Taxonomy (3 Tiers)**:
+  - **Containers**: Route orchestrators (`ReservationListContainer`, `EquipmentManagerContainer`, `UserListContainer`) consuming queries and orchestrating dialogs via custom hooks.
+  - **Presentation Islands**: Client islands (`ReservationTable`, `ReservationCartView`) rendering lists, carts, tables, and handling sorting/filtering view state.
+  - **Subcomponents & Shared Form Fields**: Single-responsibility elements (`ReservationTableRow`, `ReservationTableHeader`, `ReservationActionMenu`, `CartAvailabilityAlerts`, `AdminReservationDelegateSection`) and reusable form field sets (`EquipmentFormFields`, `UserFormFields`, `ReservationDateAdjustmentFields`).
+- **Custom Hooks Separation**:
+  - **Data Query Hooks**: Server state fetching (`useEquipmentSearch`, `useTableSort`).
+  - **Mutation Hooks**: State modifications (`useCartCheckout`, `useReservationDateAdjustment`).
+  - **UI State Hooks**: Modal dialog lifecycle (`useReservationDialogs`), infinite scroll triggers (`useInfiniteScrollTrigger`), auto-dismiss messages (`useDismissibleMessage`).
 - **TanStack Query**:
   - Caches API responses
   - Handles loading/error states
@@ -220,35 +249,39 @@ flowchart TB
 - **RBAC**: Enforces role-based permissions (user/admin/super_admin)
 - **CORS**: Manages cross-origin requests
 
-#### Handler Layer (HTTP)
+#### Handler Layer (HTTP & Binders)
 
-- Parses requests
-- Validates input
-- Calls service layer
-- Returns HTTP responses with proper status codes
+- Parses HTTP requests and maps domain errors to status codes via `http_utils.go`
+- **Query Binders**: `equipment_query.go` and `reservation_query.go` parse and sanitize search terms, status filters, date bounds, and pagination limits.
+- **Sub-Handlers**: Dedicated handlers for maintenance operations (`equipment_maintenance_handler.go`) and admin dashboard / bulk updates (`reservation_admin_handler.go`).
 
-#### Service Layer (Business Logic)
+#### Service Layer (Business Logic & Sub-Services)
 
-- **Equipment Service**:
-  - Availability checking
-  - Favorites sorting (top 3 per type per user)
-  - Equipment status change logging (writes to `maintenance_logs` in `equipmentService.Update()`)
-  - Formatting public URLs for equipment image path references
-- **Reservation Service**:
-  - Multi-item reservation creation
-  - Credit validation
-  - Conflict detection
-  - Calls stored procedures for atomic operations
-  - Sends email notifications via Noop email service (NoopEmailService)
+- **Equipment Service**: Decomposed across:
+  - `equipment_service.go`: Core interface and orchestrator
+  - `equipment_service_availability.go`: Real-time availability calculation and date collision checks
+  - `equipment_service_maintenance.go`: Maintenance log recording and status change auditing
+  - `equipment_service_mutation.go`: Create, Update, Archive/Delete, and storage URL formatting
+  - `equipment_service_types.go`: Category queries and daily credit cost lookups
+- **Reservation Service**: Decomposed across:
+  - `reservation_service.go`: Interface, constructor, paginated `List`, and `GetByID`
+  - `reservation_service_create.go`: Multi-item validation, type resolution, cost summation, atomic RPC execution, and async notification dispatch
+  - `reservation_service_update.go`: Permission validation, date conflict checks, date modification via credit adjustment RPC, and cancellation refunds
+  - `pricing.go`: Pure pricing formulas (`CalculateReservationCost`) backed by `validation.CalculateDays`
 - **Credit Service**:
   - Transaction logging
   - Balance updates with audit trail
 
-#### Repository Layer (Data Access)
+#### Repository Layer (Data Access & RPC Boundaries)
 
-- Abstracts database operations
-- Returns domain models (not raw SQL results)
-- Implements interfaces for testability
+- Abstracts database operations and returns domain models
+- **Reservation Repositories**:
+  - `reservation_repository_rpc.go`: Encapsulates atomic stored procedures (`create_reservation_atomic`, `modify_reservation_dates_with_credits`, `refund_reservation_credits`)
+  - `reservation_repository_query.go`: Dynamic filtering, pagination, and RLS bypass
+  - `reservation_repository_detail.go`: Detail retrieval joining user profiles and equipment
+  - `reservation_repository_stats.go`: Aggregates for dashboard statistics
+- **Equipment Repositories**: Decomposed into `equipment_repository_list.go`, `availability.go`, `favorites.go`, and `maintenance.go`
+- **Analytics Repository**: Dedicated `analytics_repository.go` cleanly decoupled from calendar data
 
 ---
 
@@ -279,6 +312,7 @@ flowchart TB
   - _(Note: `log_equipment_status_change` was dropped to prevent duplicates; equipment status logging is handled in application business logic)_
 - **Stored Procedures (RPC)**:
   - `create_reservation_atomic`: Multi-step transaction (check availability, deduct credits, create reservation)
+  - `modify_reservation_dates_with_credits`: Atomic date modification, credit recalculation, and balance update
   - `refund_reservation_credits`: Atomic refund on cancellation
 - **RLS Policies**: Row-level security ensures users only see their data
 

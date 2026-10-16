@@ -5,48 +5,14 @@ import (
 	"testing"
 
 	"magazyn/backend/internal/service/credit"
+	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 )
 
-type mockCreditRequestRepo struct {
-	data map[string]*types.CreditRequestDTO
-}
-
-func (m *mockCreditRequestRepo) ListRequests(ctx context.Context, page, perPage int) ([]types.CreditRequestDTO, int64, error) {
-	return nil, 0, nil
-}
-func (m *mockCreditRequestRepo) GetByID(ctx context.Context, id string) (*types.CreditRequestDTO, error) {
-	if item, ok := m.data[id]; ok {
-		return item, nil
-	}
-	return nil, types.NewNotFoundError("CreditRequest", id)
-}
-func (m *mockCreditRequestRepo) Create(ctx context.Context, req types.CreditRequestDTO) (*types.CreditRequestDTO, error) {
-	req.ID = "new-id"
-	m.data["new-id"] = &req
-	return &req, nil
-}
-func (m *mockCreditRequestRepo) Update(ctx context.Context, id string, req types.CreditRequestDTO) (*types.CreditRequestDTO, error) {
-	m.data[id] = &req
-	return &req, nil
-}
-func (m *mockCreditRequestRepo) ReviewAtomic(ctx context.Context, id string, adminID string, status types.CreditRequestStatus, creditsValue *int32, helpers []string, reason string, description string) error {
-	m.data[id].Status = status
-	if creditsValue != nil {
-		m.data[id].CreditsValue = *creditsValue
-	}
-	if helpers != nil {
-		m.data[id].Helpers = helpers
-	}
-	return nil
-}
-func (m *mockCreditRequestRepo) GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error) {
-	return nil, nil
-}
 func TestCreditRequestService_CreateRequest_NegativeCredits(t *testing.T) {
-	repo := &mockCreditRequestRepo{data: make(map[string]*types.CreditRequestDTO)}
+	repo := mocks.NewMockCreditRequestRepository()
 	service := credit.NewCreditRequestService(repo)
 	req := types.CreateCreditRequestDTO{
 		Title:        "Test",
@@ -59,7 +25,7 @@ func TestCreditRequestService_CreateRequest_NegativeCredits(t *testing.T) {
 	assert.Contains(t, err.Error(), "credits_value must be strictly positive")
 }
 func TestCreditRequestService_CreateRequest_Success(t *testing.T) {
-	repo := &mockCreditRequestRepo{data: make(map[string]*types.CreditRequestDTO)}
+	repo := mocks.NewMockCreditRequestRepository()
 	service := credit.NewCreditRequestService(repo)
 	req := types.CreateCreditRequestDTO{
 		Title:        "Test Title",
@@ -106,7 +72,7 @@ func TestCreditRequestService_UpdateRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			reqID := "req1"
 			ownerID := "u1"
-			repo := &mockCreditRequestRepo{data: map[string]*types.CreditRequestDTO{
+			repo := &mocks.MockCreditRequestRepository{Data: map[string]*types.CreditRequestDTO{
 				reqID: {
 					ID:           reqID,
 					RequestorID:  &ownerID,
@@ -169,7 +135,7 @@ func TestCreditRequestService_ReviewRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			reqID := "req1"
 			userID := "u1"
-			repo := &mockCreditRequestRepo{data: map[string]*types.CreditRequestDTO{
+			repo := &mocks.MockCreditRequestRepository{Data: map[string]*types.CreditRequestDTO{
 				reqID: {
 					ID:           reqID,
 					RequestorID:  &userID,
@@ -185,15 +151,15 @@ func TestCreditRequestService_ReviewRequest(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.errContain)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, types.CreditRequestStatusApproved, repo.data[reqID].Status)
-				assert.Equal(t, int32(20), repo.data[reqID].CreditsValue)
-				assert.Equal(t, []string{"u2", "u3"}, repo.data[reqID].Helpers)
+				assert.Equal(t, types.CreditRequestStatusApproved, repo.Data[reqID].Status)
+				assert.Equal(t, int32(20), repo.Data[reqID].CreditsValue)
+				assert.Equal(t, []string{"u2", "u3"}, repo.Data[reqID].Helpers)
 			}
 		})
 	}
 }
 func TestCreditRequestService_ListRequests_Success(t *testing.T) {
-	repo := &mockCreditRequestRepo{data: make(map[string]*types.CreditRequestDTO)}
+	repo := mocks.NewMockCreditRequestRepository()
 	service := credit.NewCreditRequestService(repo)
 	res, err := service.ListRequests(context.Background(), 1, 10)
 	assert.NoError(t, err)

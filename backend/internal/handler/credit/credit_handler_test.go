@@ -1,30 +1,18 @@
 package credit
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/auth"
+	"magazyn/backend/internal/testutils"
+	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
-
-type MockCreditHistoryService struct {
-	mock.Mock
-}
-
-func (m *MockCreditHistoryService) GetCreditHistory(ctx context.Context, query types.GetCreditHistoryQuery, requestingUserID string, userRole string) (*types.CreditHistoryResponse, error) {
-	args := m.Called(ctx, query, requestingUserID, userRole)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*types.CreditHistoryResponse), args.Error(1)
-}
 
 func TestHandleGetCreditHistory(t *testing.T) {
 	tests := []struct {
@@ -32,7 +20,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 		user           *types.User
 		profile        *types.PublicProfilesSelect
 		queryParams    map[string]string
-		setupMock      func(*MockCreditHistoryService)
+		setupMock      func(*mocks.MockCreditHistoryService)
 		expectedStatus int
 		expectedBody   string
 	}{
@@ -44,7 +32,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 				Role: auth.RoleUser,
 			},
 			queryParams: map[string]string{},
-			setupMock: func(m *MockCreditHistoryService) {
+			setupMock: func(m *mocks.MockCreditHistoryService) {
 				m.On("GetCreditHistory", mock.Anything, types.GetCreditHistoryQuery{
 					Page:    1,
 					PerPage: 25,
@@ -67,7 +55,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			queryParams: map[string]string{
 				"user_id": "target-user-456",
 			},
-			setupMock: func(m *MockCreditHistoryService) {
+			setupMock: func(m *mocks.MockCreditHistoryService) {
 				targetID := "target-user-456"
 				m.On("GetCreditHistory", mock.Anything, types.GetCreditHistoryQuery{
 					Page:    1,
@@ -91,7 +79,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			queryParams: map[string]string{
 				"user_id": "other-user",
 			},
-			setupMock: func(m *MockCreditHistoryService) {
+			setupMock: func(m *mocks.MockCreditHistoryService) {
 				otherUser := "other-user"
 				m.On("GetCreditHistory", mock.Anything, types.GetCreditHistoryQuery{
 					Page:    1,
@@ -106,7 +94,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			user:           nil,
 			profile:        nil,
 			queryParams:    map[string]string{},
-			setupMock:      func(m *MockCreditHistoryService) {},
+			setupMock:      func(m *mocks.MockCreditHistoryService) {},
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
@@ -119,7 +107,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 			queryParams: map[string]string{
 				"page": "invalid",
 			},
-			setupMock: func(m *MockCreditHistoryService) {
+			setupMock: func(m *mocks.MockCreditHistoryService) {
 				m.On("GetCreditHistory", mock.Anything, types.GetCreditHistoryQuery{
 					Page:    1,
 					PerPage: 25,
@@ -135,7 +123,7 @@ func TestHandleGetCreditHistory(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockService := new(MockCreditHistoryService)
+			mockService := new(mocks.MockCreditHistoryService)
 			tc.setupMock(mockService)
 			handler := NewCreditHistoryHandler(mockService)
 			req := httptest.NewRequest("GET", "/credit-history", nil)
@@ -144,14 +132,13 @@ func TestHandleGetCreditHistory(t *testing.T) {
 				q.Add(k, v)
 			}
 			req.URL.RawQuery = q.Encode()
-			ctx := req.Context()
 			if tc.user != nil {
-				ctx = context.WithValue(ctx, appcontext.UserContextKey, tc.user)
+				role := ""
+				if tc.profile != nil {
+					role = tc.profile.Role
+				}
+				req = testutils.WithUserContext(req, tc.user.ID, role)
 			}
-			if tc.profile != nil {
-				ctx = context.WithValue(ctx, appcontext.UserProfileContextKey, tc.profile)
-			}
-			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
 			handler.HandleGetCreditHistory(w, req)
 			assert.Equal(t, tc.expectedStatus, w.Code)

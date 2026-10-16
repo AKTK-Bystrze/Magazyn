@@ -4,39 +4,17 @@ import (
 	"context"
 	"testing"
 
-	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/testutils"
+	"magazyn/backend/internal/testutils/mocks"
 	"magazyn/backend/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-// MockCalendarRepository is a mock implementation of CalendarRepository
-type MockCalendarRepository struct {
-	mock.Mock
-}
-
-func (m *MockCalendarRepository) GetEquipmentForCalendar(ctx context.Context, equipmentID *string) ([]types.PublicEquipmentSelect, error) {
-	args := m.Called(ctx, equipmentID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]types.PublicEquipmentSelect), args.Error(1)
-}
-func (m *MockCalendarRepository) GetReservationsInDateRange(ctx context.Context, startDate string, endDate string, equipmentID *string) ([]types.PublicReservationsSelect, error) {
-	args := m.Called(ctx, startDate, endDate, equipmentID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
-}
-
-var _ repository.CalendarRepository = (*MockCalendarRepository)(nil)
-
 func TestGetCalendarAvailability_Success(t *testing.T) {
 	t.Run("returns calendar entries for single equipment", func(t *testing.T) {
-		mockCalendarRepo := new(MockCalendarRepository)
+		mockCalendarRepo := new(mocks.MockCalendarRepository)
 		service := NewCalendarService(mockCalendarRepo)
 		ctx := context.Background()
 		equipmentID := "eq-uuid-1"
@@ -74,7 +52,7 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		mockCalendarRepo.AssertExpectations(t)
 	})
 	t.Run("returns empty calendar when no equipment found", func(t *testing.T) {
-		mockCalendarRepo := new(MockCalendarRepository)
+		mockCalendarRepo := new(mocks.MockCalendarRepository)
 		service := NewCalendarService(mockCalendarRepo)
 		ctx := context.Background()
 		query := types.CalendarAvailabilityQuery{Days: 7}
@@ -85,7 +63,7 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		assert.Empty(t, result.Calendar)
 	})
 	t.Run("uses default values when not provided", func(t *testing.T) {
-		mockCalendarRepo := new(MockCalendarRepository)
+		mockCalendarRepo := new(mocks.MockCalendarRepository)
 		service := NewCalendarService(mockCalendarRepo)
 		ctx := context.Background()
 		query := types.CalendarAvailabilityQuery{}
@@ -100,7 +78,7 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		assert.Len(t, result.Calendar, 30)
 	})
 	t.Run("invalid date format returns validation error", func(t *testing.T) {
-		service := NewCalendarService(new(MockCalendarRepository))
+		service := NewCalendarService(new(mocks.MockCalendarRepository))
 		invalidDate := "invalid-date"
 		_, err := service.GetCalendarAvailability(context.Background(), types.CalendarAvailabilityQuery{
 			StartDate: &invalidDate,
@@ -110,7 +88,7 @@ func TestGetCalendarAvailability_Success(t *testing.T) {
 		assert.IsType(t, &types.ValidationError{}, err)
 	})
 	t.Run("multi day reservation marks range unavailable", func(t *testing.T) {
-		mockCalendarRepo := new(MockCalendarRepository)
+		mockCalendarRepo := new(mocks.MockCalendarRepository)
 		service := NewCalendarService(mockCalendarRepo)
 		ctx := context.Background()
 		startDate := "2025-12-01"

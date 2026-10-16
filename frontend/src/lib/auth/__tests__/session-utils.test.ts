@@ -1,6 +1,7 @@
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { getUserSession } from "../session-utils";
+import { createMockSessionInfo } from "@/test/fixtures/auth-fixtures";
 import type { SessionInfo } from "../../../types";
 
 const mockFetch = vi.fn();
@@ -9,15 +10,11 @@ vi.stubGlobal("fetch", mockFetch);
 vi.spyOn(logger, "info").mockImplementation(() => {});
 vi.spyOn(logger, "error").mockImplementation(() => {});
 
-const mockSessionInfo: SessionInfo = {
+const mockSessionInfo: SessionInfo = createMockSessionInfo({
   userId: "uuid-12345",
-  email: "test@example.com",
-  username: "testuser",
   role: "super_admin",
   creditBalance: 500,
-  isEnabled: true,
-  expiresAt: "2025-12-31T00:00:00Z",
-};
+});
 
 const validAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.validtoken";
 

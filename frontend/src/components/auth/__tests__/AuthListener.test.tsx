@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor, act } from "@testing-library/react";
-import type { Session, User, AuthChangeEvent } from "@supabase/supabase-js";
+import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 vi.mock("@/lib/auth/session-utils", () => ({
   getUserSession: vi.fn(),
@@ -30,25 +30,7 @@ import { AuthListener } from "../AuthListener";
 import { getUserSession } from "@/lib/auth/session-utils";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { supabase } from "@/lib/supabase";
-
-const createMockUser = (): User => ({
-  id: "test-user-id",
-  email: "test@example.com",
-  app_metadata: {},
-  user_metadata: {},
-  aud: "authenticated",
-  created_at: "2024-01-01T00:00:00Z",
-});
-
-const createMockSession = (overrides: Partial<Session> = {}): Session => ({
-  access_token: "mock-access-token",
-  refresh_token: "mock-refresh-token",
-  expires_in: 3600,
-  expires_at: Date.now() + 3600000,
-  token_type: "bearer",
-  user: createMockUser(),
-  ...overrides,
-});
+import { createMockSession } from "@/test/fixtures/auth-fixtures";
 
 const mockLocation = {
   href: "",
