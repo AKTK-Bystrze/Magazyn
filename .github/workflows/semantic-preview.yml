@@ -65,9 +65,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Run semantic-release in dry-run mode
+          # Point local branch to main so semantic-release evaluates against main release branch
+          git checkout -B main
+
+          # Run semantic-release in dry-run mode targeting local repository to bypass remote push checks
           set +e  # Don't exit on error
-          OUTPUT=$(npx semantic-release --dry-run --no-ci 2>&1)
+          ROOT_DIR=$(git rev-parse --show-toplevel)
+          OUTPUT=$(env -u GITHUB_ACTIONS -u GITHUB_REF -u GITHUB_EVENT_NAME npx semantic-release --dry-run --no-ci --repository-url "$ROOT_DIR" --plugins @semantic-release/commit-analyzer @semantic-release/release-notes-generator 2>&1)
           EXIT_CODE=$?
           set -e
           
@@ -81,8 +85,9 @@ jobs:
           # Extract release type
           RELEASE_TYPE=$(echo "$OUTPUT" | grep -oP 'Analysis of \d+ commits complete: \K\w+' || echo "no-release")
           
-          # Extract release notes (changelog)
-          CHANGELOG=$(echo "$OUTPUT" | sed -n '/Release note for version/,/^$/p' | tail -n +2 || echo "")
+          # Extract release notes (changelog) and normalize repo URLs
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY:-AKTK-Bystrze/Magazyn}"
+          CHANGELOG=$(echo "$OUTPUT" | awk '/Release note for version/{flag=1; next} flag' | sed "s|https://[^)]*/compare/|${REPO_URL}/compare/|g; s|https://[^)]*/commit/|${REPO_URL}/commit/|g" || echo "")
           
           # Determine if we have changes
           HAS_CHANGES=false
