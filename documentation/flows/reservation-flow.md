@@ -37,40 +37,6 @@ Cost = Days × CreditCostPerDay (from EquipmentType)
 
 Day calculation is located in `backend/internal/validation/date.go`:
 
-```go
-// CalculateDays returns the inclusive number of days between two ISO date strings (YYYY-MM-DD).
-// If dates cannot be parsed or if endDate is before startDate, it returns 0.
-// For valid ranges where startDate <= endDate, it returns at least 1.
-func CalculateDays(startDate, endDate string) int {
-	start, err := time.Parse(constants.DateFormatISO, startDate)
-	if err != nil {
-		return 0
-	}
-	end, err := time.Parse(constants.DateFormatISO, endDate)
-	if err != nil {
-		return 0
-	}
-	if end.Before(start) {
-		return 0
-	}
-	return int(end.Sub(start).Hours()/24) + 1
-}
-```
-
-Cost calculation is located in `backend/internal/service/reservation/pricing.go`:
-
-```go
-// CalculateReservationCost calculates the total credit cost for a reservation given the date range,
-// the equipment type's daily credit cost, and whether the reservation is free.
-func CalculateReservationCost(startDate, endDate string, creditCostPerDay int32, isFree bool) int32 {
-	if isFree {
-		return 0
-	}
-	days := int32(validation.CalculateDays(startDate, endDate))
-	return days * creditCostPerDay
-}
-```
-
 **Rules:**
 
 - Dates are in `YYYY-MM-DD` format

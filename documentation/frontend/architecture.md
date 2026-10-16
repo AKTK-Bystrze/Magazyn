@@ -57,41 +57,6 @@ The Astro SSR layer proxies requests to the Go backend to keep JWTs secure in HT
 
 To maintain clean Single Responsibility Principle (SRP) separation, interactive UI is organized into three distinct structural tiers:
 
-```mermaid
-flowchart TD
-    subgraph Containers["1. Route Containers (*Container.tsx)"]
-        RC[ReservationListContainer]
-        EC[EquipmentManagerContainer]
-        UC[UserListContainer]
-    end
-
-    subgraph Presentation["2. Presentation Islands (*View.tsx, *Table.tsx)"]
-        RT[ReservationTable]
-        RCV[ReservationCartView]
-    end
-
-    subgraph Subcomponents["3. Decomposed Subcomponents"]
-        RTR[ReservationTableRow]
-        RTH[ReservationTableHeader]
-        RAM[ReservationActionMenu]
-        RTS[ReservationTableStates]
-        CAA[CartAvailabilityAlerts]
-        ARD[AdminReservationDelegateSection]
-        EFF[EquipmentFormFields]
-        UFF[UserFormFields]
-        RDAF[ReservationDateAdjustmentFields]
-    end
-
-    RC --> RT
-    RC --> RTR
-    RCV --> CAA
-    RCV --> ARD
-    RT --> RTR
-    RT --> RTH
-    RT --> RAM
-    RT --> RTS
-```
-
 ### Tier 1: Route Containers (`src/components/{domain}/*Container.tsx`)
 - High-level orchestrators (`ReservationListContainer`, `EquipmentManagerContainer`, `UserListContainer`).
 - Responsible for: TanStack Query hook consumption, coordinating modal visibility state via custom hooks (`useReservationDialogs`), and routing event handlers down to presentational islands.

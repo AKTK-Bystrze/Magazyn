@@ -1,6 +1,6 @@
 # Documentation
 
-This index provides navigation to all project documentation and serves as an agent-centric quick-reference for everyday maintenance and development tasks.
+This index provides navigation to all project documentation
 
 ## ⚡ Agent Quick-Reference & Task Matrix
 

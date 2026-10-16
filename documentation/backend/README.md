@@ -12,42 +12,6 @@ The backend uses a strict **Layered Architecture** with Constructor Injection.
 - **`internal/repository/`**: Data Access layer. Concrete implementations interact with Supabase (e.g., `supabase/equipment_repository.go`).
 - **`internal/types/`**: Domain types and DTOs shared across layers.
 
-### 1.1 Decomposed Single Responsibility (SRP) Modules
-
-The backend decomposes oversized domains into single-responsibility sub-services, handlers, and repositories:
-
-#### Reservation Sub-Services (`internal/service/reservation/`)
-- **`reservation_service.go`**: Core interface (`ReservationService`), constructor (`NewReservationService`), and paginated retrieval (`List`, `GetByID`).
-- **`reservation_service_create.go`**: Reservation creation flow: multi-item validation, active equipment checks, type resolution, cost summation, atomic RPC execution, and async notification dispatch.
-- **`reservation_service_update.go`**: Mutation logic: permission checks (`validateUpdatePermissions`), date conflict checks, date modification with credit adjustment RPC, and cancellation refunds.
-- **`pricing.go`**: Pure pricing calculation functions (`CalculateReservationCost`) backed by `validation.CalculateDays(startDate, endDate)`.
-
-#### Equipment Sub-Services (`internal/service/equipment/`)
-- **`equipment_service.go`**: Core interface and dependency injection orchestrator.
-- **`equipment_service_availability.go`**: Availability calculations and date overlap queries against active reservations.
-- **`equipment_service_maintenance.go`**: Maintenance log recording and status transition audits.
-- **`equipment_service_mutation.go`**: CRUD operations (Create, Update, Archive/Delete) and public image URL formatting.
-- **`equipment_service_types.go`**: Equipment type queries and category credit pricing definitions.
-
-#### Handler Query Binders & Sub-Handlers
-- **`internal/handler/reservation/reservation_query.go`**: Binds date filters, status enums, user scope (`all` vs `my`), and pagination parameters from HTTP query parameters.
-- **`internal/handler/reservation/reservation_admin_handler.go`**: Admin endpoints for dashboard summaries (`/reservations/dashboard`) and batch status updates (`/reservations/bulk`).
-- **`internal/handler/equipment/equipment_query.go`**: Extracts and sanitizes search terms, category filters, and pagination parameters.
-- **`internal/handler/equipment/equipment_maintenance_handler.go`**: Dedicated handler for maintenance logs (`/equipment/{id}/maintenance-logs`).
-
-### 1.2 Repository RPC & Query Boundaries (`internal/repository/supabase/`)
-
-Data access operations are partitioned by query type and database execution boundary:
-- **`reservation_repository_rpc.go`**: Encapsulates atomic PostgreSQL stored procedures:
-  - `CreateReservationsAtomic`: Calls `create_reservation_atomic` stored procedure.
-  - `ModifyReservationDatesWithCredits`: Calls `modify_reservation_dates_with_credits` stored procedure.
-  - `RefundCredits`: Calls `refund_reservation_credits` stored procedure.
-- **`reservation_repository_query.go`**: Dynamic filtering, pagination, and RLS bypass logic for listing reservations.
-- **`reservation_repository_detail.go`**: Detailed queries joining reservations with user profiles and equipment metadata.
-- **`reservation_repository_stats.go`**: Aggregates for dashboard statistics (total active, pending pickups, returns).
-- **`equipment_repository_list.go` / `availability.go` / `favorites.go` / `maintenance.go`**: Decomposed repositories separating search queries, availability collision lookups, favorite equipment aggregations, and maintenance log storage.
-- **`analytics_repository.go`**: Dedicated repository for analytics queries, cleanly decoupled from `calendar_repository.go`.
-
 ## 2. Authentication & Authorization
 
 - **Middleware Flow**: Requests pass through `cors` -> `auth` -> `rbac`.
@@ -123,15 +87,8 @@ token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
 
 Test scaffolding is centralized under `backend/internal/testutils/` to ensure consistency and eliminate duplicate mock implementations:
 
-### Centralized Mocks (`internal/testutils/mocks/`)
-- **`mock_reservation_service.go`**: `MockReservationService` implementing `reservation.ReservationService` for handler tests.
-- **`mock_credit_history_service.go`**: `MockCreditHistoryService` implementing `credit.CreditHistoryService`.
-- **`mock_credit_request_repo.go`**: `MockCreditRequestRepository` replacing ad-hoc in-memory repository fakes.
-- **`mock_analytics_repo.go`**: `MockAnalyticsRepository` implementing `repository.AnalyticsRepository`.
-- **`mock_calendar_repo.go`**: `MockCalendarRepository` implementing `repository.CalendarRepository`.
-
-### Context & Request Helpers (`internal/testutils/helpers.go`)
-- **`NewAuthenticatedRequest(method, url, body, userID, role)`**: Generates an `*http.Request` pre-populated with context keys (`UserContextKey`, `UserProfileContextKey`, `AccessTokenContextKey`) and standard JSON headers, removing redundant test setup across handler test suites.
+- Centralized Mocks (`internal/testutils/mocks/`)
+- Context & Request Helpers (`internal/testutils/helpers.go`)
 
 ## 7. Extension Points
 
