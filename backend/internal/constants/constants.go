@@ -51,8 +51,6 @@ const (
 	DefaultPage = 1
 	// DefaultPerPage is the default number of items per page.
 	DefaultPerPage = 25
-	// MaxPerPage is the maximum items per page to prevent excessive data transfer.
-	MaxPerPage = 100
 )
 
 // AllowedPerPageValues defines the standard allowed page sizes for pagination.

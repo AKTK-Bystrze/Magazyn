@@ -3,26 +3,12 @@ import { equipmentAvailabilityDTOSchema } from "@/lib/validators/availability.va
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
- * Custom error class for availability transformation failures
- */
-export class AvailabilityTransformError extends Error {
-  constructor(
-    message: string,
-    public readonly data: unknown,
-    public readonly validationErrors?: unknown
-  ) {
-    super(message);
-    this.name = "AvailabilityTransformError";
-  }
-}
-
-/**
  * Transforms backend equipment availability DTO to frontend type
  * Performs runtime validation and handles snake_case to camelCase conversion
  *
  * @param dto - Backend availability DTO with snake_case fields
  * @returns Frontend equipment availability with camelCase fields
- * @throws AvailabilityTransformError if validation fails
+ * @throws Error if validation fails
  */
 export function transformEquipmentAvailabilityDTO(dto: unknown): EquipmentAvailability {
   const validated = equipmentAvailabilityDTOSchema.safeParse(dto);
@@ -32,11 +18,7 @@ export function transformEquipmentAvailabilityDTO(dto: unknown): EquipmentAvaila
       errors: validated.error.format(),
       receivedData: dto,
     });
-    throw new AvailabilityTransformError(
-      "Invalid availability data received from API",
-      dto,
-      validated.error.format()
-    );
+    throw new Error("Invalid availability data received from API");
   }
 
   const data = validated.data;

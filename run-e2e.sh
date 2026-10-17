@@ -34,7 +34,7 @@ export E2E_BASE_URL=http://localhost
 
 # Run the tests and capture the exit code so we can still clean up if they fail
 set +e
-npx cross-env E2E_BASE_URL="http://localhost" PUBLIC_SUPABASE_URL="http://127.0.0.1:54321" npx playwright test --workers=4 --retries=0
+npx playwright test --workers=4 --retries=0
 EXIT_CODE=$?
 set -e
 

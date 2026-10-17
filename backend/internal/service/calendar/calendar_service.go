@@ -10,21 +10,18 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-// CalendarService defines operations for calendar and availability functionality
-type CalendarService interface {
-	GetCalendarAvailability(ctx context.Context, query types.CalendarAvailabilityQuery) (*types.CalendarAvailabilityResponse, error)
-}
-
-type calendarService struct {
+// CalendarService provides operations for calendar and availability functionality.
+type CalendarService struct {
 	calendarRepo repository.CalendarRepository
 }
 
-func NewCalendarService(calendarRepo repository.CalendarRepository) CalendarService {
-	return &calendarService{
+func NewCalendarService(calendarRepo repository.CalendarRepository) *CalendarService {
+	return &CalendarService{
 		calendarRepo: calendarRepo,
 	}
 }
-func (s *calendarService) GetCalendarAvailability(ctx context.Context, query types.CalendarAvailabilityQuery) (*types.CalendarAvailabilityResponse, error) {
+
+func (s *CalendarService) GetCalendarAvailability(ctx context.Context, query types.CalendarAvailabilityQuery) (*types.CalendarAvailabilityResponse, error) {
 	logger.Infof(ctx, "GetCalendarAvailability - EquipmentID: %v, StartDate: %v, Days: %d", query.EquipmentID, query.StartDate, query.Days)
 	startDate := time.Now().Format(constants.DateFormatISO)
 	if query.StartDate != nil && *query.StartDate != "" {

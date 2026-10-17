@@ -20,7 +20,7 @@ import (
 
 type userTestFixture struct {
 	t       *testing.T
-	svc     user.UserService
+	svc     *user.UserService
 	credSvc credit.CreditHistoryService
 	client  *supa.Client
 	user1ID string

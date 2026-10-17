@@ -2,7 +2,8 @@ package user
 
 import (
 	"context"
-	"math"
+	"errors"
+	"slices"
 
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
@@ -10,34 +11,20 @@ import (
 	"magazyn/backend/internal/validation"
 )
 
-// UserService defines operations for user profile management.
-type UserService interface {
-	// GetProfile retrieves a single user profile by ID.
-	GetProfile(ctx context.Context, id string) (*types.UserResponse, error)
-	// ListUsers retrieves a paginated list of users with optional filters.
-	ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error)
-	// ListPublicUsers retrieves a paginated list of public user profiles.
-	ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error)
-	// CreateUser creates a new user profile with the given inputs.
-	CreateUser(ctx context.Context, req types.CreateUserRequest) (*types.UserResponse, error)
-	// UpdateUser updates an existing user profile with the given inputs.
-	UpdateUser(ctx context.Context, id string, req types.UpdateUserRequest) (*types.UserResponse, error)
-	// BulkAdjustCredits adjusts credit balance for multiple users and records history.
-	BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error
-}
-
-type userService struct {
+// UserService provides operations for user profile management.
+type UserService struct {
 	repo     repository.UserRepository
 	authRepo repository.AuthRepository
 }
 
-func NewUserService(repo repository.UserRepository, authRepo repository.AuthRepository) UserService {
-	return &userService{
+func NewUserService(repo repository.UserRepository, authRepo repository.AuthRepository) *UserService {
+	return &UserService{
 		repo:     repo,
 		authRepo: authRepo,
 	}
 }
-func (s *userService) BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error {
+
+func (s *UserService) BulkAdjustCredits(ctx context.Context, adminID string, req types.BulkAdjustCreditsRequest) error {
 	logger.Infof(ctx, "Bulk adjusting credits for %d users by %d", len(req.UserIDs), req.Amount)
 	err := s.repo.BulkAdjustCreditsAtomic(ctx, req.UserIDs, adminID, req.Amount, req.Reason, req.Description)
 	if err != nil {
@@ -46,7 +33,7 @@ func (s *userService) BulkAdjustCredits(ctx context.Context, adminID string, req
 	}
 	return nil
 }
-func (s *userService) GetProfile(ctx context.Context, id string) (*types.UserResponse, error) {
+func (s *UserService) GetProfile(ctx context.Context, id string) (*types.UserResponse, error) {
 	logger.Infof(ctx, "Fetching user profile for ID: %s", id)
 	profile, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -54,7 +41,7 @@ func (s *userService) GetProfile(ctx context.Context, id string) (*types.UserRes
 	}
 	return s.mapToUserResponse(profile), nil
 }
-func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error) {
+func (s *UserService) ListUsers(ctx context.Context, page, perPage int, role, search string) (*types.UserListResponse, error) {
 	var err error
 	page, perPage, err = validation.ValidatePagination(page, perPage)
 	if err != nil {
@@ -70,21 +57,17 @@ func (s *userService) ListUsers(ctx context.Context, page, perPage int, role, se
 	for i, p := range profiles {
 		userResponses[i] = *s.mapToUserResponse(&p)
 	}
-	totalPages := int(math.Ceil(float64(totalItems) / float64(perPage)))
-	if totalPages < 1 {
-		totalPages = 1
-	}
 	return &types.UserListResponse{
 		Users: userResponses,
 		Pagination: types.Pagination{
 			Page:       page,
 			PerPage:    perPage,
 			TotalItems: int(totalItems),
-			TotalPages: totalPages,
+			TotalPages: validation.CalculateTotalPages(totalItems, perPage),
 		},
 	}, nil
 }
-func (s *userService) ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error) {
+func (s *UserService) ListPublicUsers(ctx context.Context, page, perPage int, search string) (*types.PublicUserListResponse, error) {
 	var err error
 	page, perPage, err = validation.ValidatePagination(page, perPage)
 	if err != nil {
@@ -104,32 +87,26 @@ func (s *userService) ListPublicUsers(ctx context.Context, page, perPage int, se
 			CreditBalance: p.CreditBalance,
 		}
 	}
-	totalPages := int(math.Ceil(float64(totalItems) / float64(perPage)))
-	if totalPages < 1 {
-		totalPages = 1
-	}
 	return &types.PublicUserListResponse{
 		Users: userResponses,
 		Pagination: types.Pagination{
 			Page:       page,
 			PerPage:    perPage,
 			TotalItems: int(totalItems),
-			TotalPages: totalPages,
+			TotalPages: validation.CalculateTotalPages(totalItems, perPage),
 		},
 	}, nil
 }
-func (s *userService) CreateUser(ctx context.Context, req types.CreateUserRequest) (*types.UserResponse, error) {
+func (s *UserService) CreateUser(ctx context.Context, req types.CreateUserRequest) (*types.UserResponse, error) {
 	logger.Infof(ctx, "Creating user with email: %s", req.Email)
 	if _, err := s.repo.GetByEmail(ctx, req.Email); err == nil {
 		return nil, types.NewConflictError("User with this email already exists", map[string]string{"email": req.Email})
 	}
 	existingUsers, _, err := s.repo.List(ctx, 1, 1, "", req.Username)
-	if err == nil {
-		for _, u := range existingUsers {
-			if u.Username == req.Username {
-				return nil, types.NewConflictError("User with this username already exists", map[string]string{"username": req.Username})
-			}
-		}
+	if err == nil && slices.ContainsFunc(existingUsers, func(u types.PublicProfilesSelect) bool {
+		return u.Username == req.Username
+	}) {
+		return nil, types.NewConflictError("User with this username already exists", map[string]string{"username": req.Username})
 	}
 	creditBalance := int32(0)
 	if req.CreditBalance != nil {
@@ -140,7 +117,8 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 	authUser, err := s.authRepo.CreateUser(ctx, req.Email, tempPassword)
 	if err != nil {
 		logger.Errorf(ctx, "AuthRepo.CreateUser failed: %v", err)
-		if _, ok := err.(*types.ValidationError); ok {
+		var valErr *types.ValidationError
+		if errors.As(err, &valErr) {
 			return nil, err
 		}
 		return nil, types.NewInternalError("Failed to create auth user", err)
@@ -160,7 +138,7 @@ func (s *userService) CreateUser(ctx context.Context, req types.CreateUserReques
 	}
 	return s.mapToUserResponse(created), nil
 }
-func (s *userService) UpdateUser(ctx context.Context, id string, req types.UpdateUserRequest) (*types.UserResponse, error) {
+func (s *UserService) UpdateUser(ctx context.Context, id string, req types.UpdateUserRequest) (*types.UserResponse, error) {
 	logger.Infof(ctx, "Updating user ID: %s", id)
 	_, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -178,7 +156,7 @@ func (s *userService) UpdateUser(ctx context.Context, id string, req types.Updat
 	}
 	return s.mapToUserResponse(updated), nil
 }
-func (s *userService) mapToUserResponse(p *types.PublicProfilesSelect) *types.UserResponse {
+func (s *UserService) mapToUserResponse(p *types.PublicProfilesSelect) *types.UserResponse {
 	return &types.UserResponse{
 		ID:            p.ID,
 		Email:         p.Email,

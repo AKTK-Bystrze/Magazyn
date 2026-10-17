@@ -14,11 +14,11 @@ import (
 
 // EquipmentHandler handles HTTP endpoints for managing equipment inventory.
 type EquipmentHandler struct {
-	service equipmentservice.EquipmentService
+	service *equipmentservice.EquipmentService
 }
 
 // NewEquipmentHandler creates a new instance of EquipmentHandler.
-func NewEquipmentHandler(s equipmentservice.EquipmentService) *EquipmentHandler {
+func NewEquipmentHandler(s *equipmentservice.EquipmentService) *EquipmentHandler {
 	return &EquipmentHandler{service: s}
 }
 

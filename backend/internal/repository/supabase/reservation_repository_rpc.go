@@ -62,12 +62,8 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 	if jsonStr == "" {
 		return nil, types.NewInternalError("RPC returned empty response", nil)
 	}
-	var rawResponse map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
-		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
-	}
-	if msg, ok := rawResponse["message"]; ok {
-		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
+	if err := parseRPCMessageError(jsonStr); err != nil {
+		return nil, err
 	}
 	var result struct {
 		ID        string  `json:"id"`
@@ -99,12 +95,8 @@ func (r *reservationRepository) BulkUpdateStatusAtomic(ctx context.Context, ids 
 	if jsonStr == "" {
 		return nil, types.NewInternalError("RPC returned empty response", nil)
 	}
-	var rawResponse map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
-		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
-	}
-	if msg, ok := rawResponse["message"]; ok {
-		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
+	if err := parseRPCMessageError(jsonStr); err != nil {
+		return nil, err
 	}
 	var result types.BulkStatusUpdateResponse
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
@@ -135,12 +127,8 @@ func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Co
 	if jsonStr == "" {
 		return nil, types.NewInternalError("RPC returned empty response", nil)
 	}
-	var rawResponse map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
-		return nil, types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
-	}
-	if msg, ok := rawResponse["message"]; ok {
-		return nil, types.NewInternalError(fmt.Sprintf("%v", msg), nil)
+	if err := parseRPCMessageError(jsonStr); err != nil {
+		return nil, err
 	}
 	var result types.ModifyDatesResponse
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {

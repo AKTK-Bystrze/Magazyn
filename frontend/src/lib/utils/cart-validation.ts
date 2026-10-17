@@ -51,8 +51,6 @@ export function validateDateRange(
   return errors;
 }
 
-export { calculateDays } from "@/lib/utils/date-utils";
-
 /**
  * Calculates the total cost for all items in the cart
  *

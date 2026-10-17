@@ -1,9 +1,10 @@
 package supabase
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
-	"sort"
+	"slices"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
@@ -91,8 +92,8 @@ func (r *analyticsRepository) GetTopRentersForEquipment(ctx context.Context, equ
 	for _, stats := range userStats {
 		result = append(result, *stats)
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].ReservationCount > result[j].ReservationCount
+	slices.SortFunc(result, func(a, b types.TopRenterDTO) int {
+		return cmp.Compare(b.ReservationCount, a.ReservationCount)
 	})
 	result = result[:min(len(result), limit)]
 	return result, nil

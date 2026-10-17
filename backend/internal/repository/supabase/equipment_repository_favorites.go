@@ -30,9 +30,7 @@ func (r *equipmentRepository) GetUserFavorites(ctx context.Context, userID strin
 	favorites := make(map[string]bool)
 	maxCount := 0
 	for _, c := range counts {
-		if c > maxCount {
-			maxCount = c
-		}
+		maxCount = max(maxCount, c)
 	}
 	favCount := 0
 	for eqID, c := range counts {

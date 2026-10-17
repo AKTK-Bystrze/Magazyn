@@ -1,10 +1,4 @@
-import {
-  MILLISECONDS_IN_DAY,
-  MIDNIGHT_HOURS,
-  MIDNIGHT_MINUTES,
-  MIDNIGHT_SECONDS,
-  MIDNIGHT_MILLISECONDS,
-} from "@/lib/config/constants";
+import { MILLISECONDS_IN_DAY } from "@/lib/config/constants";
 
 /**
  * Gets today's date at midnight (00:00:00.000)
@@ -14,7 +8,7 @@ import {
  */
 export function getTodayAtMidnight(): Date {
   const today = new Date();
-  today.setHours(MIDNIGHT_HOURS, MIDNIGHT_MINUTES, MIDNIGHT_SECONDS, MIDNIGHT_MILLISECONDS);
+  today.setHours(0, 0, 0, 0);
   return today;
 }
 

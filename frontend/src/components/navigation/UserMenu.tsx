@@ -15,11 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Settings, CreditCard } from "lucide-react";
 import { handleLogout } from "@/lib/auth/logout";
-import { getInitials } from "@/lib/utils/user-utils";
 import { ROUTES } from "@/lib/config/routes";
 
 interface UserMenuProps {
@@ -41,14 +39,12 @@ export function UserMenu({ user }: UserMenuProps) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-9 w-9 rounded-full"
+          className="relative h-9 w-9 rounded-full p-0"
           data-testid="user-menu-trigger"
         >
-          <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {getInitials(user.email)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+            {user.email.slice(0, 2).toUpperCase()}
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount data-testid="user-menu-dropdown">

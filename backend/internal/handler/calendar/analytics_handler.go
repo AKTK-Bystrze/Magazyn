@@ -14,11 +14,11 @@ import (
 
 // AnalyticsHandler handles HTTP endpoints for analytics and reporting.
 type AnalyticsHandler struct {
-	service calendarservice.AnalyticsService
+	service *calendarservice.AnalyticsService
 }
 
 // NewAnalyticsHandler creates a new instance of AnalyticsHandler.
-func NewAnalyticsHandler(s calendarservice.AnalyticsService) *AnalyticsHandler {
+func NewAnalyticsHandler(s *calendarservice.AnalyticsService) *AnalyticsHandler {
 	return &AnalyticsHandler{service: s}
 }
 

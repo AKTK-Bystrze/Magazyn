@@ -2,6 +2,7 @@ package credit
 
 import (
 	"context"
+	"slices"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
@@ -9,21 +10,15 @@ import (
 	"magazyn/backend/internal/validation"
 )
 
-type CreditRequestService interface {
-	ListRequests(ctx context.Context, page, perPage int) (*types.CreditRequestListResponse, error)
-	CreateRequest(ctx context.Context, userID string, req types.CreateCreditRequestDTO) (*types.CreditRequestDTO, error)
-	UpdateRequest(ctx context.Context, userID string, id string, req types.UpdateCreditRequestDTO) (*types.CreditRequestDTO, error)
-	ReviewRequest(ctx context.Context, adminID string, id string, req types.ReviewCreditRequestDTO) error
-	GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error)
-}
-type creditRequestService struct {
+type CreditRequestService struct {
 	repo repository.CreditRequestRepository
 }
 
-func NewCreditRequestService(repo repository.CreditRequestRepository) CreditRequestService {
-	return &creditRequestService{repo: repo}
+func NewCreditRequestService(repo repository.CreditRequestRepository) *CreditRequestService {
+	return &CreditRequestService{repo: repo}
 }
-func (s *creditRequestService) ListRequests(ctx context.Context, page, perPage int) (*types.CreditRequestListResponse, error) {
+
+func (s *CreditRequestService) ListRequests(ctx context.Context, page, perPage int) (*types.CreditRequestListResponse, error) {
 	var err error
 	page, perPage, err = validation.ValidatePagination(page, perPage)
 	if err != nil {
@@ -33,29 +28,24 @@ func (s *creditRequestService) ListRequests(ctx context.Context, page, perPage i
 	if err != nil {
 		return nil, err
 	}
-	totalPages := 0
-	if perPage > 0 {
-		totalPages = int((total + int64(perPage) - 1) / int64(perPage))
-	}
 	return &types.CreditRequestListResponse{
 		Requests: items,
 		Pagination: types.Pagination{
 			Page:       page,
 			PerPage:    perPage,
 			TotalItems: int(total),
-			TotalPages: totalPages,
+			TotalPages: validation.CalculateTotalPages(total, perPage),
 		},
 	}, nil
 }
-func (s *creditRequestService) CreateRequest(ctx context.Context, userID string, req types.CreateCreditRequestDTO) (*types.CreditRequestDTO, error) {
+
+func (s *CreditRequestService) CreateRequest(ctx context.Context, userID string, req types.CreateCreditRequestDTO) (*types.CreditRequestDTO, error) {
 	if req.CreditsValue <= 0 {
 		return nil, types.NewValidationError("credits_value must be strictly positive", map[string]int{"credits_value": int(req.CreditsValue)})
 	}
 	req.Helpers = deduplicateHelpers(req.Helpers)
-	for _, h := range req.Helpers {
-		if h == userID {
-			return nil, types.NewValidationError("Requestor cannot be listed as a helper", nil)
-		}
+	if slices.Contains(req.Helpers, userID) {
+		return nil, types.NewValidationError("Requestor cannot be listed as a helper", nil)
 	}
 	dto := types.CreditRequestDTO{
 		Title:        req.Title,
@@ -68,7 +58,7 @@ func (s *creditRequestService) CreateRequest(ctx context.Context, userID string,
 	}
 	return s.repo.Create(ctx, dto)
 }
-func (s *creditRequestService) UpdateRequest(ctx context.Context, userID string, id string, req types.UpdateCreditRequestDTO) (*types.CreditRequestDTO, error) {
+func (s *CreditRequestService) UpdateRequest(ctx context.Context, userID string, id string, req types.UpdateCreditRequestDTO) (*types.CreditRequestDTO, error) {
 	existing, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -109,7 +99,7 @@ func (s *creditRequestService) UpdateRequest(ctx context.Context, userID string,
 	}
 	return s.repo.Update(ctx, id, *existing)
 }
-func (s *creditRequestService) ReviewRequest(ctx context.Context, adminID string, id string, req types.ReviewCreditRequestDTO) error {
+func (s *CreditRequestService) ReviewRequest(ctx context.Context, adminID string, id string, req types.ReviewCreditRequestDTO) error {
 	existing, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -126,17 +116,14 @@ func (s *creditRequestService) ReviewRequest(ctx context.Context, adminID string
 	return s.repo.ReviewAtomic(ctx, id, adminID, req.Status, req.CreditsValue, req.Helpers,
 		constants.CreditReasonWorkCredit, existing.Title)
 }
-func (s *creditRequestService) GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error) {
+func (s *CreditRequestService) GetLeaderboard(ctx context.Context) ([]types.UserCreditLeaderboardItem, error) {
 	return s.repo.GetLeaderboard(ctx)
 }
 func deduplicateHelpers(helpers []string) []string {
-	seen := make(map[string]bool, len(helpers))
-	result := make([]string, 0, len(helpers))
-	for _, h := range helpers {
-		if !seen[h] {
-			seen[h] = true
-			result = append(result, h)
-		}
+	if len(helpers) < 2 {
+		return helpers
 	}
-	return result
+	cp := slices.Clone(helpers)
+	slices.Sort(cp)
+	return slices.Compact(cp)
 }

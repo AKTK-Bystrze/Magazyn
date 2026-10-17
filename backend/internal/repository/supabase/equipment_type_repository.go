@@ -3,6 +3,7 @@ package supabase
 import (
 	"context"
 	"encoding/json"
+	"slices"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/repository"
@@ -43,14 +44,9 @@ func (r *equipmentTypeRepository) GetTypesByIDs(ctx context.Context, ids []strin
 	if len(ids) == 0 {
 		return make(map[string]types.PublicEquipmentTypesSelect), nil
 	}
-	uniqueIDs := make([]string, 0, len(ids))
-	seen := make(map[string]bool)
-	for _, id := range ids {
-		if !seen[id] {
-			seen[id] = true
-			uniqueIDs = append(uniqueIDs, id)
-		}
-	}
+	uniqueIDs := slices.Clone(ids)
+	slices.Sort(uniqueIDs)
+	uniqueIDs = slices.Compact(uniqueIDs)
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	data, _, err := client.From(constants.TableEquipmentTypes).
 		Select("*", "exact", false).

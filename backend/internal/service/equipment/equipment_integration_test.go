@@ -21,7 +21,7 @@ import (
 
 type equipmentTestFixture struct {
 	t           *testing.T
-	svc         equipment.EquipmentService
+	svc         *equipment.EquipmentService
 	client      *supa.Client
 	testUserID  string
 	equipmentID string

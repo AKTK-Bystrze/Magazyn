@@ -3,6 +3,7 @@ package common
 
 import (
 	"net/http"
+	"slices"
 
 	"magazyn/backend/internal/logger"
 )
@@ -12,13 +13,7 @@ func CORSMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
-			allowed := false
-			for _, allowedOrigin := range allowedOrigins {
-				if origin == allowedOrigin || allowedOrigin == "*" {
-					allowed = true
-					break
-				}
-			}
+			allowed := slices.Contains(allowedOrigins, "*") || (origin != "" && slices.Contains(allowedOrigins, origin))
 			if allowed && origin != "" {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 			} else if len(allowedOrigins) == 1 && allowedOrigins[0] == "*" {

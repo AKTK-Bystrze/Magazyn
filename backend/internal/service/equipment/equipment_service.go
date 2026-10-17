@@ -3,44 +3,25 @@ package equipment
 import (
 	"context"
 	"fmt"
-	"math"
 	"strings"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/types"
+	"magazyn/backend/internal/validation"
 )
 
-// EquipmentService defines operations for equipment management
-type EquipmentService interface {
-	// List retrieves a paginated list of equipment items with availability and favorite metadata
-	List(ctx context.Context, userID string, query types.EquipmentListQuery) (*types.EquipmentListResponse, error)
-	// GetByID retrieves detailed equipment information including maintenance logs
-	GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error)
-	// Create creates new equipment with the given parameters
-	Create(ctx context.Context, cmd types.CreateEquipmentCommand, adminID string) (*types.EquipmentDTO, error)
-	// Update updates equipment fields
-	Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error)
-	// Archive soft-deletes equipment by setting is_archived = true
-	Archive(ctx context.Context, id string) error
-	// CheckAvailability checks if equipment is available for a given date range
-	CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error)
-	// ListEquipmentTypes retrieves all equipment types
-	ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error)
-	// CreateMaintenanceLog adds a maintenance log entry for equipment
-	CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error)
-}
-
-type equipmentService struct {
+// EquipmentService provides operations for equipment management.
+type EquipmentService struct {
 	repo     repository.EquipmentRepository
 	typeRepo repository.EquipmentTypeRepository
 	userRepo repository.UserRepository
 	baseURL  string
 }
 
-func NewEquipmentService(repo repository.EquipmentRepository, typeRepo repository.EquipmentTypeRepository, userRepo repository.UserRepository, baseURL string) EquipmentService {
-	return &equipmentService{
+func NewEquipmentService(repo repository.EquipmentRepository, typeRepo repository.EquipmentTypeRepository, userRepo repository.UserRepository, baseURL string) *EquipmentService {
+	return &EquipmentService{
 		repo:     repo,
 		typeRepo: typeRepo,
 		userRepo: userRepo,
@@ -48,7 +29,7 @@ func NewEquipmentService(repo repository.EquipmentRepository, typeRepo repositor
 	}
 }
 
-func (s *equipmentService) List(ctx context.Context, userID string, query types.EquipmentListQuery) (*types.EquipmentListResponse, error) {
+func (s *EquipmentService) List(ctx context.Context, userID string, query types.EquipmentListQuery) (*types.EquipmentListResponse, error) {
 	logger.Infof(ctx, "Listing equipment - Page: %d, PerPage: %d, TypeID: %v, Status: %v", query.Page, query.PerPage, query.TypeID, query.Status)
 	equipmentList, totalItems, err := s.repo.List(ctx, query)
 	if err != nil {
@@ -81,22 +62,18 @@ func (s *equipmentService) List(ctx context.Context, userID string, query types.
 		isFav := favoriteIDs[eq.ID]
 		dtos[i] = s.mapToEquipmentDTO(eq, typeName, cost, &isFav)
 	}
-	totalPages := int(math.Ceil(float64(totalItems) / float64(query.PerPage)))
-	if totalPages < 1 {
-		totalPages = 1
-	}
 	return &types.EquipmentListResponse{
 		Equipment: dtos,
 		Pagination: types.Pagination{
 			Page:       query.Page,
 			PerPage:    query.PerPage,
 			TotalItems: int(totalItems),
-			TotalPages: totalPages,
+			TotalPages: validation.CalculateTotalPages(totalItems, query.PerPage),
 		},
 	}, nil
 }
 
-func (s *equipmentService) mapToEquipmentDTO(eq types.PublicEquipmentSelect, typeName string, cost int32, isFav *bool) types.EquipmentDTO {
+func (s *EquipmentService) mapToEquipmentDTO(eq types.PublicEquipmentSelect, typeName string, cost int32, isFav *bool) types.EquipmentDTO {
 	return types.EquipmentDTO{
 		ID:               eq.ID,
 		InternalID:       eq.InternalID,
@@ -114,7 +91,7 @@ func (s *equipmentService) mapToEquipmentDTO(eq types.PublicEquipmentSelect, typ
 	}
 }
 
-func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error) {
+func (s *EquipmentService) GetByID(ctx context.Context, id string) (*types.EquipmentDetailDTO, error) {
 	logger.Infof(ctx, "Fetching equipment details for ID: %s", id)
 	eq, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -160,7 +137,7 @@ func (s *equipmentService) GetByID(ctx context.Context, id string) (*types.Equip
 	}, nil
 }
 
-func (s *equipmentService) generateImageURL(imagePath *string) *string {
+func (s *EquipmentService) generateImageURL(imagePath *string) *string {
 	if imagePath == nil || *imagePath == "" {
 		return nil
 	}
@@ -171,7 +148,7 @@ func (s *equipmentService) generateImageURL(imagePath *string) *string {
 	return &url
 }
 
-func (s *equipmentService) CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error) {
+func (s *EquipmentService) CheckAvailability(ctx context.Context, id string, query types.AvailabilityQuery) (*types.AvailabilityResponse, error) {
 	_, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, types.NewNotFoundError("Equipment", id)
@@ -196,7 +173,7 @@ func (s *equipmentService) CheckAvailability(ctx context.Context, id string, que
 	}, nil
 }
 
-func (s *equipmentService) ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error) {
+func (s *EquipmentService) ListEquipmentTypes(ctx context.Context) (*types.EquipmentTypeListResponse, error) {
 	typesList, err := s.typeRepo.ListAll(ctx)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to fetch equipment types: %v", err)
@@ -207,7 +184,7 @@ func (s *equipmentService) ListEquipmentTypes(ctx context.Context) (*types.Equip
 	}, nil
 }
 
-func (s *equipmentService) CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error) {
+func (s *EquipmentService) CreateMaintenanceLog(ctx context.Context, equipmentID string, notes *string, userID string) (*types.MaintenanceLogDTO, error) {
 	eq, err := s.repo.GetByID(ctx, equipmentID)
 	if err != nil {
 		return nil, types.NewNotFoundError("Equipment", equipmentID)

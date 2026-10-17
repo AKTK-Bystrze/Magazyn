@@ -13,11 +13,11 @@ import (
 
 // CalendarHandler handles HTTP endpoints for calendar availability.
 type CalendarHandler struct {
-	service calendarservice.CalendarService
+	service *calendarservice.CalendarService
 }
 
 // NewCalendarHandler creates a new instance of CalendarHandler.
-func NewCalendarHandler(s calendarservice.CalendarService) *CalendarHandler {
+func NewCalendarHandler(s *calendarservice.CalendarService) *CalendarHandler {
 	return &CalendarHandler{service: s}
 }
 

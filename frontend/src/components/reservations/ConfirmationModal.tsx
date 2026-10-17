@@ -95,8 +95,8 @@ export function ConfirmationModal({
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Podsumowanie Kosztu</h3>
             <div className="bg-muted p-4 rounded-lg space-y-2">
-              {costBreakdown.isFreeReservation ? (
-                <div className="space-y-2">
+              <div className="space-y-2">
+                {costBreakdown.isFreeReservation && (
                   <div className="text-center py-4">
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                       Darmowa Rezerwacja
@@ -105,77 +105,64 @@ export function ConfirmationModal({
                       Ta rezerwacja nie będzie obciążała konta godzinkami
                     </p>
                   </div>
-                  {costBreakdown.itemCosts.map((item) => (
-                    <div
-                      key={item.equipmentId}
-                      className="w-full flex justify-between items-center text-sm border-b last:border-0 pb-2 last:pb-0"
-                    >
-                      <span className="text-foreground">
-                        {item.name}{" "}
-                        <span className="text-muted-foreground">
-                          ({item.creditCostPerDay} × {item.days})
-                        </span>
+                )}
+                {costBreakdown.itemCosts.map((item) => (
+                  <div
+                    key={item.equipmentId}
+                    className={`w-full flex justify-between items-center text-sm ${
+                      costBreakdown.isFreeReservation ? "border-b last:border-0 pb-2 last:pb-0" : ""
+                    }`}
+                  >
+                    <span className="text-foreground">
+                      {item.name}{" "}
+                      <span className="text-muted-foreground">
+                        ({item.creditCostPerDay} × {item.days})
                       </span>
-                      <span className="text-green-600 dark:text-green-400 font-medium text-right">
-                        0 godzinek
-                      </span>
-                    </div>
-                  ))}
-                  <div className="border-t pt-2 mt-2 w-full flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Aktualne Saldo:</span>
-                    <span data-testid="confirmation-current-balance" className="text-right">
-                      {costBreakdown.currentBalance} godzinki
                     </span>
-                  </div>
-                  <div className="w-full flex justify-between items-center font-semibold text-lg border-t pt-2">
-                    <span>Pozostałe Saldo:</span>
                     <span
-                      className="text-primary text-right"
-                      data-testid="confirmation-remaining-balance"
+                      className={
+                        costBreakdown.isFreeReservation
+                          ? "text-green-600 dark:text-green-400 font-medium text-right"
+                          : "text-right"
+                      }
                     >
-                      {costBreakdown.currentBalance} godzinki
+                      {costBreakdown.isFreeReservation
+                        ? "0 godzinek"
+                        : `${item.totalCost} godzinki`}
                     </span>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {costBreakdown.itemCosts.map((item) => (
-                    <div
-                      key={item.equipmentId}
-                      className="w-full flex justify-between items-center text-sm"
-                    >
-                      <span className="text-foreground">
-                        {item.name}{" "}
-                        <span className="text-muted-foreground">
-                          ({item.creditCostPerDay} × {item.days})
-                        </span>
-                      </span>
-                      <span className="text-right">{item.totalCost} godzinki</span>
-                    </div>
-                  ))}
+                ))}
+                {!costBreakdown.isFreeReservation && (
                   <div className="border-t pt-2 mt-2 w-full flex justify-between items-center font-semibold">
                     <span>Całkowity Koszt:</span>
                     <span className="text-destructive text-right">
                       -{costBreakdown.totalCreditCost} godzinki
                     </span>
                   </div>
-                  <div className="w-full flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Aktualne Saldo:</span>
-                    <span data-testid="confirmation-current-balance" className="text-right">
-                      {costBreakdown.currentBalance} godzinki
-                    </span>
-                  </div>
-                  <div className="w-full flex justify-between items-center font-semibold text-lg border-t pt-2">
-                    <span>Pozostałe Saldo:</span>
-                    <span
-                      className="text-primary text-right"
-                      data-testid="confirmation-remaining-balance"
-                    >
-                      {costBreakdown.remainingBalance} godzinki
-                    </span>
-                  </div>
+                )}
+                <div
+                  className={`w-full flex justify-between items-center text-sm ${
+                    costBreakdown.isFreeReservation ? "border-t pt-2 mt-2" : ""
+                  }`}
+                >
+                  <span className="text-muted-foreground">Aktualne Saldo:</span>
+                  <span data-testid="confirmation-current-balance" className="text-right">
+                    {costBreakdown.currentBalance} godzinki
+                  </span>
                 </div>
-              )}
+                <div className="w-full flex justify-between items-center font-semibold text-lg border-t pt-2">
+                  <span>Pozostałe Saldo:</span>
+                  <span
+                    className="text-primary text-right"
+                    data-testid="confirmation-remaining-balance"
+                  >
+                    {costBreakdown.isFreeReservation
+                      ? costBreakdown.currentBalance
+                      : costBreakdown.remainingBalance}{" "}
+                    godzinki
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 

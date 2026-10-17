@@ -45,3 +45,14 @@ func parseRPCVoidResponse(jsonStr string) error {
 	}
 	return nil
 }
+
+func parseRPCMessageError(jsonStr string) error {
+	var rawResponse map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &rawResponse); err != nil {
+		return types.NewInternalError("Failed to parse RPC response: "+jsonStr, err)
+	}
+	if msg, ok := rawResponse["message"]; ok {
+		return types.NewInternalError(fmt.Sprintf("%v", msg), nil)
+	}
+	return nil
+}

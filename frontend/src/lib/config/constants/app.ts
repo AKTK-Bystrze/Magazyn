@@ -13,10 +13,6 @@ export const DEFAULT_PAGE_SIZE = 25;
 export const SEARCH_DEBOUNCE_MS = 300;
 
 export const MILLISECONDS_IN_DAY = 1000 * 60 * 60 * 24;
-export const MIDNIGHT_HOURS = 0;
-export const MIDNIGHT_MINUTES = 0;
-export const MIDNIGHT_SECONDS = 0;
-export const MIDNIGHT_MILLISECONDS = 0;
 
 export const Z_INDEX_MODAL_BACKDROP = 50;
 export const Z_INDEX_MODAL_CONTENT = 10;

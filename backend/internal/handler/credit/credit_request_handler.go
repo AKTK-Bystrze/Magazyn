@@ -12,11 +12,11 @@ import (
 
 // CreditRequestHandler handles HTTP endpoints for credit requests (creation, review, leaderboard).
 type CreditRequestHandler struct {
-	service credit.CreditRequestService
+	service *credit.CreditRequestService
 }
 
 // NewCreditRequestHandler creates a new instance of CreditRequestHandler.
-func NewCreditRequestHandler(service credit.CreditRequestService) *CreditRequestHandler {
+func NewCreditRequestHandler(service *credit.CreditRequestService) *CreditRequestHandler {
 	return &CreditRequestHandler{service: service}
 }
 

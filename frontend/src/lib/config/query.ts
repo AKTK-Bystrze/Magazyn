@@ -1,9 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { QUERY_STALE_TIME_MS } from "./constants/app";
 
-/** Standard stale time for React Query queries (1 minute in ms) */
-export const QUERY_STALE_TIME = QUERY_STALE_TIME_MS;
-
 /** Standard cache garbage collection time for React Query (10 minutes in ms) */
 export const QUERY_CACHE_TIME = 10 * 60 * 1000;
 
@@ -14,7 +11,7 @@ export const QUERY_CACHE_TIME = 10 * 60 * 1000;
 export const queryConfig = {
   defaultOptions: {
     queries: {
-      staleTime: QUERY_STALE_TIME,
+      staleTime: QUERY_STALE_TIME_MS,
       gcTime: QUERY_CACHE_TIME,
       refetchOnWindowFocus: false,
       retry: 1,

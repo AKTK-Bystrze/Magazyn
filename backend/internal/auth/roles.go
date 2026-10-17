@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"slices"
 	"strings"
 
 	"magazyn/backend/internal/types"
@@ -21,11 +22,7 @@ func HasRole(profile *types.PublicProfilesSelect, allowedRoles ...string) bool {
 	if profile == nil {
 		return false
 	}
-	currentRole := profile.Role
-	for _, role := range allowedRoles {
-		if strings.EqualFold(currentRole, role) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(allowedRoles, func(role string) bool {
+		return strings.EqualFold(profile.Role, role)
+	})
 }

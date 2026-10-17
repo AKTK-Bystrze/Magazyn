@@ -134,17 +134,6 @@ export const equipmentApi = {
   },
 
   /**
-   * Get equipment details only (without maintenance logs)
-   *
-   * @param id - Equipment ID
-   * @returns Promise with equipment details
-   */
-  async getDetails(id: string): Promise<EquipmentSearchItem> {
-    const { equipment } = await this.getDetailsWithLogs(id);
-    return equipment;
-  },
-
-  /**
    * Add maintenance log entry for equipment
    *
    * @param equipmentId - Equipment ID

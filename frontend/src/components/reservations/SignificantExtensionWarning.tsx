@@ -1,6 +1,5 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
-import { pluralize } from "@/lib/utils/text-utils";
 import { ICON_SIZE_SM } from "@/lib/config/constants";
 
 interface DateChangeCreditInfoProps {
@@ -50,8 +49,8 @@ export function SignificantExtensionWarning({ creditAdjustment }: DateChangeCred
           </p>
           <p className="text-sm">
             {isCharge
-              ? `You will be charged ${amount} ${pluralize(amount, "credit")} for extending this reservation.`
-              : `You will receive a refund of ${amount} ${pluralize(amount, "credit")} for shortening this reservation.`}
+              ? `You will be charged ${amount} ${amount === 1 ? "credit" : "credits"} for extending this reservation.`
+              : `You will receive a refund of ${amount} ${amount === 1 ? "credit" : "credits"} for shortening this reservation.`}
           </p>
         </div>
       </AlertDescription>

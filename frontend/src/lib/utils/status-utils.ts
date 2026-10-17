@@ -29,7 +29,7 @@ export function canChangeStatus(
   isOwner: boolean,
   isAdmin: boolean
 ): StatusActionConfig {
-  if (isStatusFinal(currentStatus)) {
+  if (isStatusFinal(currentStatus) || (!isOwner && !isAdmin)) {
     return {
       canCancel: false,
       canMarkReturned: false,
@@ -38,31 +38,12 @@ export function canChangeStatus(
     };
   }
 
-  if (isOwner && !isAdmin) {
-    return {
-      canCancel: currentStatus === RESERVATION_STATUS.PENDING,
-      canMarkReturned:
-        currentStatus === RESERVATION_STATUS.PENDING || currentStatus === RESERVATION_STATUS.RENTED,
-      canChangeStatus: false,
-      availableStatuses: [],
-    };
-  }
-
-  if (isAdmin) {
-    return {
-      canCancel: currentStatus === RESERVATION_STATUS.PENDING,
-      canMarkReturned:
-        currentStatus === RESERVATION_STATUS.PENDING || currentStatus === RESERVATION_STATUS.RENTED,
-      canChangeStatus: true,
-      availableStatuses: getAvailableTransitions(currentStatus, isAdmin),
-    };
-  }
-
   return {
-    canCancel: false,
-    canMarkReturned: false,
-    canChangeStatus: false,
-    availableStatuses: [],
+    canCancel: currentStatus === RESERVATION_STATUS.PENDING,
+    canMarkReturned:
+      currentStatus === RESERVATION_STATUS.PENDING || currentStatus === RESERVATION_STATUS.RENTED,
+    canChangeStatus: isAdmin,
+    availableStatuses: isAdmin ? getAvailableTransitions(currentStatus, isAdmin) : [],
   };
 }
 

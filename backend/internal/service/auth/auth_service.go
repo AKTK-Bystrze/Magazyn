@@ -57,9 +57,8 @@ func (s *authService) GetSession(ctx context.Context, userID string, userToken s
 	return response, nil
 }
 func emailDomain(email string) string {
-	parts := strings.Split(email, "@")
-	if len(parts) == 2 {
-		return parts[1]
+	if _, domain, ok := strings.Cut(email, "@"); ok && domain != "" {
+		return domain
 	}
 	return "unknown"
 }
