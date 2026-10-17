@@ -1,3 +1,10 @@
+## [0.6.2](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.1...v0.6.2) (2026-10-17)
+
+
+### Bug Fixes
+
+* **ci:** run semantic-release from root to fix changelog commit and preview ([#245](https://github.com/AKTK-Bystrze/Magazyn/issues/245)) ([8ec94eb](https://github.com/AKTK-Bystrze/Magazyn/commit/8ec94eb71c951a846595a3ed855b5777a138b7b2))
+
 ## [0.6.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.0...v0.6.1) (2026-10-16)
 
 
