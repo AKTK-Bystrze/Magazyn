@@ -61,17 +61,19 @@ jobs:
 
       - name: Run Semantic Release (Dry Run)
         id: semantic
-        working-directory: ./frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Point local branch to main so semantic-release evaluates against main release branch
           git checkout -B main
 
+          # Link node_modules so plugins resolve from repository root
+          ln -sf frontend/node_modules node_modules
+
           # Run semantic-release in dry-run mode targeting local repository to bypass remote push checks
           set +e  # Don't exit on error
           ROOT_DIR=$(git rev-parse --show-toplevel)
-          OUTPUT=$(env -u GITHUB_ACTIONS -u GITHUB_REF -u GITHUB_EVENT_NAME npx semantic-release --dry-run --no-ci --repository-url "file://$ROOT_DIR" --plugins @semantic-release/commit-analyzer @semantic-release/release-notes-generator 2>&1)
+          OUTPUT=$(env -u GITHUB_ACTIONS -u GITHUB_REF -u GITHUB_EVENT_NAME npx --prefix frontend semantic-release --dry-run --no-ci --repository-url "file://$ROOT_DIR" --plugins @semantic-release/commit-analyzer @semantic-release/release-notes-generator 2>&1)
           EXIT_CODE=$?
           set -e
           

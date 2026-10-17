@@ -1,3 +1,29 @@
+## [0.6.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.0...v0.6.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* remove empty deleted file from repository ([#242](https://github.com/AKTK-Bystrze/Magazyn/issues/242)) ([db2d800](https://github.com/AKTK-Bystrze/Magazyn/commit/db2d80040fe6c8ede71343bd764894513ffe48ae))
+
+# [0.6.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.5.1...v0.6.0) (2026-10-16)
+
+
+### Bug Fixes
+
+* **ci:** fix PR release preview workflow and move changelog to root ([cf8c9fb](https://github.com/AKTK-Bystrze/Magazyn/commit/cf8c9fbebd8ccc6d4b50419654a1778205211b87))
+
+
+### Features
+
+* **preview:** test automated release preview workflow ([0cb606e](https://github.com/AKTK-Bystrze/Magazyn/commit/0cb606e6254525d09e6280826b5681ca5c189f00))
+
+## [0.5.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.5.0...v0.5.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* **ci:** fix PR release preview workflow and move changelog to root ([#240](https://github.com/AKTK-Bystrze/Magazyn/issues/240)) ([987d54a](https://github.com/AKTK-Bystrze/Magazyn/commit/987d54ad749d47dc6ddf41591039a5a125e667fe))
+
 # [0.5.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.4.2...v0.5.0) (2026-10-14)
 
 

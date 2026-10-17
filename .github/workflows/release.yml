@@ -197,9 +197,10 @@ jobs:
           echo "✅ Cleanup complete"
 
       - name: Semantic Release
-        working-directory: ./frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HUSKY: "0"
-        run: npx semantic-release
+        run: |
+          ln -sf frontend/node_modules node_modules
+          npx --prefix frontend semantic-release
 
