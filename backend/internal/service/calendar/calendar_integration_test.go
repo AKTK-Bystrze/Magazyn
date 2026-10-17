@@ -21,7 +21,7 @@ import (
 
 type calendarTestFixture struct {
 	t            *testing.T
-	svc          calendar.CalendarService
+	svc          *calendar.CalendarService
 	client       *supa.Client
 	testUserID   string
 	equipment1ID string

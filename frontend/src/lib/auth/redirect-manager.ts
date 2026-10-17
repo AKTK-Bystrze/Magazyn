@@ -17,66 +17,68 @@ import { defaultLogger as logger } from "@/lib/utils/logger";
  * creates a DAG - each redirect destination never redirects back unless
  * auth state changes (which requires a page load).
  */
-export class RedirectManager {
-  /**
-   * Main redirect logic - determines where to redirect based on auth state
-   *
-   * @param user - Supabase user object (null if not authenticated)
-   * @param sessionInfo - Session info from backend (null if not fetched)
-   * @param currentPath - Current URL pathname
-   * @param redirectParam - Optional redirect parameter from query string
-   * @param origin - Application origin (e.g., 'http://localhost:4321')
-   * @returns URL to redirect to, or null if no redirect needed
-   */
-  static getRedirectForAuthState(
-    user: User | null,
-    sessionInfo: SessionInfo | null,
-    currentPath: string,
-    redirectParam: string | null,
-    origin: string
-  ): string | null {
-    if (!user) {
-      if (currentPath === ROUTES.PUBLIC.LOGIN) {
-        return null;
-      }
-
-      if (currentPath === "/") {
-        return ROUTES.PUBLIC.LOGIN;
-      }
-
-      return `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(currentPath)}`;
-    }
-
-    if (sessionInfo && !sessionInfo.isEnabled) {
-      if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED) {
-        return null;
-      }
-      return ROUTES.PROTECTED.ACCOUNT_DISABLED;
-    }
-
-    if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED && sessionInfo?.isEnabled) {
-      return getDefaultRouteForUser(user, sessionInfo);
-    }
-
+/**
+ * Main redirect logic - determines where to redirect based on auth state
+ *
+ * @param user - Supabase user object (null if not authenticated)
+ * @param sessionInfo - Session info from backend (null if not fetched)
+ * @param currentPath - Current URL pathname
+ * @param redirectParam - Optional redirect parameter from query string
+ * @param origin - Application origin (e.g., 'http://localhost:4321')
+ * @returns URL to redirect to, or null if no redirect needed
+ */
+export function getRedirectForAuthState(
+  user: User | null,
+  sessionInfo: SessionInfo | null,
+  currentPath: string,
+  redirectParam: string | null,
+  origin: string
+): string | null {
+  if (!user) {
     if (currentPath === ROUTES.PUBLIC.LOGIN) {
-      if (redirectParam) {
-        const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
-        if (
-          safeRedirect !== ROUTES.PUBLIC.LOGIN &&
-          isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)
-        ) {
-          return safeRedirect;
-        }
-      }
-      return getDefaultRouteForUser(user, sessionInfo);
+      return null;
     }
 
     if (currentPath === "/") {
-      return getDefaultRouteForUser(user, sessionInfo);
+      return ROUTES.PUBLIC.LOGIN;
     }
-    return null;
+
+    return `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(currentPath)}`;
   }
+
+  if (sessionInfo && !sessionInfo.isEnabled) {
+    if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED) {
+      return null;
+    }
+    return ROUTES.PROTECTED.ACCOUNT_DISABLED;
+  }
+
+  if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED && sessionInfo?.isEnabled) {
+    return getDefaultRouteForUser(user, sessionInfo);
+  }
+
+  if (currentPath === ROUTES.PUBLIC.LOGIN) {
+    if (redirectParam) {
+      const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
+      if (
+        safeRedirect !== ROUTES.PUBLIC.LOGIN &&
+        isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)
+      ) {
+        return safeRedirect;
+      }
+    }
+    return getDefaultRouteForUser(user, sessionInfo);
+  }
+
+  if (currentPath === "/") {
+    return getDefaultRouteForUser(user, sessionInfo);
+  }
+  return null;
 }
+
+export const RedirectManager = {
+  getRedirectForAuthState,
+};
 
 function isRedirectAllowedForRole(path: string, role: string | undefined): boolean {
   return !path.startsWith(ROUTES.PROTECTED.ADMIN) || isAdmin(role);

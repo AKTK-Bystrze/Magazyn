@@ -1,7 +1,20 @@
-import * as AspectRatioPrimitive from "@radix-ui/react-aspect-ratio";
+import * as React from "react";
 
-function AspectRatio({ ...props }: React.ComponentProps<typeof AspectRatioPrimitive.Root>) {
-  return <AspectRatioPrimitive.Root data-slot="aspect-ratio" {...props} />;
+interface AspectRatioProps extends React.HTMLAttributes<HTMLDivElement> {
+  ratio?: number;
+}
+
+function AspectRatio({ ratio = 1, style, className, children, ...props }: AspectRatioProps) {
+  return (
+    <div
+      data-slot="aspect-ratio"
+      style={{ aspectRatio: ratio, ...style }}
+      className={className}
+      {...props}
+    >
+      {children}
+    </div>
+  );
 }
 
 export { AspectRatio };

@@ -1,13 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
-import * as dotenv from "dotenv";
+import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, "../.env.test") });
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+const testEnvPath = path.resolve(__dirname, "../.env.test");
+if (fs.existsSync(testEnvPath)) {
+  process.loadEnvFile(testEnvPath);
+}
+
+const envPath = path.resolve(__dirname, "../.env");
+if (fs.existsSync(envPath)) {
+  process.loadEnvFile(envPath);
+}
 
 export default defineConfig({
   testDir: "./e2e/tests",

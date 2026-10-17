@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"magazyn/backend/internal/appcontext"
@@ -17,7 +18,7 @@ func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.H
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token, err := common.ExtractBearerToken(r)
 			if err != nil {
-				if err.Error() == "authorization header required" {
+				if errors.Is(err, common.ErrAuthHeaderRequired) {
 					logger.Warn(r.Context(), "Authorization header required but missing")
 					common.RespondError(r.Context(), w, http.StatusUnauthorized, "Authorization header required")
 				} else {

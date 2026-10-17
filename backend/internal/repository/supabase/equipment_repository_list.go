@@ -33,7 +33,7 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 	}
 	var conflictIDs []string
 	if query.AvailableFrom != nil && query.AvailableTo != nil {
-		ids, err := r.GetEquipmentIDsWithConflicts(ctx, *query.AvailableFrom, *query.AvailableTo)
+		ids, err := r.getEquipmentIDsWithConflicts(ctx, *query.AvailableFrom, *query.AvailableTo)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to check equipment availability: %w", err)
 		}

@@ -8,7 +8,7 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
+func (s *EquipmentService) Create(ctx context.Context, cmd types.CreateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
 	typ, err := s.repo.GetTypeByID(ctx, cmd.TypeID)
 	if err != nil {
 		return nil, types.NewNotFoundError("Equipment Type", cmd.TypeID)
@@ -51,7 +51,7 @@ func (s *equipmentService) Create(ctx context.Context, cmd types.CreateEquipment
 	}, nil
 }
 
-func (s *equipmentService) Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
+func (s *EquipmentService) Update(ctx context.Context, id string, cmd types.UpdateEquipmentCommand, adminID string) (*types.EquipmentDTO, error) {
 	oldEq, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, types.NewNotFoundError("Equipment", id)
@@ -96,7 +96,7 @@ func (s *equipmentService) Update(ctx context.Context, id string, cmd types.Upda
 	}, nil
 }
 
-func (s *equipmentService) Archive(ctx context.Context, id string) error {
+func (s *EquipmentService) Archive(ctx context.Context, id string) error {
 	exists, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return types.NewNotFoundError("Equipment", id)

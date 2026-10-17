@@ -1,8 +1,5 @@
 FROM golang:1.25-alpine AS builder
 
-# Install git for fetching dependencies
-RUN apk add --no-cache git
-
 # Set working directory
 WORKDIR /app
 
@@ -22,8 +19,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o main ./cmd/api/main.go
 # --- Runtime Stage ---
 FROM alpine:latest AS runtime
 
-# Install ca-certificates for HTTPS requests and wget for health checks
-RUN apk add --no-cache ca-certificates wget
+# Install ca-certificates for HTTPS requests
+RUN apk add --no-cache ca-certificates
 
 # Set working directory
 WORKDIR /app

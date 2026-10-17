@@ -14,17 +14,23 @@ import (
 	"magazyn/backend/internal/types"
 )
 
+// Sentinel errors for authentication header parsing.
+var (
+	ErrAuthHeaderRequired = errors.New("authorization header required")
+	ErrInvalidAuthHeader  = errors.New("invalid authorization header format")
+)
+
 // ExtractBearerToken extracts the bearer token from the Authorization header of the request.
 func ExtractBearerToken(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		return "", errors.New("authorization header required")
+		return "", ErrAuthHeaderRequired
 	}
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", errors.New("invalid authorization header format")
+	prefix, token, ok := strings.Cut(authHeader, " ")
+	if !ok || prefix != "Bearer" || token == "" {
+		return "", ErrInvalidAuthHeader
 	}
-	return parts[1], nil
+	return token, nil
 }
 
 // RespondJSON marshals data as JSON and writes it to the response writer with the specified status code.
@@ -53,29 +59,18 @@ func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 	switch e := err.(type) {
 	case *types.NotFoundError:
 		status = http.StatusNotFound
-		message = e.Message
-		details = e.Details
-		code = e.Code
+		message, details, code = e.Message, e.Details, e.Code
 	case *types.ConflictError:
 		status = http.StatusConflict
-		message = e.Message
-		details = e.Details
-		code = e.Code
+		message, details, code = e.Message, e.Details, e.Code
 	case *types.ValidationError:
 		status = http.StatusBadRequest
-		message = e.Message
-		details = e.Details
-		code = e.Code
+		message, details, code = e.Message, e.Details, e.Code
 	case *types.ForbiddenError:
 		status = http.StatusForbidden
-		message = e.Message
-		details = e.Details
-		code = e.Code
+		message, details, code = e.Message, e.Details, e.Code
 	case *types.InternalError:
-		status = http.StatusInternalServerError
-		message = e.Message
-		details = e.Details
-		code = e.Code
+		message, details, code = e.Message, e.Details, e.Code
 	default:
 		message = err.Error()
 	}
@@ -93,11 +88,7 @@ func RespondUnauthorized(ctx context.Context, w http.ResponseWriter) {
 
 // GetUserIDFromContext extracts the authenticated user ID from the request context.
 func GetUserIDFromContext(r *http.Request) string {
-	val := r.Context().Value(appcontext.UserContextKey)
-	if val == nil {
-		return ""
-	}
-	if u, ok := val.(*types.User); ok {
+	if u := GetUserFromContext(r); u != nil {
 		return u.ID
 	}
 	return ""
@@ -113,6 +104,14 @@ func GetUserFromContext(r *http.Request) *types.User {
 		return u
 	}
 	return nil
+}
+
+// GetAccessTokenFromContext extracts the Bearer token from the request context.
+func GetAccessTokenFromContext(r *http.Request) string {
+	if token, ok := r.Context().Value(appcontext.AccessTokenContextKey).(string); ok {
+		return token
+	}
+	return ""
 }
 
 // GetUserProfileFromContext extracts the user profile from the request context.

@@ -3,7 +3,6 @@ import { cartStateSchema } from "@/lib/validators/cart.validator";
 import { STORAGE_KEY_CART } from "@/lib/config/constants";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
-const CART_STORAGE_KEY = STORAGE_KEY_CART;
 const FILTER_DATES_STORAGE_KEY = "reservation_filter_dates";
 
 /**
@@ -13,7 +12,7 @@ const FILTER_DATES_STORAGE_KEY = "reservation_filter_dates";
  */
 export function saveCartToStorage(cart: CartState): void {
   try {
-    sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    sessionStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart));
   } catch (error) {
     logger.error("Failed to save cart to sessionStorage:", { error });
   }
@@ -27,7 +26,7 @@ export function saveCartToStorage(cart: CartState): void {
  */
 export function loadCartFromStorage(): CartState | null {
   try {
-    const data = sessionStorage.getItem(CART_STORAGE_KEY);
+    const data = sessionStorage.getItem(STORAGE_KEY_CART);
     if (!data) return null;
 
     const parsed = JSON.parse(data);
@@ -49,7 +48,7 @@ export function loadCartFromStorage(): CartState | null {
  * Clears the cart from sessionStorage
  */
 export function clearCartFromStorage(): void {
-  sessionStorage.removeItem(CART_STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY_CART);
 }
 
 /**

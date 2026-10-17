@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CREDIT_HISTORY_UI_STRINGS, SKELETON_ROW_COUNT } from "@/lib/config/constants";
 import type { CreditHistoryItem } from "@/types";
 import { formatDateTime } from "@/lib/utils/date-utils";
@@ -94,68 +94,62 @@ export function CreditHistoryTable({ data, isLoading }: CreditHistoryTableProps)
   }
 
   return (
-    <TooltipProvider>
-      <div className="rounded-md border overflow-x-auto">
-        <Table data-testid="credit-history-table">
-          <TableHeader>
-            <TableRow>
-              <TableHead
-                className="whitespace-nowrap cursor-pointer"
-                onClick={() => requestSort("createdAt")}
-              >
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_DATE}{" "}
-                {sortConfig?.key === "createdAt"
-                  ? sortConfig.direction === "asc"
-                    ? "↑"
-                    : "↓"
-                  : ""}
-              </TableHead>
-              <TableHead
-                className="whitespace-nowrap cursor-pointer"
-                onClick={() => requestSort("reason")}
-              >
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_REASON}{" "}
-                {sortConfig?.key === "reason" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
-              </TableHead>
-              <TableHead
-                className="hidden sm:table-cell whitespace-nowrap cursor-pointer"
-                onClick={() => requestSort("description")}
-              >
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION}{" "}
-                {sortConfig?.key === "description"
-                  ? sortConfig.direction === "asc"
-                    ? "↑"
-                    : "↓"
-                  : ""}
-              </TableHead>
-              <TableHead
-                className="whitespace-nowrap cursor-pointer"
-                onClick={() => requestSort("authorUsername")}
-              >
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR}{" "}
-                {sortConfig?.key === "authorUsername"
-                  ? sortConfig.direction === "asc"
-                    ? "↑"
-                    : "↓"
-                  : ""}
-              </TableHead>
-              <TableHead
-                className="text-right whitespace-nowrap cursor-pointer"
-                onClick={() => requestSort("amount")}
-              >
-                {CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT}{" "}
-                {sortConfig?.key === "amount" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedData.map((item, index) => (
-              <CreditHistoryRow key={item.id} item={item} index={index} />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </TooltipProvider>
+    <div className="rounded-md border overflow-x-auto">
+      <Table data-testid="credit-history-table">
+        <TableHeader>
+          <TableRow>
+            <TableHead
+              className="whitespace-nowrap cursor-pointer"
+              onClick={() => requestSort("createdAt")}
+            >
+              {CREDIT_HISTORY_UI_STRINGS.TABLE_DATE}{" "}
+              {sortConfig?.key === "createdAt" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="whitespace-nowrap cursor-pointer"
+              onClick={() => requestSort("reason")}
+            >
+              {CREDIT_HISTORY_UI_STRINGS.TABLE_REASON}{" "}
+              {sortConfig?.key === "reason" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+            <TableHead
+              className="hidden sm:table-cell whitespace-nowrap cursor-pointer"
+              onClick={() => requestSort("description")}
+            >
+              {CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION}{" "}
+              {sortConfig?.key === "description"
+                ? sortConfig.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
+            </TableHead>
+            <TableHead
+              className="whitespace-nowrap cursor-pointer"
+              onClick={() => requestSort("authorUsername")}
+            >
+              {CREDIT_HISTORY_UI_STRINGS.TABLE_AUTHOR}{" "}
+              {sortConfig?.key === "authorUsername"
+                ? sortConfig.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
+            </TableHead>
+            <TableHead
+              className="text-right whitespace-nowrap cursor-pointer"
+              onClick={() => requestSort("amount")}
+            >
+              {CREDIT_HISTORY_UI_STRINGS.TABLE_AMOUNT}{" "}
+              {sortConfig?.key === "amount" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedData.map((item, index) => (
+            <CreditHistoryRow key={item.id} item={item} index={index} />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 

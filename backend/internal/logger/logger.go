@@ -12,38 +12,33 @@ import (
 	model "magazyn/backend/internal/types"
 )
 
-type Logger struct {
-	logger   *slog.Logger
-	levelVar *slog.LevelVar
-}
-
-var defaultLogger *Logger
+var (
+	defaultLogger *slog.Logger
+	levelVar      *slog.LevelVar
+)
 
 func init() {
-	lvl := new(slog.LevelVar)
-	lvl.Set(slog.LevelInfo)
+	levelVar = new(slog.LevelVar)
+	levelVar.Set(slog.LevelInfo)
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: lvl,
+		Level: levelVar,
 	})
-	defaultLogger = &Logger{
-		logger:   slog.New(handler),
-		levelVar: lvl,
-	}
+	defaultLogger = slog.New(handler)
 }
 
 func SetMinLevel(levelStr string) {
 	level := strings.ToUpper(levelStr)
 	switch level {
 	case "DEBUG":
-		defaultLogger.levelVar.Set(slog.LevelDebug)
+		levelVar.Set(slog.LevelDebug)
 	case "INFO":
-		defaultLogger.levelVar.Set(slog.LevelInfo)
+		levelVar.Set(slog.LevelInfo)
 	case "WARN":
-		defaultLogger.levelVar.Set(slog.LevelWarn)
+		levelVar.Set(slog.LevelWarn)
 	case "ERROR":
-		defaultLogger.levelVar.Set(slog.LevelError)
+		levelVar.Set(slog.LevelError)
 	default:
-		defaultLogger.levelVar.Set(slog.LevelInfo)
+		levelVar.Set(slog.LevelInfo)
 	}
 }
 func getUsernameFromContext(ctx context.Context) string {
@@ -77,60 +72,36 @@ func getContextAttrs(ctx context.Context) []slog.Attr {
 	}
 	return attrs
 }
-func (l *Logger) logWithCtx(ctx context.Context, level slog.Level, msg string) {
-	if !l.logger.Enabled(ctx, level) {
+func logWithCtx(ctx context.Context, level slog.Level, msg string) {
+	if !defaultLogger.Enabled(ctx, level) {
 		return
 	}
 	attrs := getContextAttrs(ctx)
-	l.logger.LogAttrs(ctx, level, msg, attrs...)
-}
-func (l *Logger) Debug(ctx context.Context, message string) {
-	l.logWithCtx(ctx, slog.LevelDebug, message)
-}
-func (l *Logger) Debugf(ctx context.Context, format string, args ...interface{}) {
-	l.logWithCtx(ctx, slog.LevelDebug, fmt.Sprintf(format, args...))
-}
-func (l *Logger) Info(ctx context.Context, message string) {
-	l.logWithCtx(ctx, slog.LevelInfo, message)
-}
-func (l *Logger) Infof(ctx context.Context, format string, args ...interface{}) {
-	l.logWithCtx(ctx, slog.LevelInfo, fmt.Sprintf(format, args...))
-}
-func (l *Logger) Warn(ctx context.Context, message string) {
-	l.logWithCtx(ctx, slog.LevelWarn, message)
-}
-func (l *Logger) Warnf(ctx context.Context, format string, args ...interface{}) {
-	l.logWithCtx(ctx, slog.LevelWarn, fmt.Sprintf(format, args...))
-}
-func (l *Logger) Error(ctx context.Context, message string) {
-	l.logWithCtx(ctx, slog.LevelError, message)
-}
-func (l *Logger) Errorf(ctx context.Context, format string, args ...interface{}) {
-	l.logWithCtx(ctx, slog.LevelError, fmt.Sprintf(format, args...))
+	defaultLogger.LogAttrs(ctx, level, msg, attrs...)
 }
 
 // Debug logs a debug message using the default logger
 func Debug(ctx context.Context, message string) {
-	defaultLogger.Debug(ctx, message)
+	logWithCtx(ctx, slog.LevelDebug, message)
 }
 func Debugf(ctx context.Context, format string, args ...interface{}) {
-	defaultLogger.Debugf(ctx, format, args...)
+	logWithCtx(ctx, slog.LevelDebug, fmt.Sprintf(format, args...))
 }
 func Info(ctx context.Context, message string) {
-	defaultLogger.Info(ctx, message)
+	logWithCtx(ctx, slog.LevelInfo, message)
 }
 func Infof(ctx context.Context, format string, args ...interface{}) {
-	defaultLogger.Infof(ctx, format, args...)
+	logWithCtx(ctx, slog.LevelInfo, fmt.Sprintf(format, args...))
 }
 func Warn(ctx context.Context, message string) {
-	defaultLogger.Warn(ctx, message)
+	logWithCtx(ctx, slog.LevelWarn, message)
 }
 func Warnf(ctx context.Context, format string, args ...interface{}) {
-	defaultLogger.Warnf(ctx, format, args...)
+	logWithCtx(ctx, slog.LevelWarn, fmt.Sprintf(format, args...))
 }
 func Error(ctx context.Context, message string) {
-	defaultLogger.Error(ctx, message)
+	logWithCtx(ctx, slog.LevelError, message)
 }
 func Errorf(ctx context.Context, format string, args ...interface{}) {
-	defaultLogger.Errorf(ctx, format, args...)
+	logWithCtx(ctx, slog.LevelError, fmt.Sprintf(format, args...))
 }

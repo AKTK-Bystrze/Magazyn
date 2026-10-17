@@ -79,8 +79,9 @@ const user = Astro.locals.user;
   </main>
 
   <script>
+    import { removeAuthCookie, AUTH_COOKIE_NAME } from "@/lib/auth/cookie-utils";
+
     const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:8080";
-    const AUTH_COOKIE_NAME = "magazyn-auth-token";
     const SUCCESS_REDIRECT_DELAY_MS = 1500;
     const LOGIN_ROUTE = "/login";
 
@@ -169,7 +170,7 @@ const user = Astro.locals.user;
       btn.setAttribute("disabled", "true");
 
       try {
-        document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+        removeAuthCookie();
 
         localStorage.removeItem(AUTH_COOKIE_NAME);
 

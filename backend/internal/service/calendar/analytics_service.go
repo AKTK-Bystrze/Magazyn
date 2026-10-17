@@ -9,24 +9,18 @@ import (
 	"magazyn/backend/internal/types"
 )
 
-// AnalyticsService defines operations for equipment and user analytics
-type AnalyticsService interface {
-	// GetEquipmentStats retrieves aggregated equipment utilization and rental statistics
-	GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.EquipmentStatsResponse, error)
-	// GetUserStats retrieves aggregated user activity statistics
-	GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.UserStatsResponse, error)
-}
-
-type analyticsService struct {
+// AnalyticsService provides operations for equipment and user analytics.
+type AnalyticsService struct {
 	analyticsRepo repository.AnalyticsRepository
 }
 
-func NewAnalyticsService(analyticsRepo repository.AnalyticsRepository) AnalyticsService {
-	return &analyticsService{
+func NewAnalyticsService(analyticsRepo repository.AnalyticsRepository) *AnalyticsService {
+	return &AnalyticsService{
 		analyticsRepo: analyticsRepo,
 	}
 }
-func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.EquipmentStatsResponse, error) {
+
+func (s *AnalyticsService) GetEquipmentStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.EquipmentStatsResponse, error) {
 	logger.Infof(ctx, "GetEquipmentStats - Year: %v, Month: %v, EquipmentID: %v", query.Year, query.Month, query.EquipmentID)
 	rawStats, err := s.analyticsRepo.GetEquipmentStats(ctx, query)
 	if err != nil {
@@ -79,7 +73,7 @@ func (s *analyticsService) GetEquipmentStats(ctx context.Context, query types.An
 		Period:         period,
 	}, nil
 }
-func (s *analyticsService) GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.UserStatsResponse, error) {
+func (s *AnalyticsService) GetUserStats(ctx context.Context, query types.AnalyticsPeriodQuery) (*types.UserStatsResponse, error) {
 	logger.Infof(ctx, "GetUserStats - Year: %v, Month: %v", query.Year, query.Month)
 	rawStats, err := s.analyticsRepo.GetUserStats(ctx, query)
 	if err != nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func setupUserServiceTest() (*mocks.MockUserRepository, *mocks.MockAuthRepository, UserService, context.Context) {
+func setupUserServiceTest() (*mocks.MockUserRepository, *mocks.MockAuthRepository, *UserService, context.Context) {
 	mockRepo := new(mocks.MockUserRepository)
 	mockAuthRepo := new(mocks.MockAuthRepository)
 	service := NewUserService(mockRepo, mockAuthRepo)

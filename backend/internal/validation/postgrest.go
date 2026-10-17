@@ -3,11 +3,13 @@ package validation
 
 import (
 	"fmt"
-	"regexp"
+	"slices"
 	"strings"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/types"
+
+	"github.com/google/uuid"
 )
 
 var postgrestReplacer = strings.NewReplacer(
@@ -20,23 +22,14 @@ var postgrestReplacer = strings.NewReplacer(
 	"!", "\\!",
 )
 
-var uuidRegex = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-
 func SanitizeSearchTerm(input string) string {
 	return postgrestReplacer.Replace(input)
 }
 func ValidateUUID(id string) error {
-	if id == "" {
-		return types.NewValidationError("UUID cannot be empty", nil)
-	}
 	if len(id) != constants.UUIDLength {
-		return types.NewValidationError(
-			fmt.Sprintf("UUID must be %d characters long", constants.UUIDLength),
-			map[string]interface{}{"length": len(id)},
-		)
+		return types.NewValidationError("Invalid UUID format", map[string]string{"id": id})
 	}
-	lowerID := strings.ToLower(id)
-	if !uuidRegex.MatchString(lowerID) {
+	if _, err := uuid.Parse(id); err != nil {
 		return types.NewValidationError(
 			"Invalid UUID format",
 			map[string]string{"id": id},
@@ -48,18 +41,16 @@ func ValidateEnum(value string, allowedValues []string) error {
 	if value == "" {
 		return types.NewValidationError("Enum value cannot be empty", nil)
 	}
-	for _, allowed := range allowedValues {
-		if value == allowed {
-			return nil
-		}
+	if !slices.Contains(allowedValues, value) {
+		return types.NewValidationError(
+			fmt.Sprintf("Invalid enum value '%s'", value),
+			map[string]interface{}{
+				"value":   value,
+				"allowed": allowedValues,
+			},
+		)
 	}
-	return types.NewValidationError(
-		fmt.Sprintf("Invalid enum value '%s'", value),
-		map[string]interface{}{
-			"value":   value,
-			"allowed": allowedValues,
-		},
-	)
+	return nil
 }
 func ValidateStringLength(str string, minLength, maxLength int) error {
 	length := len(str)

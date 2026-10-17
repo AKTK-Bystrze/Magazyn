@@ -1,6 +1,6 @@
 import * as React from "react";
 import { type EquipmentSearchItem } from "@/types";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card, CardFooter } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -141,36 +141,13 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
         </div>
       )}
 
-      {viewMode === "list" ? (
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-lg">{item.name}</h3>
-              <p className="text-sm text-muted-foreground">{item.type.name}</p>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 line-clamp-2 mt-2">
-            {item.description || "Brak opisu."}
-          </p>
-        </div>
-      ) : (
-        <>
-          <CardHeader className="p-4 pb-2">
-            <div className="flex justify-between items-start gap-2">
-              <div>
-                <h3 className="font-semibold text-lg">{item.name}</h3>
-                <p className="text-sm text-muted-foreground">{item.type.name}</p>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-4 pt-2 flex-grow">
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {item.description || "Brak opisu."}
-            </p>
-          </CardContent>
-        </>
-      )}
+      <div className={viewMode === "list" ? "flex-1 min-w-0" : "p-4 flex-grow"}>
+        <h3 className="font-semibold text-lg">{item.name}</h3>
+        <p className="text-sm text-muted-foreground">{item.type.name}</p>
+        <p className="text-sm text-gray-600 line-clamp-2 mt-2">
+          {item.description || "Brak opisu."}
+        </p>
+      </div>
 
       {viewMode === "list" ? (
         <div className="flex flex-row md:flex-col gap-2 shrink-0 items-center md:items-end w-full md:w-auto mt-2 md:mt-0 pt-2 md:pt-0 md:ml-4 border-t md:border-t-0 md:border-l md:pl-4 border-muted/50 justify-end">
@@ -181,6 +158,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
               variant="default"
               onClick={() => onViewDetail && onViewDetail(item)}
               aria-label={`Szczegóły sprzętu ${item.name}`}
+              data-testid={`equipment-details-button-${item.id}`}
             >
               Szczegóły
             </Button>

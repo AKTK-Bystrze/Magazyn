@@ -2,7 +2,6 @@ package credit
 
 import (
 	"context"
-	"math"
 
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/logger"
@@ -53,10 +52,7 @@ func (s *creditHistoryService) GetCreditHistory(ctx context.Context, query types
 		return nil, types.NewNotFoundError("User", targetUserID)
 	}
 	logger.Debugf(ctx, "CreditService: Profile found. Balance: %d", userProfile.CreditBalance)
-	totalPages := 0
-	if perPage > 0 {
-		totalPages = int(math.Ceil(float64(totalItems) / float64(perPage)))
-	}
+	totalPages := validation.CalculateTotalPages(totalItems, perPage)
 	return &types.CreditHistoryResponse{
 		CreditHistory: history,
 		Pagination: types.Pagination{

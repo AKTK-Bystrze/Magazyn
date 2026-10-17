@@ -7,8 +7,6 @@ import type { AstroCookies } from "astro";
 
 export const AUTH_COOKIE_NAME = "magazyn-auth-token";
 
-export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
-
 /**
  * Removes the authentication cookie
  * Used during logout or when authentication fails

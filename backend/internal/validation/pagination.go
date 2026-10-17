@@ -23,3 +23,11 @@ func ValidatePagination(page, perPage int) (int, int, error) {
 	}
 	return page, perPage, nil
 }
+
+// CalculateTotalPages calculates the total number of pages from total items and perPage.
+func CalculateTotalPages(total int64, perPage int) int {
+	if total <= 0 || perPage <= 0 {
+		return 0
+	}
+	return int((total + int64(perPage) - 1) / int64(perPage))
+}
