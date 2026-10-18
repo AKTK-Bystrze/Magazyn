@@ -1,3 +1,10 @@
+## [0.6.4](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.3...v0.6.4) (2026-10-18)
+
+
+### Bug Fixes
+
+* **infra:** use git checkout -f and unconditional restore_self in admin cockpit ([#247](https://github.com/AKTK-Bystrze/Magazyn/issues/247)) ([b310177](https://github.com/AKTK-Bystrze/Magazyn/commit/b310177010910eefe0c303d71f531cbb8cb06487))
+
 ## [0.6.3](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.2...v0.6.3) (2026-10-18)
 
 
