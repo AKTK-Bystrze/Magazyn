@@ -1,3 +1,10 @@
+## [0.6.3](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.2...v0.6.3) (2026-10-18)
+
+
+### Bug Fixes
+
+* **infra:** redirect picker prompts to stderr and simplify admin cockpit ([#246](https://github.com/AKTK-Bystrze/Magazyn/issues/246)) ([01bc961](https://github.com/AKTK-Bystrze/Magazyn/commit/01bc961c56e3b0a7aa7e31a5a41d656b155d83be))
+
 ## [0.6.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.0...v0.6.1) (2026-10-16)
 
 
