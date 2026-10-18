@@ -48,12 +48,7 @@ func LoadConfig() (*AppState, error) {
 		}
 	} else {
 		if err := godotenv.Load(envPath); err != nil {
-			testEnvPath := strings.Replace(envPath, ".env", ".env.test", 1)
-			if err := godotenv.Load(testEnvPath); err != nil {
-				logger.Infof(context.Background(), "No .env file found at %s or %s, relying on existing environment variables", envPath, testEnvPath)
-			} else {
-				logger.Infof(context.Background(), "Loaded .env from %s", testEnvPath)
-			}
+			logger.Infof(context.Background(), "No .env file found at %s, relying on existing environment variables", envPath)
 		} else {
 			logger.Infof(context.Background(), "Loaded .env from %s", envPath)
 		}

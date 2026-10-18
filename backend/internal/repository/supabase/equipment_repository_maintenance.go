@@ -14,11 +14,10 @@ import (
 
 func (r *equipmentRepository) GetMaintenanceLogsWithAdmin(ctx context.Context, equipmentID string) ([]repository.MaintenanceLogWithAdmin, error) {
 	adminClient := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
-	desc := true
 	data, _, err := adminClient.From(constants.TableMaintenanceLogs).
 		Select("*, admin:profiles!admin_id(username)", "exact", false).
 		Eq("equipment_id", equipmentID).
-		Order("created_at", &postgrest.OrderOpts{Ascending: !desc}).
+		Order("created_at", &postgrest.OrderOpts{Ascending: false}).
 		Execute()
 	if err != nil {
 		return nil, err
