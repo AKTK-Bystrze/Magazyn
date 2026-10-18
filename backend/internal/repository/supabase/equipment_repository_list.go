@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
@@ -54,17 +55,15 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 }
 
 func filterAndPaginateEquipment(ctx context.Context, allItems []types.PublicEquipmentSelect, conflictIDs []string, query types.EquipmentListQuery) ([]types.PublicEquipmentSelect, int64) {
-	var filteredItems []types.PublicEquipmentSelect
-	conflictSet := make(map[string]bool, len(conflictIDs))
-	for _, id := range conflictIDs {
-		conflictSet[id] = true
-	}
-	for _, item := range allItems {
-		if !conflictSet[item.ID] {
-			filteredItems = append(filteredItems, item)
-		}
-	}
+	filteredItems := allItems
 	if len(conflictIDs) > 0 {
+		conflictSet := make(map[string]bool, len(conflictIDs))
+		for _, id := range conflictIDs {
+			conflictSet[id] = true
+		}
+		filteredItems = slices.DeleteFunc(slices.Clone(allItems), func(item types.PublicEquipmentSelect) bool {
+			return conflictSet[item.ID]
+		})
 		logger.Debugf(ctx, "Filtered out %d unavailable equipment, %d remaining",
 			len(allItems)-len(filteredItems), len(filteredItems))
 	}

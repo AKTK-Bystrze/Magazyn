@@ -48,10 +48,6 @@ func (h *EquipmentHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 func (h *EquipmentHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
-	if id == "" {
-		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
-		return
-	}
 	if err := validation.ValidateUUID(id); err != nil {
 		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid equipment ID format")
 		return
