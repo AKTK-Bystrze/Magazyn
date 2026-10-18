@@ -42,8 +42,8 @@ fail() { echo -e "  [${RED}FAIL${NC}] $1"; }
 info() { echo -e "${BLUE}==>${NC} $1"; }
 
 restore_self() {
-  if [ ! -f "${ROOT_DIR}/admin.sh" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
-    cp "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
+  if [ -n "${ADMIN_TMP_DIR:-}" ] && [ -f "${ADMIN_TMP_DIR}/admin.sh" ]; then
+    cp -f "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
     chmod +x "${ROOT_DIR}/admin.sh"
   fi
 }
@@ -155,7 +155,7 @@ cmd_deploy() {
 
   # Step 3: Switch repository tag
   info "Step 3/6: Checking out ${target_tag}..."
-  git checkout "${target_tag}" || { fail "git checkout ${target_tag} failed"; exit 1; }
+  git checkout -f "${target_tag}" || { fail "git checkout ${target_tag} failed"; exit 1; }
 
   restore_self
 
@@ -165,7 +165,7 @@ cmd_deploy() {
   export MAGAZYN_VERSION="${target_tag}"
   if ! docker compose build; then
     fail "Docker build failed! Database was NOT modified."
-    git checkout "${CURRENT_TAG}" 2>/dev/null || true
+    git checkout -f "${CURRENT_TAG}" 2>/dev/null || true
     exit 1
   fi
 
@@ -244,7 +244,7 @@ cmd_rollback() {
 
   # Step 2: Checkout Git Tag
   info "Step 2/3: Checking out git tag: ${target_tag}..."
-  git checkout "${target_tag}"
+  git checkout -f "${target_tag}"
 
   restore_self
 
