@@ -23,10 +23,8 @@ if [ "${ADMIN_ISOLATED:-false}" != "true" ] && [ -n "${TMPDIR:-/tmp}" ]; then
   exec "${TMP_DIR}/admin.sh" "$@"
 fi
 
-SCRIPT_DIR="${MAGAZYN_ROOT_DIR:-${ORIGINAL_SCRIPT_DIR:-$(dirname "$(realpath "$0")")}}"
-cd "${SCRIPT_DIR}"
-ROOT_DIR="${SCRIPT_DIR}"
-export MAGAZYN_ROOT_DIR="${ROOT_DIR}"
+ROOT_DIR="${MAGAZYN_ROOT_DIR:-$(dirname "$(realpath "$0")")}"
+cd "${ROOT_DIR}"
 HELPER_DIR="${ADMIN_TMP_DIR:-${ROOT_DIR}}"
 
 # ANSI Colors
@@ -43,9 +41,16 @@ warn() { echo -e "  [${YELLOW}WARN${NC}] $1"; }
 fail() { echo -e "  [${RED}FAIL${NC}] $1"; }
 info() { echo -e "${BLUE}==>${NC} $1"; }
 
+restore_self() {
+  if [ ! -f "${ROOT_DIR}/admin.sh" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
+    cp "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
+    chmod +x "${ROOT_DIR}/admin.sh"
+  fi
+}
+
 pick_tag() {
   git fetch --tags -f >/dev/null 2>&1 || true
-  echo "Available release tags:"
+  echo "Available release tags:" >&2
   PS3="Select tag [number or name]: "
   select tag in $(git tag -l --sort=-v:refname | head -n 10); do
     echo "${tag:-$REPLY}"
@@ -54,7 +59,7 @@ pick_tag() {
 }
 
 pick_snapshot() {
-  echo "Available backup snapshots:"
+  echo "Available backup snapshots:" >&2
   PS3="Select snapshot to restore: "
   select snap in "${ROOT_DIR}/infra/backups/daily"/public-rollback-*.sql.gz; do
     echo "${snap:-$REPLY}"
@@ -73,45 +78,22 @@ load_env() {
   fi
 }
 
-cmd_doctor() {
-  bash "${HELPER_DIR}/infra/doctor.sh"
-}
-
-cmd_sanity() {
-  bash "${HELPER_DIR}/infra/sanity_check.sh"
-}
-
-cmd_backup() {
-  local tag="${1:-}"
-  bash "${HELPER_DIR}/infra/backups/backup_db.sh" "${tag}"
-}
+cmd_doctor() { bash "${HELPER_DIR}/infra/doctor.sh" "$@"; }
+cmd_sanity() { bash "${HELPER_DIR}/infra/sanity_check.sh" "$@"; }
+cmd_backup() { bash "${HELPER_DIR}/infra/backups/backup_db.sh" "$@"; }
 
 cmd_restore() {
   local snapshot="${1:-}"
-  shift || true
-  if [ -z "$snapshot" ]; then
-    echo "Available snapshots in infra/backups/daily:"
-    ls -1t "${ROOT_DIR}/infra/backups/daily"/public-rollback-*.sql.gz 2>/dev/null || echo "No daily snapshots found."
-    read -p "Enter snapshot file path to restore: " snapshot
-  fi
+  if [ -n "$snapshot" ]; then shift; else snapshot=$(pick_snapshot); fi
   bash "${HELPER_DIR}/infra/backups/restore_db.sh" "$@" "${snapshot}"
 }
 
 cmd_status() {
   info "Repository Status:"
-  local branch
-  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
-  local current_tag
-  current_tag=$(git describe --tags --exact-match 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "none")
-  local commit
-  commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-  echo "  Branch:       ${branch}"
-  echo "  Current Tag:  ${current_tag}"
-  echo "  Commit:       ${commit}"
+  git log -1 --format="  Commit:       %h (%s)%n  Branch/Tag:   %D" 2>/dev/null || echo "  Git repository not found."
   echo ""
 
   info "Docker Containers:"
-  load_env
   cd "${ROOT_DIR}/infra"
   docker compose ps || true
   echo ""
@@ -127,12 +109,10 @@ cmd_prune() {
 }
 
 cmd_deploy() {
-  local target_tag="${1:-}"
   local force=false
-  if [ "${2:-}" = "--force" ] || [ "${target_tag}" = "--force" ]; then
-    force=true
-    if [ "${target_tag}" = "--force" ]; then target_tag="${2:-}"; fi
-  fi
+  [[ "$*" =~ --force ]] && force=true
+  local target_tag="${1:-}"
+  [ "$target_tag" = "--force" ] && target_tag="${2:-}"
 
   # Auto-discovery if tag not provided
   if [ -z "$target_tag" ]; then
@@ -147,11 +127,9 @@ cmd_deploy() {
   info "Step 1/6: Running pre-flight diagnostics..."
   git fetch --tags -f || { fail "git fetch --tags failed"; exit 1; }
 
-  if ! git rev-parse -q --verify "refs/tags/${target_tag}^{commit}" >/dev/null 2>&1; then
-    if ! git rev-parse -q --verify "${target_tag}^{commit}" >/dev/null 2>&1; then
-      fail "Target tag/commit '${target_tag}' does not exist in git."
-      exit 1
-    fi
+  if ! git rev-parse -q --verify "${target_tag}^{commit}" >/dev/null 2>&1; then
+    fail "Target tag/commit '${target_tag}' does not exist in git."
+    exit 1
   fi
 
   CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "initial")
@@ -179,11 +157,7 @@ cmd_deploy() {
   info "Step 3/6: Checking out ${target_tag}..."
   git checkout "${target_tag}" || { fail "git checkout ${target_tag} failed"; exit 1; }
 
-  # Ensure admin.sh exists in target repo after deployment
-  if [ ! -f "${ROOT_DIR}/admin.sh" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
-    cp "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
-    chmod +x "${ROOT_DIR}/admin.sh"
-  fi
+  restore_self
 
   # Step 4: Build container images BEFORE migrating database
   info "Step 4/6: Building Docker container images (build-first safety)..."
@@ -238,26 +212,16 @@ cmd_deploy() {
 }
 
 cmd_rollback() {
-  local target_tag="${1:-}"
-  local snapshot_file="${2:-}"
   local auto_yes=false
-
-  for arg in "$@"; do
-    if [ "$arg" = "-y" ] || [ "$arg" = "--yes" ]; then auto_yes=true; fi
-  done
+  [[ "$*" =~ -y|--yes ]] && auto_yes=true
+  local target_tag="${1:-}"
+  [ "$target_tag" = "-y" ] || [ "$target_tag" = "--yes" ] && target_tag=""
+  local snapshot_file="${2:-}"
+  [ "$snapshot_file" = "-y" ] || [ "$snapshot_file" = "--yes" ] && snapshot_file=""
 
   info "Initiating system rollback..."
-
-  # Discover tags if not given
-  if [ -z "$target_tag" ] || [ "$target_tag" = "-y" ] || [ "$target_tag" = "--yes" ]; then
-    target_tag=$(pick_tag)
-  fi
-
-  # Discover snapshots if not given
-  if [ -z "$snapshot_file" ] || [ "$snapshot_file" = "-y" ] || [ "$snapshot_file" = "--yes" ]; then
-    echo ""
-    snapshot_file=$(pick_snapshot)
-  fi
+  [ -z "$target_tag" ] && target_tag=$(pick_tag)
+  [ -z "$snapshot_file" ] && snapshot_file=$(pick_snapshot)
 
   echo ""
   echo "Rollback Summary:"
@@ -282,11 +246,7 @@ cmd_rollback() {
   info "Step 2/3: Checking out git tag: ${target_tag}..."
   git checkout "${target_tag}"
 
-  # Ensure admin.sh exists in target repo after rollback
-  if [ ! -f "${ROOT_DIR}/admin.sh" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
-    cp "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
-    chmod +x "${ROOT_DIR}/admin.sh"
-  fi
+  restore_self
 
   # Step 3: Rebuild and Restart Containers
   info "Step 3/3: Rebuilding and restarting containers..."
@@ -357,25 +317,15 @@ EOF
 # Main routing
 ACTION="${1:-}"
 case "${ACTION}" in
-  deploy)   shift; cmd_deploy "$@" ;;
-  rollback) shift; cmd_rollback "$@" ;;
-  doctor)   shift; cmd_doctor "$@" ;;
-  sanity)   shift; cmd_sanity "$@" ;;
-  backup)   shift; cmd_backup "$@" ;;
-  restore)  shift; cmd_restore "$@" ;;
-  status)   shift; cmd_status "$@" ;;
-  prune)    shift; cmd_prune "$@" ;;
   -h|--help) show_help ;;
-  "")
-    if [ -t 0 ]; then
-      show_menu
-    else
-      show_help
-    fi
-    ;;
+  "") [ -t 0 ] && show_menu || show_help ;;
   *)
-    fail "Unknown command: ${ACTION}"
-    show_help
-    exit 1
+    if declare -f "cmd_${ACTION}" >/dev/null; then
+      shift; "cmd_${ACTION}" "$@"
+    else
+      fail "Unknown command: ${ACTION}"
+      show_help
+      exit 1
+    fi
     ;;
 esac

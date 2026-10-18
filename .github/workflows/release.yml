@@ -203,4 +203,3 @@ jobs:
         run: |
           ln -sf frontend/node_modules node_modules
           npx --prefix frontend semantic-release
-
