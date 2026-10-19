@@ -37,17 +37,12 @@ export function StatusBadge({
     );
   }
 
-  const isFuture = Boolean(
-    status === "PENDING" &&
-    startDate &&
-    (startDate.includes("T") ? startDate.split("T")[0] : startDate) > getTodayAsString()
-  );
-
-  const label = isFuture
-    ? RESERVATION_FUTURE_STATUS_LABEL
-    : (RESERVATION_STATUS_LABELS[status] ?? status);
-
   if (status === "PENDING") {
+    const isFuture = startDate && startDate.split("T")[0] > getTodayAsString();
+    const label = isFuture
+      ? RESERVATION_FUTURE_STATUS_LABEL
+      : (RESERVATION_STATUS_LABELS[status] ?? status);
+
     return (
       <Badge
         className={`bg-green-500 hover:bg-green-600 text-white border-transparent ${className || ""}`}
@@ -57,6 +52,8 @@ export function StatusBadge({
       </Badge>
     );
   }
+
+  const label = RESERVATION_STATUS_LABELS[status] ?? status;
 
   const variant = RESERVATION_STATUS_VARIANTS[status] ?? "outline";
 
