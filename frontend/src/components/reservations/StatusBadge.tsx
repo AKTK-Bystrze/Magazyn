@@ -41,19 +41,12 @@ export function StatusBadge({
     );
   }
 
-  const today = getTodayAsString();
-  const startDay = startDate
-    ? startDate.includes("T")
-      ? startDate.split("T")[0]
-      : startDate
-    : null;
-  const endDay = endDate ? (endDate.includes("T") ? endDate.split("T")[0] : endDate) : null;
-
-  const isOverdue = Boolean(status === "PENDING" && endDay && endDay < today);
-  const isFuture = Boolean(status === "PENDING" && !isOverdue && startDay && startDay > today);
-
   if (status === "PENDING") {
-    if (isOverdue) {
+    const today = getTodayAsString();
+    const startDay = startDate?.split("T")[0];
+    const endDay = endDate?.split("T")[0];
+
+    if (endDay && endDay < today) {
       return (
         <Badge variant="destructive" className={className} data-testid={testId}>
           {RESERVATION_OVERDUE_STATUS_LABEL}
@@ -61,9 +54,10 @@ export function StatusBadge({
       );
     }
 
-    const label = isFuture
-      ? RESERVATION_FUTURE_STATUS_LABEL
-      : (RESERVATION_STATUS_LABELS[status] ?? status);
+    const label =
+      startDay && startDay > today
+        ? RESERVATION_FUTURE_STATUS_LABEL
+        : (RESERVATION_STATUS_LABELS[status] ?? status);
 
     return (
       <Badge
