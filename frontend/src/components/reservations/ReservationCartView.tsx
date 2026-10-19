@@ -127,7 +127,8 @@ function ReservationCartContent({
 
       if (!response.ok) {
         const errorData = await response.json();
-        let errorMessage = errorData.message || errorData.error || "Failed to create reservation";
+        let errorMessage =
+          errorData.message || errorData.error || "Nie udało się utworzyć rezerwacji";
 
         cartState.items.forEach((item) => {
           if (errorMessage.includes(item.equipmentId)) {
@@ -138,7 +139,7 @@ function ReservationCartContent({
         if (errorMessage.includes("Conflict detected")) {
           errorMessage = errorMessage.replace(
             "Conflict detected for equipment",
-            "This equipment is already reserved:"
+            "Ten sprzęt jest już zarezerwowany:"
           );
         }
 
@@ -154,7 +155,7 @@ function ReservationCartContent({
       return true;
     } catch (error) {
       logger.error("Reservation failed:", { error });
-      setSubmissionError(error instanceof Error ? error.message : "An unexpected error occurred");
+      setSubmissionError(error instanceof Error ? error.message : "Wystąpił nieoczekiwany błąd");
       return false;
     } finally {
       setIsSubmitting(false);
@@ -210,7 +211,7 @@ function ReservationCartContent({
 
   const handleProceed = async () => {
     if (isAdmin && !selectedUserId) {
-      setSubmissionError("Please select a user to create the reservation for.");
+      setSubmissionError("Wybierz użytkownika, dla którego tworzona jest rezerwacja.");
       return;
     }
 

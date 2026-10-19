@@ -58,11 +58,11 @@ export function CartItem({ item, onRemove }: CartItemProps) {
 
       <CardContent className="p-4 pt-2 flex-grow">
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-          {item.description || "No description provided."}
+          {item.description || "Brak opisu."}
         </p>
         <div className="flex items-center gap-1 font-medium bg-secondary px-3 py-1.5 rounded-md w-fit">
           <span className="text-primary font-semibold">{item.creditCostPerDay}</span>
-          <span className="text-xs text-muted-foreground">credits/day</span>
+          <span className="text-xs text-muted-foreground">godzinek/dzień</span>
         </div>
       </CardContent>
     </Card>

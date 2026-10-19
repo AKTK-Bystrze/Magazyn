@@ -18,7 +18,7 @@ export const EQUIPMENT_FILTER_UI_STRINGS = {
   EQUIPMENT_TYPE_LABEL: "Typ sprzętu",
   AVAILABILITY_LABEL: "Dostępność",
   STATUS_ALL: "Wszystko",
-  STATUS_AVAILABLE: "Dostępne",
+  STATUS_AVAILABLE: "OK",
   STATUS_BROKEN: "Zepsute/Niedostępne",
   STATUS_BLOCKED: "Zablokowane",
   RESET_FILTERS: "Resetuj filtry",
@@ -36,8 +36,8 @@ export const EQUIPMENT_VALIDATION_MESSAGES = {
   IMAGE_INVALID_TYPE: "Dozwolone są tylko obrazy JPEG i PNG",
   CREATE_FAILED: "Nie udało się utworzyć sprzętu",
   UPDATE_FAILED: "Nie udało się zaktualizować sprzętu",
-  ARCHIVE_FAILED: "Nie udało się zarchiwizować sprzętu",
-  ARCHIVE_HAS_ACTIVE_RESERVATIONS: "Nie można zarchiwizować sprzętu z aktywnymi rezerwacjami",
+  ARCHIVE_FAILED: "Nie udało się usunąć sprzętu",
+  ARCHIVE_HAS_ACTIVE_RESERVATIONS: "Nie można usunąć sprzętu z aktywnymi rezerwacjami",
   INTERNAL_ID_EXISTS: "ID wewnętrzne już istnieje dla tego typu",
 } as const;
 
@@ -51,7 +51,7 @@ export const EQUIPMENT_MANAGER_UI_STRINGS = {
   ADD_EQUIPMENT: "Dodaj Sprzęt",
   EDIT_EQUIPMENT: "Edytuj Sprzęt",
   VIEW_DETAILS: "Zobacz Szczegóły",
-  ARCHIVE_EQUIPMENT: "Archiwizuj",
+  ARCHIVE_EQUIPMENT: "Usuń",
   TOGGLE_STATUS: "Przełącz Status",
 
   SEARCH_PLACEHOLDER: "Szukaj po nazwie lub ID...",
@@ -72,10 +72,9 @@ export const EQUIPMENT_MANAGER_UI_STRINGS = {
   ADD_DIALOG_DESCRIPTION: "Dodaj nowy element sprzętu do inwentarza.",
   EDIT_DIALOG_TITLE: "Edytuj Sprzęt",
   EDIT_DIALOG_DESCRIPTION: "Zaktualizuj informacje o sprzęcie.",
-  ARCHIVE_DIALOG_TITLE: "Zarchiwizować Sprzęt?",
-  ARCHIVE_DIALOG_MESSAGE:
-    "To ukryje sprzęt z katalogu. Nie będzie można go zarezerwować, ale można go później przywrócić.",
-  ARCHIVE_BUTTON: "Archiwizuj Sprzęt",
+  ARCHIVE_DIALOG_TITLE: "Usunąć Sprzęt?",
+  ARCHIVE_DIALOG_MESSAGE: "To usunie sprzęt z inwentarza. Ta operacja jest nieodwracalna.",
+  ARCHIVE_BUTTON: "Usuń Sprzęt",
   CANCEL_BUTTON: CORE_UI_STRINGS.CANCEL,
   SAVE_BUTTON: "Zapisz Zmiany",
   CREATE_BUTTON: "Utwórz Sprzęt",
@@ -103,7 +102,7 @@ export const EQUIPMENT_MANAGER_UI_STRINGS = {
 
   CREATED_SUCCESS: "Sprzęt utworzony pomyślnie",
   UPDATED_SUCCESS: "Sprzęt zaktualizowany pomyślnie",
-  ARCHIVED_SUCCESS: "Sprzęt zarchiwizowany pomyślnie",
+  ARCHIVED_SUCCESS: "Sprzęt usunięty pomyślnie",
   STATUS_CHANGED_SUCCESS: "Status sprzętu zmieniony",
   MAINTENANCE_LOG_ADDED: "Notatka konserwacji dodana",
 
