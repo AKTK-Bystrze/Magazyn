@@ -78,6 +78,7 @@ export function ReservationCard({
             </div>
             <StatusBadge
               status={reservation.status}
+              startDate={reservation.startDate}
               data-testid={`reservation-status-${reservation.id}`}
             />
           </div>

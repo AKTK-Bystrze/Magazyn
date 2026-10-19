@@ -9,6 +9,7 @@ import { ConfirmationModal } from "./ConfirmationModal";
 import { CartAvailabilityAlerts } from "./CartAvailabilityAlerts";
 import { UserSelector } from "@/components/admin/UserSelector";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -39,12 +40,7 @@ interface ReservationCartViewProps {
   equipmentBrowsePath?: string;
 }
 
-/**
- * Main checkout view for completing equipment reservations.
- * Displays cart items, date selection, cost estimation, and confirmation flow.
- * In admin mode, allows creating reservations for other users.
- */
-export function ReservationCartView({
+function ReservationCartContent({
   initialCreditBalance,
   isAdmin = false,
   successRedirectPath = ROUTES.PROTECTED.RESERVATIONS,
@@ -52,8 +48,32 @@ export function ReservationCartView({
   initialSelectedUserCreditBalance = 0,
   equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
 }: ReservationCartViewProps) {
+  const queryClient = useQueryClient();
+  const [userCreditBalance, setUserCreditBalance] = React.useState<number>(initialCreditBalance);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted && typeof data?.creditBalance === "number") {
+            setUserCreditBalance(data.creditBalance);
+          }
+        }
+      } catch (err) {
+        logger.error("Failed to fetch current session for credit balance:", { error: err });
+      }
+    };
+    fetchSession();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const { cartState, removeItem, updateStartDate, updateEndDate, clearCart } =
-    useReservationCart(initialCreditBalance);
+    useReservationCart(userCreditBalance);
 
   const { checkAvailability, isChecking } = useAvailabilityCheck(
     cartState.items,
@@ -132,6 +152,7 @@ export function ReservationCartView({
       }
 
       await response.json();
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
       clearCart();
       setIsFreeReservation(false);
       setIsConfirmationOpen(false);
@@ -157,7 +178,7 @@ export function ReservationCartView({
     setSelectedUserCreditBalance(user.creditBalance);
   }, []);
 
-  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : initialCreditBalance;
+  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : userCreditBalance;
 
   const costBreakdown = React.useMemo(() => {
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
@@ -190,7 +211,8 @@ export function ReservationCartView({
     cartState,
     availabilityResult,
     safeCostBreakdown,
-    isAdmin && isFreeReservation
+    isAdmin && isFreeReservation,
+    isAdmin
   );
 
   const handleProceed = async () => {
@@ -252,13 +274,11 @@ export function ReservationCartView({
       {isAdmin && !isEmpty && (
         <section className="bg-card rounded-lg border shadow-sm p-6">
           <h2 className="text-lg font-semibold mb-4">Utwórz Rezerwację Dla</h2>
-          <QueryProvider>
-            <UserSelector
-              selectedUserId={selectedUserId}
-              onSelect={handleUserSelect}
-              label="Wybierz użytkownika dla tej rezerwacji"
-            />
-          </QueryProvider>
+          <UserSelector
+            selectedUserId={selectedUserId}
+            onSelect={handleUserSelect}
+            label="Wybierz użytkownika dla tej rezerwacji"
+          />
           {!selectedUserId && (
             <p className="text-sm text-muted-foreground mt-2">
               Musisz wybrać użytkownika przed dokończeniem rezerwacji.
@@ -299,6 +319,7 @@ export function ReservationCartView({
                 onStartDateChange={updateStartDate}
                 onEndDateChange={updateEndDate}
                 validationErrors={validation.errors.dateRange}
+                allowPastDates={isAdmin}
               />
             </section>
           )}
@@ -365,5 +386,18 @@ export function ReservationCartView({
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Main checkout view for completing equipment reservations.
+ * Displays cart items, date selection, cost estimation, and confirmation flow.
+ * In admin mode, allows creating reservations for other users.
+ */
+export function ReservationCartView(props: ReservationCartViewProps) {
+  return (
+    <QueryProvider>
+      <ReservationCartContent {...props} />
+    </QueryProvider>
   );
 }

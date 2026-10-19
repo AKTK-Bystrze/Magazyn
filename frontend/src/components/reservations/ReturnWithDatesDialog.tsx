@@ -96,13 +96,6 @@ export function ReturnWithDatesDialog({
       errors.endDate = UI.END_DATE_MUST_BE_AFTER_START;
     }
 
-    if (adjustmentInfo.newBalance < 0) {
-      errors.endDate = UI.INSUFFICIENT_CREDITS_WARNING.replace(
-        "{amount}",
-        Math.abs(adjustmentInfo.newBalance).toString()
-      );
-    }
-
     setValidationErrors(errors);
     return !errors.startDate && !errors.endDate;
   };
@@ -208,10 +201,7 @@ export function ReturnWithDatesDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             {UI.CANCEL_CHANGES}
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isSubmitting || (modifyDates && adjustmentInfo.newBalance < 0)}
-          >
+          <Button onClick={handleConfirm} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
