@@ -1,6 +1,8 @@
 import "@testing-library/jest-dom";
 import { vi, beforeEach } from "vitest";
 
+process.env.TZ = "UTC";
+
 vi.stubGlobal("import", {
   meta: {
     env: {

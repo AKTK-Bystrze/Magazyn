@@ -2,12 +2,15 @@ import { Badge } from "@/components/ui/badge";
 import {
   RESERVATION_STATUS_LABELS,
   RESERVATION_STATUS_VARIANTS,
+  RESERVATION_FUTURE_STATUS_LABEL,
   MIXED_STATUS,
 } from "@/lib/config/constants";
+import { getTodayAsString } from "@/lib/utils/date-utils";
 import type { Enums } from "@/db/database.types";
 
 interface StatusBadgeProps {
   status: Enums<"reservation_status"> | typeof MIXED_STATUS | string;
+  startDate?: string | null;
   className?: string;
   "data-testid"?: string;
 }
@@ -17,9 +20,15 @@ interface StatusBadgeProps {
  * Automatically applies variant and label based on status
  *
  * @param status - Reservation status from database enum
+ * @param startDate - Optional start date to distinguish future pending reservations
  * @param className - Optional additional CSS classes
  */
-export function StatusBadge({ status, className, "data-testid": testId }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  startDate,
+  className,
+  "data-testid": testId,
+}: StatusBadgeProps) {
   if (status === MIXED_STATUS) {
     return (
       <Badge variant="outline" className={className} data-testid={testId}>
@@ -28,7 +37,15 @@ export function StatusBadge({ status, className, "data-testid": testId }: Status
     );
   }
 
-  const label = RESERVATION_STATUS_LABELS[status] ?? status;
+  const isFuture = Boolean(
+    status === "PENDING" &&
+    startDate &&
+    (startDate.includes("T") ? startDate.split("T")[0] : startDate) > getTodayAsString()
+  );
+
+  const label = isFuture
+    ? RESERVATION_FUTURE_STATUS_LABEL
+    : (RESERVATION_STATUS_LABELS[status] ?? status);
 
   if (status === "PENDING") {
     return (
