@@ -136,4 +136,39 @@ describe("ReturnWithDatesDialog", () => {
 
     expect(onConfirm).not.toHaveBeenCalled();
   });
+
+  it("forwards defect/comment notes when confirmed", async () => {
+    const onConfirm = vi.fn().mockResolvedValue(undefined);
+    const onOpenChange = vi.fn();
+
+    render(
+      <ReturnWithDatesDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        reservation={mockReservation}
+        onConfirm={onConfirm}
+        isSubmitting={false}
+        currentUserBalance={50}
+      />
+    );
+
+    const notesTextarea = screen.getByTestId("return-notes-input");
+    expect(notesTextarea).toBeInTheDocument();
+
+    fireEvent.change(notesTextarea, {
+      target: { value: "Pęknięte pióro wiosła i zarysowana burta" },
+    });
+
+    const confirmButton = screen.getByRole("button", { name: "Potwierdź Zwrot" });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith({
+        status: "RETURNED",
+        notes: "Pęknięte pióro wiosła i zarysowana burta",
+      });
+    });
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
 });
