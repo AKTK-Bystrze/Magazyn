@@ -4,7 +4,6 @@ import {
   createTestEquipment,
   cleanupTestEquipment,
   ensureSeedEquipmentExists,
-  clearPendingReservations,
 } from "../helpers/data-setup.helper";
 import { E2E_CONFIG } from "../constants";
 
@@ -23,8 +22,6 @@ interface AuthFixtures {
   superAdminPage: Page;
   /** Dedicated test equipment for this worker (created/cleaned per test) */
   testEquipment: { id: string; typeId: string; name: string }[];
-  /** Cleanup fixture (no return value) */
-  userCleanup: void;
 }
 
 /** Worker-scoped fixtures (shared across tests in same worker) */
@@ -316,14 +313,6 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
     },
     { scope: "worker" },
   ],
-
-  userCleanup: async ({ supabaseAdmin, testUser, adminUser, superAdminUser }, use) => {
-    await use();
-    console.log("[CLEANUP] Clearing pending reservations for test users...");
-    await clearPendingReservations(supabaseAdmin, testUser.id);
-    await clearPendingReservations(supabaseAdmin, adminUser.id);
-    await clearPendingReservations(supabaseAdmin, superAdminUser.id);
-  },
 
   testEquipment: async ({ supabaseAdmin, workerIndex }, use) => {
     const equipment = await createTestEquipment(

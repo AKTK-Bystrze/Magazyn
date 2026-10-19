@@ -5,8 +5,6 @@ export const E2E_CONFIG = {
   /** Default assertion timeout */
   TIMEOUT: {
     ASSERTION: 20000,
-    NAVIGATION: 15000,
-    ANIMATION: 500,
     ACTION: 1000,
   },
 
@@ -17,10 +15,6 @@ export const E2E_CONFIG = {
 
   /** Test users */
   USERS: {
-    PRIMARY: {
-      EMAIL: process.env.E2E_TEST_EMAIL || "test.user@example.com",
-      PASSWORD: process.env.E2E_TEST_PASSWORD || "TestSecurePassword123!",
-    },
     ADMIN: {
       EMAIL: "test.admin@example.com",
       PASSWORD: process.env.E2E_TEST_PASSWORD || "TestSecurePassword123!",
@@ -28,10 +22,6 @@ export const E2E_CONFIG = {
     SUPER_ADMIN: {
       EMAIL: "test.superadmin@example.com",
       PASSWORD: process.env.E2E_TEST_PASSWORD || "TestSecurePassword123!",
-    },
-    SECONDARY: {
-      EMAIL: "e2e-test-user2@example.com",
-      PASSWORD: "TestSecurePassword123!",
     },
   },
 
