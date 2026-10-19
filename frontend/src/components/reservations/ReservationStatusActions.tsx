@@ -44,7 +44,7 @@ export function ReservationStatusActions({
   const [returnDialogOpen, setReturnDialogOpen] = React.useState(false);
   const isOwner = reservation.userId === currentUserId;
   const actions = canChangeStatus(reservation.status, isOwner, isAdmin);
-  const canModify = reservation.status === "PENDING" && (isOwner || isAdmin);
+  const canModify = actions.canCancel;
 
   const needsOwnerProfile = !isOwner && (modifyDatesOpen || returnDialogOpen);
 
@@ -89,7 +89,7 @@ export function ReservationStatusActions({
     window.location.reload();
   };
 
-  if (!actions.canCancel && !actions.canMarkReturned && !canModify) {
+  if (!actions.canCancel && !actions.canMarkReturned) {
     return null;
   }
 
