@@ -37,6 +37,7 @@ describe("FilterSidebar", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(EQUIPMENT_FILTER_UI_STRINGS.ALL_TYPES)).toBeInTheDocument();
     expect(screen.getByLabelText(EQUIPMENT_FILTER_UI_STRINGS.STATUS_ALL)).toBeInTheDocument();
+    expect(screen.getByLabelText(EQUIPMENT_FILTER_UI_STRINGS.STATUS_AVAILABLE)).toBeInTheDocument();
     expect(
       screen.getByText(EQUIPMENT_FILTER_UI_STRINGS.FILTER_BY_AVAILABILITY)
     ).toBeInTheDocument();

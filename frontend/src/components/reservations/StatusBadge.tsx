@@ -76,6 +76,7 @@ export function StatusBadge({
   }
 
   const variant = RESERVATION_STATUS_VARIANTS[status] ?? "outline";
+  const label = RESERVATION_STATUS_LABELS[status] ?? status;
 
   return (
     <Badge variant={variant} className={className} data-testid={testId}>

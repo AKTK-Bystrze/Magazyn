@@ -24,8 +24,8 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
   USER: "Użytkownik",
   CREATED_AT: "Utworzono",
 
-  CANCEL_RESERVATION: "Anuluj Rezerwację",
-  MARK_RETURNED: "Oznacz jako Zwrócone",
+  CANCEL_RESERVATION: "Anuluj",
+  MARK_RETURNED: "Zwróć",
   CHANGE_STATUS: "Zmień Status",
 
   CONFIRM_CANCEL_TITLE: "Anulować Rezerwację?",
@@ -69,7 +69,7 @@ export const RESERVATION_DATE_MODIFICATION_UI_STRINGS = {
   MODIFY_DATES_TITLE: "Zmień Daty Rezerwacji",
   MODIFY_DATES_DESCRIPTION:
     "Zmień daty rozpoczęcia i zakończenia tej rezerwacji. Godzinki zostaną dostosowane na podstawie nowego okresu.",
-  MODIFY_DATES_BUTTON: "Zmień Daty",
+  MODIFY_DATES_BUTTON: "Zmień termin",
   CONFIRM_CHANGES: "Potwierdź Zmiany",
   CANCEL_CHANGES: "Anuluj",
 

@@ -1,21 +1,14 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { StatusChangeDialog } from "./StatusChangeDialog";
 import { ModifyDatesDialog } from "./ModifyDatesDialog";
 import { ReturnWithDatesDialog } from "./ReturnWithDatesDialog";
-import { ChevronDown, X, CheckCircle, CalendarClock } from "lucide-react";
+import { X, CheckCircle, CalendarClock } from "lucide-react";
 import { canChangeStatus } from "@/lib/utils/status-utils";
 import {
   ICON_SIZE_SM,
   RESERVATION_STATUS_VIEW_UI_STRINGS as UI,
   RESERVATION_DATE_MODIFICATION_UI_STRINGS as DATE_UI,
-  RESERVATION_STATUS_LABELS,
 } from "@/lib/config/constants";
 import { useQuery } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users-api";
@@ -49,11 +42,9 @@ export function ReservationStatusActions({
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
   const [modifyDatesOpen, setModifyDatesOpen] = React.useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = React.useState(false);
-  const [adminStatusDialogOpen, setAdminStatusDialogOpen] = React.useState(false);
-  const [targetStatus, setTargetStatus] = React.useState<Enums<"reservation_status"> | null>(null);
-
   const isOwner = reservation.userId === currentUserId;
   const actions = canChangeStatus(reservation.status, isOwner, isAdmin);
+  const canModify = reservation.status === "PENDING" && (isOwner || isAdmin);
 
   const needsOwnerProfile = !isOwner && (modifyDatesOpen || returnDialogOpen);
 
@@ -68,7 +59,6 @@ export function ReservationStatusActions({
   const userBalance = isOwner ? currentUserBalance : (ownerProfile?.creditBalance ?? 0);
 
   const handleCancelClick = () => {
-    setTargetStatus("CANCELLED");
     setCancelDialogOpen(true);
   };
 
@@ -80,21 +70,9 @@ export function ReservationStatusActions({
     setReturnDialogOpen(true);
   };
 
-  const handleAdminStatusClick = (newStatus: Enums<"reservation_status">) => {
-    setTargetStatus(newStatus);
-    setAdminStatusDialogOpen(true);
-  };
-
   const handleCancelConfirm = async () => {
     await onStatusChange("CANCELLED");
     setCancelDialogOpen(false);
-  };
-
-  const handleAdminStatusConfirm = async () => {
-    if (targetStatus) {
-      await onStatusChange(targetStatus);
-      setAdminStatusDialogOpen(false);
-    }
   };
 
   const handleModifyDatesConfirm = async (newDates: { startDate: string; endDate: string }) => {
@@ -111,13 +89,13 @@ export function ReservationStatusActions({
     window.location.reload();
   };
 
-  if (!actions.canCancel && !actions.canMarkReturned && !actions.canChangeStatus) {
+  if (!actions.canCancel && !actions.canMarkReturned && !canModify) {
     return null;
   }
 
   return (
     <div className="flex flex-wrap gap-3">
-      {reservation.status === "PENDING" && (isOwner || isAdmin) && (
+      {canModify && (
         <Button variant="outline" onClick={handleModifyDatesClick} disabled={isUpdating}>
           <CalendarClock className={ICON_SIZE_SM + " mr-2"} />
           {DATE_UI.MODIFY_DATES_BUTTON}
@@ -143,28 +121,6 @@ export function ReservationStatusActions({
         </Button>
       )}
 
-      {actions.canChangeStatus && actions.availableStatuses.length > 0 && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="default" disabled={isUpdating}>
-              {UI.CHANGE_STATUS}
-              <ChevronDown className={ICON_SIZE_SM + " ml-2"} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {actions.availableStatuses.map((status) => (
-              <DropdownMenuItem
-                key={status}
-                onClick={() => handleAdminStatusClick(status)}
-                variant={status === "CANCELLED" ? "destructive" : "default"}
-              >
-                {RESERVATION_STATUS_LABELS[status]}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-
       <StatusChangeDialog
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}
@@ -173,16 +129,6 @@ export function ReservationStatusActions({
         onConfirm={handleCancelConfirm}
         isSubmitting={isUpdating}
         mode="cancel"
-      />
-
-      <StatusChangeDialog
-        open={adminStatusDialogOpen}
-        onOpenChange={setAdminStatusDialogOpen}
-        reservation={reservation}
-        targetStatus={targetStatus}
-        onConfirm={handleAdminStatusConfirm}
-        isSubmitting={isUpdating}
-        mode="admin_change"
       />
 
       <ModifyDatesDialog

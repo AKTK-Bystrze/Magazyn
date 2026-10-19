@@ -189,10 +189,10 @@ interface EmptyStateProps {
  */
 function EmptyState({ hasFilters }: EmptyStateProps) {
   const Icon = hasFilters ? Package : Calendar;
-  const title = hasFilters ? "No reservations match your filters" : "No reservations yet";
+  const title = hasFilters ? "Brak rezerwacji spełniających kryteria" : "Brak rezerwacji";
   const description = hasFilters
-    ? "Try adjusting your filters or clearing them to see all reservations."
-    : "When you reserve equipment, it will appear here.";
+    ? "Spróbuj zmienić parametry filtrów lub wyszukiwania."
+    : "Twoje rezerwacje pojawią się tutaj.";
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
