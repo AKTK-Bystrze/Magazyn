@@ -380,3 +380,68 @@ export async function hardDeleteEquipment(
     console.error(`Failed to cleanup equipment: ${error.message}`);
   }
 }
+
+/**
+ * Shape of a credit history entry to seed into the database.
+ */
+export interface SeedCreditHistoryEntry {
+  amount: number;
+  reason:
+    | "reservation_charge"
+    | "reservation_refund"
+    | "reservation_adjustment"
+    | "admin_adjustment"
+    | "work_credit";
+  description?: string;
+  author_id?: string;
+  reservation_id?: string;
+  created_at?: string;
+}
+
+/**
+ * Seeds credit history entries for a specified user in the database.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param userId - The ID of the user.
+ * @param entries - Array of credit history entries to insert.
+ * @returns A promise that resolves when all entries are inserted.
+ */
+export async function seedCreditHistory(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  entries: SeedCreditHistoryEntry[]
+): Promise<void> {
+  if (entries.length === 0) return;
+
+  const records = entries.map((entry) => ({
+    user_id: userId,
+    amount: entry.amount,
+    reason: entry.reason,
+    description: entry.description ?? null,
+    author_id: entry.author_id ?? null,
+    reservation_id: entry.reservation_id ?? null,
+    created_at: entry.created_at ?? new Date().toISOString(),
+  }));
+
+  const { error } = await supabaseAdmin.from("credit_history").insert(records);
+  if (error) {
+    throw new Error(`Failed to seed credit history: ${error.message}`);
+  }
+}
+
+/**
+ * Clears all credit history records for a specified user.
+ *
+ * @param supabaseAdmin - The Supabase admin client.
+ * @param userId - The ID of the user.
+ * @returns A promise that resolves when the history is cleared.
+ */
+export async function clearCreditHistory(
+  supabaseAdmin: SupabaseClient,
+  userId: string
+): Promise<void> {
+  const { error } = await supabaseAdmin.from("credit_history").delete().eq("user_id", userId);
+  if (error) {
+    throw new Error(`Failed to clear credit history: ${error.message}`);
+  }
+}

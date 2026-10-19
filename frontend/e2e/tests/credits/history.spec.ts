@@ -1,88 +1,49 @@
 import { test, expect } from "../../fixtures";
 import { CreditHistoryPage } from "../../page-objects/credit-history.pom";
 import { CREDIT_HISTORY_UI_STRINGS } from "../../../src/lib/config/constants/credit/ui-strings";
+import { seedCreditHistory, clearCreditHistory } from "../../helpers/data-setup.helper";
 
-const API_ROUTE_CREDITS_HISTORY = "**/api/credits/history*";
-
-const MOCK_HISTORY = {
-  credit_history: [
-    {
-      id: "h1",
-      user_id: "u1",
-      username: "tester",
-      amount: -10,
-      reason: "reservation_charge",
-      description: "Opłata za rezerwację #123",
-      reservation_id: "r1",
-      author_id: "system",
-      author_username: "System",
-      created_at: "2023-12-01T10:00:00Z",
-    },
-    {
-      id: "h2",
-      user_id: "u1",
-      username: "tester",
-      amount: 5,
-      reason: "reservation_refund",
-      description: "Zwrot za rezerwację #123 (Anulowana)",
-      reservation_id: "r1",
-      author_id: "admin",
-      author_username: "Admin",
-      created_at: "2023-12-02T11:00:00Z",
-    },
-    {
-      id: "h3",
-      user_id: "u1",
-      username: "tester",
-      amount: 15,
-      reason: "work_credit",
-      description: "Za sprzątanie magazynu",
-      reservation_id: null,
-      author_id: "admin",
-      author_username: "Admin",
-      created_at: "2023-12-03T09:00:00Z",
-    },
-  ],
-  current_balance: 110,
-  pagination: {
-    page: 1,
-    per_page: 10,
-    total_items: 3,
-    total_pages: 1,
+const SEEDED_CREDIT_ENTRIES = [
+  {
+    amount: -10,
+    reason: "reservation_charge" as const,
+    description: "Opłata za rezerwację sprzętu",
+    created_at: new Date(Date.now() - 7200000).toISOString(),
   },
-};
-
-const MOCK_EMPTY = {
-  credit_history: [],
-  current_balance: 100,
-  pagination: {
-    page: 1,
-    per_page: 10,
-    total_items: 0,
-    total_pages: 0,
+  {
+    amount: 5,
+    reason: "reservation_refund" as const,
+    description: "Zwrot za rezerwację",
+    created_at: new Date(Date.now() - 3600000).toISOString(),
   },
-};
+  {
+    amount: 15,
+    reason: "work_credit" as const,
+    description: "Za sprzątanie magazynu",
+    created_at: new Date().toISOString(),
+  },
+];
 
 /**
  * Credits History e2e tests.
- * Covers layout, responsive columns, tooltips, and empty state.
+ * Covers layout, responsive columns, tooltips, and empty state against live backend.
  */
 test.describe("Credits History", () => {
   let creditPage: CreditHistoryPage;
 
+  test.afterEach(async ({ supabaseAdmin, testUser }) => {
+    await clearCreditHistory(supabaseAdmin, testUser.id);
+  });
+
   test("should display comprehensive history view with correct layout", async ({
     authenticatedPage,
+    supabaseAdmin,
+    testUser,
   }) => {
-    await authenticatedPage.route(API_ROUTE_CREDITS_HISTORY, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(MOCK_HISTORY),
-      });
-    });
+    await clearCreditHistory(supabaseAdmin, testUser.id);
+    await seedCreditHistory(supabaseAdmin, testUser.id, SEEDED_CREDIT_ENTRIES);
 
     creditPage = new CreditHistoryPage(authenticatedPage);
-
     await creditPage.goto();
 
     const historyTable = creditPage.getHistoryTable();
@@ -100,23 +61,21 @@ test.describe("Credits History", () => {
       creditPage.getColumnHeader(CREDIT_HISTORY_UI_STRINGS.TABLE_DESCRIPTION)
     ).toBeHidden();
 
+    // Row 0 is the newest transaction due to created_at descending sort order
     await creditPage.hoverReason(0);
     await expect(
-      authenticatedPage.getByRole("tooltip").getByText(MOCK_HISTORY.credit_history[0].description)
+      authenticatedPage.getByRole("tooltip").getByText(SEEDED_CREDIT_ENTRIES[2].description)
     ).toBeVisible();
   });
 
-  test("should display empty state when no history exists", async ({ authenticatedPage }) => {
-    await authenticatedPage.route(API_ROUTE_CREDITS_HISTORY, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(MOCK_EMPTY),
-      });
-    });
+  test("should display empty state when no history exists", async ({
+    authenticatedPage,
+    supabaseAdmin,
+    testUser,
+  }) => {
+    await clearCreditHistory(supabaseAdmin, testUser.id);
 
     creditPage = new CreditHistoryPage(authenticatedPage);
-
     await creditPage.goto();
 
     await expect(creditPage.getEmptyState()).toBeVisible();

@@ -87,10 +87,12 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	}
 	fixture.testUserID = profiles[0].ID
 	fixture.testUser2ID = profiles[1].ID
-	initialBalance := int32(100000)
-	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUserID).Execute()
-	_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUser2ID).Execute()
-	t.Logf("Using test users: %s, %s", fixture.testUserID, fixture.testUser2ID)
+	initialBalance := int32(10)
+	_, _, err = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUserID).Execute()
+	require.NoError(t, err)
+	_, _, err = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUser2ID).Execute()
+	require.NoError(t, err)
+	t.Logf("Using test users with realistic balance (10): %s, %s", fixture.testUserID, fixture.testUser2ID)
 }
 func (f *dateTestFixture) teardown() {
 	for i := len(f.cleanup) - 1; i >= 0; i-- {
@@ -141,4 +143,9 @@ func (f *dateTestFixture) getUserBalance(userID string) int32 {
 	require.NoError(f.t, json.Unmarshal(data, &profiles))
 	require.NotEmpty(f.t, profiles)
 	return profiles[0].CreditBalance
+}
+
+func (f *dateTestFixture) setUserBalance(userID string, balance int32) {
+	_, _, err := f.client.From("profiles").Update(map[string]interface{}{"credit_balance": balance}, "", "").Eq("id", userID).Execute()
+	require.NoError(f.t, err, "Failed to set user credit balance")
 }

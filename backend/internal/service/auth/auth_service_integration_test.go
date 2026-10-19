@@ -31,16 +31,25 @@ func TestLogin_Integration(t *testing.T) {
 	appURL := os.Getenv("PUBLIC_APP_URL")
 	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
 	service := auth.NewAuthService(repo)
+	email := fmt.Sprintf("test_login_%d@example.com", time.Now().Unix())
+	password := "testRequest123!"
+	user, err := testutils.CreateTestUser(email, password)
+	require.NoError(t, err, "Failed to create test user for magic link login")
+	defer func() {
+		_ = testutils.DeleteTestUser(user.ID.String())
+	}()
+
 	t.Run("sends magic link to valid email", func(t *testing.T) {
-		_, err := service.Login(context.Background(), "test_integration@example.com")
-		if err != nil {
-			if assert.Error(t, err) {
-				t.Logf("Skipping TestLogin_Integration due to API error (likely env config): %v", err)
-				t.Skip("Skipping test due to Supabase 400 error (configuration/permissions)")
-			}
-		} else {
-			assert.NoError(t, err)
-		}
+		resp, err := service.Login(context.Background(), email)
+		require.NoError(t, err, "Magic link login should succeed for registered user")
+		assert.NotNil(t, resp)
+		assert.Equal(t, "Magic link sent to your email", resp.Message)
+	})
+
+	t.Run("returns error for non-existent email", func(t *testing.T) {
+		resp, err := service.Login(context.Background(), fmt.Sprintf("nonexistent_%d@example.com", time.Now().UnixNano()))
+		assert.Error(t, err, "Magic link login should fail for non-existent user")
+		assert.Nil(t, resp)
 	})
 }
 func TestGetSession_Integration(t *testing.T) {
