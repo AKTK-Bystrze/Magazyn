@@ -91,7 +91,7 @@ export function ReservationActionMenu({
             {canModify && onModify && (
               <DropdownMenuItem onClick={handleModify}>
                 <Edit2 className={ICON_SIZE_SM + " mr-2"} />
-                Zmień daty
+                Zmień termin
               </DropdownMenuItem>
             )}
             {canReturn && onReturn && (

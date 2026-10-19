@@ -53,6 +53,6 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
 
     const sortTrigger = adminPage.locator("#sort-filter");
     await expect(sortTrigger).toBeVisible({ timeout: 15000 });
-    await expect(sortTrigger).toContainText(/Sortuj według|Data utworzenia/i);
+    await expect(sortTrigger).toContainText(/Data utworzenia: najnowsze/i);
   });
 });

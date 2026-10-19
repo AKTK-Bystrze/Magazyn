@@ -107,8 +107,12 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
 
       <div className="flex items-center gap-2">
         {creditBalance !== undefined && (
-          <Badge variant="secondary" className="hidden sm:flex">
-            Credits: {creditBalance}
+          <Badge
+            variant="secondary"
+            className="flex items-center text-xs font-medium whitespace-nowrap"
+            data-testid="header-credits-badge"
+          >
+            Godzinki: {creditBalance}
           </Badge>
         )}
         <ThemeToggle />
