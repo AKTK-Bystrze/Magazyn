@@ -69,6 +69,8 @@ export function StatusBadge({
     );
   }
 
+  const label = RESERVATION_STATUS_LABELS[status] ?? status;
+
   const variant = RESERVATION_STATUS_VARIANTS[status] ?? "outline";
 
   return (
