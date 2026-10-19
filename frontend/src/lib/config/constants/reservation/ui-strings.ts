@@ -26,6 +26,7 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
 
   CANCEL_RESERVATION: "Anuluj",
   MARK_RETURNED: "Zwróć",
+  CHANGE_STATUS: "Zmień Status",
 
   CONFIRM_CANCEL_TITLE: "Anulować Rezerwację?",
   CONFIRM_CANCEL_MESSAGE: "Ta akcja nie może być cofnięta. Sprzęt stanie się dostępny dla innych.",
