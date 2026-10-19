@@ -122,6 +122,7 @@ export type UserFilterState = {
   perPage: number;
   role: Enums<"user_role"> | "ALL";
   search?: string;
+  isEnabled?: boolean;
 };
 
 /**

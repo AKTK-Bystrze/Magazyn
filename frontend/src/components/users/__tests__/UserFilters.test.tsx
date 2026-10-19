@@ -17,6 +17,7 @@ describe("UserFilters", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    Element.prototype.scrollIntoView = vi.fn();
   });
 
   afterEach(() => {
@@ -77,6 +78,7 @@ describe("UserFilters", () => {
   });
 
   it("calls onFilterChange when user status filter selection changes", async () => {
+    vi.useRealTimers();
     render(
       <UserFilters filters={defaultFilters} onFilterChange={onFilterChange} onReset={onReset} />
     );

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users-api";
+import { equipmentApi } from "@/lib/api/equipment-api";
 import type { ReservationListItem, UpdateReservationCommand } from "@/types";
 
 /**
@@ -186,6 +187,13 @@ export function useReservationDialogs({
       if (targets.length === 0) return;
 
       try {
+        if (command.notes && command.notes.trim()) {
+          const notes = command.notes.trim();
+          await Promise.allSettled(
+            targets.map((t) => equipmentApi.addMaintenanceLog(t.equipmentId, { notes }))
+          );
+        }
+
         if (targets.length === 1) {
           await updateReservation(targets[0].id, command);
           setSuccessMessage(`Sprzęt "${targets[0].equipmentName}" oznaczony jako zwrócony.`);
