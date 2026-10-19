@@ -187,7 +187,7 @@ export function useReservationDialogs({
       if (targets.length === 0) return;
 
       try {
-        if (command.notes && command.notes.trim()) {
+        if (command.notes?.trim()) {
           const notes = command.notes.trim();
           await Promise.allSettled(
             targets.map((t) => equipmentApi.addMaintenanceLog(t.equipmentId, { notes }))
