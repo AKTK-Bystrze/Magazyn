@@ -9,7 +9,6 @@ import { ConfirmationModal } from "./ConfirmationModal";
 import { CartAvailabilityAlerts } from "./CartAvailabilityAlerts";
 import { UserSelector } from "@/components/admin/UserSelector";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -48,25 +47,20 @@ function ReservationCartContent({
   initialSelectedUserCreditBalance = 0,
   equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
 }: ReservationCartViewProps) {
-  const queryClient = useQueryClient();
   const [userCreditBalance, setUserCreditBalance] = React.useState<number>(initialCreditBalance);
 
   React.useEffect(() => {
     let isMounted = true;
-    const fetchSession = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        if (response.ok) {
-          const data = await response.json();
-          if (isMounted && typeof data?.creditBalance === "number") {
-            setUserCreditBalance(data.creditBalance);
-          }
+    fetch("/api/auth/session")
+      .then((r) => r.ok && r.json())
+      .then((d) => {
+        if (isMounted && typeof d?.creditBalance === "number") {
+          setUserCreditBalance(d.creditBalance);
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         logger.error("Failed to fetch current session for credit balance:", { error: err });
-      }
-    };
-    fetchSession();
+      });
     return () => {
       isMounted = false;
     };
@@ -153,7 +147,6 @@ function ReservationCartContent({
       }
 
       await response.json();
-      await queryClient.invalidateQueries({ queryKey: ["users"] });
       clearCart();
       setIsFreeReservation(false);
       setIsConfirmationOpen(false);
