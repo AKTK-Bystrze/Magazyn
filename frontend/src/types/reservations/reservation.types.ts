@@ -77,6 +77,8 @@ export type UpdateReservationCommand = {
   startDate?: string;
   endDate?: string;
   status?: Enums<"reservation_status">;
+  /** Optional defect or return notes to record in equipment maintenance logs */
+  notes?: string;
 };
 
 /**
