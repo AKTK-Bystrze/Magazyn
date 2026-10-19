@@ -9,7 +9,6 @@
 
 import { removeAuthCookie } from "./cookie-utils";
 import { ROUTES } from "@/lib/config/routes";
-import { STORAGE_KEY_SUPABASE_AUTH } from "@/lib/config/constants";
 import { supabase } from "@/lib/supabase";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
@@ -42,7 +41,6 @@ export async function handleLogout(): Promise<void> {
 
   removeAuthCookie();
 
-  localStorage.removeItem(STORAGE_KEY_SUPABASE_AUTH);
   if (typeof window !== "undefined") {
     try {
       for (const key of Object.keys(localStorage)) {
