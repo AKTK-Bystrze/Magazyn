@@ -86,7 +86,7 @@ export function ReservationStatusActions({
   };
 
   const handleReturnConfirm = async (command: UpdateReservationCommand) => {
-    if (command.notes?.trim()) {
+    if (command.notes && command.notes.trim()) {
       await equipmentApi.addMaintenanceLog(reservation.equipmentId, {
         notes: command.notes.trim(),
       });

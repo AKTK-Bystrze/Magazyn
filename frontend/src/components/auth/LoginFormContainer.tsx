@@ -4,17 +4,17 @@ import { MagicLinkSent } from "./MagicLinkSent";
 import { Loader2 } from "lucide-react";
 
 type LoginViewState = "idle" | "success" | "authenticating";
+type LoginViewState = "idle" | "success" | "authenticating";
 
 export const LoginFormContainer: React.FC = () => {
   const [viewState, setViewState] = useState<LoginViewState>(() => {
-    if (typeof window !== "undefined") {
-      const loc = window.location;
-      if (
-        (loc.hash && /(access_token|error)/.test(loc.hash)) ||
-        (loc.search && loc.search.includes("code="))
-      ) {
-        return "authenticating";
-      }
+    if (
+      typeof window !== "undefined" &&
+      (window.location.hash.includes("access_token") ||
+        window.location.hash.includes("error") ||
+        window.location.search.includes("code="))
+    ) {
+      return "authenticating";
     }
     return "idle";
   });
