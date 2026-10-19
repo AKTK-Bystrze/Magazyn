@@ -32,24 +32,6 @@ export async function cancelReservation(
 }
 
 /**
- * Clears all pending reservations for a specified user.
- *
- * @param supabaseAdmin - The Supabase admin client.
- * @param userId - The ID of the user.
- * @returns A promise that resolves when all pending reservations are cancelled.
- */
-export async function clearPendingReservations(
-  supabaseAdmin: SupabaseClient,
-  userId: string
-): Promise<void> {
-  await supabaseAdmin
-    .from("reservations")
-    .update({ status: "CANCELLED" })
-    .eq("user_id", userId)
-    .eq("status", "PENDING");
-}
-
-/**
  * Ensures that default equipment types exist in the database.
  * Creates 'kayak' and 'paddle' types if they don't exist.
  *
@@ -276,53 +258,7 @@ export async function cleanupOrphanedTestEquipment(supabaseAdmin: SupabaseClient
   }
 
   const equipmentIds = equipment.map((e) => e.id);
-
-  const { data: reservations } = await supabaseAdmin
-    .from("reservations")
-    .select("id")
-    .in("equipment_id", equipmentIds);
-
-  const reservationIds = reservations?.map((r) => r.id) ?? [];
-
-  if (reservationIds.length > 0) {
-    const { error: historyError } = await supabaseAdmin
-      .from("reservation_history")
-      .delete()
-      .in("reservation_id", reservationIds);
-
-    if (historyError) {
-      console.error(`Failed to delete orphaned reservation history: ${historyError.message}`);
-    }
-
-    const { error: creditError } = await supabaseAdmin
-      .from("credit_history")
-      .delete()
-      .in("reservation_id", reservationIds);
-
-    if (creditError) {
-      console.error(`Failed to delete orphaned credit history: ${creditError.message}`);
-    }
-  }
-
-  const { error: resError } = await supabaseAdmin
-    .from("reservations")
-    .delete()
-    .in("equipment_id", equipmentIds);
-
-  if (resError) {
-    console.error(`Failed to delete orphaned reservations: ${resError.message}`);
-  }
-
-  const { error: deleteError } = await supabaseAdmin
-    .from("equipment")
-    .delete()
-    .in("id", equipmentIds);
-
-  if (deleteError) {
-    console.error(`Failed to delete orphaned equipment: ${deleteError.message}`);
-    return 0;
-  }
-
+  await cleanupTestEquipment(supabaseAdmin, equipmentIds);
   return equipment.length;
 }
 
@@ -338,45 +274,5 @@ export async function hardDeleteEquipment(
   supabaseAdmin: SupabaseClient,
   equipmentId: string
 ): Promise<void> {
-  const { data: reservations } = await supabaseAdmin
-    .from("reservations")
-    .select("id")
-    .eq("equipment_id", equipmentId);
-
-  const reservationIds = reservations?.map((r) => r.id) ?? [];
-
-  if (reservationIds.length > 0) {
-    const { error: historyError } = await supabaseAdmin
-      .from("reservation_history")
-      .delete()
-      .in("reservation_id", reservationIds);
-
-    if (historyError) {
-      console.error(`Failed to cleanup reservation history: ${historyError.message}`);
-    }
-
-    const { error: creditError } = await supabaseAdmin
-      .from("credit_history")
-      .delete()
-      .in("reservation_id", reservationIds);
-
-    if (creditError) {
-      console.error(`Failed to cleanup credit history: ${creditError.message}`);
-    }
-  }
-
-  const { error: resError } = await supabaseAdmin
-    .from("reservations")
-    .delete()
-    .eq("equipment_id", equipmentId);
-
-  if (resError) {
-    console.error(`Failed to cleanup reservations: ${resError.message}`);
-  }
-
-  const { error } = await supabaseAdmin.from("equipment").delete().eq("id", equipmentId);
-
-  if (error) {
-    console.error(`Failed to cleanup equipment: ${error.message}`);
-  }
+  await cleanupTestEquipment(supabaseAdmin, [equipmentId]);
 }

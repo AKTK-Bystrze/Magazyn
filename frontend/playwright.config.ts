@@ -6,11 +6,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const testEnvPath = path.resolve(__dirname, "../.env.test");
-if (fs.existsSync(testEnvPath)) {
-  process.loadEnvFile(testEnvPath);
-}
-
 const envPath = path.resolve(__dirname, "../.env");
 if (fs.existsSync(envPath)) {
   process.loadEnvFile(envPath);
@@ -24,8 +19,6 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
 
   retries: process.env.CI ? 2 : 0,
-
-  workers: undefined,
 
   reporter: [["html", { open: "never" }], ["list"]],
 
@@ -45,14 +38,8 @@ export default defineConfig({
 
   projects: [
     {
-      name: "setup",
-      testMatch: /.*\.setup\.ts/,
-    },
-
-    {
       name: "Mobile Chrome",
       use: { ...devices["Pixel 5"] },
-      dependencies: ["setup"],
     },
   ],
 
