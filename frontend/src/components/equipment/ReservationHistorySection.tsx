@@ -1,11 +1,7 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/reservations/StatusBadge";
 import { CalendarDays, User, CreditCard } from "lucide-react";
 import { formatDate } from "@/lib/utils/date-utils";
-import {
-  EQUIPMENT_MANAGER_UI_STRINGS,
-  RESERVATION_STATUS_LABELS,
-  RESERVATION_STATUS_VARIANTS,
-} from "@/lib/config/constants";
+import { EQUIPMENT_MANAGER_UI_STRINGS } from "@/lib/config/constants";
 import type { EquipmentReservationHistoryItem } from "@/types";
 
 const UI = EQUIPMENT_MANAGER_UI_STRINGS;
@@ -16,20 +12,6 @@ const UI = EQUIPMENT_MANAGER_UI_STRINGS;
 interface ReservationHistorySectionProps {
   /** List of reservation history items */
   reservations: EquipmentReservationHistoryItem[];
-}
-
-/**
- * Returns badge variant based on reservation status
- */
-function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  return RESERVATION_STATUS_VARIANTS[status] ?? "outline";
-}
-
-/**
- * Returns human-readable status label
- */
-function getStatusLabel(status: string): string {
-  return RESERVATION_STATUS_LABELS[status] ?? status;
 }
 
 /**
@@ -54,9 +36,11 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">{reservation.username}</span>
             </div>
-            <Badge variant={getStatusVariant(reservation.status)}>
-              {getStatusLabel(reservation.status)}
-            </Badge>
+            <StatusBadge
+              status={reservation.status}
+              startDate={reservation.startDate}
+              endDate={reservation.endDate}
+            />
           </div>
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

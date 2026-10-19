@@ -57,6 +57,23 @@ describe("ReservationTableRow", () => {
     expect(badges[0]).toHaveTextContent("Przyszła");
   });
 
+  it("renders status badge as 'Zaległa' for overdue pending reservations", () => {
+    const overdueItem: ReservationListItem = {
+      ...mockItem,
+      id: "res-overdue",
+      startDate: "2026-04-20T10:00:00Z",
+      endDate: "2026-04-25T18:00:00Z",
+    };
+
+    renderInTable(
+      <ReservationTableRow item={overdueItem} showUserColumn={false} onViewDetails={vi.fn()} />
+    );
+
+    const badges = screen.getAllByTestId(`reservation-status-${overdueItem.id}`);
+    expect(badges.length).toBeGreaterThan(0);
+    expect(badges[0]).toHaveTextContent("Zaległa");
+  });
+
   it("renders username column and indicates current user with (Ty)", () => {
     renderInTable(
       <ReservationTableRow

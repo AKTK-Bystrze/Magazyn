@@ -43,6 +43,18 @@ export async function handleLogout(): Promise<void> {
   removeAuthCookie();
 
   localStorage.removeItem(STORAGE_KEY_SUPABASE_AUTH);
+  if (typeof window !== "undefined") {
+    try {
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith("sb-") || key.includes("supabase") || key.startsWith("magazyn-")) {
+          localStorage.removeItem(key);
+        }
+      }
+      sessionStorage.clear();
+    } catch (e) {
+      logger.debug("Failed to clear local/session storage", { error: e });
+    }
+  }
 
   window.location.href = ROUTES.PUBLIC.LOGIN;
 }

@@ -35,6 +35,11 @@ export const RESERVATION_STATUS_LABELS: Record<string, string> = {
 export const RESERVATION_FUTURE_STATUS_LABEL = "Przyszła";
 
 /**
+ * Human-readable label for overdue pending reservations
+ */
+export const RESERVATION_OVERDUE_STATUS_LABEL = "Zaległa";
+
+/**
  * Badge variants for each reservation status
  * Maps to Shadcn Badge component variants
  */

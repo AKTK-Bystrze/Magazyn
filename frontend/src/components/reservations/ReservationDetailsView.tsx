@@ -107,7 +107,11 @@ function ReservationDetailsContent({
           <ArrowLeft className={ICON_SIZE_SM} />
           {UI.BACK_TO_LIST}
         </a>
-        <StatusBadge status={reservation.status} startDate={reservation.startDate} />
+        <StatusBadge
+          status={reservation.status}
+          startDate={reservation.startDate}
+          endDate={reservation.endDate}
+        />
       </div>
 
       <div>
