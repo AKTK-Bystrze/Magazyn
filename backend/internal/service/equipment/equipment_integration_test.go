@@ -153,30 +153,17 @@ func TestEquipmentList_WithFavorites_MarksCorrectly(t *testing.T) {
 	resp, err := fixture.svc.List(ctx, fixture.testUserID, query)
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
-	assert.GreaterOrEqual(t, len(resp.Equipment), 0, "Should return equipment list")
 	foundTestEquipment := false
-	favoriteCount := 0
 	for _, eq := range resp.Equipment {
-		if eq.IsFavorite != nil && *eq.IsFavorite {
-			favoriteCount++
-		}
 		if eq.ID == fixture.equipmentID {
 			foundTestEquipment = true
-			if eq.IsFavorite != nil && *eq.IsFavorite {
-				t.Logf("✓ Test equipment found and marked as favorite")
-			} else {
-				t.Logf("⚠️  Test equipment found but NOT marked as favorite (IsFavorite=%v)", eq.IsFavorite)
+			if assert.NotNil(t, eq.IsFavorite) {
+				assert.True(t, *eq.IsFavorite, "Added favorite equipment should have is_favorite=true")
 			}
+			break
 		}
 	}
-	if !foundTestEquipment {
-		t.Logf("⚠️  Test equipment not in results (likely filtered by repository/RLS)")
-		t.Logf("Found %d total equipment, %d marked as favorites", len(resp.Equipment), favoriteCount)
-		t.Logf("✓ Favorites feature is functional (IsFavorite field populated)")
-	} else {
-		t.Logf("✓ Found test equipment in list with %d total favorites", favoriteCount)
-	}
-	t.Logf("✓ Equipment list test completed successfully")
+	assert.True(t, foundTestEquipment, "Test equipment should be found in equipment list")
 }
 
 func TestCheckAvailability_BookedDates_ReturnsUnavailable(t *testing.T) {

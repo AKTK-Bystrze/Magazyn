@@ -30,7 +30,7 @@ type creditTestFixture struct {
 
 func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 	_ = os.Setenv("ENV_FILE_PATH", "../../../../.env")
-	appState, err := config.LoadConfig()
+	_, err := config.LoadConfig()
 	require.NoError(t, err, "Failed to load config")
 	supabaseURL := os.Getenv("PUBLIC_SUPABASE_URL")
 	supabaseKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
@@ -48,10 +48,10 @@ func setupCreditTestFixture(t *testing.T) *creditTestFixture {
 		client:  client,
 		cleanup: []func(){},
 	}
-	fixture.setupTestUsers(appState)
+	fixture.setupTestUsers()
 	return fixture
 }
-func (f *creditTestFixture) setupTestUsers(appState *config.AppState) {
+func (f *creditTestFixture) setupTestUsers() {
 	type profile struct {
 		ID   string `json:"id"`
 		Role string `json:"role"`
@@ -165,26 +165,19 @@ func TestGetCreditHistory_PaginationWorks(t *testing.T) {
 			"work_credit",
 		)
 	}
-	testCases := []struct {
-		perPage  int
-		expected int
-	}{
-		{10, 10},
-		{25, 25},
-		{50, 50},
-	}
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("PerPage=%d", tc.perPage), func(t *testing.T) {
+	testPages := []int{10, 25, 50}
+	for _, perPage := range testPages {
+		t.Run(fmt.Sprintf("PerPage=%d", perPage), func(t *testing.T) {
 			query := types.GetCreditHistoryQuery{
 				Page:    1,
-				PerPage: tc.perPage,
+				PerPage: perPage,
 			}
 			resp, err := fixture.svc.GetCreditHistory(ctx, query, fixture.testUserID, "user")
 			require.NoError(t, err)
-			assert.Equal(t, tc.perPage, resp.Pagination.PerPage)
-			assert.LessOrEqual(t, len(resp.CreditHistory), tc.perPage,
+			assert.Equal(t, perPage, resp.Pagination.PerPage)
+			assert.LessOrEqual(t, len(resp.CreditHistory), perPage,
 				"Should not return more than requested per page")
-			t.Logf("✓ PerPage=%d returned %d entries", tc.perPage, len(resp.CreditHistory))
+			t.Logf("✓ PerPage=%d returned %d entries", perPage, len(resp.CreditHistory))
 		})
 	}
 }

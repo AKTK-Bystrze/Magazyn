@@ -6,7 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"magazyn/backend/internal/repository/supabase"
+	"magazyn/backend/internal/service/email"
 	"magazyn/backend/internal/service/reservation"
+	"magazyn/backend/internal/testutils"
 	"magazyn/backend/internal/types"
 	"testing"
 	"time"
@@ -28,7 +31,20 @@ type dateTestFixture struct {
 }
 
 func setupDateTestFixture(t *testing.T) *dateTestFixture {
-	svc, _, client := setupIntegrationTest(t)
+	appState, err := testutils.SetupIntegrationTest()
+	if err != nil {
+		t.Skipf("Skipping integration test: %v", err)
+	}
+	client := appState.SupabaseClient
+	url := appState.Config.SupabaseURL
+	key := appState.Config.SupabaseKey
+
+	reservationRepo := supabase.NewReservationRepository(client, url, key)
+	equipmentRepo := supabase.NewEquipmentRepository(client, url, key)
+	userRepo := supabase.NewUserRepository(client, url, key, key)
+	emailService := email.NewNoopEmailService()
+	svc := reservation.NewReservationService(reservationRepo, equipmentRepo, userRepo, emailService)
+
 	fixture := &dateTestFixture{
 		t:       t,
 		svc:     svc,
