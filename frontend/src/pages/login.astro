@@ -8,6 +8,24 @@ import { LoginFormContainer } from "@/components/auth/LoginFormContainer";
 ---
 
 <BaseLayout title="Zaloguj się | Magazyn">
+  <script is:inline>
+    if (
+      typeof window !== "undefined" &&
+      (window.location.hash.includes("access_token") ||
+        window.location.hash.includes("error") ||
+        window.location.search.includes("code="))
+    ) {
+      document.documentElement.classList.add("auth-redirecting");
+    }
+  </script>
+  <style>
+    html.auth-redirecting .login-form-wrapper {
+      display: none;
+    }
+    html.auth-redirecting .login-authenticating-skeleton {
+      display: flex;
+    }
+  </style>
   <div
     class="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0"
   >
@@ -33,7 +51,18 @@ import { LoginFormContainer } from "@/components/auth/LoginFormContainer";
     </div>
     <div class="lg:p-8 flex items-center justify-center p-8">
       <div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <LoginFormContainer client:load />
+        <div
+          class="login-authenticating-skeleton hidden flex-col items-center justify-center space-y-4 py-8"
+        >
+          <div
+            class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
+          >
+          </div>
+          <p class="text-sm font-medium text-muted-foreground">Trwa logowanie, proszę czekać...</p>
+        </div>
+        <div class="login-form-wrapper w-full">
+          <LoginFormContainer client:load />
+        </div>
       </div>
     </div>
   </div>

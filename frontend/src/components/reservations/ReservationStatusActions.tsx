@@ -13,6 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users-api";
 import { reservationsApi } from "@/lib/api/reservations-api";
+import { equipmentApi } from "@/lib/api/equipment-api";
 import type { ReservationDetail } from "@/types";
 import type { Enums } from "@/db/database.types";
 import type { UpdateReservationCommand } from "@/types/reservations/reservation.types";
@@ -85,6 +86,11 @@ export function ReservationStatusActions({
   };
 
   const handleReturnConfirm = async (command: UpdateReservationCommand) => {
+    if (command.notes && command.notes.trim()) {
+      await equipmentApi.addMaintenanceLog(reservation.equipmentId, {
+        notes: command.notes.trim(),
+      });
+    }
     await reservationsApi.update(reservation.id, command);
     window.location.reload();
   };
