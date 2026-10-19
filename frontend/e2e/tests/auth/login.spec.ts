@@ -78,9 +78,11 @@ test.describe("Login Page", () => {
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
 
     // Assert User A session is active
-    await page.getByTestId("user-menu-trigger").click();
+    await expect(async () => {
+      await page.getByTestId("user-menu-trigger").click();
+      await expect(page.getByTestId("user-menu-dropdown")).toBeVisible({ timeout: 1000 });
+    }).toPass();
     const dropdown = page.getByTestId("user-menu-dropdown");
-    await expect(dropdown).toBeVisible();
     await expect(dropdown).toContainText(testUser.email);
 
     // 2. Pure UI Logout - strictly DO NOT call clearCookies() or localStorage.clear()
@@ -99,8 +101,10 @@ test.describe("Login Page", () => {
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
 
     // 4. Assert User B session is active and NO state of User A remains
-    await page.getByTestId("user-menu-trigger").click();
-    await expect(page.getByTestId("user-menu-dropdown")).toBeVisible();
+    await expect(async () => {
+      await page.getByTestId("user-menu-trigger").click();
+      await expect(page.getByTestId("user-menu-dropdown")).toBeVisible({ timeout: 1000 });
+    }).toPass();
     await expect(page.getByTestId("user-menu-dropdown")).toContainText(adminUser.email);
     await expect(page.getByTestId("user-menu-dropdown")).not.toContainText(testUser.email);
 

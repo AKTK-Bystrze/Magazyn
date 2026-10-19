@@ -29,7 +29,7 @@ export function CreditRequestForm({ initialData, onSuccess, onCancel }: Props) {
   useEffect(() => {
     async function loadUsers() {
       try {
-        const res = await usersApi.listPublic({ perPage: 1000 });
+        const res = await usersApi.listPublic({ perPage: 100 });
         setUsers(res.users);
       } catch (err) {
         console.error("Failed to load users", err);

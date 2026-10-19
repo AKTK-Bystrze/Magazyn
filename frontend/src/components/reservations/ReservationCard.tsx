@@ -79,6 +79,7 @@ export function ReservationCard({
             <StatusBadge
               status={reservation.status}
               startDate={reservation.startDate}
+              endDate={reservation.endDate}
               data-testid={`reservation-status-${reservation.id}`}
             />
           </div>

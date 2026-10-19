@@ -79,6 +79,7 @@ export function ReservationTableRow({
         <StatusBadge
           status={item.status}
           startDate={item.startDate}
+          endDate={item.endDate}
           className="whitespace-nowrap text-xs"
           data-testid={`reservation-status-${item.id}`}
         />
@@ -97,6 +98,7 @@ export function ReservationTableRow({
         <StatusBadge
           status={item.status}
           startDate={item.startDate}
+          endDate={item.endDate}
           className="whitespace-nowrap"
           data-testid={`reservation-status-${item.id}`}
         />

@@ -8,16 +8,21 @@ import type { AstroCookies } from "astro";
 export const AUTH_COOKIE_NAME = "magazyn-auth-token";
 
 /**
- * Removes the authentication cookie
+ * Removes the authentication cookie and all Supabase auth cookies
  * Used during logout or when authentication fails
  */
 export function removeAuthCookie(): void {
-  document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
-
-  document.cookie = `${AUTH_COOKIE_NAME}=; path=/; domain=${window.location.hostname}; max-age=0`;
-
-  if (window.location.hostname === "localhost") {
-    document.cookie = `${AUTH_COOKIE_NAME}=; path=/; domain=localhost; max-age=0`;
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const eqPos = cookie.indexOf("=");
+    const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+    if (name.startsWith("sb-") || name.startsWith("magazyn-") || name === AUTH_COOKIE_NAME) {
+      document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      document.cookie = `${name}=; path=/; domain=${window.location.hostname}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      if (window.location.hostname === "localhost") {
+        document.cookie = `${name}=; path=/; domain=localhost; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      }
+    }
   }
 }
 
@@ -30,13 +35,7 @@ export function clearAllAuthCookies(request: Request, cookies: AstroCookies): vo
   const cookieNames = cookieHeader.split(";").map((c) => c.split("=")[0].trim());
 
   for (const name of cookieNames) {
-    if (
-      name.startsWith("sb-magazyn-auth-token") ||
-      name.startsWith("sb-access-token") ||
-      name.startsWith("sb-refresh-token") ||
-      name.startsWith("sb-session-token") ||
-      name === AUTH_COOKIE_NAME
-    ) {
+    if (name.startsWith("sb-") || name.startsWith("magazyn-") || name === AUTH_COOKIE_NAME) {
       cookies.delete(name, { path: "/" });
     }
   }
