@@ -1,6 +1,5 @@
 import type { CartItem } from "@/types/reservation-cart.types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { PLACEHOLDER_EQUIPMENT_IMAGE, ICON_SIZE_SM } from "@/lib/config/constants";
@@ -21,7 +20,7 @@ export function CartItem({ item, onRemove }: CartItemProps) {
       data-testid={`cart-item-${item.equipmentId}`}
     >
       <div className="relative">
-        <AspectRatio ratio={16 / 9} className="bg-muted">
+        <div className="aspect-video bg-muted w-full overflow-hidden">
           {item.imageUrl ? (
             <img
               src={item.imageUrl}
@@ -37,7 +36,7 @@ export function CartItem({ item, onRemove }: CartItemProps) {
               No Image
             </div>
           )}
-        </AspectRatio>
+        </div>
         <Button
           variant="destructive"
           size="icon"

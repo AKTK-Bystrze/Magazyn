@@ -2,20 +2,10 @@
 /**
  * AdminLayout - Admin panel layout
  *
- * Includes navigation bar configured for admin users with:
- * - Overview, Reservations, Equipment, Users, Analytics links
- * - User menu with logout
- * - Breadcrumbs for nested pages
- *
- * @example
- * <AdminLayout title="Manage Reservations">
- *   <AdminReservationsContainer client:load />
- * </AdminLayout>
+ * Delegates to AppLayout which automatically configures admin navigation
+ * based on session credentials and current route.
  */
-import BaseLayout from "./BaseLayout.astro";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { AdminHeader } from "@/components/admin/AdminHeader";
-import { QueryProvider } from "@/components/providers/QueryProvider";
+import AppLayout from "./AppLayout.astro";
 
 interface Props {
   /** Page title displayed in browser tab */
@@ -25,43 +15,8 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
-const user = Astro.locals.user;
-const currentPath = Astro.url.pathname;
 ---
 
-<BaseLayout title={title} description={description}>
-  <div id="admin-layout" class="flex min-h-screen w-full">
-    <div
-      id="desktop-sidebar-container"
-      class="hidden lg:block w-[280px] shrink-0 border-r bg-muted/40 overflow-hidden transition-[width] duration-300 data-[collapsed=true]:w-0 data-[collapsed=true]:border-r-0 sticky top-0 h-screen"
-    >
-      <div class="w-[280px] h-full flex flex-col gap-2">
-        <AdminSidebar client:load currentPath={currentPath} />
-      </div>
-    </div>
-
-    <div class="flex flex-col flex-1 min-w-0 transition-all duration-300">
-      <QueryProvider client:load>
-        <AdminHeader
-          client:load
-          user={user ? { email: user.email || "", id: user.id } : null}
-          currentPath={currentPath}
-        />
-      </QueryProvider>
-
-      <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 min-w-0">
-        <slot />
-      </main>
-    </div>
-  </div>
-
-  <script is:inline>
-    (function () {
-      const isCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
-      const container = document.getElementById("desktop-sidebar-container");
-      if (container && isCollapsed) {
-        container.dataset.collapsed = "true";
-      }
-    })();
-  </script>
-</BaseLayout>
+<AppLayout title={title} description={description}>
+  <slot />
+</AppLayout>

@@ -102,7 +102,7 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
         <span className="sr-only">Toggle Sidebar</span>
       </Button>
       <div className="flex-1">
-        <Breadcrumbs currentPath={currentPath} />
+        <Breadcrumbs currentPath={currentPath} isAdmin={isAdmin} />
       </div>
 
       <div className="flex items-center gap-2">

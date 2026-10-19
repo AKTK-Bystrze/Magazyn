@@ -13,8 +13,6 @@ const (
 	TableCreditRequests         = "credit_requests"
 	TableCreditRequestHelpers   = "credit_request_helpers"
 	TableMaintenanceLogs        = "maintenance_logs"
-	ViewAnalyticsEquipmentStats = "analytics_equipment_stats"
-	ViewAnalyticsUserStats      = "analytics_user_stats"
 )
 
 // Reservation status values that represent the lifecycle of an equipment rental.
@@ -70,12 +68,6 @@ const (
 	CalendarMaxDays = 90
 	// CalendarMinDays is the minimum number of days for calendar view.
 	CalendarMinDays = 1
-	// TopRentersLimit is the number of top renters to include in equipment stats.
-	TopRentersLimit = 5
-	// AnalyticsMinYear is the minimum year for analytics filters.
-	AnalyticsMinYear = 2000
-	// AnalyticsMaxYear is the maximum year for analytics filters.
-	AnalyticsMaxYear = 2100
 	// DateFormatISO is the ISO date format for Go time parsing.
 	DateFormatISO = "2006-01-02"
 )

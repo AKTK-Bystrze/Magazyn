@@ -3,11 +3,11 @@
  * Login Page
  * Authentication page with email magic link login.
  */
-import AuthLayout from "../layouts/AuthLayout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import { LoginFormContainer } from "@/components/auth/LoginFormContainer";
 ---
 
-<AuthLayout title="Zaloguj się | Magazyn">
+<BaseLayout title="Zaloguj się | Magazyn">
   <div
     class="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0"
   >
@@ -37,4 +37,4 @@ import { LoginFormContainer } from "@/components/auth/LoginFormContainer";
       </div>
     </div>
   </div>
-</AuthLayout>
+</BaseLayout>

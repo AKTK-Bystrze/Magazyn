@@ -167,12 +167,14 @@ func (s *reservationService) handleCancellationRefund(ctx context.Context, curre
 }
 
 func (s *reservationService) recalculateCreditCost(ctx context.Context, equipmentID, startDate, endDate string) int32 {
-	eq, _ := s.equipmentRepo.GetByID(ctx, equipmentID)
-	if eq == nil {
+	eq, err := s.equipmentRepo.GetByID(ctx, equipmentID)
+	if err != nil || eq == nil {
+		logger.Warnf(ctx, "recalculateCreditCost: equipment %s not found: %v", equipmentID, err)
 		return 0
 	}
-	eqType, _ := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-	if eqType == nil {
+	eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+	if err != nil || eqType == nil {
+		logger.Warnf(ctx, "recalculateCreditCost: equipment type %s not found: %v", eq.TypeID, err)
 		return 0
 	}
 	return validation.CalculateReservationCost(startDate, endDate, eqType.CreditCostPerDay, false)
