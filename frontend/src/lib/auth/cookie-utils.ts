@@ -14,14 +14,10 @@ export const AUTH_COOKIE_NAME = "magazyn-auth-token";
 export function removeAuthCookie(): void {
   const cookies = document.cookie.split(";");
   for (const cookie of cookies) {
-    const eqPos = cookie.indexOf("=");
-    const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
-    if (name.startsWith("sb-") || name.startsWith("magazyn-") || name === AUTH_COOKIE_NAME) {
+    const name = cookie.split("=")[0].trim();
+    if (name.startsWith("sb-") || name.startsWith("magazyn-")) {
       document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
       document.cookie = `${name}=; path=/; domain=${window.location.hostname}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-      if (window.location.hostname === "localhost") {
-        document.cookie = `${name}=; path=/; domain=localhost; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-      }
     }
   }
 }
@@ -35,7 +31,7 @@ export function clearAllAuthCookies(request: Request, cookies: AstroCookies): vo
   const cookieNames = cookieHeader.split(";").map((c) => c.split("=")[0].trim());
 
   for (const name of cookieNames) {
-    if (name.startsWith("sb-") || name.startsWith("magazyn-") || name === AUTH_COOKIE_NAME) {
+    if (name.startsWith("sb-") || name.startsWith("magazyn-")) {
       cookies.delete(name, { path: "/" });
     }
   }

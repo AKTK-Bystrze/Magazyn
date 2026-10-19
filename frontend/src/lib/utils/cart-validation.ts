@@ -32,20 +32,15 @@ export function validateDateRange(
     endDate: null,
   };
 
-  if (startDate) {
-    const startStr = startDate.includes("T") ? startDate.split("T")[0] : startDate;
-    if (!allowPastDates && startStr < getTodayAsString()) {
-      errors.startDate = ERROR_START_DATE_PAST;
-    }
+  const startStr = startDate?.split("T")[0];
+  const endStr = endDate?.split("T")[0];
+
+  if (startStr && !allowPastDates && startStr < getTodayAsString()) {
+    errors.startDate = ERROR_START_DATE_PAST;
   }
 
-  if (startDate && endDate) {
-    const startStr = startDate.includes("T") ? startDate.split("T")[0] : startDate;
-    const endStr = endDate.includes("T") ? endDate.split("T")[0] : endDate;
-
-    if (endStr < startStr) {
-      errors.endDate = ERROR_END_DATE_BEFORE_START;
-    }
+  if (startStr && endStr && endStr < startStr) {
+    errors.endDate = ERROR_END_DATE_BEFORE_START;
   }
 
   return errors;
