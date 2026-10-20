@@ -6,6 +6,7 @@ import type {
   AvailabilityCheckResult,
 } from "@/types/reservation-cart.types";
 import { ERROR_START_DATE_PAST, ERROR_END_DATE_BEFORE_START } from "@/lib/config/constants";
+import { getTodayAtMidnight } from "@/lib/utils/date-utils";
 
 /**
  * Unit tests for validateCart.
@@ -83,6 +84,34 @@ describe("validateCart", () => {
     const result = validateCart(noDates, allAvailable, sufficientCredits, false);
 
     expect(result.isValid).toBe(false);
+  });
+
+  it("allows reservations starting today (futureDate(0))", () => {
+    const todayCart: CartState = {
+      ...validCartState,
+      startDate: futureDate(0),
+      endDate: futureDate(2),
+    };
+
+    const result = validateCart(todayCart, allAvailable, sufficientCredits, false);
+
+    expect(result.errors.dateRange.startDate).toBeNull();
+    expect(result.isValid).toBe(true);
+  });
+
+  it("allows same-day reservations starting today (same-day reproduction guardrail)", () => {
+    const today = getTodayAtMidnight();
+    const todayStr = today.toISOString().split("T")[0];
+    const todayCart: CartState = {
+      ...validCartState,
+      startDate: todayStr,
+      endDate: futureDate(2),
+    };
+
+    const result = validateCart(todayCart, allAvailable, sufficientCredits, false);
+
+    expect(result.errors.dateRange.startDate).toBeNull();
+    expect(result.isValid).toBe(true);
   });
 
   it("rejects reservations with startDate in the past", () => {
@@ -181,6 +210,13 @@ describe("calculateCost", () => {
     expect(breakdown.currentBalance).toBe(20);
     expect(breakdown.remainingBalance).toBe(20);
     expect(breakdown.isFreeReservation).toBe(true);
+  });
+
+  it("does not calculate negative total cost or grant credits for backwards date range (startDate > endDate)", () => {
+    const breakdown = calculateCost(items, "2026-05-10", "2026-05-08", 100, false);
+
+    expect(breakdown.totalCreditCost).toBeGreaterThanOrEqual(0);
+    expect(breakdown.remainingBalance).toBeLessThanOrEqual(100);
   });
 
   it("calculates 1 day cost for same-day reservation (startDate === endDate)", () => {

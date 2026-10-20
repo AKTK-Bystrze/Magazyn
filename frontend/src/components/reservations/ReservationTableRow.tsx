@@ -78,6 +78,7 @@ export function ReservationTableRow({
       <TableCell className="md:hidden">
         <StatusBadge
           status={item.status}
+          startDate={item.startDate}
           className="whitespace-nowrap text-xs"
           data-testid={`reservation-status-${item.id}`}
         />
@@ -95,6 +96,7 @@ export function ReservationTableRow({
       <TableCell className="hidden md:table-cell">
         <StatusBadge
           status={item.status}
+          startDate={item.startDate}
           className="whitespace-nowrap"
           data-testid={`reservation-status-${item.id}`}
         />

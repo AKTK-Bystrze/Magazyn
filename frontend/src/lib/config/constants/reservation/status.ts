@@ -30,6 +30,11 @@ export const RESERVATION_STATUS_LABELS: Record<string, string> = {
 };
 
 /**
+ * Human-readable label for future pending reservations
+ */
+export const RESERVATION_FUTURE_STATUS_LABEL = "Przyszła";
+
+/**
  * Badge variants for each reservation status
  * Maps to Shadcn Badge component variants
  */
