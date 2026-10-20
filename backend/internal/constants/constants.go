@@ -4,15 +4,15 @@ package constants
 
 // Database table names to avoid hardcoded strings.
 const (
-	TableProfiles               = "profiles"
-	TableEquipment              = "equipment"
-	TableEquipmentTypes         = "equipment_types"
-	TableReservations           = "reservations"
-	TableReservationHistory     = "reservation_history"
-	TableCreditHistory          = "credit_history"
-	TableCreditRequests         = "credit_requests"
-	TableCreditRequestHelpers   = "credit_request_helpers"
-	TableMaintenanceLogs        = "maintenance_logs"
+	TableProfiles             = "profiles"
+	TableEquipment            = "equipment"
+	TableEquipmentTypes       = "equipment_types"
+	TableReservations         = "reservations"
+	TableReservationHistory   = "reservation_history"
+	TableCreditHistory        = "credit_history"
+	TableCreditRequests       = "credit_requests"
+	TableCreditRequestHelpers = "credit_request_helpers"
+	TableMaintenanceLogs      = "maintenance_logs"
 )
 
 // Reservation status values that represent the lifecycle of an equipment rental.
