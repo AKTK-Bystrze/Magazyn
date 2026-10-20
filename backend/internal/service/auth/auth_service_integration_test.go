@@ -33,11 +33,7 @@ func TestLogin_Integration(t *testing.T) {
 	email := fmt.Sprintf("test_login_%d@example.com", time.Now().Unix())
 	password := "testRequest123!"
 	user, err := testutils.CreateTestUser(email, password)
-	if err != nil {
-		t.Logf("Skipping TestLogin_Integration due to user creation failure: %v", err)
-		t.Skip("Skipping test due to Supabase auth permissions")
-		return
-	}
+	require.NoError(t, err, "User creation must succeed for TestLogin_Integration")
 	defer func() {
 		_ = testutils.DeleteTestUser(user.ID.String())
 	}()
@@ -65,11 +61,7 @@ func TestGetSession_Integration(t *testing.T) {
 	email := fmt.Sprintf("test_session_%d@example.com", time.Now().Unix())
 	password := "testRequest123!"
 	user, err := testutils.CreateTestUser(email, password)
-	if err != nil {
-		t.Logf("Failed to create test user (requires service role key): %v", err)
-		t.Skip("Skipping test due to user creation failure")
-		return
-	}
+	require.NoError(t, err, "User creation must succeed for TestGetSession_Integration")
 	defer func() {
 		testutils.DeleteTestUser(user.ID.String())
 	}()
