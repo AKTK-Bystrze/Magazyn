@@ -55,4 +55,61 @@ test.describe("Login Page", () => {
     await expect(page).toHaveURL(/.*\/login/);
     await expect(page.getByTestId("login-form")).toBeVisible();
   });
+
+  /**
+   * Scenario: Same-Session Multi-User Switching (Issue #23)
+   * Verifies that logging out as User A and logging in as User B in the SAME browser window
+   * properly isolates sessions without leaking User A's session or profile state,
+   * performed strictly via UI without artificial clearCookies() or localStorage.clear().
+   */
+  test("should isolate sessions during sequential user switching in the same browser window (Issue #23)", async ({
+    page,
+    testUser,
+    adminUser,
+  }) => {
+    // 1. Log in User A via Magic Link
+    await clearMailbox(testUser.email);
+    await submitLoginEmail(page, testUser.email);
+    await waitForMagicLinkSent(page);
+
+    const magicLinkA = await getMagicLinkFromEmail(testUser.email);
+    await page.goto(magicLinkA);
+
+    await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
+
+    // Assert User A session is active
+    await expect(async () => {
+      await page.getByTestId("user-menu-trigger").click();
+      await expect(page.getByTestId("user-menu-dropdown")).toBeVisible({ timeout: 1000 });
+    }).toPass();
+    const dropdown = page.getByTestId("user-menu-dropdown");
+    await expect(dropdown).toContainText(testUser.email);
+
+    // 2. Pure UI Logout - strictly DO NOT call clearCookies() or localStorage.clear()
+    await logout(page);
+    await expect(page).toHaveURL(/.*\/login/);
+    await expect(page.getByTestId("login-form")).toBeVisible();
+
+    // 3. Log in User B in the SAME browser window
+    await clearMailbox(adminUser.email);
+    await submitLoginEmail(page, adminUser.email);
+    await waitForMagicLinkSent(page);
+
+    const magicLinkB = await getMagicLinkFromEmail(adminUser.email);
+    await page.goto(magicLinkB);
+
+    await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
+
+    // 4. Assert User B session is active and NO state of User A remains
+    await expect(async () => {
+      await page.getByTestId("user-menu-trigger").click();
+      await expect(page.getByTestId("user-menu-dropdown")).toBeVisible({ timeout: 1000 });
+    }).toPass();
+    await expect(page.getByTestId("user-menu-dropdown")).toContainText(adminUser.email);
+    await expect(page.getByTestId("user-menu-dropdown")).not.toContainText(testUser.email);
+
+    // Clean up: logout User B via UI
+    await logout(page);
+    await expect(page).toHaveURL(/.*\/login/);
+  });
 });
