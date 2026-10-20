@@ -102,3 +102,69 @@ func TestTS3_Return_ExistingNegativeBalance(t *testing.T) {
 	assert.Equal(t, int32(-5), fixture.getUserBalance(fixture.testUserID), "Negative balance preserved")
 	t.Logf("✓ TS-3 return with existing negative balance allowed")
 }
+
+func TestTS3_User_Return_ExistingNegativeBalance(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	resID, err := fixture.createTestReservation(fixture.testUserID, 0, 0)
+	require.NoError(t, err)
+
+	// Set user balance to negative credits (-5)
+	fixture.setUserBalance(fixture.testUserID, -5)
+	require.Equal(t, int32(-5), fixture.getUserBalance(fixture.testUserID))
+
+	returnStatus := constants.ReservationStatusReturned
+	resp, err := fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &returnStatus},
+		fixture.testUserID, "user")
+	require.NoError(t, err, "User must be allowed to return reservation with negative balance")
+	assert.Equal(t, constants.ReservationStatusReturned, resp.Status)
+	assert.Equal(t, int32(-5), fixture.getUserBalance(fixture.testUserID), "Negative balance preserved")
+	t.Logf("✓ TS-3 user return with negative balance succeeded")
+}
+
+func TestTS3_User_Return_RentedOverdue(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	// Reservation in past (-3 to -1 days)
+	resID, err := fixture.createTestReservation(fixture.testUserID, -3, -1)
+	require.NoError(t, err)
+
+	// Admin marked it RENTED
+	rentedStatus := constants.ReservationStatusRented
+	_, err = fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &rentedStatus},
+		fixture.testUser2ID, "admin")
+	require.NoError(t, err)
+
+	// Owner returns overdue rented reservation
+	returnStatus := constants.ReservationStatusReturned
+	resp, err := fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &returnStatus},
+		fixture.testUserID, "user")
+	require.NoError(t, err, "Owner must be allowed to return overdue rented reservation")
+	assert.Equal(t, constants.ReservationStatusReturned, resp.Status)
+	t.Logf("✓ TS-3 owner return of overdue rented reservation succeeded")
+}
+
+func TestTS3_NonOwner_CannotReturn(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	resID, err := fixture.createTestReservation(fixture.testUserID, 0, 1)
+	require.NoError(t, err)
+
+	// Non-owner (testUser2ID) tries to return it as a regular user
+	returnStatus := constants.ReservationStatusReturned
+	_, err = fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &returnStatus},
+		fixture.testUser2ID, "user")
+	require.Error(t, err, "Non-owner should be forbidden from returning someone else's reservation")
+	assert.IsType(t, &types.ForbiddenError{}, err)
+	t.Logf("✓ TS-3 non-owner return rejected with ForbiddenError")
+}
