@@ -77,6 +77,15 @@ func CreateTestUser(email, password string) (*types.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	profile := map[string]interface{}{
+		"id":             user.ID.String(),
+		"email":          email,
+		"username":       email,
+		"role":           "user",
+		"credit_balance": 100,
+		"is_enabled":     true,
+	}
+	_, _, _ = TestAppState.SupabaseClient.From("profiles").Insert(profile, false, "", "", "").Execute()
 	return &user.User, nil
 }
 func DeleteTestUser(userID string) error {
@@ -92,6 +101,7 @@ func DeleteTestUser(userID string) error {
 	if serviceKey != "" {
 		client = client.WithToken(serviceKey)
 	}
+	_, _, _ = TestAppState.SupabaseClient.From("profiles").Delete("", "").Eq("id", userID).Execute()
 	return client.AdminDeleteUser(types.AdminDeleteUserRequest{
 		UserID: uid,
 	})
