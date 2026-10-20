@@ -43,7 +43,7 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 	assert.Contains(t, err.Error(), "Reservation failed", "Expected RPC error message")
 	balanceAfter := fixture.getUserBalance(fixture.testUserID)
 	assert.Equal(t, balanceBefore, balanceAfter, "Balance changed despite rollback - ATOMICITY VIOLATED")
-	fixture.setUserBalance(fixture.testUserID, 10)
+	fixture.setUserBalance(fixture.testUserID, 100)
 	resp2, err2 := fixture.svc.Create(ctx, cmd, fixture.testUserID, "user")
 	require.NoError(t, err2, "If rollback worked, reservation should not exist")
 	assert.NotNil(t, resp2)
