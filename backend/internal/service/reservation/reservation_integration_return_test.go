@@ -168,3 +168,39 @@ func TestTS3_NonOwner_CannotReturn(t *testing.T) {
 	assert.IsType(t, &types.ForbiddenError{}, err)
 	t.Logf("✓ TS-3 non-owner return rejected with ForbiddenError")
 }
+
+func TestTS3_User_Rent_PendingReservation(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	resID, err := fixture.createTestReservation(fixture.testUserID, 0, 1)
+	require.NoError(t, err)
+
+	// Owner marks pending reservation as RENTED
+	rentedStatus := constants.ReservationStatusRented
+	resp, err := fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &rentedStatus},
+		fixture.testUserID, "user")
+	require.NoError(t, err, "Owner must be allowed to transition pending reservation to RENTED")
+	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
+	t.Logf("✓ TS-3 owner rent of pending reservation succeeded")
+}
+
+func TestTS3_NonOwner_CannotRent(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	resID, err := fixture.createTestReservation(fixture.testUserID, 0, 1)
+	require.NoError(t, err)
+
+	// Non-owner (testUser2ID) tries to mark it as RENTED
+	rentedStatus := constants.ReservationStatusRented
+	_, err = fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &rentedStatus},
+		fixture.testUser2ID, "user")
+	require.Error(t, err, "Non-owner should be forbidden from renting someone else's reservation")
+	assert.IsType(t, &types.ForbiddenError{}, err)
+	t.Logf("✓ TS-3 non-owner rent rejected with ForbiddenError")
+}
