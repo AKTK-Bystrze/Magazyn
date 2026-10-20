@@ -68,8 +68,8 @@ func (m *MockReservationRepository) RefundCredits(ctx context.Context, reservati
 	args := m.Called(ctx, reservationID, amount)
 	return args.Error(0)
 }
-func (m *MockReservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
-	args := m.Called(ctx, reservationID, changedByUserID, newStartDate, newEndDate)
+func (m *MockReservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string, allowNegative bool) (*types.ModifyDatesResponse, error) {
+	args := m.Called(ctx, reservationID, changedByUserID, newStartDate, newEndDate, allowNegative)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

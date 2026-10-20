@@ -115,13 +115,14 @@ func (r *reservationRepository) RefundCredits(ctx context.Context, reservationID
 	return parseRPCVoidResponse(jsonStr)
 }
 
-func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string) (*types.ModifyDatesResponse, error) {
+func (r *reservationRepository) ModifyReservationDatesWithCredits(ctx context.Context, reservationID string, changedByUserID string, newStartDate string, newEndDate string, allowNegative bool) (*types.ModifyDatesResponse, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	params := map[string]interface{}{
 		"p_reservation_id":     reservationID,
 		"p_changed_by_user_id": changedByUserID,
 		"p_new_start_date":     newStartDate,
 		"p_new_end_date":       newEndDate,
+		"p_allow_negative":     allowNegative,
 	}
 	jsonStr := client.Rpc("modify_reservation_dates_with_credits", "", params)
 	if jsonStr == "" {

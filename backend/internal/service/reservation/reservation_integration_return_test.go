@@ -81,6 +81,66 @@ func TestTS3_Return_ZeroBalance_StandardReturnSucceeds(t *testing.T) {
 	t.Logf("✓ TS-3 zero balance return: allowed without errors")
 }
 
+func TestTS3_LateReturn_InsufficientCredits_DateExtension(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	// Reservation created for past period (day -5 to -2)
+	resID, err := fixture.createTestReservation(fixture.testUserID, -5, -2)
+	require.NoError(t, err)
+
+	// User has 0 credits
+	fixture.setUserBalance(fixture.testUserID, 0)
+	require.Equal(t, int32(0), fixture.getUserBalance(fixture.testUserID))
+
+	// Admin records actual late return today with date extension
+	today := todayStr()
+	returnStatus := constants.ReservationStatusReturned
+	resp, err := fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{
+			Status:  &returnStatus,
+			EndDate: &today,
+		},
+		fixture.testUser2ID, "admin")
+
+	// Domain Rule Guardrail: Returning equipment must not be blocked by credit deficit.
+	// Balance should become negative reflecting extra days overdue.
+	require.NoError(t, err, "Late return with date extension must not be blocked by insufficient credits")
+	assert.Equal(t, constants.ReservationStatusReturned, resp.Status)
+	assert.Less(t, fixture.getUserBalance(fixture.testUserID), int32(0), "User balance should be negative after late return penalty")
+	t.Logf("✓ TS-3 late return with date extension allowed into negative balance")
+}
+
+func TestTS3_User_LateReturn_InsufficientCredits_DateExtension(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	// Reservation created for past period (day -5 to -2)
+	resID, err := fixture.createTestReservation(fixture.testUserID, -5, -2)
+	require.NoError(t, err)
+
+	// User has 0 credits
+	fixture.setUserBalance(fixture.testUserID, 0)
+	require.Equal(t, int32(0), fixture.getUserBalance(fixture.testUserID))
+
+	// User records actual late return today with date extension
+	today := todayStr()
+	returnStatus := constants.ReservationStatusReturned
+	resp, err := fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{
+			Status:  &returnStatus,
+			EndDate: &today,
+		},
+		fixture.testUserID, "user")
+
+	require.NoError(t, err, "User late return with date extension must not be blocked by insufficient credits")
+	assert.Equal(t, constants.ReservationStatusReturned, resp.Status)
+	assert.Less(t, fixture.getUserBalance(fixture.testUserID), int32(0), "User balance should be negative after late return penalty")
+	t.Logf("✓ TS-3 user late return with date extension allowed into negative balance")
+}
+
 func TestTS3_Return_ExistingNegativeBalance(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
