@@ -200,6 +200,7 @@ function ReservationListContainerInner({
           }}
           isSubmitting={isMutating}
           currentUserBalance={currentUserBalance}
+          allowNegativeBalance={mode === "admin"}
         />
       )}
 
