@@ -134,13 +134,19 @@ func (s *reservationService) validateUpdatePermissions(current *types.Reservatio
 			}
 			return nil
 		}
+		if *cmd.Status == constants.ReservationStatusRented {
+			if current.Status != constants.ReservationStatusPending {
+				return types.NewValidationError("Can only rent pending reservations", nil)
+			}
+			return nil
+		}
 		if *cmd.Status == constants.ReservationStatusCancelled {
 			if current.Status != constants.ReservationStatusPending {
 				return types.NewForbiddenError("Cannot cancel non-pending reservation")
 			}
 			return nil
 		}
-		return types.NewValidationError("Users can only cancel or return reservations", nil)
+		return types.NewValidationError("Users can only cancel, rent, or return reservations", nil)
 	}
 
 	// Date modification rules: non-admins can only modify dates for pending reservations
