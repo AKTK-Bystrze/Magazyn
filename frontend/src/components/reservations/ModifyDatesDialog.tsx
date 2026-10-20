@@ -24,6 +24,7 @@ interface ModifyDatesDialogProps {
   onConfirm: (newDates: { startDate: string; endDate: string }) => Promise<void>;
   isSubmitting: boolean;
   currentUserBalance: number;
+  allowNegativeBalance?: boolean;
 }
 
 /**
@@ -42,6 +43,7 @@ interface ModifyDatesDialogProps {
  * @param onConfirm - Callback when user confirms date changes
  * @param isSubmitting - Loading state during API call
  * @param currentUserBalance - User's current credit balance
+ * @param allowNegativeBalance - Whether negative balance is permitted (e.g. admin override)
  */
 export function ModifyDatesDialog({
   open,
@@ -51,6 +53,7 @@ export function ModifyDatesDialog({
   onConfirm,
   isSubmitting,
   currentUserBalance,
+  allowNegativeBalance = false,
 }: ModifyDatesDialogProps) {
   const [startDate, setStartDate] = React.useState<string | null>(reservation.startDate);
   const [endDate, setEndDate] = React.useState<string | null>(reservation.endDate);
@@ -98,7 +101,7 @@ export function ModifyDatesDialog({
       errors.startDate = UI.DATES_MUST_CHANGE;
     }
 
-    if (adjustmentInfo.newBalance < 0) {
+    if (!allowNegativeBalance && adjustmentInfo.newBalance < 0) {
       errors.endDate = UI.INSUFFICIENT_CREDITS_WARNING.replace(
         "{amount}",
         Math.abs(adjustmentInfo.newBalance).toString()
@@ -174,6 +177,7 @@ export function ModifyDatesDialog({
             creditPerDay={creditPerDay}
             currentUserBalance={currentUserBalance}
             adjustmentInfo={adjustmentInfo}
+            allowNegativeBalance={allowNegativeBalance}
           />
 
           {apiError && (
@@ -189,7 +193,11 @@ export function ModifyDatesDialog({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={isSubmitting || !datesChanged || adjustmentInfo.newBalance < 0}
+            disabled={
+              isSubmitting ||
+              !datesChanged ||
+              (!allowNegativeBalance && adjustmentInfo.newBalance < 0)
+            }
             data-testid="save-dates-button"
           >
             {isSubmitting ? (

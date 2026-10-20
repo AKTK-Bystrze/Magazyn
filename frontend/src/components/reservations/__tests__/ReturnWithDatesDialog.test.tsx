@@ -91,6 +91,12 @@ describe("ReturnWithDatesDialog", () => {
     const confirmButton = screen.getByRole("button", { name: "Potwierdź Zwrot" });
     expect(confirmButton).not.toBeDisabled();
 
+    // Verify blocking warning is NOT rendered, but informational notice IS rendered
+    expect(
+      screen.queryByText(/Niewystarczająca liczba godzinek\. Potrzebujesz/)
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Twoje saldo po zwrocie wyniesie -30 godzinek\./)).toBeInTheDocument();
+
     fireEvent.click(confirmButton);
 
     await waitFor(() => {

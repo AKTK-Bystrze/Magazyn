@@ -30,6 +30,9 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	var newBalance int32
 	var latestUpdatedAt *string
 	isCancelling := cmd.Status != nil && *cmd.Status == constants.ReservationStatusCancelled
+	isReturning := cmd.Status != nil && *cmd.Status == constants.ReservationStatusReturned
+	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
+	allowNegative := isReturning || isAdmin
 	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
 	if datesChanging {
 		start := current.StartDate
@@ -48,7 +51,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			return nil, types.NewConflictError("Dates not available", nil)
 		}
 		if !isCancelling {
-			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end)
+			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end, allowNegative)
 			if err != nil {
 				logger.Errorf(ctx, "Failed to modify dates with credits: %v", err)
 				return nil, err
