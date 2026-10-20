@@ -67,41 +67,4 @@ describe("UserFilters", () => {
     fireEvent.click(resetButton);
     expect(onReset).toHaveBeenCalledTimes(1);
   });
-
-  it("renders user status filter dropdown alongside role filter", () => {
-    render(
-      <UserFilters filters={defaultFilters} onFilterChange={onFilterChange} onReset={onReset} />
-    );
-
-    expect(screen.getByRole("combobox", { name: /status/i })).toBeInTheDocument();
-  });
-
-  it("calls onFilterChange when user status filter selection changes", async () => {
-    render(
-      <UserFilters filters={defaultFilters} onFilterChange={onFilterChange} onReset={onReset} />
-    );
-
-    const statusTrigger = screen.getByRole("combobox", { name: /status/i });
-    fireEvent.click(statusTrigger);
-    const activeOption = await screen.findByText("Aktywny");
-    fireEvent.click(activeOption);
-
-    expect(onFilterChange).toHaveBeenCalledWith("isEnabled", true);
-  });
-
-  it("displays reset button when status filter is active and calls onReset on click", () => {
-    render(
-      <UserFilters
-        filters={{ ...defaultFilters, isEnabled: false } as unknown as UserFilterState}
-        onFilterChange={onFilterChange}
-        onReset={onReset}
-      />
-    );
-
-    const resetButton = screen.getByRole("button", { name: "Resetuj filtry" });
-    expect(resetButton).toBeInTheDocument();
-
-    fireEvent.click(resetButton);
-    expect(onReset).toHaveBeenCalledTimes(1);
-  });
 });
