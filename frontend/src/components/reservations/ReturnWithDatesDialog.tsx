@@ -186,6 +186,7 @@ export function ReturnWithDatesDialog({
                 creditPerDay={creditPerDay}
                 currentUserBalance={currentUserBalance}
                 adjustmentInfo={adjustmentInfo}
+                allowNegativeBalance={true}
               />
             </div>
           )}

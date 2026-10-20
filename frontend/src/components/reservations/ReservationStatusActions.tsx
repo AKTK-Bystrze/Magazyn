@@ -144,6 +144,7 @@ export function ReservationStatusActions({
         onConfirm={handleModifyDatesConfirm}
         isSubmitting={isUpdating}
         currentUserBalance={userBalance}
+        allowNegativeBalance={isAdmin}
       />
 
       <ReturnWithDatesDialog
