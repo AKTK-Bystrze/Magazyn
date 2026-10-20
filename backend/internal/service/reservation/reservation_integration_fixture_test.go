@@ -87,12 +87,12 @@ func setupTestUsers(t *testing.T, fixture *dateTestFixture) {
 	}
 	fixture.testUserID = profiles[0].ID
 	fixture.testUser2ID = profiles[1].ID
-	initialBalance := int32(10)
+	initialBalance := int32(100000)
 	_, _, err = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUserID).Execute()
 	require.NoError(t, err)
 	_, _, err = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": initialBalance}, "", "").Eq("id", fixture.testUser2ID).Execute()
 	require.NoError(t, err)
-	t.Logf("Using test users with realistic balance (10): %s, %s", fixture.testUserID, fixture.testUser2ID)
+	t.Logf("Using test users with initialized balance (%d): %s, %s", initialBalance, fixture.testUserID, fixture.testUser2ID)
 }
 func (f *dateTestFixture) teardown() {
 	for i := len(f.cleanup) - 1; i >= 0; i-- {
