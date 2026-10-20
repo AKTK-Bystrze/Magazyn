@@ -1,3 +1,11 @@
+## [0.6.5](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.4...v0.6.5) (2026-10-20)
+
+
+### Bug Fixes
+
+* **chunk-1:** core reservation and credit balance logic ([#2](https://github.com/AKTK-Bystrze/Magazyn/issues/2), [#7](https://github.com/AKTK-Bystrze/Magazyn/issues/7), [#9](https://github.com/AKTK-Bystrze/Magazyn/issues/9), [#10](https://github.com/AKTK-Bystrze/Magazyn/issues/10)) ([#264](https://github.com/AKTK-Bystrze/Magazyn/issues/264)) ([6d2dc04](https://github.com/AKTK-Bystrze/Magazyn/commit/6d2dc040829bf4538a53a4ebc1638d24c55d1a06))
+* **chunk-2:** session integrity, overdue status, pagination ([#17](https://github.com/AKTK-Bystrze/Magazyn/issues/17), [#20](https://github.com/AKTK-Bystrze/Magazyn/issues/20), [#23](https://github.com/AKTK-Bystrze/Magazyn/issues/23)) ([#265](https://github.com/AKTK-Bystrze/Magazyn/issues/265)) ([7238934](https://github.com/AKTK-Bystrze/Magazyn/commit/7238934b99673637f844ff519aad8f0a30fdfd09))
+
 ## [0.6.4](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.3...v0.6.4) (2026-10-18)
 
 
