@@ -331,7 +331,7 @@ func TestUpdate_ReturnEarlyRefundsCredits(t *testing.T) {
 		EndDate: &newEndDate,
 	}
 	mockRepo.On("GetOverlappingReservations", ctx, "eq-1", "2025-01-01", "2025-01-01", &reservationID).Return([]types.PublicReservationsSelect{}, nil)
-	mockRepo.On("ModifyReservationDatesWithCredits", ctx, reservationID, "admin-999", "2025-01-01", "2025-01-01").
+	mockRepo.On("ModifyReservationDatesWithCredits", ctx, reservationID, "admin-999", "2025-01-01", "2025-01-01", true).
 		Return(&types.ModifyDatesResponse{
 			ID:               reservationID,
 			StartDate:        "2025-01-01",
