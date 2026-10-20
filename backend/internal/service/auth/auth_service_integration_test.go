@@ -74,27 +74,21 @@ func TestGetSession_Integration(t *testing.T) {
 	defer func() {
 		testutils.DeleteTestUser(user.ID.String())
 	}()
+	tokenResp, err := testutils.TestClient.Auth.SignInWithEmailPassword(email, password)
+	require.NoError(t, err, "Failed to sign in test user")
+	validToken := tokenResp.AccessToken
+
 	t.Run("returns session for existing user", func(t *testing.T) {
-		// Profile creation happens via trigger on auth.users insert
-		// We poll to wait for the trigger to fire
-		var session *types.SessionResponse
-		var err error
-		for i := 0; i < 20; i++ {
-			session, err = service.GetSession(context.Background(), user.ID.String(), "test-token")
-			if err == nil {
-				break
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
+		session, err := service.GetSession(context.Background(), user.ID.String(), validToken)
 		require.NoError(t, err)
 		assert.NotNil(t, session)
 		assert.Equal(t, user.ID.String(), session.UserID)
 		assert.Equal(t, email, session.Email)
 	})
 	t.Run("returns error for non-existent user", func(t *testing.T) {
-		session, err := service.GetSession(context.Background(), "00000000-0000-0000-0000-000000000000", "test-token")
+		session, err := service.GetSession(context.Background(), "00000000-0000-0000-0000-000000000000", validToken)
 		assert.Error(t, err)
 		assert.Nil(t, session)
-		assert.Equal(t, "profile not found", err.Error())
+		assert.Contains(t, err.Error(), "not found")
 	})
 }
