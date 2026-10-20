@@ -190,6 +190,71 @@ test.describe("Reservation Creation", () => {
   });
 
   /**
+   * Scenario: Sequential back-to-back reservations with reactive balance updates (Issue #10)
+   *
+   * Verifies:
+   * - Performs two consecutive reservations in the same session without page reloads or API resets.
+   * - Asserts that the second reservation's cart immediately reflects the deducted credit balance.
+   */
+  test("Reactive Balance: Sequential back-to-back reservations update credit balance in UI without page reload", async ({
+    authenticatedPage,
+    testEquipment,
+    workerIndex,
+  }) => {
+    const [equip1, equip2] = testEquipment;
+    const cart = new ReservationCartPOM(authenticatedPage);
+
+    // Reservation 1: Add equip1 to cart
+    await authenticatedPage.goto("/equipment");
+    await addToCart(authenticatedPage, equip1.id);
+    await goToCart(authenticatedPage);
+    await cart.waitForCartView();
+
+    const initialBalance = await cart.getCurrentBalance();
+    expect(initialBalance).toBeGreaterThan(0);
+
+    const { startDays, endDays } = calculateWorkerDates(workerIndex);
+    await cart.setDatesFromNow(startDays, endDays);
+
+    const cost1 = await cart.getTotalCost();
+    expect(cost1).toBeGreaterThan(0);
+    const expectedBalanceAfterRes1 = initialBalance - cost1;
+
+    await cart.proceedToConfirmation();
+    await cart.confirm();
+    await cart.waitForSuccess();
+
+    expect(authenticatedPage.url()).toContain("/reservations");
+    expect(authenticatedPage.url()).toContain("success=true");
+
+    // Reservation 2: In the SAME session, navigate back to /equipment without page reload or API reset
+    await authenticatedPage.goto("/equipment");
+    await addToCart(authenticatedPage, equip2.id);
+    await goToCart(authenticatedPage);
+    await cart.waitForCartView();
+
+    // Verify reactive credit balance in UI matches updated balance after Reservation 1
+    const secondCartInitialBalance = await cart.getCurrentBalance();
+    expect(secondCartInitialBalance).toBe(expectedBalanceAfterRes1);
+
+    // Select non-overlapping dates for second reservation
+    await cart.setDatesFromNow(startDays + 10, endDays + 10);
+    const cost2 = await cart.getTotalCost();
+    expect(cost2).toBeGreaterThan(0);
+
+    const expectedBalanceAfterRes2 = secondCartInitialBalance - cost2;
+    const remainingBalance2 = await cart.getRemainingBalance();
+    expect(remainingBalance2).toBe(expectedBalanceAfterRes2);
+
+    await cart.proceedToConfirmation();
+    await cart.confirm();
+    await cart.waitForSuccess();
+
+    expect(authenticatedPage.url()).toContain("/reservations");
+    expect(authenticatedPage.url()).toContain("success=true");
+  });
+
+  /**
    * Scenario: Free reservation checkbox is not visible for non-admin users
    *
    * Steps:

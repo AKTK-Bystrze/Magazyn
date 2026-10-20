@@ -189,7 +189,7 @@ test.describe.serial("Admin Reservation Management", () => {
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
     await expect(statusBadge).toBeVisible();
-    await expect(statusBadge).toContainText(/W trakcie/i);
+    await expect(statusBadge).toContainText("Przyszła");
   });
 
   /**

@@ -47,14 +47,14 @@ describe("ReservationTableRow", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
   });
 
-  it("renders status badge matching reservation status", () => {
+  it("renders status badge as 'Przyszła' for future pending reservations", () => {
     renderInTable(
       <ReservationTableRow item={mockItem} showUserColumn={false} onViewDetails={vi.fn()} />
     );
 
     const badges = screen.getAllByTestId(`reservation-status-${mockItem.id}`);
     expect(badges.length).toBeGreaterThan(0);
-    expect(badges[0]).toHaveTextContent("W trakcie");
+    expect(badges[0]).toHaveTextContent("Przyszła");
   });
 
   it("renders username column and indicates current user with (Ty)", () => {
