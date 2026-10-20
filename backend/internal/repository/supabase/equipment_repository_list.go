@@ -42,6 +42,23 @@ func (r *equipmentRepository) List(ctx context.Context, query types.EquipmentLis
 		logger.Debugf(ctx, "Availability filter: %s to %s, found %d conflicting equipment IDs: %v",
 			*query.AvailableFrom, *query.AvailableTo, len(conflictIDs), conflictIDs)
 	}
+	if len(conflictIDs) == 0 {
+		offset := (query.Page - 1) * query.PerPage
+		baseQuery = baseQuery.Range(offset, offset+query.PerPage-1, "")
+		data, count, err := baseQuery.Execute()
+		if err != nil {
+			return nil, 0, err
+		}
+		var items []types.PublicEquipmentSelect
+		if err := json.Unmarshal(data, &items); err != nil {
+			return nil, 0, err
+		}
+		if items == nil {
+			items = []types.PublicEquipmentSelect{}
+		}
+		return items, count, nil
+	}
+
 	countData, _, err := baseQuery.Execute()
 	if err != nil {
 		return nil, 0, err

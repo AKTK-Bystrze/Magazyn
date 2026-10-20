@@ -15,10 +15,6 @@ export interface ReservationTableRowProps {
   showUserColumn: boolean;
   /** Current authenticated user's ID for highlighting "(Ty)" */
   currentUserId?: string;
-  /** Optional view mode */
-  mode?: "user" | "admin";
-  /** Optional view scope */
-  scope?: "my" | "all";
   /** Callback to view reservation details */
   onViewDetails: (item: ReservationListItem) => void;
   /** Optional callback to modify reservation */

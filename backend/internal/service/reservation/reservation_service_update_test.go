@@ -16,6 +16,9 @@ import (
 
 func TestUpdate_UserRestrictions(t *testing.T) {
 	rentedStatus := constants.ReservationStatusRented
+	returnedStatus := constants.ReservationStatusReturned
+	cancelledStatus := constants.ReservationStatusCancelled
+	invalidStatus := "INVALID_STATUS"
 	tests := []struct {
 		name       string
 		reqUser    string
@@ -34,6 +37,36 @@ func TestUpdate_UserRestrictions(t *testing.T) {
 			},
 		},
 		{
+			name:       "NonOwnerCannotRentPending",
+			reqUser:    "user-999",
+			initStatus: constants.ReservationStatusPending,
+			cmd:        types.UpdateReservationCommand{Status: &rentedStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ForbiddenError{}, err)
+				assert.Contains(t, err.Error(), "Not allowed")
+			},
+		},
+		{
+			name:       "NonOwnerCannotReturnRented",
+			reqUser:    "user-999",
+			initStatus: constants.ReservationStatusRented,
+			cmd:        types.UpdateReservationCommand{Status: &returnedStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ForbiddenError{}, err)
+				assert.Contains(t, err.Error(), "Not allowed")
+			},
+		},
+		{
+			name:       "NonOwnerCannotReturnPending",
+			reqUser:    "user-999",
+			initStatus: constants.ReservationStatusPending,
+			cmd:        types.UpdateReservationCommand{Status: &returnedStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ForbiddenError{}, err)
+				assert.Contains(t, err.Error(), "Not allowed")
+			},
+		},
+		{
 			name:       "CannotModifyNonPending",
 			reqUser:    "user-123",
 			initStatus: constants.ReservationStatusRented,
@@ -44,13 +77,53 @@ func TestUpdate_UserRestrictions(t *testing.T) {
 			},
 		},
 		{
-			name:       "CanOnlyCancelOrReturn",
+			name:       "CannotCancelRented",
 			reqUser:    "user-123",
-			initStatus: constants.ReservationStatusPending,
+			initStatus: constants.ReservationStatusRented,
+			cmd:        types.UpdateReservationCommand{Status: &cancelledStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ForbiddenError{}, err)
+				assert.Contains(t, err.Error(), "Cannot cancel non-pending reservation")
+			},
+		},
+		{
+			name:       "CannotReturnAlreadyReturned",
+			reqUser:    "user-123",
+			initStatus: constants.ReservationStatusReturned,
+			cmd:        types.UpdateReservationCommand{Status: &returnedStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ForbiddenError{}, err)
+				assert.Contains(t, err.Error(), "Cannot modify non-pending reservation")
+			},
+		},
+		{
+			name:       "CannotReturnCancelled",
+			reqUser:    "user-123",
+			initStatus: constants.ReservationStatusCancelled,
+			cmd:        types.UpdateReservationCommand{Status: &returnedStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ValidationError{}, err)
+				assert.Contains(t, err.Error(), "Can only return active reservations")
+			},
+		},
+		{
+			name:       "CannotRentCancelled",
+			reqUser:    "user-123",
+			initStatus: constants.ReservationStatusCancelled,
 			cmd:        types.UpdateReservationCommand{Status: &rentedStatus},
 			errCheck: func(t *testing.T, err error) {
 				assert.IsType(t, &types.ValidationError{}, err)
-				assert.Contains(t, err.Error(), "Users can only cancel or return")
+				assert.Contains(t, err.Error(), "Can only rent pending reservations")
+			},
+		},
+		{
+			name:       "InvalidStatusRejected",
+			reqUser:    "user-123",
+			initStatus: constants.ReservationStatusPending,
+			cmd:        types.UpdateReservationCommand{Status: &invalidStatus},
+			errCheck: func(t *testing.T, err error) {
+				assert.IsType(t, &types.ValidationError{}, err)
+				assert.Contains(t, err.Error(), "Users can only cancel, rent, or return reservations")
 			},
 		},
 	}
@@ -77,6 +150,110 @@ func TestUpdate_UserRestrictions(t *testing.T) {
 			mockRepo.AssertExpectations(t)
 		})
 	}
+}
+
+func TestUpdate_OwnerCanReturnRented(t *testing.T) {
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      "user-123",
+			Status:      constants.ReservationStatusRented,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03",
+			IsFree:      false,
+		},
+	}
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+	returnedStatus := constants.ReservationStatusReturned
+	cmd := types.UpdateReservationCommand{
+		Status: &returnedStatus,
+	}
+	updatedRes := &types.PublicReservationsSelect{
+		ID:          reservationID,
+		EquipmentID: "eq-1",
+		Status:      constants.ReservationStatusReturned,
+		StartDate:   "2025-01-01",
+		EndDate:     "2025-01-03",
+	}
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:     "eq-1",
+		Name:   &name,
+		TypeID: "type-1",
+		Status: constants.EquipmentStatusOK,
+	}
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+	mockRepo.On("UpdateReservation", ctx, reservationID, mock.MatchedBy(func(u types.PublicReservationsUpdate) bool {
+		return u.Status != nil && *u.Status == returnedStatus
+	}), "user-123").Return(updatedRes, nil)
+
+	result, err := svc.Update(ctx, reservationID, cmd, "user-123", auth.RoleUser)
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, constants.ReservationStatusReturned, result.Status)
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestUpdate_OwnerCanRentPending(t *testing.T) {
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      "user-123",
+			Status:      constants.ReservationStatusPending,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03",
+			IsFree:      false,
+		},
+	}
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+	rentedStatus := constants.ReservationStatusRented
+	cmd := types.UpdateReservationCommand{
+		Status: &rentedStatus,
+	}
+	updatedRes := &types.PublicReservationsSelect{
+		ID:          reservationID,
+		EquipmentID: "eq-1",
+		Status:      constants.ReservationStatusRented,
+		StartDate:   "2025-01-01",
+		EndDate:     "2025-01-03",
+	}
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:     "eq-1",
+		Name:   &name,
+		TypeID: "type-1",
+		Status: constants.EquipmentStatusOK,
+	}
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+	mockRepo.On("UpdateReservation", ctx, reservationID, mock.MatchedBy(func(u types.PublicReservationsUpdate) bool {
+		return u.Status != nil && *u.Status == rentedStatus
+	}), "user-123").Return(updatedRes, nil)
+
+	result, err := svc.Update(ctx, reservationID, cmd, "user-123", auth.RoleUser)
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, constants.ReservationStatusRented, result.Status)
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
 }
 
 func TestUpdate_AdminCanChangeStatus(t *testing.T) {

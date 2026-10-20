@@ -5,6 +5,7 @@ import type {
   CostBreakdown,
   AvailabilityCheckResult,
 } from "@/types/reservation-cart.types";
+import { ERROR_START_DATE_PAST, ERROR_END_DATE_BEFORE_START } from "@/lib/config/constants";
 
 /**
  * Unit tests for validateCart.
@@ -83,6 +84,58 @@ describe("validateCart", () => {
 
     expect(result.isValid).toBe(false);
   });
+
+  it("rejects reservations with startDate in the past", () => {
+    const pastCart: CartState = {
+      ...validCartState,
+      startDate: futureDate(-1),
+      endDate: futureDate(2),
+    };
+
+    const result = validateCart(pastCart, allAvailable, sufficientCredits, false);
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors.dateRange.startDate).toBe(ERROR_START_DATE_PAST);
+  });
+
+  it("rejects reservations where startDate is after endDate", () => {
+    const backwardsCart: CartState = {
+      ...validCartState,
+      startDate: futureDate(4),
+      endDate: futureDate(2),
+    };
+
+    const result = validateCart(backwardsCart, allAvailable, sufficientCredits, false);
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors.dateRange.endDate).toBe(ERROR_END_DATE_BEFORE_START);
+  });
+
+  it("validates date ranges across month boundaries", () => {
+    const monthBoundaryCart: CartState = {
+      ...validCartState,
+      startDate: "2026-10-31",
+      endDate: "2026-11-02",
+    };
+
+    const result = validateCart(monthBoundaryCart, allAvailable, sufficientCredits, false);
+
+    expect(result.errors.dateRange.startDate).toBeNull();
+    expect(result.errors.dateRange.endDate).toBeNull();
+  });
+
+  it("validates date ranges across leap year boundary (Feb 28 to Mar 1, 2028)", () => {
+    const leapYearCart: CartState = {
+      ...validCartState,
+      startDate: "2028-02-28",
+      endDate: "2028-03-01",
+    };
+
+    const result = validateCart(leapYearCart, allAvailable, sufficientCredits, false);
+
+    expect(result.errors.dateRange.startDate).toBeNull();
+    expect(result.errors.dateRange.endDate).toBeNull();
+  });
 });
 
 describe("calculateCost", () => {
@@ -128,5 +181,48 @@ describe("calculateCost", () => {
     expect(breakdown.currentBalance).toBe(20);
     expect(breakdown.remainingBalance).toBe(20);
     expect(breakdown.isFreeReservation).toBe(true);
+  });
+
+  it("calculates 1 day cost for same-day reservation (startDate === endDate)", () => {
+    const breakdown = calculateCost(items, "2026-05-10", "2026-05-10", 100, false);
+
+    expect(breakdown.itemCosts[0].days).toBe(1);
+    expect(breakdown.totalCreditCost).toBe(15);
+    expect(breakdown.remainingBalance).toBe(85);
+  });
+
+  it("calculates correct days across month boundary (Oct 30 to Nov 1 = 3 days)", () => {
+    const breakdown = calculateCost(items, "2026-10-30", "2026-11-01", 100, false);
+
+    expect(breakdown.itemCosts[0].days).toBe(3);
+    expect(breakdown.totalCreditCost).toBe(45);
+  });
+
+  it("calculates correct days across year boundary (Dec 30 to Jan 2 = 4 days)", () => {
+    const breakdown = calculateCost(items, "2026-12-30", "2027-01-02", 100, false);
+
+    expect(breakdown.itemCosts[0].days).toBe(4);
+    expect(breakdown.totalCreditCost).toBe(60);
+  });
+
+  it("calculates correct days across autumn daylight saving time transition", () => {
+    const breakdown = calculateCost(items, "2026-10-24", "2026-10-26", 100, false);
+
+    expect(breakdown.itemCosts[0].days).toBe(3);
+    expect(breakdown.totalCreditCost).toBe(45);
+  });
+
+  it("calculates correct days across spring daylight saving time transition", () => {
+    const breakdown = calculateCost(items, "2026-03-28", "2026-03-30", 100, false);
+
+    expect(breakdown.itemCosts[0].days).toBe(3);
+    expect(breakdown.totalCreditCost).toBe(45);
+  });
+
+  it("calculates correct days across leap year (Feb 28 to Mar 1, 2028 = 3 days)", () => {
+    const breakdown = calculateCost(items, "2028-02-28", "2028-03-01", 100, false);
+
+    expect(breakdown.itemCosts[0].days).toBe(3);
+    expect(breakdown.totalCreditCost).toBe(45);
   });
 });

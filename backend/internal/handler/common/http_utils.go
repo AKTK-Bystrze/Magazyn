@@ -56,21 +56,27 @@ func RespondWithError(ctx context.Context, w http.ResponseWriter, err error) {
 	var message string
 	var details interface{}
 	code := "INTERNAL_ERROR"
-	switch e := err.(type) {
-	case *types.NotFoundError:
+	var notFoundErr *types.NotFoundError
+	var conflictErr *types.ConflictError
+	var validationErr *types.ValidationError
+	var forbiddenErr *types.ForbiddenError
+	var internalErr *types.InternalError
+
+	switch {
+	case errors.As(err, &notFoundErr):
 		status = http.StatusNotFound
-		message, details, code = e.Message, e.Details, e.Code
-	case *types.ConflictError:
+		message, details, code = notFoundErr.Message, notFoundErr.Details, notFoundErr.Code
+	case errors.As(err, &conflictErr):
 		status = http.StatusConflict
-		message, details, code = e.Message, e.Details, e.Code
-	case *types.ValidationError:
+		message, details, code = conflictErr.Message, conflictErr.Details, conflictErr.Code
+	case errors.As(err, &validationErr):
 		status = http.StatusBadRequest
-		message, details, code = e.Message, e.Details, e.Code
-	case *types.ForbiddenError:
+		message, details, code = validationErr.Message, validationErr.Details, validationErr.Code
+	case errors.As(err, &forbiddenErr):
 		status = http.StatusForbidden
-		message, details, code = e.Message, e.Details, e.Code
-	case *types.InternalError:
-		message, details, code = e.Message, e.Details, e.Code
+		message, details, code = forbiddenErr.Message, forbiddenErr.Details, forbiddenErr.Code
+	case errors.As(err, &internalErr):
+		message, details, code = internalErr.Message, internalErr.Details, internalErr.Code
 	default:
 		message = err.Error()
 	}

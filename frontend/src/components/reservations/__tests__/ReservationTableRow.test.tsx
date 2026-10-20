@@ -31,13 +31,7 @@ describe("ReservationTableRow", () => {
   it("renders equipment details and formatted dates", () => {
     const onViewDetails = vi.fn();
     renderInTable(
-      <ReservationTableRow
-        item={mockItem}
-        showUserColumn={false}
-        mode="user"
-        scope="my"
-        onViewDetails={onViewDetails}
-      />
+      <ReservationTableRow item={mockItem} showUserColumn={false} onViewDetails={onViewDetails} />
     );
 
     expect(screen.getAllByText("Kajak Górski").length).toBeGreaterThanOrEqual(1);
@@ -47,13 +41,7 @@ describe("ReservationTableRow", () => {
 
   it("renders status badge matching reservation status", () => {
     renderInTable(
-      <ReservationTableRow
-        item={mockItem}
-        showUserColumn={false}
-        mode="user"
-        scope="my"
-        onViewDetails={vi.fn()}
-      />
+      <ReservationTableRow item={mockItem} showUserColumn={false} onViewDetails={vi.fn()} />
     );
 
     const badges = screen.getAllByTestId(`reservation-status-${mockItem.id}`);
@@ -67,8 +55,6 @@ describe("ReservationTableRow", () => {
         item={mockItem}
         showUserColumn={true}
         currentUserId="user-1"
-        mode="admin"
-        scope="all"
         onViewDetails={vi.fn()}
       />
     );
@@ -83,8 +69,6 @@ describe("ReservationTableRow", () => {
       <ReservationTableRow
         item={mockItem}
         showUserColumn={false}
-        mode="user"
-        scope="my"
         onViewDetails={onViewDetails}
         onCancel={onCancel}
       />

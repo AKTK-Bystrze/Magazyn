@@ -23,6 +23,7 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 	}
 	totalCost := int32(0)
 	costs := make([]int32, len(cmd.Reservations))
+	typeMap := make(map[string]*types.PublicEquipmentTypesSelect)
 	for i, req := range cmd.Reservations {
 		eq, err := s.equipmentRepo.GetByID(ctx, req.EquipmentID)
 		if err != nil {
@@ -32,9 +33,14 @@ func (s *reservationService) Create(ctx context.Context, cmd types.CreateReserva
 			return nil, types.NewValidationError(fmt.Sprintf("Equipment %s is not available", safeString(eq.Name)), nil)
 		}
 		if !isFreeReservation {
-			eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-			if err != nil {
-				return nil, types.NewInternalError("failed to fetch equipment type", err)
+			eqType, ok := typeMap[eq.TypeID]
+			if !ok {
+				fetchedType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+				if err != nil {
+					return nil, types.NewInternalError("failed to fetch equipment type", err)
+				}
+				eqType = fetchedType
+				typeMap[eq.TypeID] = eqType
 			}
 			cost := validation.CalculateReservationCost(req.StartDate, req.EndDate, eqType.CreditCostPerDay, false)
 			totalCost += cost

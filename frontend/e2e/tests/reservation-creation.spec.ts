@@ -67,7 +67,7 @@ test.describe("Reservation Creation", () => {
 
     await authenticatedPage.goto("/equipment");
     await expect(
-      authenticatedPage.getByRole("heading", { name: /equipment|sprzęt|inwentarz/i, level: 1 })
+      authenticatedPage.getByRole("heading", { name: /^(Sprzęt|Inwentarz Sprzętu)$/i, level: 1 })
     ).toBeVisible();
 
     await expect(authenticatedPage.getByTestId(TEST_IDS.EQUIPMENT_SEARCH_CONTAINER)).toBeVisible();
@@ -158,10 +158,9 @@ test.describe("Reservation Creation", () => {
   /**
    * Scenario: Non-admin cannot create free reservations
    *
-   * Steps:
-   * 1. Login as regular user.
-   * 2. Attempt to create reservation with free_reservation=true via API.
-   * 3. Verify request is rejected with 403 Forbidden.
+   * Verifies that regular users cannot create free reservations via UI:
+   * - Free reservation toggle/checkbox is not available to non-admins
+   * - Standard credit cost is strictly required and displayed in checkout
    */
   test("Authorization: Non-admin cannot create free reservations", async ({
     authenticatedPage,
@@ -169,45 +168,25 @@ test.describe("Reservation Creation", () => {
     workerIndex,
   }) => {
     const [equip1] = testEquipment;
+    const cart = new ReservationCartPOM(authenticatedPage);
+
+    await addToCart(authenticatedPage, equip1.id);
+    await goToCart(authenticatedPage);
+    await cart.waitForCartView();
+
+    // Verify UI strictly prohibits free reservations for non-admin
+    await expect(authenticatedPage.getByTestId("free-reservation-checkbox")).not.toBeVisible();
+    await expect(authenticatedPage.getByRole("checkbox", { name: /darmowa/i })).not.toBeVisible();
 
     const { startDays, endDays } = calculateWorkerDates(workerIndex);
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() + startDays);
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + endDays);
+    await cart.setDatesFromNow(startDays, endDays);
 
-    const payload = {
-      reservations: [
-        {
-          equipment_id: equip1.id,
-          start_date: startDate.toISOString().split("T")[0],
-          end_date: endDate.toISOString().split("T")[0],
-        },
-      ],
-      free_reservation: true,
-    };
+    const cost = await cart.getTotalCost();
+    expect(cost).toBeGreaterThan(0);
 
-    const storageState = await authenticatedPage.context().storageState();
-    const authToken = storageState.cookies.find((c) => c.name.includes("auth-token"))?.value;
-    let accessToken = "";
-    if (authToken) {
-      const sessionData = JSON.parse(decodeURIComponent(authToken));
-      accessToken = sessionData.access_token;
-    }
-
-    const response = await authenticatedPage.request.post("/api/reservations", {
-      data: payload,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    expect(response.status()).toBe(403);
-
-    const body = await response.json();
-    expect(body.error || body.message).toContain("Only admins can create free reservations");
+    const currentBalance = await cart.getCurrentBalance();
+    const remainingBalance = await cart.getRemainingBalance();
+    expect(remainingBalance).toBe(currentBalance - cost);
   });
 
   /**

@@ -1,5 +1,5 @@
 import { test, expect } from "../../fixtures";
-import { submitLoginEmail, waitForMagicLinkSent } from "../../helpers/auth.helper";
+import { submitLoginEmail, waitForMagicLinkSent, logout } from "../../helpers/auth.helper";
 import { getMagicLinkFromEmail, clearMailbox } from "../../helpers/inbucket.helper";
 
 /**
@@ -50,11 +50,7 @@ test.describe("Login Page", () => {
 
     await expect(page.getByTestId("user-menu-trigger")).toBeVisible({ timeout: 10000 });
 
-    // Instead of relying on Radix Dropdown UI on mobile which is flaky, use the backend logout directly
-    await page.request.post("/api/auth/logout");
-    await page.context().clearCookies();
-    await page.evaluate(() => localStorage.clear());
-    await page.goto("/login");
+    await logout(page);
 
     await expect(page).toHaveURL(/.*\/login/);
     await expect(page.getByTestId("login-form")).toBeVisible();

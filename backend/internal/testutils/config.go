@@ -68,10 +68,24 @@ func CreateTestUser(email, password string) (*types.User, error) {
 		Password:     &password,
 		EmailConfirm: true,
 	}
-	user, err := TestAppState.SupabaseClient.Auth.AdminCreateUser(params)
+	client := TestAppState.SupabaseClient.Auth
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	if serviceKey != "" {
+		client = client.WithToken(serviceKey)
+	}
+	user, err := client.AdminCreateUser(params)
 	if err != nil {
 		return nil, err
 	}
+	profile := map[string]interface{}{
+		"id":             user.ID.String(),
+		"email":          email,
+		"username":       email,
+		"role":           "user",
+		"credit_balance": 100,
+		"is_enabled":     true,
+	}
+	_, _, _ = TestAppState.SupabaseClient.From("profiles").Insert(profile, false, "", "", "").Execute()
 	return &user.User, nil
 }
 func DeleteTestUser(userID string) error {
@@ -82,7 +96,13 @@ func DeleteTestUser(userID string) error {
 	if err != nil {
 		return fmt.Errorf("invalid user id uuid: %w", err)
 	}
-	return TestAppState.SupabaseClient.Auth.AdminDeleteUser(types.AdminDeleteUserRequest{
+	client := TestAppState.SupabaseClient.Auth
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	if serviceKey != "" {
+		client = client.WithToken(serviceKey)
+	}
+	_, _, _ = TestAppState.SupabaseClient.From("profiles").Delete("", "").Eq("id", userID).Execute()
+	return client.AdminDeleteUser(types.AdminDeleteUserRequest{
 		UserID: uid,
 	})
 }
