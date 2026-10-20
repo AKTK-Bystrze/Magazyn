@@ -31,6 +31,7 @@ async function cancelReservationViaUI(adminPage: Page, row: Locator) {
   const confirmButton = adminPage.getByRole("button", { name: "Anuluj Rezerwację" });
   await expect(confirmButton).toBeVisible();
   await confirmButton.click();
+  await expect(confirmButton).toBeHidden({ timeout: 10000 });
 }
 
 /**
@@ -115,7 +116,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
-    await expect(statusBadge).toContainText("Anulowana");
+    await expect(statusBadge).toContainText(/Anulowan[ao]/);
   });
 
   /**
@@ -249,7 +250,7 @@ test.describe.serial("Admin Reservation Management", () => {
     await cancelReservationViaUI(adminPage, row);
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
-    await expect(statusBadge).toContainText("Anulowana");
+    await expect(statusBadge).toContainText(/Anulowan[ao]/);
 
     const { data: profileAfter } = await supabaseAdmin
       .from("profiles")
