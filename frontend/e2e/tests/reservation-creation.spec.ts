@@ -190,7 +190,7 @@ test.describe("Reservation Creation", () => {
   });
 
   /**
-   * Scenario: Sequential back-to-back reservations with reactive balance updates (Issue #10)
+   * Scenario: Sequential back-to-back reservations with reactive balance updates
    *
    * Verifies:
    * - Performs two consecutive reservations in the same session without page reloads or API resets.
