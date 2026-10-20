@@ -8,7 +8,6 @@ import (
 	"magazyn/backend/internal/repository/supabase"
 	"magazyn/backend/internal/service/auth"
 	"magazyn/backend/internal/testutils"
-	"magazyn/backend/internal/types"
 	"os"
 	"testing"
 	"time"
