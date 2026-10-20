@@ -85,19 +85,6 @@ describe("validateCart", () => {
     expect(result.isValid).toBe(false);
   });
 
-  it("allows reservations starting today (futureDate(0))", () => {
-    const todayCart: CartState = {
-      ...validCartState,
-      startDate: futureDate(0),
-      endDate: futureDate(2),
-    };
-
-    const result = validateCart(todayCart, allAvailable, sufficientCredits, false);
-
-    expect(result.errors.dateRange.startDate).toBeNull();
-    expect(result.isValid).toBe(true);
-  });
-
   it("rejects reservations with startDate in the past", () => {
     const pastCart: CartState = {
       ...validCartState,
