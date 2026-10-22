@@ -78,6 +78,8 @@ export function ReservationCard({
             </div>
             <StatusBadge
               status={reservation.status}
+              startDate={reservation.startDate}
+              endDate={reservation.endDate}
               data-testid={`reservation-status-${reservation.id}`}
             />
           </div>
@@ -116,7 +118,7 @@ export function ReservationCard({
                   data-testid="modify-dates-button"
                 >
                   <Edit2 className={ICON_SIZE_SM} />
-                  Modyfikuj
+                  Zmień termin
                 </Button>
               )}
 
@@ -149,7 +151,7 @@ export function ReservationCard({
                 href={`/reservations/${reservation.id}`}
                 className="sm:ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground border border-input bg-background hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
               >
-                Zobacz Szczegóły
+                Szczegóły
               </a>
             </div>
           )}

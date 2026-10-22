@@ -1,10 +1,18 @@
 import * as React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ReservationTableRow } from "../ReservationTableRow";
 import type { ReservationListItem } from "@/types";
 
 describe("ReservationTableRow", () => {
+  beforeEach(() => {
+    vi.setSystemTime(new Date("2026-05-01T00:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   const mockItem: ReservationListItem = {
     id: "res-101",
     userId: "user-1",
@@ -39,14 +47,31 @@ describe("ReservationTableRow", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
   });
 
-  it("renders status badge matching reservation status", () => {
+  it("renders status badge as 'Przyszła' for future pending reservations", () => {
     renderInTable(
       <ReservationTableRow item={mockItem} showUserColumn={false} onViewDetails={vi.fn()} />
     );
 
     const badges = screen.getAllByTestId(`reservation-status-${mockItem.id}`);
     expect(badges.length).toBeGreaterThan(0);
-    expect(badges[0]).toHaveTextContent("W trakcie");
+    expect(badges[0]).toHaveTextContent("Przyszła");
+  });
+
+  it("renders status badge as 'Zaległa' for overdue pending reservations", () => {
+    const overdueItem: ReservationListItem = {
+      ...mockItem,
+      id: "res-overdue",
+      startDate: "2026-04-20T10:00:00Z",
+      endDate: "2026-04-25T18:00:00Z",
+    };
+
+    renderInTable(
+      <ReservationTableRow item={overdueItem} showUserColumn={false} onViewDetails={vi.fn()} />
+    );
+
+    const badges = screen.getAllByTestId(`reservation-status-${overdueItem.id}`);
+    expect(badges.length).toBeGreaterThan(0);
+    expect(badges[0]).toHaveTextContent("Zaległa");
   });
 
   it("renders username column and indicates current user with (Ty)", () => {

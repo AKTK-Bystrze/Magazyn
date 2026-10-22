@@ -6,50 +6,36 @@
 # exactly as it runs in GitHub Actions.
 # =============================================================================
 
-set -e # Exit immediately if a command exits with a non-zero status
+set -e
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+cleanup() {
+  echo "🧹 Cleaning up environment..."
+  cd "$ROOT_DIR/infra" && docker compose --env-file ../.env down -v 2>/dev/null || true
+  cd "$ROOT_DIR" && npx supabase stop 2>/dev/null || true
+}
+trap cleanup EXIT
 
 echo "🚀 Starting Local CI Simulation..."
 
 # 1. Start Supabase Local
 echo "📦 Starting Supabase..."
+cd "$ROOT_DIR"
 npx supabase start
 
 # 2. Start Docker Compose Stack
 echo "🐳 Starting Docker Stack..."
-cd infra
-docker compose --env-file ../.env up -d --build
-
-# Wait for Caddy to be healthy to ensure the stack is fully up
-echo "⏳ Waiting for services to become healthy..."
-sleep 30
+cd "$ROOT_DIR/infra"
+docker compose --env-file ../.env up -d --build --wait
 
 # 3. Run Playwright Tests
 echo "🎭 Running Playwright Tests..."
-cd ../frontend
+cd "$ROOT_DIR/frontend"
 
-# Override environment variables for Playwright running on the host OS
-# This ensures it connects to the local Supabase and Caddy instances correctly
+# Override environment variables for Playwright running on host OS
 export PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 export E2E_BASE_URL=http://localhost
 
-# Run the tests and capture the exit code so we can still clean up if they fail
-set +e
 npx playwright test --workers=4 --retries=0
-EXIT_CODE=$?
-set -e
-
-# 4. Cleanup
-echo "🧹 Cleaning up environment..."
-cd ../infra
-docker compose --env-file ../.env down -v
-
-cd ..
-npx supabase stop
-
-if [ $EXIT_CODE -eq 0 ]; then
-  echo "✅ E2E Simulation completed successfully!"
-else
-  echo "❌ E2E Simulation failed with exit code $EXIT_CODE"
-fi
-
-exit $EXIT_CODE
+echo "✅ E2E Simulation completed successfully!"

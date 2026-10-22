@@ -6,7 +6,7 @@ import type {
   AvailabilityCheckResult,
   CartItem,
 } from "@/types/reservation-cart.types";
-import { getTodayAtMidnight, calculateDays } from "@/lib/utils/date-utils";
+import { getTodayAsString, calculateDays } from "@/lib/utils/date-utils";
 import {
   ERROR_START_DATE_PAST,
   ERROR_END_DATE_BEFORE_START,
@@ -19,33 +19,28 @@ import {
  *
  * @param startDate - The start date in YYYY-MM-DD format
  * @param endDate - The end date in YYYY-MM-DD format
+ * @param allowPastDates - Whether to allow past dates (e.g. for admin overrides)
  * @returns Validation errors for start and end dates
  */
 export function validateDateRange(
   startDate: string | null,
-  endDate: string | null
+  endDate: string | null,
+  allowPastDates = false
 ): DateRangeValidationErrors {
   const errors: DateRangeValidationErrors = {
     startDate: null,
     endDate: null,
   };
 
-  if (startDate) {
-    const start = new Date(startDate);
-    const today = getTodayAtMidnight();
+  const startStr = startDate?.split("T")[0];
+  const endStr = endDate?.split("T")[0];
 
-    if (start <= today) {
-      errors.startDate = ERROR_START_DATE_PAST;
-    }
+  if (startStr && !allowPastDates && startStr < getTodayAsString()) {
+    errors.startDate = ERROR_START_DATE_PAST;
   }
 
-  if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    if (end < start) {
-      errors.endDate = ERROR_END_DATE_BEFORE_START;
-    }
+  if (startStr && endStr && endStr < startStr) {
+    errors.endDate = ERROR_END_DATE_BEFORE_START;
   }
 
   return errors;
@@ -68,7 +63,7 @@ export function calculateCost(
   currentBalance: number,
   isFreeReservation = false
 ): CostBreakdown {
-  const days = calculateDays(startDate, endDate);
+  const days = Math.max(0, calculateDays(startDate, endDate));
 
   const itemCosts = items.map((item) => ({
     equipmentId: item.equipmentId,
@@ -97,15 +92,17 @@ export function calculateCost(
  * @param availabilityResult - Result of availability check for all items
  * @param costBreakdown - Cost breakdown for the cart
  * @param isFreeReservation - Whether this is a free reservation (skips credit check)
+ * @param allowPastDates - Whether to allow past dates (e.g. for admin overrides)
  * @returns Overall cart validation state
  */
 export function validateCart(
   cartState: CartState,
   availabilityResult: AvailabilityCheckResult,
   costBreakdown: CostBreakdown,
-  isFreeReservation?: boolean
+  isFreeReservation?: boolean,
+  allowPastDates = false
 ): CartValidation {
-  const dateRangeErrors = validateDateRange(cartState.startDate, cartState.endDate);
+  const dateRangeErrors = validateDateRange(cartState.startDate, cartState.endDate, allowPastDates);
 
   const hasSufficientCredits = isFreeReservation || costBreakdown.remainingBalance >= 0;
 

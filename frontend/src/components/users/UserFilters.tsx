@@ -46,7 +46,9 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
   );
 
   const hasActiveFilters =
-    filters.role !== DEFAULT_ROLE_FILTER || (filters.search && filters.search.length > 0);
+    filters.role !== DEFAULT_ROLE_FILTER ||
+    (filters.search && filters.search.length > 0) ||
+    filters.isEnabled !== undefined;
 
   return (
     <div className="flex flex-col sm:flex-row gap-4">
@@ -70,6 +72,22 @@ export function UserFilters({ filters, onFilterChange, onReset }: UserFiltersPro
               {option.label}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={filters.isEnabled === undefined ? "ALL" : filters.isEnabled ? "ACTIVE" : "BLOCKED"}
+        onValueChange={(val) =>
+          onFilterChange("isEnabled", val === "ALL" ? undefined : val === "ACTIVE")
+        }
+      >
+        <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filtruj według statusu">
+          <SelectValue placeholder="Wszystkie statusy" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">Wszystkie statusy</SelectItem>
+          <SelectItem value="ACTIVE">Aktywny</SelectItem>
+          <SelectItem value="BLOCKED">Zablokowany</SelectItem>
         </SelectContent>
       </Select>
 

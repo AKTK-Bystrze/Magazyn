@@ -29,24 +29,25 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 	email := fmt.Sprintf("test_mid_%d@example.com", time.Now().Unix())
 	password := "testMid123!"
 	user, err := testutils.CreateTestUser(email, password)
-	if err != nil {
-		t.Logf("Failed to create test user: %v", err)
-		t.Skip("Skipping test due to user creation failure")
-		return
-	}
+	require.NoError(t, err, "User creation must succeed for TestAuthMiddleware_Integration")
 	defer func() {
 		testutils.DeleteTestUser(user.ID.String())
 	}()
 	tokenResp, err := testutils.TestClient.Auth.SignInWithEmailPassword(email, password)
 	require.NoError(t, err, "Failed to sign in test user")
 	validToken := tokenResp.AccessToken
-	for i := 0; i < 20; i++ {
-		data, _, _ := testutils.TestClient.From("profiles").Select("*", "exact", false).Eq("id", user.ID.String()).Execute()
-		if len(data) > 2 {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
+	require.Eventually(t, func() bool {
+		data, _, err := testutils.TestClient.From("profiles").Select("*", "exact", false).Eq("id", user.ID.String()).Execute()
+		return err == nil && len(data) > 2
+	}, 3*time.Second, 100*time.Millisecond)
+
+	url := os.Getenv("PUBLIC_SUPABASE_URL")
+	key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
+	serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	appURL := os.Getenv("PUBLIC_APP_URL")
+	repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
+	authMiddleware := NewAuthMiddleware(repo)
+
 	t.Run("valid token populates context", func(t *testing.T) {
 		var capturedUser *types.User
 		var capturedProfile *types.PublicProfilesSelect
@@ -55,12 +56,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 			capturedProfile, _ = r.Context().Value(appcontext.UserProfileContextKey).(*types.PublicProfilesSelect)
 			w.WriteHeader(http.StatusOK)
 		})
-		url := os.Getenv("PUBLIC_SUPABASE_URL")
-		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
-		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
-		appURL := os.Getenv("PUBLIC_APP_URL")
-		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
-		middleware := NewAuthMiddleware(repo)(next)
+		middleware := authMiddleware(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+validToken)
 		w := httptest.NewRecorder()
@@ -80,12 +76,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t.Error("Next handler should not be called")
 		})
-		url := os.Getenv("PUBLIC_SUPABASE_URL")
-		key := os.Getenv("PUBLIC_SUPABASE_ANON_KEY")
-		serviceKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
-		appURL := os.Getenv("PUBLIC_APP_URL")
-		repo := supabase.NewAuthRepository(testutils.TestClient, url, key, serviceKey, appURL)
-		middleware := NewAuthMiddleware(repo)(next)
+		middleware := authMiddleware(next)
 		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
 		req.Header.Set("Authorization", "Bearer invalid-token.signature")
 		w := httptest.NewRecorder()

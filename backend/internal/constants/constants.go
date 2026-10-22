@@ -4,15 +4,15 @@ package constants
 
 // Database table names to avoid hardcoded strings.
 const (
-	TableProfiles               = "profiles"
-	TableEquipment              = "equipment"
-	TableEquipmentTypes         = "equipment_types"
-	TableReservations           = "reservations"
-	TableReservationHistory     = "reservation_history"
-	TableCreditHistory          = "credit_history"
-	TableCreditRequests         = "credit_requests"
-	TableCreditRequestHelpers   = "credit_request_helpers"
-	TableMaintenanceLogs        = "maintenance_logs"
+	TableProfiles             = "profiles"
+	TableEquipment            = "equipment"
+	TableEquipmentTypes       = "equipment_types"
+	TableReservations         = "reservations"
+	TableReservationHistory   = "reservation_history"
+	TableCreditHistory        = "credit_history"
+	TableCreditRequests       = "credit_requests"
+	TableCreditRequestHelpers = "credit_request_helpers"
+	TableMaintenanceLogs      = "maintenance_logs"
 )
 
 // Reservation status values that represent the lifecycle of an equipment rental.
@@ -52,7 +52,7 @@ const (
 )
 
 // AllowedPerPageValues defines the standard allowed page sizes for pagination.
-var AllowedPerPageValues = []int{10, 25, 50, 100}
+var AllowedPerPageValues = []int{10, 25, 50, 100, 1000}
 
 // Storage configuration for file uploads and asset management.
 const (

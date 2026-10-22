@@ -4,7 +4,7 @@
 #
 # DESCRIPTION:
 #   Sets up the Playwright environment, handling binary caching to speed up runs.
-#   It conditionally installs browsers or dependencies based on cache hits.
+#   It caches the Chromium browser and installs only Chromium's OS dependencies.
 #
 # INPUTS:
 #   - working-directory: Path to frontend directory (default: ./frontend)
@@ -35,13 +35,13 @@ runs:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ hashFiles(inputs.package-lock-path) }}
 
-    - name: Install Playwright Browsers
+    - name: Install Playwright Chromium
       if: steps.playwright-cache.outputs.cache-hit != 'true'
       working-directory: ${{ inputs.working-directory }}
       shell: bash
-      run: npx playwright install --with-deps
+      run: npx playwright install chromium
 
-    - name: Install Playwright Dependencies Only
-      if: steps.playwright-cache.outputs.cache-hit == 'true'
+    - name: Install Playwright Chromium Dependencies
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
-      run: npx playwright install-deps
+      run: npx playwright install-deps chromium

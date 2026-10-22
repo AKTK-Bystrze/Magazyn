@@ -25,9 +25,19 @@ export const RESERVATION_STATUS_LABELS: Record<string, string> = {
   PENDING: "W trakcie",
   RENTED: "Wypożyczona",
   RETURNED: "Zwrócona",
-  CANCELLED: "Anulowano",
+  CANCELLED: "Anulowana",
   ALL: "Wszystkie statusy",
 };
+
+/**
+ * Human-readable label for future pending reservations
+ */
+export const RESERVATION_FUTURE_STATUS_LABEL = "Przyszła";
+
+/**
+ * Human-readable label for overdue pending reservations
+ */
+export const RESERVATION_OVERDUE_STATUS_LABEL = "Zaległa";
 
 /**
  * Badge variants for each reservation status
@@ -51,7 +61,7 @@ export const RESERVATION_FILTER_OPTIONS = [
   { value: "PENDING", label: "W trakcie" },
   { value: "RENTED", label: "Wypożyczona" },
   { value: "RETURNED", label: "Zwrócona" },
-  { value: "CANCELLED", label: "Anulowano" },
+  { value: "CANCELLED", label: "Anulowana" },
 ] as const;
 
 /**

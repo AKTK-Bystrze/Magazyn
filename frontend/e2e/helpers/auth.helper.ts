@@ -1,4 +1,4 @@
-import { type Page, expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { E2E_CONFIG } from "../constants";
 
 /**
@@ -39,10 +39,12 @@ export async function logout(page: Page): Promise<void> {
   const menuTrigger = page.getByTestId("user-menu-trigger");
   const logoutBtn = page.getByTestId("logout-button");
 
-  await expect(async () => {
-    await menuTrigger.click();
-    await expect(logoutBtn).toBeVisible({ timeout: 1000 });
-  }).toPass();
+  if (!(await logoutBtn.isVisible())) {
+    await expect(async () => {
+      await menuTrigger.click();
+      await expect(logoutBtn).toBeVisible({ timeout: 1000 });
+    }).toPass();
+  }
 
   await logoutBtn.click();
 
