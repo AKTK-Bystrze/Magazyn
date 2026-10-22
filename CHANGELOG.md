@@ -1,3 +1,20 @@
+## [0.6.6](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.5...v0.6.6) (2026-10-22)
+
+
+### Bug Fixes
+
+* **chunk-3:** unify ui buttons, status labels, delete dialog, polish l10n ([#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1),[#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3),[#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4),[#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8),[#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13),[#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14)) ([aa84780](https://github.com/AKTK-Bystrze/Magazyn/commit/aa847803c2847d7a6491e05773a72e52c51a388f))
+* **playwright:** update caching logic and improve browser installation steps ([f7f2cec](https://github.com/AKTK-Bystrze/Magazyn/commit/f7f2cec5144f982954918df558ce01be10f456c3))
+* update package versions and improve StatusBadge component ([ea2b3c3](https://github.com/AKTK-Bystrze/Magazyn/commit/ea2b3c3e4eade7fba0c56968b4840dbd47da05f7))
+
+## [0.6.5](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.4...v0.6.5) (2026-10-20)
+
+
+### Bug Fixes
+
+* **chunk-1:** core reservation and credit balance logic ([#2](https://github.com/AKTK-Bystrze/Magazyn/issues/2), [#7](https://github.com/AKTK-Bystrze/Magazyn/issues/7), [#9](https://github.com/AKTK-Bystrze/Magazyn/issues/9), [#10](https://github.com/AKTK-Bystrze/Magazyn/issues/10)) ([#264](https://github.com/AKTK-Bystrze/Magazyn/issues/264)) ([6d2dc04](https://github.com/AKTK-Bystrze/Magazyn/commit/6d2dc040829bf4538a53a4ebc1638d24c55d1a06))
+* **chunk-2:** session integrity, overdue status, pagination ([#17](https://github.com/AKTK-Bystrze/Magazyn/issues/17), [#20](https://github.com/AKTK-Bystrze/Magazyn/issues/20), [#23](https://github.com/AKTK-Bystrze/Magazyn/issues/23)) ([#265](https://github.com/AKTK-Bystrze/Magazyn/issues/265)) ([7238934](https://github.com/AKTK-Bystrze/Magazyn/commit/7238934b99673637f844ff519aad8f0a30fdfd09))
+
 ## [0.6.4](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.3...v0.6.4) (2026-10-18)
 
 

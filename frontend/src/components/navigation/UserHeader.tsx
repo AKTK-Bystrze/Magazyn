@@ -102,13 +102,17 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
         <span className="sr-only">Toggle Sidebar</span>
       </Button>
       <div className="flex-1">
-        <Breadcrumbs currentPath={currentPath} />
+        <Breadcrumbs currentPath={currentPath} isAdmin={isAdmin} />
       </div>
 
       <div className="flex items-center gap-2">
         {creditBalance !== undefined && (
-          <Badge variant="secondary" className="hidden sm:flex">
-            Credits: {creditBalance}
+          <Badge
+            variant="secondary"
+            className="flex items-center text-xs font-medium whitespace-nowrap"
+            data-testid="header-credits-badge"
+          >
+            Godzinki: {creditBalance}
           </Badge>
         )}
         <ThemeToggle />

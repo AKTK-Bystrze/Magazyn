@@ -30,6 +30,9 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	var newBalance int32
 	var latestUpdatedAt *string
 	isCancelling := cmd.Status != nil && *cmd.Status == constants.ReservationStatusCancelled
+	isReturning := cmd.Status != nil && *cmd.Status == constants.ReservationStatusReturned
+	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
+	allowNegative := isReturning || isAdmin
 	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
 	if datesChanging {
 		start := current.StartDate
@@ -48,7 +51,7 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 			return nil, types.NewConflictError("Dates not available", nil)
 		}
 		if !isCancelling {
-			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end)
+			result, err := s.repo.ModifyReservationDatesWithCredits(ctx, id, userID, start, end, allowNegative)
 			if err != nil {
 				logger.Errorf(ctx, "Failed to modify dates with credits: %v", err)
 				return nil, err
@@ -125,12 +128,35 @@ func (s *reservationService) validateUpdatePermissions(current *types.Reservatio
 	if !isAdmin && !isOwner {
 		return types.NewForbiddenError("Not allowed")
 	}
+
+	// Status modification rules
+	if !isAdmin && cmd.Status != nil && *cmd.Status != current.Status {
+		if *cmd.Status == constants.ReservationStatusReturned {
+			if current.Status != constants.ReservationStatusPending && current.Status != constants.ReservationStatusRented {
+				return types.NewValidationError("Can only return active reservations", nil)
+			}
+			return nil
+		}
+		if *cmd.Status == constants.ReservationStatusRented {
+			if current.Status != constants.ReservationStatusPending {
+				return types.NewValidationError("Can only rent pending reservations", nil)
+			}
+			return nil
+		}
+		if *cmd.Status == constants.ReservationStatusCancelled {
+			if current.Status != constants.ReservationStatusPending {
+				return types.NewForbiddenError("Cannot cancel non-pending reservation")
+			}
+			return nil
+		}
+		return types.NewValidationError("Users can only cancel, rent, or return reservations", nil)
+	}
+
+	// Date modification rules: non-admins can only modify dates for pending reservations
 	if !isAdmin && current.Status != constants.ReservationStatusPending {
 		return types.NewForbiddenError("Cannot modify non-pending reservation")
 	}
-	if !isAdmin && cmd.Status != nil && *cmd.Status != current.Status && *cmd.Status != constants.ReservationStatusCancelled && *cmd.Status != constants.ReservationStatusReturned {
-		return types.NewValidationError("Users can only cancel or return pending reservations", nil)
-	}
+
 	return nil
 }
 
@@ -167,12 +193,14 @@ func (s *reservationService) handleCancellationRefund(ctx context.Context, curre
 }
 
 func (s *reservationService) recalculateCreditCost(ctx context.Context, equipmentID, startDate, endDate string) int32 {
-	eq, _ := s.equipmentRepo.GetByID(ctx, equipmentID)
-	if eq == nil {
+	eq, err := s.equipmentRepo.GetByID(ctx, equipmentID)
+	if err != nil || eq == nil {
+		logger.Warnf(ctx, "recalculateCreditCost: equipment %s not found: %v", equipmentID, err)
 		return 0
 	}
-	eqType, _ := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
-	if eqType == nil {
+	eqType, err := s.equipmentRepo.GetTypeByID(ctx, eq.TypeID)
+	if err != nil || eqType == nil {
+		logger.Warnf(ctx, "recalculateCreditCost: equipment type %s not found: %v", eq.TypeID, err)
 		return 0
 	}
 	return validation.CalculateReservationCost(startDate, endDate, eqType.CreditCostPerDay, false)

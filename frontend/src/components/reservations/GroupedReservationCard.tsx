@@ -77,7 +77,7 @@ export function GroupedReservationCard({
                   {scope === "all" && isOwn && " (Ty)"}
                 </span>
               </div>
-              <StatusBadge status={group.status} />
+              <StatusBadge status={group.status} startDate={group.startDate} />
             </div>
 
             <div className="flex items-start justify-between gap-2 min-w-0">

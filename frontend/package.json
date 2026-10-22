@@ -1,7 +1,7 @@
 {
   "name": "magazyn",
   "type": "module",
-  "version": "0.6.4",
+  "version": "0.6.6",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -48,7 +48,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
     "@commitlint/config-conventional": "^19.0.0",
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.64.1",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^11.0.1",
     "@testing-library/jest-dom": "^6.6.3",

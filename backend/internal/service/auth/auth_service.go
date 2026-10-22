@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"magazyn/backend/internal/logger"
@@ -25,7 +24,7 @@ func NewAuthService(repo repository.AuthRepository) AuthService {
 	}
 }
 func (s *authService) Login(ctx context.Context, email string) (*types.LoginResponse, error) {
-	logger.Infof(ctx, "Initiating magic link login for email domain: %s", emailDomain(email))
+	logger.Infof(ctx, "Initiating magic link login for: %s", email)
 	err := s.repo.SendMagicLink(ctx, email)
 	if err != nil {
 		return nil, err
@@ -55,10 +54,4 @@ func (s *authService) GetSession(ctx context.Context, userID string, userToken s
 		ExpiresAt:     expiresAt,
 	}
 	return response, nil
-}
-func emailDomain(email string) string {
-	if _, domain, ok := strings.Cut(email, "@"); ok && domain != "" {
-		return domain
-	}
-	return "unknown"
 }

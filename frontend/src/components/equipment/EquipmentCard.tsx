@@ -1,7 +1,6 @@
 import * as React from "react";
 import { type EquipmentSearchItem } from "@/types";
 import { Card, CardFooter } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShoppingCart, Check } from "lucide-react";
@@ -121,7 +120,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
     >
       {viewMode === "grid" && (
         <div className="relative">
-          <AspectRatio ratio={4 / 3} className="bg-muted">
+          <div className="aspect-[4/3] bg-muted w-full overflow-hidden">
             {item.imagePath ? (
               <img
                 src={item.imagePath}
@@ -137,7 +136,7 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
                 Brak obrazu
               </div>
             )}
-          </AspectRatio>
+          </div>
         </div>
       )}
 

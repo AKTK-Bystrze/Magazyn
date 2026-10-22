@@ -144,14 +144,8 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 			break
 		}
 	}
-	if !found {
-		if len(resp.CreditHistory) == 0 {
-			t.Skip("⚠️  Admin cannot view other user's credit history - RLS policy may need adjustment for admin role")
-		}
-		t.Logf("⚠️  Test entry not found in %d results - may have been filtered by RLS or timing issue", len(resp.CreditHistory))
-	} else {
-		t.Logf("✓ Admin successfully viewed other user's history: %d entries", len(resp.CreditHistory))
-	}
+	assert.NotEmpty(t, resp.CreditHistory, "Admin should receive non-empty credit history for target user")
+	assert.True(t, found, "Expected admin to view target user's credit history entry with reason 'admin_adjustment' and amount 200")
 }
 
 func TestGetCreditHistory_PaginationWorks(t *testing.T) {

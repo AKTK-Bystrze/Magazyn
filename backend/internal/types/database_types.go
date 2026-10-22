@@ -132,17 +132,3 @@ type PublicReservationHistorySelect struct {
 	Status          string  `json:"status"`
 	UserID          string  `json:"user_id"`
 }
-type PublicAnalyticsEquipmentStatsSelect struct {
-	EquipmentID       *string  `json:"equipment_id"`
-	EquipmentName     *string  `json:"equipment_name"`
-	TotalDaysRented   *int64   `json:"total_days_rented"`
-	TotalReservations *int64   `json:"total_reservations"`
-	UtilizationRate   *float64 `json:"utilization_rate"`
-}
-type PublicAnalyticsUserStatsSelect struct {
-	LastReservationDate *string `json:"last_reservation_date"`
-	TotalCreditsSpent   *int64  `json:"total_credits_spent"`
-	TotalReservations   *int64  `json:"total_reservations"`
-	UserID              *string `json:"user_id"`
-	Username            *string `json:"username"`
-}

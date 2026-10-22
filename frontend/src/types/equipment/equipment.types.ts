@@ -27,28 +27,6 @@ export type EquipmentType = {
 };
 
 /**
- * Equipment item with type information
- * Combines data from equipment and equipment_types tables
- */
-export type Equipment = {
-  id: string;
-  /** Unique inventory identifier */
-  internalId: string;
-  typeId: string;
-  typeName: string;
-  name: string | null;
-  description: string | null;
-  status: Enums<"equipment_status">;
-  /** Cost in credits per day joined from equipment type */
-  creditCostPerDay: number;
-  imageUrl: string | null;
-  isFavorite: boolean;
-  isArchived: boolean;
-  createdAt: string;
-  updatedAt: string | null;
-};
-
-/**
  * Equipment in search results (GET /equipment)
  */
 export type EquipmentSearchItem = {

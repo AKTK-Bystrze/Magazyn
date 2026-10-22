@@ -39,12 +39,7 @@ interface ReservationCartViewProps {
   equipmentBrowsePath?: string;
 }
 
-/**
- * Main checkout view for completing equipment reservations.
- * Displays cart items, date selection, cost estimation, and confirmation flow.
- * In admin mode, allows creating reservations for other users.
- */
-export function ReservationCartView({
+function ReservationCartContent({
   initialCreditBalance,
   isAdmin = false,
   successRedirectPath = ROUTES.PROTECTED.RESERVATIONS,
@@ -52,8 +47,27 @@ export function ReservationCartView({
   initialSelectedUserCreditBalance = 0,
   equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
 }: ReservationCartViewProps) {
+  const [userCreditBalance, setUserCreditBalance] = React.useState<number>(initialCreditBalance);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch("/api/auth/session")
+      .then((r) => r.ok && r.json())
+      .then((d) => {
+        if (isMounted && typeof d?.creditBalance === "number") {
+          setUserCreditBalance(d.creditBalance);
+        }
+      })
+      .catch((err) => {
+        logger.error("Failed to fetch current session for credit balance:", { error: err });
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const { cartState, removeItem, updateStartDate, updateEndDate, clearCart } =
-    useReservationCart(initialCreditBalance);
+    useReservationCart(userCreditBalance);
 
   const { checkAvailability, isChecking } = useAvailabilityCheck(
     cartState.items,
@@ -113,7 +127,8 @@ export function ReservationCartView({
 
       if (!response.ok) {
         const errorData = await response.json();
-        let errorMessage = errorData.message || errorData.error || "Failed to create reservation";
+        let errorMessage =
+          errorData.message || errorData.error || "Nie udało się utworzyć rezerwacji";
 
         cartState.items.forEach((item) => {
           if (errorMessage.includes(item.equipmentId)) {
@@ -124,7 +139,7 @@ export function ReservationCartView({
         if (errorMessage.includes("Conflict detected")) {
           errorMessage = errorMessage.replace(
             "Conflict detected for equipment",
-            "This equipment is already reserved:"
+            "Ten sprzęt jest już zarezerwowany:"
           );
         }
 
@@ -140,7 +155,7 @@ export function ReservationCartView({
       return true;
     } catch (error) {
       logger.error("Reservation failed:", { error });
-      setSubmissionError(error instanceof Error ? error.message : "An unexpected error occurred");
+      setSubmissionError(error instanceof Error ? error.message : "Wystąpił nieoczekiwany błąd");
       return false;
     } finally {
       setIsSubmitting(false);
@@ -157,7 +172,7 @@ export function ReservationCartView({
     setSelectedUserCreditBalance(user.creditBalance);
   }, []);
 
-  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : initialCreditBalance;
+  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : userCreditBalance;
 
   const costBreakdown = React.useMemo(() => {
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {
@@ -190,12 +205,13 @@ export function ReservationCartView({
     cartState,
     availabilityResult,
     safeCostBreakdown,
-    isAdmin && isFreeReservation
+    isAdmin && isFreeReservation,
+    isAdmin
   );
 
   const handleProceed = async () => {
     if (isAdmin && !selectedUserId) {
-      setSubmissionError("Please select a user to create the reservation for.");
+      setSubmissionError("Wybierz użytkownika, dla którego tworzona jest rezerwacja.");
       return;
     }
 
@@ -252,13 +268,11 @@ export function ReservationCartView({
       {isAdmin && !isEmpty && (
         <section className="bg-card rounded-lg border shadow-sm p-6">
           <h2 className="text-lg font-semibold mb-4">Utwórz Rezerwację Dla</h2>
-          <QueryProvider>
-            <UserSelector
-              selectedUserId={selectedUserId}
-              onSelect={handleUserSelect}
-              label="Wybierz użytkownika dla tej rezerwacji"
-            />
-          </QueryProvider>
+          <UserSelector
+            selectedUserId={selectedUserId}
+            onSelect={handleUserSelect}
+            label="Wybierz użytkownika dla tej rezerwacji"
+          />
           {!selectedUserId && (
             <p className="text-sm text-muted-foreground mt-2">
               Musisz wybrać użytkownika przed dokończeniem rezerwacji.
@@ -299,6 +313,7 @@ export function ReservationCartView({
                 onStartDateChange={updateStartDate}
                 onEndDateChange={updateEndDate}
                 validationErrors={validation.errors.dateRange}
+                allowPastDates={isAdmin}
               />
             </section>
           )}
@@ -365,5 +380,18 @@ export function ReservationCartView({
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Main checkout view for completing equipment reservations.
+ * Displays cart items, date selection, cost estimation, and confirmation flow.
+ * In admin mode, allows creating reservations for other users.
+ */
+export function ReservationCartView(props: ReservationCartViewProps) {
+  return (
+    <QueryProvider>
+      <ReservationCartContent {...props} />
+    </QueryProvider>
   );
 }

@@ -36,7 +36,6 @@ export const ROUTES = {
     ACCOUNT_DISABLED: "/account-disabled",
     CREDITS: "/credits",
     CREDITS_HISTORY: "/credits/history",
-    CREDITS_REQUEST: "/credits/request",
     RESERVATIONS: "/reservations",
     RESERVATIONS_CREATE: "/reservations/create",
   },

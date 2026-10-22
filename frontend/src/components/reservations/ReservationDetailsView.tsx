@@ -1,4 +1,5 @@
 import * as React from "react";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,13 +23,17 @@ interface ReservationDetailsViewProps {
 
 /**
  * Main view for reservation details with status management
- * Shows reservation info, audit history, and available actions
- *
- * @param reservationId - ID of reservation to display
- * @param currentUserId - ID of logged-in user
- * @param isAdmin - Whether user has admin privileges
+ * Wraps content in QueryProvider for isolated React island mounting
  */
-export function ReservationDetailsView({
+export function ReservationDetailsView(props: ReservationDetailsViewProps) {
+  return (
+    <QueryProvider>
+      <ReservationDetailsContent {...props} />
+    </QueryProvider>
+  );
+}
+
+function ReservationDetailsContent({
   reservationId,
   currentUserId,
   currentUserBalance,
@@ -102,7 +107,11 @@ export function ReservationDetailsView({
           <ArrowLeft className={ICON_SIZE_SM} />
           {UI.BACK_TO_LIST}
         </a>
-        <StatusBadge status={reservation.status} />
+        <StatusBadge
+          status={reservation.status}
+          startDate={reservation.startDate}
+          endDate={reservation.endDate}
+        />
       </div>
 
       <div>

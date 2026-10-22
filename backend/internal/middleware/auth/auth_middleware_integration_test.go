@@ -29,11 +29,7 @@ func TestAuthMiddleware_Integration(t *testing.T) {
 	email := fmt.Sprintf("test_mid_%d@example.com", time.Now().Unix())
 	password := "testMid123!"
 	user, err := testutils.CreateTestUser(email, password)
-	if err != nil {
-		t.Logf("Failed to create test user: %v", err)
-		t.Skip("Skipping test due to user creation failure")
-		return
-	}
+	require.NoError(t, err, "User creation must succeed for TestAuthMiddleware_Integration")
 	defer func() {
 		testutils.DeleteTestUser(user.ID.String())
 	}()

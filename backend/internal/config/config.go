@@ -42,18 +42,16 @@ type AppState struct {
 func LoadConfig() (*AppState, error) {
 	envPath := os.Getenv("ENV_FILE_PATH")
 	if envPath == "" {
-		_ = godotenv.Load("../.env.test")
 		if err := godotenv.Load("../.env"); err != nil {
-			logger.Info(context.Background(), "No .env file found, relying on existing environment variables")
+			if testErr := godotenv.Load("../.env.test"); testErr == nil {
+				logger.Info(context.Background(), "Loaded configuration from ../.env.test fallback")
+			} else {
+				logger.Info(context.Background(), "No .env or .env.test file found, relying on existing environment variables")
+			}
 		}
 	} else {
 		if err := godotenv.Load(envPath); err != nil {
-			testEnvPath := strings.Replace(envPath, ".env", ".env.test", 1)
-			if err := godotenv.Load(testEnvPath); err != nil {
-				logger.Infof(context.Background(), "No .env file found at %s or %s, relying on existing environment variables", envPath, testEnvPath)
-			} else {
-				logger.Infof(context.Background(), "Loaded .env from %s", testEnvPath)
-			}
+			logger.Infof(context.Background(), "No .env file found at %s, relying on existing environment variables", envPath)
 		} else {
 			logger.Infof(context.Background(), "Loaded .env from %s", envPath)
 		}
