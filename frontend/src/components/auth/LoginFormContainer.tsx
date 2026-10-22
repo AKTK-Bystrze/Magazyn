@@ -3,8 +3,7 @@ import { LoginForm } from "./LoginForm";
 import { MagicLinkSent } from "./MagicLinkSent";
 import { Loader2 } from "lucide-react";
 
-type LoginViewState = "idle" | "success" | "authenticating";
-type LoginViewState = "idle" | "success" | "authenticating";
+type LoginViewState = "idle" | "success";
 
 export const LoginFormContainer: React.FC = () => {
   const [viewState, setViewState] = useState<LoginViewState>(() => {
