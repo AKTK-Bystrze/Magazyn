@@ -1,3 +1,12 @@
+## [0.6.6](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.5...v0.6.6) (2026-10-22)
+
+
+### Bug Fixes
+
+* **chunk-3:** unify ui buttons, status labels, delete dialog, polish l10n ([#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1),[#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3),[#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4),[#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8),[#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13),[#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14)) ([aa84780](https://github.com/AKTK-Bystrze/Magazyn/commit/aa847803c2847d7a6491e05773a72e52c51a388f))
+* **playwright:** update caching logic and improve browser installation steps ([f7f2cec](https://github.com/AKTK-Bystrze/Magazyn/commit/f7f2cec5144f982954918df558ce01be10f456c3))
+* update package versions and improve StatusBadge component ([ea2b3c3](https://github.com/AKTK-Bystrze/Magazyn/commit/ea2b3c3e4eade7fba0c56968b4840dbd47da05f7))
+
 ## [0.6.5](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.4...v0.6.5) (2026-10-20)
 
 
