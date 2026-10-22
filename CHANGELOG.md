@@ -1,3 +1,15 @@
+# [0.7.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.6...v0.7.0) (2026-10-22)
+
+
+### Bug Fixes
+
+* **chunk-4:** return defect notes and smooth magic link redirect ([#6](https://github.com/AKTK-Bystrze/Magazyn/issues/6), [#21](https://github.com/AKTK-Bystrze/Magazyn/issues/21)) ([#267](https://github.com/AKTK-Bystrze/Magazyn/issues/267)) ([e7e42cb](https://github.com/AKTK-Bystrze/Magazyn/commit/e7e42cb0078011775502ab13718c67d0177ab030)), closes [#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1) [#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3) [#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4) [#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8) [#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13) [#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14) [#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1) [#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3) [#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4) [#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8) [#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13) [#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14)
+
+
+### Features
+
+* enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
+
 ## [0.6.6](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.5...v0.6.6) (2026-10-22)
 
 
