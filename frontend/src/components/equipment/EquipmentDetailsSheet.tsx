@@ -70,7 +70,7 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
           <SheetHeader>
             <SheetTitle>{UI.DETAILS_TITLE}</SheetTitle>
           </SheetHeader>
-          <div className="py-8 text-center text-muted-foreground">No equipment selected</div>
+          <div className="py-8 text-center text-muted-foreground">Nie wybrano sprzętu</div>
         </SheetContent>
       </Sheet>
     );
@@ -103,7 +103,14 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{equipment.name || equipment.type.name}</h2>
-                <Badge variant={getStatusVariant(equipment.status)}>
+                <Badge
+                  variant={getStatusVariant(equipment.status)}
+                  className={
+                    equipment.status === "ok"
+                      ? "bg-green-600 hover:bg-green-700 text-white border-transparent"
+                      : undefined
+                  }
+                >
                   {EQUIPMENT_STATUS_LABELS[equipment.status] || equipment.status}
                 </Badge>
               </div>
@@ -128,7 +135,7 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
                     {UI.CREDIT_COST}
                   </p>
                   <p className="font-medium tabular-nums">
-                    {equipment.type.creditCostPerDay} credits/day
+                    {equipment.type.creditCostPerDay} godzinek/dzień
                   </p>
                 </div>
                 <div>

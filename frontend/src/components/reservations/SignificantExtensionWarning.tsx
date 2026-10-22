@@ -45,12 +45,12 @@ export function SignificantExtensionWarning({ creditAdjustment }: DateChangeCred
       >
         <div className="space-y-1">
           <p className="font-semibold">
-            {isCharge ? "Additional Credits Required" : "Credit Refund"}
+            {isCharge ? "Wymagane dodatkowe godzinki" : "Zwrot godzinek"}
           </p>
           <p className="text-sm">
             {isCharge
-              ? `You will be charged ${amount} ${amount === 1 ? "credit" : "credits"} for extending this reservation.`
-              : `You will receive a refund of ${amount} ${amount === 1 ? "credit" : "credits"} for shortening this reservation.`}
+              ? `Zostaniesz obciążony/a kwotą ${amount} ${amount === 1 ? "godzinki" : "godzinek"} za przedłużenie tej rezerwacji.`
+              : `Otrzymasz zwrot ${amount} ${amount === 1 ? "godzinki" : "godzinek"} za skrócenie tej rezerwacji.`}
           </p>
         </div>
       </AlertDescription>

@@ -1,6 +1,6 @@
 import { test, expect } from "../../fixtures";
 import { EquipmentManagerPage } from "../../page-objects/equipment-manager.pom";
-import { E2E_CONFIG } from "../../constants";
+import { E2E_CONFIG, TEST_IDS } from "../../constants";
 import { hardDeleteEquipment } from "../../helpers/data-setup.helper";
 
 /**
@@ -24,20 +24,25 @@ test.describe("Admin Equipment Manager", () => {
     }
   });
 
-  // ponytail: DEBT - edit/archive tests skipped due to flakiness
-  test("should create and list equipment", async ({ adminPage, workerIndex, supabaseAdmin }) => {
+  test("should execute complete equipment CRUD lifecycle via UI", async ({
+    adminPage,
+    workerIndex,
+    supabaseAdmin,
+  }) => {
     const equipmentPage = new EquipmentManagerPage(adminPage);
     const timestamp = Date.now();
     const uniqueInternalId = `E2E-W${workerIndex}-${timestamp}`;
     const uniqueName = `E2E Equipment W${workerIndex} ${timestamp}`;
+    const updatedName = `${uniqueName} Updated`;
 
     console.log(`[Worker ${workerIndex}] Starting equipment lifecycle test`);
 
     await equipmentPage.goto();
     await expect(equipmentPage.getTable()).toBeVisible();
 
-    console.log(`[Worker ${workerIndex}] 1. Creating equipment: ${uniqueInternalId}`);
+    console.log(`[Worker ${workerIndex}] 1. Creating equipment via UI: ${uniqueInternalId}`);
     await equipmentPage.clickAddEquipment();
+    await expect(equipmentPage.getAddDialog()).toBeVisible();
 
     const { data: types } = await supabaseAdmin
       .from("equipment_types")
@@ -63,7 +68,7 @@ test.describe("Admin Equipment Manager", () => {
       timeout: E2E_CONFIG.TIMEOUT.ASSERTION,
     });
 
-    console.log(`[Worker ${workerIndex}] 2. Verifying equipment appears in list`);
+    console.log(`[Worker ${workerIndex}] 2. Verifying created equipment appears in table`);
 
     const { data: createdEquipment } = await supabaseAdmin
       .from("equipment")
@@ -75,16 +80,49 @@ test.describe("Admin Equipment Manager", () => {
       throw new Error("Created equipment not found in database");
     }
 
-    createdEquipmentId = createdEquipment.id;
-    console.log(`[Worker ${workerIndex}] Created equipment ID: ${createdEquipmentId}`);
+    const equipmentId = createdEquipment.id;
+    createdEquipmentId = equipmentId;
+    console.log(`[Worker ${workerIndex}] Created equipment ID: ${equipmentId}`);
 
-    const equipmentRow = equipmentPage.getEquipmentRow(createdEquipmentId!);
+    const equipmentRow = equipmentPage.getEquipmentRow(equipmentId);
     await expect(equipmentRow).toBeVisible({ timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
     await expect(equipmentRow).toContainText(uniqueInternalId);
     await expect(equipmentRow).toContainText(uniqueName);
+    await expect(equipmentRow).toContainText("OK");
 
-    console.log(`[Worker ${workerIndex}] 3. Verifying action menu options`);
-    await equipmentPage.verifyActionsPresent(createdEquipmentId!);
+    console.log(`[Worker ${workerIndex}] 3. Editing equipment name and status via UI dialog`);
+    await equipmentPage.clickEdit(equipmentId);
+    const editDialog = adminPage.getByTestId("admin-edit-equipment-dialog");
+    await expect(editDialog).toBeVisible();
+
+    await editDialog.getByTestId(TEST_IDS.EQUIPMENT_FORM_NAME_INPUT).fill(updatedName);
+    await editDialog.getByTestId(TEST_IDS.EQUIPMENT_FORM_STATUS_SELECT).click();
+    await adminPage
+      .getByRole("option", { name: /Zablokowane/i })
+      .first()
+      .click();
+    await equipmentPage.submitForm();
+
+    await expect(equipmentPage.getSuccessAlert()).toBeVisible({
+      timeout: E2E_CONFIG.TIMEOUT.ASSERTION,
+    });
+
+    await expect(equipmentRow).toContainText(updatedName);
+    await expect(equipmentRow).toContainText("Zablokowane");
+
+    console.log(`[Worker ${workerIndex}] 4. Archiving equipment via UI dialog`);
+    await equipmentPage.clickArchive(equipmentId);
+    await expect(equipmentPage.getArchiveDialog()).toBeVisible();
+
+    await equipmentPage.confirmArchive();
+
+    await expect(equipmentPage.getSuccessAlert()).toBeVisible({
+      timeout: E2E_CONFIG.TIMEOUT.ASSERTION,
+    });
+
+    await expect(equipmentPage.getEquipmentRow(equipmentId)).toBeHidden({
+      timeout: E2E_CONFIG.TIMEOUT.ASSERTION,
+    });
 
     console.log(`[Worker ${workerIndex}] ✅ Equipment lifecycle test completed`);
   });

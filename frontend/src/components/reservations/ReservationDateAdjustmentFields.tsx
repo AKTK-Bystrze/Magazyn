@@ -33,6 +33,8 @@ export interface ReservationDateAdjustmentFieldsProps {
   currentUserBalance: number;
   /** Calculated credit adjustment information */
   adjustmentInfo: CreditAdjustmentInfo;
+  /** Whether negative balance is permitted (e.g. equipment return) */
+  allowNegativeBalance?: boolean;
 }
 
 /**
@@ -52,6 +54,7 @@ export function ReservationDateAdjustmentFields({
   creditPerDay,
   currentUserBalance,
   adjustmentInfo,
+  allowNegativeBalance = false,
 }: ReservationDateAdjustmentFieldsProps) {
   return (
     <>
@@ -77,6 +80,7 @@ export function ReservationDateAdjustmentFields({
             originalCreditCost={totalCost}
             newCreditCost={newDays * creditPerDay}
             currentBalance={currentUserBalance}
+            allowNegativeBalance={allowNegativeBalance}
           />
 
           <SignificantExtensionWarning creditAdjustment={adjustmentInfo.adjustment} />

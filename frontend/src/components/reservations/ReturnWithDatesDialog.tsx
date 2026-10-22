@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { RESERVATION_DATE_MODIFICATION_UI_STRINGS as UI } from "@/lib/config/constants";
@@ -53,6 +54,7 @@ export function ReturnWithDatesDialog({
   const [modifyDates, setModifyDates] = React.useState(false);
   const [startDate, setStartDate] = React.useState<string | null>(reservation.startDate);
   const [endDate, setEndDate] = React.useState<string | null>(reservation.endDate);
+  const [notes, setNotes] = React.useState("");
   const [validationErrors, setValidationErrors] = React.useState<DateRangeValidationErrors>({
     startDate: null,
     endDate: null,
@@ -64,6 +66,7 @@ export function ReturnWithDatesDialog({
       setModifyDates(false);
       setStartDate(reservation.startDate);
       setEndDate(reservation.endDate);
+      setNotes("");
       setValidationErrors({ startDate: null, endDate: null });
       setApiError(null);
     }
@@ -96,13 +99,6 @@ export function ReturnWithDatesDialog({
       errors.endDate = UI.END_DATE_MUST_BE_AFTER_START;
     }
 
-    if (adjustmentInfo.newBalance < 0) {
-      errors.endDate = UI.INSUFFICIENT_CREDITS_WARNING.replace(
-        "{amount}",
-        Math.abs(adjustmentInfo.newBalance).toString()
-      );
-    }
-
     setValidationErrors(errors);
     return !errors.startDate && !errors.endDate;
   };
@@ -119,6 +115,10 @@ export function ReturnWithDatesDialog({
       if (modifyDates && startDate && endDate) {
         command.startDate = startDate;
         command.endDate = endDate;
+      }
+
+      if (notes.trim()) {
+        command.notes = notes.trim();
       }
 
       await onConfirm(command);
@@ -186,9 +186,26 @@ export function ReturnWithDatesDialog({
                 creditPerDay={creditPerDay}
                 currentUserBalance={currentUserBalance}
                 adjustmentInfo={adjustmentInfo}
+                allowNegativeBalance={true}
               />
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label htmlFor="return-notes" className="text-sm font-medium">
+              Uwagi / usterki sprzętu (opcjonalnie)
+            </Label>
+            <Textarea
+              id="return-notes"
+              data-testid="return-notes-input"
+              placeholder="Opisz ewentualne usterki, uszkodzenia lub uwagi do zwracanego sprzętu..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={isSubmitting}
+              rows={3}
+              className="resize-none"
+            />
+          </div>
 
           <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -208,10 +225,7 @@ export function ReturnWithDatesDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             {UI.CANCEL_CHANGES}
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isSubmitting || (modifyDates && adjustmentInfo.newBalance < 0)}
-          >
+          <Button onClick={handleConfirm} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

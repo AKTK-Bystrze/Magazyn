@@ -37,7 +37,8 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(r.Context(), w, http.StatusBadRequest, "Email is required")
 		return
 	}
-	if _, err := h.service.Login(r.Context(), req.Email); err != nil {
+	resp, err := h.service.Login(r.Context(), req.Email)
+	if err != nil {
 		logger.Errorf(r.Context(), "Failed to initiate login for %s: %v", req.Email, err)
 		var validationErr *types.ValidationError
 		if errors.As(err, &validationErr) {
@@ -53,7 +54,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Infof(r.Context(), "Login link sent to %s", req.Email)
-	common.RespondJSON(r.Context(), w, http.StatusOK, types.LoginResponse{Message: "Login link sent to your email"})
+	common.RespondJSON(r.Context(), w, http.StatusOK, resp)
 }
 
 // HandleLogout revokes the user's active session.

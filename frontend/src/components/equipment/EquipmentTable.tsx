@@ -218,7 +218,14 @@ export function EquipmentTable({
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{item.type.name}</TableCell>
                 <TableCell>
-                  <Badge variant={getStatusVariant(item.status)}>
+                  <Badge
+                    variant={getStatusVariant(item.status)}
+                    className={
+                      item.status === "ok"
+                        ? "bg-green-600 hover:bg-green-700 text-white border-transparent"
+                        : undefined
+                    }
+                  >
                     {EQUIPMENT_STATUS_LABELS[item.status] || item.status}
                   </Badge>
                 </TableCell>

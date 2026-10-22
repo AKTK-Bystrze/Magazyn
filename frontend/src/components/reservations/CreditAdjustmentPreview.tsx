@@ -10,6 +10,7 @@ interface CreditAdjustmentPreviewProps {
   originalCreditCost: number;
   newCreditCost: number;
   currentBalance: number;
+  allowNegativeBalance?: boolean;
 }
 
 /**
@@ -32,6 +33,7 @@ export function CreditAdjustmentPreview({
   originalCreditCost,
   newCreditCost,
   currentBalance,
+  allowNegativeBalance = false,
 }: CreditAdjustmentPreviewProps) {
   const originalDays =
     Math.ceil(
@@ -55,7 +57,12 @@ export function CreditAdjustmentPreview({
         ? "text-red-600 dark:text-red-400"
         : "text-muted-foreground";
 
-  const balanceColor = newBalance < 0 ? "text-red-600 dark:text-red-400" : "text-foreground";
+  const balanceColor =
+    newBalance < 0
+      ? allowNegativeBalance
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-red-600 dark:text-red-400"
+      : "text-foreground";
 
   return (
     <div className="space-y-4">
@@ -114,11 +121,19 @@ export function CreditAdjustmentPreview({
             </div>
 
             {newBalance < 0 && (
-              <div className="text-xs text-red-600 dark:text-red-400 mt-2 flex items-start gap-1">
-                <span>⚠️</span>
+              <div
+                className={`text-xs mt-2 flex items-start gap-1 ${
+                  allowNegativeBalance
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+                data-testid="credit-balance-warning"
+              >
+                <span>{allowNegativeBalance ? "ℹ️" : "⚠️"}</span>
                 <span>
-                  Niewystarczająca liczba godzinek. Potrzebujesz {Math.abs(newBalance)} więcej
-                  godzinek, aby dokończyć tę modyfikację.
+                  {allowNegativeBalance
+                    ? `Twoje saldo po zwrocie wyniesie ${newBalance} godzinek.`
+                    : `Niewystarczająca liczba godzinek. Potrzebujesz ${Math.abs(newBalance)} więcej godzinek, aby dokończyć tę modyfikację.`}
                 </span>
               </div>
             )}

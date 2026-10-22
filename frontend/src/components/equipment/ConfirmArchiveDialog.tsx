@@ -60,8 +60,7 @@ export function ConfirmArchiveDialog({
       await onConfirm(equipment.id);
       onClose();
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Nie udało się zarchiwizować sprzętu";
+      const errorMessage = err instanceof Error ? err.message : "Nie udało się usunąć sprzętu";
       setLocalError(errorMessage);
     }
   }, [equipment, onConfirm, onClose]);

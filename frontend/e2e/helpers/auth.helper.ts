@@ -1,4 +1,5 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { E2E_CONFIG } from "../constants";
 
 /**
  * Authentication helper functions for e2e tests.
@@ -26,4 +27,42 @@ export async function submitLoginEmail(page: Page, email: string): Promise<void>
  */
 export async function waitForMagicLinkSent(page: Page): Promise<void> {
   await page.getByTestId("magic-link-sent-container").waitFor({ state: "visible" });
+}
+/**
+ * Logs out the current user via the user menu.
+ *
+ * @param page - The Playwright Page instance.
+ * @returns A promise that resolves when the user is logged out and redirected to login.
+ */
+export async function logout(page: Page): Promise<void> {
+  const menuTrigger = page.getByTestId("user-menu-trigger");
+  const logoutBtn = page.getByTestId("logout-button");
+
+  if (!(await logoutBtn.isVisible())) {
+    await expect(async () => {
+      await menuTrigger.click();
+      await expect(logoutBtn).toBeVisible({ timeout: 1000 });
+    }).toPass();
+  }
+
+  await logoutBtn.click();
+
+  await page.waitForURL("**/login");
+}
+
+/**
+ * Verifies if the user is currently logged in by checking for the user menu trigger.
+ *
+ * @param page - The Playwright Page instance.
+ * @returns A promise that resolves to true if logged in, false otherwise.
+ */
+export async function verifyLoggedIn(page: Page): Promise<boolean> {
+  try {
+    await page
+      .getByTestId("user-menu-trigger")
+      .waitFor({ state: "visible", timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
+    return true;
+  } catch {
+    return false;
+  }
 }
