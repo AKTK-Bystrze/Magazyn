@@ -91,6 +91,7 @@ func (f *equipmentTestFixture) createTestEquipment() {
 		f.equipmentID = created[0].ID
 	}
 	f.cleanup = append(f.cleanup, func() {
+		f.client.From("maintenance_logs").Delete("", "").Eq("equipment_id", f.equipmentID).Execute()
 		f.client.From("equipment").Delete("", "").Eq("id", f.equipmentID).Execute()
 	})
 }
@@ -100,18 +101,27 @@ func (f *equipmentTestFixture) teardown() {
 	}
 }
 func (f *equipmentTestFixture) addToFavorites(equipmentID string) {
-	_, _, _ = f.client.From("favorites").
-		Insert(map[string]interface{}{
-			"user_id":      f.testUserID,
-			"equipment_id": equipmentID,
-		}, false, "", "", "").
-		Execute()
+	startDate := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+	endDate := time.Now().AddDate(0, 0, -4).Format("2006-01-02")
+	data, _, err := f.client.From("reservations").Insert(map[string]interface{}{
+		"user_id":      f.testUserID,
+		"equipment_id": equipmentID,
+		"start_date":   startDate,
+		"end_date":     endDate,
+		"status":       constants.ReservationStatusReturned,
+	}, false, "", "representation", "").Execute()
+	require.NoError(f.t, err)
+	var created []struct {
+		ID string `json:"id"`
+	}
+	require.NoError(f.t, json.Unmarshal(data, &created))
+	require.NotEmpty(f.t, created, "completed rental should be created")
+	reservationID := created[0].ID
+
 	f.cleanup = append(f.cleanup, func() {
-		f.client.From("favorites").
-			Delete("", "").
-			Eq("user_id", f.testUserID).
-			Eq("equipment_id", equipmentID).
-			Execute()
+		f.client.From("reservation_history").Delete("", "").Eq("reservation_id", reservationID).Execute()
+		f.client.From("credit_history").Delete("", "").Eq("reservation_id", reservationID).Execute()
+		f.client.From("reservations").Delete("", "").Eq("id", reservationID).Execute()
 	})
 }
 func (f *equipmentTestFixture) createReservation(equipmentID string, startDays, endDays int) string {
@@ -132,6 +142,8 @@ func (f *equipmentTestFixture) createReservation(equipmentID string, startDays, 
 	if len(created) > 0 {
 		resID := created[0].ID
 		f.cleanup = append(f.cleanup, func() {
+			f.client.From("reservation_history").Delete("", "").Eq("reservation_id", resID).Execute()
+			f.client.From("credit_history").Delete("", "").Eq("reservation_id", resID).Execute()
 			f.client.From("reservations").Delete("", "").Eq("id", resID).Execute()
 		})
 		return resID

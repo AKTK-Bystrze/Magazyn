@@ -46,7 +46,90 @@ test.describe("Admin User Management", () => {
    */
   test.afterEach(async ({ supabaseAdmin }) => {
     if (targetUserId) {
+      const { data: reservations, error: reservationLookupError } = await supabaseAdmin
+        .from("reservations")
+        .select("id")
+        .eq("user_id", targetUserId);
+
+      if (reservationLookupError) {
+        throw new Error(
+          `Failed to find target user reservations: ${reservationLookupError.message}`
+        );
+      }
+
+      const reservationIds = reservations?.map(({ id }) => id) ?? [];
+      if (reservationIds.length > 0) {
+        const { error: reservationHistoryError } = await supabaseAdmin
+          .from("reservation_history")
+          .delete()
+          .in("reservation_id", reservationIds);
+        if (reservationHistoryError) {
+          throw new Error(
+            `Failed to clear target user reservation history: ${reservationHistoryError.message}`
+          );
+        }
+
+        const { error: reservationCreditHistoryError } = await supabaseAdmin
+          .from("credit_history")
+          .delete()
+          .in("reservation_id", reservationIds);
+        if (reservationCreditHistoryError) {
+          throw new Error(
+            `Failed to clear target user reservation credits: ${reservationCreditHistoryError.message}`
+          );
+        }
+
+        const { error: reservationDeleteError } = await supabaseAdmin
+          .from("reservations")
+          .delete()
+          .in("id", reservationIds);
+        if (reservationDeleteError) {
+          throw new Error(
+            `Failed to clear target user reservations: ${reservationDeleteError.message}`
+          );
+        }
+      }
+
       await clearCreditHistory(supabaseAdmin, targetUserId);
+
+      const { error: authoredCreditHistoryError } = await supabaseAdmin
+        .from("credit_history")
+        .delete()
+        .eq("author_id", targetUserId);
+      if (authoredCreditHistoryError) {
+        throw new Error(
+          `Failed to clear target user-authored credits: ${authoredCreditHistoryError.message}`
+        );
+      }
+
+      const { error: userHistoryError } = await supabaseAdmin
+        .from("reservation_history")
+        .delete()
+        .eq("user_id", targetUserId);
+      if (userHistoryError) {
+        throw new Error(
+          `Failed to clear target user reservation history: ${userHistoryError.message}`
+        );
+      }
+
+      const { error: auditHistoryError } = await supabaseAdmin
+        .from("reservation_history")
+        .delete()
+        .eq("changed_by_user_id", targetUserId);
+      if (auditHistoryError) {
+        throw new Error(`Failed to clear target user audit history: ${auditHistoryError.message}`);
+      }
+
+      const { error: maintenanceLogError } = await supabaseAdmin
+        .from("maintenance_logs")
+        .delete()
+        .eq("admin_id", targetUserId);
+      if (maintenanceLogError) {
+        throw new Error(
+          `Failed to clear target user maintenance logs: ${maintenanceLogError.message}`
+        );
+      }
+
       const { error } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
       if (error) {
         throw new Error(`Failed to delete target user: ${error.message}`);
