@@ -1,3 +1,12 @@
+## [0.7.2](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.1...v0.7.2) (2026-10-23)
+
+
+### Reverts
+
+* Revert "chore(release): 0.7.1 [skip ci]" ([2feb2c5](https://github.com/AKTK-Bystrze/Magazyn/commit/2feb2c548d7de3fbab32d53d07a9f3b088c392ec))
+* Revert "fix: unify audited user credit adjustments" ([04f39aa](https://github.com/AKTK-Bystrze/Magazyn/commit/04f39aa4c17311db549eff462b5a7a079f77d680))
+* Revert "refactor: revert test changes" ([8f49be5](https://github.com/AKTK-Bystrze/Magazyn/commit/8f49be51a9ff512f35e6fabd41b375f9088a4647))
+
 # [0.7.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.6...v0.7.0) (2026-10-22)
 
 
