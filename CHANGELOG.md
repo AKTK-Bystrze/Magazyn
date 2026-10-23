@@ -1,10 +1,3 @@
-## [0.7.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.0...v0.7.1) (2026-10-23)
-
-
-### Bug Fixes
-
-* unify audited user credit adjustments ([03d0637](https://github.com/AKTK-Bystrze/Magazyn/commit/03d063743bcdf47bd30bb381743c86d40c6b1241))
-
 # [0.7.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.6...v0.7.0) (2026-10-22)
 
 
