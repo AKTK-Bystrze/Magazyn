@@ -229,6 +229,15 @@ export async function cleanupTestEquipment(
     console.error(`Failed to cleanup reservations: ${resError.message}`);
   }
 
+  const { error: maintenanceError } = await supabaseAdmin
+    .from("maintenance_logs")
+    .delete()
+    .in("equipment_id", equipmentIds);
+
+  if (maintenanceError) {
+    console.error(`Failed to cleanup maintenance logs: ${maintenanceError.message}`);
+  }
+
   const { error } = await supabaseAdmin.from("equipment").delete().in("id", equipmentIds);
 
   if (error) {

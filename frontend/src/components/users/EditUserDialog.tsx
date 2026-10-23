@@ -45,7 +45,7 @@ interface EditUserDialogProps {
 /**
  * Modal dialog for editing existing user accounts
  * Pre-populated with current user data
- * Allows modification of email, credit balance, and role
+ * Allows modification of email, role, and account status
  *
  * @param isOpen - Whether dialog is open
  * @param user - User being edited
@@ -63,14 +63,12 @@ export function EditUserDialog({
   const [formData, setFormData] = React.useState({
     email: "",
     role: USER_ROLE.USER as Enums<"user_role">,
-    creditBalance: 0,
     isEnabled: true,
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   const emailId = React.useId();
   const roleId = React.useId();
-  const creditsId = React.useId();
   const statusId = React.useId();
 
   React.useEffect(() => {
@@ -78,7 +76,6 @@ export function EditUserDialog({
       setFormData({
         email: user.email,
         role: user.role,
-        creditBalance: user.creditBalance,
         isEnabled: user.isEnabled,
       });
       setErrors({});
@@ -87,9 +84,7 @@ export function EditUserDialog({
 
   const handleInputChange = React.useCallback(
     (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value =
-        field === "creditBalance" ? Math.max(0, parseInt(e.target.value) || 0) : e.target.value;
-      setFormData((prev) => ({ ...prev, [field]: value }));
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
       if (errors[field]) {
         setErrors((prev) => ({ ...prev, [field]: "" }));
       }
@@ -108,10 +103,6 @@ export function EditUserDialog({
       newErrors.email = USER_VALIDATION_MESSAGES.EMAIL_INVALID;
     }
 
-    if (formData.creditBalance < 0) {
-      newErrors.creditBalance = USER_VALIDATION_MESSAGES.CREDIT_BALANCE_INVALID;
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
@@ -126,9 +117,6 @@ export function EditUserDialog({
     }
     if (formData.role !== user.role) {
       command.role = formData.role;
-    }
-    if (formData.creditBalance !== user.creditBalance) {
-      command.creditBalance = formData.creditBalance;
     }
     if (formData.isEnabled !== user.isEnabled) {
       command.isEnabled = formData.isEnabled;
@@ -226,29 +214,6 @@ export function EditUserDialog({
                   <SelectItem value={USER_ROLE.SUPER_ADMIN}>Super Administrator</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor={creditsId}>Stan Konta (Kredyty)</Label>
-              <Input
-                id={creditsId}
-                type="number"
-                min="0"
-                placeholder="0"
-                value={formData.creditBalance}
-                onChange={handleInputChange("creditBalance")}
-                aria-invalid={!!errors.creditBalance}
-                aria-describedby={errors.creditBalance ? `${creditsId}-error` : undefined}
-                disabled={isSubmitting}
-              />
-              {errors.creditBalance && (
-                <p id={`${creditsId}-error`} className="text-sm text-destructive">
-                  {errors.creditBalance}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Zmiany stanu konta są logowane w historii kredytów użytkownika
-              </p>
             </div>
 
             <div className="grid gap-2">

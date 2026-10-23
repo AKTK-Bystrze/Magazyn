@@ -52,6 +52,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [adjustCreditsOpen, setAdjustCreditsOpen] = React.useState(false);
+  const [creditAdjustmentUserIds, setCreditAdjustmentUserIds] = React.useState<string[]>([]);
   const [selectedUser, setSelectedUser] = React.useState<UserListItem | null>(null);
 
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
@@ -108,7 +109,18 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   }, []);
 
   const handleAdjustCreditsClick = React.useCallback(() => {
+    setCreditAdjustmentUserIds(selectedIds);
     setAdjustCreditsOpen(true);
+  }, [selectedIds]);
+
+  const handleAdjustSingleUserCredits = React.useCallback((user: UserListItem) => {
+    setCreditAdjustmentUserIds([user.id]);
+    setAdjustCreditsOpen(true);
+  }, []);
+
+  const handleCloseAdjustCredits = React.useCallback(() => {
+    setAdjustCreditsOpen(false);
+    setCreditAdjustmentUserIds([]);
   }, []);
 
   const handleAdjustCreditsSubmit = React.useCallback(
@@ -119,11 +131,14 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       description?: string;
     }) => {
       await bulkAdjustCredits(command);
-      setSuccessMessage(`Godzinki dostosowane dla ${selectedIds.length} użytkowników.`);
-      setAdjustCreditsOpen(false);
+      const userCount = command.userIds.length;
+      setSuccessMessage(
+        `Godzinki dostosowane dla ${userCount} ${userCount === 1 ? "użytkownika" : "użytkowników"}.`
+      );
+      handleCloseAdjustCredits();
       setSelectedIds([]);
     },
-    [bulkAdjustCredits, selectedIds.length, setSuccessMessage]
+    [bulkAdjustCredits, handleCloseAdjustCredits, setSuccessMessage]
   );
 
   const hasActiveFilters =
@@ -191,6 +206,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         isLoading={isLoading}
         isSuperAdmin={isSuperAdmin}
         onEdit={handleEditClick}
+        onAdjustCredits={handleAdjustSingleUserCredits}
         selectedIds={selectedIds}
         onToggleSelect={handleToggleSelect}
         onToggleSelectAll={handleToggleSelectAll}
@@ -225,8 +241,8 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
         <AdjustCreditsDialog
           isOpen={adjustCreditsOpen}
           isSubmitting={isMutating}
-          userIds={selectedIds}
-          onClose={() => setAdjustCreditsOpen(false)}
+          userIds={creditAdjustmentUserIds}
+          onClose={handleCloseAdjustCredits}
           onSubmit={handleAdjustCreditsSubmit}
         />
       )}

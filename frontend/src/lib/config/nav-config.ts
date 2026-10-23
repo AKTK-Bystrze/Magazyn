@@ -74,7 +74,7 @@ export const USER_NAV_ITEMS: NavItem[] = [
  */
 export const ADMIN_NAV_ITEMS: NavItem[] = [
   {
-    label: NAV_LABELS.OVERVIEW,
+    label: NAV_LABELS.DASHBOARD,
     href: ROUTES.PROTECTED.ADMIN,
     icon: LayoutDashboard,
     activePattern: /^\/admin$/,
@@ -86,7 +86,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     activePattern: /^\/admin\/reservations/,
   },
   {
-    label: NAV_LABELS.BROWSE_EQUIPMENT,
+    label: NAV_LABELS.EQUIPMENT,
     href: ROUTES.PROTECTED.ADMIN_EQUIPMENT,
     icon: Package,
     activePattern: /^\/admin\/equipment$/,

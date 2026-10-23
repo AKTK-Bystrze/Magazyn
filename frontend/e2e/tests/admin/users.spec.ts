@@ -1,6 +1,7 @@
 import { test, expect } from "../../fixtures";
 import { AdminUsersPage } from "../../page-objects/admin-users.pom";
 import { TEST_IDS } from "../../constants";
+import { clearCreditHistory } from "../../helpers/data-setup.helper";
 
 test.describe("Admin User Management", () => {
   let targetUserEmail: string;
@@ -45,7 +46,95 @@ test.describe("Admin User Management", () => {
    */
   test.afterEach(async ({ supabaseAdmin }) => {
     if (targetUserId) {
-      await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+      const { data: reservations, error: reservationLookupError } = await supabaseAdmin
+        .from("reservations")
+        .select("id")
+        .eq("user_id", targetUserId);
+
+      if (reservationLookupError) {
+        throw new Error(
+          `Failed to find target user reservations: ${reservationLookupError.message}`
+        );
+      }
+
+      const reservationIds = reservations?.map(({ id }) => id) ?? [];
+      if (reservationIds.length > 0) {
+        const { error: reservationHistoryError } = await supabaseAdmin
+          .from("reservation_history")
+          .delete()
+          .in("reservation_id", reservationIds);
+        if (reservationHistoryError) {
+          throw new Error(
+            `Failed to clear target user reservation history: ${reservationHistoryError.message}`
+          );
+        }
+
+        const { error: reservationCreditHistoryError } = await supabaseAdmin
+          .from("credit_history")
+          .delete()
+          .in("reservation_id", reservationIds);
+        if (reservationCreditHistoryError) {
+          throw new Error(
+            `Failed to clear target user reservation credits: ${reservationCreditHistoryError.message}`
+          );
+        }
+
+        const { error: reservationDeleteError } = await supabaseAdmin
+          .from("reservations")
+          .delete()
+          .in("id", reservationIds);
+        if (reservationDeleteError) {
+          throw new Error(
+            `Failed to clear target user reservations: ${reservationDeleteError.message}`
+          );
+        }
+      }
+
+      await clearCreditHistory(supabaseAdmin, targetUserId);
+
+      const { error: authoredCreditHistoryError } = await supabaseAdmin
+        .from("credit_history")
+        .delete()
+        .eq("author_id", targetUserId);
+      if (authoredCreditHistoryError) {
+        throw new Error(
+          `Failed to clear target user-authored credits: ${authoredCreditHistoryError.message}`
+        );
+      }
+
+      const { error: userHistoryError } = await supabaseAdmin
+        .from("reservation_history")
+        .delete()
+        .eq("user_id", targetUserId);
+      if (userHistoryError) {
+        throw new Error(
+          `Failed to clear target user reservation history: ${userHistoryError.message}`
+        );
+      }
+
+      const { error: auditHistoryError } = await supabaseAdmin
+        .from("reservation_history")
+        .delete()
+        .eq("changed_by_user_id", targetUserId);
+      if (auditHistoryError) {
+        throw new Error(`Failed to clear target user audit history: ${auditHistoryError.message}`);
+      }
+
+      const { error: maintenanceLogError } = await supabaseAdmin
+        .from("maintenance_logs")
+        .delete()
+        .eq("admin_id", targetUserId);
+      if (maintenanceLogError) {
+        throw new Error(
+          `Failed to clear target user maintenance logs: ${maintenanceLogError.message}`
+        );
+      }
+
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+      if (error) {
+        throw new Error(`Failed to delete target user: ${error.message}`);
+      }
+      targetUserId = "";
     }
   });
 
@@ -66,6 +155,7 @@ test.describe("Admin User Management", () => {
     await expect(editButton).toBeVisible();
 
     await adminUsersPage.openEditModal(targetUserEmail);
+    await expect(superAdminPage.getByLabel("Stan Konta (Kredyty)")).not.toBeAttached();
     await adminUsersPage.updateUserRole("admin");
     await adminUsersPage.setUserStatus(false);
     await adminUsersPage.saveChanges();
@@ -75,5 +165,43 @@ test.describe("Admin User Management", () => {
     const userRow = superAdminPage.getByRole("row").filter({ hasText: targetUserEmail });
     await expect(userRow).toContainText(/admin/i);
     await expect(userRow).toContainText(/Wyłączony/i);
+  });
+
+  test("adjusts credits for one user through the audited credit adjustment form", async ({
+    superAdminPage,
+    supabaseAdmin,
+  }) => {
+    const adminUsersPage = new AdminUsersPage(superAdminPage);
+
+    await adminUsersPage.goto();
+    await adminUsersPage.searchUser(targetUserEmail);
+    await adminUsersPage.adjustUserCredits(
+      targetUserEmail,
+      25,
+      "Nagroda za pomoc",
+      "Porządkowanie magazynu"
+    );
+
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("credit_balance")
+      .eq("id", targetUserId)
+      .single();
+    expect(profileError).toBeNull();
+    expect(profile?.credit_balance).toBe(125);
+
+    const { data: history, error: historyError } = await supabaseAdmin
+      .from("credit_history")
+      .select("amount, reason, description")
+      .eq("user_id", targetUserId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    expect(historyError).toBeNull();
+    expect(history).toMatchObject({
+      amount: 25,
+      reason: "admin_adjustment",
+      description: "Nagroda za pomoc - Porządkowanie magazynu",
+    });
   });
 });
