@@ -50,18 +50,6 @@ export class AdminUsersPage {
     await expect(this.editModal).toBeVisible();
   }
 
-  async adjustUserCredits(email: string, amount: number, reason: string, notes?: string) {
-    await this.page.getByTestId(TEST_IDS.adminUserRowAdjustCredits(email)).click();
-    await expect(this.page.getByRole("heading", { name: "Dostosuj Godzinki" })).toBeVisible();
-    await this.page.getByLabel("Kwota").fill(String(amount));
-    await this.page.getByLabel("Powód (wymagany)").fill(reason);
-    if (notes) {
-      await this.page.getByLabel("Dodatkowe notatki (opcjonalnie)").fill(notes);
-    }
-    await this.page.getByRole("button", { name: "Dodaj Godzinki" }).click();
-    await expect(this.page.getByRole("heading", { name: "Dostosuj Godzinki" })).not.toBeVisible();
-  }
-
   /**
    * Updates the user's role in the edit modal.
    * @param role - The new role to select.

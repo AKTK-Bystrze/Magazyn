@@ -84,7 +84,7 @@ export const usersApi = {
    * User must be SuperAdmin
    *
    * @param id - User ID to update
-   * @param command - Update command with optional email, role, and enabled status
+   * @param command - Update command with optional email, role, creditBalance
    * @returns Updated user profile with transformed data
    */
   update: async (id: string, command: UpdateUserCommand): Promise<UserProfile> => {
@@ -94,7 +94,7 @@ export const usersApi = {
   },
 
   /**
-   * Adjusts credit balance for one or multiple users
+   * Adjusts credit balance for multiple users
    * User must be SuperAdmin
    *
    * @param command - Bulk adjustment command

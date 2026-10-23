@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RoleBadge } from "./RoleBadge";
-import { Coins, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { ICON_SIZE_SM, SKELETON_ROW_COUNT } from "@/lib/config/constants";
 import { formatDate } from "@/lib/utils/date-utils";
 import { useTableSort } from "@/lib/hooks/useTableSort";
@@ -29,8 +29,6 @@ interface UserTableProps {
   isSuperAdmin: boolean;
   /** Callback when edit button is clicked */
   onEdit: (user: UserListItem) => void;
-  /** Callback when the per-user credit adjustment action is clicked */
-  onAdjustCredits: (user: UserListItem) => void;
   /** IDs of currently selected users */
   selectedIds?: string[];
   /** Callback when a user row checkbox is clicked */
@@ -101,7 +99,6 @@ export function UserTable({
   isLoading,
   isSuperAdmin,
   onEdit,
-  onAdjustCredits,
   selectedIds = [],
   onToggleSelect,
   onToggleSelectAll,
@@ -177,7 +174,7 @@ export function UserTable({
               Utworzono{" "}
               {sortConfig?.key === "createdAt" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
             </TableHead>
-            {isSuperAdmin && <TableHead className="w-[100px]">Akcje</TableHead>}
+            {isSuperAdmin && <TableHead className="w-[70px]">Akcje</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -231,26 +228,15 @@ export function UserTable({
                 </TableCell>
                 {isSuperAdmin && (
                   <TableCell>
-                    <div className="flex items-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onAdjustCredits(user)}
-                        aria-label={`Dostosuj godzinki ${user.username}`}
-                        data-testid={`admin-user-row-adjust-credits-${user.email.replace(/[@.]/g, "-")}`}
-                      >
-                        <Coins className={ICON_SIZE_SM} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleEdit(user)}
-                        aria-label={`Edytuj ${user.username}`}
-                        data-testid={`admin-user-row-edit-${user.email.replace(/[@.]/g, "-")}`}
-                      >
-                        <Pencil className={ICON_SIZE_SM} />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleEdit(user)}
+                      aria-label={`Edytuj ${user.username}`}
+                      data-testid={`admin-user-row-edit-${user.email.replace(/[@.]/g, "-")}`}
+                    >
+                      <Pencil className={ICON_SIZE_SM} />
+                    </Button>
                   </TableCell>
                 )}
               </TableRow>

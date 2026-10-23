@@ -127,18 +127,21 @@ func TestTS4_BulkAdjustCredits_Integration(t *testing.T) {
 		_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": balance2Before}, "", "").Eq("id", fixture.user2ID).Execute()
 	})
 }
-func TestUpdateUser_CreditBalanceChangeRequiresAuditedAdjustment_Integration(t *testing.T) {
+func TestTS4_SetExactCreditBalance_Integration(t *testing.T) {
 	fixture := setupUserTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	balanceBefore := fixture.getUserBalance(fixture.user1ID)
 	exactBalance := int32(777)
-	_, err := fixture.svc.UpdateUser(ctx, fixture.user1ID, types.UpdateUserRequest{
+	resp, err := fixture.svc.UpdateUser(ctx, fixture.user1ID, types.UpdateUserRequest{
 		CreditBalance: &exactBalance,
 	})
-	require.Error(t, err)
-	assert.IsType(t, &types.ValidationError{}, err)
-	assert.Equal(t, balanceBefore, fixture.getUserBalance(fixture.user1ID), "Balance must not be changed by profile update")
+	require.NoError(t, err)
+	assert.Equal(t, exactBalance, resp.CreditBalance, "Credit balance should be set to exact value")
+	assert.Equal(t, exactBalance, fixture.getUserBalance(fixture.user1ID), "DB balance must match")
+	t.Logf("✓ TS-4: Exact balance set to %d", exactBalance)
+	fixture.cleanup = append(fixture.cleanup, func() {
+		_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": int32(1000)}, "", "").Eq("id", fixture.user1ID).Execute()
+	})
 }
 func TestTS4_UserSeesAdjustedBalance_Integration(t *testing.T) {
 	fixture := setupUserTestFixture(t)

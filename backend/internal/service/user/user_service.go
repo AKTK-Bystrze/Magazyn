@@ -140,17 +140,15 @@ func (s *UserService) CreateUser(ctx context.Context, req types.CreateUserReques
 }
 func (s *UserService) UpdateUser(ctx context.Context, id string, req types.UpdateUserRequest) (*types.UserResponse, error) {
 	logger.Infof(ctx, "Updating user ID: %s", id)
-	if req.CreditBalance != nil {
-		return nil, types.NewValidationError("Credit balances must be changed through the audited credit adjustment operation", nil)
-	}
 	_, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, types.NewNotFoundError("User", id)
 	}
 	update := types.PublicProfilesUpdate{
-		Email:     req.Email,
-		Role:      req.Role,
-		IsEnabled: req.IsEnabled,
+		Email:         req.Email,
+		Role:          req.Role,
+		CreditBalance: req.CreditBalance,
+		IsEnabled:     req.IsEnabled,
 	}
 	updated, err := s.repo.Update(ctx, id, update)
 	if err != nil {

@@ -4,6 +4,11 @@ import { defaultLogger as logger } from "@/lib/utils/logger";
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
+logger.info("🔧 Supabase Browser Client Configuration", {
+  url: supabaseUrl,
+  anonKey: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : "MISSING",
+});
+
 if (!supabaseUrl || !supabaseAnonKey) {
   logger.error("❌ Missing Supabase environment variables", {
     url: supabaseUrl,

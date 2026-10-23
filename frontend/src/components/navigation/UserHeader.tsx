@@ -14,7 +14,7 @@
  *   creditBalance={100}
  * />
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,8 +31,6 @@ import { UserMenu } from "@/components/navigation/UserMenu";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { UserSidebar } from "./UserSidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { creditsApi } from "@/lib/api/credits-api";
-import { defaultLogger as logger } from "@/lib/utils/logger";
 
 interface UserHeaderProps {
   /** User information object */
@@ -53,27 +51,6 @@ interface UserHeaderProps {
  */
 export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [displayedCreditBalance, setDisplayedCreditBalance] = useState(creditBalance);
-
-  useEffect(() => {
-    setDisplayedCreditBalance(creditBalance);
-
-    if (!isAdmin) return;
-
-    let isMounted = true;
-    creditsApi
-      .getHistory({ page: 1, perPage: 25 })
-      .then((history) => {
-        if (isMounted) setDisplayedCreditBalance(history.currentBalance);
-      })
-      .catch((error) => {
-        logger.error("Failed to refresh admin credit balance in header", { error });
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [creditBalance, isAdmin]);
 
   return (
     <header
@@ -129,13 +106,13 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
       </div>
 
       <div className="flex items-center gap-2">
-        {displayedCreditBalance !== undefined && (
+        {creditBalance !== undefined && (
           <Badge
             variant="secondary"
             className="flex items-center text-xs font-medium whitespace-nowrap"
             data-testid="header-credits-badge"
           >
-            Godzinki: {displayedCreditBalance}
+            Godzinki: {creditBalance}
           </Badge>
         )}
         <ThemeToggle />

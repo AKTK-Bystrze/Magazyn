@@ -69,6 +69,9 @@ export function transformUpdateUserCommand(command: UpdateUserCommand): Record<s
   if (command.role !== undefined) {
     result.role = command.role;
   }
+  if (command.creditBalance !== undefined) {
+    result.credit_balance = command.creditBalance;
+  }
   if (command.isEnabled !== undefined) {
     result.is_enabled = command.isEnabled;
   }

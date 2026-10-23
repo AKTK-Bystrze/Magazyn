@@ -20,7 +20,6 @@ import { ROUTES } from "@/lib/config/routes";
 import { supabase } from "@/lib/supabase";
 import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
 import { defaultLogger as logger } from "@/lib/utils/logger";
-import { creditsApi } from "@/lib/api/credits-api";
 
 /**
  * Props for ReservationCartView component
@@ -49,6 +48,24 @@ function ReservationCartContent({
   equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
 }: ReservationCartViewProps) {
   const [userCreditBalance, setUserCreditBalance] = React.useState<number>(initialCreditBalance);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch("/api/auth/session")
+      .then((r) => r.ok && r.json())
+      .then((d) => {
+        if (isMounted && typeof d?.creditBalance === "number") {
+          setUserCreditBalance(d.creditBalance);
+        }
+      })
+      .catch((err) => {
+        logger.error("Failed to fetch current session for credit balance:", { error: err });
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const { cartState, removeItem, updateStartDate, updateEndDate, clearCart } =
     useReservationCart(userCreditBalance);
 
@@ -72,47 +89,7 @@ function ReservationCartContent({
   const [selectedUserCreditBalance, setSelectedUserCreditBalance] = React.useState<number>(
     initialSelectedUserCreditBalance
   );
-  const selectedUserIdRef = React.useRef(selectedUserId);
-  selectedUserIdRef.current = selectedUserId;
   const [isFreeReservation, setIsFreeReservation] = React.useState(false);
-
-  React.useEffect(() => {
-    let isMounted = true;
-
-    if (isAdmin) {
-      creditsApi
-        .getHistory({ page: 1, perPage: 25 })
-        .then((history) => {
-          if (!isMounted) return;
-
-          setUserCreditBalance(history.currentBalance);
-          if (selectedUserIdRef.current === initialSelectedUserId) {
-            setSelectedUserCreditBalance(history.currentBalance);
-          }
-        })
-        .catch((err) => {
-          logger.error("Failed to fetch current admin credit balance:", { error: err });
-        });
-
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    fetch("/api/auth/session")
-      .then((r) => r.ok && r.json())
-      .then((d) => {
-        if (isMounted && typeof d?.creditBalance === "number") {
-          setUserCreditBalance(d.creditBalance);
-        }
-      })
-      .catch((err) => {
-        logger.error("Failed to fetch current session for credit balance:", { error: err });
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, [initialSelectedUserId, isAdmin]);
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submissionError, setSubmissionError] = React.useState<string | null>(null);

@@ -183,20 +183,6 @@ func TestUpdateUser_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestUpdateUser_CreditBalanceChangeRequiresAuditedAdjustment(t *testing.T) {
-	mockRepo, _, service, ctx := setupUserServiceTest()
-	id := "user-123"
-	balance := int32(250)
-
-	_, err := service.UpdateUser(ctx, id, types.UpdateUserRequest{CreditBalance: &balance})
-
-	assert.Error(t, err)
-	assert.IsType(t, &types.ValidationError{}, err)
-	assert.Contains(t, err.Error(), "audited credit adjustment")
-	mockRepo.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything)
-	mockRepo.AssertNotCalled(t, "Update", mock.Anything, mock.Anything, mock.Anything)
-}
-
 func TestBulkAdjustCredits_Success(t *testing.T) {
 	mockRepo, _, service, ctx := setupUserServiceTest()
 	adminID := "admin-123"

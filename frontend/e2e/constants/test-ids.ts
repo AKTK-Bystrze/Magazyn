@@ -45,8 +45,6 @@ export const TEST_IDS = {
   equipmentDetailsButton: (id: string) => `equipment-details-button-${id}`,
   cartItem: (id: string) => `cart-item-${id}`,
   adminUserRowEdit: (email: string) => `admin-user-row-edit-${email.replace(/[@.]/g, "-")}`,
-  adminUserRowAdjustCredits: (email: string) =>
-    `admin-user-row-adjust-credits-${email.replace(/[@.]/g, "-")}`,
   equipmentRow: (id: string) => `equipment-row-${id}`,
   equipmentEditBtn: (id: string) => `equipment-edit-btn-${id}`,
   equipmentArchiveBtn: (id: string) => `equipment-archive-btn-${id}`,
