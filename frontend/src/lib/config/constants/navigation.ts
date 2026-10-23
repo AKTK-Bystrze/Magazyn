@@ -13,12 +13,10 @@
  */
 export const NAV_LABELS = {
   DASHBOARD: "Panel",
-  EQUIPMENT: "Sprzęt",
+  EQUIPMENT: "Zarezerwuj Sprzęt",
   RESERVATIONS: "Rezerwacje",
   CREDITS: "Godzinki",
 
-  OVERVIEW: "Przegląd",
-  BROWSE_EQUIPMENT: "Zarezerwuj Sprzęt",
   MANAGE_EQUIPMENT: "Zarządzaj Sprzętem",
   USERS: "Użytkownicy",
   ANALYTICS: "Analityka",

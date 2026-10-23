@@ -44,15 +44,16 @@ describe("transformCreateUserCommand", () => {
 describe("transformUpdateUserCommand", () => {
   it.each([
     [{ email: "updated@example.com" }, { email: "updated@example.com" }],
-    [{ creditBalance: 200 }, { credit_balance: 200 }],
-    [{ creditBalance: 0 }, { credit_balance: 0 }],
-    [
-      { email: "updated@example.com", role: "admin", creditBalance: 150 },
-      { email: "updated@example.com", role: "admin", credit_balance: 150 },
-    ],
+    [{ email: "updated@example.com", role: "admin" }, { email: "updated@example.com", role: "admin" }],
     [{}, {}],
   ])("transforms update command %j", (command, expected) => {
     expect(transformUpdateUserCommand(command as UpdateUserCommand)).toEqual(expected);
+  });
+
+  it("does not include legacy creditBalance fields in profile updates", () => {
+    expect(
+      transformUpdateUserCommand({ creditBalance: 200 } as unknown as UpdateUserCommand)
+    ).toEqual({});
   });
 });
 

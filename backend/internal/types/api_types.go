@@ -52,7 +52,7 @@ type CreateUserRequest struct {
 type UpdateUserRequest struct {
 	Email         *string `json:"email"`
 	Role          *string `json:"role"`
-	CreditBalance *int32  `json:"credit_balance"`
+	CreditBalance *int32  `json:"credit_balance,omitempty"` // Rejected; use audited bulk adjustment.
 	IsEnabled     *bool   `json:"is_enabled"`
 }
 
