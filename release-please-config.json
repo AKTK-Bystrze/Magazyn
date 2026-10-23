@@ -1,0 +1,8 @@
+{
+  "release-type": "node",
+  "packages": {
+    "frontend": {
+      "changelog-path": "/CHANGELOG.md"
+    }
+  }
+}

@@ -3,16 +3,18 @@
 # =============================================================================
 #
 # DESCRIPTION:
-#   Builds, tests, and creates a new version release using semantic-release.
+#   Builds and tests changes, then opens a Release Please PR with the next
+#   version and changelog. The GitHub release and tag are created after the PR
+#   is merged.
 #   Runs E2E tests against the full stack (backend, frontend, Caddy) using
 #   Docker Compose and a remote Supabase test database before releasing.
 #
 # TRIGGERS:
-#   - Push to main branch (production releases)
+#   - Push to main branch (create/update release PR or publish a merged release PR)
 #   - Manual trigger via workflow_dispatch
 #
 # VERSIONING:
-#   Uses semantic-release to determine version based on commit messages:
+#   Uses Conventional Commits to determine version:
 #   - fix: → Patch bump (v1.0.0 → v1.0.1)
 #   - feat: → Minor bump (v1.0.0 → v1.1.0)
 #   - feat!: or BREAKING CHANGE: → Major bump (v1.0.0 → v2.0.0)
@@ -25,6 +27,7 @@
 #   - SUPABASE_ACCESS_TOKEN: CLI access token for migrations
 #   - E2E_TEST_EMAIL: Test user email
 #   - E2E_TEST_PASSWORD: Test user password
+#   - RELEASE_PLEASE_TOKEN: PAT used to create release PRs and trigger their CI
 #
 # =============================================================================
 
@@ -58,6 +61,8 @@ jobs:
     environment: integration
     permissions:
       contents: write
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -196,10 +201,9 @@ jobs:
           docker compose down -v --remove-orphans
           echo "✅ Cleanup complete"
 
-      - name: Semantic Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HUSKY: "0"
-        run: |
-          ln -sf frontend/node_modules node_modules
-          npx --prefix frontend semantic-release
+      - name: Create or publish release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
