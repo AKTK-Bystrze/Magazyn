@@ -53,18 +53,27 @@ interface UserHeaderProps {
  */
 export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [displayedCreditBalance, setDisplayedCreditBalance] = useState(creditBalance);
+  const [adminCreditBalance, setAdminCreditBalance] = useState<{
+    userId: string | null;
+    sessionBalance: number | undefined;
+    balance: number;
+  }>();
+  const userId = user?.id ?? null;
 
   useEffect(() => {
-    setDisplayedCreditBalance(creditBalance);
-
     if (!isAdmin) return;
 
     let isMounted = true;
     creditsApi
       .getHistory({ page: 1, perPage: 25 })
       .then((history) => {
-        if (isMounted) setDisplayedCreditBalance(history.currentBalance);
+        if (isMounted) {
+          setAdminCreditBalance({
+            userId,
+            sessionBalance: creditBalance,
+            balance: history.currentBalance,
+          });
+        }
       })
       .catch((error) => {
         logger.error("Failed to refresh admin credit balance in header", { error });
@@ -73,7 +82,14 @@ export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHe
     return () => {
       isMounted = false;
     };
-  }, [creditBalance, isAdmin]);
+  }, [creditBalance, isAdmin, userId]);
+
+  const displayedCreditBalance =
+    isAdmin &&
+    adminCreditBalance?.userId === userId &&
+    adminCreditBalance.sessionBalance === creditBalance
+      ? adminCreditBalance.balance
+      : creditBalance;
 
   return (
     <header
