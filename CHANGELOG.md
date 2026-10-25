@@ -19,6 +19,15 @@
 
 * enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
+## [0.7.3](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.2...v0.7.3) (2026-10-25)
+
+
+### Bug Fixes
+
+* **ci:** configure release-please unscoped tags and changelog path ([#275](https://github.com/AKTK-Bystrze/Magazyn/issues/275)) ([7dffd96](https://github.com/AKTK-Bystrze/Magazyn/commit/7dffd96a6cbc256aed6f0e0b0a867860816e5d5d))
+* **ci:** keep root changelog in release-please and allow deploy by commit id ([#277](https://github.com/AKTK-Bystrze/Magazyn/issues/277)) ([425dc9c](https://github.com/AKTK-Bystrze/Magazyn/commit/425dc9ca976a84e8c875f9746862ed395b97775a))
+* credit balance display reservation v2 ([#273](https://github.com/AKTK-Bystrze/Magazyn/issues/273)) ([e1cda85](https://github.com/AKTK-Bystrze/Magazyn/commit/e1cda85865a561b37bd52bf97d70899659a744fb))
+
 ## [0.6.6](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.5...v0.6.6) (2026-10-22)
 
 
