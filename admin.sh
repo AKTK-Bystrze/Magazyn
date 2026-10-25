@@ -206,7 +206,7 @@ cmd_deploy() {
   info "Step 4/6: Building Docker container images (build-first safety)..."
   cd "${ROOT_DIR}/infra"
   export MAGAZYN_VERSION="${target_ref}"
-  if ! docker compose build; then
+  if ! docker compose build --pull; then
     fail "Docker build failed! Database was NOT modified."
     git checkout -f "${CURRENT_COMMIT}" 2>/dev/null || true
     exit 1
