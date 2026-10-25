@@ -58,6 +58,46 @@ pick_tag() {
   done
 }
 
+pick_target() {
+  git fetch origin --tags -f >/dev/null 2>&1 || true
+
+  local c1_hash c1_desc c2_hash c2_desc c3_hash c3_desc
+  c1_hash=$(git log -1 --skip=0 --format="%h" 2>/dev/null || echo "")
+  c1_desc=$(git log -1 --skip=0 --format="%h - %s (%cr)" 2>/dev/null || echo "")
+  c2_hash=$(git log -1 --skip=1 --format="%h" 2>/dev/null || echo "")
+  c2_desc=$(git log -1 --skip=1 --format="%h - %s (%cr)" 2>/dev/null || echo "")
+  c3_hash=$(git log -1 --skip=2 --format="%h" 2>/dev/null || echo "")
+  c3_desc=$(git log -1 --skip=2 --format="%h - %s (%cr)" 2>/dev/null || echo "")
+
+  echo "Select commit or enter any commit ID / tag to deploy:" >&2
+  PS3="Select target [1-4 or enter commit/tag]: "
+  select opt in "${c1_desc:-Commit 1}" \
+                "${c2_desc:-Commit 2}" \
+                "${c3_desc:-Commit 3}" \
+                "Enter custom commit ID or tag"; do
+    case "$REPLY" in
+      1) echo "${c1_hash}"; return ;;
+      2) echo "${c2_hash}"; return ;;
+      3) echo "${c3_hash}"; return ;;
+      4)
+        if [ -t 0 ]; then
+          read -r -p "Enter commit ID or tag: " custom_target
+        else
+          read -r custom_target || true
+        fi
+        echo "${custom_target}"
+        return
+        ;;
+      *)
+        if [ -n "$REPLY" ]; then
+          echo "${REPLY}"
+          return
+        fi
+        ;;
+    esac
+  done
+}
+
 pick_snapshot() {
   echo "Available backup snapshots:" >&2
   PS3="Select snapshot to restore: "
@@ -111,32 +151,35 @@ cmd_prune() {
 cmd_deploy() {
   local force=false
   [[ "$*" =~ --force ]] && force=true
-  local target_tag="${1:-}"
-  [ "$target_tag" = "--force" ] && target_tag="${2:-}"
+  local target_ref="${1:-}"
+  [ "$target_ref" = "--force" ] && target_ref="${2:-}"
 
-  # Auto-discovery if tag not provided
-  if [ -z "$target_tag" ]; then
-    target_tag=$(pick_tag)
+  # Auto-discovery if commit/tag not provided
+  if [ -z "$target_ref" ]; then
+    target_ref=$(pick_target)
   fi
 
-  [ -n "$target_tag" ] || { fail "Target tag cannot be empty"; exit 1; }
+  [ -n "$target_ref" ] || { fail "Target commit/tag cannot be empty"; exit 1; }
 
-  info "Starting deployment to: ${BOLD}${target_tag}${NC}"
+  info "Starting deployment to: ${BOLD}${target_ref}${NC}"
 
   # Step 1: Pre-flight checks
   info "Step 1/6: Running pre-flight diagnostics..."
-  git fetch --tags -f || { fail "git fetch --tags failed"; exit 1; }
+  git fetch origin --tags -f || { fail "git fetch failed"; exit 1; }
 
-  if ! git rev-parse -q --verify "${target_tag}^{commit}" >/dev/null 2>&1; then
-    fail "Target tag/commit '${target_tag}' does not exist in git."
+  if ! git rev-parse -q --verify "${target_ref}^{commit}" >/dev/null 2>&1; then
+    fail "Target commit/tag '${target_ref}' does not exist in git."
     exit 1
   fi
 
-  CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "initial")
-  if [ "${target_tag}" = "${CURRENT_TAG}" ] && [ "$force" = false ]; then
+  RESOLVED_COMMIT=$(git rev-parse --short "${target_ref}^{commit}")
+  CURRENT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "")
+  CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+  if ([ "${target_ref}" = "${CURRENT_TAG}" ] || [ "${RESOLVED_COMMIT}" = "${CURRENT_COMMIT}" ]) && [ "$force" = false ]; then
     echo ""
-    warn "Repository is already at tag '${CURRENT_TAG}'."
-    read -p "Do you want to force redeploy this tag? [y/N] " -n 1 -r
+    warn "Repository is already at ${RESOLVED_COMMIT}${CURRENT_TAG:+ (tag: $CURRENT_TAG)}."
+    read -p "Do you want to force redeploy? [y/N] " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
       echo "Deployment cancelled."
@@ -148,24 +191,24 @@ cmd_deploy() {
 
   # Step 2: Database snapshot
   info "Step 2/6: Creating pre-deployment database backup..."
-  bash "${HELPER_DIR}/infra/backups/backup_db.sh" "${target_tag}" || {
+  bash "${HELPER_DIR}/infra/backups/backup_db.sh" "${target_ref}" || {
     fail "Pre-deploy database backup failed"
     exit 1
   }
 
-  # Step 3: Switch repository tag
-  info "Step 3/6: Checking out ${target_tag}..."
-  git checkout -f "${target_tag}" || { fail "git checkout ${target_tag} failed"; exit 1; }
+  # Step 3: Switch repository commit/tag
+  info "Step 3/6: Checking out ${target_ref} (${RESOLVED_COMMIT})..."
+  git checkout -f "${target_ref}" || { fail "git checkout ${target_ref} failed"; exit 1; }
 
   restore_self
 
   # Step 4: Build container images BEFORE migrating database
   info "Step 4/6: Building Docker container images (build-first safety)..."
   cd "${ROOT_DIR}/infra"
-  export MAGAZYN_VERSION="${target_tag}"
-  if ! docker compose build; then
+  export MAGAZYN_VERSION="${target_ref}"
+  if ! docker compose build --pull; then
     fail "Docker build failed! Database was NOT modified."
-    git checkout -f "${CURRENT_TAG}" 2>/dev/null || true
+    git checkout -f "${CURRENT_COMMIT}" 2>/dev/null || true
     exit 1
   fi
 
@@ -180,14 +223,14 @@ cmd_deploy() {
     npx --yes supabase db push --yes --db-url "${DB_CONNECTION_STRING}"; then
     fail "Database migration failed!"
     echo "Your previous containers are still running. If DB requires restoration, run:"
-    echo "  ./admin.sh rollback ${CURRENT_TAG}"
+    echo "  ./admin.sh rollback ${CURRENT_COMMIT}"
     exit 1
   fi
 
   # Step 6: Bring up containers with healthcheck verification
   info "Step 6/6: Restarting containers and verifying health..."
   cd "${ROOT_DIR}/infra"
-  export MAGAZYN_VERSION="${target_tag}"
+  export MAGAZYN_VERSION="${target_ref}"
   docker compose up -d --wait || {
     fail "Containers failed to report healthy within timeout."
     exit 1
@@ -202,11 +245,11 @@ cmd_deploy() {
     echo ""
     warn "Post-deployment sanity check reported warnings or failed."
     warn "The new containers are currently online. If you need to revert, run:"
-    echo -e "  ${BOLD}./admin.sh rollback ${CURRENT_TAG}${NC}"
+    echo -e "  ${BOLD}./admin.sh rollback ${CURRENT_COMMIT}${NC}"
   else
     echo ""
     echo -e "${GREEN}${BOLD}====================================================================${NC}"
-    echo -e "${GREEN}${BOLD}  Deployment to ${target_tag} successfully completed and verified!  ${NC}"
+    echo -e "${GREEN}${BOLD}  Deployment to ${target_ref} (${RESOLVED_COMMIT}) successfully completed and verified!  ${NC}"
     echo -e "${GREEN}${BOLD}====================================================================${NC}"
   fi
 }
@@ -268,7 +311,7 @@ cmd_rollback() {
 show_menu() {
   echo -e "${CYAN}${BOLD}=== Magazyn Admin Cockpit ===${NC}"
   PS3="Select an option [1-9]: "
-  select opt in "Deploy release tag" \
+  select opt in "Deploy commit ID or release tag" \
                 "Rollback release" \
                 "Run system diagnostics (doctor)" \
                 "Run sanity check" \
@@ -300,17 +343,17 @@ Usage:
   ./admin.sh [COMMAND] [OPTIONS]
 
 Commands:
-  deploy [TAG] [--force]    Deploy a git release tag (builds first, migrates DB, restarts)
-  rollback [TAG] [SNAP]     Roll back to a previous tag and database snapshot
-  doctor                    Run system environment, disk space, and connectivity diagnostics
-  sanity                    Run automated health checks and authenticated read test
-  backup [TAG]              Create a database snapshot
-  restore [SNAP] [-y]       Restore database from a snapshot file
-  status                    View repository version, container states, and recent backups
-  prune                     Prune unused Docker images to free disk space
+  deploy [COMMIT_OR_TAG] [--force]    Deploy any commit ID or git release tag (builds first, migrates DB, restarts)
+  rollback [TAG] [SNAP]               Roll back to a previous tag and database snapshot
+  doctor                              Run system environment, disk space, and connectivity diagnostics
+  sanity                              Run automated health checks and authenticated read test
+  backup [TAG]                        Create a database snapshot
+  restore [SNAP] [-y]                 Restore database from a snapshot file
+  status                              View repository version, container states, and recent backups
+  prune                               Prune unused Docker images to free disk space
 
 Interactive Mode:
-  ./admin.sh                Run without arguments to launch the interactive menu
+  ./admin.sh                          Run without arguments to launch the interactive menu
 EOF
 }
 
