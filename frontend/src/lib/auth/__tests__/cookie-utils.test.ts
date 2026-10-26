@@ -40,17 +40,17 @@ describe("cookie-utils", () => {
 
   describe("constants", () => {
     it("exports expected cookie names and bases", () => {
-      expect(AUTH_COOKIE_NAME).toBe("magazyn-auth-token");
+      expect(AUTH_COOKIE_NAME).toBe("sb-magazyn-auth-token");
       expect(BASE_AUTH_COOKIE_NAMES).toEqual(["sb-magazyn-auth-token", "magazyn-auth-token"]);
     });
   });
 
   describe("removeAuthCookie", () => {
     it("clears existing cookie by setting max-age to 0", () => {
-      mockCookie = "magazyn-auth-token=some-token; path=/";
+      mockCookie = "sb-magazyn-auth-token=some-token; path=/";
       removeAuthCookie();
 
-      expect(mockCookie).not.toContain("magazyn-auth-token=some-token");
+      expect(mockCookie).not.toContain("sb-magazyn-auth-token=some-token");
     });
 
     it("issues dual-scope eviction (host-only and domain-scoped) for base names and chunks 0-9", () => {

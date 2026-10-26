@@ -69,6 +69,39 @@ describe("supabase-ssr", () => {
 
         expect(result).toEqual([]);
       });
+
+      it("suppresses unchunked base cookie when chunked cookies (.0) are present in Cookie header", () => {
+        const request = new Request("http://localhost:3000", {
+          headers: {
+            Cookie:
+              "sb-magazyn-auth-token=stale-base; sb-magazyn-auth-token.0=chunk0; sb-magazyn-auth-token.1=chunk1; other=value",
+          },
+        });
+        const methods = createCookieMethods(request, mockCookies);
+        const result = methods.getAll();
+
+        expect(result).toEqual([
+          { name: "sb-magazyn-auth-token.0", value: "chunk0" },
+          { name: "sb-magazyn-auth-token.1", value: "chunk1" },
+          { name: "other", value: "value" },
+        ]);
+        expect(result.some((c) => c.name === "sb-magazyn-auth-token")).toBe(false);
+      });
+
+      it("preserves unchunked base cookie when no chunked cookies are present", () => {
+        const request = new Request("http://localhost:3000", {
+          headers: {
+            Cookie: "sb-magazyn-auth-token=valid-base; other=value",
+          },
+        });
+        const methods = createCookieMethods(request, mockCookies);
+        const result = methods.getAll();
+
+        expect(result).toEqual([
+          { name: "sb-magazyn-auth-token", value: "valid-base" },
+          { name: "other", value: "value" },
+        ]);
+      });
     });
 
     describe("setAll - bilateral chunked vs base pruning", () => {
@@ -138,6 +171,32 @@ describe("supabase-ssr", () => {
             options: { maxAge: 3600, path: "/", sameSite: "lax" },
           },
         ]);
+      });
+
+      it("purges incoming chunk cookies beyond index 9 when present in Request header", () => {
+        const request = new Request("http://localhost:3000", {
+          headers: {
+            Cookie: "sb-magazyn-auth-token.10=val10; sb-magazyn-auth-token.11=val11",
+          },
+        });
+        const methods = createCookieMethods(request, mockCookies);
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token",
+            value: "base-token-value",
+            options: { maxAge: 3600 },
+          },
+        ]);
+
+        expect(deleteCalls).toContainEqual({
+          name: "sb-magazyn-auth-token.10",
+          options: { path: "/" },
+        });
+        expect(deleteCalls).toContainEqual({
+          name: "sb-magazyn-auth-token.11",
+          options: { path: "/" },
+        });
       });
 
       it("prevents setting base cookie if chunked cookies are present in the same setAll batch", () => {

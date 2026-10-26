@@ -14,10 +14,23 @@ export const CHUNKED_COOKIE_REGEX = /^sb-magazyn-auth-token\.\d+$/;
 export function createCookieMethods(request: Request, cookies: AstroCookies) {
   return {
     getAll() {
-      return parseCookieHeader(request.headers.get("Cookie") ?? "").map(({ name, value }) => ({
-        name,
-        value: value ?? "",
-      }));
+      const parsed = parseCookieHeader(request.headers.get("Cookie") ?? "").map(
+        ({ name, value }) => ({
+          name,
+          value: value ?? "",
+        })
+      );
+
+      // Bilateral read-side pruning:
+      // If chunked cookies exist, suppress unchunked base cookie so `@supabase/ssr`
+      // combineChunks() is forced to reconstruct the chunks rather than early-exiting on a stale base token.
+      const hasChunks = parsed.some((c) => CHUNKED_COOKIE_REGEX.test(c.name) && Boolean(c.value));
+
+      if (hasChunks) {
+        return parsed.filter((c) => c.name !== AUTH_COOKIE_NAME);
+      }
+
+      return parsed;
     },
     setAll(cookiesToSet: Array<{ name: string; value: string; options?: AstroCookieSetOptions }>) {
       const isWritingChunked = cookiesToSet.some(
@@ -35,8 +48,23 @@ export function createCookieMethods(request: Request, cookies: AstroCookies) {
       }
 
       if (isWritingBase) {
+        const chunkNamesToDelete = new Set<string>();
         for (let i = 0; i <= 9; i++) {
-          cookies.delete(`${AUTH_COOKIE_NAME}.${i}`, { path: "/" });
+          chunkNamesToDelete.add(`${AUTH_COOKIE_NAME}.${i}`);
+        }
+
+        const rawCookieHeader = request.headers.get("Cookie") ?? "";
+        if (rawCookieHeader) {
+          const incomingCookieNames = rawCookieHeader.split(";").map((c) => c.split("=")[0].trim());
+          for (const name of incomingCookieNames) {
+            if (CHUNKED_COOKIE_REGEX.test(name)) {
+              chunkNamesToDelete.add(name);
+            }
+          }
+        }
+
+        for (const name of chunkNamesToDelete) {
+          cookies.delete(name, { path: "/" });
         }
       }
 

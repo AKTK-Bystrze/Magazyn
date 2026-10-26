@@ -39,7 +39,6 @@ const userId = Astro.locals.user?.id || null;
     <meta name="trace-id" content={traceId} />
     <title>{title}</title>
 
-    {/* eslint-disable-next-line react/no-unknown-property */}
     <script is:inline>
       (function () {
         const STORAGE_KEY_THEME = "theme";

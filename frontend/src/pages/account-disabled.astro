@@ -69,7 +69,10 @@ const user = Astro.locals.user;
           Sprawdź status konta
         </button>
 
-        <Button variant="ghost" id="logout-btn" className="mt-4"> Powrót do logowania </Button>
+        <Button variant="ghost" id="logout-btn" className="mt-4">
+          {" "}
+          Powrót do logowania{" "}
+        </Button>
       </div>
 
       <div id="status-message" class="hidden">
@@ -79,13 +82,11 @@ const user = Astro.locals.user;
   </main>
 
   <script>
-    import { removeAuthCookie, AUTH_COOKIE_NAME } from "@/lib/auth/cookie-utils";
+    import { supabase } from "@/lib/supabase";
+    import { handleLogout } from "@/lib/auth/logout";
 
     const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:8080";
     const SUCCESS_REDIRECT_DELAY_MS = 1500;
-    const LOGIN_ROUTE = "/login";
-
-    const accessToken = document.cookie.match(new RegExp(`${AUTH_COOKIE_NAME}=([^;]+)`))?.[1];
 
     /**
      * Helper function to update status message
@@ -115,6 +116,12 @@ const user = Astro.locals.user;
       statusMsg.classList.add("hidden");
 
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) {
+          throw new Error("Brak aktywnej sesji użytkownika");
+        }
+
         const response = await fetch(`${BACKEND_URL}/auth/session`, {
           method: "GET",
           headers: {
@@ -170,13 +177,7 @@ const user = Astro.locals.user;
       btn.setAttribute("disabled", "true");
 
       try {
-        removeAuthCookie();
-
-        localStorage.removeItem(AUTH_COOKIE_NAME);
-
-        localStorage.removeItem("sb-gwamxxqarkcpvgzvpanc-auth-token");
-
-        window.location.href = LOGIN_ROUTE;
+        await handleLogout();
       } catch (error) {
         console.error("Błąd przy wylogowywaniu:", error);
         btn.textContent = "Wyloguj się";

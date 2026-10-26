@@ -5,7 +5,7 @@
 
 import type { AstroCookies } from "astro";
 
-export const AUTH_COOKIE_NAME = "magazyn-auth-token";
+export const AUTH_COOKIE_NAME = "sb-magazyn-auth-token";
 export const BASE_AUTH_COOKIE_NAMES = ["sb-magazyn-auth-token", "magazyn-auth-token"] as const;
 
 /**
