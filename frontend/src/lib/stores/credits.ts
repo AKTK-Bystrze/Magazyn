@@ -52,7 +52,7 @@ export function setCreditBalance(balance: number): void {
 export async function refreshCreditBalance(): Promise<number | null> {
   return (activeRefreshPromise ??= (async () => {
     try {
-      const history = await creditsApi.getHistory({ page: 1, perPage: 1 });
+      const history = await creditsApi.getHistory({ page: 1, perPage: 10 });
       if (typeof history.currentBalance === "number") {
         $creditBalance.set(history.currentBalance);
         return history.currentBalance;

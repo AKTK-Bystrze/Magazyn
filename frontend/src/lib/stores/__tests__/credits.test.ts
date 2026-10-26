@@ -52,7 +52,7 @@ describe("credits store", () => {
 
     expect(result).toBe(200);
     expect($creditBalance.get()).toBe(200);
-    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 1 });
+    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 10 });
   });
 
   it("deduplicates concurrent refresh requests", async () => {

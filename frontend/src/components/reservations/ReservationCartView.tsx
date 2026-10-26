@@ -175,12 +175,22 @@ function ReservationCartContent({
     setSubmissionError(null);
   }, [cartState.startDate, cartState.endDate, cartState.items, setSubmissionError]);
 
-  const handleUserSelect = React.useCallback((user: UserListItem) => {
-    setSelectedUserId(user.id);
-    setSelectedUserCreditBalance(user.creditBalance);
-  }, []);
+  const handleUserSelect = React.useCallback(
+    (user: UserListItem) => {
+      setSelectedUserId(user.id);
+      setSelectedUserCreditBalance(user.creditBalance);
+      if (user.id === initialSelectedUserId) {
+        setCreditBalance(user.creditBalance);
+      }
+    },
+    [initialSelectedUserId]
+  );
 
-  const effectiveCreditBalance = isAdmin ? selectedUserCreditBalance : userCreditBalance;
+  const effectiveCreditBalance = isAdmin
+    ? selectedUserId === initialSelectedUserId && storeBalance !== null
+      ? storeBalance
+      : selectedUserCreditBalance
+    : userCreditBalance;
 
   const costBreakdown = React.useMemo(() => {
     if (!cartState.startDate || !cartState.endDate || cartState.items.length === 0) {

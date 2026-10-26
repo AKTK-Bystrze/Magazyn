@@ -59,7 +59,7 @@ describe("UserHeader", () => {
     await waitFor(() => {
       expect(screen.getByTestId("header-credits-badge")).toHaveTextContent("Godzinki: 24");
     });
-    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 1 });
+    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 10 });
   });
 
   it("fetches and displays updated credit history balance for regular users", async () => {
@@ -72,7 +72,7 @@ describe("UserHeader", () => {
     await waitFor(() => {
       expect(screen.getByTestId("header-credits-badge")).toHaveTextContent("Godzinki: 85");
     });
-    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 1 });
+    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 10 });
   });
 
   it("does not render credits badge when creditBalance is undefined and history has no balance", () => {

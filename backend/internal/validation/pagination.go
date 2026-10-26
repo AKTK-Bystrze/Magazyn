@@ -19,7 +19,7 @@ func ValidatePagination(page, perPage int) (int, int, error) {
 		perPage = constants.DefaultPerPage
 	}
 	if !slices.Contains(constants.AllowedPerPageValues, perPage) {
-		return page, perPage, types.NewValidationError("Invalid per_page value. Allowed: 10, 25, 50, 100, 1000", map[string]int{"per_page": perPage})
+		return page, perPage, types.NewValidationError("Invalid per_page value. Allowed: 1, 10, 25, 50, 100, 1000", map[string]int{"per_page": perPage})
 	}
 	return page, perPage, nil
 }

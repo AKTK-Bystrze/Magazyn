@@ -52,7 +52,7 @@ const (
 )
 
 // AllowedPerPageValues defines the standard allowed page sizes for pagination.
-var AllowedPerPageValues = []int{10, 25, 50, 100, 1000}
+var AllowedPerPageValues = []int{1, 10, 25, 50, 100, 1000}
 
 // Storage configuration for file uploads and asset management.
 const (

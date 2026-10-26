@@ -66,6 +66,15 @@ export function UserSelector({
     });
   }, [users, selectedUserId]);
 
+  React.useEffect(() => {
+    if (selectedUserId && users.length > 0) {
+      const selected = users.find((u: UserListItem) => u.id === selectedUserId);
+      if (selected) {
+        onSelect(selected);
+      }
+    }
+  }, [selectedUserId, users, onSelect]);
+
   if (isLoading) {
     return (
       <div className="space-y-2">
