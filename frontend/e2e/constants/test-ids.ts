@@ -49,6 +49,10 @@ export const TEST_IDS = {
   adminUserRowEdit: (email: string) => `admin-user-row-edit-${email.replace(/[@.]/g, "-")}`,
   adminUserRowAdjustCredits: (email: string) =>
     `admin-user-row-adjust-credits-${email.replace(/[@.]/g, "-")}`,
+  adminUserRowCreditBalance: (email: string) =>
+    `admin-user-row-credits-${email.replace(/[@.]/g, "-")}`,
+  adminUserRowStatus: (email: string) =>
+    `admin-user-row-status-${email.replace(/[@.]/g, "-")}`,
   equipmentRow: (id: string) => `equipment-row-${id}`,
   equipmentEditBtn: (id: string) => `equipment-edit-btn-${id}`,
   equipmentArchiveBtn: (id: string) => `equipment-archive-btn-${id}`,

@@ -54,4 +54,30 @@ describe("AdjustCreditsDialog", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Powód (wymagany)")).toBeInTheDocument();
   });
+
+  it("displays target user info and live projected balance preview", () => {
+    const targetUser = {
+      username: "mati",
+      email: "mati@example.com",
+      creditBalance: 14,
+    };
+
+    render(
+      <AdjustCreditsDialog
+        isOpen
+        isSubmitting={false}
+        userIds={["user-1"]}
+        targetUser={targetUser}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    expect(screen.getAllByText(/mati/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId("current-credit-balance")).toHaveTextContent("14 godzinek");
+
+    fireEvent.change(screen.getByLabelText("Kwota"), { target: { value: "86" } });
+
+    expect(screen.getByTestId("projected-credit-balance")).toHaveTextContent("100");
+  });
 });
