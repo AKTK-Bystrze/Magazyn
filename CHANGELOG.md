@@ -19,6 +19,15 @@
 
 * enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
+## [0.7.4](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.3...v0.7.4) (2026-10-26)
+
+
+### Bug Fixes
+
+* **auth:** prevent session swapping via SSR bilateral pruning, dual-scope eviction, and client identity guard ([#281](https://github.com/AKTK-Bystrze/Magazyn/issues/281)) ([2196b38](https://github.com/AKTK-Bystrze/Magazyn/commit/2196b38d9ef08918f579766c588e0360afd00914))
+* **credits:** synchronize user credit balance across UI and fix false positive tests ([#280](https://github.com/AKTK-Bystrze/Magazyn/issues/280)) ([23b067e](https://github.com/AKTK-Bystrze/Magazyn/commit/23b067e0b4477dd6f854c290f38c64eec046f237))
+* **users:** show user credits on mobile and eliminate false positive tests ([#283](https://github.com/AKTK-Bystrze/Magazyn/issues/283)) ([37a4d2f](https://github.com/AKTK-Bystrze/Magazyn/commit/37a4d2f10c83e2237342f358ae7dd392e6afa51d))
+
 ## [0.7.3](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.2...v0.7.3) (2026-10-25)
 
 
