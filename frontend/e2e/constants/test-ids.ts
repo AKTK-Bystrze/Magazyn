@@ -8,6 +8,8 @@ export const TEST_IDS = {
 
   CART_INDICATOR: "cart-indicator",
   CART_ITEM_COUNT: "cart-item-count",
+  HEADER_CREDITS_BADGE: "header-credits-badge",
+  CURRENT_CREDIT_BALANCE: "current-credit-balance",
   REMAINING_BALANCE: "reservation-remaining-balance",
 
   CONFIRMATION_CURRENT_BALANCE: "confirmation-current-balance",
