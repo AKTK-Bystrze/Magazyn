@@ -26,11 +26,16 @@ vi.mock("@/lib/supabase", () => ({
   },
 }));
 
+vi.mock("@/lib/auth/logout", () => ({
+  handleLogout: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { AuthListener } from "../AuthListener";
 import { getUserSession } from "@/lib/auth/session-utils";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { supabase } from "@/lib/supabase";
-import { createMockSession } from "@/test/fixtures/auth-fixtures";
+import { handleLogout } from "@/lib/auth/logout";
+import { createMockSession, createMockUser } from "@/test/fixtures/auth-fixtures";
 
 const mockLocation = {
   href: "",
@@ -181,6 +186,155 @@ describe("AuthListener", () => {
 
       await waitFor(() => {
         expect(mockReplace).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("Client Session Identity Guard (R3)", () => {
+    it("should allow standard behavior when initialUserId matches session.user.id", async () => {
+      mockLocation.pathname = "/dashboard";
+      vi.stubGlobal("location", { ...mockLocation, pathname: "/dashboard", replace: mockReplace });
+      const session = createMockSession({
+        user: createMockUser({ id: "user-123", email: "user@example.com" }),
+      });
+
+      vi.mocked(getUserSession).mockResolvedValue({
+        userId: "user-123",
+        email: "user@example.com",
+        username: "testuser",
+        isEnabled: true,
+        role: "user",
+        creditBalance: 100,
+        expiresAt: "2025-12-31T00:00:00Z",
+      } as any);
+
+      render(<AuthListener initialUserId="user-123" />);
+
+      await act(async () => {
+        await authStateCallback?.("SIGNED_IN", session);
+      });
+
+      await waitFor(() => {
+        expect(handleLogout).not.toHaveBeenCalled();
+        expect(getUserSession).toHaveBeenCalledWith(session.access_token);
+      });
+    });
+
+    it("should abort, log critical error, and call handleLogout when session.user.id !== initialUserId on authenticated route", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      mockLocation.pathname = "/dashboard";
+      vi.stubGlobal("location", { ...mockLocation, pathname: "/dashboard", replace: mockReplace });
+      const session = createMockSession({
+        user: createMockUser({ id: "attacker-456", email: "attacker@example.com" }),
+      });
+
+      render(<AuthListener initialUserId="victim-123" />);
+
+      await act(async () => {
+        await authStateCallback?.("SIGNED_IN", session);
+      });
+
+      await waitFor(() => {
+        expect(handleLogout).toHaveBeenCalledTimes(1);
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          "Critical session mismatch detected in AuthListener:",
+          expect.objectContaining({
+            initialUserId: "victim-123",
+            sessionUserId: "attacker-456",
+          })
+        );
+        expect(getUserSession).not.toHaveBeenCalled();
+        expect(mockReplace).not.toHaveBeenCalled();
+      });
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should allow login flow without triggering logout abort on /login route even when session.user.id differs from initialUserId", async () => {
+      mockLocation.pathname = "/login";
+      const session = createMockSession({
+        user: createMockUser({ id: "new-user-789", email: "new@example.com" }),
+      });
+
+      vi.mocked(getUserSession).mockResolvedValue({
+        userId: "new-user-789",
+        email: "new@example.com",
+        username: "newuser",
+        isEnabled: true,
+        role: "user",
+        creditBalance: 50,
+        expiresAt: "2025-12-31T00:00:00Z",
+      } as any);
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/dashboard");
+
+      render(<AuthListener initialUserId="old-user-123" />);
+
+      await act(async () => {
+        await authStateCallback?.("SIGNED_IN", session);
+      });
+
+      await waitFor(() => {
+        expect(handleLogout).not.toHaveBeenCalled();
+        expect(getUserSession).toHaveBeenCalledWith(session.access_token);
+        expect(mockReplace).toHaveBeenCalledWith("/dashboard");
+      });
+    });
+
+    it("should allow login flow on /login/ with trailing slash without triggering logout abort", async () => {
+      mockLocation.pathname = "/login/";
+      vi.stubGlobal("location", { ...mockLocation, pathname: "/login/", replace: mockReplace });
+      const session = createMockSession({
+        user: createMockUser({ id: "new-user-789", email: "new@example.com" }),
+      });
+
+      vi.mocked(getUserSession).mockResolvedValue({
+        userId: "new-user-789",
+        email: "new@example.com",
+        username: "newuser",
+        isEnabled: true,
+        role: "user",
+        creditBalance: 50,
+        expiresAt: "2025-12-31T00:00:00Z",
+      } as any);
+
+      render(<AuthListener initialUserId="old-user-123" />);
+
+      await act(async () => {
+        await authStateCallback?.("SIGNED_IN", session);
+      });
+
+      await waitFor(() => {
+        expect(handleLogout).not.toHaveBeenCalled();
+        expect(getUserSession).toHaveBeenCalledWith(session.access_token);
+      });
+    });
+
+    it("should not trigger logout abort when initialUserId is null or undefined (guest SSR session)", async () => {
+      mockLocation.pathname = "/dashboard";
+      vi.stubGlobal("location", { ...mockLocation, pathname: "/dashboard", replace: mockReplace });
+      const session = createMockSession({
+        user: createMockUser({ id: "guest-becoming-user-999", email: "guest@example.com" }),
+      });
+
+      vi.mocked(getUserSession).mockResolvedValue({
+        userId: "guest-becoming-user-999",
+        email: "guest@example.com",
+        username: "guestuser",
+        isEnabled: true,
+        role: "user",
+        creditBalance: 10,
+        expiresAt: "2025-12-31T00:00:00Z",
+      } as any);
+
+      render(<AuthListener initialUserId={null} />);
+
+      await act(async () => {
+        await authStateCallback?.("SIGNED_IN", session);
+      });
+
+      await waitFor(() => {
+        expect(handleLogout).not.toHaveBeenCalled();
+        expect(getUserSession).toHaveBeenCalledWith(session.access_token);
       });
     });
   });

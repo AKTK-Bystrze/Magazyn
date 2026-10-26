@@ -25,6 +25,7 @@ interface Props {
 
 const { title, description = "Bystrzacki Magazyn" } = Astro.props;
 const traceId = Astro.locals.trace_id || "unknown";
+const userId = Astro.locals.user?.id || null;
 ---
 
 <!doctype html>
@@ -66,7 +67,7 @@ const traceId = Astro.locals.trace_id || "unknown";
     </script>
   </head>
   <body>
-    <AuthListener client:load />
+    <AuthListener client:load initialUserId={userId} />
     <slot />
   </body>
 </html>
