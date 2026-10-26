@@ -12,6 +12,7 @@ import { AlertCircle, CheckCircle2, UserPlus, Coins } from "lucide-react";
 import { ICON_SIZE_SM, DEFAULT_ROLE_FILTER } from "@/lib/config/constants";
 import { useInfiniteScrollTrigger } from "@/lib/hooks/useInfiniteScrollTrigger";
 import { useDismissibleMessage } from "@/lib/hooks/useDismissibleMessage";
+import { refreshCreditBalance } from "@/lib/stores/credits";
 import type { UserListItem, CreateUserCommand, UpdateUserCommand } from "@/types";
 
 /**
@@ -137,6 +138,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
       description?: string;
     }) => {
       await bulkAdjustCredits(command);
+      refreshCreditBalance();
       const userCount = command.userIds.length;
       setSuccessMessage(
         `Godzinki dostosowane dla ${userCount} ${userCount === 1 ? "użytkownika" : "użytkowników"}.`

@@ -20,7 +20,13 @@ import { ROUTES } from "@/lib/config/routes";
 import { supabase } from "@/lib/supabase";
 import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
 import { defaultLogger as logger } from "@/lib/utils/logger";
-import { useUserCreditBalance } from "@/hooks/useUserCreditBalance";
+import { useStore } from "@nanostores/react";
+import {
+  $creditBalance,
+  initCreditBalance,
+  setCreditBalance,
+  refreshCreditBalance,
+} from "@/lib/stores/credits";
 
 /**
  * Props for ReservationCartView component
@@ -48,9 +54,13 @@ function ReservationCartContent({
   initialSelectedUserCreditBalance = 0,
   equipmentBrowsePath = ROUTES.PUBLIC.EQUIPMENT,
 }: ReservationCartViewProps) {
-  const { creditBalance: liveUserCreditBalance, refetch: refetchUserCreditBalance } =
-    useUserCreditBalance(initialCreditBalance);
-  const userCreditBalance = liveUserCreditBalance ?? initialCreditBalance;
+  const storeBalance = useStore($creditBalance);
+
+  React.useEffect(() => {
+    initCreditBalance(initialCreditBalance);
+  }, [initialCreditBalance]);
+
+  const userCreditBalance = storeBalance !== null ? storeBalance : initialCreditBalance;
 
   const { cartState, removeItem, updateStartDate, updateEndDate, clearCart } =
     useReservationCart(userCreditBalance);
@@ -80,13 +90,10 @@ function ReservationCartContent({
   const [isFreeReservation, setIsFreeReservation] = React.useState(false);
 
   React.useEffect(() => {
-    if (
-      selectedUserIdRef.current === initialSelectedUserId &&
-      liveUserCreditBalance !== undefined
-    ) {
-      setSelectedUserCreditBalance(liveUserCreditBalance);
+    if (selectedUserIdRef.current === initialSelectedUserId && storeBalance !== null) {
+      setSelectedUserCreditBalance(storeBalance);
     }
-  }, [initialSelectedUserId, liveUserCreditBalance]);
+  }, [initialSelectedUserId, storeBalance]);
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submissionError, setSubmissionError] = React.useState<string | null>(null);
@@ -143,7 +150,11 @@ function ReservationCartContent({
         throw new Error(errorMessage);
       }
 
-      await response.json();
+      const createdData = await response.json();
+      const newBalance = createdData?.remaining_balance ?? createdData?.remainingBalance;
+      if (typeof newBalance === "number") {
+        setCreditBalance(newBalance);
+      }
       clearCart();
       setIsFreeReservation(false);
       setIsConfirmationOpen(false);
@@ -218,7 +229,7 @@ function ReservationCartContent({
 
     setSubmissionError(null);
 
-    await refetchUserCreditBalance();
+    await refreshCreditBalance();
 
     const result = await checkAvailability();
     setAvailabilityResult(result);

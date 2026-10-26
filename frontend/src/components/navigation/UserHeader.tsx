@@ -14,7 +14,7 @@
  *   creditBalance={100}
  * />
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,8 +31,8 @@ import { UserMenu } from "@/components/navigation/UserMenu";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { UserSidebar } from "./UserSidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { useUserCreditBalance } from "@/hooks/useUserCreditBalance";
-import { QueryProvider } from "@/components/providers/QueryProvider";
+import { useStore } from "@nanostores/react";
+import { $creditBalance, initCreditBalance, refreshCreditBalance } from "@/lib/stores/credits";
 
 interface UserHeaderProps {
   /** User information object */
@@ -51,10 +51,18 @@ interface UserHeaderProps {
 /**
  * Responsive header for user pages
  */
-function UserHeaderContent({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
+export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { creditBalance: liveBalance } = useUserCreditBalance(creditBalance, !!user);
-  const displayedCreditBalance = liveBalance !== undefined ? liveBalance : creditBalance;
+  const storeBalance = useStore($creditBalance);
+
+  useEffect(() => {
+    initCreditBalance(creditBalance);
+    if (user) {
+      refreshCreditBalance();
+    }
+  }, [user, creditBalance]);
+
+  const displayedCreditBalance = storeBalance !== null ? storeBalance : creditBalance;
 
   return (
     <header
@@ -123,16 +131,5 @@ function UserHeaderContent({ user, currentPath, creditBalance, isAdmin }: UserHe
         <UserMenu user={user} />
       </div>
     </header>
-  );
-}
-
-/**
- * Responsive header for user pages wrapped with QueryProvider
- */
-export function UserHeader(props: UserHeaderProps) {
-  return (
-    <QueryProvider>
-      <UserHeaderContent {...props} />
-    </QueryProvider>
   );
 }
