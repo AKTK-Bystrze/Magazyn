@@ -33,7 +33,6 @@ import { UserSidebar } from "./UserSidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { useStore } from "@nanostores/react";
 import { $creditBalance, initCreditBalance, refreshCreditBalance } from "@/lib/stores/credits";
-import { QueryProvider } from "@/components/providers/QueryProvider";
 
 interface UserHeaderProps {
   /** User information object */
@@ -52,7 +51,7 @@ interface UserHeaderProps {
 /**
  * Responsive header for user pages
  */
-function UserHeaderContent({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
+export function UserHeader({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const storeBalance = useStore($creditBalance);
 
@@ -132,16 +131,5 @@ function UserHeaderContent({ user, currentPath, creditBalance, isAdmin }: UserHe
         <UserMenu user={user} />
       </div>
     </header>
-  );
-}
-
-/**
- * Responsive header for user pages wrapped with QueryProvider
- */
-export function UserHeader(props: UserHeaderProps) {
-  return (
-    <QueryProvider>
-      <UserHeaderContent {...props} />
-    </QueryProvider>
   );
 }

@@ -3,7 +3,6 @@ import {
   $creditBalance,
   initCreditBalance,
   setCreditBalance,
-  getCreditBalance,
   resetCreditBalance,
   refreshCreditBalance,
 } from "../credits";
@@ -23,28 +22,27 @@ describe("credits store", () => {
   });
 
   it("initializes balance when store is null", () => {
-    expect(getCreditBalance()).toBeNull();
+    expect($creditBalance.get()).toBeNull();
 
     initCreditBalance(50);
-    expect(getCreditBalance()).toBe(50);
+    expect($creditBalance.get()).toBe(50);
 
     // Should not overwrite once initialized
     initCreditBalance(100);
-    expect(getCreditBalance()).toBe(50);
+    expect($creditBalance.get()).toBe(50);
   });
 
   it("updates balance directly via setCreditBalance", () => {
     setCreditBalance(120);
-    expect(getCreditBalance()).toBe(120);
     expect($creditBalance.get()).toBe(120);
   });
 
   it("resets store to null via resetCreditBalance", () => {
     setCreditBalance(80);
-    expect(getCreditBalance()).toBe(80);
+    expect($creditBalance.get()).toBe(80);
 
     resetCreditBalance();
-    expect(getCreditBalance()).toBeNull();
+    expect($creditBalance.get()).toBeNull();
   });
 
   it("refreshes balance from API successfully", async () => {
@@ -53,7 +51,7 @@ describe("credits store", () => {
     const result = await refreshCreditBalance();
 
     expect(result).toBe(200);
-    expect(getCreditBalance()).toBe(200);
+    expect($creditBalance.get()).toBe(200);
     expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 1 });
   });
 
@@ -74,7 +72,7 @@ describe("credits store", () => {
 
     expect(res1).toBe(350);
     expect(res2).toBe(350);
-    expect(getCreditBalance()).toBe(350);
+    expect($creditBalance.get()).toBe(350);
   });
 
   it("retains previous balance and handles API error gracefully", async () => {
@@ -84,6 +82,6 @@ describe("credits store", () => {
     const result = await refreshCreditBalance();
 
     expect(result).toBe(42);
-    expect(getCreditBalance()).toBe(42);
+    expect($creditBalance.get()).toBe(42);
   });
 });

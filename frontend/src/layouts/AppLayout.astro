@@ -16,7 +16,6 @@ import BaseLayout from "./BaseLayout.astro";
 import { UserSidebar } from "@/components/navigation/UserSidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { UserHeader } from "@/components/navigation/UserHeader";
-import { QueryProvider } from "@/components/providers/QueryProvider";
 import { isAdmin } from "@/lib/auth/roles";
 
 interface Props {
@@ -40,26 +39,22 @@ const currentPath = Astro.url.pathname;
       class="hidden lg:block w-[280px] shrink-0 border-r bg-muted/40 overflow-hidden transition-[width] duration-300 data-[collapsed=true]:w-0 data-[collapsed=true]:border-r-0 sticky top-0 h-screen"
     >
       <div class="w-[280px] h-full flex flex-col gap-2">
-        {
-          isAdmin(sessionInfo?.role) ? (
-            <AdminSidebar client:load currentPath={currentPath} />
-          ) : (
-            <UserSidebar client:load currentPath={currentPath} />
-          )
-        }
+        {isAdmin(sessionInfo?.role) ? (
+          <AdminSidebar client:load currentPath={currentPath} />
+        ) : (
+          <UserSidebar client:load currentPath={currentPath} />
+        )}
       </div>
     </div>
 
     <div class="flex flex-col flex-1 min-w-0 transition-all duration-300">
-      <QueryProvider client:load>
-        <UserHeader
-          client:load
-          user={user ? { email: user.email || "", id: user.id } : null}
-          currentPath={currentPath}
-          creditBalance={sessionInfo?.creditBalance}
-          isAdmin={isAdmin(sessionInfo?.role)}
-        />
-      </QueryProvider>
+      <UserHeader
+        client:load
+        user={user ? { email: user.email || "", id: user.id } : null}
+        currentPath={currentPath}
+        creditBalance={sessionInfo?.creditBalance}
+        isAdmin={isAdmin(sessionInfo?.role)}
+      />
 
       <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 min-w-0">
         <slot />

@@ -95,7 +95,6 @@ export function ReservationStatusActions({
       endDate: newDates.endDate,
     };
     await reservationsApi.update(reservation.id, command);
-    refreshCreditBalance();
     window.location.reload();
   };
 
@@ -106,7 +105,6 @@ export function ReservationStatusActions({
       });
     }
     await reservationsApi.update(reservation.id, command);
-    refreshCreditBalance();
     window.location.reload();
   };
 

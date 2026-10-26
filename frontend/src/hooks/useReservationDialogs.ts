@@ -99,9 +99,7 @@ export function useReservationDialogs({
   }, [sessionUserBalance]);
 
   const currentUserBalance = isOwner
-    ? storeBalance !== null
-      ? storeBalance
-      : sessionUserBalance
+    ? (storeBalance ?? sessionUserBalance)
     : (ownerProfile?.creditBalance ?? 0);
 
   const handleModify = React.useCallback((reservation: ReservationListItem) => {

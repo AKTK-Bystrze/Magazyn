@@ -44,26 +44,13 @@ export function setCreditBalance(balance: number): void {
 }
 
 /**
- * Synchronously retrieves the current credit balance from the store.
- *
- * @returns Current credit balance number, or null if uninitialized
- */
-export function getCreditBalance(): number | null {
-  return $creditBalance.get();
-}
-
-/**
  * Asynchronously refreshes the user's credit balance from the backend API.
  * Deduplicates concurrent calls and catches errors gracefully.
  *
  * @returns The updated balance, or the previous balance if the fetch fails
  */
 export async function refreshCreditBalance(): Promise<number | null> {
-  if (activeRefreshPromise) {
-    return activeRefreshPromise;
-  }
-
-  activeRefreshPromise = (async () => {
+  return (activeRefreshPromise ??= (async () => {
     try {
       const history = await creditsApi.getHistory({ page: 1, perPage: 1 });
       if (typeof history.currentBalance === "number") {
@@ -76,7 +63,5 @@ export async function refreshCreditBalance(): Promise<number | null> {
       activeRefreshPromise = null;
     }
     return $creditBalance.get();
-  })();
-
-  return activeRefreshPromise;
+  })());
 }

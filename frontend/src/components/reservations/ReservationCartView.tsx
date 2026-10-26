@@ -151,10 +151,9 @@ function ReservationCartContent({
       }
 
       const createdData = await response.json();
-      if (typeof createdData?.remaining_balance === "number") {
-        setCreditBalance(createdData.remaining_balance);
-      } else if (typeof createdData?.remainingBalance === "number") {
-        setCreditBalance(createdData.remainingBalance);
+      const newBalance = createdData?.remaining_balance ?? createdData?.remainingBalance;
+      if (typeof newBalance === "number") {
+        setCreditBalance(newBalance);
       }
       clearCart();
       setIsFreeReservation(false);
