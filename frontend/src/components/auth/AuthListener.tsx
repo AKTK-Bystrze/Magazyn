@@ -6,6 +6,7 @@ import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { normalizePath } from "@/lib/auth/url-utils";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import { handleLogout } from "@/lib/auth/logout";
+import { removeAuthCookie } from "@/lib/auth/cookie-utils";
 
 export interface AuthListenerProps {
   /** The authenticated user ID extracted during SSR, or null if unauthenticated */
@@ -37,6 +38,9 @@ export const AuthListener: React.FC<AuthListenerProps> = ({ initialUserId }) => 
               "",
               window.location.pathname + window.location.search
             );
+
+            // Proactively purge legacy auth cookies before establishing new session
+            removeAuthCookie();
 
             const { data, error } = await supabase.auth.setSession({
               access_token,

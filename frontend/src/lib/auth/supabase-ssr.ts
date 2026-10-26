@@ -1,8 +1,8 @@
 import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 import type { AstroCookieSetOptions, AstroCookies } from "astro";
+import { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX, pruneCookieList } from "./cookie-utils";
 
-export const AUTH_COOKIE_NAME = "sb-magazyn-auth-token";
-export const CHUNKED_COOKIE_REGEX = /^sb-magazyn-auth-token\.\d+$/;
+export { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX };
 
 /**
  * Creates cookie handlers for the Supabase SSR client with bilateral pruning.
@@ -14,23 +14,7 @@ export const CHUNKED_COOKIE_REGEX = /^sb-magazyn-auth-token\.\d+$/;
 export function createCookieMethods(request: Request, cookies: AstroCookies) {
   return {
     getAll() {
-      const parsed = parseCookieHeader(request.headers.get("Cookie") ?? "").map(
-        ({ name, value }) => ({
-          name,
-          value: value ?? "",
-        })
-      );
-
-      // Bilateral read-side pruning:
-      // If chunked cookies exist, suppress unchunked base cookie so `@supabase/ssr`
-      // combineChunks() is forced to reconstruct the chunks rather than early-exiting on a stale base token.
-      const hasChunks = parsed.some((c) => CHUNKED_COOKIE_REGEX.test(c.name) && Boolean(c.value));
-
-      if (hasChunks) {
-        return parsed.filter((c) => c.name !== AUTH_COOKIE_NAME);
-      }
-
-      return parsed;
+      return pruneCookieList(parseCookieHeader(request.headers.get("Cookie") ?? ""));
     },
     setAll(cookiesToSet: Array<{ name: string; value: string; options?: AstroCookieSetOptions }>) {
       const isWritingChunked = cookiesToSet.some(

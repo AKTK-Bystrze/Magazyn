@@ -1,5 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { defaultLogger as logger } from "@/lib/utils/logger";
+import { AUTH_COOKIE_NAME, createBrowserCookieMethods } from "@/lib/auth/cookie-utils";
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
@@ -26,8 +27,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
  */
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
   cookieOptions: {
-    name: "sb-magazyn-auth-token",
+    name: AUTH_COOKIE_NAME,
   },
+  cookies: createBrowserCookieMethods(),
 });
 
 declare global {

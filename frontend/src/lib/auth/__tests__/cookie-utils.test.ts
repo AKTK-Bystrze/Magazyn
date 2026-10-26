@@ -5,6 +5,9 @@ import {
   clearAllAuthCookies,
   BASE_AUTH_COOKIE_NAMES,
   AUTH_COOKIE_NAME,
+  CHUNKED_COOKIE_REGEX,
+  pruneCookieList,
+  createBrowserCookieMethods,
 } from "../cookie-utils";
 
 describe("cookie-utils", () => {
@@ -42,6 +45,175 @@ describe("cookie-utils", () => {
     it("exports expected cookie names and bases", () => {
       expect(AUTH_COOKIE_NAME).toBe("sb-magazyn-auth-token");
       expect(BASE_AUTH_COOKIE_NAMES).toEqual(["sb-magazyn-auth-token", "magazyn-auth-token"]);
+    });
+
+    it("CHUNKED_COOKIE_REGEX matches chunked names and rejects base or unrelated names", () => {
+      expect(CHUNKED_COOKIE_REGEX.test("sb-magazyn-auth-token.0")).toBe(true);
+      expect(CHUNKED_COOKIE_REGEX.test("sb-magazyn-auth-token.1")).toBe(true);
+      expect(CHUNKED_COOKIE_REGEX.test("sb-magazyn-auth-token.9")).toBe(true);
+      expect(CHUNKED_COOKIE_REGEX.test("sb-magazyn-auth-token")).toBe(false);
+      expect(CHUNKED_COOKIE_REGEX.test("sb-magazyn-auth-token.other")).toBe(false);
+      expect(CHUNKED_COOKIE_REGEX.test("other-cookie.0")).toBe(false);
+    });
+  });
+
+  describe("pruneCookieList", () => {
+    it("suppresses unchunked base cookie when chunked cookies (.0) are present", () => {
+      const input = [
+        { name: "sb-magazyn-auth-token", value: "stale-base" },
+        { name: "sb-magazyn-auth-token.0", value: "chunk0" },
+        { name: "sb-magazyn-auth-token.1", value: "chunk1" },
+        { name: "theme", value: "dark" },
+      ];
+
+      const result = pruneCookieList(input);
+
+      expect(result).toEqual([
+        { name: "sb-magazyn-auth-token.0", value: "chunk0" },
+        { name: "sb-magazyn-auth-token.1", value: "chunk1" },
+        { name: "theme", value: "dark" },
+      ]);
+      expect(result.some((c) => c.name === "sb-magazyn-auth-token")).toBe(false);
+    });
+
+    it("preserves unchunked base cookie when no chunked cookies are present", () => {
+      const input = [
+        { name: "sb-magazyn-auth-token", value: "valid-base" },
+        { name: "theme", value: "dark" },
+      ];
+
+      const result = pruneCookieList(input);
+
+      expect(result).toEqual([
+        { name: "sb-magazyn-auth-token", value: "valid-base" },
+        { name: "theme", value: "dark" },
+      ]);
+    });
+
+    it("preserves base cookie if chunked cookies have empty values", () => {
+      const input = [
+        { name: "sb-magazyn-auth-token", value: "valid-base" },
+        { name: "sb-magazyn-auth-token.0", value: "" },
+      ];
+
+      const result = pruneCookieList(input);
+
+      expect(result).toEqual([
+        { name: "sb-magazyn-auth-token", value: "valid-base" },
+        { name: "sb-magazyn-auth-token.0", value: "" },
+      ]);
+    });
+
+    it("handles empty cookie list safely", () => {
+      expect(pruneCookieList([])).toEqual([]);
+    });
+  });
+
+  describe("createBrowserCookieMethods", () => {
+    describe("getAll", () => {
+      it("parses document.cookie and prunes stale base cookie when chunks exist", () => {
+        mockCookie =
+          "sb-magazyn-auth-token=stale-base; sb-magazyn-auth-token.0=chunk0; sb-magazyn-auth-token.1=chunk1; other=value";
+
+        const methods = createBrowserCookieMethods();
+        const result = methods.getAll();
+
+        expect(result).toEqual([
+          { name: "sb-magazyn-auth-token.0", value: "chunk0" },
+          { name: "sb-magazyn-auth-token.1", value: "chunk1" },
+          { name: "other", value: "value" },
+        ]);
+        expect(result.some((c) => c.name === "sb-magazyn-auth-token")).toBe(false);
+      });
+
+      it("returns unchunked base cookie when no chunks are present", () => {
+        mockCookie = "sb-magazyn-auth-token=valid-base; theme=dark";
+
+        const methods = createBrowserCookieMethods();
+        const result = methods.getAll();
+
+        expect(result).toEqual([
+          { name: "sb-magazyn-auth-token", value: "valid-base" },
+          { name: "theme", value: "dark" },
+        ]);
+      });
+
+      it("returns empty array when document.cookie is empty", () => {
+        mockCookie = "";
+
+        const methods = createBrowserCookieMethods();
+        const result = methods.getAll();
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe("setAll", () => {
+      it("purges unchunked base cookie when chunked cookies are written", () => {
+        mockCookie = "sb-magazyn-auth-token=old-base";
+        const methods = createBrowserCookieMethods();
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token.0",
+            value: "chunk0-val",
+            options: { maxAge: 3600 },
+          },
+          {
+            name: "sb-magazyn-auth-token.1",
+            value: "chunk1-val",
+            options: { maxAge: 3600 },
+          },
+        ]);
+
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining("sb-magazyn-auth-token=; path=/; max-age=0")
+        );
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining("sb-magazyn-auth-token.0=chunk0-val")
+        );
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining("sb-magazyn-auth-token.1=chunk1-val")
+        );
+      });
+
+      it("purges orphaned chunks (.0 to .9) when base cookie is written", () => {
+        mockCookie = "sb-magazyn-auth-token.0=old0; sb-magazyn-auth-token.1=old1";
+        const methods = createBrowserCookieMethods();
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token",
+            value: "new-base",
+            options: { maxAge: 3600 },
+          },
+        ]);
+
+        for (let i = 0; i <= 9; i++) {
+          expect(cookieWrites).toContainEqual(
+            expect.stringContaining(`sb-magazyn-auth-token.${i}=; path=/; max-age=0`)
+          );
+        }
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining("sb-magazyn-auth-token=new-base")
+        );
+      });
+
+      it("deletes cookie when maxAge is 0 or value is empty", () => {
+        const methods = createBrowserCookieMethods();
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token",
+            value: "",
+            options: { maxAge: 0 },
+          },
+        ]);
+
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining("sb-magazyn-auth-token=; path=/; max-age=0")
+        );
+      });
     });
   });
 
