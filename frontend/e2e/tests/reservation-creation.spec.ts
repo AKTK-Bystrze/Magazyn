@@ -109,18 +109,22 @@ test.describe("Reservation Creation", () => {
     await cart.proceedToConfirmation();
     await expect(cart.confirmationModal).toBeVisible();
 
-    await expect(
-      authenticatedPage.getByTestId(TEST_IDS.CONFIRMATION_CURRENT_BALANCE)
-    ).toBeVisible();
-    await expect(
-      authenticatedPage.getByTestId(TEST_IDS.CONFIRMATION_REMAINING_BALANCE)
-    ).toBeVisible();
+    await expect(authenticatedPage.getByTestId(TEST_IDS.CONFIRMATION_CURRENT_BALANCE)).toHaveText(
+      `${currentBalance} godzinki`
+    );
+    await expect(authenticatedPage.getByTestId(TEST_IDS.CONFIRMATION_REMAINING_BALANCE)).toHaveText(
+      `${remainingBalance} godzinki`
+    );
 
     await cart.confirm();
 
     await cart.waitForSuccess();
     expect(authenticatedPage.url()).toContain("/reservations");
     expect(authenticatedPage.url()).toContain("success=true");
+
+    await expect(authenticatedPage.getByTestId(TEST_IDS.HEADER_CREDITS_BADGE)).toHaveText(
+      `Godzinki: ${remainingBalance}`
+    );
 
     await expect(authenticatedPage.getByTestId(TEST_IDS.RESERVATION_LIST_CONTAINER)).toBeVisible();
 
@@ -227,6 +231,10 @@ test.describe("Reservation Creation", () => {
     expect(authenticatedPage.url()).toContain("/reservations");
     expect(authenticatedPage.url()).toContain("success=true");
 
+    await expect(authenticatedPage.getByTestId(TEST_IDS.HEADER_CREDITS_BADGE)).toHaveText(
+      `Godzinki: ${expectedBalanceAfterRes1}`
+    );
+
     // Reservation 2: In the SAME session, navigate back to /equipment without page reload or API reset
     await authenticatedPage.goto("/equipment");
     await addToCart(authenticatedPage, equip2.id);
@@ -252,6 +260,10 @@ test.describe("Reservation Creation", () => {
 
     expect(authenticatedPage.url()).toContain("/reservations");
     expect(authenticatedPage.url()).toContain("success=true");
+
+    await expect(authenticatedPage.getByTestId(TEST_IDS.HEADER_CREDITS_BADGE)).toHaveText(
+      `Godzinki: ${expectedBalanceAfterRes2}`
+    );
   });
 
   /**

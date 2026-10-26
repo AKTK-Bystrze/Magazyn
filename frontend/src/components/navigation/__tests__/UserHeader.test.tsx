@@ -1,7 +1,8 @@
 import * as React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { UserHeader } from "../UserHeader";
+import { renderWithQueryClient } from "@/test/test-utils";
 
 const { getHistoryMock } = vi.hoisted(() => ({
   getHistoryMock: vi.fn(),
@@ -34,7 +35,11 @@ describe("UserHeader", () => {
   });
 
   it("renders credits badge visible with Polish label Godzinki", () => {
-    render(<UserHeader user={mockUser} currentPath="/reservations" creditBalance={75} />);
+    getHistoryMock.mockReturnValue(new Promise(() => {}));
+
+    renderWithQueryClient(
+      <UserHeader user={mockUser} currentPath="/reservations" creditBalance={75} />
+    );
 
     const badge = screen.getByTestId("header-credits-badge");
     expect(badge).toBeInTheDocument();
@@ -45,25 +50,33 @@ describe("UserHeader", () => {
   it("uses the credit history balance for admins", async () => {
     getHistoryMock.mockResolvedValue({ currentBalance: 24 });
 
-    render(
+    renderWithQueryClient(
       <UserHeader user={mockUser} currentPath="/reservations" creditBalance={1000} isAdmin />
     );
 
     await waitFor(() => {
       expect(screen.getByTestId("header-credits-badge")).toHaveTextContent("Godzinki: 24");
     });
-    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 25 });
+    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 1 });
   });
 
-  it("keeps the session balance for regular users", () => {
-    render(<UserHeader user={mockUser} currentPath="/reservations" creditBalance={75} />);
+  it("fetches and displays updated credit history balance for regular users", async () => {
+    getHistoryMock.mockResolvedValue({ currentBalance: 85 });
 
-    expect(screen.getByTestId("header-credits-badge")).toHaveTextContent("Godzinki: 75");
-    expect(getHistoryMock).not.toHaveBeenCalled();
+    renderWithQueryClient(
+      <UserHeader user={mockUser} currentPath="/reservations" creditBalance={75} />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("header-credits-badge")).toHaveTextContent("Godzinki: 85");
+    });
+    expect(getHistoryMock).toHaveBeenCalledWith({ page: 1, perPage: 1 });
   });
 
-  it("does not render credits badge when creditBalance is undefined", () => {
-    render(<UserHeader user={mockUser} currentPath="/reservations" />);
+  it("does not render credits badge when creditBalance is undefined and history has no balance", () => {
+    getHistoryMock.mockReturnValue(new Promise(() => {}));
+
+    renderWithQueryClient(<UserHeader user={mockUser} currentPath="/reservations" />);
 
     expect(screen.queryByTestId("header-credits-badge")).not.toBeInTheDocument();
   });
