@@ -141,8 +141,11 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
 
   const bulkAdjustCreditsMutation = useMutation({
     mutationFn: (command: BulkAdjustCreditsCommand) => usersApi.bulkAdjustCredits(command),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all }),
+        queryClient.invalidateQueries({ queryKey: ["credits"] }),
+      ]);
     },
   });
 

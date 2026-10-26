@@ -105,4 +105,20 @@ export class AdminUsersPage {
   getUsersTable() {
     return this.table;
   }
+
+  /**
+   * Returns the locator for a user's credit balance display.
+   * Works across desktop and mobile viewports by selecting the visible element.
+   */
+  getUserCreditBalanceLocator(email: string): Locator {
+    return this.page.locator(`[data-testid="${TEST_IDS.adminUserRowCreditBalance(email)}"]:visible`);
+  }
+
+  /**
+   * Returns the locator for a user's status badge.
+   * Works across desktop and mobile viewports by selecting the visible element.
+   */
+  getUserStatusLocator(email: string): Locator {
+    return this.page.locator(`[data-testid="${TEST_IDS.adminUserRowStatus(email)}"]:visible`);
+  }
 }

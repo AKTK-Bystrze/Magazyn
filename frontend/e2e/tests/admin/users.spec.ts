@@ -164,7 +164,9 @@ test.describe("Admin User Management", () => {
 
     const userRow = superAdminPage.getByRole("row").filter({ hasText: targetUserEmail });
     await expect(userRow).toContainText(/admin/i);
-    await expect(userRow).toContainText(/Wyłączony/i);
+    const statusLocator = adminUsersPage.getUserStatusLocator(targetUserEmail);
+    await expect(statusLocator).toBeVisible();
+    await expect(statusLocator).toContainText(/Wyłączony/i);
   });
 
   test("adjusts credits for one user through the audited credit adjustment form", async ({
@@ -175,12 +177,19 @@ test.describe("Admin User Management", () => {
 
     await adminUsersPage.goto();
     await adminUsersPage.searchUser(targetUserEmail);
+
+    const creditBalanceLocator = adminUsersPage.getUserCreditBalanceLocator(targetUserEmail);
+    await expect(creditBalanceLocator).toBeVisible();
+    await expect(creditBalanceLocator).toHaveText(/100/);
+
     await adminUsersPage.adjustUserCredits(
       targetUserEmail,
       25,
       "Nagroda za pomoc",
       "Porządkowanie magazynu"
     );
+
+    await expect(creditBalanceLocator).toHaveText(/125/);
 
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")

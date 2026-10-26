@@ -50,4 +50,47 @@ describe("UserTable credit actions", () => {
 
     expect(onToggleSelect).toHaveBeenCalledWith(testUser.id);
   });
+
+  it("renders user credit balance and status visibly across viewports", () => {
+    render(
+      <UserTable
+        users={[testUser]}
+        isLoading={false}
+        isSuperAdmin
+        onEdit={vi.fn()}
+        onAdjustCredits={vi.fn()}
+      />
+    );
+
+    const creditElements = screen.getAllByTestId("admin-user-row-credits-user-example-com");
+    expect(creditElements.length).toBeGreaterThanOrEqual(1);
+    expect(creditElements[0]).toHaveTextContent("50");
+
+    const statusElement = screen.getAllByTestId("admin-user-row-status-user-example-com")[0];
+    expect(statusElement).toBeInTheDocument();
+    expect(statusElement).toHaveTextContent("Aktywny");
+  });
+
+  it("renders disabled status indicator when user is disabled", () => {
+    const disabledUser: UserListItem = {
+      ...testUser,
+      id: "user-disabled",
+      email: "disabled@example.com",
+      isEnabled: false,
+    };
+
+    render(
+      <UserTable
+        users={[disabledUser]}
+        isLoading={false}
+        isSuperAdmin
+        onEdit={vi.fn()}
+        onAdjustCredits={vi.fn()}
+      />
+    );
+
+    const statusElement = screen.getAllByTestId("admin-user-row-status-disabled-example-com")[0];
+    expect(statusElement).toBeInTheDocument();
+    expect(statusElement).toHaveTextContent("Wyłączony");
+  });
 });

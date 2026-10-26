@@ -53,6 +53,9 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [adjustCreditsOpen, setAdjustCreditsOpen] = React.useState(false);
   const [creditAdjustmentUserIds, setCreditAdjustmentUserIds] = React.useState<string[]>([]);
+  const [selectedUserForCredits, setSelectedUserForCredits] = React.useState<UserListItem | null>(
+    null
+  );
   const [selectedUser, setSelectedUser] = React.useState<UserListItem | null>(null);
 
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
@@ -109,17 +112,20 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
   }, []);
 
   const handleAdjustCreditsClick = React.useCallback(() => {
+    setSelectedUserForCredits(null);
     setCreditAdjustmentUserIds(selectedIds);
     setAdjustCreditsOpen(true);
   }, [selectedIds]);
 
   const handleAdjustSingleUserCredits = React.useCallback((user: UserListItem) => {
+    setSelectedUserForCredits(user);
     setCreditAdjustmentUserIds([user.id]);
     setAdjustCreditsOpen(true);
   }, []);
 
   const handleCloseAdjustCredits = React.useCallback(() => {
     setAdjustCreditsOpen(false);
+    setSelectedUserForCredits(null);
     setCreditAdjustmentUserIds([]);
   }, []);
 
@@ -242,6 +248,7 @@ function UserListContainerInner({ isSuperAdmin }: UserListContainerProps) {
           isOpen={adjustCreditsOpen}
           isSubmitting={isMutating}
           userIds={creditAdjustmentUserIds}
+          targetUser={selectedUserForCredits ?? undefined}
           onClose={handleCloseAdjustCredits}
           onSubmit={handleAdjustCreditsSubmit}
         />

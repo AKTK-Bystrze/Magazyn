@@ -164,8 +164,8 @@ test.describe.serial("Admin Reservation Management", () => {
     const { startDays, endDays } = calculateWorkerDates(workerIndex);
     await cart.setDatesFromNow(startDays, endDays);
 
-    const totalCost = await cart.getTotalCost();
-    expect(totalCost).toBe(0);
+    expect(await cart.getTotalCost()).toBe(0);
+    expect(await cart.getCurrentBalance()).toBe(await cart.getRemainingBalance());
 
     await cart.proceedToConfirmation();
     await cart.confirm();
@@ -234,6 +234,7 @@ test.describe.serial("Admin Reservation Management", () => {
     const { startDays, endDays } = calculateWorkerDates(workerIndex);
     await cart.setDatesFromNow(startDays, endDays);
     expect(await cart.getTotalCost()).toBe(0);
+    expect(await cart.getCurrentBalance()).toBe(await cart.getRemainingBalance());
 
     await cart.proceedToConfirmation();
     await cart.confirm();

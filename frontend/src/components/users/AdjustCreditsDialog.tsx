@@ -25,6 +25,8 @@ interface AdjustCreditsDialogProps {
   isSubmitting: boolean;
   /** IDs of users to adjust credits for */
   userIds: string[];
+  /** Optional target user details when adjusting a single user */
+  targetUser?: { username: string; email: string; creditBalance: number };
   /** Callback when dialog closes */
   onClose: () => void;
   /** Callback when adjustment is confirmed */
@@ -41,6 +43,7 @@ export function AdjustCreditsDialog({
   isOpen,
   isSubmitting,
   userIds,
+  targetUser,
   onClose,
   onSubmit,
 }: AdjustCreditsDialogProps) {
@@ -98,6 +101,38 @@ export function AdjustCreditsDialog({
               : `Dostosuj stan konta dla ${userIds.length} wybranych użytkowników.`}
           </DialogDescription>
         </DialogHeader>
+
+        {targetUser && (
+          <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1.5 my-1">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Użytkownik:</span>
+              <span className="font-medium text-foreground">
+                {targetUser.username}{" "}
+                <span className="text-xs text-muted-foreground">({targetUser.email})</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Obecne saldo:</span>
+              <span
+                className="font-semibold text-foreground"
+                data-testid="current-credit-balance"
+              >
+                {targetUser.creditBalance} godzinek
+              </span>
+            </div>
+            <div className="flex justify-between items-center border-t border-border/50 pt-1.5 text-xs">
+              <span className="text-muted-foreground">
+                Prognoza po dodaniu (+{amount}):
+              </span>
+              <span
+                className="font-bold text-green-600 dark:text-green-400"
+                data-testid="projected-credit-balance"
+              >
+                {targetUser.creditBalance + amount} godzinek
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">

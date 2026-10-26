@@ -75,6 +75,32 @@ function SkeletonRow() {
 }
 
 /**
+ * Status badge for user row
+ */
+function UserStatusBadge({
+  isEnabled,
+  email,
+  className,
+}: {
+  isEnabled: boolean;
+  email: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`inline-flex items-center rounded-full border font-semibold ${
+        isEnabled
+          ? "border-transparent bg-green-500/15 text-green-700"
+          : "border-transparent bg-destructive/15 text-destructive"
+      } ${className ?? "px-2.5 py-0.5 text-xs"}`}
+      data-testid={`admin-user-row-status-${email.replace(/[@.]/g, "-")}`}
+    >
+      {isEnabled ? "Aktywny" : "Wyłączony"}
+    </div>
+  );
+}
+
+/**
  * Empty state component when no users are found
  */
 function EmptyState() {
@@ -207,24 +233,35 @@ export function UserTable({
                 <TableCell>
                   <div className="font-medium">{user.username}</div>
                   <div className="text-xs text-muted-foreground md:hidden">{user.email}</div>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1 lg:hidden">
+                    <span
+                      className="inline-flex items-center text-xs text-muted-foreground font-medium"
+                      data-testid={`admin-user-row-credits-${user.email.replace(/[@.]/g, "-")}`}
+                    >
+                      Godzinki:{" "}
+                      <span className="font-semibold text-foreground ml-1">
+                        {user.creditBalance}
+                      </span>
+                    </span>
+                    <UserStatusBadge
+                      isEnabled={user.isEnabled}
+                      email={user.email}
+                      className="px-2 py-0.5 text-[10px] md:hidden"
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                <TableCell className="hidden lg:table-cell text-right tabular-nums">
+                <TableCell
+                  className="hidden lg:table-cell text-right tabular-nums"
+                  data-testid={`admin-user-row-credits-${user.email.replace(/[@.]/g, "-")}`}
+                >
                   {user.creditBalance}
                 </TableCell>
                 <TableCell>
                   <RoleBadge role={user.role} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {user.isEnabled ? (
-                    <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500/15 text-green-700 hover:bg-green-500/25">
-                      Aktywny
-                    </div>
-                  ) : (
-                    <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive/15 text-destructive hover:bg-destructive/25">
-                      Wyłączony
-                    </div>
-                  )}
+                  <UserStatusBadge isEnabled={user.isEnabled} email={user.email} />
                 </TableCell>
                 <TableCell className="hidden xl:table-cell text-muted-foreground">
                   {formatDate(user.createdAt)}
