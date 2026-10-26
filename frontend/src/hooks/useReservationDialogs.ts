@@ -2,6 +2,8 @@ import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users-api";
 import { equipmentApi } from "@/lib/api/equipment-api";
+import { useStore } from "@nanostores/react";
+import { $creditBalance, initCreditBalance, refreshCreditBalance } from "@/lib/stores/credits";
 import type { ReservationListItem, UpdateReservationCommand } from "@/types";
 
 /**
@@ -90,7 +92,17 @@ export function useReservationDialogs({
     staleTime: 0,
   });
 
-  const currentUserBalance = isOwner ? sessionUserBalance : (ownerProfile?.creditBalance ?? 0);
+  const storeBalance = useStore($creditBalance);
+
+  React.useEffect(() => {
+    initCreditBalance(sessionUserBalance);
+  }, [sessionUserBalance]);
+
+  const currentUserBalance = isOwner
+    ? storeBalance !== null
+      ? storeBalance
+      : sessionUserBalance
+    : (ownerProfile?.creditBalance ?? 0);
 
   const handleModify = React.useCallback((reservation: ReservationListItem) => {
     setSelectedReservation(reservation);
@@ -168,6 +180,7 @@ export function useReservationDialogs({
         setModifyDialogOpen(false);
         setSelectedReservation(null);
         setBatchReservations([]);
+        refreshCreditBalance();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Nie udało się zaktualizować dat";
         setErrorMessage(message);
@@ -222,6 +235,7 @@ export function useReservationDialogs({
         setReturnDialogOpen(false);
         setSelectedReservation(null);
         setBatchReservations([]);
+        refreshCreditBalance();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Nie udało się zwrócić sprzętu";
         setErrorMessage(message);
@@ -267,6 +281,7 @@ export function useReservationDialogs({
       setCancelDialogOpen(false);
       setSelectedReservation(null);
       setBatchReservations([]);
+      refreshCreditBalance();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Nie udało się anulować rezerwacji";
       setErrorMessage(message);

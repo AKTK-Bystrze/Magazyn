@@ -14,7 +14,7 @@
  *   creditBalance={100}
  * />
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +31,8 @@ import { UserMenu } from "@/components/navigation/UserMenu";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { UserSidebar } from "./UserSidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { useUserCreditBalance } from "@/hooks/useUserCreditBalance";
+import { useStore } from "@nanostores/react";
+import { $creditBalance, initCreditBalance, refreshCreditBalance } from "@/lib/stores/credits";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 
 interface UserHeaderProps {
@@ -53,8 +54,16 @@ interface UserHeaderProps {
  */
 function UserHeaderContent({ user, currentPath, creditBalance, isAdmin }: UserHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { creditBalance: liveBalance } = useUserCreditBalance(creditBalance, !!user);
-  const displayedCreditBalance = liveBalance !== undefined ? liveBalance : creditBalance;
+  const storeBalance = useStore($creditBalance);
+
+  useEffect(() => {
+    initCreditBalance(creditBalance);
+    if (user) {
+      refreshCreditBalance();
+    }
+  }, [user, creditBalance]);
+
+  const displayedCreditBalance = storeBalance !== null ? storeBalance : creditBalance;
 
   return (
     <header

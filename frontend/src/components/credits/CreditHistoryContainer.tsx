@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Wallet } from "lucide-react";
 import { CREDIT_HISTORY_UI_STRINGS, ICON_SIZE_SM } from "@/lib/config/constants";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useStore } from "@nanostores/react";
+import { $creditBalance, setCreditBalance } from "@/lib/stores/credits";
 
 /**
  * Inner component that uses the useCreditHistory hook
@@ -13,6 +15,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 function CreditHistoryContainerInner() {
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useCreditHistory();
+  const storeBalance = useStore($creditBalance);
+
+  React.useEffect(() => {
+    if (typeof data?.currentBalance === "number") {
+      setCreditBalance(data.currentBalance);
+    }
+  }, [data?.currentBalance]);
 
   const observerTarget = React.useRef<HTMLDivElement>(null);
 
@@ -45,10 +54,10 @@ function CreditHistoryContainerInner() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? (
+              {isLoading && storeBalance === null ? (
                 <div className="h-8 w-16 animate-pulse rounded bg-muted" />
               ) : (
-                `${data?.currentBalance ?? 0}`
+                `${storeBalance ?? data?.currentBalance ?? 0}`
               )}
             </div>
             <p className="text-xs text-muted-foreground">Available credits for reservations</p>

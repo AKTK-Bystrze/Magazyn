@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { UserHeader } from "../UserHeader";
 import { renderWithQueryClient } from "@/test/test-utils";
+import { resetCreditBalance } from "@/lib/stores/credits";
 
 const { getHistoryMock } = vi.hoisted(() => ({
   getHistoryMock: vi.fn(),
@@ -31,6 +32,7 @@ describe("UserHeader", () => {
   };
 
   beforeEach(() => {
+    resetCreditBalance();
     getHistoryMock.mockReset();
   });
 

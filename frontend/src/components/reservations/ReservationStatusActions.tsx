@@ -14,6 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users-api";
 import { reservationsApi } from "@/lib/api/reservations-api";
 import { equipmentApi } from "@/lib/api/equipment-api";
+import { useStore } from "@nanostores/react";
+import { $creditBalance, initCreditBalance, refreshCreditBalance } from "@/lib/stores/credits";
 import type { ReservationDetail } from "@/types";
 import type { Enums } from "@/db/database.types";
 import type { UpdateReservationCommand } from "@/types/reservations/reservation.types";
@@ -57,7 +59,17 @@ export function ReservationStatusActions({
     staleTime: 0,
   });
 
-  const userBalance = isOwner ? currentUserBalance : (ownerProfile?.creditBalance ?? 0);
+  const storeBalance = useStore($creditBalance);
+
+  React.useEffect(() => {
+    initCreditBalance(currentUserBalance);
+  }, [currentUserBalance]);
+
+  const userBalance = isOwner
+    ? storeBalance !== null
+      ? storeBalance
+      : currentUserBalance
+    : (ownerProfile?.creditBalance ?? 0);
 
   const handleCancelClick = () => {
     setCancelDialogOpen(true);
@@ -73,6 +85,7 @@ export function ReservationStatusActions({
 
   const handleCancelConfirm = async () => {
     await onStatusChange("CANCELLED");
+    refreshCreditBalance();
     setCancelDialogOpen(false);
   };
 
@@ -82,6 +95,7 @@ export function ReservationStatusActions({
       endDate: newDates.endDate,
     };
     await reservationsApi.update(reservation.id, command);
+    refreshCreditBalance();
     window.location.reload();
   };
 
@@ -92,6 +106,7 @@ export function ReservationStatusActions({
       });
     }
     await reservationsApi.update(reservation.id, command);
+    refreshCreditBalance();
     window.location.reload();
   };
 

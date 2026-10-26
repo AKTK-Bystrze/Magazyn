@@ -2,6 +2,7 @@ import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { creditsApi } from "@/lib/api/credits-api";
 import { QUERY_STALE_TIME_MS } from "@/lib/config/constants";
+import { setCreditBalance } from "@/lib/stores/credits";
 
 /**
  * Query key for user credit balance queries
@@ -54,6 +55,12 @@ export function useUserCreditBalance(
   const invalidateBalance = React.useCallback(() => {
     return queryClient.invalidateQueries({ queryKey: USER_CREDIT_BALANCE_KEY });
   }, [queryClient]);
+
+  React.useEffect(() => {
+    if (typeof query.data === "number") {
+      setCreditBalance(query.data);
+    }
+  }, [query.data]);
 
   return {
     creditBalance: query.data ?? initialBalance,
