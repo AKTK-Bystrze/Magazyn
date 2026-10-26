@@ -1,5 +1,6 @@
 import { test as base, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 import {
   createTestEquipment,
   cleanupTestEquipment,
@@ -213,8 +214,6 @@ export async function ensureSuperAdminUserExists(
 }
 
 async function injectSupabaseSession(page: Page, email: string): Promise<void> {
-  console.log(`[AUTH] Getting real session tokens for ${email} via signInWithPassword...`);
-
   const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
   const anonKey = process.env.PUBLIC_SUPABASE_ANON_KEY;
   const client = createClient(supabaseUrl!, anonKey!);
@@ -228,46 +227,58 @@ async function injectSupabaseSession(page: Page, email: string): Promise<void> {
     throw new Error(`Failed to sign in for tokens: ${error?.message}`);
   }
 
-  const { access_token, refresh_token, expires_in, expires_at } = data.session;
+  let cookiesToSet: { name: string; value: string }[] = [];
+  const ssrClient = createServerClient(supabaseUrl!, anonKey!, {
+    cookieOptions: {
+      name: "sb-magazyn-auth-token",
+    },
+    cookies: {
+      getAll: () => cookiesToSet,
+      setAll: (c) => {
+        cookiesToSet = c;
+      },
+    },
+  });
+
+  await ssrClient.auth.setSession({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+  });
+
   const baseURL = process.env.E2E_BASE_URL || "http://localhost";
+  const urlObj = new URL(baseURL);
+  const domain = urlObj.hostname;
 
-  await page.goto(`${baseURL}/dashboard`);
-
-  const sessionData = {
-    access_token,
-    refresh_token,
-    expires_in,
-    expires_at,
-    token_type: "bearer",
-    user: data.user,
-  };
-
-  const sessionJson = JSON.stringify(sessionData);
-
-  const projectRef = new URL(supabaseUrl!).hostname.split(".")[0];
-  const encodedSession = encodeURIComponent(sessionJson);
   const cookies = [
-    { name: `sb-magazyn-auth-token`, value: encodedSession },
-    { name: `sb-${projectRef}-auth-token`, value: encodedSession },
-    { name: `sb-localhost-auth-token`, value: encodedSession },
-    { name: `sb-host-auth-token`, value: encodedSession },
-    { name: `supabase-auth-token`, value: encodedSession },
-    { name: `magazyn-auth-token`, value: encodedSession },
+    ...cookiesToSet.map((c) => ({
+      name: c.name,
+      value: c.value,
+      domain: domain,
+      path: "/",
+      sameSite: "Lax" as const,
+    })),
   ];
 
-  await page
-    .context()
-    .addCookies([
-      ...cookies.map((c) => ({ ...c, domain: "localhost", path: "/", sameSite: "Lax" as const })),
-      ...cookies.map((c) => ({ ...c, domain: "127.0.0.1", path: "/", sameSite: "Lax" as const })),
-    ]);
+  if (domain === "localhost") {
+    cookies.push(
+      ...cookiesToSet.map((c) => ({
+        name: c.name,
+        value: c.value,
+        domain: "127.0.0.1",
+        path: "/",
+        sameSite: "Lax" as const,
+      }))
+    );
+  }
 
-  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.context().addCookies(cookies);
+
+  await page.goto(`${baseURL}/dashboard`, { waitUntil: "domcontentloaded" });
 
   try {
     await page.getByTestId("topbar").waitFor({ state: "visible", timeout: 5000 });
   } catch {
-    console.warn("[AUTH] ⚠️ Topbar not visible after reload, continuing anyway");
+    console.warn("[AUTH] ⚠️ Topbar not visible after initial load, continuing anyway");
   }
 }
 
