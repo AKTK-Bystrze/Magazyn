@@ -25,6 +25,7 @@ interface Props {
 
 const { title, description = "Bystrzacki Magazyn" } = Astro.props;
 const traceId = Astro.locals.trace_id || "unknown";
+const userId = Astro.locals.user?.id || null;
 ---
 
 <!doctype html>
@@ -38,7 +39,6 @@ const traceId = Astro.locals.trace_id || "unknown";
     <meta name="trace-id" content={traceId} />
     <title>{title}</title>
 
-    {/* eslint-disable-next-line react/no-unknown-property */}
     <script is:inline>
       (function () {
         const STORAGE_KEY_THEME = "theme";
@@ -66,7 +66,7 @@ const traceId = Astro.locals.trace_id || "unknown";
     </script>
   </head>
   <body>
-    <AuthListener client:load />
+    <AuthListener client:load initialUserId={userId} />
     <slot />
   </body>
 </html>

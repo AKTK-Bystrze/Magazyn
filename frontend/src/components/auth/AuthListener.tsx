@@ -5,13 +5,19 @@ import { ROUTES } from "@/lib/config/routes";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { normalizePath } from "@/lib/auth/url-utils";
 import { defaultLogger as logger } from "@/lib/utils/logger";
+import { handleLogout } from "@/lib/auth/logout";
+
+export interface AuthListenerProps {
+  /** The authenticated user ID extracted during SSR, or null if unauthenticated */
+  initialUserId?: string | null;
+}
 
 /**
  * Component that listens for Supabase auth state changes
  * Handles session management, redirects, and cookie synchronization
  * Must be placed at the root of the application (in Layout)
  */
-export const AuthListener: React.FC = () => {
+export const AuthListener: React.FC<AuthListenerProps> = ({ initialUserId }) => {
   const [isRedirectInProgress, setIsRedirectInProgress] = useState(false);
 
   useEffect(() => {
@@ -105,6 +111,26 @@ export const AuthListener: React.FC = () => {
           return;
         }
 
+        if (
+          initialUserId &&
+          session.user.id !== initialUserId &&
+          normalizePath(window.location.pathname) !== ROUTES.PUBLIC.LOGIN
+        ) {
+          console.error("Critical session mismatch detected in AuthListener:", {
+            initialUserId,
+            sessionUserId: session.user.id,
+          });
+          logger.error(
+            "🚨 Critical session mismatch detected: client session user does not match SSR initial user ID",
+            {
+              initialUserId,
+              sessionUserId: session.user.id,
+            }
+          );
+          await handleLogout();
+          return;
+        }
+
         if (isRedirectInProgress) {
           logger.info("⏸️ Skipping - redirect in progress");
           return;
@@ -137,7 +163,7 @@ export const AuthListener: React.FC = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [isRedirectInProgress]);
+  }, [isRedirectInProgress, initialUserId]);
 
   return null;
 };

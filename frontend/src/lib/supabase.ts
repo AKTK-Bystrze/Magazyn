@@ -29,3 +29,19 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     name: "sb-magazyn-auth-token",
   },
 });
+
+declare global {
+  interface Window {
+    supabase?: typeof supabase;
+  }
+}
+
+if (
+  typeof window !== "undefined" &&
+  (import.meta.env.DEV ||
+    import.meta.env.PUBLIC_E2E_TESTING === "true" ||
+    window.location?.hostname === "localhost" ||
+    window.location?.hostname === "127.0.0.1")
+) {
+  window.supabase = supabase;
+}
