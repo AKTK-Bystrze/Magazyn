@@ -51,7 +51,7 @@ export type ReservationDetail = Reservation & {
 /**
  * Single reservation item for creation
  */
-export type CreateReservationItem = {
+type CreateReservationItem = {
   equipmentId: string;
   /** Reservation start date (YYYY-MM-DD) */
   startDate: string;

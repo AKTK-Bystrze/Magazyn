@@ -3,7 +3,7 @@ import * as React from "react";
 /**
  * Configuration options for the `useInfiniteScrollTrigger` hook.
  */
-export interface UseInfiniteScrollTriggerOptions {
+interface UseInfiniteScrollTriggerOptions {
   /** Whether additional pages of data are available */
   hasNextPage: boolean;
   /** Whether a page fetch operation is currently in flight */

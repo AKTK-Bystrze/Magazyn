@@ -27,7 +27,7 @@ export const equipmentDTOSchema = z
 /**
  * Zod schema for pagination response
  */
-export const paginationResponseDTOSchema = z.object({
+const paginationResponseDTOSchema = z.object({
   page: z.number().int().min(1),
   per_page: z.number().int().min(1),
   total_items: z.number().int().min(0),

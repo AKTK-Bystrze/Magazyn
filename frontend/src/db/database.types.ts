@@ -621,21 +621,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
-
-export const Constants = {
-  public: {
-    Enums: {
-      credit_request_status: ["awaiting", "approved", "rejected", "approved with changes"],
-      credit_transaction_reason: [
-        "reservation_charge",
-        "reservation_refund",
-        "reservation_adjustment",
-        "admin_adjustment",
-        "work_credit",
-      ],
-      equipment_status: ["ok", "broken", "blocked"],
-      reservation_status: ["PENDING", "RENTED", "RETURNED", "CANCELLED"],
-      user_role: ["user", "admin", "super_admin"],
-    },
-  },
-} as const;

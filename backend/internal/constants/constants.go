@@ -78,10 +78,6 @@ const (
 	UUIDLength = 36
 	// DateLengthISO is the length of an ISO 8601 date string (YYYY-MM-DD).
 	DateLengthISO = 10
-	// MinMonth is the minimum month value.
-	MinMonth = 1
-	// MaxMonth is the maximum month value.
-	MaxMonth = 12
 )
 
 // ValidEquipmentStatuses lists all valid equipment status values for validation.

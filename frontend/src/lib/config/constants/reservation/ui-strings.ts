@@ -43,18 +43,11 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
   CONFIRM_STATUS_CHANGE_BUTTON: "Zmień Status",
   CANCEL_CHANGE: "Anuluj",
 
-  STATUS_CHANGED_SUCCESS: "Status rezerwacji został pomyślnie zmieniony",
-  CANCELLED_SUCCESS: "Rezerwacja anulowana. Godzinki zostały zwrócone.",
-  MARKED_RETURNED_SUCCESS: "Rezerwacja oznaczona jako zwrócona",
-
   UNAUTHORIZED: "Nie masz uprawnień do przeglądania tej rezerwacji",
   NOT_FOUND: "Nie znaleziono rezerwacji",
-  CONFLICT: "Status rezerwacji został już zmieniony",
   NETWORK_ERROR: "Błąd połączenia. Spróbuj ponownie",
-  STATUS_CHANGE_FAILED: "Nie udało się zmienić statusu rezerwacji",
 
   LOADING: CORE_UI_STRINGS.LOADING,
-  UPDATING: "Aktualizowanie...",
 
   CHANGED_BY: "Zmienione przez",
   INITIAL_CREATION: "Rezerwacja utworzona",
@@ -81,14 +74,6 @@ export const RESERVATION_DATE_MODIFICATION_UI_STRINGS = {
   CONFIRM_RETURN: "Potwierdź Zwrot",
   FINAL_STATUS_WARNING: "⚠️ ZWRÓCONE to status końcowy i nie może być później zmieniony.",
 
-  CREDIT_ADJUSTMENT_TITLE: "Korekta Godzinek",
-  DATE_COMPARISON: "Porównanie Dat",
-  ORIGINAL_DATES: "Oryginalne",
-  NEW_DATES: "Nowe",
-  CREDIT_ADJUSTMENT: "Korekta Godzinek",
-  CURRENT_BALANCE: "Aktualne Saldo",
-  NEW_BALANCE: "Nowe Saldo",
-
   SIGNIFICANT_EXTENSION_WARNING: "Wykryto Znaczące Wydłużenie",
   INSUFFICIENT_CREDITS_WARNING:
     "Niewystarczająca liczba godzinek. Potrzebujesz {amount} więcej godzinek, aby dokończyć tę modyfikację.",
@@ -101,10 +86,5 @@ export const RESERVATION_DATE_MODIFICATION_UI_STRINGS = {
   EQUIPMENT_NOT_AVAILABLE: "Sprzęt niedostępny dla wybranych dat",
   DATES_MUST_CHANGE: "Wybierz inne daty, aby zmodyfikować rezerwację",
 
-  DATES_MODIFIED_SUCCESS: "Daty rezerwacji zostały pomyślnie zmodyfikowane",
-  RETURNED_WITH_DATES_SUCCESS: "Rezerwacja oznaczona jako zwrócona i daty zaktualizowane",
-  RETURNED_SUCCESS: "Rezerwacja oznaczona jako zwrócona",
-
-  VALIDATING_DATES: "Walidacja dat...",
   UPDATING_RESERVATION: "Aktualizowanie rezerwacji...",
 } as const;

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
 
-export interface BadgeProps extends React.ComponentProps<"span"> {
+interface BadgeProps extends React.ComponentProps<"span"> {
   variant?: "default" | "secondary" | "destructive" | "outline";
   asChild?: boolean;
 }
@@ -30,4 +30,4 @@ function Badge({ className, variant = "default", asChild = false, ...props }: Ba
   );
 }
 
-export { Badge, badgeVariants };
+export { Badge };

@@ -1,5 +1,4 @@
 import { expect, type Page } from "@playwright/test";
-import { E2E_CONFIG } from "../constants";
 
 /**
  * Authentication helper functions for e2e tests.
@@ -49,21 +48,4 @@ export async function logout(page: Page): Promise<void> {
   await logoutBtn.click();
 
   await page.waitForURL("**/login");
-}
-
-/**
- * Verifies if the user is currently logged in by checking for the user menu trigger.
- *
- * @param page - The Playwright Page instance.
- * @returns A promise that resolves to true if logged in, false otherwise.
- */
-export async function verifyLoggedIn(page: Page): Promise<boolean> {
-  try {
-    await page
-      .getByTestId("user-menu-trigger")
-      .waitFor({ state: "visible", timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
-    return true;
-  } catch {
-    return false;
-  }
 }

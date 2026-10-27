@@ -30,7 +30,7 @@ export interface CartState {
 /**
  * Individual item cost calculation
  */
-export interface ItemCost {
+interface ItemCost {
   equipmentId: string;
   name: string;
   days: number;

@@ -102,7 +102,7 @@ interface ReservationListResponseDTO {
  * @param dto - Backend reservation object
  * @returns Frontend ReservationListItem
  */
-export function transformReservationItem(dto: ReservationDTO): ReservationListItem {
+function transformReservationItem(dto: ReservationDTO): ReservationListItem {
   return {
     id: dto.id,
     userId: dto.user_id,

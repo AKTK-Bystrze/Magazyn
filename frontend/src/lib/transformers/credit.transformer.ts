@@ -37,7 +37,7 @@ interface CreditHistoryResponseDTO {
  * @param dto - Backend credit history item object with snake_case fields
  * @returns Frontend CreditHistoryItem with camelCase fields
  */
-export function transformCreditHistoryItem(dto: CreditHistoryItemDTO): CreditHistoryItem {
+function transformCreditHistoryItem(dto: CreditHistoryItemDTO): CreditHistoryItem {
   return {
     id: dto.id,
     userId: dto.user_id,

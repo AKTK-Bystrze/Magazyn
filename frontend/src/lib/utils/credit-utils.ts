@@ -1,7 +1,5 @@
 import type { CreditAdjustmentInfo } from "@/types/reservations/reservation.types";
 
-export type { CreditAdjustmentInfo };
-
 /**
  * Calculates whether a date extension is considered "significant"
  * A significant extension meets either of these criteria:
@@ -12,7 +10,7 @@ export type { CreditAdjustmentInfo };
  * @param newDays - New reservation duration in days
  * @returns True if extension is significant
  */
-export function isSignificantExtension(originalDays: number, newDays: number): boolean {
+function isSignificantExtension(originalDays: number, newDays: number): boolean {
   if (newDays <= originalDays) {
     return false;
   }

@@ -44,12 +44,12 @@ export const ROUTES = {
 /**
  * Type representing any public route
  */
-export type PublicRoute = (typeof ROUTES.PUBLIC)[keyof typeof ROUTES.PUBLIC];
+type PublicRoute = (typeof ROUTES.PUBLIC)[keyof typeof ROUTES.PUBLIC];
 
 /**
  * Type representing any protected route (requires authentication)
  */
-export type ProtectedRoute = (typeof ROUTES.PROTECTED)[keyof typeof ROUTES.PROTECTED];
+type ProtectedRoute = (typeof ROUTES.PROTECTED)[keyof typeof ROUTES.PROTECTED];
 
 /**
  * Type representing any application route
