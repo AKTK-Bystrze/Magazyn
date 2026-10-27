@@ -22,7 +22,7 @@ import {
  * @param allowPastDates - Whether to allow past dates (e.g. for admin overrides)
  * @returns Validation errors for start and end dates
  */
-export function validateDateRange(
+function validateDateRange(
   startDate: string | null,
   endDate: string | null,
   allowPastDates = false

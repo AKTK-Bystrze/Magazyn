@@ -86,7 +86,7 @@ export function transformEquipmentListResponse(response: unknown): {
  * @returns Frontend equipment type with camelCase fields
  * @throws Error if validation fails
  */
-export function transformEquipmentTypeDTO(dto: unknown): EquipmentType {
+function transformEquipmentTypeDTO(dto: unknown): EquipmentType {
   const validated = equipmentTypeDTOSchema.safeParse(dto);
 
   if (!validated.success) {

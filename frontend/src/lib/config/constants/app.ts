@@ -31,13 +31,11 @@ export const MAX_SEARCH_LENGTH = 255;
 export const PLACEHOLDER_EQUIPMENT_IMAGE = "/placeholder-equipment.svg";
 
 export const STORAGE_KEY_CART = "reservation-cart";
-export const STORAGE_KEY_SUPABASE_AUTH = "magazyn-auth-token";
 export const STORAGE_KEY_THEME = "theme";
 
 export const FEEDBACK_DISPLAY_DURATION_MS = 3000;
 export const CLEAR_CART_CONFIRM_TIMEOUT_MS = 3000;
 
-export const SUCCESS_REDIRECT_DELAY_MS = 1500;
 export const MESSAGE_AUTO_DISMISS_MS = 5000;
 
 /** 1 minute stale time */

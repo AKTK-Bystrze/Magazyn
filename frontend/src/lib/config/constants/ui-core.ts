@@ -7,5 +7,4 @@
 export const CORE_UI_STRINGS = {
   CANCEL: "Anuluj",
   LOADING: "Ładowanie...",
-  SAVING: "Zapisywanie...",
 } as const;

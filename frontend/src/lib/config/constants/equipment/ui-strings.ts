@@ -32,8 +32,6 @@ export const EQUIPMENT_VALIDATION_MESSAGES = {
   INTERNAL_ID_REQUIRED: "ID wewnętrzne jest wymagane",
   TYPE_ID_REQUIRED: "Typ sprzętu jest wymagany",
   NAME_MAX_LENGTH: "Nazwa może mieć maksymalnie 200 znaków",
-  IMAGE_MAX_SIZE: "Obraz musi mieć maksymalnie 2MB",
-  IMAGE_INVALID_TYPE: "Dozwolone są tylko obrazy JPEG i PNG",
   CREATE_FAILED: "Nie udało się utworzyć sprzętu",
   UPDATE_FAILED: "Nie udało się zaktualizować sprzętu",
   ARCHIVE_FAILED: "Nie udało się usunąć sprzętu",
@@ -52,13 +50,6 @@ export const EQUIPMENT_MANAGER_UI_STRINGS = {
   EDIT_EQUIPMENT: "Edytuj Sprzęt",
   VIEW_DETAILS: "Zobacz Szczegóły",
   ARCHIVE_EQUIPMENT: "Usuń",
-  TOGGLE_STATUS: "Przełącz Status",
-
-  SEARCH_PLACEHOLDER: "Szukaj po nazwie lub ID...",
-  ALL_TYPES: "Wszystkie typy",
-  FILTER_BY_TYPE: "Filtruj według typu",
-  FILTER_BY_STATUS: "Filtruj według statusu",
-  RESET_FILTERS: "Resetuj",
 
   INTERNAL_ID: "ID",
   NAME: "Nazwa",
@@ -88,7 +79,6 @@ export const EQUIPMENT_MANAGER_UI_STRINGS = {
   FORM_DESCRIPTION: "Opis",
   FORM_DESCRIPTION_PLACEHOLDER: "Opcjonalny opis...",
   FORM_STATUS: "Status",
-  FORM_IMAGE: "Obraz",
 
   DETAILS_TITLE: "Szczegóły Sprzętu",
   MAINTENANCE_HISTORY: "Historia Konserwacji",
@@ -103,9 +93,7 @@ export const EQUIPMENT_MANAGER_UI_STRINGS = {
   CREATED_SUCCESS: "Sprzęt utworzony pomyślnie",
   UPDATED_SUCCESS: "Sprzęt zaktualizowany pomyślnie",
   ARCHIVED_SUCCESS: "Sprzęt usunięty pomyślnie",
-  STATUS_CHANGED_SUCCESS: "Status sprzętu zmieniony",
   MAINTENANCE_LOG_ADDED: "Notatka konserwacji dodana",
 
   LOADING: CORE_UI_STRINGS.LOADING,
-  SAVING: CORE_UI_STRINGS.SAVING,
 } as const;

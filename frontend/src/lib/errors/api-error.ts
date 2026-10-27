@@ -1,6 +1,6 @@
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(
     public message: string,
     public status: number,
