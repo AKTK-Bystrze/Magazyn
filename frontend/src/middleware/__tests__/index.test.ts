@@ -260,6 +260,80 @@ describe("Astro Middleware (onRequest)", () => {
     });
   });
 
+  describe("Guest Visitor / AuthSessionMissing Handling", () => {
+    it("does not clear cookies or log an error when AuthSessionMissingError occurs, redirecting protected page to /login", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      mockGetUser.mockResolvedValueOnce({
+        data: { user: null },
+        error: {
+          name: "AuthSessionMissingError",
+          message: "Auth session missing!",
+          status: 400,
+        },
+      });
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await onRequest(context, nextMock);
+
+      expect(mockClearAllAuthCookies).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
+      expect(nextMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(302);
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("does not clear cookies or log an error when AuthSessionMissingError occurs on public route /login", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      mockGetUser.mockResolvedValueOnce({
+        data: { user: null },
+        error: {
+          name: "AuthSessionMissingError",
+          message: "Auth session missing!",
+          status: 400,
+        },
+      });
+
+      const { context, redirectMock } = createMockContext("/login");
+      const response = await onRequest(context, nextMock);
+
+      expect(mockClearAllAuthCookies).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(redirectMock).not.toHaveBeenCalled();
+      expect(nextMock).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(200);
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("does not clear cookies or log an error when error has message 'Auth session missing!' without the exact error name", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      mockGetUser.mockResolvedValueOnce({
+        data: { user: null },
+        error: {
+          name: "CustomError",
+          message: "Auth session missing!",
+          status: 400,
+        },
+      });
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await onRequest(context, nextMock);
+
+      expect(mockClearAllAuthCookies).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
+      expect(nextMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(302);
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
   describe("Account Disabled Enforcement", () => {
     it("returns 403 Forbidden JSON when disabled user calls API route", async () => {
       const mockUser = { id: "disabled-user", email: "disabled@example.com" };
