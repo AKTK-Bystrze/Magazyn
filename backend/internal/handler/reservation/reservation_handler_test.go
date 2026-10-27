@@ -238,4 +238,3 @@ func TestHandleUpdate_ConflictError_ReturnsConflict(t *testing.T) {
 	assert.Equal(t, "Dates not available", resp["error"])
 	mockSvc.AssertExpectations(t)
 }
-
