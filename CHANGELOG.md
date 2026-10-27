@@ -19,6 +19,20 @@
 
 * enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
+## [0.8.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.4...v0.8.0) (2026-10-27)
+
+
+### Features
+
+* **credits:** synchronize user credit balance across Astro islands using Nano Stores ([#284](https://github.com/AKTK-Bystrze/Magazyn/issues/284)) ([558804f](https://github.com/AKTK-Bystrze/Magazyn/commit/558804ff3a336d8bdfd5e015a117738fef16afb3))
+
+
+### Bug Fixes
+
+* **auth:** prevent session swap via browser cookie pruning ([#286](https://github.com/AKTK-Bystrze/Magazyn/issues/286)) ([061d8fc](https://github.com/AKTK-Bystrze/Magazyn/commit/061d8fc630ba59f1dcfe99b66e61eed10b4165e5))
+* **ci:** remove pr release preview and add commit deploy navigation in admin.sh ([#289](https://github.com/AKTK-Bystrze/Magazyn/issues/289)) ([189c424](https://github.com/AKTK-Bystrze/Magazyn/commit/189c42449ef9456d6963bfda327ea23da0453fbf))
+* **credits:** resolve credit desync across header, cart calculation, and user dropdown ([#287](https://github.com/AKTK-Bystrze/Magazyn/issues/287)) ([3342823](https://github.com/AKTK-Bystrze/Magazyn/commit/3342823e0c33740f5343f66af832e1336274445b))
+
 ## [0.7.4](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.3...v0.7.4) (2026-10-26)
 
 
