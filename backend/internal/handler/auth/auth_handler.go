@@ -59,15 +59,11 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 // HandleLogout revokes the user's active session.
 func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	token := common.GetAccessTokenFromContext(r)
-	if token == "" {
-		var err error
-		token, err = common.ExtractBearerToken(r)
-		if err != nil {
-			logger.Warnf(r.Context(), "Token extraction failed: %v", err)
-			common.RespondError(r.Context(), w, http.StatusUnauthorized, err.Error())
-			return
-		}
+	token, err := common.ExtractTokenOrContext(r)
+	if err != nil {
+		logger.Warnf(r.Context(), "Token extraction failed: %v", err)
+		common.RespondError(r.Context(), w, http.StatusUnauthorized, err.Error())
+		return
 	}
 	if err := h.service.Logout(r.Context(), token); err != nil {
 		logger.Errorf(r.Context(), "Logout failed: %v", err)
@@ -85,25 +81,16 @@ func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 		common.RespondUnauthorized(r.Context(), w)
 		return
 	}
-	token := common.GetAccessTokenFromContext(r)
-	if token == "" {
-		var err error
-		token, err = common.ExtractBearerToken(r)
-		if err != nil {
-			logger.Warnf(r.Context(), "Token extraction failed: %v", err)
-			common.RespondError(r.Context(), w, http.StatusUnauthorized, err.Error())
-			return
-		}
+	token, err := common.ExtractTokenOrContext(r)
+	if err != nil {
+		logger.Warnf(r.Context(), "Token extraction failed: %v", err)
+		common.RespondError(r.Context(), w, http.StatusUnauthorized, err.Error())
+		return
 	}
 	session, err := h.service.GetSession(r.Context(), user.ID, token)
 	if err != nil {
-		var notFoundErr *types.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			common.RespondError(r.Context(), w, http.StatusNotFound, "Profile not found")
-		} else {
-			logger.Errorf(r.Context(), "Failed to get session for user %s: %v", user.ID, err)
-			common.RespondError(r.Context(), w, http.StatusInternalServerError, "Internal server error")
-		}
+		logger.Errorf(r.Context(), "Failed to get session for user %s: %v", user.ID, err)
+		common.RespondWithError(r.Context(), w, err)
 		return
 	}
 	common.RespondJSON(r.Context(), w, http.StatusOK, session)

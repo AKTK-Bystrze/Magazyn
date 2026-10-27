@@ -34,7 +34,7 @@ export async function handleLogout(): Promise<void> {
   }
 
   try {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
   } catch (e) {
     logger.error("Failed to call logout API", { error: e });
   }
@@ -52,7 +52,7 @@ export async function handleLogout(): Promise<void> {
     } catch (e) {
       logger.debug("Failed to clear local/session storage", { error: e });
     }
-  }
 
-  window.location.href = ROUTES.PUBLIC.LOGIN;
+    window.location.href = ROUTES.PUBLIC.LOGIN;
+  }
 }

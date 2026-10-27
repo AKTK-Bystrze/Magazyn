@@ -27,10 +27,19 @@ func ExtractBearerToken(r *http.Request) (string, error) {
 		return "", ErrAuthHeaderRequired
 	}
 	prefix, token, ok := strings.Cut(authHeader, " ")
-	if !ok || prefix != "Bearer" || token == "" {
+	token = strings.TrimSpace(token)
+	if !ok || !strings.EqualFold(prefix, "Bearer") || token == "" {
 		return "", ErrInvalidAuthHeader
 	}
 	return token, nil
+}
+
+// ExtractTokenOrContext extracts the bearer token from the request context, or falls back to extracting it from the Authorization header.
+func ExtractTokenOrContext(r *http.Request) (string, error) {
+	if token := strings.TrimSpace(GetAccessTokenFromContext(r)); token != "" {
+		return token, nil
+	}
+	return ExtractBearerToken(r)
 }
 
 // RespondJSON marshals data as JSON and writes it to the response writer with the specified status code.

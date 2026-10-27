@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { AstroCookies } from "astro";
-import {
-  createCookieMethods,
-  createSupabaseServerClient,
-  AUTH_COOKIE_NAME,
-  CHUNKED_COOKIE_REGEX,
-} from "../supabase-ssr";
+import { createCookieMethods, createSupabaseServerClient } from "../supabase-ssr";
+import { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX } from "../cookie-utils";
 
 describe("supabase-ssr", () => {
   beforeEach(() => {
@@ -278,6 +274,65 @@ describe("supabase-ssr", () => {
         ]);
 
         expect(mockCookies.set).not.toHaveBeenCalled();
+        expect(deleteCalls).toContainEqual({
+          name: "sb-magazyn-auth-token.0",
+          options: { path: "/" },
+        });
+      });
+
+      it("invokes cookies.delete when options.maxAge is negative (e.g. -1)", () => {
+        const request = new Request("http://localhost:3000");
+        const methods = createCookieMethods(request, mockCookies);
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token.1",
+            value: "negative-expired-value",
+            options: { maxAge: -1 },
+          },
+        ]);
+
+        expect(mockCookies.set).not.toHaveBeenCalled();
+        expect(deleteCalls).toContainEqual({
+          name: "sb-magazyn-auth-token.1",
+          options: { path: "/" },
+        });
+      });
+
+      it("invokes cookies.delete when options.expires is in the past (e.g. new Date(0))", () => {
+        const request = new Request("http://localhost:3000");
+        const methods = createCookieMethods(request, mockCookies);
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token.2",
+            value: "expired-by-date",
+            options: { expires: new Date(0) },
+          },
+        ]);
+
+        expect(mockCookies.set).not.toHaveBeenCalled();
+        expect(deleteCalls).toContainEqual({
+          name: "sb-magazyn-auth-token.2",
+          options: { path: "/" },
+        });
+      });
+
+      it("does not trigger bilateral pruning when chunked cookie has expired options.expires", () => {
+        const request = new Request("http://localhost:3000");
+        const methods = createCookieMethods(request, mockCookies);
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token.0",
+            value: "stale-chunk",
+            options: { expires: new Date(0) },
+          },
+        ]);
+
+        // Base cookie must NOT be deleted because this chunk write was an expiration, not an active write
+        expect(deleteCalls.filter((c) => c.name === "sb-magazyn-auth-token")).toHaveLength(0);
+        // Chunk cookie must be deleted
         expect(deleteCalls).toContainEqual({
           name: "sb-magazyn-auth-token.0",
           options: { path: "/" },
