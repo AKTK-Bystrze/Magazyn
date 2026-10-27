@@ -97,10 +97,9 @@ services:
       test:
         [
           "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "-O",
+          "curl",
+          "-fsS",
+          "-o",
           "/dev/null",
           "http://localhost:2019/metrics",
         ]
