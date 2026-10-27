@@ -19,6 +19,13 @@
 
 * enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
+## [0.8.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.8.0...v0.8.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* **credits:** allow requestor as helper and cast status in rpc functions ([#290](https://github.com/AKTK-Bystrze/Magazyn/issues/290)) ([0434dc4](https://github.com/AKTK-Bystrze/Magazyn/commit/0434dc4fe3ba44ba5028d56b7efc6879978a8ca9))
+
 ## [0.8.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.4...v0.8.0) (2026-10-27)
 
 
