@@ -1,15 +1,33 @@
 import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 import type { AstroCookieSetOptions, AstroCookies } from "astro";
-import { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX, pruneCookieList } from "./cookie-utils";
+import {
+  AUTH_COOKIE_NAME,
+  CHUNKED_COOKIE_REGEX,
+  getCookieNamesToDelete,
+  pruneCookieList,
+} from "./cookie-utils";
 
 export { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX };
 
 /**
- * Creates cookie handlers for the Supabase SSR client with bilateral pruning.
+ * Determines whether a cookie operation represents an expiration/deletion.
+ * Evaluates RFC 6265 semantics for empty value, non-positive max-age, and past expiration date.
  *
- * @param request - The incoming HTTP request
+ * @param value - Cookie string value
+ * @param options - Cookie attributes (maxAge, expires, etc.)
+ * @returns true if the cookie is expired and should be deleted
+ */
+export const isCookieExpired = (value: string, options?: AstroCookieSetOptions): boolean =>
+  !value ||
+  (options?.maxAge !== undefined && options.maxAge <= 0) ||
+  (options?.expires !== undefined && options.expires.getTime() <= Date.now());
+
+/**
+ * Creates cookie handlers for the Supabase SSR client with bilateral pruning.
+ * Reads parsed cookies from the incoming request and writes updates back to Astro cookies.
+ *
+ * @param request - Incoming HTTP request containing Cookie headers
  * @param cookies - Astro's cookie handling interface
- * @returns An object containing getAll and setAll cookie methods
  */
 export function createCookieMethods(request: Request, cookies: AstroCookies) {
   return {
@@ -18,13 +36,16 @@ export function createCookieMethods(request: Request, cookies: AstroCookies) {
     },
     setAll(cookiesToSet: Array<{ name: string; value: string; options?: AstroCookieSetOptions }>) {
       const isWritingChunked = cookiesToSet.some(
-        (c) => CHUNKED_COOKIE_REGEX.test(c.name) && Boolean(c.value) && c.options?.maxAge !== 0
+        (c) =>
+          CHUNKED_COOKIE_REGEX.test(c.name) &&
+          Boolean(c.value) &&
+          !isCookieExpired(c.value, c.options)
       );
-
       const isWritingBase =
         !isWritingChunked &&
         cookiesToSet.some(
-          (c) => c.name === AUTH_COOKIE_NAME && Boolean(c.value) && c.options?.maxAge !== 0
+          (c) =>
+            c.name === AUTH_COOKIE_NAME && Boolean(c.value) && !isCookieExpired(c.value, c.options)
         );
 
       if (isWritingChunked) {
@@ -32,22 +53,10 @@ export function createCookieMethods(request: Request, cookies: AstroCookies) {
       }
 
       if (isWritingBase) {
-        const chunkNamesToDelete = new Set<string>();
-        for (let i = 0; i <= 9; i++) {
-          chunkNamesToDelete.add(`${AUTH_COOKIE_NAME}.${i}`);
-        }
-
-        const rawCookieHeader = request.headers.get("Cookie") ?? "";
-        if (rawCookieHeader) {
-          const incomingCookieNames = rawCookieHeader.split(";").map((c) => c.split("=")[0].trim());
-          for (const name of incomingCookieNames) {
-            if (CHUNKED_COOKIE_REGEX.test(name)) {
-              chunkNamesToDelete.add(name);
-            }
-          }
-        }
-
-        for (const name of chunkNamesToDelete) {
+        const chunkNames = getCookieNamesToDelete(request.headers.get("Cookie"), {
+          chunkedOnly: true,
+        });
+        for (const name of chunkNames) {
           cookies.delete(name, { path: "/" });
         }
       }
@@ -63,7 +72,7 @@ export function createCookieMethods(request: Request, cookies: AstroCookies) {
           return;
         }
 
-        if (!value || options?.maxAge === 0) {
+        if (isCookieExpired(value, options)) {
           cookies.delete(name, {
             path: options?.path ?? "/",
             ...(options?.domain ? { domain: options.domain } : {}),
@@ -72,7 +81,7 @@ export function createCookieMethods(request: Request, cookies: AstroCookies) {
           cookies.set(name, value, {
             ...options,
             path: options?.path ?? "/",
-            sameSite: "lax",
+            sameSite: (options?.sameSite as "lax" | "strict" | "none") ?? "lax",
           });
         }
       });
@@ -81,25 +90,37 @@ export function createCookieMethods(request: Request, cookies: AstroCookies) {
 }
 
 /**
- * Creates a request-scoped Supabase client for SSR
- *
- * This factory ensures proper session isolation in server-side rendering.
- * Each request gets its own client instance with request-specific cookies.
+ * Creates a request-scoped Supabase client for SSR.
+ * Ensures proper session isolation in server-side rendering.
  *
  * @param request - The incoming HTTP request
  * @param cookies - Astro's cookie handling interface
+ * @param env - Optional runtime environment variables override
  * @returns Supabase client configured for SSR with proper cookie handling
  */
-export function createSupabaseServerClient(request: Request, cookies: AstroCookies) {
+export function createSupabaseServerClient(
+  request: Request,
+  cookies: AstroCookies,
+  env?: {
+    PUBLIC_SUPABASE_URL?: string;
+    PUBLIC_SUPABASE_ANON_KEY?: string;
+  }
+) {
   const supabaseUrl =
-    import.meta.env.SSR && typeof process !== "undefined" && process.env.INTERNAL_SUPABASE_URL
+    env?.PUBLIC_SUPABASE_URL ||
+    (import.meta.env.SSR && typeof process !== "undefined" && process.env.INTERNAL_SUPABASE_URL
       ? process.env.INTERNAL_SUPABASE_URL
-      : import.meta.env.PUBLIC_SUPABASE_URL;
+      : import.meta.env.PUBLIC_SUPABASE_URL);
 
-  return createServerClient(supabaseUrl, import.meta.env.PUBLIC_SUPABASE_ANON_KEY, {
+  const anonKey = env?.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+  return createServerClient(supabaseUrl, anonKey, {
     cookieOptions: {
       name: AUTH_COOKIE_NAME,
     },
     cookies: createCookieMethods(request, cookies),
   });
 }
+
+/** Alias for backwards compatibility */
+export const createAstroSupabaseServerClient = createSupabaseServerClient;

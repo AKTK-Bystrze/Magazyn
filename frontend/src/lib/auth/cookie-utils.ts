@@ -8,7 +8,11 @@ import type { AstroCookies } from "astro";
 
 export const AUTH_COOKIE_NAME = "sb-magazyn-auth-token";
 export const CHUNKED_COOKIE_REGEX = /^sb-magazyn-auth-token\.\d+$/;
-export const BASE_AUTH_COOKIE_NAMES = ["sb-magazyn-auth-token", "magazyn-auth-token"] as const;
+
+export interface CookieDeletionOptions {
+  /** If true, resolves only chunked cookie names (.0 through .9 and dynamic chunks) */
+  chunkedOnly?: boolean;
+}
 
 /**
  * Expires a cookie on document.cookie for both host-only and domain scopes.
@@ -17,7 +21,7 @@ export const BASE_AUTH_COOKIE_NAMES = ["sb-magazyn-auth-token", "magazyn-auth-to
  * @param domain - Optional domain for dual-scope eviction
  * @param path - Cookie path (defaults to '/')
  */
-function expireBrowserCookie(name: string, domain?: string, path = "/"): void {
+export function expireBrowserCookie(name: string, domain?: string, path = "/"): void {
   document.cookie = `${name}=; path=${path}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   if (domain) {
     document.cookie = `${name}=; path=${path}; domain=${domain}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
@@ -38,6 +42,45 @@ export function pruneCookieList(
 ): Array<{ name: string; value: string }> {
   const hasChunks = cookies.some((c) => CHUNKED_COOKIE_REGEX.test(c.name) && Boolean(c.value));
   return hasChunks ? cookies.filter((c) => c.name !== AUTH_COOKIE_NAME) : cookies;
+}
+
+/**
+ * Resolves authentication cookie names to delete.
+ * Always includes chunk indices .0 through .9, conditionally includes the base auth token,
+ * and dynamically extracts matching cookies from the provided raw cookie string.
+ *
+ * @param cookieString - Optional cookie header or document.cookie string to scan
+ * @param options - Deletion filter options
+ * @returns Set of unique cookie names to purge
+ */
+export function getCookieNamesToDelete(
+  cookieString?: string | null,
+  options?: CookieDeletionOptions
+): Set<string> {
+  const namesToDelete = new Set<string>();
+
+  for (let i = 0; i <= 9; i++) {
+    namesToDelete.add(`${AUTH_COOKIE_NAME}.${i}`);
+  }
+
+  if (!options?.chunkedOnly) {
+    namesToDelete.add(AUTH_COOKIE_NAME);
+  }
+
+  if (cookieString) {
+    const parsed = parseCookieHeader(cookieString);
+    for (const { name } of parsed) {
+      if (options?.chunkedOnly) {
+        if (CHUNKED_COOKIE_REGEX.test(name)) {
+          namesToDelete.add(name);
+        }
+      } else if (name.startsWith("sb-") || CHUNKED_COOKIE_REGEX.test(name)) {
+        namesToDelete.add(name);
+      }
+    }
+  }
+
+  return namesToDelete;
 }
 
 /**
@@ -88,14 +131,8 @@ export function createBrowserCookieMethods() {
       }
 
       if (isWritingBase) {
-        const chunkNames = Array.from({ length: 10 }, (_, i) => `${AUTH_COOKIE_NAME}.${i}`);
-        if (document.cookie) {
-          document.cookie.split(";").forEach((c) => {
-            const name = c.split("=")[0].trim();
-            if (CHUNKED_COOKIE_REGEX.test(name)) chunkNames.push(name);
-          });
-        }
-        for (const name of new Set(chunkNames)) {
+        const chunkNames = getCookieNamesToDelete(document.cookie, { chunkedOnly: true });
+        for (const name of chunkNames) {
           expireBrowserCookie(name, hostname);
         }
       }
@@ -128,8 +165,8 @@ export function createBrowserCookieMethods() {
 }
 
 /**
- * Removes the authentication cookie and all Supabase auth cookies.
- * Used during logout or when authentication fails.
+ * Removes the authentication cookie and all Supabase auth cookies from the browser.
+ * Used during logout or when client authentication fails.
  *
  * Implements RFC 6265 dual-scope eviction by generating base names and chunk suffixes (.0 to .9),
  * as well as parsing existing document.cookie entries, issuing deletion headers for both
@@ -140,27 +177,10 @@ export function removeAuthCookie(): void {
     return;
   }
 
-  const namesToDelete = new Set<string>();
-
-  for (const base of BASE_AUTH_COOKIE_NAMES) {
-    namesToDelete.add(base);
-    for (let i = 0; i <= 9; i++) {
-      namesToDelete.add(`${base}.${i}`);
-    }
-  }
-
-  if (document.cookie) {
-    const cookies = document.cookie.split(";");
-    for (const cookie of cookies) {
-      const name = cookie.split("=")[0].trim();
-      if (name.startsWith("sb-") || name.startsWith("magazyn-")) {
-        namesToDelete.add(name);
-      }
-    }
-  }
-
+  const namesToDelete = getCookieNamesToDelete(document.cookie);
   const hostname =
     typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "";
+
   for (const name of namesToDelete) {
     expireBrowserCookie(name, hostname);
   }
@@ -175,24 +195,7 @@ export function removeAuthCookie(): void {
  * @param cookies - Astro's cookie handling interface
  */
 export function clearAllAuthCookies(request: Request, cookies: AstroCookies): void {
-  const namesToDelete = new Set<string>();
-
-  for (const base of BASE_AUTH_COOKIE_NAMES) {
-    namesToDelete.add(base);
-    for (let i = 0; i <= 9; i++) {
-      namesToDelete.add(`${base}.${i}`);
-    }
-  }
-
-  const cookieHeader = request.headers.get("Cookie") || "";
-  if (cookieHeader) {
-    const cookieNames = cookieHeader.split(";").map((c) => c.split("=")[0].trim());
-    for (const name of cookieNames) {
-      if (name.startsWith("sb-") || name.startsWith("magazyn-")) {
-        namesToDelete.add(name);
-      }
-    }
-  }
+  const namesToDelete = getCookieNamesToDelete(request.headers.get("Cookie"));
 
   for (const name of namesToDelete) {
     cookies.delete(name, { path: "/" });

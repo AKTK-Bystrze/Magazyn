@@ -1,6 +1,7 @@
 import { test as base, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import { AUTH_COOKIE_NAME } from "../../src/lib/auth/cookie-utils";
 import {
   createTestEquipment,
   cleanupTestEquipment,
@@ -230,7 +231,7 @@ async function injectSupabaseSession(page: Page, email: string): Promise<void> {
   let cookiesToSet: { name: string; value: string }[] = [];
   const ssrClient = createServerClient(supabaseUrl!, anonKey!, {
     cookieOptions: {
-      name: "sb-magazyn-auth-token",
+      name: AUTH_COOKIE_NAME,
     },
     cookies: {
       getAll: () => cookiesToSet,

@@ -7,6 +7,13 @@ import { RedirectManager } from "../lib/auth/redirect-manager";
 import type { SessionInfo } from "../types";
 import { StructuredLogger } from "../lib/utils/logger";
 
+const REVOKED_TOKEN_ERROR_CODES = new Set([
+  "refresh_token_not_found",
+  "invalid_grant",
+  "session_not_found",
+  "user_not_found",
+]);
+
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
 
@@ -36,12 +43,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
       });
     }
 
-    if (error && error.code === "refresh_token_not_found") {
-      logger.error("Invalid refresh token detected");
+    if (error && REVOKED_TOKEN_ERROR_CODES.has(error.code || "")) {
+      logger.error("Invalid or revoked session detected, clearing auth cookies", {
+        code: error.code,
+      });
 
       clearAllAuthCookies(context.request, context.cookies);
-
-      return context.redirect("/login");
     }
 
     context.locals.user = user || null;

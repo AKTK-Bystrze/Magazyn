@@ -17,6 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": "/src",
+      "astro:middleware": "/src/test/mocks/astro-middleware.ts",
     },
   },
 });

@@ -126,6 +126,31 @@ describe("AuthListener", () => {
     });
   });
 
+  describe("Token Refresh Handling", () => {
+    it("should trigger handleLogout when TOKEN_REFRESHED arrives with null session", async () => {
+      render(<AuthListener />);
+
+      await act(async () => {
+        await authStateCallback?.("TOKEN_REFRESHED", null);
+      });
+
+      await waitFor(() => {
+        expect(handleLogout).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it("should acknowledge refresh and not trigger logout when TOKEN_REFRESHED arrives with session", async () => {
+      render(<AuthListener />);
+
+      const session = createMockSession();
+      await act(async () => {
+        await authStateCallback?.("TOKEN_REFRESHED", session);
+      });
+
+      expect(handleLogout).not.toHaveBeenCalled();
+    });
+  });
+
   describe("Magic Link Hash Processing", () => {
     it("should detect and process access_token in URL hash and clean hash", async () => {
       mockLocation.hash =
