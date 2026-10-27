@@ -2,36 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { E2E_CONFIG } from "../constants";
 
 /**
- * Resets a user's credit balance to the default or specified amount.
- *
- * @param supabaseAdmin - The Supabase admin client.
- * @param userId - The ID of the user.
- * @param balance - The credit balance to set (default: defined in config).
- * @returns A promise that resolves when the balance is updated.
- */
-export async function resetCredits(
-  supabaseAdmin: SupabaseClient,
-  userId: string,
-  balance = E2E_CONFIG.DEFAULTS.INITIAL_CREDITS
-): Promise<void> {
-  await supabaseAdmin.from("profiles").update({ credit_balance: balance }).eq("id", userId);
-}
-
-/**
- * Cancels a reservation by setting its status to 'CANCELLED'.
- *
- * @param supabaseAdmin - The Supabase admin client.
- * @param reservationId - The ID of the reservation to cancel.
- * @returns A promise that resolves when the status is updated.
- */
-export async function cancelReservation(
-  supabaseAdmin: SupabaseClient,
-  reservationId: string
-): Promise<void> {
-  await supabaseAdmin.from("reservations").update({ status: "CANCELLED" }).eq("id", reservationId);
-}
-
-/**
  * Ensures that default equipment types exist in the database.
  * Creates 'kayak' and 'paddle' types if they don't exist.
  *
@@ -39,7 +9,7 @@ export async function cancelReservation(
  * @returns A promise that resolves to an object with equipment type IDs.
  * @throws An error if equipment types cannot be created or fetched.
  */
-export async function ensureEquipmentTypesExist(
+async function ensureEquipmentTypesExist(
   supabaseAdmin: SupabaseClient
 ): Promise<{ kayakId: string; paddleId: string }> {
   const defaultTypes = [E2E_CONFIG.EQUIPMENT_TYPES.KAYAK, E2E_CONFIG.EQUIPMENT_TYPES.PADDLE];

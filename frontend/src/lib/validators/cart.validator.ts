@@ -4,7 +4,7 @@ import { z } from "zod";
  * Zod schema for validating CartItem from untrusted sources (e.g., sessionStorage)
  * Ensures runtime type safety when loading persisted data
  */
-export const cartItemSchema = z.object({
+const cartItemSchema = z.object({
   equipmentId: z.string().uuid(),
   name: z.string().min(1),
   typeName: z.string().min(1),

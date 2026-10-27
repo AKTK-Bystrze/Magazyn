@@ -153,19 +153,19 @@ async function ensureUserExists(
   return { id: userId, email };
 }
 
-export function getTestUserEmail(workerIndex: number): string {
+function getTestUserEmail(workerIndex: number): string {
   const baseEmail = process.env.E2E_TEST_EMAIL || "test.user@example.com";
   const [, domain] = baseEmail.split("@");
   return `test.user.${workerIndex}@${domain}`;
 }
 
-export function getAdminEmail(workerIndex: number): string {
+function getAdminEmail(workerIndex: number): string {
   const baseEmail = E2E_CONFIG.USERS.ADMIN.EMAIL || "test.admin@example.com";
   const [, domain] = baseEmail.split("@");
   return `test.admin.${workerIndex}@${domain}`;
 }
 
-export function getSuperAdminEmail(workerIndex: number): string {
+function getSuperAdminEmail(workerIndex: number): string {
   const baseEmail = E2E_CONFIG.USERS.SUPER_ADMIN.EMAIL || "test.superadmin@example.com";
   const [, domain] = baseEmail.split("@");
   return `test.superadmin.${workerIndex}@${domain}`;

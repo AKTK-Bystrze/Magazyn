@@ -3,7 +3,7 @@ import * as React from "react";
 /**
  * Direction for table column sorting.
  */
-export type SortDirection = "asc" | "desc";
+type SortDirection = "asc" | "desc";
 
 /**
  * Configuration representing current table sort state.
@@ -16,7 +16,7 @@ export interface SortConfig<K extends string = string> {
 /**
  * Options for configuring the `useTableSort` hook.
  */
-export interface UseTableSortOptions<T, K extends string = string> {
+interface UseTableSortOptions<T, K extends string = string> {
   /** Initial column key to sort by */
   initialKey?: K | null;
   /** Initial sorting direction (defaults to "asc") */

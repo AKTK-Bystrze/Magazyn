@@ -10,21 +10,15 @@
 /**
  * Date validation error messages
  */
-export const DATE_VALIDATION = {
+const DATE_VALIDATION = {
   START_DATE_PAST: "Data rozpoczęcia musi być w przyszłości",
   END_DATE_BEFORE_START: "Data zakończenia musi być po dacie rozpoczęcia",
-  START_DATE_REQUIRED: "Data rozpoczęcia jest wymagana",
-  END_DATE_REQUIRED: "Data zakończenia jest wymagana",
-  START_DATE_MUST_BE_FUTURE: "Data rozpoczęcia musi być w przyszłości",
-  END_DATE_MUST_BE_AFTER_START:
-    "Data zakończenia musi być równa lub późniejsza niż data rozpoczęcia",
-  DATES_MUST_CHANGE: "Wybierz inne daty, aby zmodyfikować rezerwację",
 } as const;
 
 /**
  * Availability validation error messages
  */
-export const AVAILABILITY_VALIDATION = {
+const AVAILABILITY_VALIDATION = {
   /**
    * Returns message for unavailable items count
    * Uses simple Polish pluralization
@@ -32,7 +26,6 @@ export const AVAILABILITY_VALIDATION = {
   ITEMS_UNAVAILABLE: (count: number) =>
     `${count} ${count === 1 ? "przedmiot niedostępny" : "przedmioty niedostępne"}`,
   UNAVAILABLE_FOR_DATES: "Niedostępne dla wybranych dat",
-  EQUIPMENT_NOT_AVAILABLE: "Sprzęt niedostępny dla wybranych dat",
   CHECK_FAILED: "Nie udało się sprawdzić dostępności",
   SELECT_DATES: "Wybierz daty rozpoczęcia i zakończenia, aby kontynuować.",
 } as const;

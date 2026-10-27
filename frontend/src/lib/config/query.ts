@@ -2,13 +2,13 @@ import { QueryClient } from "@tanstack/react-query";
 import { QUERY_STALE_TIME_MS } from "./constants/app";
 
 /** Standard cache garbage collection time for React Query (10 minutes in ms) */
-export const QUERY_CACHE_TIME = 10 * 60 * 1000;
+const QUERY_CACHE_TIME = 10 * 60 * 1000;
 
 /**
  * Standard React Query configuration.
  * Centralizes query caching and refetching defaults across the application.
  */
-export const queryConfig = {
+const queryConfig = {
   defaultOptions: {
     queries: {
       staleTime: QUERY_STALE_TIME_MS,

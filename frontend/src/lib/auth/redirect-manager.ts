@@ -27,7 +27,7 @@ import { defaultLogger as logger } from "@/lib/utils/logger";
  * @param origin - Application origin (e.g., 'http://localhost:4321')
  * @returns URL to redirect to, or null if no redirect needed
  */
-export function getRedirectForAuthState(
+function getRedirectForAuthState(
   user: User | null,
   sessionInfo: SessionInfo | null,
   currentPath: string,
@@ -90,7 +90,7 @@ function isRedirectAllowedForRole(path: string, role: string | undefined): boole
  * @param user - Supabase user object (can be null)
  * @param sessionInfo - Session info from backend (authoritative source)
  */
-export function getDefaultRouteForUser(user: User | null, sessionInfo: SessionInfo | null): string {
+function getDefaultRouteForUser(user: User | null, sessionInfo: SessionInfo | null): string {
   if (!user || !sessionInfo) {
     logger.info("No user or sessionInfo available, redirecting to login");
     return ROUTES.PUBLIC.LOGIN;
