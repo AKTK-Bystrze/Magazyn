@@ -8,6 +8,16 @@
 	servers {
 		metrics
 	}
+
+	# Standardized global/system logger
+	log default {
+		output stdout
+		format json {
+			time_format iso8601
+			time_key time
+			level_format upper
+		}
+	}
 }
 
 :443 {
@@ -25,6 +35,11 @@
 	# Enable logging
 	log {
 		output stdout
+		format json {
+			time_format iso8601
+			time_key time
+			level_format upper
+		}
 	}
 }
 
