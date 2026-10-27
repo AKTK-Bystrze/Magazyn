@@ -66,21 +66,23 @@ func (r *reservationRepository) UpdateReservation(ctx context.Context, id string
 		return nil, err
 	}
 	var result struct {
-		ID        string  `json:"id"`
-		Status    string  `json:"status"`
-		StartDate string  `json:"start_date"`
-		EndDate   string  `json:"end_date"`
-		UpdatedAt *string `json:"updated_at"`
+		ID          string  `json:"id"`
+		EquipmentID string  `json:"equipment_id"`
+		Status      string  `json:"status"`
+		StartDate   string  `json:"start_date"`
+		EndDate     string  `json:"end_date"`
+		UpdatedAt   *string `json:"updated_at"`
 	}
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		return nil, types.NewInternalError("Failed to parse update result: "+jsonStr, err)
 	}
 	return &types.PublicReservationsSelect{
-		ID:        result.ID,
-		Status:    result.Status,
-		StartDate: result.StartDate,
-		EndDate:   result.EndDate,
-		UpdatedAt: result.UpdatedAt,
+		ID:          result.ID,
+		EquipmentID: result.EquipmentID,
+		Status:      result.Status,
+		StartDate:   result.StartDate,
+		EndDate:     result.EndDate,
+		UpdatedAt:   result.UpdatedAt,
 	}, nil
 }
 

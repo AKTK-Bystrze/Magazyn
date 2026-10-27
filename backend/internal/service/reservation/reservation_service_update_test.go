@@ -487,3 +487,60 @@ func TestUpdate_CancelRefund_LookupErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdate_PreservesEquipmentIDWhenRPCReturnsEmpty(t *testing.T) {
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+	reservationID := "res-456"
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      "user-123",
+			Status:      constants.ReservationStatusPending,
+			EquipmentID: "eq-1",
+			StartDate:   "2025-01-01",
+			EndDate:     "2025-01-03",
+			IsFree:      false,
+		},
+	}
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+	rentedStatus := constants.ReservationStatusRented
+	cmd := types.UpdateReservationCommand{
+		Status: &rentedStatus,
+	}
+	// Simulate legacy/empty RPC return where EquipmentID, StartDate, EndDate are empty strings
+	updatedRes := &types.PublicReservationsSelect{
+		ID:          reservationID,
+		EquipmentID: "",
+		Status:      constants.ReservationStatusRented,
+		StartDate:   "",
+		EndDate:     "",
+	}
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:     "eq-1",
+		Name:   &name,
+		TypeID: "type-1",
+		Status: constants.EquipmentStatusOK,
+	}
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+	mockRepo.On("UpdateReservation", ctx, reservationID, mock.MatchedBy(func(u types.PublicReservationsUpdate) bool {
+		return u.Status != nil && *u.Status == rentedStatus
+	}), "user-123").Return(updatedRes, nil)
+
+	result, err := svc.Update(ctx, reservationID, cmd, "user-123", auth.RoleUser)
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, constants.ReservationStatusRented, result.Status)
+	assert.Equal(t, "eq-1", result.EquipmentID)
+	assert.Equal(t, "2025-01-01", result.StartDate)
+	assert.Equal(t, "2025-01-03", result.EndDate)
+	assert.Equal(t, int32(30), result.CreditCost)
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+}

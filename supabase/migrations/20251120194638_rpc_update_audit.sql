@@ -4,5 +4,12 @@ BEGIN
     PERFORM set_config('app.changed_by_user_id', p_changed_by_user_id::TEXT, true);
     UPDATE reservations SET status = COALESCE(p_status::reservation_status, status), start_date = COALESCE(p_start_date, start_date), end_date = COALESCE(p_end_date, end_date), updated_at = NOW() WHERE id = p_reservation_id RETURNING * INTO v_updated_reservation;
     IF v_updated_reservation.id IS NULL THEN RAISE EXCEPTION 'Reservation not found'; END IF;
-    RETURN jsonb_build_object('id', v_updated_reservation.id, 'status', v_updated_reservation.status);
+    RETURN jsonb_build_object(
+        'id', v_updated_reservation.id,
+        'equipment_id', v_updated_reservation.equipment_id,
+        'status', v_updated_reservation.status,
+        'start_date', v_updated_reservation.start_date,
+        'end_date', v_updated_reservation.end_date,
+        'updated_at', v_updated_reservation.updated_at
+    );
 END; $body$;

@@ -98,6 +98,15 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 		if err != nil {
 			return nil, err
 		}
+		if updated.EquipmentID == "" {
+			updated.EquipmentID = current.EquipmentID
+		}
+		if updated.StartDate == "" {
+			updated.StartDate = current.StartDate
+		}
+		if updated.EndDate == "" {
+			updated.EndDate = current.EndDate
+		}
 	} else {
 		updated = &types.PublicReservationsSelect{
 			ID:          id,
