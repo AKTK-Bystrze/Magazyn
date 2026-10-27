@@ -19,6 +19,13 @@
 
 * enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
+## [0.9.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.8.1...v0.9.0) (2026-10-27)
+
+
+### Features
+
+* **infra:** standardize caddy logging and fix metrics healthcheck ([#293](https://github.com/AKTK-Bystrze/Magazyn/issues/293)) ([f48844b](https://github.com/AKTK-Bystrze/Magazyn/commit/f48844b03ca6d37657fa798044280835660fa19c))
+
 ## [0.8.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.8.0...v0.8.1) (2026-10-27)
 
 
