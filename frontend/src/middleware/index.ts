@@ -12,6 +12,8 @@ const REVOKED_TOKEN_ERROR_CODES = new Set([
   "invalid_grant",
   "session_not_found",
   "user_not_found",
+  "bad_jwt",
+  "invalid_token",
 ]);
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -43,9 +45,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
       });
     }
 
-    if (error && REVOKED_TOKEN_ERROR_CODES.has(error.code || "")) {
+    const isRevokedOrCorrupt =
+      Boolean(error) &&
+      (REVOKED_TOKEN_ERROR_CODES.has(error?.code || "") ||
+        (error?.status !== undefined &&
+          error.status >= 400 &&
+          error.status < 500 &&
+          error.code !== "unexpected_failure"));
+
+    if (isRevokedOrCorrupt) {
       logger.error("Invalid or revoked session detected, clearing auth cookies", {
-        code: error.code,
+        code: error?.code,
+        status: error?.status,
       });
 
       clearAllAuthCookies(context.request, context.cookies);

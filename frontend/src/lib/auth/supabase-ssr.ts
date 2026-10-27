@@ -4,23 +4,11 @@ import {
   AUTH_COOKIE_NAME,
   CHUNKED_COOKIE_REGEX,
   getCookieNamesToDelete,
+  isCookieExpired,
   pruneCookieList,
 } from "./cookie-utils";
 
-export { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX };
-
-/**
- * Determines whether a cookie operation represents an expiration/deletion.
- * Evaluates RFC 6265 semantics for empty value, non-positive max-age, and past expiration date.
- *
- * @param value - Cookie string value
- * @param options - Cookie attributes (maxAge, expires, etc.)
- * @returns true if the cookie is expired and should be deleted
- */
-export const isCookieExpired = (value: string, options?: AstroCookieSetOptions): boolean =>
-  !value ||
-  (options?.maxAge !== undefined && options.maxAge <= 0) ||
-  (options?.expires !== undefined && options.expires.getTime() <= Date.now());
+export { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX, isCookieExpired };
 
 /**
  * Creates cookie handlers for the Supabase SSR client with bilateral pruning.

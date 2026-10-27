@@ -96,4 +96,20 @@ func TestExtractTokenOrContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "valid-token-789", token)
 	})
+
+	t.Run("accepts case-insensitive Bearer prefix", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("Authorization", "bearer lowercase-token-123")
+
+		token, err := common.ExtractTokenOrContext(req)
+		assert.NoError(t, err)
+		assert.Equal(t, "lowercase-token-123", token)
+
+		reqUpper := httptest.NewRequest(http.MethodGet, "/test", nil)
+		reqUpper.Header.Set("Authorization", "BEARER uppercase-token-456")
+
+		tokenUpper, err := common.ExtractTokenOrContext(reqUpper)
+		assert.NoError(t, err)
+		assert.Equal(t, "uppercase-token-456", tokenUpper)
+	})
 }

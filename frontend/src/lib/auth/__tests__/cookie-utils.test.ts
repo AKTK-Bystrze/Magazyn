@@ -6,6 +6,7 @@ import {
   getCookieNamesToDelete,
   AUTH_COOKIE_NAME,
   CHUNKED_COOKIE_REGEX,
+  isCookieExpired,
   pruneCookieList,
   createBrowserCookieMethods,
 } from "../cookie-utils";
@@ -54,6 +55,35 @@ describe("cookie-utils", () => {
       expect(CHUNKED_COOKIE_REGEX.test("sb-magazyn-auth-token")).toBe(false);
       expect(CHUNKED_COOKIE_REGEX.test("other-token.0")).toBe(false);
       expect(CHUNKED_COOKIE_REGEX.test("sb-magazyn-auth-token.abc")).toBe(false);
+    });
+  });
+
+  describe("isCookieExpired", () => {
+    it("returns true for empty string value", () => {
+      expect(isCookieExpired("")).toBe(true);
+    });
+
+    it("returns true for maxAge <= 0", () => {
+      expect(isCookieExpired("val", { maxAge: 0 })).toBe(true);
+      expect(isCookieExpired("val", { maxAge: -1 })).toBe(true);
+      expect(isCookieExpired("val", { maxAge: -100 })).toBe(true);
+    });
+
+    it("returns false for positive maxAge", () => {
+      expect(isCookieExpired("val", { maxAge: 3600 })).toBe(false);
+    });
+
+    it("returns true for past expires date", () => {
+      expect(isCookieExpired("val", { expires: new Date(0) })).toBe(true);
+      expect(isCookieExpired("val", { expires: new Date(Date.now() - 5000) })).toBe(true);
+    });
+
+    it("returns false for future expires date", () => {
+      expect(isCookieExpired("val", { expires: new Date(Date.now() + 60000) })).toBe(false);
+    });
+
+    it("returns false for non-empty value with no expiration options", () => {
+      expect(isCookieExpired("val")).toBe(false);
     });
   });
 
@@ -137,6 +167,20 @@ describe("cookie-utils", () => {
       expect(result).toEqual([
         { name: "sb-magazyn-auth-token", value: "valid-base" },
         { name: "sb-magazyn-auth-token.0", value: "" },
+      ]);
+    });
+
+    it("preserves base cookie if only higher chunk (.1) is present without .0", () => {
+      const input = [
+        { name: "sb-magazyn-auth-token", value: "valid-base" },
+        { name: "sb-magazyn-auth-token.1", value: "orphaned-chunk" },
+      ];
+
+      const result = pruneCookieList(input);
+
+      expect(result).toEqual([
+        { name: "sb-magazyn-auth-token", value: "valid-base" },
+        { name: "sb-magazyn-auth-token.1", value: "orphaned-chunk" },
       ]);
     });
 
@@ -248,6 +292,47 @@ describe("cookie-utils", () => {
 
         expect(cookieWrites).toContainEqual(
           expect.stringContaining("sb-magazyn-auth-token=; path=/; max-age=0")
+        );
+      });
+
+      it("deletes cookie when maxAge is negative or expires is in the past", () => {
+        const methods = createBrowserCookieMethods();
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token",
+            value: "old-val",
+            options: { maxAge: -1 },
+          },
+          {
+            name: "sb-magazyn-auth-token.0",
+            value: "old-chunk",
+            options: { expires: new Date(0) },
+          },
+        ]);
+
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining("sb-magazyn-auth-token=; path=/; max-age=0")
+        );
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining("sb-magazyn-auth-token.0=; path=/; max-age=0")
+        );
+      });
+
+      it("formats expires attribute when expires option is in the future", () => {
+        const methods = createBrowserCookieMethods();
+        const futureDate = new Date(Date.now() + 60000);
+
+        methods.setAll([
+          {
+            name: "sb-magazyn-auth-token",
+            value: "future-val",
+            options: { expires: futureDate },
+          },
+        ]);
+
+        expect(cookieWrites).toContainEqual(
+          expect.stringContaining(`expires=${futureDate.toUTCString()}`)
         );
       });
     });

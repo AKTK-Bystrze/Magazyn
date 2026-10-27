@@ -6,13 +6,32 @@
 import { parseCookieHeader } from "@supabase/ssr";
 import type { AstroCookies } from "astro";
 
+/** Base authentication cookie name standardized across SSR and browser client. */
 export const AUTH_COOKIE_NAME = "sb-magazyn-auth-token";
+
+/** Regular expression identifying numeric chunked authentication cookies (e.g., `.0`, `.1`). */
 export const CHUNKED_COOKIE_REGEX = /^sb-magazyn-auth-token\.\d+$/;
 
 export interface CookieDeletionOptions {
   /** If true, resolves only chunked cookie names (.0 through .9 and dynamic chunks) */
   chunkedOnly?: boolean;
 }
+
+/**
+ * Determines whether a cookie operation represents an expiration or deletion.
+ * Evaluates RFC 6265 semantics for empty value, non-positive max-age, and past expiration date.
+ *
+ * @param value - Cookie string value
+ * @param options - Cookie attributes (maxAge, expires, etc.)
+ * @returns true if the cookie is expired and should be deleted
+ */
+export const isCookieExpired = (
+  value: string,
+  options?: { maxAge?: number; expires?: Date }
+): boolean =>
+  !value ||
+  (options?.maxAge !== undefined && options.maxAge <= 0) ||
+  (options?.expires !== undefined && options.expires.getTime() <= Date.now());
 
 /**
  * Expires a cookie on document.cookie for both host-only and domain scopes.
@@ -40,8 +59,8 @@ export function expireBrowserCookie(name: string, domain?: string, path = "/"): 
 export function pruneCookieList(
   cookies: Array<{ name: string; value: string }>
 ): Array<{ name: string; value: string }> {
-  const hasChunks = cookies.some((c) => CHUNKED_COOKIE_REGEX.test(c.name) && Boolean(c.value));
-  return hasChunks ? cookies.filter((c) => c.name !== AUTH_COOKIE_NAME) : cookies;
+  const hasChunk0 = cookies.some((c) => c.name === `${AUTH_COOKIE_NAME}.0` && Boolean(c.value));
+  return hasChunk0 ? cookies.filter((c) => c.name !== AUTH_COOKIE_NAME) : cookies;
 }
 
 /**
@@ -106,6 +125,7 @@ export function createBrowserCookieMethods() {
           path?: string;
           domain?: string;
           maxAge?: number;
+          expires?: Date;
           sameSite?: string;
           secure?: boolean;
         };
@@ -118,12 +138,16 @@ export function createBrowserCookieMethods() {
       const hostname =
         typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "";
       const isWritingChunked = cookiesToSet.some(
-        (c) => CHUNKED_COOKIE_REGEX.test(c.name) && Boolean(c.value) && c.options?.maxAge !== 0
+        (c) =>
+          CHUNKED_COOKIE_REGEX.test(c.name) &&
+          Boolean(c.value) &&
+          !isCookieExpired(c.value, c.options)
       );
       const isWritingBase =
         !isWritingChunked &&
         cookiesToSet.some(
-          (c) => c.name === AUTH_COOKIE_NAME && Boolean(c.value) && c.options?.maxAge !== 0
+          (c) =>
+            c.name === AUTH_COOKIE_NAME && Boolean(c.value) && !isCookieExpired(c.value, c.options)
         );
 
       if (isWritingChunked) {
@@ -144,12 +168,14 @@ export function createBrowserCookieMethods() {
         const path = options?.path ?? "/";
         const domain = options?.domain || hostname;
 
-        if (!value || options?.maxAge === 0) {
+        if (isCookieExpired(value, options)) {
           expireBrowserCookie(name, domain, path);
         } else {
           let cookieStr = `${name}=${value}; path=${path}; samesite=${options?.sameSite || "lax"}`;
           if (options?.maxAge !== undefined) {
             cookieStr += `; max-age=${options.maxAge}`;
+          } else if (options?.expires) {
+            cookieStr += `; expires=${options.expires.toUTCString()}`;
           }
           if (options?.domain) {
             cookieStr += `; domain=${options.domain}`;

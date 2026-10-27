@@ -28,7 +28,7 @@ func ExtractBearerToken(r *http.Request) (string, error) {
 	}
 	prefix, token, ok := strings.Cut(authHeader, " ")
 	token = strings.TrimSpace(token)
-	if !ok || prefix != "Bearer" || token == "" {
+	if !ok || !strings.EqualFold(prefix, "Bearer") || token == "" {
 		return "", ErrInvalidAuthHeader
 	}
 	return token, nil

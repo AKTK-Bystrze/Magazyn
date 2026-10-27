@@ -190,6 +190,41 @@ describe("AuthListener", () => {
 
       expect(supabase.auth.setSession).not.toHaveBeenCalled();
     });
+
+    it("should reset redirect-in-progress flag and process SIGNED_IN when hash lands directly on target page", async () => {
+      mockLocation.pathname = "/admin";
+      mockLocation.hash =
+        "#access_token=hash-access-token&refresh_token=hash-refresh-token&expires_in=3600";
+      vi.stubGlobal("location", { ...mockLocation, pathname: "/admin", replace: mockReplace });
+
+      const session = createMockSession({
+        user: createMockUser({ id: "user-123" }),
+        access_token: "hash-access-token",
+      });
+      vi.mocked(supabase.auth.setSession).mockResolvedValue({
+        data: { session, user: session.user },
+        error: null,
+      });
+      vi.mocked(getUserSession).mockResolvedValue({
+        isEnabled: true,
+        role: "admin",
+      } as any);
+      vi.mocked(RedirectManager.getRedirectForAuthState).mockReturnValue("/admin");
+
+      render(<AuthListener initialUserId="user-123" />);
+
+      await waitFor(() => {
+        expect(supabase.auth.setSession).toHaveBeenCalled();
+      });
+
+      mockLocation.hash = "";
+
+      await act(async () => {
+        await authStateCallback?.("SIGNED_IN", session);
+      });
+
+      expect(getUserSession).toHaveBeenCalled();
+    });
   });
 
   describe("Redirect Prevention", () => {

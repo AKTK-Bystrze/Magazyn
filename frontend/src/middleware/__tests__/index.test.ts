@@ -234,6 +234,30 @@ describe("Astro Middleware (onRequest)", () => {
 
       expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
     });
+
+    it("clears cookies when error code is bad_jwt or invalid_token", async () => {
+      mockGetUser.mockResolvedValueOnce({
+        data: { user: null },
+        error: { code: "bad_jwt", message: "Malformed token signature" },
+      });
+
+      const { context } = createMockContext("/dashboard");
+      await onRequest(context, nextMock);
+
+      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
+    });
+
+    it("clears cookies when error has a 4xx status (e.g. 400 bad request)", async () => {
+      mockGetUser.mockResolvedValueOnce({
+        data: { user: null },
+        error: { status: 400, message: "Corrupted cookie chunk header" },
+      });
+
+      const { context } = createMockContext("/dashboard");
+      await onRequest(context, nextMock);
+
+      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
+    });
   });
 
   describe("Account Disabled Enforcement", () => {

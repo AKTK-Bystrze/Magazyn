@@ -89,13 +89,8 @@ func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 	}
 	session, err := h.service.GetSession(r.Context(), user.ID, token)
 	if err != nil {
-		var notFoundErr *types.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			common.RespondError(r.Context(), w, http.StatusNotFound, "Profile not found")
-		} else {
-			logger.Errorf(r.Context(), "Failed to get session for user %s: %v", user.ID, err)
-			common.RespondError(r.Context(), w, http.StatusInternalServerError, "Internal server error")
-		}
+		logger.Errorf(r.Context(), "Failed to get session for user %s: %v", user.ID, err)
+		common.RespondWithError(r.Context(), w, err)
 		return
 	}
 	common.RespondJSON(r.Context(), w, http.StatusOK, session)

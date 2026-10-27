@@ -79,7 +79,11 @@ export const AuthListener: React.FC<AuthListenerProps> = ({ initialUserId }) => 
                 if (normalizePath(window.location.pathname) !== normalizePath(redirectTo)) {
                   logger.info(`🔗 Redirect: ${window.location.pathname} → ${redirectTo}`);
                   window.location.replace(redirectTo);
+                } else {
+                  isRedirectInProgressRef.current = false;
                 }
+              } else {
+                isRedirectInProgressRef.current = false;
               }
             }
           } catch (err) {
