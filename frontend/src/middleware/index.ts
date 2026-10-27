@@ -36,7 +36,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
       error,
     } = await supabase.auth.getUser();
 
-    if (error) {
+    const isAuthSessionMissing =
+      error?.name === "AuthSessionMissingError" || error?.message === "Auth session missing!";
+
+    if (error && !isAuthSessionMissing) {
       logger.error("Supabase getUser() error", {
         code: error.code,
         message: error.message,
@@ -47,6 +50,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     const isRevokedOrCorrupt =
       Boolean(error) &&
+      !isAuthSessionMissing &&
       (REVOKED_TOKEN_ERROR_CODES.has(error?.code || "") ||
         (error?.status !== undefined &&
           error.status >= 400 &&
