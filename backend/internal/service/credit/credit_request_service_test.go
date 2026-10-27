@@ -38,6 +38,19 @@ func TestCreditRequestService_CreateRequest_Success(t *testing.T) {
 	assert.Equal(t, "Test Title", res.Title)
 	assert.Equal(t, types.CreditRequestStatusAwaiting, res.Status)
 }
+func TestCreditRequestService_CreateRequest_RequestorAsHelper(t *testing.T) {
+	repo := mocks.NewMockCreditRequestRepository()
+	service := credit.NewCreditRequestService(repo)
+	req := types.CreateCreditRequestDTO{
+		Title:        "Test with requestor as helper",
+		CreditsValue: 10,
+		UserHelpedID: "u2",
+		Helpers:      []string{"u1", "u3"},
+	}
+	res, err := service.CreateRequest(context.Background(), "u1", req)
+	assert.NoError(t, err)
+	assert.Contains(t, res.Helpers, "u1")
+}
 func TestCreditRequestService_UpdateRequest(t *testing.T) {
 	newTitle := "new title"
 	tests := []struct {
