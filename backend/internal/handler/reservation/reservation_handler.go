@@ -3,6 +3,7 @@ package reservation
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"magazyn/backend/internal/constants"
@@ -89,7 +90,12 @@ func (h *ReservationHandler) HandleCreate(w http.ResponseWriter, r *http.Request
 	}
 	response, err := h.service.Create(ctx, cmd, userID, role)
 	if err != nil {
-		logger.Errorf(ctx, "Create error: %v", err)
+		var conflictErr *types.ConflictError
+		if errors.As(err, &conflictErr) {
+			logger.Warnf(ctx, "Create conflict: %v", err)
+		} else {
+			logger.Errorf(ctx, "Create error: %v", err)
+		}
 		common.RespondWithError(ctx, w, err)
 		return
 	}
@@ -123,7 +129,12 @@ func (h *ReservationHandler) HandleUpdate(w http.ResponseWriter, r *http.Request
 	}
 	response, err := h.service.Update(ctx, id, cmd, userID, role)
 	if err != nil {
-		logger.Errorf(ctx, "Update error: %v", err)
+		var conflictErr *types.ConflictError
+		if errors.As(err, &conflictErr) {
+			logger.Warnf(ctx, "Update conflict: %v", err)
+		} else {
+			logger.Errorf(ctx, "Update error: %v", err)
+		}
 		common.RespondWithError(ctx, w, err)
 		return
 	}

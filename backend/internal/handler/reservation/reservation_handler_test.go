@@ -174,3 +174,67 @@ func TestHandleList_AllFiltersValid_CallsService(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	mockSvc.AssertExpectations(t)
 }
+
+func TestHandleCreate_ConflictError_ReturnsConflict(t *testing.T) {
+	mockSvc := new(mocks.MockReservationService)
+	h := handler.NewReservationHandler(mockSvc)
+
+	cmd := types.CreateReservationsCommand{
+		Reservations: []types.CreateReservationItem{
+			{
+				EquipmentID: "eq-1",
+				StartDate:   "2026-06-01",
+				EndDate:     "2026-06-05",
+			},
+		},
+	}
+	body, err := json.Marshal(cmd)
+	assert.NoError(t, err)
+
+	conflictErr := types.NewConflictError("Equipment is already reserved for the selected period", nil)
+	mockSvc.On("Create", mock.Anything, cmd, "user-1", auth.RoleUser).Return(nil, conflictErr)
+
+	req := httptest.NewRequest(http.MethodPost, "/reservations", bytes.NewReader(body))
+	req = testutils.WithUserContext(req, "user-1", auth.RoleUser)
+	rec := httptest.NewRecorder()
+
+	h.HandleCreate(rec, req)
+
+	assert.Equal(t, http.StatusConflict, rec.Code)
+	var resp map[string]interface{}
+	decodeErr := json.NewDecoder(rec.Body).Decode(&resp)
+	assert.NoError(t, decodeErr)
+	assert.Equal(t, "Equipment is already reserved for the selected period", resp["error"])
+	mockSvc.AssertExpectations(t)
+}
+
+func TestHandleUpdate_ConflictError_ReturnsConflict(t *testing.T) {
+	mockSvc := new(mocks.MockReservationService)
+	h := handler.NewReservationHandler(mockSvc)
+
+	startDate := "2026-06-10"
+	endDate := "2026-06-15"
+	cmd := types.UpdateReservationCommand{
+		StartDate: &startDate,
+		EndDate:   &endDate,
+	}
+	body, err := json.Marshal(cmd)
+	assert.NoError(t, err)
+
+	conflictErr := types.NewConflictError("Dates not available", nil)
+	mockSvc.On("Update", mock.Anything, "res-1", cmd, "user-1", auth.RoleUser).Return(nil, conflictErr)
+
+	req := httptest.NewRequest(http.MethodPatch, "/reservations/res-1", bytes.NewReader(body))
+	req.SetPathValue("id", "res-1")
+	req = testutils.WithUserContext(req, "user-1", auth.RoleUser)
+	rec := httptest.NewRecorder()
+
+	h.HandleUpdate(rec, req)
+
+	assert.Equal(t, http.StatusConflict, rec.Code)
+	var resp map[string]interface{}
+	decodeErr := json.NewDecoder(rec.Body).Decode(&resp)
+	assert.NoError(t, decodeErr)
+	assert.Equal(t, "Dates not available", resp["error"])
+	mockSvc.AssertExpectations(t)
+}
