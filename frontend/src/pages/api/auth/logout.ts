@@ -6,10 +6,5 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
   clearAllAuthCookies(request, cookies);
 
-  return new Response(JSON.stringify({ message: "Logged out" }), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  return Response.json({ message: "Logged out" });
 };

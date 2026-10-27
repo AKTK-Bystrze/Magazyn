@@ -93,7 +93,7 @@ export function getCookieNamesToDelete(
         if (CHUNKED_COOKIE_REGEX.test(name)) {
           namesToDelete.add(name);
         }
-      } else if (name.startsWith("sb-") || CHUNKED_COOKIE_REGEX.test(name)) {
+      } else if (name.startsWith("sb-")) {
         namesToDelete.add(name);
       }
     }

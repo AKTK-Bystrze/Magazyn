@@ -8,8 +8,6 @@ import {
   pruneCookieList,
 } from "./cookie-utils";
 
-export { AUTH_COOKIE_NAME, CHUNKED_COOKIE_REGEX, isCookieExpired };
-
 /**
  * Creates cookie handlers for the Supabase SSR client with bilateral pruning.
  * Reads parsed cookies from the incoming request and writes updates back to Astro cookies.
@@ -109,6 +107,3 @@ export function createSupabaseServerClient(
     cookies: createCookieMethods(request, cookies),
   });
 }
-
-/** Alias for backwards compatibility */
-export const createAstroSupabaseServerClient = createSupabaseServerClient;

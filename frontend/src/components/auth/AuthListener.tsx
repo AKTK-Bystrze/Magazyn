@@ -156,12 +156,9 @@ export const AuthListener: React.FC<AuthListenerProps> = ({ initialUserId }) => 
         );
 
         if (redirectTo) {
-          const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
-          const targetPath = redirectTo.replace(/\/$/, "") || "/";
-
-          if (currentPath !== targetPath) {
+          if (normalizePath(window.location.pathname) !== normalizePath(redirectTo)) {
             isRedirectInProgressRef.current = true;
-            logger.info(`🔔 Redirect: ${currentPath} → ${redirectTo}`);
+            logger.info(`🔔 Redirect: ${window.location.pathname} → ${redirectTo}`);
             window.location.replace(redirectTo);
           }
         }
