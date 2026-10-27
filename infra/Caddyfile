@@ -1,50 +1,64 @@
 # Cloudflare Origin Certificate Caddyfile
 # Full (strict) SSL: Cloudflare <-> Caddy with Origin Certificate
 {
-    # Disable auto-HTTPS - Cloudflare Origin Certificate
-    auto_https off
+	# Disable auto-HTTPS - Cloudflare Origin Certificate
+	auto_https off
 
-    # Enable global Caddy metrics
-    servers {
-        metrics
-    }
+	# Enable global Caddy metrics
+	servers {
+		metrics
+	}
+
+	# Standardized global/system logger
+	log default {
+		output stdout
+		format json {
+			time_format iso8601
+			time_key time
+			level_format upper
+		}
+	}
 }
 
 :443 {
-    # Use Cloudflare Origin Certificate
-    tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
+	# Use Cloudflare Origin Certificate
+	tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 
-    # Proxy /api requests to the Go backend container
-    handle /api/* {
-        uri strip_prefix /api
-        reverse_proxy backend:8080 {
-            transport http {
-                response_header_timeout 10s
-                dial_timeout 5s
-            }
-        }
-    }
+	# Proxy /api requests to the Go backend container
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy backend:8080 {
+			transport http {
+				response_header_timeout 10s
+				dial_timeout 5s
+			}
+		}
+	}
 
-    # Proxy all other requests to the Astro frontend container
-    handle /* {
-        reverse_proxy frontend:4321 {
-            transport http {
-                response_header_timeout 10s
-                dial_timeout 5s
-            }
-        }
-    }
+	# Proxy all other requests to the Astro frontend container
+	handle /* {
+		reverse_proxy frontend:4321 {
+			transport http {
+				response_header_timeout 10s
+				dial_timeout 5s
+			}
+		}
+	}
 
-    # Enable logging
-    log {
-        output stdout
-        format json
-    }
+	# Enable logging
+	log {
+		output stdout
+		format json {
+			time_format iso8601
+			time_key time
+			level_format upper
+		}
+	}
 }
 
 :2019 {
-    # Expose metrics to internal network only (Alloy will scrape this)
-    handle /metrics {
-        metrics
-    }
+	# Expose metrics to internal network only (Alloy will scrape this)
+	handle /metrics {
+		metrics
+	}
 }
