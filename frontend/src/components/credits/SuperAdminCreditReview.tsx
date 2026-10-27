@@ -35,7 +35,12 @@ export function SuperAdminCreditReview({ request, open, onOpenChange, onReviewed
       setHelpers(request.helpers);
       usersApi
         .listPublic({ perPage: 1000 })
-        .then((res) => setUsers(res.users))
+        .then((res) => {
+          const sorted = [...res.users].sort((a, b) =>
+            a.username.localeCompare(b.username, "pl", { sensitivity: "base" })
+          );
+          setUsers(sorted);
+        })
         .catch(console.error);
     }
   }, [open, request]);

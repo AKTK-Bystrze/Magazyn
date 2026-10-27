@@ -41,6 +41,7 @@ func (r *userRepository) List(ctx context.Context, page, perPage int, role, sear
 		filter := fmt.Sprintf("username.ilike.%%%s%%,email.ilike.%%%s%%", searchTerm, searchTerm)
 		query = query.Or(filter, "")
 	}
+	query = query.Order("username", nil)
 	query = query.Range(offset, offset+perPage-1, "")
 	data, count, err := query.Execute()
 	if err != nil {

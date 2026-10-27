@@ -252,4 +252,27 @@ describe("CreditRequestForm", () => {
     expect(await screen.findByText("Błąd zapisu w bazie danych")).toBeInTheDocument();
     expect(onSuccess).not.toHaveBeenCalled();
   });
+
+  it("renders users sorted alphabetically in both select and helpers list", async () => {
+    vi.mocked(usersApi.listPublic).mockResolvedValueOnce({
+      users: [
+        { id: "user-z", username: "Zofia", creditBalance: 0 },
+        { id: "user-a", username: "Adam", creditBalance: 0 },
+        { id: "user-m", username: "Michał", creditBalance: 0 },
+      ],
+      pagination: { page: 1, perPage: 1000, totalItems: 3, totalPages: 1 },
+    });
+
+    render(<CreditRequestForm onSuccess={onSuccess} onCancel={onCancel} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("option", { name: "Adam" })).toBeInTheDocument();
+    });
+
+    const options = screen
+      .getAllByRole("option")
+      .map((opt) => opt.textContent)
+      .filter((text) => text !== "Wybierz osobę...");
+    expect(options).toEqual(["Adam", "Michał", "Zofia"]);
+  });
 });
