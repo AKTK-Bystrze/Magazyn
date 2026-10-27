@@ -49,52 +49,69 @@ restore_self() {
 }
 
 pick_tag() {
-  git fetch --tags -f >/dev/null 2>&1 || true
+  git fetch origin --tags -f >/dev/null 2>&1 || true
   echo "Available release tags:" >&2
-  PS3="Select tag [number or name]: "
-  select tag in $(git tag -l --sort=-v:refname | head -n 10); do
-    echo "${tag:-$REPLY}"
-    return
+  PS3="Select tag [number, or enter custom tag]: "
+  local tags=()
+  while IFS= read -r tag; do
+    [ -n "$tag" ] && tags+=("$tag")
+  done < <(git tag -l --sort=-v:refname 2>/dev/null | head -n 5)
+
+  tags+=("Enter custom tag")
+  select opt in "${tags[@]}"; do
+    if [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -ge 1 ] && [ "$REPLY" -le $((${#tags[@]} - 1)) ]; then
+      echo "${tags[$((REPLY-1))]}"
+      return
+    elif [ "$REPLY" = "${#tags[@]}" ] || [ "$opt" = "Enter custom tag" ]; then
+      if [ -t 0 ]; then
+        read -r -p "Enter custom release tag: " custom_tag
+      else
+        read -r custom_tag || true
+      fi
+      echo "${custom_tag}"
+      return
+    elif [ -n "$REPLY" ]; then
+      echo "${REPLY}"
+      return
+    fi
   done
 }
 
-pick_target() {
-  git fetch origin --tags -f >/dev/null 2>&1 || true
+pick_commit() {
+  git fetch origin main --tags -f >/dev/null 2>&1 || true
+  echo "Available recent commits (origin/main):" >&2
+  PS3="Select commit [number, or enter commit ID]: "
+  local ref="origin/main"
+  if ! git rev-parse -q --verify "${ref}^{commit}" >/dev/null 2>&1; then
+    ref="HEAD"
+  fi
 
-  local c1_hash c1_desc c2_hash c2_desc c3_hash c3_desc
-  c1_hash=$(git log -1 --skip=0 --format="%h" 2>/dev/null || echo "")
-  c1_desc=$(git log -1 --skip=0 --format="%h - %s (%cr)" 2>/dev/null || echo "")
-  c2_hash=$(git log -1 --skip=1 --format="%h" 2>/dev/null || echo "")
-  c2_desc=$(git log -1 --skip=1 --format="%h - %s (%cr)" 2>/dev/null || echo "")
-  c3_hash=$(git log -1 --skip=2 --format="%h" 2>/dev/null || echo "")
-  c3_desc=$(git log -1 --skip=2 --format="%h - %s (%cr)" 2>/dev/null || echo "")
+  local commits=()
+  local hashes=()
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    local hash="${line%% *}"
+    hashes+=("$hash")
+    commits+=("${line#* }")
+  done < <(git log "${ref}" -n 5 --format="%h %h - %s (%cr)" 2>/dev/null)
 
-  echo "Select commit or enter any commit ID / tag to deploy:" >&2
-  PS3="Select target [1-4 or enter commit/tag]: "
-  select opt in "${c1_desc:-Commit 1}" \
-                "${c2_desc:-Commit 2}" \
-                "${c3_desc:-Commit 3}" \
-                "Enter custom commit ID or tag"; do
-    case "$REPLY" in
-      1) echo "${c1_hash}"; return ;;
-      2) echo "${c2_hash}"; return ;;
-      3) echo "${c3_hash}"; return ;;
-      4)
-        if [ -t 0 ]; then
-          read -r -p "Enter commit ID or tag: " custom_target
-        else
-          read -r custom_target || true
-        fi
-        echo "${custom_target}"
-        return
-        ;;
-      *)
-        if [ -n "$REPLY" ]; then
-          echo "${REPLY}"
-          return
-        fi
-        ;;
-    esac
+  commits+=("Enter custom commit ID")
+  select opt in "${commits[@]}"; do
+    if [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -ge 1 ] && [ "$REPLY" -le "${#hashes[@]}" ]; then
+      echo "${hashes[$((REPLY-1))]}"
+      return
+    elif [ "$REPLY" = "$(( ${#hashes[@]} + 1 ))" ] || [ "$opt" = "Enter custom commit ID" ]; then
+      if [ -t 0 ]; then
+        read -r -p "Enter custom commit ID: " custom_commit
+      else
+        read -r custom_commit || true
+      fi
+      echo "${custom_commit}"
+      return
+    elif [ -n "$REPLY" ]; then
+      echo "${REPLY}"
+      return
+    fi
   done
 }
 
@@ -148,6 +165,21 @@ cmd_prune() {
   ok "Prune complete."
 }
 
+cmd_pick_tag() { pick_tag; }
+cmd_pick_commit() { pick_commit; }
+
+cmd_deploy_tag() {
+  local tag
+  tag=$(pick_tag)
+  [ -n "$tag" ] && cmd_deploy "$tag" "$@"
+}
+
+cmd_deploy_commit() {
+  local commit
+  commit=$(pick_commit)
+  [ -n "$commit" ] && cmd_deploy "$commit" "$@"
+}
+
 cmd_deploy() {
   local force=false
   [[ "$*" =~ --force ]] && force=true
@@ -156,7 +188,15 @@ cmd_deploy() {
 
   # Auto-discovery if commit/tag not provided
   if [ -z "$target_ref" ]; then
-    target_ref=$(pick_target)
+    echo "Select deployment method:" >&2
+    PS3="Select method [1-2]: "
+    select method in "Deploy release tag" "Deploy commit ID"; do
+      case "$REPLY" in
+        1) target_ref=$(pick_tag); break ;;
+        2) target_ref=$(pick_commit); break ;;
+        *) echo "Invalid option" ;;
+      esac
+    done
   fi
 
   [ -n "$target_ref" ] || { fail "Target commit/tag cannot be empty"; exit 1; }
@@ -310,8 +350,9 @@ cmd_rollback() {
 
 show_menu() {
   echo -e "${CYAN}${BOLD}=== Magazyn Admin Cockpit ===${NC}"
-  PS3="Select an option [1-9]: "
-  select opt in "Deploy commit ID or release tag" \
+  PS3="Select an option [1-10]: "
+  select opt in "Deploy release tag" \
+                "Deploy commit ID" \
                 "Rollback release" \
                 "Run system diagnostics (doctor)" \
                 "Run sanity check" \
@@ -321,15 +362,26 @@ show_menu() {
                 "Prune unused Docker images" \
                 "Exit"; do
     case "$REPLY" in
-      1) cmd_deploy; break ;;
-      2) cmd_rollback; break ;;
-      3) cmd_doctor; break ;;
-      4) cmd_sanity; break ;;
-      5) cmd_backup; break ;;
-      6) cmd_restore; break ;;
-      7) cmd_status; break ;;
-      8) cmd_prune; break ;;
-      9|q|Q) exit 0 ;;
+      1)
+        local tag
+        tag=$(pick_tag)
+        [ -n "$tag" ] && cmd_deploy "$tag"
+        break
+        ;;
+      2)
+        local commit
+        commit=$(pick_commit)
+        [ -n "$commit" ] && cmd_deploy "$commit"
+        break
+        ;;
+      3) cmd_rollback; break ;;
+      4) cmd_doctor; break ;;
+      5) cmd_sanity; break ;;
+      6) cmd_backup; break ;;
+      7) cmd_restore; break ;;
+      8) cmd_status; break ;;
+      9) cmd_prune; break ;;
+      10|q|Q) exit 0 ;;
       *) echo "Invalid option" ;;
     esac
   done
@@ -343,7 +395,7 @@ Usage:
   ./admin.sh [COMMAND] [OPTIONS]
 
 Commands:
-  deploy [COMMIT_OR_TAG] [--force]    Deploy any commit ID or git release tag (builds first, migrates DB, restarts)
+  deploy [COMMIT_OR_TAG] [--force]    Deploy any release tag or commit ID (builds first, migrates DB, restarts)
   rollback [TAG] [SNAP]               Roll back to a previous tag and database snapshot
   doctor                              Run system environment, disk space, and connectivity diagnostics
   sanity                              Run automated health checks and authenticated read test
@@ -360,7 +412,8 @@ EOF
 # Main routing
 ACTION="${1:-}"
 case "${ACTION}" in
-  -h|--help) show_help ;;
+  help|-h|--help) show_help ;;
+  menu) show_menu ;;
   "") [ -t 0 ] && show_menu || show_help ;;
   *)
     if declare -f "cmd_${ACTION}" >/dev/null; then
