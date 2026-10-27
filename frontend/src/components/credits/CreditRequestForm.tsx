@@ -30,7 +30,10 @@ export function CreditRequestForm({ initialData, onSuccess, onCancel }: Props) {
     async function loadUsers() {
       try {
         const res = await usersApi.listPublic({ perPage: 100 });
-        setUsers(res.users);
+        const sorted = [...res.users].sort((a, b) =>
+          a.username.localeCompare(b.username, "pl", { sensitivity: "base" })
+        );
+        setUsers(sorted);
       } catch (err) {
         console.error("Failed to load users", err);
       } finally {

@@ -44,9 +44,6 @@ func (s *CreditRequestService) CreateRequest(ctx context.Context, userID string,
 		return nil, types.NewValidationError("credits_value must be strictly positive", map[string]int{"credits_value": int(req.CreditsValue)})
 	}
 	req.Helpers = deduplicateHelpers(req.Helpers)
-	if slices.Contains(req.Helpers, userID) {
-		return nil, types.NewValidationError("Requestor cannot be listed as a helper", nil)
-	}
 	dto := types.CreditRequestDTO{
 		Title:        req.Title,
 		Description:  req.Description,

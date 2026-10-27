@@ -51,7 +51,7 @@ BEGIN
       description = p_description,
       credits_value = p_credits_value,
       user_helped_id = p_user_helped_id,
-      status = p_status,
+      status = p_status::credit_request_status,
       updated_at = NOW()
   WHERE id = p_id;
 
@@ -111,7 +111,7 @@ BEGIN
 
   -- Update the request
   UPDATE credit_requests
-  SET status = p_status,
+  SET status = p_status::credit_request_status,
       credits_value = v_final_value,
       updated_at = NOW()
   WHERE id = p_id;
