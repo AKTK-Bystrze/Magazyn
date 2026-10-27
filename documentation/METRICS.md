@@ -91,7 +91,7 @@ Grafana dashboards are provisioned from code via `infra/grafana/provisioning/das
 
 To add a new chart for your metric:
 
-1. Open `infra/grafana/provisioning/dashboards/generate.py`.
+1. Open `infra/grafana/provisioning/dashboards/magazyn.json`.
 2. Add a new panel definition to the `panels` array.
 3. For the query target, always use the job filter `job="prometheus.scrape.magazyn_backend"` so it only fetches metrics from the Go container (and not Caddy's internal metrics). Example:
 
@@ -102,11 +102,10 @@ To add a new chart for your metric:
 }
 ```
 
-4. Run `python infra/grafana/provisioning/dashboards/generate.py` to regenerate the JSON.
-5. Restart the Grafana container:
+4. Restart the Grafana container:
 
 ```bash
 docker restart magazyn-grafana
 ```
 
-6. Hard-refresh your browser (`F5`).
+5. Hard-refresh your browser (`F5`).
