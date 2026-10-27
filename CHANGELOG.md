@@ -19,6 +19,16 @@
 
 * enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
+## [0.9.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.9.0...v0.9.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* **auth:** ignore AuthSessionMissingError for guest visitors in middleware ([#298](https://github.com/AKTK-Bystrze/Magazyn/issues/298)) ([9e5e70d](https://github.com/AKTK-Bystrze/Magazyn/commit/9e5e70d252d93432e1f709940c52d3247859082f))
+* **handler:** log reservation conflicts at warn level instead of error ([#297](https://github.com/AKTK-Bystrze/Magazyn/issues/297)) ([02f96f6](https://github.com/AKTK-Bystrze/Magazyn/commit/02f96f601c50221dd9d7c35acc64b6f0b2741ee8))
+* **infra:** use curl for caddy healthcheck to prevent broken pipe ([#295](https://github.com/AKTK-Bystrze/Magazyn/issues/295)) ([5ba1769](https://github.com/AKTK-Bystrze/Magazyn/commit/5ba1769d27af278b854626aed2606e1fc9da2940))
+* **reservation:** preserve equipment_id on reservation update and RPC return ([#296](https://github.com/AKTK-Bystrze/Magazyn/issues/296)) ([39baa76](https://github.com/AKTK-Bystrze/Magazyn/commit/39baa766f0334dde8d6cf15c9865aa831ff83ea4))
+
 ## [0.9.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.8.1...v0.9.0) (2026-10-27)
 
 
