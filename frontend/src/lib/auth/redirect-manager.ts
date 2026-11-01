@@ -17,9 +17,8 @@ export interface AuthUser {
 /**
  * Manages redirects with centralized logic
  *
- * This class eliminates 38% code duplication across middleware,
- * AuthListener, and page components by providing a single source of
- * truth for all redirect decisions.
+ * This class centralizes redirect logic across middleware and page
+ * components by providing a single source of truth for all redirect decisions.
  *
  * Note: Redirect loop detection is unnecessary as the redirect structure
  * creates a DAG - each redirect destination never redirects back unless

@@ -31,10 +31,12 @@ sequenceDiagram
     participant Supabase
 
     User->>Browser: Access protected page
-    Browser->>Astro: Request with cookie
-    Astro->>Astro: Check auth cookie
-    Astro->>Supabase: Validate token (getUser)
-    Supabase-->>Astro: User object
+    Browser->>Astro: Request with HttpOnly magazyn_sid cookie
+    Astro->>Astro: Decrypt session (AES-256-GCM)
+    opt Near Expiry (<60s)
+        Astro->>Supabase: Refresh session (refreshSession)
+        Supabase-->>Astro: New tokens (updates cookie)
+    end
     Astro->>Backend: GET /auth/session (Bearer token)
     Backend->>Supabase: Validate JWT + fetch profile
     Supabase-->>Backend: User + Profile (RLS enforced)

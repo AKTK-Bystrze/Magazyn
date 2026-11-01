@@ -1,4 +1,4 @@
-# Code Review Checklist for Diet Planner MVP
+# Code Review Checklist for Magazyn
 
 This checklist should be used when reviewing code changes to ensure compliance with project standards, tech stack requirements, and best practices.
 
@@ -32,7 +32,7 @@ This checklist should be used when reviewing code changes to ensure compliance w
   - `src/components/ui/` - Shadcn/ui components
   - `src/components/hooks/` - Custom React hooks
   - `src/lib/` - Services and utilities
-  - `src/db/` - Supabase clients and types
+  - `src/db/` - Database types (database.types.ts)
   - `src/types.ts` - Shared types (DTOs, entities)
   - `src/middleware/` - Astro middleware
 
@@ -396,4 +396,4 @@ This checklist can be used:
 
 **Last Updated**: 2025-01-25
 **Version**: 1.0
-**Project**: Diet Planner MVP
+**Project**: Magazyn

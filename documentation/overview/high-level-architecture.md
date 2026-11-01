@@ -22,11 +22,10 @@ flowchart TB
 
     Browser -->|"HTTPS Requests"| Caddy
 
-    Caddy -->|"/* routes"| Frontend
-    Caddy -->|"/api/* routes"| Backend
+    Caddy -->|"All HTTP traffic (/*)"| Frontend
 
-    Frontend -->|"API Calls"| Backend
-    Frontend -.->|"Login, Session"| Auth
+    Frontend -->|"Proxied API Calls (Bearer JWT)"| Backend
+    Frontend -.->|"Token Validation & Refresh"| Auth
 
     Backend -->|"SQL Queries"| DB
     Backend -->|"Verify JWT"| Auth
@@ -52,20 +51,19 @@ flowchart TB
 - User interface
 - Interacts with frontend via HTTPS
 - Receives server-rendered pages and React components
+- Stores single encrypted `HttpOnly` session cookie (`magazyn_sid`)
 
 ### Caddy Reverse Proxy
 
-- Automatic HTTPS (Let's Encrypt)
-- Routes traffic:
-  - `/*` → Frontend (Astro)
-  - `/api/*` → Backend (Go)
+- Automatic HTTPS (Let's Encrypt / TLS certificates)
+- Routes all incoming traffic (`/*`) to Frontend (Astro SSR) container
 
 ### Frontend (Astro + React)
 
-- **Astro 5**: SSR pages, layouts, middleware
+- **Astro 5**: SSR pages, layouts, server-side encrypted HttpOnly session management middleware
 - **React 19**: Interactive components (cart, calendar, forms)
 - **TanStack Query**: Server state management and caching
-- **API Proxies**: Forward requests to backend with auth headers
+- **API Proxies**: Server-side proxy endpoints (`/api/*`) that unwrap session cookies and forward requests to backend with Bearer JWT auth headers
 
 ### Backend (Go)
 

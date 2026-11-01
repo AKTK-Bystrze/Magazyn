@@ -45,7 +45,7 @@ flowchart TB
         subgraph FrontendUtils["Utilities"]
             Transformers["Transformers<br/>snake_case ↔ camelCase"]
             Validators["Validators<br/>Zod Schemas"]
-            SupabaseClient["Supabase Client<br/>(Auth Only)"]
+            SessionStore["Session Store<br/>(AES-256-GCM Encrypted)"]
         end
     end
 
@@ -176,7 +176,7 @@ flowchart TB
     Equipment -.-> RLS
     Reservations -.-> RLS
 
-    SupabaseClient -.->|"Login/Session"| SupabaseAuth
+    AstroMiddleware -.->|"Token Refresh"| SupabaseAuth
     AuthService -.-> SupabaseAuth
     EmailService --> Email
     ReservationService --> EmailService
@@ -188,7 +188,7 @@ flowchart TB
     classDef externalStyle fill:#ffccbc,stroke:#d84315,stroke-width:2px
 
     class Browser clientStyle
-    class Pages,Layouts,AstroMiddleware,ReservationListContainer,EquipmentManagerContainer,UserListContainer,ReservationTable,ReservationCartView,ReservationRow,CartSub,FormFields,QueryHooks,MutationHooks,UIHooks,Query,APIProxies,Transformers,Validators,SupabaseClient frontendStyle
+    class Pages,Layouts,AstroMiddleware,ReservationListContainer,EquipmentManagerContainer,UserListContainer,ReservationTable,ReservationCartView,ReservationRow,CartSub,FormFields,QueryHooks,MutationHooks,UIHooks,Query,APIProxies,Transformers,Validators,SessionStore frontendStyle
     class JWTMiddleware,RBACMiddleware,CORSMiddleware,AuthHandler,EquipmentHandler,ReservationHandler,UserHandler,CreditHandler backendStyle
     class AuthService,EquipmentService,ReservationService,UserService,CreditService backendStyle
     class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,AnalyticsRepo,SupabaseGoClient,EmailService backendStyle
@@ -237,7 +237,7 @@ flowchart TB
 
 - **Transformers**: Convert between backend snake_case and frontend camelCase
 - **Validators**: Zod schemas for runtime type safety
-- **Supabase Client**: Direct calls for authentication only (login, session management)
+- **Session Store**: Server-side AES-256-GCM encryption and decryption of HttpOnly session cookies
 
 ---
 
