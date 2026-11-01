@@ -1,7 +1,6 @@
 import { test as base, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { createServerClient } from "@supabase/ssr";
-import { AUTH_COOKIE_NAME } from "../../src/lib/auth/cookie-utils";
+import { encryptSession, SESSION_COOKIE } from "../../src/lib/auth/session-store";
 import {
   createTestEquipment,
   cleanupTestEquipment,
@@ -228,48 +227,44 @@ async function injectSupabaseSession(page: Page, email: string): Promise<void> {
     throw new Error(`Failed to sign in for tokens: ${error?.message}`);
   }
 
-  let cookiesToSet: { name: string; value: string }[] = [];
-  const ssrClient = createServerClient(supabaseUrl!, anonKey!, {
-    cookieOptions: {
-      name: AUTH_COOKIE_NAME,
-    },
-    cookies: {
-      getAll: () => cookiesToSet,
-      setAll: (c) => {
-        cookiesToSet = c;
-      },
-    },
-  });
+  const session = data.session;
 
-  await ssrClient.auth.setSession({
-    access_token: data.session.access_token,
-    refresh_token: data.session.refresh_token,
+  // Encrypt a single HttpOnly session cookie (same format the app produces).
+  const encrypted = await encryptSession({
+    userId: session.user.id,
+    accessToken: session.access_token,
+    refreshToken: session.refresh_token,
+    expiresAt: session.expires_at ?? Math.floor(Date.now() / 1000) + 3600,
   });
 
   const baseURL = process.env.E2E_BASE_URL || "http://localhost";
   const urlObj = new URL(baseURL);
   const domain = urlObj.hostname;
 
-  const cookies = [
-    ...cookiesToSet.map((c) => ({
-      name: c.name,
-      value: c.value,
+  const cookies: {
+    name: string;
+    value: string;
+    domain: string;
+    path: string;
+    sameSite: "Lax";
+  }[] = [
+    {
+      name: SESSION_COOKIE,
+      value: encrypted,
       domain: domain,
       path: "/",
-      sameSite: "Lax" as const,
-    })),
+      sameSite: "Lax",
+    },
   ];
 
   if (domain === "localhost") {
-    cookies.push(
-      ...cookiesToSet.map((c) => ({
-        name: c.name,
-        value: c.value,
-        domain: "127.0.0.1",
-        path: "/",
-        sameSite: "Lax" as const,
-      }))
-    );
+    cookies.push({
+      name: SESSION_COOKIE,
+      value: encrypted,
+      domain: "127.0.0.1",
+      path: "/",
+      sameSite: "Lax",
+    });
   }
 
   await page.context().addCookies(cookies);

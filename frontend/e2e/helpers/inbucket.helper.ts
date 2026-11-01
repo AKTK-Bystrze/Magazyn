@@ -34,7 +34,10 @@ export async function getMagicLinkFromEmail(emailAddress: string): Promise<strin
 
   const magicLink = links.find(
     (link: string) =>
-      link.includes("auth/v1/verify") || link.includes("token=") || link.includes("token_hash=")
+      link.includes("/api/auth/callback") ||
+      link.includes("auth/v1/verify") ||
+      link.includes("token_hash=") ||
+      link.includes("code=")
   );
 
   if (!magicLink) {
