@@ -546,3 +546,4 @@ await expect(page).toHaveURL(/.*\/login/);
 - **`SUPABASE_SERVICE_ROLE_KEY` leaking to client bundle**: In Astro, any `import.meta.env.*` variable NOT prefixed with `PUBLIC_` is automatically excluded from client bundles. Confirm by building and checking the client bundle.
 - **Magic link still goes to hash URL**: You must update the redirect URL in Supabase Dashboard. The client-side hash flow is completely removed.
 - **Middleware TypeScript errors on `locals.supabase`**: Remove it from `App.Locals` in `env.d.ts`.
+
