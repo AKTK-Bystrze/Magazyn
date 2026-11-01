@@ -57,7 +57,7 @@ sequenceDiagram
     participant Callback as Callback page (/api/auth/callback)
     participant Astro as Astro SSR
 
-    User->>Browser: Click magic link (implicit flow)
+    User->>Browser: Click magic link
     Browser->>Supabase: Verify OTP token
     Supabase-->>Browser: Redirect with #access_token (fragment)
     Browser->>Callback: Page script reads fragment, POSTs tokens
@@ -121,9 +121,9 @@ interface SessionInfo {
 | Path      | `/`                      | Site-wide availability                     |
 | SameSite  | Lax                      | CSRF protection                            |
 | HttpOnly  | Yes                      | Never readable by JavaScript               |
-| Max-Age   | 30 days                  | Matches Supabase refresh-token lifetime    |
+| Max-Age   | 30 days                  | Session lifetime                           |
 
-> **Note**: The cookie holds `userId`, `accessToken`, `refreshToken` and `expiresAt`, encrypted with `SESSION_ENCRYPTION_KEY`. The middleware refreshes tokens server-side 60 s before expiry and rewrites the cookie. Logout revokes the Supabase session and deletes the cookie.
+> **Note**: The cookie holds `userId`, `accessToken`, `refreshToken` and `expiresAt`, encrypted with `SESSION_ENCRYPTION_KEY`. The middleware refreshes tokens server-side 60 s before expiry and updates the cookie. Logout revokes the Supabase session and clears all cookies.
 
 ---
 

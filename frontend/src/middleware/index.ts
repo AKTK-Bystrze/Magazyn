@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import {
   decryptSession,
   encryptSession,
+  clearAllCookies,
   SESSION_COOKIE,
   SESSION_COOKIE_OPTIONS,
 } from "@/lib/auth/session-store";
@@ -41,9 +42,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
         });
 
         if (error || !data.session) {
-          // A failed refresh is only a logged-out user when the token was
-          // actually revoked. Transient errors (timeouts, 5xx) must not log
-          // the user out — keep the current session for this request.
+          // Definitive auth error (4xx or explicit revocation) revokes the session.
+          // Transient failures (network timeout, 5xx) retain the active session.
           const authError = error as
             { code?: string; message?: string; status?: number } | null | undefined;
           const isRevoked =
@@ -59,7 +59,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
             logger.warn("Refresh token expired or revoked, clearing session", {
               error: error?.message,
             });
-            context.cookies.delete(SESSION_COOKIE, { path: "/" });
+            clearAllCookies(context.request, context.cookies);
             session = null;
           } else {
             logger.warn("Session refresh failed, keeping existing session", {
@@ -92,9 +92,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       const sessionInfo = await getUserSession(session.accessToken);
       context.locals.sessionInfo = sessionInfo;
 
-      // A failed session-info fetch is a temporary backend blip, not a logout.
-      // Keep the user signed in; the email falls back to empty until the next
-      // successful fetch.
+      // Populate user context from session, using backend session info when available.
       context.locals.user = {
         id: session.userId,
         email: sessionInfo?.email ?? "",

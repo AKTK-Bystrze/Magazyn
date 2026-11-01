@@ -1,8 +1,8 @@
 // frontend/src/pages/api/auth/logout.ts
 import type { APIRoute } from "astro";
-import { decryptSession, SESSION_COOKIE } from "@/lib/auth/session-store";
+import { decryptSession, SESSION_COOKIE, clearAllCookies } from "@/lib/auth/session-store";
 
-export const POST: APIRoute = async ({ cookies, locals }) => {
+export const POST: APIRoute = async ({ request, cookies, locals }) => {
   locals.logger?.info("User logging out");
 
   const rawCookie = cookies.get(SESSION_COOKIE)?.value ?? null;
@@ -26,6 +26,6 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
     }
   }
 
-  cookies.delete(SESSION_COOKIE, { path: "/" });
+  clearAllCookies(request, cookies);
   return Response.json({ message: "Logged out" });
 };

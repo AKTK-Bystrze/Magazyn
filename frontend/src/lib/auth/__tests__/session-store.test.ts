@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   encryptSession,
   decryptSession,
+  clearAllCookies,
   SESSION_COOKIE,
   type MagazynSession,
 } from "../session-store";
@@ -75,5 +76,35 @@ describe("session-store", () => {
 
   it("exposes the expected HttpOnly cookie name", () => {
     expect(SESSION_COOKIE).toBe("magazyn_sid");
+  });
+
+  describe("clearAllCookies", () => {
+    it("deletes all cookies found in the request header and the session cookie", () => {
+      const mockDelete = vi.fn();
+      const mockCookies = { delete: mockDelete };
+      const request = new Request("http://localhost", {
+        headers: {
+          cookie: "custom_a=123; magazyn_sid=abc; other_val=xyz",
+        },
+      });
+
+      clearAllCookies(request, mockCookies);
+
+      expect(mockDelete).toHaveBeenCalledWith("custom_a", { path: "/" });
+      expect(mockDelete).toHaveBeenCalledWith("magazyn_sid", { path: "/" });
+      expect(mockDelete).toHaveBeenCalledWith("other_val", { path: "/" });
+      expect(mockDelete).toHaveBeenCalledTimes(3);
+    });
+
+    it("always deletes the session cookie even if no cookie header is present", () => {
+      const mockDelete = vi.fn();
+      const mockCookies = { delete: mockDelete };
+      const request = new Request("http://localhost");
+
+      clearAllCookies(request, mockCookies);
+
+      expect(mockDelete).toHaveBeenCalledWith(SESSION_COOKIE, { path: "/" });
+      expect(mockDelete).toHaveBeenCalledTimes(1);
+    });
   });
 });

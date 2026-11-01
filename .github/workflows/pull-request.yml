@@ -181,3 +181,5 @@ jobs:
     with:
       supabase-mode: local
       retries: 0
+    secrets:
+      SESSION_ENCRYPTION_KEY: ${{ secrets.SESSION_ENCRYPTION_KEY }}

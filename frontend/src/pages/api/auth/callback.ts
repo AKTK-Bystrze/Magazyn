@@ -1,12 +1,7 @@
 // frontend/src/pages/api/auth/callback.ts
-// Magic-link landing handler.
-//
-// The Go backend requests the OTP without a PKCE challenge, so GoTrue uses the
-// implicit flow: after the user clicks the email link, the session arrives in
-// the URL fragment (`#access_token=...`), which never reaches the server. This
-// GET handler therefore renders a tiny page that reads the fragment and POSTs
-// the tokens back. The POST handler validates them against Supabase and sets
-// the HttpOnly session cookie.
+// Magic-link authentication callback handler:
+// 1. GET renders a client-side handoff page that extracts tokens from the URL fragment and POSTs them.
+// 2. POST validates the tokens against Supabase, retrieves user session info, and sets the encrypted HttpOnly session cookie.
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -79,10 +74,7 @@ export const GET: APIRoute = async () =>
   });
 
 export const POST: APIRoute = async ({ url, request, cookies }) => {
-  // Only the handoff page may call this route. A cross-site form cannot set a
-  // custom header without a CORS preflight, which this server never allows,
-  // so this guards against login-CSRF (logging a victim into the attacker's
-  // account).
+  // Verify handoff header to guard against cross-site request forgery.
   if (request.headers.get(HANDOFF_HEADER) !== "1") {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }

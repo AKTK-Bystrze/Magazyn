@@ -229,7 +229,7 @@ async function injectSupabaseSession(page: Page, email: string): Promise<void> {
 
   const session = data.session;
 
-  // Encrypt a single HttpOnly session cookie (same format the app produces).
+  // Encrypt session cookie for authenticated browser context.
   const encrypted = await encryptSession({
     userId: session.user.id,
     accessToken: session.access_token,
@@ -245,6 +245,7 @@ async function injectSupabaseSession(page: Page, email: string): Promise<void> {
     name: SESSION_COOKIE,
     value: encrypted,
     path: "/",
+    httpOnly: true,
     sameSite: "Lax" as const,
   };
 

@@ -47,10 +47,40 @@ export const SESSION_COOKIE = "magazyn_sid";
 
 export const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
-  // Safe in both Astro SSR (import.meta.env defined) and plain Node contexts
-  // (e.g. Playwright fixtures) where import.meta.env is undefined.
   secure: Boolean(import.meta.env?.PROD || process.env.NODE_ENV === "production"),
   sameSite: "lax" as const,
   path: "/",
-  maxAge: 60 * 60 * 24 * 30, // 30 days (matches Supabase refresh token lifetime)
+  maxAge: 60 * 60 * 24 * 30, // 30 days
 } as const;
+
+export interface CookieDeleter {
+  delete(name: string, options?: { path?: string; domain?: string }): void;
+}
+
+/**
+ * Clears all cookies received in the request along with the session cookie.
+ *
+ * @param request - Incoming HTTP request containing cookie headers
+ * @param cookies - Cookie store capable of issuing deletion directives
+ */
+export function clearAllCookies(request: Request, cookies: CookieDeleter): void {
+  const cookieHeader = request.headers.get("cookie") || "";
+  const names = new Set<string>();
+
+  if (cookieHeader) {
+    for (const part of cookieHeader.split(";")) {
+      const trimmed = part.trim();
+      const eqIdx = trimmed.indexOf("=");
+      const name = eqIdx !== -1 ? trimmed.slice(0, eqIdx).trim() : trimmed;
+      if (name) {
+        names.add(name);
+      }
+    }
+  }
+
+  names.add(SESSION_COOKIE);
+
+  for (const name of names) {
+    cookies.delete(name, { path: "/" });
+  }
+}

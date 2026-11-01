@@ -14,18 +14,22 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: (...args: unknown[]) => mocks.createClient(...args),
 }));
 
-vi.mock("@/lib/auth/session-store", () => ({
-  decryptSession: (...args: unknown[]) => mocks.decryptSession(...args),
-  encryptSession: (...args: unknown[]) => mocks.encryptSession(...args),
-  SESSION_COOKIE: "magazyn_sid",
-  SESSION_COOKIE_OPTIONS: {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 2592000,
-  },
-}));
+vi.mock("@/lib/auth/session-store", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth/session-store")>();
+  return {
+    ...actual,
+    decryptSession: (...args: unknown[]) => mocks.decryptSession(...args),
+    encryptSession: (...args: unknown[]) => mocks.encryptSession(...args),
+    SESSION_COOKIE: "magazyn_sid",
+    SESSION_COOKIE_OPTIONS: {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 2592000,
+    },
+  };
+});
 
 vi.mock("@/lib/auth/session-utils", () => ({
   getUserSession: (...args: unknown[]) => mocks.getUserSession(...args),

@@ -379,7 +379,7 @@ flowchart TB
 1. **Login Request**: User enters email → Frontend calls `/api/auth/login`
 2. **Magic Link**: Supabase Auth sends magic link email (handled by Supabase)
 3. **Click Link**: User clicks link → Supabase validates → creates session
-4. **Set Cookie**: Supabase sets session cookie (httpOnly)
+4. **Set Cookie**: Server validates session and sets encrypted HttpOnly session cookie
 5. **Middleware**: On each request, middleware validates session
 6. **API Calls**: Frontend proxies include `Authorization: Bearer <token>` from session
 7. **Backend**: Verifies JWT signature against Supabase public key

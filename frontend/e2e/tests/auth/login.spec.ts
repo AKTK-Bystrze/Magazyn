@@ -9,7 +9,7 @@ import { getMagicLinkFromEmail, clearMailbox } from "../../helpers/inbucket.help
  * Authentication is handled by the `authenticatedPage` fixture which:
  * 1. Creates/updates a test user via Supabase Admin API (with password)
  * 2. Signs in via `signInWithPassword` to get real JWT tokens
- * 3. Injects session into browser localStorage and cookies
+ * 3. Injects encrypted session cookie
  *
  * @see fixtures/index.ts for authentication implementation
  */

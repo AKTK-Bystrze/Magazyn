@@ -37,6 +37,9 @@ inputs:
     description: Public App URL
     required: false
     default: 'http://localhost'
+  session-encryption-key:
+    description: Session Encryption Key (64-char hex string)
+    required: true
 
 runs:
   using: composite
@@ -51,6 +54,7 @@ runs:
         SUPABASE_SERVICE_ROLE_KEY=${{ inputs.supabase-service-role-key }}
         PUBLIC_BACKEND_URL=${{ inputs.backend-url }}
         PUBLIC_APP_URL=${{ inputs.app-url }}
+        SESSION_ENCRYPTION_KEY=${{ inputs.session-encryption-key }}
         CADDY_FILE=Caddyfile.test
         CADDY_PORT=80
         EOF
