@@ -11,10 +11,7 @@ export interface MagazynSession {
 const ENC_KEY_ENV = "SESSION_ENCRYPTION_KEY";
 
 async function getKey(): Promise<CryptoKey> {
-  const raw =
-    (typeof import.meta !== "undefined" && import.meta.env
-      ? import.meta.env.SESSION_ENCRYPTION_KEY
-      : undefined) || (typeof process !== "undefined" ? process.env[ENC_KEY_ENV] : undefined);
+  const raw = process.env.SESSION_ENCRYPTION_KEY ?? import.meta.env?.SESSION_ENCRYPTION_KEY;
   if (!raw || raw.length < 64) {
     throw new Error(`${ENC_KEY_ENV} must be a 64-char hex string (32 bytes)`);
   }
@@ -27,9 +24,9 @@ export async function encryptSession(session: MagazynSession): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const data = new TextEncoder().encode(JSON.stringify(session));
   const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
-  const encode = (buf: ArrayBuffer | Uint8Array) =>
-    Buffer.from(buf instanceof Uint8Array ? buf : new Uint8Array(buf)).toString("base64url");
-  return `${encode(iv)}:${encode(ciphertext)}`;
+  const ivB64 = Buffer.from(iv).toString("base64url");
+  const ctB64 = Buffer.from(ciphertext).toString("base64url");
+  return `${ivB64}:${ctB64}`;
 }
 
 export async function decryptSession(cookie: string): Promise<MagazynSession | null> {
@@ -52,7 +49,7 @@ export const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
   // Safe in both Astro SSR (import.meta.env defined) and plain Node contexts
   // (e.g. Playwright fixtures) where import.meta.env is undefined.
-  secure: typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.PROD : false,
+  secure: Boolean(import.meta.env?.PROD || process.env.NODE_ENV === "production"),
   sameSite: "lax" as const,
   path: "/",
   maxAge: 60 * 60 * 24 * 30, // 30 days (matches Supabase refresh token lifetime)

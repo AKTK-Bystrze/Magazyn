@@ -161,7 +161,6 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       expect(mocks.decryptSession).toHaveBeenCalledWith("encrypted-cookie-value");
       expect(mocks.getUserSession).toHaveBeenCalledWith("access-token-1");
       expect(context.locals.user).toEqual({ id: "user-123", email: "user@example.com" });
-      expect(context.locals.userId).toBe("user-123");
       expect(context.locals.accessToken).toBe("access-token-1");
       expect(context.locals.sessionInfo).toEqual(mockSessionInfo);
       expect(redirectMock).not.toHaveBeenCalled();

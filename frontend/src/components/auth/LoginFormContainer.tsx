@@ -12,7 +12,10 @@ export const LoginFormContainer: React.FC = () => {
       // login page (for example when its redirect target fails validation).
       // Forward those to the callback page, which hands the session to the
       // server and sets the HttpOnly cookie.
-      if (loc.hash && /(access_token|code)=/.test(loc.hash)) {
+      if (
+        (loc.hash && /(access_token|code)=/.test(loc.hash)) ||
+        (loc.search && loc.search.includes("code="))
+      ) {
         window.location.replace(`/api/auth/callback${loc.search}${loc.hash}`);
       }
     }

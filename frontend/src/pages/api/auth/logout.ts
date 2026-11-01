@@ -9,8 +9,6 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
   if (rawCookie) {
     const session = await decryptSession(rawCookie);
     if (session) {
-      // Revoke the Supabase session server-side, like the old client-side
-      // signOut() did, so a copied or replayed cookie stops working.
       try {
         await fetch(
           `${process.env.INTERNAL_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL}/auth/v1/logout?scope=global`,

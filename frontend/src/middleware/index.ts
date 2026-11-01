@@ -12,15 +12,6 @@ import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { ApiErrors, handleApiError } from "@/lib/errors/api-error";
 import { StructuredLogger } from "@/lib/utils/logger";
 
-const REVOKED_REFRESH_ERROR_CODES = new Set([
-  "refresh_token_not_found",
-  "invalid_grant",
-  "session_not_found",
-  "user_not_found",
-  "bad_jwt",
-  "invalid_token",
-]);
-
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
   const traceId = context.request.headers.get("X-Trace-Id") || crypto.randomUUID();
@@ -57,11 +48,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
             { code?: string; message?: string; status?: number } | null | undefined;
           const isRevoked =
             Boolean(error) &&
-            (REVOKED_REFRESH_ERROR_CODES.has(authError?.code ?? "") ||
-              REVOKED_REFRESH_ERROR_CODES.has(authError?.message ?? "") ||
-              (authError?.status !== undefined &&
-                authError.status >= 400 &&
-                authError.status < 500));
+            ((authError?.status !== undefined &&
+              authError.status >= 400 &&
+              authError.status < 500) ||
+              /revoked|expired|not_found|invalid/i.test(
+                `${authError?.code ?? ""} ${authError?.message ?? ""}`
+              ));
 
           if (isRevoked) {
             logger.warn("Refresh token expired or revoked, clearing session", {
@@ -96,7 +88,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     if (session) {
       context.locals.accessToken = session.accessToken;
-      context.locals.userId = session.userId;
 
       const sessionInfo = await getUserSession(session.accessToken);
       context.locals.sessionInfo = sessionInfo;
@@ -119,7 +110,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
       context.locals.user = null;
       context.locals.sessionInfo = null;
       context.locals.accessToken = null;
-      context.locals.userId = null;
       logger.debug("No authenticated session");
     }
 

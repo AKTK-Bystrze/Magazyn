@@ -241,33 +241,19 @@ async function injectSupabaseSession(page: Page, email: string): Promise<void> {
   const urlObj = new URL(baseURL);
   const domain = urlObj.hostname;
 
-  const cookies: {
-    name: string;
-    value: string;
-    domain: string;
-    path: string;
-    sameSite: "Lax";
-  }[] = [
-    {
-      name: SESSION_COOKIE,
-      value: encrypted,
-      domain: domain,
-      path: "/",
-      sameSite: "Lax",
-    },
-  ];
+  const cookie = {
+    name: SESSION_COOKIE,
+    value: encrypted,
+    path: "/",
+    sameSite: "Lax" as const,
+  };
 
-  if (domain === "localhost") {
-    cookies.push({
-      name: SESSION_COOKIE,
-      value: encrypted,
-      domain: "127.0.0.1",
-      path: "/",
-      sameSite: "Lax",
-    });
-  }
-
-  await page.context().addCookies(cookies);
+  await page
+    .context()
+    .addCookies([
+      { ...cookie, domain },
+      ...(domain === "localhost" ? [{ ...cookie, domain: "127.0.0.1" }] : []),
+    ]);
 
   await page.goto(`${baseURL}/dashboard`, { waitUntil: "domcontentloaded" });
 

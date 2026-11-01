@@ -1,16 +1,6 @@
 import { DEFAULT_HEADERS } from "@/lib/config/api";
 
 /**
- * Builds headers for API requests.
- * Authentication is handled server-side by the middleware: the HttpOnly
- * `magazyn_sid` cookie is sent automatically on same-origin requests and the
- * middleware injects the access token into `locals.accessToken` for the proxy.
- */
-function buildHeaders(): Record<string, string> {
-  return { ...DEFAULT_HEADERS };
-}
-
-/**
  * Handles non-OK fetch responses by extracting error details and throwing an Error.
  *
  * @param response - The failed Response object
@@ -26,10 +16,9 @@ export async function handleFetchError(response: Response): Promise<never> {
 }
 
 async function request<T>(method: string, url: string, data?: unknown): Promise<{ data: T }> {
-  const headers = buildHeaders();
   const init: RequestInit = {
     method,
-    headers,
+    headers: { ...DEFAULT_HEADERS },
     credentials: "same-origin",
     ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
   };

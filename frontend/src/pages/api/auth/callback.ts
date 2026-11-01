@@ -31,49 +31,39 @@ const HANDOFF_PAGE = `<!doctype html>
   <body>
     <p>Trwa logowanie, proszę czekać...</p>
     <script>
-      (function () {
-        var hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      (async () => {
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
         if (hash.get("error")) {
           window.location.replace("/login?error=" + encodeURIComponent(hash.get("error")));
           return;
         }
-        var accessToken = hash.get("access_token");
-        var refreshToken = hash.get("refresh_token");
+        const accessToken = hash.get("access_token");
+        const refreshToken = hash.get("refresh_token");
         if (!accessToken || !refreshToken) {
           window.location.replace("/login?error=missing_session");
           return;
         }
-        var expiresAt = hash.get("expires_at");
-        fetch("/api/auth/callback", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "x-magazyn-handoff": "1"
-          },
-          body: JSON.stringify({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-            expires_at: expiresAt ? parseInt(expiresAt, 10) : null
-          })
-        })
-          .then(function (response) {
-            return response.json().catch(function () {
-              return {};
-            });
-          })
-          .then(function (data) {
-            if (data && data.redirectTo) {
-              window.location.replace(data.redirectTo);
-            } else {
-              window.location.replace(
-                "/login?error=" + encodeURIComponent((data && data.error) || "login_failed")
-              );
-            }
-          })
-          .catch(function () {
-            window.location.replace("/login?error=network");
+        const expiresAt = hash.get("expires_at");
+        try {
+          const res = await fetch("/api/auth/callback", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-magazyn-handoff": "1",
+            },
+            body: JSON.stringify({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+              expires_at: expiresAt ? parseInt(expiresAt, 10) : null,
+            }),
           });
+          const data = await res.json().catch(() => ({}));
+          window.location.replace(
+            data?.redirectTo || "/login?error=" + encodeURIComponent(data?.error || "login_failed")
+          );
+        } catch {
+          window.location.replace("/login?error=network");
+        }
       })();
     </script>
   </body>

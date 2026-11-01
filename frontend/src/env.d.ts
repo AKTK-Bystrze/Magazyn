@@ -6,7 +6,6 @@ declare global {
       trace_id: string;
       logger: import("./lib/utils/logger").StructuredLogger;
       user: { id: string; email: string } | null;
-      userId: string | null;
       accessToken: string | null;
       sessionInfo: SessionInfo | null;
     }
