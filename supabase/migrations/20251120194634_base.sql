@@ -55,6 +55,7 @@ CREATE TABLE reservations (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   status reservation_status NOT NULL DEFAULT 'PENDING',
+  is_free BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ,
   CHECK (end_date >= start_date)
@@ -83,16 +84,23 @@ ALTER TABLE credit_history ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE credit_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES profiles(id),
-  amount INTEGER NOT NULL CHECK (amount > 0),
-  description TEXT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  credits_value INT NOT NULL CHECK (credits_value > 0),
+  requestor_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  user_helped_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   status credit_request_status NOT NULL DEFAULT 'awaiting',
-  admin_id UUID REFERENCES profiles(id),
-  admin_note TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ALTER TABLE credit_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE credit_request_helpers (
+  credit_request_id UUID REFERENCES credit_requests(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  PRIMARY KEY (credit_request_id, user_id)
+);
+ALTER TABLE credit_request_helpers ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE maintenance_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -130,6 +138,9 @@ CREATE INDEX reservations_user_equipment_idx ON reservations (user_id, equipment
 CREATE INDEX reservation_history_reservation_id_created_at_idx ON reservation_history (reservation_id, created_at);
 CREATE INDEX credit_history_user_id_idx ON credit_history (user_id);
 CREATE INDEX credit_history_reservation_id_idx ON credit_history (reservation_id);
+CREATE INDEX credit_requests_requestor_id_idx ON credit_requests (requestor_id);
+CREATE INDEX credit_requests_status_idx ON credit_requests (status);
+CREATE INDEX credit_request_helpers_user_id_idx ON credit_request_helpers (user_id);
 CREATE INDEX maintenance_logs_equipment_id_idx ON maintenance_logs (equipment_id);
 
 -- HELPER FUNCTIONS (for RLS policies - must be after tables are created)
@@ -141,7 +152,7 @@ $$;
 
 -- Check if current user is admin or super_admin
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
   SELECT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin'));
 $$;
 
