@@ -97,7 +97,7 @@ ALTER TABLE credit_requests ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE credit_request_helpers (
   credit_request_id UUID REFERENCES credit_requests(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   PRIMARY KEY (credit_request_id, user_id)
 );
 ALTER TABLE credit_request_helpers ENABLE ROW LEVEL SECURITY;

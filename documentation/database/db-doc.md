@@ -128,7 +128,7 @@ Requests submitted by users to earn credits for club service or helping others.
 Junction table linking credit requests with multiple helper users who participated in the task.
 
 - `credit_request_id` (uuid, foreign key to credit_requests on delete cascade)
-- `user_id` (uuid, foreign key to profiles on delete set null)
+- `user_id` (uuid, foreign key to profiles on delete cascade)
 - Primary Key: `(credit_request_id, user_id)`
 
 ### maintenance_logs
