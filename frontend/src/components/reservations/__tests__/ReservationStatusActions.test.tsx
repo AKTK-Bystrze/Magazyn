@@ -5,18 +5,6 @@ import { ReservationStatusActions } from "../ReservationStatusActions";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReservationDetail } from "@/types";
 
-vi.mock("@/lib/supabase", () => ({
-  supabase: {
-    auth: {
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      onAuthStateChange: vi
-        .fn()
-        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
-    },
-  },
-}));
-
 describe("ReservationStatusActions", () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },

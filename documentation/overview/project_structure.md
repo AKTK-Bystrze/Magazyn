@@ -54,7 +54,7 @@ Magazyn/frontend/
 - Astro runs in **SSR mode**.
 - React is used for interactive components (Cart, Calendar, Checkout).
 - TanStack Query manages server state.
-- Supabase Client handles login + admin uploads.
+- Server-side HttpOnly encrypted session cookie (`magazyn_sid`) handles authentication.
 
 ### Public Folder Organization
 

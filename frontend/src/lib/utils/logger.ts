@@ -9,6 +9,18 @@ interface LogEntry {
   [key: string]: unknown;
 }
 
+function errorReplacer(_key: string, value: unknown): unknown {
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack,
+      ...(value.cause !== undefined ? { cause: value.cause } : {}),
+    };
+  }
+  return value;
+}
+
 export class StructuredLogger {
   private baseContext: Record<string, unknown>;
 
@@ -36,7 +48,7 @@ export class StructuredLogger {
     if (!entry.username) delete entry.username;
     if (!entry.trace_id) entry.trace_id = "unknown";
 
-    const output = JSON.stringify(entry);
+    const output = JSON.stringify(entry, errorReplacer);
 
     if (isServer) {
       if (level === "ERROR") {

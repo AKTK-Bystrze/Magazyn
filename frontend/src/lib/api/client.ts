@@ -1,22 +1,4 @@
 import { DEFAULT_HEADERS } from "@/lib/config/api";
-import { supabase } from "@/lib/supabase";
-
-/**
- * Builds headers for API requests with optional authentication
- * Eliminates duplicated header building logic
- */
-async function buildHeaders(): Promise<Record<string, string>> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const headers: Record<string, string> = { ...DEFAULT_HEADERS };
-
-  if (session?.access_token) {
-    headers["Authorization"] = `Bearer ${session.access_token}`;
-  }
-
-  return headers;
-}
 
 /**
  * Handles non-OK fetch responses by extracting error details and throwing an Error.
@@ -34,11 +16,10 @@ export async function handleFetchError(response: Response): Promise<never> {
 }
 
 async function request<T>(method: string, url: string, data?: unknown): Promise<{ data: T }> {
-  const headers = await buildHeaders();
   const init: RequestInit = {
     method,
-    headers,
-    credentials: "include",
+    headers: DEFAULT_HEADERS,
+    credentials: "same-origin",
     ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
   };
 

@@ -10,6 +10,10 @@ const envPath = path.resolve(__dirname, "../.env");
 if (fs.existsSync(envPath)) {
   process.loadEnvFile(envPath);
 }
+const localEnvPath = path.resolve(__dirname, ".env");
+if (fs.existsSync(localEnvPath)) {
+  process.loadEnvFile(localEnvPath);
+}
 
 export default defineConfig({
   testDir: "./e2e/tests",

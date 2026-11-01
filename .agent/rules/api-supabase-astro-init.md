@@ -1,85 +1,47 @@
 ---
-description: 
+description: Supabase & Astro Integration Architecture
 globs: 
 alwaysApply: false
 ---
-# Supabase Astro Initialization
+# Supabase & Astro Integration Architecture
 
-This document provides a reproducible guide to create the necessary file structure for integrating Supabase with your Astro project.
+This document describes the server-side integration between Supabase Auth and Astro SSR in Magazyn.
 
-## Prerequisites
+## Overview
 
-- Your project should use Astro 5, TypeScript 5, React 19, and Tailwind 4.
-- Install the `@supabase/supabase-js` package.
-- Ensure that `/supabase/config.toml` exists
-- Ensure that a file `/src/db/database.types.ts` exists and contains the correct type definitions for your database.
+Magazyn uses a **server-managed, encrypted HttpOnly session cookie** (`magazyn_sid`) rather than exposing Supabase clients or JWTs directly to client-side code.
 
-IMPORTANT: Check prerequisites before perfoming actions below. If they're not met, stop and ask a user for the fix.
+- **No client-side Supabase client**: The browser holds only an encrypted HttpOnly cookie.
+- **No `locals.supabase`**: Astro `App.Locals` does NOT expose a Supabase client.
+- **Server-side Session Store**: All session encryption, decryption, and cookie lifecycle are handled in `src/lib/auth/session-store.ts` via AES-256-GCM using `SESSION_ENCRYPTION_KEY`.
 
-## File Structure and Setup
+## Architecture & Lifecycle
 
-### 1. Supabase Client Initialization
+1. **Callback (`src/pages/api/auth/callback.ts`)**:
+   - Validates tokens received from the magic-link handoff using a temporary server-side Supabase client.
+   - Fetches authoritative user role and status from the Go backend (`GET /auth/session`).
+   - Encrypts the session and sets the `magazyn_sid` HttpOnly cookie.
 
-Create the file `/src/db/supabase.client.ts` with the following content:
+2. **Middleware (`src/middleware/index.ts`)**:
+   - Decrypts `magazyn_sid` using `decryptSession`.
+   - Checks token expiration; proactively refreshes via Supabase Auth server-side if near expiry (< 60s).
+   - Injects `user`, `accessToken`, and `sessionInfo` into `context.locals`.
+   - Delegates navigation control to `RedirectManager`.
 
-```ts
-import { createClient } from '@supabase/supabase-js';
-
-import type { Database } from '../db/database.types.ts';
-
-const supabaseUrl = import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.SUPABASE_KEY;
-
-export const supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey);
-```
-
-This file initializes the Supabase client using the environment variables `SUPABASE_URL` and `SUPABASE_KEY`.
-
-
-### 2. Middleware Setup
-
-Create the file `/src/middleware/index.ts` with the following content:
+3. **TypeScript Definitions (`src/env.d.ts`)**:
 
 ```ts
-import { defineMiddleware } from 'astro:middleware';
-
-import { supabaseClient } from '../db/supabase.client.ts';
-
-export const onRequest = defineMiddleware((context, next) => {
-  context.locals.supabase = supabaseClient;
-  return next();
-});
-```
-
-This middleware adds the Supabase client to the Astro context locals, making it available throughout your application.
-
-
-### 3. TypeScript Environment Definitions
-
-Create the file `src/env.d.ts` with the following content:
-
-```ts
-/// <reference types="astro/client" />
-
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from './db/database.types.ts';
+import type { SessionInfo } from "./types";
 
 declare global {
   namespace App {
     interface Locals {
-      supabase: SupabaseClient<Database>;
+      trace_id: string;
+      logger: import("./lib/utils/logger").StructuredLogger;
+      user: { id: string; email: string } | null;
+      accessToken: string | null;
+      sessionInfo: SessionInfo | null;
     }
   }
 }
-
-interface ImportMetaEnv {
-  readonly SUPABASE_URL: string;
-  readonly SUPABASE_KEY: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
 ```
-
-This file augments the global types to include the Supabase client on the Astro `App.Locals` object, ensuring proper typing throughout your application.

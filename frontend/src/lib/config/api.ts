@@ -13,15 +13,16 @@
  * Reads from PUBLIC_BACKEND_URL environment variable with localhost fallback.
  * This should point to your Go backend API server.
  *
- * In SSR context (server-side), uses INTERNAL_BACKEND_URL for Docker network communication.
- * On client-side, uses PUBLIC_BACKEND_URL for browser requests.
+ * In SSR context (server-side), uses INTERNAL_BACKEND_URL for Docker network communication
+ * or falls back to PUBLIC_BACKEND_URL / localhost. Used by SSR API proxies and server utilities.
+ * Client-side components make same-origin requests to Astro API routes (/api/*) rather than calling the backend directly.
  *
  * @example
- * // Development
+ * // Local development
  * PUBLIC_BACKEND_URL=http://localhost:8080
  *
- * // Production
- * PUBLIC_BACKEND_URL=https://api.yourdomain.com
+ * // Docker internal network (server-to-server)
+ * INTERNAL_BACKEND_URL=http://backend:8080
  */
 export const BACKEND_URL =
   import.meta.env.SSR && typeof process !== "undefined" && process.env.INTERNAL_BACKEND_URL

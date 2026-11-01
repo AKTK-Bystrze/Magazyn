@@ -12,8 +12,8 @@ Magazyn uses **Supabase Auth** for identity management with **JWT tokens** for A
 
 | Layer                 | Component        | Responsibility                                                    |
 | --------------------- | ---------------- | ----------------------------------------------------------------- |
-| **Frontend (SSR)**    | Astro Middleware | Session validation, token forwarding, route protection            |
-| **Frontend (Client)** | AuthListener     | Auth state changes, client redirects (@supabase/ssr auto-cookies) |
+| **Frontend (SSR)**    | Astro Middleware | Session validation, token refresh, route protection              |
+| **Frontend (Client)** | Callback handoff | Reads the magic-link fragment and hands tokens to the server      |
 | **Backend**           | Auth Middleware  | JWT validation, user context injection                            |
 | **Backend**           | RBAC Middleware  | Role-based endpoint protection                                    |
 | **Supabase**          | Auth Service     | User identity, JWT issuance, magic links                          |
@@ -31,10 +31,12 @@ sequenceDiagram
     participant Supabase
 
     User->>Browser: Access protected page
-    Browser->>Astro: Request with cookie
-    Astro->>Astro: Check auth cookie
-    Astro->>Supabase: Validate token (getUser)
-    Supabase-->>Astro: User object
+    Browser->>Astro: Request with HttpOnly magazyn_sid cookie
+    Astro->>Astro: Decrypt session (AES-256-GCM)
+    opt Near Expiry (<60s)
+        Astro->>Supabase: Refresh session (refreshSession)
+        Supabase-->>Astro: New tokens (updates cookie)
+    end
     Astro->>Backend: GET /auth/session (Bearer token)
     Backend->>Supabase: Validate JWT + fetch profile
     Supabase-->>Backend: User + Profile (RLS enforced)
@@ -54,17 +56,17 @@ sequenceDiagram
     participant User
     participant Browser
     participant Supabase
-    participant AuthListener as AuthListener (React)
-    participant SSR as @supabase/ssr
+    participant Callback as Callback page (/api/auth/callback)
+    participant Astro as Astro SSR
 
     User->>Browser: Click magic link
-    Browser->>Supabase: Verify magic link
-    Supabase-->>Browser: Redirect with #access_token
-    Browser->>AuthListener: Process hash token
-    AuthListener->>Supabase: setSession(token)
-    Supabase->>SSR: Auto-set HTTP cookies (sb-*-auth-token)
-    SSR-->>Browser: Cookies configured
-    AuthListener->>Browser: Redirect to dashboard/admin
+    Browser->>Supabase: Verify OTP token
+    Supabase-->>Browser: Redirect with #access_token (fragment)
+    Browser->>Callback: Page script reads fragment, POSTs tokens
+    Callback->>Supabase: Validate access token (getUser)
+    Supabase-->>Callback: User object
+    Callback->>Astro: Set HttpOnly magazyn_sid cookie
+    Callback->>Browser: Redirect to dashboard/admin
 ```
 
 ### 2. Token Propagation (API Calls)
@@ -113,17 +115,17 @@ interface SessionInfo {
 
 ### Cookie Configuration
 
-**Managed automatically by `@supabase/ssr`**:
+**One server-managed, encrypted, HttpOnly cookie** (see `src/lib/auth/session-store.ts`):
 
-| Attribute | Value                                       | Purpose                     |
-| --------- | ------------------------------------------- | --------------------------- |
-| Name      | `sb-<project-ref>-auth-token`               | Access token (auto-managed) |
-| Name      | `sb-<project-ref>-auth-token-code-verifier` | PKCE verifier (temporary)   |
-| Path      | `/`                                         | Site-wide availability      |
-| SameSite  | Lax                                         | CSRF protection             |
-| HttpOnly  | No                                          | Allows client-side refresh  |
+| Attribute | Value                    | Purpose                                    |
+| --------- | ------------------------ | ------------------------------------------ |
+| Name      | `magazyn_sid`            | Encrypted session (AES-256-GCM)            |
+| Path      | `/`                      | Site-wide availability                     |
+| SameSite  | Lax                      | CSRF protection                            |
+| HttpOnly  | Yes                      | Never readable by JavaScript               |
+| Max-Age   | 30 days                  | Session lifetime                           |
 
-> **Note**: Cookies are automatically set by `createBrowserClient()` and read by `createServerClient()` from `@supabase/ssr`.
+> **Note**: The cookie holds `userId`, `accessToken`, `refreshToken` and `expiresAt`, encrypted with `SESSION_ENCRYPTION_KEY`. The middleware refreshes tokens server-side 60 s before expiry and updates the cookie. Logout revokes the Supabase session and clears all cookies.
 
 ---
 
@@ -194,7 +196,8 @@ Centralized in `RedirectManager` class with loop prevention:
 
 1. **Token Security**
    - JWT validated server-side on every request
-   - Tokens never exposed to client JavaScript (except via Supabase SDK)
+   - Access/refresh tokens stay in the HttpOnly `magazyn_sid` cookie, encrypted with AES-256-GCM
+   - Tokens appear in the URL fragment only during the magic-link handoff and are forwarded to the server immediately
 
 2. **Authorization Single Source of Truth**
    - Role/status from `sessionInfo` (backend DB with RLS)

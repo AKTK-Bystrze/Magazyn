@@ -1,16 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { handleFetchError, api } from "../client";
 
-vi.mock("@/lib/supabase", () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { access_token: "mock-token" } },
-      }),
-    },
-  },
-}));
-
 describe("API client error handling", () => {
   beforeEach(() => {
     vi.restoreAllMocks();

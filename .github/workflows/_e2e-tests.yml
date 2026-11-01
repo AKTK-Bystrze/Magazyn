@@ -40,12 +40,17 @@ on:
       SUPABASE_SERVICE_ROLE_KEY:
         description: 'Supabase service role key (required for remote mode)'
         required: false
+      SESSION_ENCRYPTION_KEY:
+        description: 'Session encryption key for HttpOnly cookies (64-char hex string)'
+        required: true
 
 jobs:
   e2e:
     name: E2E
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SESSION_ENCRYPTION_KEY: ${{ secrets.SESSION_ENCRYPTION_KEY }}
     steps:
       - uses: actions/checkout@v7
 
@@ -90,6 +95,7 @@ jobs:
           supabase-url: ${{ env.PUBLIC_SUPABASE_URL }}
           supabase-anon-key: ${{ env.PUBLIC_SUPABASE_ANON_KEY }}
           supabase-service-role-key: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+          session-encryption-key: ${{ secrets.SESSION_ENCRYPTION_KEY }}
 
       - name: Check Remote Environment
         id: check_remote
@@ -110,6 +116,7 @@ jobs:
           supabase-url: ${{ inputs.supabase-url }}
           supabase-anon-key: ${{ inputs.supabase-anon-key }}
           supabase-service-role-key: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          session-encryption-key: ${{ secrets.SESSION_ENCRYPTION_KEY }}
 
       - name: Run E2E Tests
         working-directory: ./frontend

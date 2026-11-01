@@ -99,6 +99,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
    - `PUBLIC_SUPABASE_URL`
    - `PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SESSION_ENCRYPTION_KEY` (64-character hex string)
 
 3. **Start Application**
 
@@ -144,6 +145,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
    - `PUBLIC_SUPABASE_URL`
    - `PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SESSION_ENCRYPTION_KEY` (64-character hex string)
 
    See [`.env.example`](.env.example) for all configuration options.
 

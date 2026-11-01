@@ -1356,19 +1356,19 @@ Implementation:
 
 **Flow**:
 
-1. User submits email via `POST /auth/login`
+1. User submits email via `POST /auth/login` (proxied to Go backend)
 2. Supabase sends magic link to email
-3. User clicks link, Supabase creates session
-4. Frontend receives JWT token from Supabase
-5. Frontend includes JWT in Authorization header for all API requests: `Authorization: Bearer <jwt>`
+3. User clicks link, Supabase redirects to `/api/auth/callback` with token fragment
+4. Server validates tokens and establishes an encrypted `HttpOnly` session cookie (`magazyn_sid`)
+5. Frontend makes same-origin requests to Astro API proxies, which inject `Authorization: Bearer <jwt>`
 6. Go backend verifies JWT using Supabase public key
 7. Backend extracts user information from verified JWT
 
 **Session Management**:
 
-- Sessions expire after 2 hours of inactivity
-- Frontend should monitor session expiration and redirect to login
-- Refresh tokens handled by Supabase client library
+- Single server-managed encrypted `HttpOnly` cookie (`magazyn_sid`)
+- Proactive token refresh performed server-side 60s before expiry
+- Client JavaScript cannot read session tokens
 
 ### 3.2 Authorization Rules
 

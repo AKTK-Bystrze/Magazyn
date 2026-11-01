@@ -7,7 +7,7 @@
 - **Styling**: Tailwind CSS 4 + Shadcn/ui
 - **Language**: TypeScript 5
 - **State Management**: React Query (`@tanstack/react-query`)
-- **Authentication**: Supabase Auth (`@supabase/ssr`)
+- **Authentication**: Supabase Auth (HttpOnly encrypted session cookie)
 - **Testing**: Vitest (Unit) + Playwright (E2E)
 
 ## 2. API Proxy Pattern & Full Request Flow
@@ -32,10 +32,11 @@ The Astro SSR layer proxies requests to the Go backend to keep JWTs secure in HT
 
 ## 4. Authentication Flow (Magic Links)
 
-1. **Initiate**: `supabase.auth.signInWithOtp` sends email.
-2. **Callback**: User clicks link containing `#access_token=...`.
-3. **Session Processing** (`AuthListener.tsx`): Pushes token to `setSession`, writes `sb-magazyn-auth-token` cookie (managed by `@supabase/ssr`).
-4. **Token Refresh**: Supabase auto-refreshes tokens. If a refresh token expires, a `SIGNED_OUT` event fires and redirects to login.
+1. **Initiate**: The Go backend requests a magic link from Supabase Auth.
+2. **Callback**: Supabase verifies the OTP and redirects the browser to `/api/auth/callback` with session tokens in the URL fragment (`#access_token=...`).
+3. **Handoff**: The callback page reads the URL fragment and POSTs tokens to the same route.
+4. **Session Creation**: The server validates the access token, fetches `sessionInfo` from the Go backend, and sets the encrypted `HttpOnly` cookie (`magazyn_sid`).
+5. **Token Refresh**: The middleware refreshes tokens server-side 60 s before expiry and updates the cookie. A revoked session redirects to login; a transient refresh failure keeps the current session.
 
 ## 5. Security & Redirect Flow
 

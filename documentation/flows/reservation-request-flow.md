@@ -50,9 +50,9 @@ sequenceDiagram
 
 ### 2. Transport Phase (HTTP)
 
-- Frontend sends JSON request to Go backend
-- Uses camelCase naming convention
-- Includes JWT token for authentication
+- Browser sends same-origin request to Astro SSR BFF proxy (`/api/reservations`) with HttpOnly session cookie
+- Astro API proxy unwraps the session, injects `Authorization: Bearer <token>`, and forwards request to Go backend
+- Uses camelCase naming convention on frontend, transformed to snake_case for Go backend
 
 ### 3. Decoding Phase (Backend)
 

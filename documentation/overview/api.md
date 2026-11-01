@@ -8,7 +8,7 @@ This document provides a tree-view structure and route reference for the Applica
 
 - **Backend**: Go standard library `net/http` (`http.NewServeMux()`), exposing REST endpoints on port `:8080`.
 - **Frontend / BFF**: Astro 5 SSR proxy endpoints under `frontend/src/pages/api/` forwarding authenticated requests to the backend.
-- **Reverse Proxy**: In production/Docker environments, Caddy strips `/api` and routes directly to the Go backend on port `:8080`. During local SSR development, Astro BFF proxies forward requests with the user's `locals.accessToken`.
+- **Reverse Proxy & BFF**: Caddy routes all incoming HTTP traffic (`/*`) to the Astro SSR container (`:4321`). Astro BFF proxy endpoints (`frontend/src/pages/api/*`) read the HttpOnly encrypted session cookie, inject `locals.accessToken` as `Authorization: Bearer <token>`, and forward requests to the Go backend on port `:8080`.
 - **Database**: Supabase PostgreSQL (managed), accessed via `supabase-go` and atomic SQL RPC stored procedures.
 - **Authentication**: Supabase Auth (Magic Links), verified on the Go backend using JWT verification middleware.
 

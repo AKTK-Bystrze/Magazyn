@@ -1,6 +1,6 @@
 # Debug Issue Command
 
-This command provides a systematic approach to debugging issues in the Diet Planner MVP project.
+This command provides a systematic approach to debugging issues in the Magazyn project.
 
 ## Command Usage
 
@@ -504,7 +504,7 @@ After identifying root cause:
 # Technical Report: {Issue Name} Analysis
 
 **Report Date**: {Date}
-**Project**: Diet Planner MVP
+**Project**: Magazyn
 **Issue**: {Issue Name}
 **Status**: ✅ Resolved
 **Severity**: {Severity Level}

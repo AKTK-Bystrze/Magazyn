@@ -21,7 +21,7 @@ This document outlines the architecture for a public-facing Rental Application. 
 **State & API:**
 
 - **TanStack Query:** Caches API responses from the Go Backend.
-- **Supabase Client (JS):** Used only for Authentication and Admin File Uploads (Storage).
+- **Authentication & Proxying:** Server-side HttpOnly encrypted session cookie (`magazyn_sid`) with Astro SSR BFF API proxies forwarding authenticated requests to the Go backend.
 
 ### 2. Backend Layer (Go)
 
@@ -63,9 +63,8 @@ Instead of self-hosting complex services, we connect to the managed Supabase Clo
 - **Container 2 (Astro):** Runs the Node.js adapter for Astro.
 - **Container 3 (Caddy):**
   - Acts as the entry point (Reverse Proxy).
-  - Handles Automatic HTTPS (Let's Encrypt).
-  - Routes `/api/*` → Go Container.
-  - Routes `/*` → Astro Container.
+  - Handles Automatic HTTPS (Let's Encrypt / TLS certificates).
+  - Routes `/*` → Astro Container (which internally proxies `/api/*` to the Go Container).
 
 ### 5. External Services
 
@@ -79,8 +78,8 @@ The following diagram illustrates the "Hybrid Light" approach. The heavy statefu
 flowchart TD
     subgraph VPS ["VPS / DigitalOcean"]
         Caddy("Caddy Reverse Proxy")
+        AstroApp("Astro Frontend (SSR)")
         GoApp("Go Backend API")
-        AstroApp("Astro Frontend")
     end
 
     subgraph Supabase_Cloud ["Supabase Cloud Managed Services"]
@@ -93,15 +92,13 @@ flowchart TD
     Email["Email Service (Noop)"]
 
     Browser -->|HTTPS / 443| Caddy
-    Caddy -->|/api/*| GoApp
     Caddy -->|/*| AstroApp
+    AstroApp -->|Proxied /api/* (Bearer JWT)| GoApp
 
     GoApp -->|SQL Queries| DB
     GoApp -->|Verify JWT| Auth
     GoApp -->|Send Email| Email
-
-    Browser -->|Login / Admin Uploads| Auth
-    Browser -->|Login / Admin Uploads| Storage
+    AstroApp -.->|Validate/Refresh Tokens| Auth
 
     classDef cloud fill:#3ECF8E,stroke:#333,stroke-width:2px,color:white;
     classDef vps fill:#22b357,stroke:#333,stroke-width:2px,color:white;
