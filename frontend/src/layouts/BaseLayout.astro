@@ -6,14 +6,12 @@
  * - Meta tags and SEO basics
  * - Theme script for FOUC prevention
  * - Global styles
- * - AuthListener for session management
  *
  * @example
  * <BaseLayout title="Dashboard" description="User dashboard page">
  *   <main>Page content</main>
  * </BaseLayout>
  */
-import { AuthListener } from "@/components/auth/AuthListener";
 import "../styles/global.css";
 
 interface Props {
@@ -25,7 +23,6 @@ interface Props {
 
 const { title, description = "Bystrzacki Magazyn" } = Astro.props;
 const traceId = Astro.locals.trace_id || "unknown";
-const userId = Astro.locals.user?.id || null;
 ---
 
 <!doctype html>
@@ -66,7 +63,6 @@ const userId = Astro.locals.user?.id || null;
     </script>
   </head>
   <body>
-    <AuthListener client:load initialUserId={userId} />
     <slot />
   </body>
 </html>
