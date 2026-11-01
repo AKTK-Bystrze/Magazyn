@@ -1,16 +1,14 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { Database } from "./db/database.types.ts";
 import type { SessionInfo } from "./types";
 
 declare global {
   namespace App {
     interface Locals {
-      supabase: SupabaseClient<Database>;
-      user: User | null;
-      sessionInfo: SessionInfo | null;
-      accessToken?: string;
-      logger: import("./lib/utils/logger").StructuredLogger;
       trace_id: string;
+      logger: import("./lib/utils/logger").StructuredLogger;
+      user: { id: string; email: string } | null;
+      userId: string | null;
+      accessToken: string | null;
+      sessionInfo: SessionInfo | null;
     }
   }
 }
@@ -18,6 +16,8 @@ declare global {
 interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_URL: string;
   readonly PUBLIC_SUPABASE_ANON_KEY: string;
+  readonly SESSION_ENCRYPTION_KEY?: string;
+  readonly SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
 interface ImportMeta {
