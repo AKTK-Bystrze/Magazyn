@@ -1,40 +1,49 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { AstroCookies } from "astro";
 
-// Mock supabase-ssr
-const mockGetUser = vi.fn();
-const mockGetSession = vi.fn();
-const mockSupabaseClient = {
-  auth: {
-    getUser: mockGetUser,
-    getSession: mockGetSession,
+// Hoisted mocks for modules consumed by the middleware
+const mocks = vi.hoisted(() => ({
+  decryptSession: vi.fn(),
+  encryptSession: vi.fn(),
+  getUserSession: vi.fn(),
+  refreshSession: vi.fn(),
+  createClient: vi.fn(),
+}));
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: (...args: unknown[]) => mocks.createClient(...args),
+}));
+
+vi.mock("@/lib/auth/session-store", () => ({
+  decryptSession: (...args: unknown[]) => mocks.decryptSession(...args),
+  encryptSession: (...args: unknown[]) => mocks.encryptSession(...args),
+  SESSION_COOKIE: "magazyn_sid",
+  SESSION_COOKIE_OPTIONS: {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 2592000,
   },
-};
-
-vi.mock("../../lib/auth/supabase-ssr", () => ({
-  createSupabaseServerClient: vi.fn(() => mockSupabaseClient),
 }));
 
-// Mock cookie-utils
-const mockClearAllAuthCookies = vi.fn();
-vi.mock("../../lib/auth/cookie-utils", () => ({
-  clearAllAuthCookies: (...args: unknown[]) => mockClearAllAuthCookies(...args),
-}));
-
-// Mock session-utils
-const mockGetUserSession = vi.fn();
-vi.mock("../../lib/auth/session-utils", () => ({
-  getUserSession: (...args: unknown[]) => mockGetUserSession(...args),
+vi.mock("@/lib/auth/session-utils", () => ({
+  getUserSession: (...args: unknown[]) => mocks.getUserSession(...args),
 }));
 
 // Import middleware under test
 import { onRequest } from "../index";
 
-describe("Astro Middleware (onRequest)", () => {
+type NextFn = Parameters<typeof onRequest>[1];
+
+describe("Astro Middleware (onRequest) — HttpOnly session", () => {
   let mockCookies: AstroCookies;
   let nextMock: ReturnType<typeof vi.fn>;
 
-  function createMockContext(urlPath: string, options?: { headers?: Record<string, string> }) {
+  function createMockContext(
+    urlPath: string,
+    options?: { headers?: Record<string, string>; cookieValue?: string | null }
+  ) {
     const fullUrl = `http://localhost:3000${urlPath}`;
     const headers = new Headers(options?.headers || {});
     const request = new Request(fullUrl, { headers });
@@ -60,6 +69,36 @@ describe("Astro Middleware (onRequest)", () => {
     };
   }
 
+  /**
+   * Runs the middleware with a mocked `next` callback and returns the Response.
+   * The middleware returns `void | Response`; in practice it always returns a
+   * Response when a redirect/error occurs, otherwise it delegates to `next()`.
+   */
+  async function runMiddleware(
+    context: Parameters<typeof onRequest>[0],
+    next: ReturnType<typeof vi.fn>
+  ): Promise<Response> {
+    const result = await onRequest(context, next as unknown as NextFn);
+    return result as Response;
+  }
+
+  const mockSession = {
+    userId: "user-123",
+    accessToken: "access-token-1",
+    refreshToken: "refresh-token-1",
+    expiresAt: Math.floor(Date.now() / 1000) + 3600,
+  };
+
+  const mockSessionInfo = {
+    userId: "user-123",
+    email: "user@example.com",
+    username: "testuser",
+    role: "user",
+    creditBalance: 100,
+    isEnabled: true,
+    expiresAt: "2026-12-31T00:00:00Z",
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -70,292 +109,220 @@ describe("Astro Middleware (onRequest)", () => {
       has: vi.fn(),
     } as unknown as AstroCookies;
 
-    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
-    mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+    mocks.createClient.mockReturnValue({
+      auth: { refreshSession: mocks.refreshSession },
+    });
+    mocks.encryptSession.mockResolvedValue("encrypted-cookie-value");
     nextMock = vi.fn().mockResolvedValue(new Response("Next handler output", { status: 200 }));
   });
 
-  describe("Authenticated Happy Path", () => {
-    it("authenticates valid user and populates locals before calling next()", async () => {
-      const mockUser = { id: "user-123", email: "user@example.com" };
-      const mockSessionInfo = {
-        userId: "user-123",
-        role: "user",
-        isEnabled: true,
-        username: "testuser",
-        email: "user@example.com",
-        creditBalance: 100,
-        expiresAt: "2026-12-31T00:00:00Z",
-      };
+  describe("Unauthenticated requests", () => {
+    it("redirects to login when no session cookie is present on a protected page", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
+      mocks.decryptSession.mockResolvedValue(null);
 
-      mockGetUser.mockResolvedValueOnce({ data: { user: mockUser }, error: null });
-      mockGetSession.mockResolvedValueOnce({
-        data: { session: { access_token: "mock-jwt-token" } },
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await runMiddleware(context, nextMock);
+
+      expect(mocks.decryptSession).not.toHaveBeenCalled();
+      expect(context.locals.user).toBeNull();
+      expect(context.locals.sessionInfo).toBeNull();
+      expect(context.locals.accessToken).toBeNull();
+      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
+      expect(nextMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(302);
+    });
+
+    it("treats a tampered/corrupt cookie as unauthenticated", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({ value: "tampered" });
+      mocks.decryptSession.mockResolvedValue(null);
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await runMiddleware(context, nextMock);
+
+      expect(mocks.decryptSession).toHaveBeenCalledWith("tampered");
+      expect(context.locals.user).toBeNull();
+      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
+      expect(response.status).toBe(302);
+    });
+  });
+
+  describe("Authenticated happy path", () => {
+    it("decrypts the session, fetches session info, and populates locals", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(mockSession);
+      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await runMiddleware(context, nextMock);
+
+      expect(mocks.decryptSession).toHaveBeenCalledWith("encrypted-cookie-value");
+      expect(mocks.getUserSession).toHaveBeenCalledWith("access-token-1");
+      expect(context.locals.user).toEqual({ id: "user-123", email: "user@example.com" });
+      expect(context.locals.userId).toBe("user-123");
+      expect(context.locals.accessToken).toBe("access-token-1");
+      expect(context.locals.sessionInfo).toEqual(mockSessionInfo);
+      expect(redirectMock).not.toHaveBeenCalled();
+      expect(nextMock).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(200);
+    });
+
+    it("does not refresh when the access token is far from expiry", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(mockSession);
+      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+
+      const { context } = createMockContext("/dashboard");
+      await runMiddleware(context, nextMock);
+
+      expect(mocks.createClient).not.toHaveBeenCalled();
+      expect(mocks.refreshSession).not.toHaveBeenCalled();
+      expect(mockCookies.set).not.toHaveBeenCalled();
+    });
+
+    it("keeps the user signed in when the backend session-info fetch fails", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(mockSession);
+      mocks.getUserSession.mockResolvedValue(null);
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await runMiddleware(context, nextMock);
+
+      expect(context.locals.user).toEqual({ id: "user-123", email: "" });
+      expect(context.locals.sessionInfo).toBeNull();
+      expect(context.locals.accessToken).toBe("access-token-1");
+      expect(redirectMock).not.toHaveBeenCalled();
+      expect(nextMock).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(200);
+    });
+  });
+
+  describe("Server-side token refresh", () => {
+    it("refreshes near-expiry tokens and rewrites the cookie", async () => {
+      const nearExpirySession = {
+        ...mockSession,
+        expiresAt: Math.floor(Date.now() / 1000) + 30,
+      };
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(nearExpirySession);
+      mocks.refreshSession.mockResolvedValue({
+        data: {
+          session: {
+            access_token: "new-access-token",
+            refresh_token: "new-refresh-token",
+            expires_at: Math.floor(Date.now() / 1000) + 3600,
+          },
+        },
         error: null,
       });
-      mockGetUserSession.mockResolvedValueOnce(mockSessionInfo);
+      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+
+      const { context } = createMockContext("/dashboard");
+      await runMiddleware(context, nextMock);
+
+      expect(mocks.createClient).toHaveBeenCalledTimes(1);
+      expect(mocks.refreshSession).toHaveBeenCalledWith({
+        refresh_token: "refresh-token-1",
+      });
+      expect(mocks.encryptSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accessToken: "new-access-token",
+          refreshToken: "new-refresh-token",
+        })
+      );
+      expect(mockCookies.set).toHaveBeenCalledWith(
+        "magazyn_sid",
+        "encrypted-cookie-value",
+        expect.objectContaining({ httpOnly: true, sameSite: "lax" })
+      );
+      expect(context.locals.accessToken).toBe("new-access-token");
+      expect(nextMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears the session cookie when the refresh token is expired or revoked", async () => {
+      const nearExpirySession = {
+        ...mockSession,
+        expiresAt: Math.floor(Date.now() / 1000) + 30,
+      };
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(nearExpirySession);
+      mocks.refreshSession.mockResolvedValue({
+        data: { session: null },
+        error: { message: "refresh_token_not_found" },
+      });
 
       const { context, redirectMock } = createMockContext("/dashboard");
-      const response = await onRequest(context, nextMock);
+      const response = await runMiddleware(context, nextMock);
 
-      expect(mockGetUser).toHaveBeenCalledTimes(1);
-      expect(mockGetSession).toHaveBeenCalledTimes(1);
-      expect(mockGetUserSession).toHaveBeenCalledWith("mock-jwt-token");
-      expect(context.locals.user).toEqual(mockUser);
-      expect(context.locals.sessionInfo).toEqual(mockSessionInfo);
-      expect(context.locals.accessToken).toBe("mock-jwt-token");
+      expect(mockCookies.delete).toHaveBeenCalledWith("magazyn_sid", { path: "/" });
+      expect(context.locals.user).toBeNull();
+      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
+      expect(nextMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(302);
+    });
+
+    it("keeps the session when the refresh fails transiently (timeout / 5xx)", async () => {
+      const nearExpirySession = {
+        ...mockSession,
+        expiresAt: Math.floor(Date.now() / 1000) + 30,
+      };
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(nearExpirySession);
+      mocks.refreshSession.mockResolvedValue({
+        data: { session: null },
+        error: { message: "timed out", status: 500 },
+      });
+      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await runMiddleware(context, nextMock);
+
+      expect(mockCookies.delete).not.toHaveBeenCalled();
+      expect(context.locals.user).toEqual({ id: "user-123", email: "user@example.com" });
+      expect(context.locals.accessToken).toBe("access-token-1");
       expect(redirectMock).not.toHaveBeenCalled();
       expect(nextMock).toHaveBeenCalledTimes(1);
       expect(response.status).toBe(200);
     });
   });
 
-  describe("Unauthenticated User Page Navigation", () => {
-    it("redirects unauthenticated user from protected page to /login preserving deep link", async () => {
-      mockGetUser.mockResolvedValueOnce({ data: { user: null }, error: null });
-
-      const { context, redirectMock } = createMockContext("/dashboard");
-      const response = await onRequest(context, nextMock);
-
-      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
-      expect(nextMock).not.toHaveBeenCalled();
-      expect(response.status).toBe(302);
-      expect(response.headers.get("Location")).toBe("/login?redirect=%2Fdashboard");
-    });
-
-    it("allows unauthenticated user to access /login without redirect", async () => {
-      mockGetUser.mockResolvedValueOnce({ data: { user: null }, error: null });
-
-      const { context, redirectMock } = createMockContext("/login");
-      const response = await onRequest(context, nextMock);
-
-      expect(redirectMock).not.toHaveBeenCalled();
-      expect(nextMock).toHaveBeenCalledTimes(1);
-      expect(response.status).toBe(200);
-    });
-  });
-
-  describe("Invalid Refresh Token Handling", () => {
-    it("clears cookies and redirects protected page to /login with redirect parameter", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "refresh_token_not_found", message: "Token not found" },
-      });
-
-      const { context, redirectMock } = createMockContext("/dashboard");
-      const response = await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
-      expect(response.status).toBe(302);
-      expect(nextMock).not.toHaveBeenCalled();
-    });
-
-    it("clears cookies and renders /login directly without self-redirect loop", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "refresh_token_not_found", message: "Token not found" },
-      });
-
-      const { context, redirectMock } = createMockContext("/login");
-      const response = await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-      expect(redirectMock).not.toHaveBeenCalled();
-      expect(nextMock).toHaveBeenCalledTimes(1);
-      expect(response.status).toBe(200);
-    });
-
-    it("clears cookies on /api/auth/login and allows request to proceed to route handler", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "refresh_token_not_found", message: "Token not found" },
-      });
-
-      const { context, redirectMock } = createMockContext("/api/auth/login");
-      const response = await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-      expect(redirectMock).not.toHaveBeenCalled();
-      expect(nextMock).toHaveBeenCalledTimes(1);
-      expect(response.status).toBe(200);
-    });
-
-    it("clears cookies on non-auth API /api/reservations and returns 401 JSON error", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "refresh_token_not_found", message: "Token not found" },
-      });
+  describe("API route auth enforcement", () => {
+    it("returns 401 JSON for API routes without an authenticated session", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
+      mocks.decryptSession.mockResolvedValue(null);
 
       const { context, redirectMock } = createMockContext("/api/reservations");
-      const response = await onRequest(context, nextMock);
+      const response = await runMiddleware(context, nextMock);
 
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
       expect(redirectMock).not.toHaveBeenCalled();
       expect(nextMock).not.toHaveBeenCalled();
       expect(response.status).toBe(401);
 
       const json = await response.json();
-      expect(json.error).toBe("Authentication required");
+      expect(json.error).toContain("Authentication required");
     });
 
-    it("clears cookies when error code is invalid_grant", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "invalid_grant", message: "Invalid refresh token" },
+    it("returns 403 JSON when a disabled user calls an API route", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
       });
-
-      const { context } = createMockContext("/dashboard");
-      await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-    });
-
-    it("clears cookies when error code is session_not_found", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "session_not_found", message: "Session expired" },
-      });
-
-      const { context } = createMockContext("/dashboard");
-      await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-    });
-
-    it("clears cookies when error code is user_not_found", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "user_not_found", message: "User deleted" },
-      });
-
-      const { context } = createMockContext("/dashboard");
-      await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-    });
-
-    it("clears cookies when error code is bad_jwt or invalid_token", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { code: "bad_jwt", message: "Malformed token signature" },
-      });
-
-      const { context } = createMockContext("/dashboard");
-      await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-    });
-
-    it("clears cookies when error has a 4xx status (e.g. 400 bad request)", async () => {
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: { status: 400, message: "Corrupted cookie chunk header" },
-      });
-
-      const { context } = createMockContext("/dashboard");
-      await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).toHaveBeenCalledWith(context.request, mockCookies);
-    });
-  });
-
-  describe("Guest Visitor / AuthSessionMissing Handling", () => {
-    it("does not clear cookies or log an error when AuthSessionMissingError occurs, redirecting protected page to /login", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: {
-          name: "AuthSessionMissingError",
-          message: "Auth session missing!",
-          status: 400,
-        },
-      });
-
-      const { context, redirectMock } = createMockContext("/dashboard");
-      const response = await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).not.toHaveBeenCalled();
-      expect(consoleErrorSpy).not.toHaveBeenCalled();
-      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
-      expect(nextMock).not.toHaveBeenCalled();
-      expect(response.status).toBe(302);
-
-      consoleErrorSpy.mockRestore();
-    });
-
-    it("does not clear cookies or log an error when AuthSessionMissingError occurs on public route /login", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: {
-          name: "AuthSessionMissingError",
-          message: "Auth session missing!",
-          status: 400,
-        },
-      });
-
-      const { context, redirectMock } = createMockContext("/login");
-      const response = await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).not.toHaveBeenCalled();
-      expect(consoleErrorSpy).not.toHaveBeenCalled();
-      expect(redirectMock).not.toHaveBeenCalled();
-      expect(nextMock).toHaveBeenCalledTimes(1);
-      expect(response.status).toBe(200);
-
-      consoleErrorSpy.mockRestore();
-    });
-
-    it("does not clear cookies or log an error when error has message 'Auth session missing!' without the exact error name", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-      mockGetUser.mockResolvedValueOnce({
-        data: { user: null },
-        error: {
-          name: "CustomError",
-          message: "Auth session missing!",
-          status: 400,
-        },
-      });
-
-      const { context, redirectMock } = createMockContext("/dashboard");
-      const response = await onRequest(context, nextMock);
-
-      expect(mockClearAllAuthCookies).not.toHaveBeenCalled();
-      expect(consoleErrorSpy).not.toHaveBeenCalled();
-      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
-      expect(nextMock).not.toHaveBeenCalled();
-      expect(response.status).toBe(302);
-
-      consoleErrorSpy.mockRestore();
-    });
-  });
-
-  describe("Account Disabled Enforcement", () => {
-    it("returns 403 Forbidden JSON when disabled user calls API route", async () => {
-      const mockUser = { id: "disabled-user", email: "disabled@example.com" };
-      const mockDisabledSession = {
-        userId: "disabled-user",
-        role: "user",
-        isEnabled: false,
-        username: "disableduser",
-        email: "disabled@example.com",
-        creditBalance: 0,
-        expiresAt: "2026-12-31T00:00:00Z",
-      };
-
-      mockGetUser.mockResolvedValueOnce({ data: { user: mockUser }, error: null });
-      mockGetSession.mockResolvedValueOnce({
-        data: { session: { access_token: "disabled-token" } },
-        error: null,
-      });
-      mockGetUserSession.mockResolvedValueOnce(mockDisabledSession);
+      mocks.decryptSession.mockResolvedValue(mockSession);
+      mocks.getUserSession.mockResolvedValue({ ...mockSessionInfo, isEnabled: false });
 
       const { context, redirectMock } = createMockContext("/api/reservations");
-      const response = await onRequest(context, nextMock);
+      const response = await runMiddleware(context, nextMock);
 
       expect(redirectMock).not.toHaveBeenCalled();
       expect(nextMock).not.toHaveBeenCalled();
@@ -364,28 +331,18 @@ describe("Astro Middleware (onRequest)", () => {
       const json = await response.json();
       expect(json.error).toContain("Account is disabled");
     });
+  });
 
-    it("redirects disabled user to /account-disabled when accessing page route", async () => {
-      const mockUser = { id: "disabled-user", email: "disabled@example.com" };
-      const mockDisabledSession = {
-        userId: "disabled-user",
-        role: "user",
-        isEnabled: false,
-        username: "disableduser",
-        email: "disabled@example.com",
-        creditBalance: 0,
-        expiresAt: "2026-12-31T00:00:00Z",
-      };
-
-      mockGetUser.mockResolvedValueOnce({ data: { user: mockUser }, error: null });
-      mockGetSession.mockResolvedValueOnce({
-        data: { session: { access_token: "disabled-token" } },
-        error: null,
+  describe("Account disabled enforcement (page routes)", () => {
+    it("redirects a disabled user to /account-disabled", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
       });
-      mockGetUserSession.mockResolvedValueOnce(mockDisabledSession);
+      mocks.decryptSession.mockResolvedValue(mockSession);
+      mocks.getUserSession.mockResolvedValue({ ...mockSessionInfo, isEnabled: false });
 
       const { context, redirectMock } = createMockContext("/dashboard");
-      const response = await onRequest(context, nextMock);
+      const response = await runMiddleware(context, nextMock);
 
       expect(redirectMock).toHaveBeenCalledWith("/account-disabled");
       expect(nextMock).not.toHaveBeenCalled();
@@ -393,10 +350,13 @@ describe("Astro Middleware (onRequest)", () => {
     });
   });
 
-  describe("Static Assets Bypass", () => {
-    it("passes static assets directly to next() without auth check or redirect", async () => {
+  describe("Static assets bypass", () => {
+    it("passes static assets directly to next() without auth checks", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
+      mocks.decryptSession.mockResolvedValue(null);
+
       const { context, redirectMock } = createMockContext("/assets/styles.css");
-      const response = await onRequest(context, nextMock);
+      const response = await runMiddleware(context, nextMock);
 
       expect(redirectMock).not.toHaveBeenCalled();
       expect(nextMock).toHaveBeenCalledTimes(1);

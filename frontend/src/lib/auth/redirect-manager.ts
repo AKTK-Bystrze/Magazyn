@@ -1,10 +1,18 @@
-import type { User } from "@supabase/supabase-js";
 import type { SessionInfo } from "../../types";
 import { ROUTES } from "../config/routes";
 import { validateRedirectUrl } from "./url-utils";
 import { ADMIN_ROLE, SUPER_ADMIN_ROLE, isAdmin } from "./roles";
 import { USER_ROLE } from "@/lib/config/constants/user/role";
 import { defaultLogger as logger } from "@/lib/utils/logger";
+
+/**
+ * Minimal authenticated user shape required for redirect decisions.
+ * Populated server-side by the middleware from the HttpOnly session cookie.
+ */
+export interface AuthUser {
+  id: string;
+  email?: string | null;
+}
 
 /**
  * Manages redirects with centralized logic
@@ -20,7 +28,7 @@ import { defaultLogger as logger } from "@/lib/utils/logger";
 /**
  * Main redirect logic - determines where to redirect based on auth state
  *
- * @param user - Supabase user object (null if not authenticated)
+ * @param user - Authenticated user (null if not authenticated)
  * @param sessionInfo - Session info from backend (null if not fetched)
  * @param currentPath - Current URL pathname
  * @param redirectParam - Optional redirect parameter from query string
@@ -28,7 +36,7 @@ import { defaultLogger as logger } from "@/lib/utils/logger";
  * @returns URL to redirect to, or null if no redirect needed
  */
 function getRedirectForAuthState(
-  user: User | null,
+  user: AuthUser | null,
   sessionInfo: SessionInfo | null,
   currentPath: string,
   redirectParam: string | null,
@@ -87,10 +95,10 @@ function isRedirectAllowedForRole(path: string, role: string | undefined): boole
 /**
  * Gets the default route for a user based on their role
  *
- * @param user - Supabase user object (can be null)
+ * @param user - Authenticated user (can be null)
  * @param sessionInfo - Session info from backend (authoritative source)
  */
-function getDefaultRouteForUser(user: User | null, sessionInfo: SessionInfo | null): string {
+function getDefaultRouteForUser(user: AuthUser | null, sessionInfo: SessionInfo | null): string {
   if (!user || !sessionInfo) {
     logger.info("No user or sessionInfo available, redirecting to login");
     return ROUTES.PUBLIC.LOGIN;

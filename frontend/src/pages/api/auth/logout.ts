@@ -1,10 +1,33 @@
+// frontend/src/pages/api/auth/logout.ts
 import type { APIRoute } from "astro";
-import { clearAllAuthCookies } from "@/lib/auth/cookie-utils";
+import { decryptSession, SESSION_COOKIE } from "@/lib/auth/session-store";
 
-export const POST: APIRoute = async ({ request, cookies, locals }) => {
+export const POST: APIRoute = async ({ cookies, locals }) => {
   locals.logger?.info("User logging out");
 
-  clearAllAuthCookies(request, cookies);
+  const rawCookie = cookies.get(SESSION_COOKIE)?.value ?? null;
+  if (rawCookie) {
+    const session = await decryptSession(rawCookie);
+    if (session) {
+      // Revoke the Supabase session server-side, like the old client-side
+      // signOut() did, so a copied or replayed cookie stops working.
+      try {
+        await fetch(
+          `${process.env.INTERNAL_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL}/auth/v1/logout?scope=global`,
+          {
+            method: "POST",
+            headers: {
+              apikey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          }
+        );
+      } catch (error) {
+        locals.logger?.warn("Failed to revoke Supabase session on logout", { error });
+      }
+    }
+  }
 
+  cookies.delete(SESSION_COOKIE, { path: "/" });
   return Response.json({ message: "Logged out" });
 };
