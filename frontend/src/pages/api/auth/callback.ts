@@ -40,7 +40,7 @@ const HANDOFF_PAGE = `<!doctype html>
         }
         const expiresAt = hash.get("expires_at");
         try {
-          const res = await fetch("/api/auth/callback", {
+          const res = await fetch("/api/auth/callback" + window.location.search, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -49,7 +49,7 @@ const HANDOFF_PAGE = `<!doctype html>
             body: JSON.stringify({
               access_token: accessToken,
               refresh_token: refreshToken,
-              expires_at: expiresAt ? parseInt(expiresAt, 10) : null,
+              expires_at: Number(expiresAt) || null,
             }),
           });
           const data = await res.json().catch(() => ({}));
@@ -73,21 +73,25 @@ export const GET: APIRoute = async () =>
     },
   });
 
-export const POST: APIRoute = async ({ url, request, cookies }) => {
+export const POST: APIRoute = async ({ url, request, cookies, locals }) => {
   // Verify handoff header to guard against cross-site request forgery.
   if (request.headers.get(HANDOFF_HEADER) !== "1") {
+    locals.logger?.warn("Magic link callback rejected: missing or invalid handoff header");
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => null);
-  const accessToken = typeof body?.access_token === "string" ? body.access_token : "";
-  const refreshToken = typeof body?.refresh_token === "string" ? body.refresh_token : "";
-  const expiresAt =
-    typeof body?.expires_at === "number" && body.expires_at > 0 ? body.expires_at : null;
+  const {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_at: rawExpiresAt,
+  } = (await request.json().catch(() => ({}))) ?? {};
 
   if (!accessToken || !refreshToken) {
+    locals.logger?.warn("Magic link callback rejected: missing tokens in payload");
     return Response.json({ error: "missing_session" }, { status: 400 });
   }
+
+  const expiresAt = typeof rawExpiresAt === "number" && rawExpiresAt > 0 ? rawExpiresAt : null;
 
   // Validate the tokens with Supabase before trusting them.
   const supabase = createClient(
@@ -96,12 +100,16 @@ export const POST: APIRoute = async ({ url, request, cookies }) => {
   );
   const { data, error } = await supabase.auth.getUser(accessToken);
   if (error || !data.user) {
+    locals.logger?.warn("Magic link token rejected by Supabase", { error: error?.message });
     return Response.json({ error: "invalid_token" }, { status: 401 });
   }
 
   // Fetch authoritative role + enabled status from the Go backend.
   const sessionInfo = await getUserSession(accessToken);
   if (!sessionInfo) {
+    locals.logger?.error("Magic link session info fetch failed from backend", {
+      userId: data.user.id,
+    });
     return Response.json({ error: "session_fetch_failed" }, { status: 502 });
   }
 
@@ -112,7 +120,18 @@ export const POST: APIRoute = async ({ url, request, cookies }) => {
     expiresAt: expiresAt ?? Math.floor(Date.now() / 1000) + 3600,
   };
 
-  cookies.set(SESSION_COOKIE, await encryptSession(session), SESSION_COOKIE_OPTIONS);
+  try {
+    const encryptedCookie = await encryptSession(session);
+    cookies.set(SESSION_COOKIE, encryptedCookie, SESSION_COOKIE_OPTIONS);
+  } catch (err) {
+    locals.logger?.error("Failed to encrypt session cookie", { error: err });
+    return Response.json({ error: "encryption_failed" }, { status: 500 });
+  }
+
+  locals.logger?.info("Magic link authentication successful", {
+    userId: data.user.id,
+    role: sessionInfo.role,
+  });
 
   const redirectTo = RedirectManager.getRedirectForAuthState(
     data.user,

@@ -95,6 +95,24 @@ describe("redirect-manager", () => {
       });
     });
 
+    describe("Admin Route Protection", () => {
+      it("redirects regular user attempting to visit /admin to /dashboard", () => {
+        const user = createMockUser();
+        const session = createMockSessionInfo({ role: "user" });
+        expect(RedirectManager.getRedirectForAuthState(user, session, "/admin", null, origin)).toBe(
+          "/dashboard"
+        );
+      });
+
+      it("allows admin user to visit /admin", () => {
+        const user = createMockUser();
+        const session = createMockSessionInfo({ role: "admin" });
+        expect(
+          RedirectManager.getRedirectForAuthState(user, session, "/admin", null, origin)
+        ).toBeNull();
+      });
+    });
+
     describe("Root Path Redirects", () => {
       it.each([
         ["regular user from root", createMockSessionInfo({ role: "user" }), "/", "/dashboard"],
@@ -127,10 +145,22 @@ describe("redirect-manager", () => {
         expect(result).toBe("/login?redirect=%2Fdashboard");
       });
 
-      it("handles user with null sessionInfo", () => {
+      it("handles user with null sessionInfo on /login without looping", () => {
         const user = createMockUser();
         const result = RedirectManager.getRedirectForAuthState(user, null, "/login", null, origin);
-        expect(result).toBe("/login");
+        expect(result).toBeNull();
+      });
+
+      it("handles user with null sessionInfo on protected page by redirecting to /login", () => {
+        const user = createMockUser();
+        const result = RedirectManager.getRedirectForAuthState(
+          user,
+          null,
+          "/dashboard",
+          null,
+          origin
+        );
+        expect(result).toBe("/login?redirect=%2Fdashboard");
       });
     });
   });

@@ -187,7 +187,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       expect(mockCookies.set).not.toHaveBeenCalled();
     });
 
-    it("keeps the user signed in when the backend session-info fetch fails", async () => {
+    it("clears auth cookies and treats user as unauthenticated when session-info fetch fails", async () => {
       (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
         value: "encrypted-cookie-value",
       });
@@ -197,12 +197,13 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       const { context, redirectMock } = createMockContext("/dashboard");
       const response = await runMiddleware(context, nextMock);
 
-      expect(context.locals.user).toEqual({ id: "user-123", email: "" });
+      expect(mockCookies.delete).toHaveBeenCalledWith("magazyn_sid", { path: "/" });
+      expect(context.locals.user).toBeNull();
       expect(context.locals.sessionInfo).toBeNull();
-      expect(context.locals.accessToken).toBe("access-token-1");
-      expect(redirectMock).not.toHaveBeenCalled();
-      expect(nextMock).toHaveBeenCalledTimes(1);
-      expect(response.status).toBe(200);
+      expect(context.locals.accessToken).toBeNull();
+      expect(redirectMock).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
+      expect(nextMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(302);
     });
   });
 

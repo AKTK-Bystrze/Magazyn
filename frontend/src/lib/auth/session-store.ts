@@ -8,15 +8,30 @@ export interface MagazynSession {
   expiresAt: number; // Unix timestamp in seconds
 }
 
-const ENC_KEY_ENV = "SESSION_ENCRYPTION_KEY";
+const HEX_KEY_REGEX = /^[0-9a-fA-F]{64}$/;
+
+let cachedKey: CryptoKey | null = null;
+let cachedRawKey: string | null = null;
 
 async function getKey(): Promise<CryptoKey> {
   const raw = process.env.SESSION_ENCRYPTION_KEY ?? import.meta.env?.SESSION_ENCRYPTION_KEY;
-  if (!raw || raw.length < 64) {
-    throw new Error(`${ENC_KEY_ENV} must be a 64-char hex string (32 bytes)`);
+  if (!raw || !HEX_KEY_REGEX.test(raw)) {
+    cachedKey = null;
+    cachedRawKey = null;
+    throw new Error("SESSION_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)");
   }
-  const bytes = Buffer.from(raw, "hex");
-  return crypto.subtle.importKey("raw", bytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  if (cachedKey && cachedRawKey === raw) {
+    return cachedKey;
+  }
+  cachedRawKey = raw;
+  cachedKey = await crypto.subtle.importKey(
+    "raw",
+    Buffer.from(raw, "hex"),
+    { name: "AES-GCM" },
+    false,
+    ["encrypt", "decrypt"]
+  );
+  return cachedKey;
 }
 
 export async function encryptSession(session: MagazynSession): Promise<string> {
@@ -30,10 +45,17 @@ export async function encryptSession(session: MagazynSession): Promise<string> {
 }
 
 export async function decryptSession(cookie: string): Promise<MagazynSession | null> {
+  let key: CryptoKey;
+  try {
+    key = await getKey();
+  } catch (err) {
+    console.error("[SessionStore] Fatal session encryption key error:", err);
+    return null;
+  }
+
   try {
     const [ivB64, ctB64] = cookie.split(":");
     if (!ivB64 || !ctB64) return null;
-    const key = await getKey();
     const iv = Buffer.from(ivB64, "base64url");
     const ct = Buffer.from(ctB64, "base64url");
     const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
@@ -53,34 +75,23 @@ export const SESSION_COOKIE_OPTIONS = {
   maxAge: 60 * 60 * 24 * 30, // 30 days
 } as const;
 
-export interface CookieDeleter {
-  delete(name: string, options?: { path?: string; domain?: string }): void;
-}
-
 /**
  * Clears all cookies received in the request along with the session cookie.
  *
  * @param request - Incoming HTTP request containing cookie headers
  * @param cookies - Cookie store capable of issuing deletion directives
  */
-export function clearAllCookies(request: Request, cookies: CookieDeleter): void {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const names = new Set<string>();
-
-  if (cookieHeader) {
-    for (const part of cookieHeader.split(";")) {
-      const trimmed = part.trim();
-      const eqIdx = trimmed.indexOf("=");
-      const name = eqIdx !== -1 ? trimmed.slice(0, eqIdx).trim() : trimmed;
-      if (name) {
-        names.add(name);
-      }
-    }
-  }
-
-  names.add(SESSION_COOKIE);
-
-  for (const name of names) {
-    cookies.delete(name, { path: "/" });
-  }
+export function clearAllCookies(
+  request: Request,
+  cookies: { delete: (name: string, options?: { path?: string; domain?: string }) => void }
+): void {
+  const raw = request.headers.get("cookie") || "";
+  const names = new Set([
+    SESSION_COOKIE,
+    ...raw
+      .split(";")
+      .map((p) => p.split("=")[0].trim())
+      .filter(Boolean),
+  ]);
+  for (const name of names) cookies.delete(name, { path: "/" });
 }

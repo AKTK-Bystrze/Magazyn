@@ -66,12 +66,47 @@ describe("session-store", () => {
     expect(await decryptSession(encrypted)).toBeNull();
   });
 
-  it("throws when the encryption key is missing or too short", async () => {
+  it("automatically invalidates cache when rotating encryption keys without manual reset", async () => {
+    const encryptedWithA = await encryptSession(mockSession);
+    expect(await decryptSession(encryptedWithA)).toEqual(mockSession);
+
+    // Rotate to key B
+    process.env.SESSION_ENCRYPTION_KEY = "b".repeat(64);
+    const encryptedWithB = await encryptSession(mockSession);
+    expect(await decryptSession(encryptedWithB)).toEqual(mockSession);
+    expect(await decryptSession(encryptedWithA)).toBeNull();
+
+    // Rotate back to key A
+    process.env.SESSION_ENCRYPTION_KEY = TEST_KEY;
+    expect(await decryptSession(encryptedWithA)).toEqual(mockSession);
+    expect(await decryptSession(encryptedWithB)).toBeNull();
+  });
+
+  it("throws when the encryption key is missing or invalid hex", async () => {
     delete process.env.SESSION_ENCRYPTION_KEY;
     await expect(encryptSession(mockSession)).rejects.toThrow("SESSION_ENCRYPTION_KEY");
 
     process.env.SESSION_ENCRYPTION_KEY = "short";
     await expect(encryptSession(mockSession)).rejects.toThrow("SESSION_ENCRYPTION_KEY");
+
+    process.env.SESSION_ENCRYPTION_KEY = "z".repeat(64); // Non-hex chars
+    await expect(encryptSession(mockSession)).rejects.toThrow("SESSION_ENCRYPTION_KEY");
+
+    process.env.SESSION_ENCRYPTION_KEY = "a".repeat(65); // Invalid length (odd / >64)
+    await expect(encryptSession(mockSession)).rejects.toThrow("SESSION_ENCRYPTION_KEY");
+  });
+
+  it("logs fatal error and returns null on decryptSession when encryption key is missing", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    delete process.env.SESSION_ENCRYPTION_KEY;
+
+    const result = await decryptSession("some:cookie");
+    expect(result).toBeNull();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[SessionStore] Fatal session encryption key error:"),
+      expect.any(Error)
+    );
+    consoleSpy.mockRestore();
   });
 
   it("exposes the expected HttpOnly cookie name", () => {

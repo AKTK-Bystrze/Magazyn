@@ -18,7 +18,7 @@ export async function handleFetchError(response: Response): Promise<never> {
 async function request<T>(method: string, url: string, data?: unknown): Promise<{ data: T }> {
   const init: RequestInit = {
     method,
-    headers: { ...DEFAULT_HEADERS },
+    headers: DEFAULT_HEADERS,
     credentials: "same-origin",
     ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
   };

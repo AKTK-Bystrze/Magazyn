@@ -15,10 +15,20 @@ import { StructuredLogger } from "@/lib/utils/logger";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
+
+  // Static asset passthrough: skip logging and auth middleware overhead
+  const isStaticAsset =
+    /\.(css|js|mjs|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp4|webm)$/i.test(
+      url.pathname
+    );
+  if (isStaticAsset) {
+    return next();
+  }
+
   const traceId = context.request.headers.get("X-Trace-Id") || crypto.randomUUID();
   context.locals.trace_id = traceId;
 
-  const logger = new StructuredLogger({ trace_id: traceId });
+  let logger = new StructuredLogger({ trace_id: traceId });
   context.locals.logger = logger;
 
   logger.info("Request received", { path: url.pathname });
@@ -30,7 +40,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (session) {
       // Proactive server-side token refresh (60s before expiry)
       if (Date.now() / 1000 >= session.expiresAt - 60) {
-        logger.info("Access token near expiry, refreshing server-side");
+        logger.info("Access token near expiry, refreshing server-side", {
+          userId: session.userId,
+        });
 
         const supabase = createClient(
           process.env.INTERNAL_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL,
@@ -42,45 +54,32 @@ export const onRequest = defineMiddleware(async (context, next) => {
         });
 
         if (error || !data.session) {
-          // Definitive auth error (4xx or explicit revocation) revokes the session.
-          // Transient failures (network timeout, 5xx) retain the active session.
-          const authError = error as
-            { code?: string; message?: string; status?: number } | null | undefined;
+          const authErr = error as { code?: string; message?: string; status?: number } | null;
           const isRevoked =
             Boolean(error) &&
-            ((authError?.status !== undefined &&
-              authError.status >= 400 &&
-              authError.status < 500) ||
-              /revoked|expired|not_found|invalid/i.test(
-                `${authError?.code ?? ""} ${authError?.message ?? ""}`
-              ));
+            ((authErr?.status !== undefined && authErr.status >= 400 && authErr.status < 500) ||
+              /revoked|expired|not_found|invalid/i.test(`${authErr?.code} ${authErr?.message}`));
+
+          logger.warn(
+            isRevoked
+              ? "Refresh token expired or revoked, clearing session"
+              : "Session refresh transient error",
+            { error: error?.message }
+          );
 
           if (isRevoked) {
-            logger.warn("Refresh token expired or revoked, clearing session", {
-              error: error?.message,
-            });
             clearAllCookies(context.request, context.cookies);
             session = null;
-          } else {
-            logger.warn("Session refresh failed, keeping existing session", {
-              error: error?.message,
-            });
           }
         } else {
           session = {
-            ...session,
+            userId: session.userId,
             accessToken: data.session.access_token,
             refreshToken: data.session.refresh_token,
             expiresAt: data.session.expires_at ?? session.expiresAt,
           };
-
-          // Rewrite cookie with new tokens
-          context.cookies.set(
-            SESSION_COOKIE,
-            await encryptSession(session),
-            SESSION_COOKIE_OPTIONS
-          );
-
+          const newCookieValue = await encryptSession(session);
+          context.cookies.set(SESSION_COOKIE, newCookieValue, SESSION_COOKIE_OPTIONS);
           logger.info("Session refreshed and cookie rewritten");
         }
       }
@@ -92,17 +91,30 @@ export const onRequest = defineMiddleware(async (context, next) => {
       const sessionInfo = await getUserSession(session.accessToken);
       context.locals.sessionInfo = sessionInfo;
 
-      // Populate user context from session, using backend session info when available.
-      context.locals.user = {
-        id: session.userId,
-        email: sessionInfo?.email ?? "",
-      };
-
       if (sessionInfo) {
+        context.locals.user = {
+          id: session.userId,
+          email: sessionInfo.email ?? "",
+        };
+
+        logger = logger.with({
+          username: sessionInfo.email || session.userId,
+          userId: session.userId,
+        });
+        context.locals.logger = logger;
+
         logger.info("User authenticated", {
           userId: session.userId,
           role: sessionInfo.role,
         });
+      } else {
+        logger.warn("User session invalid or unreachable, clearing auth state", {
+          userId: session.userId,
+        });
+        clearAllCookies(context.request, context.cookies);
+        context.locals.user = null;
+        context.locals.sessionInfo = null;
+        context.locals.accessToken = null;
       }
     } else {
       context.locals.user = null;
@@ -111,14 +123,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       logger.debug("No authenticated session");
     }
 
-    // Static asset passthrough
-    const isStaticAsset =
-      /\.(css|js|mjs|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp4|webm)$/i.test(
-        url.pathname
-      );
-
     // Page route guard
-    if (!url.pathname.startsWith("/api/") && !isStaticAsset) {
+    if (!url.pathname.startsWith("/api/")) {
       const redirectTo = RedirectManager.getRedirectForAuthState(
         context.locals.user,
         context.locals.sessionInfo,

@@ -5,22 +5,7 @@ import { MagicLinkSent } from "./MagicLinkSent";
 type LoginViewState = "idle" | "success";
 
 export const LoginFormContainer: React.FC = () => {
-  const [viewState, setViewState] = useState<LoginViewState>(() => {
-    if (typeof window !== "undefined") {
-      const loc = window.location;
-      // GoTrue can land the implicit-flow tokens as a URL fragment on the
-      // login page (for example when its redirect target fails validation).
-      // Forward those to the callback page, which hands the session to the
-      // server and sets the HttpOnly cookie.
-      if (
-        (loc.hash && /(access_token|code)=/.test(loc.hash)) ||
-        (loc.search && loc.search.includes("code="))
-      ) {
-        window.location.replace(`/api/auth/callback${loc.search}${loc.hash}`);
-      }
-    }
-    return "idle";
-  });
+  const [viewState, setViewState] = useState<LoginViewState>("idle");
   const [email, setEmail] = useState("");
 
   const handleLoginSuccess = (userEmail: string) => {

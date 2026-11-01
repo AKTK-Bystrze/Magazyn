@@ -1,8 +1,7 @@
 import type { SessionInfo } from "../../types";
 import { ROUTES } from "../config/routes";
 import { validateRedirectUrl } from "./url-utils";
-import { ADMIN_ROLE, SUPER_ADMIN_ROLE, isAdmin } from "./roles";
-import { USER_ROLE } from "@/lib/config/constants/user/role";
+import { isAdmin } from "./roles";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 
 /**
@@ -41,7 +40,7 @@ function getRedirectForAuthState(
   redirectParam: string | null,
   origin: string
 ): string | null {
-  if (!user) {
+  if (!user || !sessionInfo) {
     if (currentPath === ROUTES.PUBLIC.LOGIN) {
       return null;
     }
@@ -53,14 +52,14 @@ function getRedirectForAuthState(
     return `${ROUTES.PUBLIC.LOGIN}?redirect=${encodeURIComponent(currentPath)}`;
   }
 
-  if (sessionInfo && !sessionInfo.isEnabled) {
+  if (!sessionInfo.isEnabled) {
     if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED) {
       return null;
     }
     return ROUTES.PROTECTED.ACCOUNT_DISABLED;
   }
 
-  if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED && sessionInfo?.isEnabled) {
+  if (currentPath === ROUTES.PROTECTED.ACCOUNT_DISABLED && sessionInfo.isEnabled) {
     return getDefaultRouteForUser(user, sessionInfo);
   }
 
@@ -69,12 +68,16 @@ function getRedirectForAuthState(
       const safeRedirect = validateRedirectUrl(redirectParam, origin, ROUTES.PUBLIC.LOGIN);
       if (
         safeRedirect !== ROUTES.PUBLIC.LOGIN &&
-        isRedirectAllowedForRole(safeRedirect, sessionInfo?.role)
+        isRedirectAllowedForRole(safeRedirect, sessionInfo.role)
       ) {
         return safeRedirect;
       }
     }
     return getDefaultRouteForUser(user, sessionInfo);
+  }
+
+  if (currentPath.startsWith(ROUTES.PROTECTED.ADMIN) && !isAdmin(sessionInfo.role)) {
+    return ROUTES.PROTECTED.DASHBOARD;
   }
 
   if (currentPath === "/") {
@@ -107,16 +110,5 @@ function getDefaultRouteForUser(user: AuthUser | null, sessionInfo: SessionInfo 
     return ROUTES.PROTECTED.ACCOUNT_DISABLED;
   }
 
-  const role = sessionInfo.role;
-
-  switch (role) {
-    case SUPER_ADMIN_ROLE:
-    case ADMIN_ROLE:
-      return ROUTES.PROTECTED.ADMIN;
-    case USER_ROLE.USER:
-      return ROUTES.PROTECTED.DASHBOARD;
-    default:
-      logger.warn(`⚠️ Unknown role: ${role}, defaulting to dashboard`);
-      return ROUTES.PROTECTED.DASHBOARD;
-  }
+  return isAdmin(sessionInfo.role) ? ROUTES.PROTECTED.ADMIN : ROUTES.PROTECTED.DASHBOARD;
 }
