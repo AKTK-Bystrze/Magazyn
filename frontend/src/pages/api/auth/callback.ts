@@ -100,7 +100,7 @@ export const POST: APIRoute = async ({ url, request, cookies }) => {
   // Validate the tokens with Supabase before trusting them.
   const supabase = createClient(
     process.env.INTERNAL_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY
   );
   const { data, error } = await supabase.auth.getUser(accessToken);
   if (error || !data.user) {
