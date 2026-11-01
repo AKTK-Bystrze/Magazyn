@@ -6,7 +6,6 @@ import {
 } from "@/lib/config/constants";
 import { transformEquipmentAvailabilityDTO } from "@/lib/transformers/availability.transformer";
 import { defaultLogger as logger } from "@/lib/utils/logger";
-import { supabase } from "@/lib/supabase";
 
 /**
  * Custom hook for checking equipment availability for cart items
@@ -35,18 +34,11 @@ export function useAvailabilityCheck(
     setIsChecking(true);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
+      // Auth is handled server-side: the HttpOnly session cookie is sent
+      // automatically and the middleware injects the access token for the proxy.
       const headers: HeadersInit = {
         "Content-Type": "application/json",
       };
-
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
 
       const params = new URLSearchParams({
         start_date: startDate,

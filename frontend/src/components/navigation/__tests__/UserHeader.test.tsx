@@ -13,18 +13,6 @@ vi.mock("@/lib/api/credits-api", () => ({
   creditsApi: { getHistory: getHistoryMock },
 }));
 
-vi.mock("@/lib/supabase", () => ({
-  supabase: {
-    auth: {
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      onAuthStateChange: vi
-        .fn()
-        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
-    },
-  },
-}));
-
 describe("UserHeader", () => {
   const mockUser = {
     id: "user-123",

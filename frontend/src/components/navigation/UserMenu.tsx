@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Settings, CreditCard } from "lucide-react";
-import { handleLogout } from "@/lib/auth/logout";
 import { ROUTES } from "@/lib/config/routes";
 
 interface UserMenuProps {
@@ -26,6 +25,15 @@ interface UserMenuProps {
     email: string;
     id: string;
   } | null;
+}
+
+/**
+ * Logs the user out via the server-side session cookie endpoint.
+ * The HttpOnly cookie is deleted on the server; no client-side session state exists.
+ */
+async function handleLogout(): Promise<void> {
+  await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+  window.location.href = ROUTES.PUBLIC.LOGIN;
 }
 
 /**

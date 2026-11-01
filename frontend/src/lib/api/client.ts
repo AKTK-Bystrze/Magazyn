@@ -1,21 +1,13 @@
 import { DEFAULT_HEADERS } from "@/lib/config/api";
-import { supabase } from "@/lib/supabase";
 
 /**
- * Builds headers for API requests with optional authentication
- * Eliminates duplicated header building logic
+ * Builds headers for API requests.
+ * Authentication is handled server-side by the middleware: the HttpOnly
+ * `magazyn_sid` cookie is sent automatically on same-origin requests and the
+ * middleware injects the access token into `locals.accessToken` for the proxy.
  */
-async function buildHeaders(): Promise<Record<string, string>> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const headers: Record<string, string> = { ...DEFAULT_HEADERS };
-
-  if (session?.access_token) {
-    headers["Authorization"] = `Bearer ${session.access_token}`;
-  }
-
-  return headers;
+function buildHeaders(): Record<string, string> {
+  return { ...DEFAULT_HEADERS };
 }
 
 /**
@@ -34,11 +26,11 @@ export async function handleFetchError(response: Response): Promise<never> {
 }
 
 async function request<T>(method: string, url: string, data?: unknown): Promise<{ data: T }> {
-  const headers = await buildHeaders();
+  const headers = buildHeaders();
   const init: RequestInit = {
     method,
     headers,
-    credentials: "include",
+    credentials: "same-origin",
     ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
   };
 

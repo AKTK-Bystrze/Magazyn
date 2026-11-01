@@ -17,7 +17,6 @@ import type { UserListItem, CreateReservationsCommand } from "@/types";
 import type { AvailabilityCheckResult } from "@/types/reservation-cart.types";
 import { CLEAR_CART_CONFIRM_TIMEOUT_MS } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
-import { supabase } from "@/lib/supabase";
 import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import { useStore } from "@nanostores/react";
@@ -105,13 +104,7 @@ function ReservationCartContent({
     setSubmissionError(null);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
       const headers: HeadersInit = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const command: CreateReservationsCommand = {
         reservations: cartState.items.map((item) => ({
