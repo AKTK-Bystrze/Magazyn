@@ -271,22 +271,22 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 
 ## Related Files
 
-| File | Purpose |
-| :--- | :--- |
-| `backend/internal/service/reservation/reservation_service.go` | Main service interface, constructor, list, get, and bulk updates |
-| `backend/internal/service/reservation/reservation_service_create.go` | Reservation creation validation, pricing orchestration, and atomic RPC dispatch |
-| `backend/internal/service/reservation/reservation_service_update.go` | Reservation update, date conflict checks, cancellation, and refund logic |
-| `backend/internal/service/reservation/pricing.go` | Pure pricing calculations (`CalculateReservationCost`) |
-| `backend/internal/validation/date.go` | Inclusive date span calculation (`CalculateDays`) and ISO validation |
-| `backend/internal/repository/supabase/reservation_repository_rpc.go` | Atomic PostgreSQL stored procedure wrappers (`create_reservation_atomic`, `modify_reservation_dates_with_credits`, `refund_reservation_credits`) |
-| `backend/internal/repository/supabase/reservation_repository_query.go` | Filtered list retrieval and RLS bypass logic |
-| `backend/internal/repository/supabase/reservation_repository_detail.go` | Detailed queries joining user profiles and equipment |
-| `backend/internal/repository/supabase/reservation_repository_stats.go` | Aggregates for dashboard statistics |
-| `backend/internal/handler/reservation/reservation_query.go` | Query parameter extraction and validation binder |
-| `backend/internal/handler/reservation/reservation_admin_handler.go` | Dedicated administrative handlers for dashboard metrics and bulk actions |
-| `backend/internal/constants/constants.go` | Status constants and date formats |
-| `supabase/migrations/20260314183802_add_is_free_to_reservations.sql` | Atomic reservation RPCs and `is_free` support |
-| `backend/internal/service/email/email_service.go` | Email service (Noop implementation) |
-| `frontend/src/hooks/useCartCheckout.ts` | Frontend cart checkout mutation and credit sufficiency checks |
-| `frontend/src/hooks/useReservationDateAdjustment.ts` | Frontend date adjustment mutation and range validation |
-| `frontend/src/hooks/useReservationDialogs.ts` | Frontend modal dialog state management |
+| File                                                                    | Purpose                                                                                                                                          |
+| :---------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/internal/service/reservation/reservation_service.go`           | Main service interface, constructor, list, get, and bulk updates                                                                                 |
+| `backend/internal/service/reservation/reservation_service_create.go`    | Reservation creation validation, pricing orchestration, and atomic RPC dispatch                                                                  |
+| `backend/internal/service/reservation/reservation_service_update.go`    | Reservation update, date conflict checks, cancellation, and refund logic                                                                         |
+| `backend/internal/service/reservation/pricing.go`                       | Pure pricing calculations (`CalculateReservationCost`)                                                                                           |
+| `backend/internal/validation/date.go`                                   | Inclusive date span calculation (`CalculateDays`) and ISO validation                                                                             |
+| `backend/internal/repository/supabase/reservation_repository_rpc.go`    | Atomic PostgreSQL stored procedure wrappers (`create_reservation_atomic`, `modify_reservation_dates_with_credits`, `refund_reservation_credits`) |
+| `backend/internal/repository/supabase/reservation_repository_query.go`  | Filtered list retrieval and RLS bypass logic                                                                                                     |
+| `backend/internal/repository/supabase/reservation_repository_detail.go` | Detailed queries joining user profiles and equipment                                                                                             |
+| `backend/internal/repository/supabase/reservation_repository_stats.go`  | Aggregates for dashboard statistics                                                                                                              |
+| `backend/internal/handler/reservation/reservation_query.go`             | Query parameter extraction and validation binder                                                                                                 |
+| `backend/internal/handler/reservation/reservation_admin_handler.go`     | Dedicated administrative handlers for dashboard metrics and bulk actions                                                                         |
+| `backend/internal/constants/constants.go`                               | Status constants and date formats                                                                                                                |
+| `supabase/migrations/20251120194636_rpc_create_reservation.sql`         | Atomic reservation RPCs and `is_free` support                                                                                                    |
+| `backend/internal/service/email/email_service.go`                       | Email service (Noop implementation)                                                                                                              |
+| `frontend/src/hooks/useCartCheckout.ts`                                 | Frontend cart checkout mutation and credit sufficiency checks                                                                                    |
+| `frontend/src/hooks/useReservationDateAdjustment.ts`                    | Frontend date adjustment mutation and range validation                                                                                           |
+| `frontend/src/hooks/useReservationDialogs.ts`                           | Frontend modal dialog state management                                                                                                           |

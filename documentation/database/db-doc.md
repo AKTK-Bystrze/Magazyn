@@ -128,7 +128,7 @@ Requests submitted by users to earn credits for club service or helping others.
 Junction table linking credit requests with multiple helper users who participated in the task.
 
 - `credit_request_id` (uuid, foreign key to credit_requests on delete cascade)
-- `user_id` (uuid, foreign key to profiles on delete set null)
+- `user_id` (uuid, foreign key to profiles on delete cascade)
 - Primary Key: `(credit_request_id, user_id)`
 
 ### maintenance_logs
@@ -206,6 +206,7 @@ Modifies reservation date ranges, checks conflicts, and atomically recalculates/
   - `p_changed_by_user_id` (UUID)
   - `p_new_start_date` (DATE)
   - `p_new_end_date` (DATE)
+  - `p_allow_negative` (BOOLEAN, default: false)
 - **Returns**: JSONB (updated reservation details and new balance)
 
 ### bulk_update_reservations_status
@@ -226,6 +227,54 @@ Refunds credits to a user and logs the transaction.
   - `p_reservation_id` (UUID)
   - `p_amount` (INTEGER)
 - **Returns**: void
+
+### create_credit_request_atomic
+
+Creates a credit request and associated helpers in a single transaction.
+
+- **Parameters**:
+  - `p_title` (VARCHAR)
+  - `p_description` (TEXT)
+  - `p_credits_value` (INTEGER)
+  - `p_requestor_id` (UUID)
+  - `p_user_helped_id` (UUID)
+  - `p_helpers` (UUID[])
+- **Returns**: JSONB (`{id: UUID}`)
+
+### update_credit_request_atomic
+
+Updates credit request metadata and synchronizes helper assignments.
+
+- **Parameters**:
+  - `p_id` (UUID)
+  - `p_title` (VARCHAR)
+  - `p_description` (TEXT)
+  - `p_credits_value` (INTEGER)
+  - `p_user_helped_id` (UUID)
+  - `p_status` (VARCHAR)
+  - `p_helpers` (UUID[])
+- **Returns**: void
+
+### review_credit_request_atomic
+
+Approves or rejects a credit request, atomically distributing credits to helpers if approved.
+
+- **Parameters**:
+  - `p_id` (UUID)
+  - `p_admin_id` (UUID)
+  - `p_status` (VARCHAR)
+  - `p_credits_value` (INTEGER, optional)
+  - `p_helpers` (UUID[], optional)
+  - `p_reason` (TEXT, default: 'work_credit')
+  - `p_description` (TEXT, default: '')
+- **Returns**: void
+
+### get_credit_leaderboard
+
+Returns aggregated total approved credits per user for the leaderboard.
+
+- **Parameters**: None
+- **Returns**: TABLE (`user_id UUID, username VARCHAR, total_credits BIGINT`)
 
 ---
 
