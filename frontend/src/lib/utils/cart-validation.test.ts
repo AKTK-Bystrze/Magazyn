@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { validateCart, calculateCost } from "./cart-validation";
 import type {
   CartState,
@@ -141,29 +141,41 @@ describe("validateCart", () => {
   });
 
   it("validates date ranges across month boundaries", () => {
-    const monthBoundaryCart: CartState = {
-      ...validCartState,
-      startDate: "2026-10-31",
-      endDate: "2026-11-02",
-    };
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-01T12:00:00Z"));
+    try {
+      const monthBoundaryCart: CartState = {
+        ...validCartState,
+        startDate: "2026-10-31",
+        endDate: "2026-11-02",
+      };
 
-    const result = validateCart(monthBoundaryCart, allAvailable, sufficientCredits, false);
+      const result = validateCart(monthBoundaryCart, allAvailable, sufficientCredits, false);
 
-    expect(result.errors.dateRange.startDate).toBeNull();
-    expect(result.errors.dateRange.endDate).toBeNull();
+      expect(result.errors.dateRange.startDate).toBeNull();
+      expect(result.errors.dateRange.endDate).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("validates date ranges across leap year boundary (Feb 28 to Mar 1, 2028)", () => {
-    const leapYearCart: CartState = {
-      ...validCartState,
-      startDate: "2028-02-28",
-      endDate: "2028-03-01",
-    };
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2028-02-01T12:00:00Z"));
+    try {
+      const leapYearCart: CartState = {
+        ...validCartState,
+        startDate: "2028-02-28",
+        endDate: "2028-03-01",
+      };
 
-    const result = validateCart(leapYearCart, allAvailable, sufficientCredits, false);
+      const result = validateCart(leapYearCart, allAvailable, sufficientCredits, false);
 
-    expect(result.errors.dateRange.startDate).toBeNull();
-    expect(result.errors.dateRange.endDate).toBeNull();
+      expect(result.errors.dateRange.startDate).toBeNull();
+      expect(result.errors.dateRange.endDate).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

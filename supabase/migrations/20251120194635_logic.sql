@@ -20,16 +20,7 @@ BEGIN
 END; $body$;
 
 -- Note: create_user_profile trigger is NOT created - profile creation is superAdmin-only via API
-
-CREATE OR REPLACE FUNCTION log_maintenance_change() 
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
-BEGIN 
-  IF OLD.status IS DISTINCT FROM NEW.status THEN 
-    INSERT INTO maintenance_logs (equipment_id, previous_status, new_status, admin_id) 
-    VALUES (NEW.id, OLD.status, NEW.status, auth.uid()); 
-  END IF; 
-  RETURN NEW; 
-END; $body$;
+-- Note: log_equipment_status_change trigger is NOT created - status logging is handled in application business logic
 
 CREATE OR REPLACE FUNCTION log_reservation_change() 
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $body$
@@ -51,7 +42,6 @@ CREATE TRIGGER update_reservations_updated_at BEFORE UPDATE ON reservations FOR 
 CREATE TRIGGER update_credit_requests_updated_at BEFORE UPDATE ON credit_requests FOR EACH ROW EXECUTE PROCEDURE update_updated_at();
 CREATE TRIGGER set_user_role_metadata_trigger BEFORE INSERT ON auth.users FOR EACH ROW EXECUTE PROCEDURE public.set_user_role_metadata();
 -- Note: create_user_profile_trigger is intentionally NOT created - superAdmin creates profiles via API
-CREATE TRIGGER log_equipment_status_change AFTER UPDATE ON equipment FOR EACH ROW EXECUTE PROCEDURE log_maintenance_change();
 CREATE TRIGGER log_reservation_changes AFTER INSERT OR UPDATE ON reservations FOR EACH ROW EXECUTE PROCEDURE log_reservation_change();
 
 -- =====================================================
@@ -60,9 +50,9 @@ CREATE TRIGGER log_reservation_changes AFTER INSERT OR UPDATE ON reservations FO
 -- =====================================================
 
 -- PROFILES
--- All enabled users can view all profiles
+-- All enabled users can view all profiles, users can always view their own profile even when disabled
 CREATE POLICY "profiles_select" ON profiles FOR SELECT TO authenticated 
-  USING (is_enabled());
+  USING (id = auth.uid() OR is_enabled());
 -- Only superAdmin can create profiles
 CREATE POLICY "profiles_insert" ON profiles FOR INSERT TO authenticated 
   WITH CHECK (is_super_admin());
@@ -120,15 +110,24 @@ CREATE POLICY "credit_history_insert" ON credit_history FOR INSERT TO authentica
   WITH CHECK (is_super_admin());
 
 -- CREDIT_REQUESTS
--- Users can view own credit requests, admin can view all
+-- Enabled users can view credit requests
 CREATE POLICY "credit_requests_select" ON credit_requests FOR SELECT TO authenticated 
-  USING (is_enabled() AND ((select auth.uid()) = user_id OR is_admin()));
--- Users can create their own credit requests
+  USING (is_enabled());
+-- Enabled users can create their own credit requests, admin can create for anyone
 CREATE POLICY "credit_requests_insert" ON credit_requests FOR INSERT TO authenticated 
-  WITH CHECK (is_enabled() AND (select auth.uid()) = user_id);
--- Only superAdmin can approve/deny credit requests
+  WITH CHECK (is_enabled() AND (requestor_id = auth.uid() OR is_admin()));
+-- Requestor can update own awaiting request, admin can update any
 CREATE POLICY "credit_requests_update" ON credit_requests FOR UPDATE TO authenticated 
-  USING (is_super_admin());
+  USING (is_enabled() AND (is_admin() OR (requestor_id = auth.uid() AND status = 'awaiting')));
+
+-- CREDIT_REQUEST_HELPERS
+-- Note: helper mutations are handled atomically via SECURITY DEFINER RPCs
+CREATE POLICY "credit_request_helpers_select" ON credit_request_helpers FOR SELECT TO authenticated 
+  USING (is_enabled());
+CREATE POLICY "credit_request_helpers_insert" ON credit_request_helpers FOR INSERT TO authenticated 
+  WITH CHECK (is_admin());
+CREATE POLICY "credit_request_helpers_delete" ON credit_request_helpers FOR DELETE TO authenticated 
+  USING (is_admin());
 
 -- MAINTENANCE_LOGS
 -- All enabled users can view maintenance logs
