@@ -20,15 +20,14 @@ BEGIN
   SELECT credit_balance INTO v_user_balance FROM profiles WHERE id = p_user_id FOR UPDATE;
   IF v_user_balance IS NULL THEN RAISE EXCEPTION 'User not found'; END IF;
 
-  -- Skip balance check for free reservations
+  -- Deduct credits unless reservation is free
   IF NOT p_is_free THEN
     IF v_user_balance < p_total_cost THEN RAISE EXCEPTION 'Insufficient credits'; END IF;
     v_new_balance := v_user_balance - p_total_cost;
+    UPDATE profiles SET credit_balance = v_new_balance, updated_at = NOW() WHERE id = p_user_id;
   ELSE
     v_new_balance := v_user_balance;
   END IF;
-
-  UPDATE profiles SET credit_balance = v_new_balance, updated_at = NOW() WHERE id = p_user_id;
 
   INSERT INTO credit_history (user_id, amount, reason, description, author_id)
   VALUES (p_user_id, CASE WHEN p_is_free THEN 0 ELSE -p_total_cost END, 'reservation_charge',

@@ -125,8 +125,6 @@ CREATE POLICY "credit_request_helpers_select" ON credit_request_helpers FOR SELE
   USING (is_enabled());
 CREATE POLICY "credit_request_helpers_insert" ON credit_request_helpers FOR INSERT TO authenticated 
   WITH CHECK (is_enabled());
-CREATE POLICY "credit_request_helpers_update" ON credit_request_helpers FOR UPDATE TO authenticated 
-  USING (is_enabled());
 CREATE POLICY "credit_request_helpers_delete" ON credit_request_helpers FOR DELETE TO authenticated 
   USING (is_enabled());
 
