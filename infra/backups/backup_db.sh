@@ -19,7 +19,7 @@ DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in 
 
 TAG_ARG="${1:-}"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-PREFIX="${TAG_ARG:+${TAG_ARG}-}"
+PREFIX="${TAG_ARG:+${TAG_ARG//\//-}-}"
 DAY_OF_WEEK=$(date +%u) # 1-7 (Monday-Sunday)
 DAILY_DIR="${BACKUPS_DIR}/daily"
 WEEKLY_DIR="${BACKUPS_DIR}/weekly"

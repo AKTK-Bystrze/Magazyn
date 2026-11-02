@@ -42,9 +42,9 @@ fail() { echo -e "  [${RED}FAIL${NC}] $1"; }
 info() { echo -e "${BLUE}==>${NC} $1"; }
 
 restore_self() {
-  if [ -n "${ADMIN_TMP_DIR:-}" ] && [ -f "${ADMIN_TMP_DIR}/admin.sh" ]; then
-    cp -f "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
-    chmod +x "${ROOT_DIR}/admin.sh"
+  if [ -n "${ADMIN_TMP_DIR:-}" ]; then
+    [ -f "${ADMIN_TMP_DIR}/admin.sh" ] && cp -f "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh" && chmod +x "${ROOT_DIR}/admin.sh"
+    [ -d "${ROOT_DIR}/infra" ] && cp -r "${ROOT_DIR}/infra"/* "${ADMIN_TMP_DIR}/infra/" 2>/dev/null || true
   fi
 }
 
@@ -245,7 +245,7 @@ cmd_deploy() {
   # Step 4: Build container images BEFORE migrating database
   info "Step 4/6: Building Docker container images (build-first safety)..."
   cd "${ROOT_DIR}/infra"
-  export MAGAZYN_VERSION="${target_ref}"
+  export MAGAZYN_VERSION="${target_ref//\//-}"
   if ! docker compose build --pull; then
     fail "Docker build failed! Database was NOT modified."
     git checkout -f "${CURRENT_COMMIT}" 2>/dev/null || true
@@ -270,7 +270,7 @@ cmd_deploy() {
   # Step 6: Bring up containers with healthcheck verification
   info "Step 6/6: Restarting containers and verifying health..."
   cd "${ROOT_DIR}/infra"
-  export MAGAZYN_VERSION="${target_ref}"
+  export MAGAZYN_VERSION="${target_ref//\//-}"
   docker compose up -d --wait || {
     fail "Containers failed to report healthy within timeout."
     exit 1
@@ -334,7 +334,7 @@ cmd_rollback() {
   # Step 3: Rebuild and Restart Containers
   info "Step 3/3: Rebuilding and restarting containers..."
   cd "${ROOT_DIR}/infra"
-  export MAGAZYN_VERSION="${target_tag}"
+  export MAGAZYN_VERSION="${target_tag//\//-}"
   docker compose up -d --build --wait
 
   # Verify with sanity
