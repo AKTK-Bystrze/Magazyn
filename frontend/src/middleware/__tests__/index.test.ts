@@ -170,6 +170,10 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       expect(redirectMock).not.toHaveBeenCalled();
       expect(nextMock).toHaveBeenCalledTimes(1);
       expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBe(
+        "private, no-cache, no-store, must-revalidate, max-age=0"
+      );
+      expect(response.headers.get("Pragma")).toBe("no-cache");
     });
 
     it("does not refresh when the access token is far from expiry", async () => {
@@ -299,6 +303,10 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       expect(redirectMock).not.toHaveBeenCalled();
       expect(nextMock).toHaveBeenCalledTimes(1);
       expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBe(
+        "private, no-cache, no-store, must-revalidate, max-age=0"
+      );
+      expect(response.headers.get("Pragma")).toBe("no-cache");
     });
   });
 
@@ -365,6 +373,8 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       expect(redirectMock).not.toHaveBeenCalled();
       expect(nextMock).toHaveBeenCalledTimes(1);
       expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBeNull();
+      expect(response.headers.get("Pragma")).toBeNull();
     });
   });
 });

@@ -63,5 +63,38 @@ describe("API client error handling", () => {
 
       await expect(call()).rejects.toThrow("Operation failed");
     });
+
+    it("passes cache: 'no-store' and appends _t to GET requests", async () => {
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+      global.fetch = mockFetch;
+
+      await api.get("/test", { page: 1 });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [calledUrl, calledInit] = mockFetch.mock.calls[0];
+      expect(calledInit.cache).toBe("no-store");
+      expect(calledUrl).toMatch(/^\/test\?page=1&_t=\d+$/);
+    });
+
+    it("respects bypassCache: false option", async () => {
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+      global.fetch = mockFetch;
+
+      await api.get("/test", { page: 1 }, { bypassCache: false });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [calledUrl] = mockFetch.mock.calls[0];
+      expect(calledUrl).toBe("/test?page=1");
+    });
   });
 });

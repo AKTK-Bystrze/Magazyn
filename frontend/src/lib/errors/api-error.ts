@@ -24,7 +24,11 @@ export function handleApiError(error: unknown): Response {
       }),
       {
         status: error.status,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          Pragma: "no-cache",
+        },
       }
     );
   }
@@ -36,7 +40,11 @@ export function handleApiError(error: unknown): Response {
     }),
     {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        Pragma: "no-cache",
+      },
     }
   );
 }

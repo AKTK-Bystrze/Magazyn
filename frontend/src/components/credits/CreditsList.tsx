@@ -18,6 +18,7 @@ import { SuperAdminCreditReview } from "./SuperAdminCreditReview";
 import { CreditRequestDetailsDialog } from "./CreditRequestDetailsDialog";
 import { useTableSort } from "@/lib/hooks/useTableSort";
 import { SearchInput } from "@/components/ui/search-input";
+import { RefreshCw } from "lucide-react";
 
 interface Props {
   isSuperAdmin: boolean;
@@ -177,6 +178,16 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
                 onClick={() => setFilter(CREDIT_REQUEST_STATUS.REJECTED)}
               >
                 Odrzucone
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => load()}
+                disabled={loading}
+                title="Odśwież listę wniosków"
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+                Odśwież
               </Button>
             </div>
           </div>

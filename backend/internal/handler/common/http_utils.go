@@ -45,6 +45,8 @@ func ExtractTokenOrContext(r *http.Request) (string, error) {
 // RespondJSON marshals data as JSON and writes it to the response writer with the specified status code.
 func RespondJSON(ctx context.Context, w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		logger.Errorf(ctx, "Failed to encode JSON response: %v", err)

@@ -149,7 +149,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
 
-    return next();
+    const response = await next();
+    if (!isStaticAsset && !url.pathname.startsWith("/_astro/")) {
+      response.headers.set(
+        "Cache-Control",
+        "private, no-cache, no-store, must-revalidate, max-age=0"
+      );
+      response.headers.set("Pragma", "no-cache");
+    }
+    return response;
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
     if (context.request.url.includes("/api/")) return handleApiError(error);
@@ -157,6 +165,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
       name: err.name,
       error: err.message,
     });
-    return new Response("Internal Server Error", { status: 500 });
+    return new Response("Internal Server Error", {
+      status: 500,
+      headers: {
+        "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
+        Pragma: "no-cache",
+      },
+    });
   }
 });
