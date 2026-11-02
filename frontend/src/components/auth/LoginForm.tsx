@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.hash.slice(1) || window.location.search);
+    const errCode = p.get("error_code") || p.get("error");
+    if (!errCode) return;
+
+    if (errCode === "otp_expired" || errCode === "access_denied") {
+      setError(USER_VALIDATION_MESSAGES.LOGIN_LINK_EXPIRED);
+    } else if (errCode === "network") {
+      setError(USER_VALIDATION_MESSAGES.LOGIN_NETWORK_ERROR);
+    } else {
+      setError(USER_VALIDATION_MESSAGES.LOGIN_FAILED);
+    }
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -75,7 +90,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             autoCorrect="off"
             disabled={isLoading}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) {
+                setError(null);
+              }
+            }}
           />
         </div>
         {error && (

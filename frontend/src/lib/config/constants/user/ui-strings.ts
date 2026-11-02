@@ -24,4 +24,8 @@ export const USER_VALIDATION_MESSAGES = {
   LOGIN_SIGNUP_DISABLED:
     "Nie znaleziono konta. Aby założyć konto, skontaktuj się z administratorem.",
   LOGIN_GENERIC_ERROR: "Coś poszło nie tak. Spróbuj ponownie.",
+  LOGIN_LINK_EXPIRED:
+    "Link do logowania wygasł lub został już użyty. Wpisz swój e-mail, aby otrzymać nowy link.",
+  LOGIN_FAILED: "Logowanie nie powiodło się. Spróbuj ponownie.",
+  LOGIN_NETWORK_ERROR: "Wystąpił błąd sieci. Sprawdź połączenie i spróbuj ponownie.",
 } as const;

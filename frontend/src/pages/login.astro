@@ -9,8 +9,8 @@ import { LoginFormContainer } from "@/components/auth/LoginFormContainer";
 
 <BaseLayout title="Zaloguj się | Magazyn">
   <script is:inline>
-    if (/(access_token|error|code=)/.test(window.location.href)) {
-      window.location.replace("/api/auth/callback" + window.location.search + window.location.hash);
+    if (location.hash.includes("access_token=") || location.search.includes("code=")) {
+      location.replace("/api/auth/callback" + location.search + location.hash);
     }
   </script>
   <div class="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
