@@ -30,13 +30,18 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
   const [data, setData] = useState<CreditRequest[]>([]);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [reviewItem, setReviewItem] = useState<CreditRequest | null>(null);
   const [detailsItem, setDetailsItem] = useState<CreditRequest | null>(null);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const [res, usersRes] = await Promise.all([
         creditRequestsApi.getRequests({}),
@@ -53,6 +58,7 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -182,11 +188,11 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => load()}
-                disabled={loading}
+                onClick={() => load(true)}
+                disabled={refreshing}
                 title="Odśwież listę wniosków"
               >
-                <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+                <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? "animate-spin" : ""}`} />
                 Odśwież
               </Button>
             </div>
