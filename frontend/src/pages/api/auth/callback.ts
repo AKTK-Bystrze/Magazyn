@@ -27,16 +27,18 @@ const HANDOFF_PAGE = `<!doctype html>
     <p>Trwa logowanie, proszę czekać...</p>
     <script>
       (async () => {
-        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-        if (hash.get("error")) {
-          window.location.replace("/login?error=" + encodeURIComponent(hash.get("error")));
-          return;
-        }
+        const hash = new URLSearchParams(window.location.hash.slice(1));
+        const search = new URLSearchParams(window.location.search);
+        const err =
+          hash.get("error_code") ||
+          hash.get("error") ||
+          search.get("error_code") ||
+          search.get("error");
+        if (err) return window.location.replace("/login?error=" + encodeURIComponent(err));
         const accessToken = hash.get("access_token");
         const refreshToken = hash.get("refresh_token");
         if (!accessToken || !refreshToken) {
-          window.location.replace("/login?error=missing_session");
-          return;
+          return window.location.replace("/login?error=missing_session");
         }
         const expiresAt = hash.get("expires_at");
         try {
