@@ -19,6 +19,16 @@
 
 * enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
+## [0.10.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.10.0...v0.10.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **auth:** prevent redirect loop on outdated magic links and show error alert ([#310](https://github.com/AKTK-Bystrze/Magazyn/issues/310)) ([627b687](https://github.com/AKTK-Bystrze/Magazyn/commit/627b687b5889611de9f8ad663cd84f85dec933f0))
+* **caching:** prevent edge and browser caching of dynamic API routes and SSR pages ([#303](https://github.com/AKTK-Bystrze/Magazyn/issues/303)) ([04b8a18](https://github.com/AKTK-Bystrze/Magazyn/commit/04b8a18d86949618d7c2689bbcb4490a7d63ebab))
+* **credits:** sync fresh SSR credit balance and prevent header flickering ([#309](https://github.com/AKTK-Bystrze/Magazyn/issues/309)) ([a35bcd4](https://github.com/AKTK-Bystrze/Magazyn/commit/a35bcd490760304165d36743fcfb5e0c82961796))
+* **infra:** update sanity check for containerized backend and httponly ingress ([#311](https://github.com/AKTK-Bystrze/Magazyn/issues/311)) ([42a5795](https://github.com/AKTK-Bystrze/Magazyn/commit/42a57950de8bc83a627c682329475c37720139b3))
+
 ## [0.10.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.9.0...v0.10.0) (2026-11-01)
 
 
