@@ -66,7 +66,7 @@ const HANDOFF_PAGE = `<!doctype html>
   </body>
 </html>`;
 
-export const GET: APIRoute = async () =>
+export const GET = async (): Promise<Response> =>
   new Response(HANDOFF_PAGE, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",

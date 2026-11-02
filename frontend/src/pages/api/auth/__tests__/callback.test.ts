@@ -29,7 +29,7 @@ describe("Magic Link Callback Handler", () => {
 
   describe("GET /api/auth/callback", () => {
     it("returns handoff HTML page containing client-side extraction logic", async () => {
-      const response = await GET({} as APIContext);
+      const response = await GET();
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toBe("text/html; charset=utf-8");
 
