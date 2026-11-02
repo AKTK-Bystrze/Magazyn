@@ -18,6 +18,7 @@ import { SuperAdminCreditReview } from "./SuperAdminCreditReview";
 import { CreditRequestDetailsDialog } from "./CreditRequestDetailsDialog";
 import { useTableSort } from "@/lib/hooks/useTableSort";
 import { SearchInput } from "@/components/ui/search-input";
+import { RefreshCw } from "lucide-react";
 
 interface Props {
   isSuperAdmin: boolean;
@@ -29,13 +30,18 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
   const [data, setData] = useState<CreditRequest[]>([]);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [reviewItem, setReviewItem] = useState<CreditRequest | null>(null);
   const [detailsItem, setDetailsItem] = useState<CreditRequest | null>(null);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const [res, usersRes] = await Promise.all([
         creditRequestsApi.getRequests({}),
@@ -52,6 +58,7 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -177,6 +184,16 @@ export function CreditsList({ isSuperAdmin, userId, onEditClick }: Props) {
                 onClick={() => setFilter(CREDIT_REQUEST_STATUS.REJECTED)}
               >
                 Odrzucone
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => load(true)}
+                disabled={refreshing}
+                title="Odśwież listę wniosków"
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? "animate-spin" : ""}`} />
+                Odśwież
               </Button>
             </div>
           </div>

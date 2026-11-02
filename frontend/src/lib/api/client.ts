@@ -20,6 +20,7 @@ async function request<T>(method: string, url: string, data?: unknown): Promise<
     method,
     headers: DEFAULT_HEADERS,
     credentials: "same-origin",
+    cache: "no-store",
     ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
   };
 
@@ -51,6 +52,9 @@ export const api = {
           queryParams.append(key, String(value));
         }
       });
+    }
+    if (!queryParams.has("_t")) {
+      queryParams.append("_t", String(Date.now()));
     }
     const queryString = queryParams.toString();
     return request<T>("GET", queryString ? `${url}?${queryString}` : url);

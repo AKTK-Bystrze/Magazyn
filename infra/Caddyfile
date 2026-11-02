@@ -24,13 +24,26 @@
 	# Use Cloudflare Origin Certificate
 	tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 
-	# Proxy all requests to the Astro frontend container
+	# Static assets: preserve Astro immutable caching
+	@static path /_astro/* /favicon* /*.png /*.svg /*.jpg /*.jpeg /*.css /*.js /*.woff2
+	handle @static {
+		reverse_proxy frontend:4321 {
+			transport http {
+				response_header_timeout 10s
+				dial_timeout 5s
+			}
+		}
+	}
+
+	# Dynamic pages and APIs: enforce no-store for intermediate CDNs and browsers
 	handle /* {
 		reverse_proxy frontend:4321 {
 			transport http {
 				response_header_timeout 10s
 				dial_timeout 5s
 			}
+			header_down Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+			header_down Pragma "no-cache"
 		}
 	}
 

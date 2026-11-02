@@ -113,3 +113,18 @@ func TestExtractTokenOrContext(t *testing.T) {
 		assert.Equal(t, "uppercase-token-456", tokenUpper)
 	})
 }
+
+func TestRespondJSON(t *testing.T) {
+	t.Run("sets no-cache and json content-type headers", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := context.Background()
+
+		common.RespondJSON(ctx, w, http.StatusOK, map[string]string{"status": "ok"})
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+		assert.Equal(t, "no-store, no-cache, must-revalidate, max-age=0", w.Header().Get("Cache-Control"))
+		assert.Equal(t, "no-cache", w.Header().Get("Pragma"))
+		assert.JSONEq(t, `{"status":"ok"}`, w.Body.String())
+	})
+}
