@@ -242,6 +242,10 @@ cmd_deploy() {
 
   restore_self
 
+  if [ -d "${ROOT_DIR}/infra" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
+    cp -r "${ROOT_DIR}/infra"/* "${ADMIN_TMP_DIR}/infra/" 2>/dev/null || true
+  fi
+
   # Step 4: Build container images BEFORE migrating database
   info "Step 4/6: Building Docker container images (build-first safety)..."
   cd "${ROOT_DIR}/infra"
@@ -330,6 +334,10 @@ cmd_rollback() {
   git checkout -f "${target_tag}"
 
   restore_self
+
+  if [ -d "${ROOT_DIR}/infra" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
+    cp -r "${ROOT_DIR}/infra"/* "${ADMIN_TMP_DIR}/infra/" 2>/dev/null || true
+  fi
 
   # Step 3: Rebuild and Restart Containers
   info "Step 3/3: Rebuilding and restarting containers..."
