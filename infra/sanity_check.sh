@@ -51,13 +51,9 @@ else
 fi
 
 # Verify Caddy ingress endpoint if running
-if curl -k -s -m 3 -o /dev/null "https://localhost:${CADDY_PORT}/login" >/dev/null 2>&1; then
-  ok "Verified Caddy reverse proxy ingress on port ${CADDY_PORT}"
-elif curl -k -s -m 3 -o /dev/null "https://localhost:${CADDY_PORT}/" >/dev/null 2>&1; then
-  ok "Verified Caddy reverse proxy ingress on port ${CADDY_PORT}"
-else
-  warn "Caddy ingress not responding on port ${CADDY_PORT} (may not be deployed or running)"
-fi
+curl -k -s -m 3 -o /dev/null "https://localhost:${CADDY_PORT}/" >/dev/null 2>&1 \
+  && ok "Verified Caddy reverse proxy ingress on port ${CADDY_PORT}" \
+  || warn "Caddy ingress not responding on port ${CADDY_PORT} (may not be deployed or running)"
 
 # 2. Authenticated Read Flow
 TEST_EMAIL="${SANITY_TEST_USER_EMAIL:-}"
@@ -107,29 +103,14 @@ ok "Successfully logged in and retrieved JWT access token"
 for ep in "equipment" "credits/history" "users/me"; do
   info "Querying ${ep}..."
   if [ "${EXEC_MODE}" = "direct" ]; then
-    TMP_EP=$(mktemp)
-    STATUS=$(curl -s -m 5 "${CURL_OPTS[@]}" \
+    curl -s -f -m 5 "${CURL_OPTS[@]}" \
       -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-      -o "${TMP_EP}" \
-      -w "%{http_code}" \
-      "${API_BASE}/${ep}" 2>/dev/null || echo "000")
-    rm -f "${TMP_EP}"
-    if [ "$STATUS" = "200" ]; then
-      ok "${ep} retrieved successfully (HTTP 200)"
-    else
-      fail "Failed to retrieve ${ep} (HTTP ${STATUS})"
-      exit 1
-    fi
+      -o /dev/null "${API_BASE}/${ep}" 2>/dev/null
   else
-    if docker exec "${BACKEND_CONTAINER}" wget -q --spider \
+    docker exec "${BACKEND_CONTAINER}" wget -q --spider \
       --header="Authorization: Bearer ${ACCESS_TOKEN}" \
-      "http://localhost:8080/${ep}" >/dev/null 2>&1; then
-      ok "${ep} retrieved successfully (HTTP 200 via container)"
-    else
-      fail "Failed to retrieve ${ep} via container (${BACKEND_CONTAINER})"
-      exit 1
-    fi
-  fi
+      "http://localhost:8080/${ep}" >/dev/null 2>&1
+  fi && ok "${ep} retrieved successfully" || { fail "Failed to retrieve ${ep}"; exit 1; }
 done
 
 # Logout session

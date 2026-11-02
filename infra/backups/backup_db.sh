@@ -18,9 +18,8 @@ set +a
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?"DB_CONNECTION_STRING not found in .env"}
 
 TAG_ARG="${1:-}"
-SAFE_TAG="${TAG_ARG//\//-}"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-PREFIX="${SAFE_TAG:+${SAFE_TAG}-}"
+PREFIX="${TAG_ARG:+${TAG_ARG//\//-}-}"
 DAY_OF_WEEK=$(date +%u) # 1-7 (Monday-Sunday)
 DAILY_DIR="${BACKUPS_DIR}/daily"
 WEEKLY_DIR="${BACKUPS_DIR}/weekly"

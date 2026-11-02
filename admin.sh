@@ -42,9 +42,9 @@ fail() { echo -e "  [${RED}FAIL${NC}] $1"; }
 info() { echo -e "${BLUE}==>${NC} $1"; }
 
 restore_self() {
-  if [ -n "${ADMIN_TMP_DIR:-}" ] && [ -f "${ADMIN_TMP_DIR}/admin.sh" ]; then
-    cp -f "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh"
-    chmod +x "${ROOT_DIR}/admin.sh"
+  if [ -n "${ADMIN_TMP_DIR:-}" ]; then
+    [ -f "${ADMIN_TMP_DIR}/admin.sh" ] && cp -f "${ADMIN_TMP_DIR}/admin.sh" "${ROOT_DIR}/admin.sh" && chmod +x "${ROOT_DIR}/admin.sh"
+    [ -d "${ROOT_DIR}/infra" ] && cp -r "${ROOT_DIR}/infra"/* "${ADMIN_TMP_DIR}/infra/" 2>/dev/null || true
   fi
 }
 
@@ -242,10 +242,6 @@ cmd_deploy() {
 
   restore_self
 
-  if [ -d "${ROOT_DIR}/infra" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
-    cp -r "${ROOT_DIR}/infra"/* "${ADMIN_TMP_DIR}/infra/" 2>/dev/null || true
-  fi
-
   # Step 4: Build container images BEFORE migrating database
   info "Step 4/6: Building Docker container images (build-first safety)..."
   cd "${ROOT_DIR}/infra"
@@ -334,10 +330,6 @@ cmd_rollback() {
   git checkout -f "${target_tag}"
 
   restore_self
-
-  if [ -d "${ROOT_DIR}/infra" ] && [ -n "${ADMIN_TMP_DIR:-}" ]; then
-    cp -r "${ROOT_DIR}/infra"/* "${ADMIN_TMP_DIR}/infra/" 2>/dev/null || true
-  fi
 
   # Step 3: Rebuild and Restart Containers
   info "Step 3/3: Rebuilding and restarting containers..."
