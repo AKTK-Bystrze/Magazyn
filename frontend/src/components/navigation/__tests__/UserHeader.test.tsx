@@ -70,4 +70,18 @@ describe("UserHeader", () => {
 
     expect(screen.queryByTestId("header-credits-badge")).not.toBeInTheDocument();
   });
+
+  it("updates displayed balance when creditBalance prop changes", () => {
+    getHistoryMock.mockReturnValue(new Promise(() => {}));
+
+    const { rerender } = renderWithQueryClient(
+      <UserHeader user={mockUser} currentPath="/reservations" creditBalance={50} />
+    );
+
+    expect(screen.getByTestId("header-credits-badge")).toHaveTextContent("Godzinki: 50");
+
+    rerender(<UserHeader user={mockUser} currentPath="/reservations" creditBalance={90} />);
+
+    expect(screen.getByTestId("header-credits-badge")).toHaveTextContent("Godzinki: 90");
+  });
 });

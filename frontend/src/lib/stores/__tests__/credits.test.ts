@@ -21,15 +21,19 @@ describe("credits store", () => {
     getHistoryMock.mockReset();
   });
 
-  it("initializes balance when store is null", () => {
+  it("initializes balance and updates when new initial balance is provided", () => {
     expect($creditBalance.get()).toBeNull();
 
     initCreditBalance(50);
     expect($creditBalance.get()).toBe(50);
 
-    // Should not overwrite once initialized
+    // Should sync when a new initial balance is provided (e.g., SSR page navigation)
     initCreditBalance(100);
-    expect($creditBalance.get()).toBe(50);
+    expect($creditBalance.get()).toBe(100);
+
+    // Should ignore undefined
+    initCreditBalance(undefined);
+    expect($creditBalance.get()).toBe(100);
   });
 
   it("updates balance directly via setCreditBalance", () => {

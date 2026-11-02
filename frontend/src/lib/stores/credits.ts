@@ -14,13 +14,13 @@ export const $creditBalance = atom<number | null>(null);
 let activeRefreshPromise: Promise<number | null> | null = null;
 
 /**
- * Initializes the credit balance store from an initial value (e.g., SSR sessionInfo).
- * Only sets the value if the store is currently null.
+ * Initializes or updates the credit balance store from an initial value (e.g., SSR sessionInfo).
+ * Synchronizes the store whenever a defined initial balance is provided.
  *
  * @param initialBalance - Optional initial balance passed from SSR
  */
 export function initCreditBalance(initialBalance?: number): void {
-  if (initialBalance !== undefined && $creditBalance.get() === null) {
+  if (initialBalance !== undefined) {
     $creditBalance.set(initialBalance);
   }
 }
