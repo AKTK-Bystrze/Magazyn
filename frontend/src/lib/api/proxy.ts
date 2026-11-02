@@ -74,11 +74,7 @@ export function createProxyHandler(opts: ProxyOptions) {
 
       return new Response(responseText, {
         status: response.status,
-        headers: {
-          "Content-Type": responseContentType,
-          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-          Pragma: "no-cache",
-        },
+        headers: { "Content-Type": responseContentType },
       });
     } catch (error) {
       locals.logger?.error(`[Proxy] ${opts.method} ${opts.path} error:`, { error });
@@ -87,11 +83,7 @@ export function createProxyHandler(opts: ProxyOptions) {
         {
           // 502 Bad Gateway since this is an upstream proxy error
           status: 502,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-            Pragma: "no-cache",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
     }

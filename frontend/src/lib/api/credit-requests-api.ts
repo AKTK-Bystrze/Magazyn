@@ -24,7 +24,6 @@ export const creditRequestsApi = {
     const { data } = await api.get<unknown>("/api/credits/requests", {
       page: params.page,
       per_page: params.perPage,
-      _t: Date.now(),
     });
     return transformCreditRequestList(data);
   },

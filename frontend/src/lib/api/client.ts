@@ -43,8 +43,7 @@ export const api = {
 
   get: <T>(
     url: string,
-    params?: Record<string, string | number | boolean | undefined | null>,
-    options?: { bypassCache?: boolean }
+    params?: Record<string, string | number | boolean | undefined | null>
   ): Promise<{ data: T }> => {
     const queryParams = new URLSearchParams();
     if (params) {
@@ -54,7 +53,7 @@ export const api = {
         }
       });
     }
-    if (options?.bypassCache !== false && !queryParams.has("_t")) {
+    if (!queryParams.has("_t")) {
       queryParams.append("_t", String(Date.now()));
     }
     const queryString = queryParams.toString();
