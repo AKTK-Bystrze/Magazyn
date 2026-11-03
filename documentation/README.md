@@ -53,15 +53,6 @@ Backend rules and guidelines (e.g. testing, docker, db migrations) are maintaine
 
 ---
 
-## 📄 Product Requirements
-
-- [Product Requirements Document (PRD)](product/prd/index.md) - Core user stories and requirements
-- [UI Architecture Plan](product/ui-plan.md) - Frontend view layout and UI design
-- [API Plan](product/api-plan.md) - Initial endpoint specifications
-- [Database Schema Plan](product/db-plan.md) - Initial DB schema design
-
----
-
 ## 🗄️ Database
 
 - [Database Documentation](database/db-doc.md) - Authoritative schema documentation and RPCs
