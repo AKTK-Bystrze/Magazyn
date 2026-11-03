@@ -1,25 +1,8 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: { extensions?: Json; operationName?: string; query?: string; variables?: Json };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5";
   };
   public: {
     Tables: {
@@ -34,7 +17,6 @@ export type Database = {
           reservation_id: string | null;
           user_id: string;
         };
-        ComputedFields: never;
         Insert: {
           amount: number;
           author_id?: string | null;
@@ -84,7 +66,6 @@ export type Database = {
           credit_request_id: string;
           user_id: string;
         };
-        ComputedFields: never;
         Insert: {
           credit_request_id: string;
           user_id: string;
@@ -119,10 +100,9 @@ export type Database = {
           requestor_id: string | null;
           status: Database["public"]["Enums"]["credit_request_status"];
           title: string;
-          updated_at: string;
+          updated_at: string | null;
           user_helped_id: string | null;
         };
-        ComputedFields: never;
         Insert: {
           created_at?: string;
           credits_value: number;
@@ -131,7 +111,7 @@ export type Database = {
           requestor_id?: string | null;
           status?: Database["public"]["Enums"]["credit_request_status"];
           title: string;
-          updated_at?: string;
+          updated_at?: string | null;
           user_helped_id?: string | null;
         };
         Update: {
@@ -142,7 +122,7 @@ export type Database = {
           requestor_id?: string | null;
           status?: Database["public"]["Enums"]["credit_request_status"];
           title?: string;
-          updated_at?: string;
+          updated_at?: string | null;
           user_helped_id?: string | null;
         };
         Relationships: [
@@ -175,7 +155,6 @@ export type Database = {
           type_id: string;
           updated_at: string | null;
         };
-        ComputedFields: never;
         Insert: {
           created_at?: string;
           description?: string | null;
@@ -217,7 +196,6 @@ export type Database = {
           id: string;
           name: string;
         };
-        ComputedFields: never;
         Insert: {
           created_at?: string;
           credit_cost_per_day: number;
@@ -242,7 +220,6 @@ export type Database = {
           notes: string | null;
           previous_status: Database["public"]["Enums"]["equipment_status"] | null;
         };
-        ComputedFields: never;
         Insert: {
           admin_id?: string | null;
           created_at?: string;
@@ -289,7 +266,6 @@ export type Database = {
           updated_at: string | null;
           username: string;
         };
-        ComputedFields: never;
         Insert: {
           created_at?: string;
           credit_balance?: number;
@@ -324,7 +300,6 @@ export type Database = {
           status: Database["public"]["Enums"]["reservation_status"];
           user_id: string;
         };
-        ComputedFields: never;
         Insert: {
           changed_by_user_id?: string | null;
           created_at?: string;
@@ -390,7 +365,6 @@ export type Database = {
           updated_at: string | null;
           user_id: string;
         };
-        ComputedFields: never;
         Insert: {
           created_at?: string;
           end_date: string;
@@ -435,100 +409,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      bulk_adjust_user_credits: {
-        Args: {
-          p_admin_id: string;
-          p_amount: number;
-          p_description: string;
-          p_reason: string;
-          p_user_ids: string[];
-        };
-        Returns: undefined;
-      };
-      bulk_update_reservations_status: {
-        Args: { p_admin_id: string; p_reservation_ids: string[]; p_status: string };
-        Returns: Json;
-      };
-      create_credit_request_atomic: {
-        Args: {
-          p_credits_value: number;
-          p_description: string;
-          p_helpers: string[];
-          p_requestor_id: string;
-          p_title: string;
-          p_user_helped_id: string;
-        };
-        Returns: Json;
-      };
-      create_reservation_atomic: {
-        Args: {
-          p_created_by_user_id: string;
-          p_is_free: boolean;
-          p_reservations: Json;
-          p_total_cost: number;
-          p_user_id: string;
-        };
-        Returns: Json;
-      };
-      get_credit_leaderboard: {
-        Args: Record<PropertyKey, never>;
-        Returns: {
-          total_credits: number;
-          user_id: string;
-          username: string;
-        }[];
-      };
-      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
-      is_enabled: { Args: Record<PropertyKey, never>; Returns: boolean };
-      is_super_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
-      modify_reservation_dates_with_credits: {
-        Args: {
-          p_allow_negative?: boolean;
-          p_changed_by_user_id: string;
-          p_new_end_date: string;
-          p_new_start_date: string;
-          p_reservation_id: string;
-        };
-        Returns: Json;
-      };
-      refund_reservation_credits: {
-        Args: { p_amount: number; p_reservation_id: string };
-        Returns: undefined;
-      };
-      review_credit_request_atomic: {
-        Args: {
-          p_admin_id: string;
-          p_credits_value?: number;
-          p_description?: string;
-          p_helpers?: string[];
-          p_id: string;
-          p_reason?: string;
-          p_status: string;
-        };
-        Returns: undefined;
-      };
-      update_credit_request_atomic: {
-        Args: {
-          p_credits_value: number;
-          p_description: string;
-          p_helpers: string[];
-          p_id: string;
-          p_status: string;
-          p_title: string;
-          p_user_helped_id: string;
-        };
-        Returns: undefined;
-      };
-      update_reservation_with_audit: {
-        Args: {
-          p_changed_by_user_id: string;
-          p_end_date?: string;
-          p_reservation_id: string;
-          p_start_date?: string;
-          p_status?: string;
-        };
-        Returns: Json;
-      };
+      [_ in never]: never;
     };
     Enums: {
       credit_request_status: "awaiting" | "approved" | "rejected" | "approved with changes";
@@ -562,7 +443,9 @@ export type Tables<
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
@@ -585,7 +468,9 @@ export type TablesInsert<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
@@ -607,7 +492,9 @@ export type TablesUpdate<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
@@ -629,7 +516,9 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
@@ -643,29 +532,10 @@ export type CompositeTypes<
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never) = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
-
-export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
-  public: {
-    Enums: {
-      credit_request_status: ["awaiting", "approved", "rejected", "approved with changes"],
-      credit_transaction_reason: [
-        "reservation_charge",
-        "reservation_refund",
-        "reservation_adjustment",
-        "admin_adjustment",
-        "work_credit",
-      ],
-      equipment_status: ["ok", "broken", "blocked"],
-      reservation_status: ["PENDING", "RENTED", "RETURNED", "CANCELLED"],
-      user_role: ["user", "admin", "super_admin"],
-    },
-  },
-} as const;
