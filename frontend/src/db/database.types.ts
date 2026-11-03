@@ -42,13 +42,6 @@ export type Database = {
             foreignKeyName: "credit_history_author_id_fkey";
             columns: ["author_id"];
             isOneToOne: false;
-            referencedRelation: "analytics_user_stats";
-            referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "credit_history_author_id_fkey";
-            columns: ["author_id"];
-            isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
@@ -58,13 +51,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "reservations";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "credit_history_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "analytics_user_stats";
-            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "credit_history_user_id_fkey";
@@ -257,22 +243,8 @@ export type Database = {
             foreignKeyName: "maintenance_logs_admin_id_fkey";
             columns: ["admin_id"];
             isOneToOne: false;
-            referencedRelation: "analytics_user_stats";
-            referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "maintenance_logs_admin_id_fkey";
-            columns: ["admin_id"];
-            isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "maintenance_logs_equipment_id_fkey";
-            columns: ["equipment_id"];
-            isOneToOne: false;
-            referencedRelation: "analytics_equipment_stats";
-            referencedColumns: ["equipment_id"];
           },
           {
             foreignKeyName: "maintenance_logs_equipment_id_fkey";
@@ -355,22 +327,8 @@ export type Database = {
             foreignKeyName: "reservation_history_changed_by_user_id_fkey";
             columns: ["changed_by_user_id"];
             isOneToOne: false;
-            referencedRelation: "analytics_user_stats";
-            referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "reservation_history_changed_by_user_id_fkey";
-            columns: ["changed_by_user_id"];
-            isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "reservation_history_equipment_id_fkey";
-            columns: ["equipment_id"];
-            isOneToOne: false;
-            referencedRelation: "analytics_equipment_stats";
-            referencedColumns: ["equipment_id"];
           },
           {
             foreignKeyName: "reservation_history_equipment_id_fkey";
@@ -385,13 +343,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "reservations";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "reservation_history_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "analytics_user_stats";
-            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "reservation_history_user_id_fkey";
@@ -441,22 +392,8 @@ export type Database = {
             foreignKeyName: "reservations_equipment_id_fkey";
             columns: ["equipment_id"];
             isOneToOne: false;
-            referencedRelation: "analytics_equipment_stats";
-            referencedColumns: ["equipment_id"];
-          },
-          {
-            foreignKeyName: "reservations_equipment_id_fkey";
-            columns: ["equipment_id"];
-            isOneToOne: false;
             referencedRelation: "equipment";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "reservations_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "analytics_user_stats";
-            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "reservations_user_id_fkey";
@@ -469,26 +406,7 @@ export type Database = {
       };
     };
     Views: {
-      analytics_equipment_stats: {
-        Row: {
-          equipment_id: string | null;
-          equipment_name: string | null;
-          total_days_rented: number | null;
-          total_reservations: number | null;
-          utilization_rate: number | null;
-        };
-        Relationships: [];
-      };
-      analytics_user_stats: {
-        Row: {
-          last_reservation_date: string | null;
-          total_credits_spent: number | null;
-          total_reservations: number | null;
-          user_id: string | null;
-          username: string | null;
-        };
-        Relationships: [];
-      };
+      [_ in never]: never;
     };
     Functions: {
       [_ in never]: never;
