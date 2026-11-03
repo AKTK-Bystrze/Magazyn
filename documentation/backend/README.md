@@ -46,7 +46,6 @@ token   := r.Context().Value(appcontext.AccessTokenContextKey).(string)
 | `GET /calendar/availability`                                                                                                                 | Any authenticated      | Must be enabled.                                |
 | `GET /credits/history`, `GET /credits/requests`, `POST /credits/requests`, `PUT /credits/requests/{id}`                                      | Any authenticated      | Must be enabled.                                |
 | `PATCH /credits/requests/{id}/status`                                                                                                        | `super_admin`          | Must be enabled.                                |
-| `GET /analytics/*`                                                                                                                           | `admin`, `super_admin` | Must be enabled.                                |
 
 ## 3. Database & Supabase Interaction
 

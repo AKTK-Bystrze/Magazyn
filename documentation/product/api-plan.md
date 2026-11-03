@@ -1222,7 +1222,7 @@ Implementation:
 
 ---
 
-### 2.9 Calendar & Analytics
+### 2.9 Calendar
 
 #### GET /calendar/availability
 
@@ -1262,89 +1262,6 @@ Implementation:
 
 - `400 Bad Request`: Invalid parameters
 - `401 Unauthorized`: Not authenticated
-
----
-
-#### GET /analytics/equipment-stats
-
-**Description**: Equipment usage analytics (Admin only)
-
-**Query Parameters**:
-
-- `year` (integer, optional): Filter by year
-- `month` (integer, optional): Filter by month (1-12)
-- `equipment_id` (uuid, optional): Specific equipment
-
-**Response** (200 OK):
-
-```json
-{
-  "equipment_stats": [
-    {
-      "equipment_id": "uuid",
-      "equipment_name": "Red Kayak",
-      "equipment_type": "Kayak",
-      "total_reservations": 25,
-      "total_days_rented": 120,
-      "utilization_rate": 0.65,
-      "top_renters": [
-        {
-          "user_id": "uuid",
-          "username": "john_doe",
-          "reservation_count": 8,
-          "days_rented": 35
-        }
-      ]
-    }
-  ],
-  "period": {
-    "year": 2025,
-    "month": 11
-  }
-}
-```
-
-**Error Responses**:
-
-- `401 Unauthorized`: Not authenticated
-- `403 Forbidden`: Admin only
-
----
-
-#### GET /analytics/user-stats
-
-**Description**: User activity analytics (Admin only)
-
-**Query Parameters**:
-
-- `year` (integer, optional): Filter by year
-- `month` (integer, optional): Filter by month (1-12)
-
-**Response** (200 OK):
-
-```json
-{
-  "user_stats": [
-    {
-      "user_id": "uuid",
-      "username": "john_doe",
-      "total_reservations": 15,
-      "total_credits_spent": 180,
-      "last_reservation_date": "2025-11-25",
-      "favorite_equipment_type": "Kayak"
-    }
-  ],
-  "period": {
-    "year": 2025,
-    "month": 11
-  }
-}
-```
-
-**Error Responses**:
-
-- `401 Unauthorized`: Not authenticated
-- `403 Forbidden`: Admin only
 
 ---
 
@@ -1959,7 +1876,6 @@ All errors return consistent JSON structure:
 
 **Query Optimization**:
 
-- Use database views for analytics (pre-aggregated)
 - Cache frequently accessed data (equipment types, user favorites)
 - Pagination for all large result sets
 

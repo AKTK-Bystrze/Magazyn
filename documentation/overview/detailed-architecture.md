@@ -78,7 +78,6 @@ flowchart TB
             ReservationRepo["Reservation Repository<br/>• query • detail • stats<br/>• reservation_repository_rpc.go"]
             UserRepo["User Repository"]
             CreditRepo["Credit Repository"]
-            AnalyticsRepo["Analytics Repository<br/>(Decoupled from Calendar)"]
         end
 
         SupabaseGoClient["Supabase Go Client<br/>(PostgreSQL Adapter)"]
@@ -150,14 +149,12 @@ flowchart TB
     ReservationService --> CreditService
     UserService --> UserRepo
     CreditService --> CreditRepo
-    CreditService --> AnalyticsRepo
 
     AuthRepo --> SupabaseGoClient
     EquipmentRepo --> SupabaseGoClient
     ReservationRepo --> SupabaseGoClient
     UserRepo --> SupabaseGoClient
     CreditRepo --> SupabaseGoClient
-    AnalyticsRepo --> SupabaseGoClient
 
     SupabaseGoClient --> Profiles
     SupabaseGoClient --> EquipmentTypes
@@ -191,7 +188,7 @@ flowchart TB
     class Pages,Layouts,AstroMiddleware,ReservationListContainer,EquipmentManagerContainer,UserListContainer,ReservationTable,ReservationCartView,ReservationRow,CartSub,FormFields,QueryHooks,MutationHooks,UIHooks,Query,APIProxies,Transformers,Validators,SessionStore frontendStyle
     class JWTMiddleware,RBACMiddleware,CORSMiddleware,AuthHandler,EquipmentHandler,ReservationHandler,UserHandler,CreditHandler backendStyle
     class AuthService,EquipmentService,ReservationService,UserService,CreditService backendStyle
-    class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,AnalyticsRepo,SupabaseGoClient,EmailService backendStyle
+    class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,SupabaseGoClient,EmailService backendStyle
     class Profiles,EquipmentTypes,Equipment,Reservations,CreditHistory,CreditRequests dbStyle
     class ReservationHistory,MaintenanceLogs,Triggers,StoredProcs,RLS dbStyle
     class SupabaseAuth,SupabaseStorage,Email externalStyle
@@ -281,7 +278,6 @@ flowchart TB
   - `reservation_repository_detail.go`: Detail retrieval joining user profiles and equipment
   - `reservation_repository_stats.go`: Aggregates for dashboard statistics
 - **Equipment Repositories**: Decomposed into `equipment_repository_list.go`, `availability.go`, `favorites.go`, and `maintenance.go`
-- **Analytics Repository**: Dedicated `analytics_repository.go` cleanly decoupled from calendar data
 
 ---
 

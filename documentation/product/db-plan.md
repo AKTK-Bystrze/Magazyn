@@ -182,22 +182,6 @@ Audit trail for all reservation changes (insert-only, immutable).
 | `changed_by_user_id` | `uuid`               | `FK -> profiles.id`                 | User/admin who made this change |
 | `created_at`         | `timestamptz`        | `NOT NULL`, `DEFAULT now()`         | When this change occurred       |
 
-## 3. Views
-
-Database views to simplify analytics and reporting.
-
-### `analytics_equipment_stats`
-
-Aggregates usage statistics per equipment item.
-
-- Columns: `equipment_id`, `equipment_name`, `total_reservations`, `total_days_rented`, `utilization_rate` (days rented / days available).
-
-### `analytics_user_stats`
-
-Aggregates user activity.
-
-- Columns: `user_id`, `username`, `total_reservations`, `total_credits_spent`, `last_reservation_date`.
-
 ## 4. Relationships Summary
 
 - **Users & Auth**: 1:1 mapping between `auth.users` and `public.profiles`.
@@ -230,7 +214,7 @@ To optimize performance for common query patterns:
     - `(username)` (Search/Lookup)
     - `(email)` (Search/Lookup)
 
-4.  **Analytics / Favorites**:
+4.  **Favorites**:
     - `reservations(user_id, equipment_id)` (To quickly calculate user's favorite items)
 
 5.  **Reservation History**:
