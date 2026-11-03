@@ -113,8 +113,15 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
 4. **Logging In**
 
-   
-   reuse seed.sql from supabase/seed.sql to create super admin user.
+   1. Navigate to the login page: [http://localhost/login](http://localhost:/login)
+   2. Enter one of the pre-seeded test accounts:
+      - **Admin User**: `admin@example.com`
+      - **Standard User**: `user@example.com`
+   3. Click **"Send Magic Link"**.
+   4. Open the local email inbox (Mailpit/Inbucket): [http://127.0.0.1:54324](http://127.0.0.1:54324)
+   5. Open the latest email and click the login link to authenticate.
+
+   > Look for more details in the section below
 
 > [!TIP]
 > See [documentation/frontend/testing.md](documentation/frontend/testing.md) for E2E testing guidelines and CI simulation setup.
@@ -159,7 +166,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
    npm run dev
    ```
 
-   The application will be available at `http://localhost:4321`
+   The application will be available at `http://localhost:80`
 
 5. **Start Go backend** (in separate terminal)
 
@@ -174,7 +181,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
 The application uses passwordless authentication via Magic Links. During local development:
 
-1. Navigate to the login page: [http://localhost:4321/login](http://localhost:4321/login)
+1. Navigate to the login page: [http://localhost:80login](http://localhost:80/login)
 2. Enter one of the pre-seeded test accounts:
    - **Admin User**: `admin@example.com`
    - **Standard User**: `user@example.com`
