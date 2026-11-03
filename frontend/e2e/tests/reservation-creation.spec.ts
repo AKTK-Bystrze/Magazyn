@@ -9,26 +9,9 @@ import {
   calculateWorkerDates,
 } from "../helpers/reservation.helper";
 
-/**
- * Reservation creation E2E tests.
- * Covers the complete workflow from equipment selection to reservation finalization.
- *
- * Uses worker-isolated fixtures:
- * - Each worker has dedicated test user and equipment
- * - Tests can run fully parallel without conflicts
- *
- * @see fixtures/index.ts for fixture implementation
- * @see page-objects/reservation-cart.pom.ts for cart interactions
- * @see helpers/reservation.helper.ts for common actions
- */
 test.describe("Reservation Creation", () => {
   let initialCredits: number;
 
-  /**
-   * Setup:
-   * 1. Captures initial user credits to support restoration after test.
-   * 2. Clears the cart to ensure a clean state for the test.
-   */
   test.beforeEach(async ({ authenticatedPage, supabaseAdmin, testUser }) => {
     const { data } = await supabaseAdmin
       .from("profiles")
@@ -41,22 +24,10 @@ test.describe("Reservation Creation", () => {
     await clearCart(authenticatedPage);
   });
 
-  /**
-   * Teardown:
-   * Restores the user's credit balance to the initial value to prevent test flakiness.
-   */
   test.afterEach(async ({ supabaseAdmin, testUser }) => {
     await restoreCredits(supabaseAdmin, testUser.id, initialCredits);
   });
 
-  /**
-   * Happy Path: Complete reservation flow
-   * Consolidates tests for:
-   * - should display cart with all selected items
-   * - should show total cost for all items
-   * - should complete full reservation flow with 2 items
-   * - should clear cart after successful reservation
-   */
   test("Happy Path: Complete reservation flow", async ({
     authenticatedPage,
     testEquipment,
@@ -137,13 +108,6 @@ test.describe("Reservation Creation", () => {
     await expect(authenticatedPage.getByTestId(TEST_IDS.CART_INDICATOR)).not.toBeVisible();
   });
 
-  /**
-   * Scenario: Cart Item Removal
-   * Verifies that items can be successfully removed from the cart.
-   * - Adds item to cart
-   * - Removes item
-   * - Verifies item is gone and cart count is updated
-   */
   test("Cart Management: Remove items from cart", async ({ authenticatedPage, testEquipment }) => {
     const [equip1] = testEquipment;
     const cart = new ReservationCartPOM(authenticatedPage);
@@ -159,13 +123,6 @@ test.describe("Reservation Creation", () => {
     await expect(cart.cartItems).toHaveCount(0);
   });
 
-  /**
-   * Scenario: Non-admin cannot create free reservations
-   *
-   * Verifies that regular users cannot create free reservations via UI:
-   * - Free reservation toggle/checkbox is not available to non-admins
-   * - Standard credit cost is strictly required and displayed in checkout
-   */
   test("Authorization: Non-admin cannot create free reservations", async ({
     authenticatedPage,
     testEquipment,
@@ -178,7 +135,6 @@ test.describe("Reservation Creation", () => {
     await goToCart(authenticatedPage);
     await cart.waitForCartView();
 
-    // Verify UI strictly prohibits free reservations for non-admin
     await expect(authenticatedPage.getByTestId("free-reservation-checkbox")).not.toBeVisible();
     await expect(authenticatedPage.getByRole("checkbox", { name: /darmowa/i })).not.toBeVisible();
 
@@ -193,13 +149,6 @@ test.describe("Reservation Creation", () => {
     expect(remainingBalance).toBe(currentBalance - cost);
   });
 
-  /**
-   * Scenario: Sequential back-to-back reservations with reactive balance updates
-   *
-   * Verifies:
-   * - Performs two consecutive reservations in the same session without page reloads or API resets.
-   * - Asserts that the second reservation's cart immediately reflects the deducted credit balance.
-   */
   test("Reactive Balance: Sequential back-to-back reservations update credit balance in UI without page reload", async ({
     authenticatedPage,
     testEquipment,
@@ -208,7 +157,6 @@ test.describe("Reservation Creation", () => {
     const [equip1, equip2] = testEquipment;
     const cart = new ReservationCartPOM(authenticatedPage);
 
-    // Reservation 1: Add equip1 to cart
     await authenticatedPage.goto("/equipment");
     await addToCart(authenticatedPage, equip1.id);
     await goToCart(authenticatedPage);
@@ -235,17 +183,14 @@ test.describe("Reservation Creation", () => {
       `Godzinki: ${expectedBalanceAfterRes1}`
     );
 
-    // Reservation 2: In the SAME session, navigate back to /equipment without page reload or API reset
     await authenticatedPage.goto("/equipment");
     await addToCart(authenticatedPage, equip2.id);
     await goToCart(authenticatedPage);
     await cart.waitForCartView();
 
-    // Verify reactive credit balance in UI matches updated balance after Reservation 1
     const secondCartInitialBalance = await cart.getCurrentBalance();
     expect(secondCartInitialBalance).toBe(expectedBalanceAfterRes1);
 
-    // Select non-overlapping dates for second reservation
     await cart.setDatesFromNow(startDays + 10, endDays + 10);
     const cost2 = await cart.getTotalCost();
     expect(cost2).toBeGreaterThan(0);
@@ -266,14 +211,6 @@ test.describe("Reservation Creation", () => {
     );
   });
 
-  /**
-   * Scenario: Free reservation checkbox is not visible for non-admin users
-   *
-   * Steps:
-   * 1. Login as a regular user.
-   * 2. Add equipment to cart and navigate to cart.
-   * 3. Assert the free-reservation-checkbox is not rendered.
-   */
   test("Authorization: Free reservation checkbox is not visible for non-admin users", async ({
     authenticatedPage,
     testEquipment,
@@ -288,11 +225,6 @@ test.describe("Reservation Creation", () => {
     });
   });
 
-  /**
-   * Test: Super admin can access and see free reservation toggle in checkout.
-   *
-   * Verifies super_admin role permissions in reservation checkout.
-   */
   test("Authorization: Super admin can access free reservation toggle", async ({
     superAdminPage,
     testEquipment,

@@ -2,10 +2,10 @@
 
 ## 1. Tech Stack
 
-- **Framework**: Astro 5 (Static Site Generation + Server-Side Rendering)
+- **Framework**: Astro 7 (Static Site Generation + Server-Side Rendering)
 - **UI Library**: React 19 (interactive components)
 - **Styling**: Tailwind CSS 4 + Shadcn/ui
-- **Language**: TypeScript 5
+- **Language**: TypeScript 6
 - **State Management**: React Query (`@tanstack/react-query`)
 - **Authentication**: Supabase Auth (HttpOnly encrypted session cookie)
 - **Testing**: Vitest (Unit) + Playwright (E2E)
@@ -78,7 +78,6 @@ To maintain clean Single Responsibility Principle (SRP) separation, interactive 
   - `CartAvailabilityAlerts.tsx`: Warning banners for date overlaps or insufficient user credits.
 - **Shared Form Fields**:
   - `EquipmentFormFields.tsx`: Centralized form inputs (name, category, status, serial number, description) shared identically across `AddEquipmentDialog` and `EditEquipmentDialog`.
-  - `UserFormFields.tsx`: Centralized inputs (email, username, role, credit balance) shared across `CreateUserDialog` and `EditUserDialog`.
   - `ReservationDateAdjustmentFields.tsx`: Date pickers and duration summaries shared between `ModifyDatesDialog` and `ReturnWithDatesDialog`.
   - `ConfirmationModal.tsx`: Standardized confirmation dialog built strictly on top of Radix/Shadcn dialog primitives.
 
@@ -90,8 +89,8 @@ Custom hooks are strictly categorized by responsibility:
 - Wrap TanStack Query `useQuery` calls with caching and typing.
 - Examples: `useEquipmentSearch` (search filters + debouncing), `useTableSort` (in-memory and remote sorting).
 
-### 2. Mutation & Checkout Hooks
-- **`useCartCheckout.ts`**: Encapsulates cart submission logic, balance sufficiency checks, optimistic state transitions, error toast triggers, and cart reset on success.
+### 2. Cart & Mutation Hooks
+- **`useReservationCart.ts`**: Encapsulates cart state persistence in sessionStorage, date bounds, validation, item addition/removal, and cost breakdown. Checkout submission is executed from `ReservationCartView.tsx` via `/api/reservations`.
 - **`useReservationDateAdjustment.ts`**: Manages reservation date range modification, validates range boundaries, computes credit differences, and submits date adjustment mutations.
 
 ### 3. UI State & Interaction Hooks

@@ -1,23 +1,4 @@
-## [0.7.2](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.1...v0.7.2) (2026-10-23)
-
-
-### Reverts
-
-* Revert "chore(release): 0.7.1 [skip ci]" ([2feb2c5](https://github.com/AKTK-Bystrze/Magazyn/commit/2feb2c548d7de3fbab32d53d07a9f3b088c392ec))
-* Revert "fix: unify audited user credit adjustments" ([04f39aa](https://github.com/AKTK-Bystrze/Magazyn/commit/04f39aa4c17311db549eff462b5a7a079f77d680))
-* Revert "refactor: revert test changes" ([8f49be5](https://github.com/AKTK-Bystrze/Magazyn/commit/8f49be51a9ff512f35e6fabd41b375f9088a4647))
-
-# [0.7.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.6...v0.7.0) (2026-10-22)
-
-
-### Bug Fixes
-
-* **chunk-4:** return defect notes and smooth magic link redirect ([#6](https://github.com/AKTK-Bystrze/Magazyn/issues/6), [#21](https://github.com/AKTK-Bystrze/Magazyn/issues/21)) ([#267](https://github.com/AKTK-Bystrze/Magazyn/issues/267)) ([e7e42cb](https://github.com/AKTK-Bystrze/Magazyn/commit/e7e42cb0078011775502ab13718c67d0177ab030)), closes [#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1) [#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3) [#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4) [#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8) [#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13) [#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14) [#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1) [#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3) [#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4) [#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8) [#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13) [#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14)
-
-
-### Features
-
-* enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
+# Changelog
 
 ## [0.10.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.10.0...v0.10.1) (2026-11-02)
 
@@ -89,6 +70,27 @@
 * **ci:** configure release-please unscoped tags and changelog path ([#275](https://github.com/AKTK-Bystrze/Magazyn/issues/275)) ([7dffd96](https://github.com/AKTK-Bystrze/Magazyn/commit/7dffd96a6cbc256aed6f0e0b0a867860816e5d5d))
 * **ci:** keep root changelog in release-please and allow deploy by commit id ([#277](https://github.com/AKTK-Bystrze/Magazyn/issues/277)) ([425dc9c](https://github.com/AKTK-Bystrze/Magazyn/commit/425dc9ca976a84e8c875f9746862ed395b97775a))
 * credit balance display reservation v2 ([#273](https://github.com/AKTK-Bystrze/Magazyn/issues/273)) ([e1cda85](https://github.com/AKTK-Bystrze/Magazyn/commit/e1cda85865a561b37bd52bf97d70899659a744fb))
+
+## [0.7.2](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.7.1...v0.7.2) (2026-10-23)
+
+
+### Reverts
+
+* Revert "chore(release): 0.7.1 [skip ci]" ([2feb2c5](https://github.com/AKTK-Bystrze/Magazyn/commit/2feb2c548d7de3fbab32d53d07a9f3b088c392ec))
+* Revert "fix: unify audited user credit adjustments" ([04f39aa](https://github.com/AKTK-Bystrze/Magazyn/commit/04f39aa4c17311db549eff462b5a7a079f77d680))
+* Revert "refactor: revert test changes" ([8f49be5](https://github.com/AKTK-Bystrze/Magazyn/commit/8f49be51a9ff512f35e6fabd41b375f9088a4647))
+
+## [0.7.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.6...v0.7.0) (2026-10-22)
+
+
+### Bug Fixes
+
+* **chunk-4:** return defect notes and smooth magic link redirect ([#6](https://github.com/AKTK-Bystrze/Magazyn/issues/6), [#21](https://github.com/AKTK-Bystrze/Magazyn/issues/21)) ([#267](https://github.com/AKTK-Bystrze/Magazyn/issues/267)) ([e7e42cb](https://github.com/AKTK-Bystrze/Magazyn/commit/e7e42cb0078011775502ab13718c67d0177ab030)), closes [#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1) [#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3) [#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4) [#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8) [#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13) [#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14) [#1](https://github.com/AKTK-Bystrze/Magazyn/issues/1) [#3](https://github.com/AKTK-Bystrze/Magazyn/issues/3) [#4](https://github.com/AKTK-Bystrze/Magazyn/issues/4) [#8](https://github.com/AKTK-Bystrze/Magazyn/issues/8) [#13](https://github.com/AKTK-Bystrze/Magazyn/issues/13) [#14](https://github.com/AKTK-Bystrze/Magazyn/issues/14)
+
+
+### Features
+
+* enhance user filters with status selection and update tests ([061cf00](https://github.com/AKTK-Bystrze/Magazyn/commit/061cf00107c433a934ba85430d464d33a57b9955))
 
 ## [0.6.6](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.6.5...v0.6.6) (2026-10-22)
 

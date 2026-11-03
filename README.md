@@ -1,10 +1,10 @@
 # Equipment Rental System (Magazyn)
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![Astro](https://img.shields.io/badge/Astro-5.16-orange.svg)](https://astro.build/)
-[![React](https://img.shields.io/badge/React-19.0-blue.svg)](https://reactjs.org/)
-[![Go](https://img.shields.io/badge/Go-1.25.0-blue.svg)](https://golang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-1.22-blue.svg)](https://supabase.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
+[![Astro](https://img.shields.io/badge/Astro-7.4-orange.svg)](https://astro.build/)
+[![React](https://img.shields.io/badge/React-19.3-blue.svg)](https://reactjs.org/)
+[![Go](https://img.shields.io/badge/Go-1.27.3-blue.svg)](https://golang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.118-blue.svg)](https://supabase.com/)
 [![Docker](https://img.shields.io/badge/Docker-24.0-blue.svg)](https://www.docker.com/)
 [![Caddy](https://img.shields.io/badge/Caddy-2.6-blue.svg)](https://caddyserver.com/)
 
@@ -18,7 +18,7 @@
 
 ## 📖 About
 
-The Equipment Rental System replaces an inconvenient Google Form-based rental process with a mobile-accessible web application. The system enables club members to:
+The Equipment Rental System with a mobile-accessible web application. The system enables club members to:
 
 - 🚣 Rent kayaking equipment using a credit system
 - 📅 View real-time equipment availability with calendar views
@@ -46,7 +46,7 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 
 | Layer        | Technology                                               |
 | ------------ | -------------------------------------------------------- |
-| **Frontend** | Astro 5 (SSR) + React 19 + TypeScript 5 + TanStack Query |
+| **Frontend** | Astro 7 (SSR) + React 19 + TypeScript 6 + TanStack Query |
 | **Backend**  | Go (net/http) + Email Service (Noop)                     |
 | **Database** | Supabase (PostgreSQL + Auth + Storage)                   |
 | **Deploy**   | Docker Compose + Caddy                                   |
@@ -78,7 +78,7 @@ The Equipment Rental System replaces an inconvenient Google Form-based rental pr
 - **Node.js**: Version specified in project (check `package.json`)
 - **Go**: Latest stable version
 - **Docker & Docker Compose**: For deployment
-- **Supabase Account**: Free tier account
+- **Supabase Account**: Free tier account (optional)
 
 [Note]
 Database instance is created on Supabase. It can be started locally or remotely on [text](https://supabase.com/)
@@ -101,6 +101,8 @@ Database instance is created on Supabase. It can be started locally or remotely 
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SESSION_ENCRYPTION_KEY` (64-character hex string)
 
+   >When running on Windows replace "journald" driver driver with "json-file" in docker-compose.yaml file. Look for the detailed guidance in the file
+
 3. **Start Application**
 
    ```bash
@@ -109,9 +111,17 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
    **App available at:** http://localhost:80
 
-4. **Create Super Admin User**
+4. **Logging In**
 
-   reuse seed.sql from supabase/seed.sql to create super admin user. Just replace email and role. Email is used to send magic link
+   1. Navigate to the login page: [http://localhost/login](http://localhost:/login)
+   2. Enter one of the pre-seeded test accounts:
+      - **Admin User**: `admin@example.com`
+      - **Standard User**: `user@example.com`
+   3. Click **"Send Magic Link"**.
+   4. Open the local email inbox (Mailpit/Inbucket): [http://127.0.0.1:54324](http://127.0.0.1:54324)
+   5. Open the latest email and click the login link to authenticate.
+
+   > Look for more details in the section below
 
 > [!TIP]
 > See [documentation/frontend/testing.md](documentation/frontend/testing.md) for E2E testing guidelines and CI simulation setup.
@@ -156,7 +166,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
    npm run dev
    ```
 
-   The application will be available at `http://localhost:4321`
+   The application will be available at `http://localhost:80`
 
 5. **Start Go backend** (in separate terminal)
 
@@ -171,7 +181,7 @@ Database instance is created on Supabase. It can be started locally or remotely 
 
 The application uses passwordless authentication via Magic Links. During local development:
 
-1. Navigate to the login page: [http://localhost:4321/login](http://localhost:4321/login)
+1. Navigate to the login page: [http://localhost:80login](http://localhost:80/login)
 2. Enter one of the pre-seeded test accounts:
    - **Admin User**: `admin@example.com`
    - **Standard User**: `user@example.com`
@@ -286,7 +296,6 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 
 - [Documentation Index](documentation/README.md)
 - [Operations & Recovery Playbook](documentation/operations/recovery_playbook.md)
-- [Product Requirements Document](documentation/product/prd/index.md)
 - [Technology Stack & Architecture](documentation/overview/techstack.md)
 - [Database Schema Plan](documentation/database/db-doc.md)
 - [Conventional Commits Guide](documentation/overview/conventional-commits.md)

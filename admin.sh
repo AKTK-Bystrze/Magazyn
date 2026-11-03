@@ -160,8 +160,18 @@ cmd_status() {
 }
 
 cmd_prune() {
-  info "Pruning unused Docker images and build caches to free disk space..."
-  docker image prune -a -f --filter "until=48h" || docker image prune -f
+  local f="--filter until=48h" b_all=""
+  [[ "$*" =~ --all|--deep ]] && { f=""; b_all="-a"; }
+
+  info "Pruning Docker images, build cache, stopped containers, and networks..."
+  docker image prune -a -f ${f} 2>/dev/null || docker image prune -f || true
+  docker builder prune ${b_all} -f ${f} 2>/dev/null || docker builder prune -f || true
+  docker container prune -f || true
+  docker network prune -f || true
+
+  # Clean stale admin isolation directories older than 24h
+  find /tmp -maxdepth 1 -name "magazyn-admin-*" -mtime +1 -not -path "${ADMIN_TMP_DIR:-}" -exec rm -rf {} + 2>/dev/null || true
+
   ok "Prune complete."
 }
 
@@ -402,7 +412,7 @@ Commands:
   backup [TAG]                        Create a database snapshot
   restore [SNAP] [-y]                 Restore database from a snapshot file
   status                              View repository version, container states, and recent backups
-  prune                               Prune unused Docker images to free disk space
+  prune [--all]                       Prune unused Docker images, builder cache, containers, and stale temp files
 
 Interactive Mode:
   ./admin.sh                          Run without arguments to launch the interactive menu
