@@ -24,10 +24,6 @@ const SEEDED_CREDIT_ENTRIES = [
   },
 ];
 
-/**
- * Credits History e2e tests.
- * Covers layout, responsive columns, tooltips, and empty state against live backend.
- */
 test.describe("Credits History", () => {
   let creditPage: CreditHistoryPage;
 

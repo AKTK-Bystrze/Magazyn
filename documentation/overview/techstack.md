@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the architecture for a public-facing Rental Application. It follows a Hybrid "Light" Architecture: maximizing performance by hosting the application logic (Go/Astro) on your existing VPS (DigitalOcean), while offloading state management (DB, Auth, Storage) to Supabase Cloud (Free Tier).
+This document outlines the architecture for a public-facing Rental Application.
 
 **Key Decisions:**
 
@@ -14,9 +14,9 @@ This document outlines the architecture for a public-facing Rental Application. 
 
 **Core Framework:**
 
-- **Astro 5:** Configured for SSR (output: 'server') to handle SEO and dynamic content.
+- **Astro 7:** Configured for SSR (output: 'server') to handle SEO and dynamic content.
 - **React 19:** Interactive components (Cart, Calendar, Checkout).
-- **TypeScript 5:** Shared types between Frontend and Backend.
+- **TypeScript 6:** Shared types between Frontend and Backend.
 
 **State & API:**
 
@@ -25,7 +25,7 @@ This document outlines the architecture for a public-facing Rental Application. 
 
 ### 2. Backend Layer (Go)
 
-- **Language:** Go (Golang).
+- **Language:** Go (Golang 1.27).
 - **Role:** Stateless Business Logic.
 - **API:** Exposes REST endpoints (e.g., `POST /reservations`, `GET /equipment/{id}/availability`, `GET /calendar/availability`).
 - **Email:** Uses Noop Email Service (mock implementation) for transactional emails (Reservation Confirmations).
@@ -55,7 +55,7 @@ Instead of self-hosting complex services, we connect to the managed Supabase Clo
   - **Write:** Restricted to Admin users only via RLS.
 - **Limits:** 1GB Storage.
 
-### 4. Deployment (VPS / DigitalOcean)
+### 4. Deployment (VPS)
 
 **Container Strategy (Docker Compose):**
 
@@ -107,12 +107,3 @@ flowchart TD
     class DB,Auth,Storage cloud
     class Caddy,GoApp,AstroApp backend
 ```
-
-## Implementation Roadmap
-
-- [x] **Auth Migration:** Removed passwordless package from Go. Implemented Supabase Auth UI in React.
-- [x] **Caddyfile Setup:** Configured Caddy to proxy `localhost:4321` (Astro) and `localhost:8080` (Go).
-- [x] **Database Connection:** Updated Go ENV variables to point to Supabase Postgres connection.
-- [x] **RLS Policies:** Set up Supabase Storage policies for `equipment` bucket:
-  - `bucket_id = 'equipment'`, `operation = SELECT`, `auth.role() = 'anon'` (Public Read).
-  - `bucket_id = 'equipment'`, `operation = INSERT/UPDATE/DELETE`, `auth.jwt().role = 'service_role'` OR custom admin flag (Admin Write).

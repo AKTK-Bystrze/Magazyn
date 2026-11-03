@@ -8,7 +8,7 @@ flowchart TB
         Browser["Browser"]
     end
 
-    subgraph Frontend["Frontend Application (Astro 5 + React 19)"]
+    subgraph Frontend["Frontend Application (Astro 7 + React 19)"]
         subgraph AstroLayer["Astro SSR Layer"]
             Pages["Pages<br/>(Routes)"]
             Layouts["Layouts"]
@@ -28,11 +28,11 @@ flowchart TB
             subgraph Subcomponents["Subcomponents & Form Fields"]
                 ReservationRow["ReservationTableRow<br/>ReservationTableHeader<br/>ReservationActionMenu"]
                 CartSub["CartAvailabilityAlerts<br/>AdminReservationDelegate"]
-                FormFields["EquipmentFormFields<br/>UserFormFields<br/>ReservationDateAdjustmentFields"]
+                FormFields["EquipmentFormFields<br/>ReservationDateAdjustmentFields"]
             end
             subgraph HooksLayer["Custom Hooks"]
                 QueryHooks["Query Hooks<br/>• useEquipmentSearch<br/>• useTableSort"]
-                MutationHooks["Mutation Hooks<br/>• useCartCheckout<br/>• useReservationDateAdjustment"]
+                MutationHooks["Cart & Mutation Hooks<br/>• useReservationCart<br/>• useReservationDateAdjustment"]
                 UIHooks["UI Hooks<br/>• useReservationDialogs<br/>• useInfiniteScrollTrigger<br/>• useDismissibleMessage"]
             end
             Query["TanStack Query<br/>Server State Cache"]
@@ -58,18 +58,20 @@ flowchart TB
 
         subgraph HandlerLayer["Handler Layer & Binders"]
             AuthHandler["Auth Handler<br/>• Login • Logout • Session"]
-            EquipmentHandler["Equipment Handler<br/>• equipment_query.go<br/>• equipment_maintenance_handler.go"]
-            ReservationHandler["Reservation Handler<br/>• reservation_query.go<br/>• reservation_admin_handler.go"]
+            EquipmentHandler["Equipment Handler<br/>• equipment_query.go<br/>• equipment_handler.go"]
+            ReservationHandler["Reservation Handler<br/>• reservation_query.go<br/>• reservation_handler.go"]
             UserHandler["User Handler<br/>• Profile • List • Update"]
             CreditHandler["Credit Handler<br/>• History • Requests"]
+            CalendarHandler["Calendar Handler<br/>• Calendar Availability"]
         end
 
         subgraph ServiceLayer["Service Layer (Decomposed Sub-Services)"]
             AuthService["Auth Service"]
             EquipmentService["Equipment Service<br/>• mutation • availability<br/>• maintenance • types"]
-            ReservationService["Reservation Service<br/>• create • update • pricing.go<br/>• List / GetByID / Bulk"]
+            ReservationService["Reservation Service<br/>• create • update<br/>• List / GetByID / Bulk"]
             UserService["User Service"]
             CreditService["Credit Service<br/>• Transaction Log • Balance Update"]
+            CalendarService["Calendar Service"]
         end
 
         subgraph RepositoryLayer["Repository Layer (SRP & RPC Boundaries)"]
@@ -78,6 +80,7 @@ flowchart TB
             ReservationRepo["Reservation Repository<br/>• query • detail • stats<br/>• reservation_repository_rpc.go"]
             UserRepo["User Repository"]
             CreditRepo["Credit Repository"]
+            CalendarRepo["Calendar Repository<br/>• calendar_repository.go"]
         end
 
         SupabaseGoClient["Supabase Go Client<br/>(PostgreSQL Adapter)"]
@@ -136,12 +139,14 @@ flowchart TB
     CORSMiddleware --> ReservationHandler
     CORSMiddleware --> UserHandler
     CORSMiddleware --> CreditHandler
+    CORSMiddleware --> CalendarHandler
 
     AuthHandler --> AuthService
     EquipmentHandler --> EquipmentService
     ReservationHandler --> ReservationService
     UserHandler --> UserService
     CreditHandler --> CreditService
+    CalendarHandler --> CalendarService
 
     AuthService --> AuthRepo
     EquipmentService --> EquipmentRepo
@@ -149,12 +154,14 @@ flowchart TB
     ReservationService --> CreditService
     UserService --> UserRepo
     CreditService --> CreditRepo
+    CalendarService --> CalendarRepo
 
     AuthRepo --> SupabaseGoClient
     EquipmentRepo --> SupabaseGoClient
     ReservationRepo --> SupabaseGoClient
     UserRepo --> SupabaseGoClient
     CreditRepo --> SupabaseGoClient
+    CalendarRepo --> SupabaseGoClient
 
     SupabaseGoClient --> Profiles
     SupabaseGoClient --> EquipmentTypes
@@ -186,9 +193,9 @@ flowchart TB
 
     class Browser clientStyle
     class Pages,Layouts,AstroMiddleware,ReservationListContainer,EquipmentManagerContainer,UserListContainer,ReservationTable,ReservationCartView,ReservationRow,CartSub,FormFields,QueryHooks,MutationHooks,UIHooks,Query,APIProxies,Transformers,Validators,SessionStore frontendStyle
-    class JWTMiddleware,RBACMiddleware,CORSMiddleware,AuthHandler,EquipmentHandler,ReservationHandler,UserHandler,CreditHandler backendStyle
-    class AuthService,EquipmentService,ReservationService,UserService,CreditService backendStyle
-    class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,SupabaseGoClient,EmailService backendStyle
+    class JWTMiddleware,RBACMiddleware,CORSMiddleware,AuthHandler,EquipmentHandler,ReservationHandler,UserHandler,CreditHandler,CalendarHandler backendStyle
+    class AuthService,EquipmentService,ReservationService,UserService,CreditService,CalendarService backendStyle
+    class AuthRepo,EquipmentRepo,ReservationRepo,UserRepo,CreditRepo,CalendarRepo,SupabaseGoClient,EmailService backendStyle
     class Profiles,EquipmentTypes,Equipment,Reservations,CreditHistory,CreditRequests dbStyle
     class ReservationHistory,MaintenanceLogs,Triggers,StoredProcs,RLS dbStyle
     class SupabaseAuth,SupabaseStorage,Email externalStyle
@@ -212,10 +219,10 @@ flowchart TB
 - **Components Taxonomy (3 Tiers)**:
   - **Containers**: Route orchestrators (`ReservationListContainer`, `EquipmentManagerContainer`, `UserListContainer`) consuming queries and orchestrating dialogs via custom hooks.
   - **Presentation Islands**: Client islands (`ReservationTable`, `ReservationCartView`) rendering lists, carts, tables, and handling sorting/filtering view state.
-  - **Subcomponents & Shared Form Fields**: Single-responsibility elements (`ReservationTableRow`, `ReservationTableHeader`, `ReservationActionMenu`, `CartAvailabilityAlerts`, `AdminReservationDelegateSection`) and reusable form field sets (`EquipmentFormFields`, `UserFormFields`, `ReservationDateAdjustmentFields`).
+  - **Subcomponents & Shared Form Fields**: Single-responsibility elements (`ReservationTableRow`, `ReservationTableHeader`, `ReservationActionMenu`, `CartAvailabilityAlerts`, `AdminReservationDelegateSection`) and reusable form field sets (`EquipmentFormFields`, `ReservationDateAdjustmentFields`).
 - **Custom Hooks Separation**:
   - **Data Query Hooks**: Server state fetching (`useEquipmentSearch`, `useTableSort`).
-  - **Mutation Hooks**: State modifications (`useCartCheckout`, `useReservationDateAdjustment`).
+  - **Cart & Mutation Hooks**: State modifications and checkout (`useReservationCart`, `useReservationDateAdjustment`).
   - **UI State Hooks**: Modal dialog lifecycle (`useReservationDialogs`), infinite scroll triggers (`useInfiniteScrollTrigger`), auto-dismiss messages (`useDismissibleMessage`).
 - **TanStack Query**:
   - Caches API responses
@@ -250,24 +257,20 @@ flowchart TB
 
 - Parses HTTP requests and maps domain errors to status codes via `http_utils.go`
 - **Query Binders**: `equipment_query.go` and `reservation_query.go` parse and sanitize search terms, status filters, date bounds, and pagination limits.
-- **Sub-Handlers**: Dedicated handlers for maintenance operations (`equipment_maintenance_handler.go`) and admin dashboard / bulk updates (`reservation_admin_handler.go`).
+- **Handlers**: Structured handlers for each domain (`equipment_handler.go`, `reservation_handler.go` with admin dashboard/bulk routes, `user_handler.go`, `credit_handler.go`, `auth_handler.go`, `calendar_handler.go`).
 
 #### Service Layer (Business Logic & Sub-Services)
 
-- **Equipment Service**: Decomposed across:
-  - `equipment_service.go`: Core interface and orchestrator
-  - `equipment_service_availability.go`: Real-time availability calculation and date collision checks
-  - `equipment_service_maintenance.go`: Maintenance log recording and status change auditing
-  - `equipment_service_mutation.go`: Create, Update, Archive/Delete, and storage URL formatting
-  - `equipment_service_types.go`: Category queries and daily credit cost lookups
+- **Equipment Service**: Handled across `equipment_service.go` and `equipment_service_mutation.go` (availability, category queries, and inventory mutations).
 - **Reservation Service**: Decomposed across:
   - `reservation_service.go`: Interface, constructor, paginated `List`, and `GetByID`
   - `reservation_service_create.go`: Multi-item validation, type resolution, cost summation, atomic RPC execution, and async notification dispatch
   - `reservation_service_update.go`: Permission validation, date conflict checks, date modification via credit adjustment RPC, and cancellation refunds
-  - `pricing.go`: Pure pricing formulas (`CalculateReservationCost`) backed by `validation.CalculateDays`
+  - Pricing calculation: Pure pricing formulas (`CalculateReservationCost`) located in `backend/internal/validation/date.go`
 - **Credit Service**:
-  - Transaction logging
-  - Balance updates with audit trail
+  - `credit_history_service.go`: Transaction logging and credit ledger
+  - `credit_request_service.go`: Credit request submission, updates, and reviews
+- **Calendar Service**: Availability overview across date ranges
 
 #### Repository Layer (Data Access & RPC Boundaries)
 
@@ -277,7 +280,8 @@ flowchart TB
   - `reservation_repository_query.go`: Dynamic filtering, pagination, and RLS bypass
   - `reservation_repository_detail.go`: Detail retrieval joining user profiles and equipment
   - `reservation_repository_stats.go`: Aggregates for dashboard statistics
-- **Equipment Repositories**: Decomposed into `equipment_repository_list.go`, `availability.go`, `favorites.go`, and `maintenance.go`
+- **Equipment Repositories**: Decomposed into `equipment_repository.go`, `equipment_repository_list.go`, `availability.go`, `favorites.go`, and `maintenance.go`
+- **Calendar Repository**: Dedicated `calendar_repository.go` for calendar date availability queries
 
 ---
 

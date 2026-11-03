@@ -1,399 +1,302 @@
 # Code Review Checklist for Magazyn
 
-This checklist should be used when reviewing code changes to ensure compliance with project standards, tech stack requirements, and best practices.
+This checklist must be used when reviewing code changes (PR reviews, self-reviews, and AI assistance) to ensure compliance with project standards, monorepo architecture, security boundaries, and domain invariants.
 
-## Tech Stack Compliance
+---
 
-### Core Technologies
+## 📚 Documentation & Reference Map
 
-- [ ] **Astro 5** - Used for static content and layouts, not React
-- [ ] **TypeScript 5** - All code is properly typed, no `any` types without justification
-- [ ] **React 19** - Used only for interactive components, not static content
-- [ ] **Tailwind 4** - Styling uses Tailwind utilities, not custom CSS unless necessary
-- [ ] **Shadcn/ui** - UI components come from Shadcn/ui library (New York style, neutral color)
-- [ ] **Zod** - All API inputs validated with Zod schemas
-- [ ] **React Hook Form** - Forms use React Hook Form for state management
+Quick-reference links to authoritative project documentation:
 
-### Version Compatibility
+| Domain                    | Guide & Documentation Link                                                                                                                                                                                                                                                                                         | Key Architectural Boundaries                                                                                             |
+| :------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| **Commit & PR Standards** | [Conventional Commits Guide](../../documentation/overview/conventional-commits.md)                                                                                                                                                                                                                                 | PR title must follow `<type>(<scope>): <description>` for squash merge                                                   |
+| **System Architecture**   | [High-Level Architecture](../../documentation/overview/high-level-architecture.md)<br/>[Detailed Architecture](../../documentation/overview/detailed-architecture.md)<br/>[Technology Stack](../../documentation/overview/techstack.md)<br/>[Project Structure](../../documentation/overview/project_structure.md) | Hybrid Light: SSR Frontend (Astro/React) + Stateless Go API + Supabase Cloud + Caddy                                     |
+| **Backend Layer (Go)**    | [Backend Developer Guide](../../documentation/backend/README.md)<br/>[API Reference](../../documentation/overview/api.md)                                                                                                                                                                                          | Layered architecture (`handler` → `service` → `repository`), stdlib `net/http`, constructor injection, structured errors |
+| **Frontend Layer**        | [Frontend Architecture](../../documentation/frontend/architecture.md)<br/>[Frontend Coding Guidelines](../../documentation/frontend/guidelines.md)                                                                                                                                                                 | 3-tier components (Containers → Islands → Subcomponents), BFF API proxies, Zod transformers, `ROUTES` constants          |
+| **Database & Migrations** | [Database Documentation](../../documentation/database/db-doc.md)                                                                                                                                                                                                                                                   | PostgreSQL RPCs (`SECURITY DEFINER`), strict RLS on all tables, UTC migration naming                                     |
+| **Application Flows**     | [Authentication Flow](../../documentation/flows/auth-flow.md)<br/>[Reservation Flow](../../documentation/flows/reservation-flow.md)<br/>[Request Flow](../../documentation/flows/reservation-request-flow.md)                                                                                                      | Magic Link auth, HttpOnly encrypted cookie (`magazyn_sid`), atomic reservation RPCs, inclusive day calculations          |
+| **Testing**               | [Frontend Testing Standards](../../documentation/frontend/testing.md)<br/>[Backend Testing Guide](../../documentation/backend/README.md#6-test-infrastructure--centralized-mocks)                                                                                                                                  | Table-driven Go subtests (`t.Run`), centralized mocks, Vitest with fixtures, Playwright on mobile viewport               |
+| **Observability & Ops**   | [Metrics & Observability](../../documentation/METRICS.md)<br/>[Disaster Recovery Playbook](../../documentation/operations/recovery_playbook.md)                                                                                                                                                                    | Prometheus metrics on internal `:9091`, Grafana dashboards, `./admin.sh` cockpit                                         |
 
-- [ ] No deprecated APIs or patterns are used
-- [ ] All dependencies are compatible with the tech stack versions
-- [ ] Node.js version matches `.nvmrc` (22.14.0)
+---
 
-## Project Structure
+## 1. Conventional Commits & Pull Request Standards
 
-### Directory Structure
+- [ ] **PR Title Format** - Follows Conventional Commits: `<type>(<scope>): <description>` (summarizes ALL changes for squash merge; validated via `commitlint`).
+- [ ] **Allowed Types** - Uses valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+- [ ] **Breaking Changes** - Breaking changes explicitly flagged with `!` after type (e.g., `feat!:`) or `BREAKING CHANGE:` in body/footer.
+- [ ] **Description Style** - Description is lowercase, imperative, and contains no trailing period (e.g., `feat(reservation): add calendar availability check`).
+- [ ] **Scope Appropriateness** - Uses recognized domain scopes: `auth`, `ui`, `backend`, `frontend`, `api`, `db`, `e2e`, `ci`, `docs`.
 
-- [ ] Files are placed in correct directories according to project structure:
-  - `src/layouts/` - Astro layouts
-  - `src/pages/` - Astro pages
-  - `src/pages/api/` - API endpoints
-  - `src/components/` - React and Astro components
-  - `src/components/ui/` - Shadcn/ui components
-  - `src/components/hooks/` - Custom React hooks
-  - `src/lib/` - Services and utilities
-  - `src/db/` - Database types (database.types.ts)
-  - `src/types.ts` - Shared types (DTOs, entities)
-  - `src/middleware/` - Astro middleware
+---
 
-### File Naming Conventions
+## 2. Monorepo & Directory Structure Compliance
 
-- [ ] Components: PascalCase (e.g., `MealPlanEditor.tsx`)
-- [ ] Utilities: camelCase (e.g., `meal-plan-parser.ts`)
-- [ ] Services: camelCase (e.g., `meal-plan.service.ts`)
-- [ ] Pages: kebab-case (e.g., `meal-plans.ts`)
-- [ ] API Routes: kebab-case (e.g., `meal-plans.ts`)
-- [ ] Migration files: `YYYYMMDDHHmmss_short_description.sql`
+- [ ] **Correct Directory Placement**:
+  - `frontend/src/pages/` - Astro page routes and SSR BFF proxies (`frontend/src/pages/api/`).
+  - `frontend/src/layouts/` - Astro layout templates.
+  - `frontend/src/components/{domain}/` - Decomposed React components (Containers, Islands, Subcomponents).
+  - `frontend/src/hooks/` & `frontend/src/lib/hooks/` - Custom query, mutation, and UI state hooks.
+  - `frontend/src/lib/api/` - Client API modules.
+  - `frontend/src/lib/transformers/` - Bidirectional data transformers (`snake_case` ↔ `camelCase`).
+  - `frontend/src/lib/auth/` - `SessionStore` (AES-256-GCM) and `RedirectManager` DAG.
+  - `frontend/src/lib/config/constants/` - `ROUTES`, status, role, and UI string constants.
+  - `frontend/src/test/fixtures/` - Centralized test fixtures and utilities.
+  - `backend/cmd/api/main.go` - Application bootstrap and dependency wireup.
+  - `backend/internal/handler/{domain}/` - HTTP transport handlers and query binders (`*_query.go`).
+  - `backend/internal/service/{domain}/` - Pure business logic and decomposed sub-services.
+  - `backend/internal/repository/supabase/` - PostgREST data access and RPC wrappers (`*_rpc.go`).
+  - `backend/internal/middleware/` - CORS, JWT validation, and RBAC middleware.
+  - `backend/internal/types/` - Shared domain models and DTOs.
+  - `backend/internal/validation/` - Input validation and search sanitization utilities.
+  - `backend/internal/testutils/` - Centralized test mocks and request helpers.
+  - `supabase/migrations/` - Versioned SQL schema changes and stored procedures.
+  - `infra/` - Docker Compose, Caddyfile, Dockerfiles, and operations scripts (`admin.sh`).
+- [ ] **File Naming Conventions**:
+  - React Components: `PascalCase.tsx`
+  - React/Astro Hooks & Utils: `camelCase.ts` or `kebab-case.ts`
+  - Astro Pages & API Routes: `kebab-case.astro` or `[id].ts`
+  - Go Backend Files: `snake_case.go` (tests suffixed with `_test.go` or `_integration_test.go`)
+  - Supabase Migrations: `YYYYMMDDHHMMSS_short_description.sql` (UTC timestamp)
 
-## Coding Practices
+---
 
-### Clean Code Principles
+## 3. Backend Guidelines (Go Layered Architecture)
 
-- [ ] **Early returns** - Error conditions handled at the beginning of functions
-- [ ] **Guard clauses** - Preconditions and invalid states handled early
-- [ ] **No unnecessary else** - Uses if-return pattern instead
-- [ ] **Happy path last** - Main logic appears at the end of functions
-- [ ] **Error handling** - All errors handled with appropriate error types
-- [ ] **Error logging** - Errors logged with proper context
-- [ ] **User-friendly messages** - Error messages are user-friendly and actionable
+### Layer Boundaries & Separation of Concerns
 
-### Code Quality
+- [ ] **Strict Layering** - Requests flow unidirectionally: `handler` → `service` → `repository`. Handlers never call repositories directly.
+- [ ] **Handler Layer (`internal/handler/`)**:
+  - Only handles HTTP transport (decoding JSON, query binding, status mapping).
+  - Contains **zero business logic**.
+  - Query parameters bound and validated using domain binders (e.g., `equipment_query.go`, `reservation_query.go`).
+  - Domain errors mapped to standard HTTP status codes via `http_utils.go`.
+- [ ] **Service Layer (`internal/service/`)**:
+  - Pure Go business logic, independent of HTTP or database driver abstractions.
+  - Decomposed into single-responsibility sub-services for complex domains (e.g., `equipment_service_availability.go`, `reservation_service_create.go`, `reservation_service_update.go`, `pricing.go`).
+  - Orchestrates repositories and dispatches async side-effects (e.g., notifications).
+- [ ] **Repository Layer (`internal/repository/`)**:
+  - Database access abstracted behind interfaces in `internal/repository/{domain}.go`.
+  - Concrete Supabase implementations in `internal/repository/supabase/`.
+  - Stored procedure calls isolated in `*_repository_rpc.go`.
 
-- [ ] **Linter compliance** - Code passes ESLint checks
-- [ ] **Type safety** - No TypeScript errors, proper type annotations
-- [ ] **No console.log** - Debugging statements removed (use proper logging)
-- [ ] **Comments** - Complex logic is commented appropriately
-- [ ] **DRY principle** - No code duplication without justification
+### Routing, Context & Dependency Injection
 
-## Frontend Guidelines
+- [ ] **Standard Library Routing** - Uses `net/http` with `http.NewServeMux()`. No external web frameworks (Gin, Echo, Fiber).
+- [ ] **Constructor Injection** - Dependencies wired explicitly via constructors (`NewReservationService(repo, ...)`); no global mutable state.
+- [ ] **Context Propagation** - `context.Context` from HTTP requests propagated down through all services and repositories.
+- [ ] **Detached Context for Async Tasks** - Detached context (`context.WithoutCancel(ctx)`) used for background goroutines (e.g., email notifications) so HTTP disconnects do not cancel background work.
+- [ ] **Type-Safe Context Extraction** - Context values extracted in handlers with explicit type assertions:
+  - `appcontext.UserContextKey` → `*types.User`
+  - `appcontext.UserProfileContextKey` → `*types.PublicProfilesSelect`
+  - `appcontext.AccessTokenContextKey` → `string`
 
-### Astro Components
+### Security & Input Validation
 
-- [ ] Used for static content and layouts only
-- [ ] Server-side rendering where appropriate
-- [ ] Props defined in frontmatter (`---`)
-- [ ] Slots used for content projection
-- [ ] Client directives (`client:load`, `client:visible`) used appropriately for React components
-- [ ] View Transitions API used for smooth page transitions
-- [ ] `export const prerender = false` for API routes
-- [ ] Environment variables accessed via `import.meta.env`
+- [ ] **PostgREST Injection Sanitization (CRITICAL)** - All search terms used in `ILIKE` queries are sanitized with `validation.SanitizeSearchTerm(term)` to escape `, . ( ) = * !`.
+- [ ] **UUID Validation** - All ID path/query parameters validated with `validation.ValidateUUID()`.
+- [ ] **Enum Validation** - Status and role strings validated against constants with `validation.ValidateEnum()`.
+- [ ] **Date Validation** - Dates parsed and validated using Go standard `time.Parse(constants.DateFormatISO, ...)`.
+- [ ] **String Length Limits** - String inputs validated with `validation.ValidateStringLength()`.
+- [ ] **Authorization & RBAC** - Endpoints protected with `RequireRoles()` wrappers matching the [Auth Access Control Table](../../documentation/backend/README.md#auth-access-control-table).
+- [ ] **Disabled User Quarantine** - Disabled users blocked from all endpoints except `GET /auth/session`.
+- [ ] **Service Role Key Scoping** - `SUPABASE_SERVICE_ROLE_KEY` used ONLY for privileged administrative operations or background workers; standard operations use user JWT + Anon Key for RLS.
 
-### React Components
+### Error Handling & Logging
 
-- [ ] **Functional components** - No class components
-- [ ] **No Next.js directives** - Never uses `"use client"` (Next.js specific)
-- [ ] **Custom hooks** - Complex logic extracted to hooks in `src/components/hooks/`
-- [ ] **Performance optimization**:
-  - [ ] `React.memo()` for expensive components with same props
-  - [ ] `useCallback()` for event handlers passed to children
-  - [ ] `useMemo()` for expensive calculations
-  - [ ] `useId()` for accessibility attributes
-- [ ] **Code splitting** - `React.lazy()` and `Suspense` used where appropriate
-- [ ] **Props interfaces** - Defined above component
+- [ ] **Domain Error Types** - Services return structured types (`types.NewNotFoundError`, `types.NewConflictError`, `types.NewValidationError`).
+- [ ] **Repository Error Wrapping** - Repositories wrap low-level errors with context (`fmt.Errorf("...: %w", err)`).
+- [ ] **No Leaked Internals** - Internal database errors or stack traces are not leaked in HTTP response payloads.
 
-### Styling (Tailwind)
+---
 
-- [ ] **@layer directive** - Custom styles organized into layers
-- [ ] **Arbitrary values** - Used with square brackets (e.g., `w-[123px]`)
-- [ ] **Dark mode** - Uses `dark:` variant for dark mode styles
-- [ ] **Responsive** - Uses responsive variants (`sm:`, `md:`, `lg:`)
-- [ ] **State variants** - Uses interactive variants (`hover:`, `focus-visible:`, `active:`)
-- [ ] **No inline styles** - Tailwind utilities used instead (unless dynamic values)
-- [ ] **CSS variables** - Shadcn/ui components use CSS variables for theming
+## 4. Frontend Guidelines (Astro 5 + React 19 + TypeScript)
 
-### Accessibility (ARIA)
+### Component Taxonomy & Decomposition (SRP)
 
-- [ ] **ARIA landmarks** - Used to identify page regions (main, navigation, search)
-- [ ] **ARIA roles** - Applied to custom elements without semantic HTML
-- [ ] **ARIA states** - `aria-expanded`, `aria-controls` for expandable content
-- [ ] **ARIA live regions** - Used for dynamic content updates with appropriate politeness
-- [ ] **ARIA labels** - `aria-label` or `aria-labelledby` for elements without visible text
-- [ ] **ARIA descriptions** - `aria-describedby` for form inputs and complex elements
-- [ ] **ARIA current** - Used for indicating current item in sets/navigation
-- [ ] **No redundant ARIA** - Doesn't duplicate native HTML semantics
-- [ ] **Keyboard navigation** - All interactive elements keyboard accessible
-- [ ] **Focus management** - Proper focus handling in modals and dialogs
+- [ ] **Tier 1: Route Containers (`*Container.tsx`)**:
+  - High-level orchestrators consuming TanStack Query hooks.
+  - Coordinate dialog states via dedicated hooks (`useReservationDialogs.ts`).
+  - Contain **no table rows, cards, or form markup**.
+- [ ] **Tier 2: Presentation Islands (`*View.tsx`, `*Table.tsx`)**:
+  - Responsible for view layouts, sorting state, responsive wrappers.
+  - Delegate row and cell rendering to subcomponents.
+- [ ] **Tier 3: Subcomponents & Shared Form Fields**:
+  - Table rows (`ReservationTableRow.tsx`), headers (`ReservationTableHeader.tsx`), and menus (`ReservationActionMenu.tsx`) extracted to dedicated files.
+  - Shared form inputs extracted into reusable field sets (`EquipmentFormFields.tsx`, `UserFormFields.tsx`, `ReservationDateAdjustmentFields.tsx`).
+  - Dialogs built on Radix / Shadcn primitives with keyboard accessibility (`Esc`, focus traps).
+- [ ] **Component Size Limit** - Components kept under 300 lines of code.
 
-### Forms
+### Custom Hooks Taxonomy
 
-- [ ] **React Hook Form** - Used for form state management
-- [ ] **Zod validation** - Schemas defined in `src/lib/validation/*.schemas.ts`
-- [ ] **Validation timing** - `onBlur` for immediate feedback
-- [ ] **Error display** - Inline validation errors shown to users
-- [ ] **Accessibility** - Form inputs have proper labels and error associations
+- [ ] **Data Query Hooks** - Wrap TanStack Query `useQuery` calls with caching and typing (e.g., `useEquipmentSearch`).
+- [ ] **Mutation Hooks** - Encapsulate mutations, cache invalidation, and toast feedback (e.g., `useCartCheckout`, `useReservationDateAdjustment`).
+- [ ] **UI State Hooks** - Isolate modal, dialog, and interaction state (e.g., `useReservationDialogs`, `useInfiniteScrollTrigger`, `useDismissibleMessage`).
 
-## Backend Guidelines
+### API Proxy Pattern (BFF) & Transformers
 
-### Supabase Integration
+- [ ] **No Direct Backend Calls** - React components NEVER call the Go backend directly; all client requests go to same-origin Astro SSR proxies (`/pages/api/*`).
+- [ ] **BFF Proxy Handler**:
+  - Reads `locals.accessToken` populated by Astro middleware.
+  - Forwards requests to backend with `Authorization: Bearer <token>`.
+  - Disables prerendering (`export const prerender = false`).
+- [ ] **Bidirectional Transformers**:
+  - Backend `snake_case` DTOs converted to frontend `camelCase` domain models using transformers in `src/lib/transformers/`.
+  - Mutations convert `camelCase` payloads back to `snake_case`.
+  - All input/output payloads validated with Zod schemas.
 
-- [ ] **Context locals** - Uses `context.locals.supabase` in Astro routes
-- [ ] **Client types** - Uses `SupabaseClient` from `src/db/supabase.client.ts`, not `@supabase/supabase-js`
-- [ ] **Server client** - Uses `supabase.server.ts` for server-side operations
-- [ ] **Admin client** - Uses `supabase.admin.ts` only for admin operations (account deletion)
+### Coding Practices & Styling
 
-### API Routes (Astro Server Endpoints)
+- [ ] **Route Constants** - Routes NEVER hardcoded as raw strings; use `ROUTES` constants from `src/lib/config/constants/routes.ts` (e.g., `ROUTES.PUBLIC.LOGIN`).
+- [ ] **Centralized UI Strings** - UI text uses constants from `ui-strings.ts` (no inline user-facing magic strings).
+- [ ] **Early Returns & Guard Clauses** - Error and precondition checks placed at the beginning of functions; happy path last; no unnecessary `else` blocks.
+- [ ] **No Next.js Directives** - Never use `"use client"` or `"use server"` (Astro handles island hydration via `client:*` directives).
+- [ ] **Tailwind & Shadcn Styling**:
+  - Utility classes used over custom CSS; no inline `style={{ ... }}` attributes.
+  - Dark mode supported using Tailwind's `dark:` variant and CSS variables.
+  - Responsive design verified across mobile and desktop breakpoints.
 
-- [ ] **Uppercase methods** - Uses `POST`, `GET` (uppercase) for endpoint handlers
-- [ ] **Prerender disabled** - `export const prerender = false` for API routes
-- [ ] **Zod validation** - All inputs validated with Zod schemas
-- [ ] **Authentication** - Uses `getUserFromRequest()` from `src/lib/auth/session.service.ts`
-- [ ] **Error handling** - Proper error responses (401, 400, 500)
-- [ ] **Response types** - Proper Content-Type headers set
-- [ ] **Service layer** - Business logic extracted to services in `src/lib/`
+### Authentication & Session Security
 
-### API Client Pattern
+- [ ] **HttpOnly Encrypted Cookie** - Sessions managed via server-side encrypted `magazyn_sid` cookie (AES-256-GCM); tokens NEVER stored in `localStorage`.
+- [ ] **Deterministic Redirect DAG** - Navigation and route protection adhere to `RedirectManager` DAG (eliminates redirect loops).
+- [ ] **Source of Truth** - User roles and enabled status determined strictly from backend `sessionInfo.role`, never from client-side JWT claims.
 
-- [ ] **Auth headers** - Uses `getAuthHeaders()` from `src/lib/api/base.client.ts`
-- [ ] **Error handling** - Handles 401 (redirects to login), 400, 500 errors
-- [ ] **Response parsing** - Uses `handleApiResponse<T>()` for type-safe responses
-- [ ] **Type safety** - Response types match DTOs from `src/types.ts`
+---
 
-### Service Layer
-
-- [ ] **Service functions** - Business logic in services, not in API routes
-- [ ] **Error types** - Uses custom error classes (`DatabaseError`, `UnauthorizedError`, `ValidationError`)
-- [ ] **Database operations** - Uses Supabase client with proper error handling
-- [ ] **Type safety** - Functions properly typed with TypeScript
-
-## Database Guidelines
+## 5. Database & Supabase Guidelines
 
 ### Migrations
 
-- [ ] **Naming convention** - `YYYYMMDDHHmmss_short_description.sql` format
-- [ ] **Header comments** - Includes metadata (purpose, affected tables, considerations)
-- [ ] **SQL style** - All SQL written in lowercase
-- [ ] **Comments** - Thorough comments explaining each migration step
-- [ ] **Destructive operations** - Copious comments for DROP, TRUNCATE, ALTER operations
+- [ ] **File Naming** - Named in exact UTC format: `supabase/migrations/YYYYMMDDHHMMSS_short_description.sql`.
+- [ ] **Header Metadata** - Contains header comments describing purpose, affected tables, and dependencies.
+- [ ] **SQL Style** - All SQL syntax written in lowercase.
+- [ ] **Destructive Safety** - Copious comments and safety checks for destructive operations (`DROP`, `ALTER`, `TRUNCATE`).
 
 ### Row Level Security (RLS)
 
-- [ ] **RLS enabled** - All tables have RLS enabled (even for public access)
-- [ ] **Granular policies** - One policy per operation (SELECT, INSERT, UPDATE, DELETE)
-- [ ] **Role-based policies** - Separate policies for `anon` and `authenticated` roles
-- [ ] **Policy comments** - Comments explain rationale and intended behavior
-- [ ] **User isolation** - Users can only access their own data (where applicable)
+- [ ] **RLS Enabled Everywhere** - `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` applied on all tables without exception.
+- [ ] **Granular Policies** - One policy per operation (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), separated for `anon` and `authenticated` roles.
+- [ ] **Recursion Prevention** - Admin policies use `SECURITY DEFINER` helper functions (e.g., `get_user_role()`) to prevent infinite RLS recursion.
+- [ ] **User Data Isolation** - Non-admin users restricted to their own rows (`user_id = auth.uid()`).
 
-### Database Operations
+### Stored Procedures (Atomic RPCs) & DB Logic
 
-- [ ] **Indexes** - Appropriate indexes created for search and filtering
-- [ ] **Triggers** - Triggers properly defined for `updated_at` timestamps
-- [ ] **Functions** - Database functions are secure and well-documented
-- [ ] **Foreign keys** - Proper foreign key constraints defined
-- [ ] **Data types** - Appropriate data types used (uuid, timestamptz, jsonb, etc.)
-
-## Type Safety
-
-### TypeScript
-
-- [ ] **Strict mode** - Code complies with strict TypeScript settings
-- [ ] **No any types** - No `any` types without justification
-- [ ] **Type exports** - Types exported from `src/types.ts` (shared types)
-- [ ] **Database types** - Uses types from `src/db/database.types.ts` (generated from Supabase)
-- [ ] **Zod inference** - Uses Zod schema inference for runtime validation with TypeScript types
-
-### Type Definitions
-
-- [ ] **DTOs** - Data Transfer Objects defined in `src/types.ts`
-- [ ] **Entities** - Entity types match database schema
-- [ ] **Interfaces** - Proper interfaces for component props and function parameters
-- [ ] **Type guards** - Type guards used where appropriate for runtime type checking
-
-## Error Handling
-
-### Error Types
-
-- [ ] **Custom errors** - Uses custom error classes from `src/lib/errors.ts`:
-  - `DatabaseError` - Database operation failures
-  - `UnauthorizedError` - Authentication/authorization failures
-  - `ValidationError` - Input validation failures
-- [ ] **Error context** - Errors include proper context and original error information
-
-### Error Responses
-
-- [ ] **401 Unauthorized** - Redirects to `/auth/login` (client-side) or returns 401 (API)
-- [ ] **400 Bad Request** - Returns validation errors with details
-- [ ] **500 Internal Server Error** - Returns generic error message (doesn't leak implementation details)
-- [ ] **Error logging** - Server errors logged with proper context
-- [ ] **User messages** - Error messages are user-friendly and actionable
-
-## Security
-
-### Authentication & Authorization
-
-- [ ] **Middleware protection** - Protected routes use middleware (`src/middleware/index.ts`)
-- [ ] **API authentication** - API routes verify user authentication
-- [ ] **User isolation** - Users can only access their own data (RLS policies)
-- [ ] **JWT tokens** - Authentication uses JWT tokens in Authorization header
-- [ ] **Password requirements** - Password validation (minimum 8 characters, letters and numbers)
-
-### Data Security
-
-- [ ] **Service role key** - Service role key only used server-side, never exposed to client
-- [ ] **Environment variables** - Sensitive data in environment variables, not hardcoded
-- [ ] **Input validation** - All user inputs validated (client and server-side)
-- [ ] **SQL injection** - Uses parameterized queries (Supabase handles this)
-- [ ] **XSS prevention** - User-generated content properly sanitized
-
-### API Security
-
-- [ ] **CORS** - CORS properly configured (if needed)
-- [ ] **Rate limiting** - Consider rate limiting for API endpoints (future enhancement)
-- [ ] **Request validation** - All API requests validated with Zod schemas
-
-## Testing
-
-### Unit Tests
-
-- [ ] **Test coverage** - New code has unit tests (Vitest)
-- [ ] **Test location** - Tests in `src/test/unit/` directory
-- [ ] **Test naming** - Test files follow `*.test.tsx` or `*.test.ts` pattern
-- [ ] **React Testing Library** - Component tests use React Testing Library
-- [ ] **MSW mocking** - API calls mocked with MSW (Mock Service Worker)
-
-### Integration Tests
-
-- [ ] **API tests** - API endpoints have integration tests (Supertest)
-- [ ] **Test location** - Tests in `src/test/integration/` directory
-- [ ] **Database mocking** - Database operations properly mocked
-
-### E2E Tests
-
-- [ ] **Playwright tests** - Critical user flows have E2E tests
-- [ ] **Test location** - Tests in `src/test/e2e/` directory
-- [ ] **Page objects** - Uses page object model pattern
-- [ ] **Test naming** - Test files follow `*.spec.ts` pattern
-
-## Internationalization (i18n)
-
-### Translation System
-
-- [ ] **Translation provider** - Uses `TranslationProvider` for language management
-- [ ] **Translation hook** - Uses `useTranslation()` hook for translations
-- [ ] **Translation files** - Translations in `src/lib/i18n/translations/en.json` and `pl.json`
-- [ ] **Translation keys** - Keys organized by feature (auth._, common._, nav.\*, etc.)
-- [ ] **Language storage** - Language preference stored in database (authenticated) or localStorage (unauthenticated)
-
-### Language Support
-
-- [ ] **Language selector** - Language can be switched (EN/PL)
-- [ ] **Default language** - Default language is English (en)
-- [ ] **Language persistence** - Language preference persists across sessions
-- [ ] **Terms content** - Terms and Privacy Policy content loaded based on current language
-
-## Theme Management
-
-### Theme System
-
-- [ ] **Theme provider** - Uses `ThemeProvider` for theme management
-- [ ] **Theme hook** - Uses `useTheme()` hook for theme access
-- [ ] **Theme storage** - Theme preference stored in database (authenticated) or localStorage (unauthenticated)
-- [ ] **Theme toggle** - Theme can be switched (light/dark)
-- [ ] **CSS variables** - Shadcn/ui components use CSS variables for theming
-- [ ] **Dark mode styles** - Dark mode styles use `dark:` Tailwind variant
-
-## Performance
-
-### Optimization
-
-- [ ] **Code splitting** - React components loaded with `client:load` directive
-- [ ] **Lazy loading** - `React.lazy()` used for code splitting where appropriate
-- [ ] **Memoization** - `useMemo`, `useCallback` used for expensive operations
-- [ ] **Debouncing** - Search inputs debounced (use `useDebounce` hook)
-- [ ] **Image optimization** - Images optimized (Astro Image integration when used)
-
-### Bundle Size
-
-- [ ] **No unnecessary imports** - Only necessary imports included
-- [ ] **Tree shaking** - Code is tree-shakeable
-- [ ] **Bundle analysis** - Consider bundle size impact for large dependencies
-
-## Documentation
-
-### Code Documentation
-
-- [ ] **Function comments** - Complex functions have JSDoc comments
-- [ ] **Type comments** - Complex types have comments explaining purpose
-- [ ] **README updates** - README updated if project structure changes
-- [ ] **Migration comments** - Database migrations have thorough comments
-
-### Implementation Plans
-
-- [ ] **Documentation files** - New features have implementation plans in `.ai/` directory (if applicable)
-- [ ] **PRD updates** - Product Requirements Document updated if scope changes
-
-## Specific Feature Compliance
-
-### Meal Plans
-
-- [ ] **Data structure** - Meal plan data matches `MealPlanContent` interface
-- [ ] **API endpoints** - Uses correct API endpoints (`/api/meal-plans`)
-- [ ] **Export functionality** - Export generates .doc file correctly
-- [ ] **Editor functionality** - Editor supports create and edit modes
-
-### AI Chat
-
-- [ ] **Session management** - AI chat sessions properly created and managed
-- [ ] **Message history** - Message history stored in database
-- [ ] **Error handling** - AI API errors properly handled and displayed
-
-### Authentication
-
-- [ ] **Supabase Auth** - Uses Supabase Auth SDK for authentication
-- [ ] **Session management** - Session properly managed (cookies, JWT tokens)
-- [ ] **Password reset** - Password reset flow works correctly
-- [ ] **Account deletion** - Account deletion properly cleans up data
-
-### User Preferences
-
-- [ ] **Language preference** - Language preference stored and retrieved correctly
-- [ ] **Theme preference** - Theme preference stored and retrieved correctly
-- [ ] **Terms acceptance** - Terms acceptance stored with timestamp
-
-## Checklist Summary
-
-### Critical (Must Fix)
-
-- [ ] Security vulnerabilities
-- [ ] TypeScript errors
-- [ ] Authentication/authorization issues
-- [ ] Database RLS policy issues
-- [ ] Breaking changes to API contracts
-
-### Important (Should Fix)
-
-- [ ] Error handling gaps
-- [ ] Missing type annotations
-- [ ] Accessibility issues
-- [ ] Performance issues
-- [ ] Missing tests for critical paths
-
-### Nice to Have (Consider Fixing)
-
-- [ ] Code style improvements
-- [ ] Additional test coverage
-- [ ] Documentation improvements
-- [ ] Performance optimizations
-- [ ] UX improvements
+- [ ] **Atomic Transactions** - Critical multi-table operations implemented as PostgreSQL RPCs with `SECURITY DEFINER` and transactions:
+  - `create_reservation_atomic`: Checks availability, deducts credits, inserts booking, logs to history.
+  - `modify_reservation_dates_with_credits`: Recalculates cost difference, updates dates, adjusts credit balance.
+  - `bulk_update_reservations_status`: Atomically transitions statuses and processes cancellation refunds.
+  - `refund_reservation_credits`: Refunds credits and logs ledger transaction.
+  - `create_credit_request_atomic` / `review_credit_request_atomic`: Creates or reviews credit requests and helper splits.
+- [ ] **Integrity Constraints** - Booking dates protected by `end_date >= start_date` and PostgreSQL exclusion constraints (`btree_gist`) to prevent date overlaps on the same equipment.
+- [ ] **Audit Triggers** - `log_reservation_changes` trigger active on `reservations`; `update_updated_at` active on timestamped tables.
 
 ---
 
-## Usage
+## 6. Domain-Specific Feature Compliance
 
-This checklist can be used:
+### Equipment & Inventory
 
-1. **Before submitting PR** - Self-review your changes
-2. **During code review** - Reviewers can use this to ensure completeness
-3. **As a command** - Reference this file in Cursor with `@code-review-checklist.md` when reviewing code
+- [ ] **Equipment Statuses** - Status matches enum: `ok`, `broken`, `blocked`.
+- [ ] **Archived Equipment** - `is_archived = true` items excluded from public listing and new reservations.
+- [ ] **Maintenance Logging** - Equipment status transitions recorded in `maintenance_logs` via the service layer.
+- [ ] **Image Storage** - Equipment images referenced by relative path (`image_path`) in Supabase Storage `equipment` bucket.
+- [ ] **Top Favorites Ranking** - Top 3 rented equipment items per type ranked first in search results.
 
-## Notes
+### Reservations & Pricing Flow
 
-- Not all items may be applicable to every change
-- Focus on items relevant to the specific change being reviewed
-- Use this as a guide, not a strict requirement for every single item
-- Prioritize security, type safety, and error handling
+- [ ] **Day Calculation Rule** - Uses `validation.CalculateDays(start, end)`: inclusive formula (`end - start + 1`), minimum 1 day.
+- [ ] **Pricing Formula** - `Cost = Days × CreditCostPerDay` from `EquipmentType`.
+- [ ] **Free Reservations** - `is_free = true` reservations charge 0 credits and skip refund transactions on cancellation/adjustment.
+- [ ] **Status State Machine**:
+  - `PENDING` → `RENTED` (Admin approval / equipment pickup)
+  - `PENDING` → `CANCELLED` (User or Admin cancellation; triggers credit refund)
+  - `PENDING` → `RETURNED` (User self-return if allowed)
+  - `RENTED` → `RETURNED` (Admin confirmed return)
+- [ ] **Permission Boundaries** - Regular users can only modify/cancel their **own PENDING** reservations. Non-pending reservations are immutable for regular users.
+
+### Credit System & Ledger
+
+- [ ] **Immutable History** - Every credit balance change creates a corresponding row in `credit_history` with an appropriate reason:
+  - `reservation_charge`, `reservation_refund`, `reservation_adjustment`, `admin_adjustment`, `work_credit`.
+- [ ] **Helper Distribution** - Credit requests with multiple helpers correctly record entries in `credit_request_helpers` and distribute credits atomically upon admin approval.
+- [ ] **Leaderboard** - Credit totals computed via `get_credit_leaderboard` RPC.
 
 ---
 
-**Last Updated**: 2025-01-25
-**Version**: 1.0
+## 7. Testing Standards
+
+### Go Backend Tests
+
+- [ ] **Table-Driven Tests** - Unit tests structured with descriptive `t.Run("scenario", func(t *testing.T) { ... })` cases.
+- [ ] **Centralized Mocks** - Uses mock implementations from `backend/internal/testutils/mocks/` (no duplicate mock definitions in test files).
+- [ ] **Test Request Helpers** - Uses `testutils.NewAuthenticatedRequest()` and `httptest.NewRecorder()` for handler tests.
+- [ ] **Mock Assertions** - Tests verify mock interactions with `mock.AssertExpectations(t)` and negative assertions with `mock.AssertNotCalled()`.
+- [ ] **Integration Test Separation** - Integration tests marked with `//go:build integration` header and follow `Test<Method>_<Scenario>_<ExpectedBehavior>` naming.
+- [ ] **Fixture Teardown** - Integration tests use `setupTestFixture(t)` with `defer fixture.teardown()`. No `time.Sleep()` used for synchronization.
+
+### Frontend Unit Tests (Vitest)
+
+- [ ] **Test File Location** - Tests placed alongside components in `__tests__/` or `src/test/unit/`.
+- [ ] **Top-Level Mocks** - `vi.mock()` factories placed at the top level of test files.
+- [ ] **QueryClient Isolation** - React components tested using `renderWithQueryClient()` with a fresh `createTestQueryClient()`.
+- [ ] **Centralized Fixtures** - Mocks generated using `src/test/fixtures/` (`createMockUser()`, `createMockSessionInfo()`, `createMockUserDTO()`).
+- [ ] **DOM Environment** - Component tests configured with `// @vitest-environment jsdom`.
+
+### Frontend E2E Tests (Playwright)
+
+- [ ] **Mobile Viewport** - Tests configured and validated for mobile viewport (Pixel 5: 393×851px).
+- [ ] **Resilient Selectors** - Uses semantic `data-testid` in `kebab-case` (`{feature}-{element}-{variant?}`) placed on target interactive elements.
+- [ ] **Page Object Model** - Complex flows organized using Page Objects under `e2e/`.
+- [ ] **No Magic Constants** - Timeouts, test IDs, and test configurations imported from `e2e/constants/`.
+- [ ] **Test Isolation** - State cleaned up between tests (`beforeEach` / `afterEach`); isolated fixtures used for mutating tests.
+
+---
+
+## 8. Observability & Operations
+
+- [ ] **Prometheus Metrics** - New backend metrics registered in `backend/cmd/api/main.go` on dedicated internal port `:9091` (`/metrics`).
+- [ ] **Service Role in Background Metrics** - Background database metric collectors inject Service Role Key into context to bypass RLS.
+- [ ] **Grafana Dashboards** - New metric panels defined in `infra/grafana/provisioning/dashboards/magazyn.json` using `job="prometheus.scrape.magazyn_backend"`.
+- [ ] **Operational Tooling** - Deployment, backup, rollback, and sanity procedures compatible with `./admin.sh`.
+
+---
+
+## 9. Review Triage & Severity Matrix
+
+### 🔴 Critical (Must Fix Before Merge)
+
+- PostgREST injection risks (missing `validation.SanitizeSearchTerm` on `ILIKE` inputs).
+- Authentication or authorization bypasses; trusting client-supplied roles instead of backend `sessionInfo`.
+- Broken database transactions or mutations performed outside atomic RPC stored procedures.
+- Double-booking vulnerabilities or missing exclusion constraints.
+- Inconsistent credit ledger updates (credit balance modified without `credit_history` entry).
+- Broken build, lint errors, or TypeScript type failures.
+
+### 🟡 Important (Should Fix)
+
+- Missing unit tests for new business logic, query binders, or transformers.
+- Violations of the 3-tier component architecture (mixing container state with presentation tables/forms).
+- Component size exceeding 300 lines of code.
+- Hardcoded URLs or route strings instead of `ROUTES` constants.
+- Inline user-facing text instead of centralized UI string constants.
+- Missing error boundary or unhandled error/loading states in UI islands.
+
+### 🟢 Nice to Have (Suggestions & Polish)
+
+- Minor styling adjustments or layout optimizations.
+- Code deduplication that does not affect current architecture boundaries.
+- Additional inline TSDoc/Godoc documentation comments for internal functions.
+
+---
+
+## 10. Usage Instructions
+
+**AI Pair Programming**: Mention `@code-review-checklist.md` in prompts when asking for code review or architectural verification.
+
+---
+
+**Last Updated**: 2026-11-03  
+**Version**: 2.0  
 **Project**: Magazyn

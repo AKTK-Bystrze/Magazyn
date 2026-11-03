@@ -1,6 +1,6 @@
 # Project Structure Plan (Final Recommended Version)
 
-This document describes the finalized project structure for the Magazyn application, incorporating the recommended improvements. The architecture follows a clean monorepo pattern, separating frontend, backend, infrastructure, and database management.
+This document describes the project structure for the Magazyn application. The architecture follows a clean monorepo pattern, separating frontend, backend, infrastructure, and database management.
 
 ---
 
@@ -33,12 +33,17 @@ This structure cleanly separates concerns:
 Magazyn/frontend/
 ├── src/
 │   ├── components/        # Reusable React UI components
+│   ├── db/                # Supabase database types
+│   ├── hooks/             # Domain React hooks (reservations, equipment, cart)
 │   ├── layouts/           # Astro layout files
-│   ├── lib/               # Services and helpers
+│   ├── lib/               # Services, API clients, auth, and helpers
 │   │   ├── api/           # API clients and logic
-│   │   ├── auth/          # Authentication utilities
-│   ├── pages/             # Astro routed pages
-│   └── types/             # Shared TypeScript types
+│   │   ├── auth/          # Authentication & session utilities
+│   ├── middleware/        # Astro SSR auth & session middleware
+│   ├── pages/             # Astro routed pages & /api BFF proxies
+│   ├── styles/            # Global styles and Tailwind configuration
+│   ├── test/              # Shared fixtures and test utilities
+│   └── types/             # Shared TypeScript types and DTOs
 ├── public/                # Static assets (served as-is)
 │   ├── favicon.png        # Site favicon
 │   ├── logo-bystrze-kolor.png           # Brand logo (light theme)
@@ -67,15 +72,6 @@ The `public/` folder contains static assets that are served directly without pro
   - Theme switching is handled via Tailwind's `dark:` variant (e.g., `class="block dark:hidden"`)
 - **Placeholders**: Static SVG placeholders for missing images
 
-**Theme-Aware Asset Pattern:**
-
-```html
-<!-- Light theme logo -->
-<img src="/logo-bystrze-kolor.png" class="block dark:hidden" />
-<!-- Dark theme logo -->
-<img src="/bystrze-logo-czarno-biale.png" class="hidden dark:block" />
-```
-
 ---
 
 ## ⚙️ Backend (Go API)
@@ -86,13 +82,19 @@ Magazyn/backend/
 │   └── api/
 │       └── main.go        # Application entry point
 ├── internal/
+│   ├── appcontext/        # Context keys & helpers
+│   ├── auth/              # Auth types & role constants
 │   ├── config/            # ENV / configuration loader
-│   ├── handler/           # HTTP request handlers
-│   ├── middleware/        # JWT validation via Supabase Auth
-│   ├── repository/        # Data access layer (PostgREST / Supabase)
-│   ├── service/           # Business logic
-│   └── types/             # Shared Go types + domain models
-├── pkg/                   # Optional reusable utilities
+│   ├── constants/         # Domain status & limit constants
+│   ├── handler/           # HTTP request handlers & query binders
+│   ├── logger/            # Structured logging
+│   ├── metrics/           # Prometheus metrics server
+│   ├── middleware/        # Auth, RBAC, CORS, observability
+│   ├── repository/        # Data access layer (PostgREST / Supabase RPC)
+│   ├── service/           # Business logic & email notifications
+│   ├── testutils/         # Centralized test mocks & HTTP helpers
+│   ├── types/             # Shared Go types, domain models, DTOs
+│   └── validation/        # Search sanitizers, date bounds, pricing
 ├── go.mod
 └── go.sum
 ```
@@ -151,33 +153,6 @@ Magazyn/supabase/
 
 ---
 
-## 📄 .env.example
-
-A template for required environment variables:
-
-```
-# Supabase
-PUBLIC_SUPABASE_URL=
-PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-
-# Database (same as PUBLIC_SUPABASE_URL, stored separately for backend compatibility)
-# Note: Backend now uses PUBLIC_SUPABASE_URL directly
-# GO_DB_URI=  # Deprecated
-
-# Backend API
-PUBLIC_BACKEND_URL=
-
-# Server
-PORT=8080
-LOG_LEVEL=INFO
-CORS_ALLOWED_ORIGINS=http://localhost:4321,http://localhost:3000
-```
-
-This file prevents configuration drift and onboarding pain.
-
----
-
 ## 🛠️ Operational Tooling
 
 Operational and administration tasks are managed via `admin.sh`:
@@ -185,10 +160,4 @@ Operational and administration tasks are managed via `admin.sh`:
 - `./admin.sh backup` — Run database backups
 - `./admin.sh check` — Run system and environment sanity checks
 
-_(Note: Root `Makefile` and `scripts/` directory were planned enhancements not present in the repository; project tasks are run directly via `npm` / `go` CLI or `admin.sh`)._
-
 ---
-
-## ✅ Final Notes
-
-This structure is scalable, production-ready, and easy for contributors. It separates compute, cloud-managed state, and deployment concerns while staying familiar to both Go and JavaScript developers.

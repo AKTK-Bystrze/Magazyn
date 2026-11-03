@@ -8,7 +8,7 @@ This playbook provides actionable, step-by-step procedures for administering, de
 
 All routine and emergency administrative tasks are unified under [`admin.sh`](../../admin.sh).
 
-### Interactive Mode (Recommended for Newcomers)
+### Interactive Mode
 
 Simply run the script with no arguments:
 
@@ -17,21 +17,6 @@ Simply run the script with no arguments:
 ```
 
 This presents an interactive menu that automatically discovers available Git release tags and backup snapshots:
-
-```text
-==============================================
-           Magazyn Admin Cockpit
-==============================================
-  1) Deploy release tag
-  2) Rollback release (revert tag & restore DB)
-  3) Run system diagnostics (doctor)
-  4) Run sanity check
-  5) Create database backup snapshot
-  6) Restore database from snapshot
-  7) View system status & container health
-  8) Prune unused Docker images (free disk)
-  q) Exit
-```
 
 ### CLI Command Mode (For Automation & CI)
 
@@ -45,7 +30,8 @@ This presents an interactive menu that automatically discovers available Git rel
 ./admin.sh backup [tag]              # Create a pre-deploy or ad-hoc DB snapshot
 ./admin.sh restore <snap> -y         # Restore DB snapshot without confirmation prompt
 ./admin.sh status                    # View active tag, containers, disk space
-./admin.sh prune                     # Prune dangling/old images (free disk space)
+./admin.sh prune                     # Prune unused images, builder cache, dead containers (>48h)
+./admin.sh prune --all               # Deep prune (all unused images, cache, containers, networks)
 ```
 
 ---
@@ -62,6 +48,8 @@ This presents an interactive menu that automatically discovers available Git rel
   1. Free disk space on the host:
      ```bash
      ./admin.sh prune
+     # Or run deep prune if disk is critically exhausted:
+     ./admin.sh prune --all
      ```
   2. Run the doctor to verify disk and system health:
      ```bash

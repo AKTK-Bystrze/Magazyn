@@ -3,19 +3,9 @@ import { EquipmentManagerPage } from "../../page-objects/equipment-manager.pom";
 import { E2E_CONFIG, TEST_IDS } from "../../constants";
 import { hardDeleteEquipment } from "../../helpers/data-setup.helper";
 
-/**
- * Admin Equipment Manager E2E tests.
- * Tests the complete equipment lifecycle: create, list, edit, and archive.
- *
- * Uses adminPage fixture for authenticated admin access.
- */
 test.describe("Admin Equipment Manager", () => {
   let createdEquipmentId: string | null = null;
 
-  /**
-   * Cleanup: Hard-delete any equipment created during tests.
-   * This ensures no test data accumulation if tests fail mid-execution.
-   */
   test.afterEach(async ({ supabaseAdmin }) => {
     if (createdEquipmentId) {
       console.log(`[CLEANUP] Hard-deleting equipment: ${createdEquipmentId}`);
