@@ -29,9 +29,9 @@ services:
     networks:
       - magazyn-network
     # journald driver requires Linux with systemd. For local dev on macOS/Windows,
-    # override with docker-compose.override.yml using driver: "json-file".
+    # override with driver: "json-file".
     logging:
-      driver: "journald"
+      driver: "json-file"
       options:
         tag: "{{.Name}}"
 
@@ -77,7 +77,8 @@ services:
     networks:
       - magazyn-network
     logging:
-      driver: "journald"
+    # override with driver: "json-file".
+      driver: "json-file"
       options:
         tag: "{{.Name}}"
 
@@ -115,7 +116,8 @@ services:
     networks:
       - magazyn-network
     logging:
-      driver: "journald"
+    # override with driver: "json-file".
+      driver: "json-file"
       options:
         tag: "{{.Name}}"
 

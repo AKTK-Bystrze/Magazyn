@@ -159,30 +159,6 @@ Audit trail for reservation changes.
 
 ---
 
-## Views
-
-### analytics_equipment_stats
-
-Calculated statistics for equipment.
-
-- `equipment_id`
-- `equipment_name`
-- `total_reservations`
-- `total_days_rented`
-- `utilization_rate`
-
-### analytics_user_stats
-
-Calculated statistics for users.
-
-- `user_id`
-- `username`
-- `total_reservations`
-- `total_credits_spent`
-- `last_reservation_date`
-
----
-
 ## RPC Functions (Stored Procedures)
 
 ### create_reservation_atomic

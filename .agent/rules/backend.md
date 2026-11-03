@@ -1,6 +1,6 @@
 ---
 description: 
-globs: src/db/*.ts,src/middleware/*.ts,src/lib/*.ts
+globs: frontend/src/db/*.ts,frontend/src/middleware/*.ts,frontend/src/lib/*.ts
 alwaysApply: false
 ---
 ### Backend and Database
@@ -8,5 +8,5 @@ alwaysApply: false
 - Use Supabase for backend services, including authentication and database interactions.
 - Follow Supabase guidelines for security and performance.
 - Use Zod schemas to validate data exchanged with the backend.
-- Use supabase from context.locals in Astro routes instead of importing supabaseClient directly
-- Use SupabaseClient type from `src/db/supabase.client.ts`, not from `@supabase/supabase-js`
+- Astro App.Locals does NOT expose a Supabase client; use server-managed HttpOnly encrypted session cookie (`magazyn_sid`) and forward authenticated requests to the Go backend via Bearer token in `context.locals.accessToken`.
+- For database types, use `Database` from `frontend/src/db/database.types.ts`.

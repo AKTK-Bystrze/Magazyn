@@ -12,8 +12,8 @@ The following task matrix maps core development workflows directly to their impl
 | **Decompose UI Dialog / Component** | `frontend/src/components/{domain}/`<br/>`frontend/src/hooks/`<br/>`frontend/src/lib/hooks/` | Single Responsibility Principle (SRP): split into Container vs Presentation Island vs Subcomponent; extract shared form fields (`*FormFields.tsx`); isolate modal state to custom hooks (`use*Dialogs.ts`); use Radix/Shadcn dialog patterns; zero inline styles. | [Frontend Architecture](frontend/architecture.md)<br/>[Frontend Guidelines](frontend/guidelines.md) |
 | **Add DB Migration / RPC** | `supabase/migrations/`<br/>`backend/internal/repository/supabase/*_rpc.go`<br/>`backend/internal/types/` | Name migration `YYYYMMDDHHMMSS_*.sql`; use PostgreSQL transactions with `SECURITY DEFINER` for atomic multi-step mutations; encapsulate DB calls in `*_repository_rpc.go`; reflect schema and RPC parameters in database docs. | [Database Documentation](database/db-doc.md)<br/>[Backend Guide](backend/README.md) |
 | **Add Test Suite / Cases** | `backend/internal/.../*_test.go`<br/>`backend/internal/testutils/mocks/`<br/>`backend/internal/testutils/helpers.go`<br/>`frontend/src/**/__tests__/*`<br/>`frontend/src/test/fixtures/`<br/>`frontend/src/test/test-utils.tsx` | Backend: table-driven tests (`t.Run`), centralized mocks in `testutils/mocks/`, HTTP context helpers (`NewAuthenticatedRequest`). Frontend: Vitest + RTL, shared fixtures in `test/fixtures/`, `renderWithQueryClient` wrapper. Real assertions only—no dummy facades. | [Testing Standards](frontend/testing.md)<br/>[Backend Guide](backend/README.md) |
-| **Add Equipment Type / Inventory** | `backend/internal/repository/supabase/equipment_repository_*.go`<br/>`backend/internal/service/equipment/equipment_service_*.go`<br/>`backend/internal/handler/equipment/equipment_*.go`<br/>`frontend/src/components/equipment/` | Respect decomposed equipment sub-services (`equipment_service_mutation.go`, `equipment_service_availability.go`); use `equipment_query.go` binder for query parameters; validate status constants and ISO dates. | [Backend Guide](backend/README.md)<br/>[Frontend Architecture](frontend/architecture.md) |
-| **Modify Reservation Flow** | `backend/internal/service/reservation/pricing.go`<br/>`backend/internal/service/reservation/reservation_service_create.go`<br/>`backend/internal/service/reservation/reservation_service_update.go`<br/>`backend/internal/repository/supabase/reservation_repository_rpc.go`<br/>`frontend/src/hooks/useCartCheckout.ts`<br/>`frontend/src/components/reservations/` | Pricing formulas strictly located in `pricing.go` via `validation.CalculateDays()`; credit deduction and refunds through atomic DB RPCs (`create_reservation_atomic`, `modify_reservation_dates_with_credits`); keep audit trail in `credit_history`. | [Reservation Flow](flows/reservation-flow.md)<br/>[Backend Guide](backend/README.md)<br/>[Database Documentation](database/db-doc.md) |
+| **Add Equipment Type / Inventory** | `backend/internal/repository/supabase/equipment_repository_*.go`<br/>`backend/internal/service/equipment/`<br/>`backend/internal/handler/equipment/equipment_*.go`<br/>`frontend/src/components/equipment/` | Respect decomposed equipment services (`equipment_service.go`, `equipment_service_mutation.go`); use `equipment_query.go` binder for query parameters; validate status constants and ISO dates. | [Backend Guide](backend/README.md)<br/>[Frontend Architecture](frontend/architecture.md) |
+| **Modify Reservation Flow** | `backend/internal/validation/date.go`<br/>`backend/internal/service/reservation/reservation_service_create.go`<br/>`backend/internal/service/reservation/reservation_service_update.go`<br/>`backend/internal/repository/supabase/reservation_repository_rpc.go`<br/>`frontend/src/hooks/useReservationCart.ts`<br/>`frontend/src/components/reservations/` | Pricing formulas strictly located in `backend/internal/validation/date.go` via `validation.CalculateDays()` & `validation.CalculateReservationCost()`; credit deduction and refunds through atomic DB RPCs (`create_reservation_atomic`, `modify_reservation_dates_with_credits`); keep audit trail in `credit_history`. | [Reservation Flow](flows/reservation-flow.md)<br/>[Backend Guide](backend/README.md)<br/>[Database Documentation](database/db-doc.md) |
 
 ---
 
@@ -56,6 +56,13 @@ Backend rules and guidelines (e.g. testing, docker, db migrations) are maintaine
 ## 🗄️ Database
 
 - [Database Documentation](database/db-doc.md) - Authoritative schema documentation and RPCs
+
+---
+
+## 🛠️ Operations & Observability
+
+- [Disaster Recovery & Operations Playbook](operations/recovery_playbook.md) - Admin CLI cockpit (`admin.sh`), backup/restore, and deployment runbooks
+- [Metrics & Observability Guide](METRICS.md) - Prometheus, Grafana Alloy, and backend observability
 
 ---
 

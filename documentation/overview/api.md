@@ -65,12 +65,8 @@ The backend registers routes directly on standard `net/http` ServeMux (no `/api/
 │       ├── PUT   /credits/requests/{id}         # Auth: update credit request
 │       └── PATCH /credits/requests/{id}/status  # SuperAdmin: approve/reject credit request
 │
-├── /calendar
-│   └── GET  /calendar/availability              # Auth: equipment calendar availability
-│
-└── /analytics
-    ├── GET  /analytics/equipment-stats          # Admin, SuperAdmin: equipment utilization statistics
-    └── GET  /analytics/user-stats               # Admin, SuperAdmin: user activity statistics
+└── /calendar
+    └── GET  /calendar/availability              # Auth: equipment calendar availability
 ```
 
 _Note: Prometheus metrics are served on an internal HTTP server on port `:9091` (`/metrics`)._
@@ -84,6 +80,8 @@ Astro server-side endpoints proxy incoming browser requests to the Go backend (`
 | Astro Route                            | Methods                  | Backend Target                     | Description                                       |
 | -------------------------------------- | ------------------------ | ---------------------------------- | ------------------------------------------------- |
 | `/api/auth/login`                      | `POST`                   | `/auth/login`                      | Login handler                                     |
+| `/api/auth/callback`                   | `GET`, `POST`            | Supabase / `/auth/session`         | Magic link handoff & session cookie issuance      |
+| `/api/auth/session`                    | `GET`                    | `/auth/session`                    | Current session validation & profile info         |
 | `/api/auth/logout`                     | `POST`                   | Local / Backend                    | Clear session cookies & sign out                  |
 | `/api/users`                           | `GET`, `POST`            | `/users`                           | List users (`GET`), create user (`POST`)          |
 | `/api/users/me`                        | `GET`                    | `/users/me`                        | Current user profile                              |
@@ -105,8 +103,6 @@ Astro server-side endpoints proxy incoming browser requests to the Go backend (`
 | `/api/credits/requests/[id]`           | `PUT`                    | `/credits/requests/{id}`           | Update credit request                             |
 | `/api/credits/requests/[id]/status`    | `PATCH`                  | `/credits/requests/{id}/status`    | SuperAdmin review/status change                   |
 | `/api/calendar/availability`           | `GET`                    | `/calendar/availability`           | Calendar view availability                        |
-| `/api/analytics/equipment-stats`       | `GET`                    | `/analytics/equipment-stats`       | Equipment analytics view                          |
-| `/api/analytics/user-stats`            | `GET`                    | `/analytics/user-stats`            | User activity analytics view                      |
 
 ---
 

@@ -2,35 +2,37 @@
 trigger: always_on
 ---
 
-# AI Rules for {app-name}
+# AI Rules for Magazyn
 
-{project-description}
+Club equipment rental system with credit-based billing, inventory management, and calendar availability tracking.
 
 ## Tech Stack
 
-- Astro 5
-- TypeScript 5
+- Astro 7
+- TypeScript 6
 - React 19
 - Tailwind 4
 - Shadcn/ui
-- go
+- Go 1.27
 
 ## Project Structure
 
 When introducing changes to the project, always follow the directory structure below:
 
-- `./src` - source code
-- `./src/layouts` - Astro layouts
-- `./src/pages` - Astro pages
-- `./src/pages/api` - API endpoints
-- `./src/middleware/index.ts` - Astro middleware
-- `./src/db` - Supabase clients and types
-- `./src/types.ts` - Shared types for backend and frontend (Entities, DTOs)
-- `./src/components` - Client-side components written in Astro (static) and React (dynamic)
-- `./src/components/ui` - Client-side components from Shadcn/ui
-- `./src/lib` - Services and helpers
-- `./src/assets` - static internal assets
-- `./public` - public assets
+- `./frontend/src` - Frontend source code
+- `./frontend/src/layouts` - Astro layouts
+- `./frontend/src/pages` - Astro pages
+- `./frontend/src/pages/api` - BFF API proxy endpoints
+- `./frontend/src/middleware/index.ts` - Astro SSR auth and session middleware
+- `./frontend/src/db` - Supabase generated database types
+- `./frontend/src/types` - Frontend TypeScript types and DTOs
+- `./frontend/src/components` - UI components in Astro (static) and React (dynamic)
+- `./frontend/src/components/ui` - Primitives from Shadcn/ui
+- `./frontend/src/lib` - API clients, auth helpers, transformers, and utilities
+- `./frontend/public` - Static public assets
+- `./backend` - Go API backend (`cmd/api`, `internal/`)
+- `./infra` - Docker Compose, Caddyfile, and operations scripts
+- `./supabase` - PostgreSQL migrations and seed data
 
 When modifying the directory structure, always update this section.
 

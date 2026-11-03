@@ -33,12 +33,17 @@ This structure cleanly separates concerns:
 Magazyn/frontend/
 ├── src/
 │   ├── components/        # Reusable React UI components
+│   ├── db/                # Supabase database types
+│   ├── hooks/             # Domain React hooks (reservations, equipment, cart)
 │   ├── layouts/           # Astro layout files
-│   ├── lib/               # Services and helpers
+│   ├── lib/               # Services, API clients, auth, and helpers
 │   │   ├── api/           # API clients and logic
-│   │   ├── auth/          # Authentication utilities
-│   ├── pages/             # Astro routed pages
-│   └── types/             # Shared TypeScript types
+│   │   ├── auth/          # Authentication & session utilities
+│   ├── middleware/        # Astro SSR auth & session middleware
+│   ├── pages/             # Astro routed pages & /api BFF proxies
+│   ├── styles/            # Global styles and Tailwind configuration
+│   ├── test/              # Shared fixtures and test utilities
+│   └── types/             # Shared TypeScript types and DTOs
 ├── public/                # Static assets (served as-is)
 │   ├── favicon.png        # Site favicon
 │   ├── logo-bystrze-kolor.png           # Brand logo (light theme)
@@ -77,13 +82,19 @@ Magazyn/backend/
 │   └── api/
 │       └── main.go        # Application entry point
 ├── internal/
+│   ├── appcontext/        # Context keys & helpers
+│   ├── auth/              # Auth types & role constants
 │   ├── config/            # ENV / configuration loader
-│   ├── handler/           # HTTP request handlers
-│   ├── middleware/        # JWT validation via Supabase Auth
-│   ├── repository/        # Data access layer (PostgREST / Supabase)
-│   ├── service/           # Business logic
-│   └── types/             # Shared Go types + domain models
-├── pkg/                   # Optional reusable utilities
+│   ├── constants/         # Domain status & limit constants
+│   ├── handler/           # HTTP request handlers & query binders
+│   ├── logger/            # Structured logging
+│   ├── metrics/           # Prometheus metrics server
+│   ├── middleware/        # Auth, RBAC, CORS, observability
+│   ├── repository/        # Data access layer (PostgREST / Supabase RPC)
+│   ├── service/           # Business logic & email notifications
+│   ├── testutils/         # Centralized test mocks & HTTP helpers
+│   ├── types/             # Shared Go types, domain models, DTOs
+│   └── validation/        # Search sanitizers, date bounds, pricing
 ├── go.mod
 └── go.sum
 ```

@@ -14,9 +14,9 @@ This document outlines the architecture for a public-facing Rental Application.
 
 **Core Framework:**
 
-- **Astro 5:** Configured for SSR (output: 'server') to handle SEO and dynamic content.
+- **Astro 7:** Configured for SSR (output: 'server') to handle SEO and dynamic content.
 - **React 19:** Interactive components (Cart, Calendar, Checkout).
-- **TypeScript 5:** Shared types between Frontend and Backend.
+- **TypeScript 6:** Shared types between Frontend and Backend.
 
 **State & API:**
 
@@ -25,7 +25,7 @@ This document outlines the architecture for a public-facing Rental Application.
 
 ### 2. Backend Layer (Go)
 
-- **Language:** Go (Golang).
+- **Language:** Go (Golang 1.27).
 - **Role:** Stateless Business Logic.
 - **API:** Exposes REST endpoints (e.g., `POST /reservations`, `GET /equipment/{id}/availability`, `GET /calendar/availability`).
 - **Email:** Uses Noop Email Service (mock implementation) for transactional emails (Reservation Confirmations).
