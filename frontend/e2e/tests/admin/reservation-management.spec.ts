@@ -34,18 +34,9 @@ async function cancelReservationViaUI(adminPage: Page, row: Locator) {
   await expect(confirmButton).toBeHidden({ timeout: 10000 });
 }
 
-/**
- * Admin Reservation Management E2E tests.
- * Covers scenarios where an Admin creates and manages reservations for other users.
- */
 test.describe.serial("Admin Reservation Management", () => {
   let initialUserCredits: number;
 
-  /**
-   * Setup:
-   * 1. Captures initial PUBLIC user credits (not admin) to support restoration.
-   *    Note: Admin uses their own session but creates reservation for the public test user.
-   */
   test.beforeEach(async ({ supabaseAdmin, testUser }) => {
     const { data } = await supabaseAdmin
       .from("profiles")
@@ -56,27 +47,10 @@ test.describe.serial("Admin Reservation Management", () => {
     initialUserCredits = data?.credit_balance ?? E2E_CONFIG.DEFAULTS.INITIAL_CREDITS;
   });
 
-  /**
-   * Teardown:
-   * Restores the PUBLIC user's credit balance.
-   */
   test.afterEach(async ({ supabaseAdmin, testUser }) => {
     await restoreCredits(supabaseAdmin, testUser.id, initialUserCredits);
   });
 
-  /**
-   * Scenario: Admin creates reservation for user and cancels it
-   *
-   * Steps:
-   * 1. Login as Admin.
-   * 2. Add item to Admin's cart.
-   * 3. In Cart, select the Standard Test User as the target.
-   * 4. Checkout.
-   * 5. Verify success.
-   * 6. Go to All Reservations.
-   * 7. Find the reservation and mark as Cancelled.
-   * 8. Verify status.
-   */
   test("Happy Path: Admin creates reservation for user and cancels it", async ({
     adminPage,
     testUser,
@@ -119,19 +93,6 @@ test.describe.serial("Admin Reservation Management", () => {
     await expect(statusBadge).toContainText(/Anulowan[ao]/);
   });
 
-  /**
-   * Scenario: Admin creates free reservation for user
-   *
-   * Steps:
-   * 1. Login as Admin.
-   * 2. Add item to Admin's cart.
-   * 3. In Cart, select the Standard Test User as the target.
-   * 4. Enable "Free Reservation" checkbox.
-   * 5. Verify cost shows 0.
-   * 6. Checkout.
-   * 7. Verify user's balance is unchanged.
-   * 8. Verify reservation was created with 0 cost.
-   */
   test("Happy Path: Admin creates free reservation for user", async ({
     adminPage,
     testUser,
@@ -193,16 +154,6 @@ test.describe.serial("Admin Reservation Management", () => {
     await expect(statusBadge).toContainText("Przyszła");
   });
 
-  /**
-   * Scenario: Cancelling a free reservation does not refund credits
-   *
-   * Steps:
-   * 1. Login as Admin.
-   * 2. Create a free reservation for the test user.
-   * 3. Navigate to All Reservations.
-   * 4. Cancel the reservation via the UI.
-   * 5. Verify the user's credit balance is unchanged.
-   */
   test("Free Reservation: Cancelling does not refund credits", async ({
     adminPage,
     testUser,

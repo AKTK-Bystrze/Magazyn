@@ -7,10 +7,6 @@ test.describe("Admin User Management", () => {
   let targetUserEmail: string;
   let targetUserId: string;
 
-  /**
-   * Setup: Create a dedicated target user for the admin to manipulate.
-   * This isolates the test from the shared testUser and avoids race conditions.
-   */
   test.beforeEach(async ({ supabaseAdmin, workerIndex }) => {
     const timestamp = Date.now();
     targetUserEmail = `admin_test_target_${workerIndex}_${timestamp}@example.com`;
@@ -41,9 +37,6 @@ test.describe("Admin User Management", () => {
     }
   });
 
-  /**
-   * Teardown: Delete the target user.
-   */
   test.afterEach(async ({ supabaseAdmin }) => {
     if (targetUserId) {
       const { data: reservations, error: reservationLookupError } = await supabaseAdmin
