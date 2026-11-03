@@ -30,7 +30,8 @@ This presents an interactive menu that automatically discovers available Git rel
 ./admin.sh backup [tag]              # Create a pre-deploy or ad-hoc DB snapshot
 ./admin.sh restore <snap> -y         # Restore DB snapshot without confirmation prompt
 ./admin.sh status                    # View active tag, containers, disk space
-./admin.sh prune                     # Prune dangling/old images (free disk space)
+./admin.sh prune                     # Prune unused images, builder cache, dead containers (>48h)
+./admin.sh prune --all               # Deep prune (all unused images, cache, containers, networks)
 ```
 
 ---
@@ -47,6 +48,8 @@ This presents an interactive menu that automatically discovers available Git rel
   1. Free disk space on the host:
      ```bash
      ./admin.sh prune
+     # Or run deep prune if disk is critically exhausted:
+     ./admin.sh prune --all
      ```
   2. Run the doctor to verify disk and system health:
      ```bash
