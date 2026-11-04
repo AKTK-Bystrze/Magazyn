@@ -7,30 +7,11 @@ export type RefreshResult =
   | { success: true; session: MagazynSession }
   | { success: false; isRevoked: boolean; error?: string };
 
-const GRACE_PERIOD_MS = 30_000; // 30 seconds window for in-flight browser requests
-
-interface CachedSession {
-  session: MagazynSession;
-  expiresAt: number; // Date.now() timestamp
-}
-
 // In-flight refresh promises mapped by userId
 const activeRefreshes = new Map<string, Promise<RefreshResult>>();
 
-// Recently rotated tokens mapped by oldRefreshToken -> newSession
-const recentRefreshes = new Map<string, CachedSession>();
-
-/**
- * Cleans expired entries from the recentRefreshes grace cache.
- */
-function pruneGraceCache(): void {
-  const now = Date.now();
-  for (const [key, cached] of recentRefreshes.entries()) {
-    if (now >= cached.expiresAt) {
-      recentRefreshes.delete(key);
-    }
-  }
-}
+// Recently rotated tokens mapped by oldRefreshToken -> newSession (30s grace window)
+const recentRefreshes = new Map<string, MagazynSession>();
 
 /**
  * Executes or deduplicates a server-side session token refresh via Supabase.
@@ -46,12 +27,10 @@ export async function refreshUserSession(
   session: MagazynSession,
   supabase: SupabaseClient
 ): Promise<RefreshResult> {
-  pruneGraceCache();
-
   // 1. Check if this exact refresh token was already rotated during the grace period
   const cached = recentRefreshes.get(session.refreshToken);
-  if (cached && Date.now() < cached.expiresAt) {
-    return { success: true, session: cached.session };
+  if (cached) {
+    return { success: true, session: cached };
   }
 
   // 2. Check if a refresh for this user is already in flight
@@ -88,19 +67,16 @@ export async function refreshUserSession(
         expiresAt: data.session.expires_at ?? Math.floor(Date.now() / 1000) + 3600,
       };
 
-      // Store in grace cache under the old refresh token
-      recentRefreshes.set(session.refreshToken, {
-        session: newSession,
-        expiresAt: Date.now() + GRACE_PERIOD_MS,
-      });
+      // Store in grace cache under old refresh token with auto-eviction
+      recentRefreshes.set(session.refreshToken, newSession);
+      setTimeout(() => recentRefreshes.delete(session.refreshToken), 30_000).unref?.();
 
       return { success: true, session: newSession };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
       return {
         success: false,
         isRevoked: false,
-        error: message,
+        error: err instanceof Error ? err.message : String(err),
       };
     } finally {
       activeRefreshes.delete(session.userId);

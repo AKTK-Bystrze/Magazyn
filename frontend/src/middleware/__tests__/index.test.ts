@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   decryptSession: vi.fn(),
   encryptSession: vi.fn(),
   getUserSession: vi.fn(),
-  fetchUserSessionDetails: vi.fn(),
   refreshSession: vi.fn(),
   createClient: vi.fn(),
 }));
@@ -34,7 +33,6 @@ vi.mock("@/lib/auth/session-store", async (importOriginal) => {
 
 vi.mock("@/lib/auth/session-utils", () => ({
   getUserSession: (...args: unknown[]) => mocks.getUserSession(...args),
-  fetchUserSessionDetails: (...args: unknown[]) => mocks.fetchUserSessionDetails(...args),
 }));
 
 import { clearRefreshStateForTesting } from "@/lib/auth/session-refresh";
@@ -111,11 +109,10 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
     vi.clearAllMocks();
     clearRefreshStateForTesting();
 
-    mocks.fetchUserSessionDetails.mockImplementation(async (token: string) => {
-      const info = await mocks.getUserSession(token);
-      if (info) return { status: "ok", sessionInfo: info };
-      return { status: "unauthorized" };
-    });
+    mocks.getUserSession.mockImplementation(async () => ({
+      status: "ok",
+      sessionInfo: mockSessionInfo,
+    }));
 
     mockCookies = {
       get: vi.fn(),
@@ -168,7 +165,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         value: "encrypted-cookie-value",
       });
       mocks.decryptSession.mockResolvedValue(mockSession);
-      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+      mocks.getUserSession.mockResolvedValue({ status: "ok", sessionInfo: mockSessionInfo });
 
       const { context, redirectMock } = createMockContext("/dashboard");
       const response = await runMiddleware(context, nextMock);
@@ -192,7 +189,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         value: "encrypted-cookie-value",
       });
       mocks.decryptSession.mockResolvedValue(mockSession);
-      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+      mocks.getUserSession.mockResolvedValue({ status: "ok", sessionInfo: mockSessionInfo });
 
       const { context } = createMockContext("/dashboard");
       await runMiddleware(context, nextMock);
@@ -207,7 +204,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         value: "encrypted-cookie-value",
       });
       mocks.decryptSession.mockResolvedValue(mockSession);
-      mocks.getUserSession.mockResolvedValue(null);
+      mocks.getUserSession.mockResolvedValue({ status: "unauthorized" });
 
       const { context, redirectMock } = createMockContext("/dashboard");
       const response = await runMiddleware(context, nextMock);
@@ -226,7 +223,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         value: "encrypted-cookie-value",
       });
       mocks.decryptSession.mockResolvedValue(mockSession);
-      mocks.fetchUserSessionDetails.mockResolvedValue({
+      mocks.getUserSession.mockResolvedValue({
         status: "unavailable",
         error: "502 Bad Gateway",
       });
@@ -262,7 +259,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         },
         error: null,
       });
-      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+      mocks.getUserSession.mockResolvedValue({ status: "ok", sessionInfo: mockSessionInfo });
 
       const { context } = createMockContext("/dashboard");
       await runMiddleware(context, nextMock);
@@ -323,7 +320,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         data: { session: null },
         error: { message: "timed out", status: 500 },
       });
-      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+      mocks.getUserSession.mockResolvedValue({ status: "ok", sessionInfo: mockSessionInfo });
 
       const { context, redirectMock } = createMockContext("/dashboard");
       const response = await runMiddleware(context, nextMock);
@@ -387,7 +384,7 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
           error: null,
         };
       });
-      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+      mocks.getUserSession.mockResolvedValue({ status: "ok", sessionInfo: mockSessionInfo });
 
       const ctx1 = createMockContext("/dashboard");
       const ctx2 = createMockContext("/api/credits");
@@ -425,7 +422,10 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         value: "encrypted-cookie-value",
       });
       mocks.decryptSession.mockResolvedValue(mockSession);
-      mocks.getUserSession.mockResolvedValue({ ...mockSessionInfo, isEnabled: false });
+      mocks.getUserSession.mockResolvedValue({
+        status: "ok",
+        sessionInfo: { ...mockSessionInfo, isEnabled: false },
+      });
 
       const { context, redirectMock } = createMockContext("/api/reservations");
       const response = await runMiddleware(context, nextMock);
@@ -445,7 +445,10 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         value: "encrypted-cookie-value",
       });
       mocks.decryptSession.mockResolvedValue(mockSession);
-      mocks.getUserSession.mockResolvedValue({ ...mockSessionInfo, isEnabled: false });
+      mocks.getUserSession.mockResolvedValue({
+        status: "ok",
+        sessionInfo: { ...mockSessionInfo, isEnabled: false },
+      });
 
       const { context, redirectMock } = createMockContext("/dashboard");
       const response = await runMiddleware(context, nextMock);

@@ -8,33 +8,24 @@ export type SessionFetchResult =
   | { status: "unavailable"; error: string };
 
 /**
- * Fetches the user session from the backend with detailed status differentiation.
- *
- * Distinguishes between genuine token invalidation (401 Unauthorized) and transient
- * backend/network unavailability (5xx, timeouts, connection refused) to prevent
- * accidental session deletion during service hiccups.
+ * Fetches the user session from the backend with status differentiation.
  *
  * @param accessToken - Supabase access token
  * @returns Structured result indicating ok, unauthorized, or unavailable
  */
-export async function fetchUserSessionDetails(accessToken: string): Promise<SessionFetchResult> {
+export async function getUserSession(accessToken: string): Promise<SessionFetchResult> {
   try {
-    const headers = {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    };
-
-    const url = `${BACKEND_URL}/auth/session`;
-
-    const response = await fetch(url, {
+    const response = await fetch(`${BACKEND_URL}/auth/session`, {
       method: "GET",
-      headers,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
       cache: "no-store",
     });
 
     if (response.ok) {
-      const data = (await response.json()) as SessionInfo;
-      return { status: "ok", sessionInfo: data };
+      return { status: "ok", sessionInfo: (await response.json()) as SessionInfo };
     }
 
     if (response.status === 401) {
@@ -44,7 +35,6 @@ export async function fetchUserSessionDetails(accessToken: string): Promise<Sess
     const errorText = await response.text().catch(() => "");
     logger.error("❌ Backend session check unavailable", {
       status: response.status,
-      statusText: response.statusText,
       errorText,
     });
 
@@ -59,15 +49,4 @@ export async function fetchUserSessionDetails(accessToken: string): Promise<Sess
       error: error instanceof Error ? error.message : String(error),
     };
   }
-}
-
-/**
- * Fetches the current user's session information from the backend
- * Requires a valid access token
- * @param accessToken - Supabase access token
- * @returns SessionInfo or null if request fails
- */
-export async function getUserSession(accessToken: string): Promise<SessionInfo | null> {
-  const result = await fetchUserSessionDetails(accessToken);
-  return result.status === "ok" ? result.sessionInfo : null;
 }

@@ -9,10 +9,22 @@ import {
   SESSION_COOKIE_OPTIONS,
 } from "@/lib/auth/session-store";
 import { refreshUserSession } from "@/lib/auth/session-refresh";
-import { fetchUserSessionDetails } from "@/lib/auth/session-utils";
+import { getUserSession } from "@/lib/auth/session-utils";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { ApiErrors, handleApiError } from "@/lib/errors/api-error";
 import { StructuredLogger } from "@/lib/utils/logger";
+
+function unavailableResponse(isApi: boolean, message: string): Response {
+  if (isApi) throw ApiErrors.serviceUnavailable(message);
+  return new Response(message, {
+    status: 503,
+    headers: {
+      "Retry-After": "5",
+      "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
+      Pragma: "no-cache",
+    },
+  });
+}
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
@@ -66,19 +78,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
           } else if (Date.now() / 1000 >= session.expiresAt) {
             // Access token has expired and refresh encountered a transient error.
             // Do not wipe cookies (preserve 30-day session), but do not use expired JWT.
-            if (url.pathname.startsWith("/api/")) {
-              throw ApiErrors.serviceUnavailable("Authentication service temporarily unavailable");
-            }
-            return new Response(
-              "Usługa logowania jest tymczasowo niedostępna. Proszę odświeżyć stronę za chwilę.",
-              {
-                status: 503,
-                headers: {
-                  "Retry-After": "5",
-                  "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
-                  Pragma: "no-cache",
-                },
-              }
+            return unavailableResponse(
+              url.pathname.startsWith("/api/"),
+              "Usługa logowania jest tymczasowo niedostępna. Proszę odświeżyć stronę za chwilę."
             );
           }
         } else if (refreshResult.session) {
@@ -93,7 +95,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (session) {
       context.locals.accessToken = session.accessToken;
 
-      const fetchResult = await fetchUserSessionDetails(session.accessToken);
+      const fetchResult = await getUserSession(session.accessToken);
 
       if (fetchResult.status === "ok") {
         const sessionInfo = fetchResult.sessionInfo;
@@ -128,19 +130,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
           userId: session.userId,
           error: fetchResult.error,
         });
-        if (url.pathname.startsWith("/api/")) {
-          throw ApiErrors.serviceUnavailable("Backend service temporarily unavailable");
-        }
-        return new Response(
-          "Serwer jest chwilowo niedostępny. Proszę odświeżyć stronę za chwilę.",
-          {
-            status: 503,
-            headers: {
-              "Retry-After": "5",
-              "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
-              Pragma: "no-cache",
-            },
-          }
+        return unavailableResponse(
+          url.pathname.startsWith("/api/"),
+          "Serwer jest chwilowo niedostępny. Proszę odświeżyć stronę za chwilę."
         );
       }
     } else {

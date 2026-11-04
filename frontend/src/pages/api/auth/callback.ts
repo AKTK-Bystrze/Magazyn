@@ -107,13 +107,15 @@ export const POST: APIRoute = async ({ url, request, cookies, locals }) => {
   }
 
   // Fetch authoritative role + enabled status from the Go backend.
-  const sessionInfo = await getUserSession(accessToken);
-  if (!sessionInfo) {
+  const sessionRes = await getUserSession(accessToken);
+  if (sessionRes.status !== "ok") {
     locals.logger?.error("Magic link session info fetch failed from backend", {
       userId: data.user.id,
     });
     return Response.json({ error: "session_fetch_failed" }, { status: 502 });
   }
+
+  const sessionInfo = sessionRes.sessionInfo;
 
   const session: MagazynSession = {
     userId: data.user.id,
