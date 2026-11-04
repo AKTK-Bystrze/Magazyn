@@ -101,6 +101,11 @@ Database instance is created on Supabase. It can be started locally or remotely 
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SESSION_ENCRYPTION_KEY` (64-character hex string)
 
+   When running the application with Docker Compose and Supabase locally, also set
+   `INTERNAL_SUPABASE_URL=http://host.docker.internal:54321`. Keep
+   `PUBLIC_SUPABASE_URL=http://127.0.0.1:54321` for browser access; `127.0.0.1`
+   inside a container refers to that container, not the host.
+
    >When running on Windows replace "journald" driver driver with "json-file" in docker-compose.yaml file. Look for the detailed guidance in the file
 
 3. **Start Application**
