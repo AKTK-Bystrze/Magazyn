@@ -1,6 +1,6 @@
 import { defaultLogger as logger } from "@/lib/utils/logger";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getUserSession } from "../session-utils";
+import { getUserSession, fetchUserSessionDetails } from "../session-utils";
 import { createMockSessionInfo } from "@/test/fixtures/auth-fixtures";
 import type { SessionInfo } from "../../../types";
 
@@ -108,6 +108,59 @@ describe("getUserSession", () => {
       const result = await getUserSession("");
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe("fetchUserSessionDetails", () => {
+    it("should return ok with session info on 200", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockSessionInfo),
+        headers: new Headers(),
+      });
+
+      const result = await fetchUserSessionDetails(validAccessToken);
+      expect(result).toEqual({ status: "ok", sessionInfo: mockSessionInfo });
+    });
+
+    it("should return unauthorized on 401", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+        text: () => Promise.resolve("Invalid token"),
+        headers: new Headers(),
+      });
+
+      const result = await fetchUserSessionDetails(validAccessToken);
+      expect(result).toEqual({ status: "unauthorized" });
+    });
+
+    it("should return unavailable on 500 or 502", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        statusText: "Bad Gateway",
+        text: () => Promise.resolve("Bad Gateway"),
+        headers: new Headers(),
+      });
+
+      const result = await fetchUserSessionDetails(validAccessToken);
+      expect(result.status).toBe("unavailable");
+      if (result.status === "unavailable") {
+        expect(result.error).toContain("502");
+      }
+    });
+
+    it("should return unavailable on network error", async () => {
+      mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+
+      const result = await fetchUserSessionDetails(validAccessToken);
+      expect(result.status).toBe("unavailable");
+      if (result.status === "unavailable") {
+        expect(result.error).toContain("Connection refused");
+      }
     });
   });
 });

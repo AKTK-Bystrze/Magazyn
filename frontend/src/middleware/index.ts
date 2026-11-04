@@ -8,7 +8,8 @@ import {
   SESSION_COOKIE,
   SESSION_COOKIE_OPTIONS,
 } from "@/lib/auth/session-store";
-import { getUserSession } from "@/lib/auth/session-utils";
+import { refreshUserSession } from "@/lib/auth/session-refresh";
+import { fetchUserSessionDetails } from "@/lib/auth/session-utils";
 import { RedirectManager } from "@/lib/auth/redirect-manager";
 import { ApiErrors, handleApiError } from "@/lib/errors/api-error";
 import { StructuredLogger } from "@/lib/utils/logger";
@@ -38,7 +39,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     let session = rawCookie ? await decryptSession(rawCookie) : null;
 
     if (session) {
-      // Proactive server-side token refresh (60s before expiry)
+      // Proactive server-side token refresh (60s before expiry or already expired)
       if (Date.now() / 1000 >= session.expiresAt - 60) {
         logger.info("Access token near expiry, refreshing server-side", {
           userId: session.userId,
@@ -49,35 +50,39 @@ export const onRequest = defineMiddleware(async (context, next) => {
           process.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY
         );
 
-        const { data, error } = await supabase.auth.refreshSession({
-          refresh_token: session.refreshToken,
-        });
+        const refreshResult = await refreshUserSession(session, supabase);
 
-        if (error || !data.session) {
-          const authErr = error as { code?: string; message?: string; status?: number } | null;
-          const isRevoked =
-            Boolean(error) &&
-            ((authErr?.status !== undefined && authErr.status >= 400 && authErr.status < 500) ||
-              /revoked|expired|not_found|invalid/i.test(`${authErr?.code} ${authErr?.message}`));
-
+        if (!refreshResult.success) {
           logger.warn(
-            isRevoked
+            refreshResult.isRevoked
               ? "Refresh token expired or revoked, clearing session"
               : "Session refresh transient error",
-            { error: error?.message }
+            { error: refreshResult.error }
           );
 
-          if (isRevoked) {
+          if (refreshResult.isRevoked) {
             clearAllCookies(context.request, context.cookies);
             session = null;
+          } else if (Date.now() / 1000 >= session.expiresAt) {
+            // Access token has expired and refresh encountered a transient error.
+            // Do not wipe cookies (preserve 30-day session), but do not use expired JWT.
+            if (url.pathname.startsWith("/api/")) {
+              throw ApiErrors.serviceUnavailable("Authentication service temporarily unavailable");
+            }
+            return new Response(
+              "Usługa logowania jest tymczasowo niedostępna. Proszę odświeżyć stronę za chwilę.",
+              {
+                status: 503,
+                headers: {
+                  "Retry-After": "5",
+                  "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
+                  Pragma: "no-cache",
+                },
+              }
+            );
           }
-        } else {
-          session = {
-            userId: session.userId,
-            accessToken: data.session.access_token,
-            refreshToken: data.session.refresh_token,
-            expiresAt: data.session.expires_at ?? session.expiresAt,
-          };
+        } else if (refreshResult.session) {
+          session = refreshResult.session;
           const newCookieValue = await encryptSession(session);
           context.cookies.set(SESSION_COOKIE, newCookieValue, SESSION_COOKIE_OPTIONS);
           logger.info("Session refreshed and cookie rewritten");
@@ -88,10 +93,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (session) {
       context.locals.accessToken = session.accessToken;
 
-      const sessionInfo = await getUserSession(session.accessToken);
-      context.locals.sessionInfo = sessionInfo;
+      const fetchResult = await fetchUserSessionDetails(session.accessToken);
 
-      if (sessionInfo) {
+      if (fetchResult.status === "ok") {
+        const sessionInfo = fetchResult.sessionInfo;
+        context.locals.sessionInfo = sessionInfo;
         context.locals.user = {
           id: session.userId,
           email: sessionInfo.email ?? "",
@@ -107,14 +113,35 @@ export const onRequest = defineMiddleware(async (context, next) => {
           userId: session.userId,
           role: sessionInfo.role,
         });
-      } else {
-        logger.warn("User session invalid or unreachable, clearing auth state", {
+      } else if (fetchResult.status === "unauthorized") {
+        logger.warn("User session unauthorized, clearing auth state", {
           userId: session.userId,
         });
         clearAllCookies(context.request, context.cookies);
         context.locals.user = null;
         context.locals.sessionInfo = null;
         context.locals.accessToken = null;
+      } else {
+        // Backend service unavailable (5xx, timeout, network error).
+        // Preserves cookies so user is not logged out during transient blips.
+        logger.error("Backend session validation unavailable", {
+          userId: session.userId,
+          error: fetchResult.error,
+        });
+        if (url.pathname.startsWith("/api/")) {
+          throw ApiErrors.serviceUnavailable("Backend service temporarily unavailable");
+        }
+        return new Response(
+          "Serwer jest chwilowo niedostępny. Proszę odświeżyć stronę za chwilę.",
+          {
+            status: 503,
+            headers: {
+              "Retry-After": "5",
+              "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
+              Pragma: "no-cache",
+            },
+          }
+        );
       }
     } else {
       context.locals.user = null;

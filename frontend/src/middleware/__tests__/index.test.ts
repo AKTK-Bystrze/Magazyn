@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   decryptSession: vi.fn(),
   encryptSession: vi.fn(),
   getUserSession: vi.fn(),
+  fetchUserSessionDetails: vi.fn(),
   refreshSession: vi.fn(),
   createClient: vi.fn(),
 }));
@@ -33,7 +34,10 @@ vi.mock("@/lib/auth/session-store", async (importOriginal) => {
 
 vi.mock("@/lib/auth/session-utils", () => ({
   getUserSession: (...args: unknown[]) => mocks.getUserSession(...args),
+  fetchUserSessionDetails: (...args: unknown[]) => mocks.fetchUserSessionDetails(...args),
 }));
+
+import { clearRefreshStateForTesting } from "@/lib/auth/session-refresh";
 
 // Import middleware under test
 import { onRequest } from "../index";
@@ -105,6 +109,13 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearRefreshStateForTesting();
+
+    mocks.fetchUserSessionDetails.mockImplementation(async (token: string) => {
+      const info = await mocks.getUserSession(token);
+      if (info) return { status: "ok", sessionInfo: info };
+      return { status: "unauthorized" };
+    });
 
     mockCookies = {
       get: vi.fn(),
@@ -209,6 +220,26 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       expect(nextMock).not.toHaveBeenCalled();
       expect(response.status).toBe(302);
     });
+
+    it("preserves auth cookies and returns 503 when backend session check is temporarily unavailable", async () => {
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(mockSession);
+      mocks.fetchUserSessionDetails.mockResolvedValue({
+        status: "unavailable",
+        error: "502 Bad Gateway",
+      });
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await runMiddleware(context, nextMock);
+
+      expect(mockCookies.delete).not.toHaveBeenCalled();
+      expect(redirectMock).not.toHaveBeenCalled();
+      expect(nextMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(503);
+      expect(await response.text()).toContain("Serwer jest chwilowo niedostępny");
+    });
   });
 
   describe("Server-side token refresh", () => {
@@ -307,6 +338,69 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
         "private, no-cache, no-store, must-revalidate, max-age=0"
       );
       expect(response.headers.get("Pragma")).toBe("no-cache");
+    });
+
+    it("returns 503 and preserves session cookie when token is already expired and refresh fails transiently", async () => {
+      const expiredSession = {
+        ...mockSession,
+        expiresAt: Math.floor(Date.now() / 1000) - 300, // expired 5 minutes ago
+      };
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(expiredSession);
+      mocks.refreshSession.mockResolvedValue({
+        data: { session: null },
+        error: { message: "Supabase timeout", status: 504 },
+      });
+
+      const { context, redirectMock } = createMockContext("/dashboard");
+      const response = await runMiddleware(context, nextMock);
+
+      expect(mockCookies.delete).not.toHaveBeenCalled();
+      expect(redirectMock).not.toHaveBeenCalled();
+      expect(nextMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(503);
+      expect(await response.text()).toContain("Usługa logowania jest tymczasowo niedostępna");
+    });
+
+    it("deduplicates concurrent refresh requests and rewrites cookies for all callers", async () => {
+      const nearExpirySession = {
+        ...mockSession,
+        expiresAt: Math.floor(Date.now() / 1000) + 30,
+      };
+      (mockCookies.get as ReturnType<typeof vi.fn>).mockReturnValue({
+        value: "encrypted-cookie-value",
+      });
+      mocks.decryptSession.mockResolvedValue(nearExpirySession);
+
+      mocks.refreshSession.mockImplementation(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        return {
+          data: {
+            session: {
+              access_token: "rotated-access-token",
+              refresh_token: "rotated-refresh-token",
+              expires_at: Math.floor(Date.now() / 1000) + 3600,
+            },
+          },
+          error: null,
+        };
+      });
+      mocks.getUserSession.mockResolvedValue(mockSessionInfo);
+
+      const ctx1 = createMockContext("/dashboard");
+      const ctx2 = createMockContext("/api/credits");
+
+      const [res1, res2] = await Promise.all([
+        runMiddleware(ctx1.context, nextMock),
+        runMiddleware(ctx2.context, nextMock),
+      ]);
+
+      expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
+      expect(mockCookies.delete).not.toHaveBeenCalled();
+      expect(res1.status).toBe(200);
+      expect(res2.status).toBe(200);
     });
   });
 
