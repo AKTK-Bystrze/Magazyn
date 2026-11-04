@@ -140,6 +140,8 @@ Database instance is created on Supabase. It can be started locally or remotely 
    npm install
    ```
 
+
+
 2. **Start local Supabase**
 
    Start the local Supabase services (database, auth, storage) using Docker or create a remote instance on [Supabase](https://supabase.com/):
