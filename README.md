@@ -152,10 +152,8 @@ Database instance is created on Supabase. It can be started locally or remotely 
    Copy `.env.example` to `.env`:
 
    Update in `.env`:
-   - `PUBLIC_SUPABASE_URL`
    - `PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `SESSION_ENCRYPTION_KEY` (64-character hex string)
 
    See [`.env.example`](.env.example) for all configuration options.
 
