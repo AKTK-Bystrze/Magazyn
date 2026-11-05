@@ -45,7 +45,7 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
 
   UNAUTHORIZED: "Możesz zobaczyć szczegóły tylko własnej rezerwacji (under development)",
   NOT_FOUND: "Nie znaleziono rezerwacji",
-  NETWORK_ERROR: "Możesz zobaczyć szczegóły tylko własnej rezerwacji (under development)",
+  NETWORK_ERROR: "Błąd połączenia. Spróbuj ponownie",
 
   LOADING: CORE_UI_STRINGS.LOADING,
 

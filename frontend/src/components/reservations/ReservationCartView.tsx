@@ -35,6 +35,8 @@ interface ReservationCartViewProps {
   initialCreditBalance: number;
   /** Enable admin mode to create reservations on behalf of other users */
   isAdmin?: boolean;
+  /** Current authenticated user ID */
+  currentUserId?: string;
   /** Route to redirect after successful reservation */
   successRedirectPath?: string;
   /** Pre-selected user ID (admin mode) - defaults to admin's own ID */
@@ -48,6 +50,7 @@ interface ReservationCartViewProps {
 function ReservationCartContent({
   initialCreditBalance,
   isAdmin = false,
+  currentUserId,
   successRedirectPath = ROUTES.PROTECTED.RESERVATIONS,
   initialSelectedUserId,
   initialSelectedUserCreditBalance = 0,
@@ -326,6 +329,8 @@ function ReservationCartContent({
         submissionError={submissionError}
         availabilityResult={availabilityResult}
         equipmentBrowsePath={equipmentBrowsePath}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

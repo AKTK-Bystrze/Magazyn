@@ -13,6 +13,10 @@ export interface CartAvailabilityAlertsProps {
   availabilityResult: AvailabilityCheckResult;
   /** Optional path to navigate back to equipment browse */
   equipmentBrowsePath?: string;
+  /** Current user ID for checking reservation view permissions */
+  currentUserId?: string;
+  /** Whether the current user is an admin */
+  isAdmin?: boolean;
 }
 
 /**
@@ -23,6 +27,8 @@ export function CartAvailabilityAlerts({
   submissionError,
   availabilityResult,
   equipmentBrowsePath,
+  currentUserId,
+  isAdmin = false,
 }: CartAvailabilityAlertsProps) {
   const localRef = React.useRef<HTMLDivElement>(null);
 
@@ -89,7 +95,9 @@ export function CartAvailabilityAlerts({
                       <ul className="list-none pl-4 mt-1 space-y-1">
                         {item.conflictingReservations.map((conflict, idx) => (
                           <li key={idx} className="text-xs flex flex-wrap items-center gap-1.5">
-                            <span>• {conflict.startDate} do {conflict.endDate}</span>
+                            <span>
+                              • {conflict.startDate} do {conflict.endDate}
+                            </span>
                             {conflict.username && (
                               <span className="text-muted-foreground">
                                 (rezerwujący:{" "}
@@ -99,14 +107,15 @@ export function CartAvailabilityAlerts({
                                 )
                               </span>
                             )}
-                            {conflict.id && (
-                              <a
-                                href={`/reservations/${conflict.id}`}
-                                className="underline font-medium hover:text-foreground"
-                              >
-                                Szczegóły
-                              </a>
-                            )}
+                            {conflict.id &&
+                              (isAdmin || (currentUserId && conflict.userId === currentUserId)) && (
+                                <a
+                                  href={`/reservations/${conflict.id}`}
+                                  className="underline font-medium hover:text-foreground"
+                                >
+                                  Szczegóły
+                                </a>
+                              )}
                           </li>
                         ))}
                       </ul>

@@ -62,6 +62,7 @@ describe("CartAvailabilityAlerts", () => {
         submissionError={null}
         availabilityResult={conflictResult}
         equipmentBrowsePath="/equipment"
+        isAdmin={true}
       />
     );
 
@@ -76,6 +77,40 @@ describe("CartAvailabilityAlerts", () => {
     expect(detailsLink).toHaveAttribute("href", "/reservations/res-123");
     const backLink = screen.getByRole("link", { name: "← Wróć do listy sprzętu" });
     expect(backLink).toHaveAttribute("href", "/equipment");
+  });
+
+  it("does not render details link for non-admin user when conflict belongs to another user", () => {
+    const conflictResult: AvailabilityCheckResult = {
+      isAllAvailable: false,
+      unavailableItems: [
+        {
+          equipmentId: "eq-1",
+          name: "Wiosło Górskie",
+          reason: "Sprzęt zarezerwowany w wybranym terminie",
+          conflictingReservations: [
+            {
+              id: "res-123",
+              startDate: "2026-05-10",
+              endDate: "2026-05-12",
+              userId: "other-user",
+              username: "jan.kowalski",
+            },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <CartAvailabilityAlerts
+        submissionError={null}
+        availabilityResult={conflictResult}
+        currentUserId="me-123"
+        isAdmin={false}
+      />
+    );
+
+    expect(screen.queryByRole("link", { name: "Szczegóły" })).not.toBeInTheDocument();
+    expect(screen.getByText("jan.kowalski")).toBeInTheDocument();
   });
 
   it("renders both submission error and conflict alert when both are present", () => {

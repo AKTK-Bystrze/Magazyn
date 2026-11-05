@@ -93,7 +93,7 @@ describe("EquipmentDetailsView", () => {
       refetch: vi.fn(),
     });
 
-    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} />);
+    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} currentUserId="user-1" />);
     expect(screen.getByText("Kajak Górski Rapid")).toBeInTheDocument();
     expect(screen.getByText("EQ-001 • Kajaki")).toBeInTheDocument();
     expect(screen.getByText("Wytrzymały kajak górski")).toBeInTheDocument();
@@ -106,6 +106,52 @@ describe("EquipmentDetailsView", () => {
       "href",
       "/reservations/res-1"
     );
+  });
+
+  it("renders reservation history dates as plain text when user is not admin and not owner", () => {
+    vi.mocked(useEquipmentDetails).mockReturnValue({
+      equipment: {
+        id: "eq-1",
+        internalId: "EQ-001",
+        typeId: "typ-1",
+        name: "Kajak Górski Rapid",
+        description: "Wytrzymały kajak górski",
+        status: "ok",
+        isArchived: false,
+        createdAt: "2026-01-01",
+        updatedAt: null,
+        type: {
+          id: "typ-1",
+          name: "Kajaki",
+          creditCostPerDay: 5,
+        },
+      },
+      maintenanceLogs: [],
+      reservationHistory: [
+        {
+          id: "res-1",
+          userId: "other-user",
+          username: "jan.kowalski",
+          startDate: "2026-05-01",
+          endDate: "2026-05-03",
+          status: "RENTED",
+          creditCost: 15,
+          createdAt: "2026-04-20",
+        },
+      ],
+      isLoading: false,
+      isLogsLoading: false,
+      isReservationsLoading: false,
+      error: null,
+      addMaintenanceLog: vi.fn(),
+      isMutating: false,
+      refetch: vi.fn(),
+    });
+
+    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} currentUserId="me-123" />);
+
+    expect(screen.queryByRole("link", { name: /01.05.2026 → 03.05.2026/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/01.05.2026 → 03.05.2026/)).toBeInTheDocument();
   });
 
   it("renders admin back link to admin equipment", () => {

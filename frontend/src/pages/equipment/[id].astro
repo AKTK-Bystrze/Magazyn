@@ -6,7 +6,7 @@ import { EquipmentDetailsView } from "@/components/equipment/EquipmentDetailsVie
 import { ROUTES } from "@/lib/config/routes";
 import { isAdmin } from "@/lib/auth/roles";
 
-const { sessionInfo } = Astro.locals;
+const { sessionInfo, user } = Astro.locals;
 const { id } = Astro.params;
 
 if (!id) {
@@ -21,6 +21,7 @@ const adminUser = sessionInfo ? isAdmin(sessionInfo.role) : false;
     <EquipmentDetailsView
       equipmentId={id}
       isAdmin={adminUser}
+      currentUserId={user?.id}
       client:only="react"
     />
   </div>

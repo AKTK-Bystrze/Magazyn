@@ -52,8 +52,13 @@ export function ReservationTableRow({
   onRent,
   mode,
 }: ReservationTableRowProps) {
+  const canViewDetails =
+    mode === "admin" || (currentUserId ? item.userId === currentUserId : false);
+
   const handleRowClick = () => {
-    onViewDetails(item);
+    if (canViewDetails) {
+      onViewDetails(item);
+    }
   };
 
   const actionMenu = (
@@ -70,7 +75,7 @@ export function ReservationTableRow({
 
   return (
     <TableRow
-      className="hover:bg-muted/50 cursor-pointer"
+      className={canViewDetails ? "hover:bg-muted/50 cursor-pointer" : "hover:bg-muted/50"}
       onClick={handleRowClick}
       data-testid={`reservation-row-${item.id}`}
     >
@@ -78,13 +83,19 @@ export function ReservationTableRow({
         <TableCell className="md:hidden truncate max-w-[100px] text-sm">{item.username}</TableCell>
       )}
       <TableCell className="md:hidden whitespace-nowrap text-sm">
-        <a
-          href={`/reservations/${item.id}`}
-          className="hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
-        </a>
+        {canViewDetails ? (
+          <a
+            href={`/reservations/${item.id}`}
+            className="hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
+          </a>
+        ) : (
+          <span>
+            {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
+          </span>
+        )}
       </TableCell>
       <TableCell className="md:hidden font-medium truncate max-w-[120px]">
         <a
