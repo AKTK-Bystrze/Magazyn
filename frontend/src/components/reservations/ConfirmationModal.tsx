@@ -81,7 +81,16 @@ export function ConfirmationModal({
                   className="w-full flex justify-between items-center text-sm py-2 border-b last:border-0"
                 >
                   <div>
-                    <p className="font-medium">{item.name}</p>
+                    <p className="font-medium">
+                      <a
+                        href={`/equipment/${item.equipmentId}`}
+                        className="hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {item.name}
+                      </a>
+                    </p>
                     <p className="text-muted-foreground text-xs">{item.typeName}</p>
                   </div>
                   <span className="text-muted-foreground text-right">

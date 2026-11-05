@@ -54,6 +54,8 @@ type ConflictingReservation struct {
 	StartDate string `json:"start_date"`
 	EndDate   string `json:"end_date"`
 	Status    string `json:"status"`
+	UserID    string `json:"user_id,omitempty"`
+	Username  string `json:"username,omitempty"`
 }
 
 // CreateEquipmentCommand represents a request to create new equipment

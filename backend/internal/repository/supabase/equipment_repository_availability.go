@@ -27,10 +27,10 @@ func (r *equipmentRepository) GetActiveReservations(ctx context.Context, equipme
 	return reservations, nil
 }
 
-func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.PublicReservationsSelect, error) {
+func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.ConflictingReservation, error) {
 	client := getClientWithAuth(ctx, r.client, r.supabaseURL, r.supabaseKey)
 	data, _, err := client.From(constants.TableReservations).
-		Select("id, start_date, end_date, status", "exact", false).
+		Select("id, start_date, end_date, status, user_id, profiles!user_id(username)", "exact", false).
 		Eq("equipment_id", equipmentID).
 		Lte("start_date", end).
 		Gte("end_date", start).
@@ -39,9 +39,29 @@ func (r *equipmentRepository) GetConflictingReservations(ctx context.Context, eq
 	if err != nil {
 		return nil, err
 	}
-	var reservations []types.PublicReservationsSelect
-	if err := json.Unmarshal(data, &reservations); err != nil {
+	var rawData []struct {
+		ID        string `json:"id"`
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
+		Status    string `json:"status"`
+		UserID    string `json:"user_id"`
+		Profile   struct {
+			Username string `json:"username"`
+		} `json:"profiles"`
+	}
+	if err := json.Unmarshal(data, &rawData); err != nil {
 		return nil, err
+	}
+	reservations := make([]types.ConflictingReservation, len(rawData))
+	for i, item := range rawData {
+		reservations[i] = types.ConflictingReservation{
+			ID:        item.ID,
+			StartDate: item.StartDate,
+			EndDate:   item.EndDate,
+			Status:    item.Status,
+			UserID:    item.UserID,
+			Username:  item.Profile.Username,
+		}
 	}
 	return reservations, nil
 }

@@ -51,7 +51,16 @@ export function CartItem({ item, onRemove }: CartItemProps) {
 
       <CardHeader className="p-4 pb-2">
         <div>
-          <h3 className="font-semibold text-lg">{item.name}</h3>
+          <h3 className="font-semibold text-lg">
+            <a
+              href={`/equipment/${item.equipmentId}`}
+              className="hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {item.name}
+            </a>
+          </h3>
           <p className="text-sm text-muted-foreground">{item.typeName}</p>
         </div>
       </CardHeader>

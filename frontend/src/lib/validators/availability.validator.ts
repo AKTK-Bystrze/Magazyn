@@ -9,6 +9,8 @@ const conflictingReservationDTOSchema = z.object({
   start_date: z.string(),
   end_date: z.string(),
   status: z.string(),
+  user_id: z.string().optional(),
+  username: z.string().optional(),
 });
 
 /**

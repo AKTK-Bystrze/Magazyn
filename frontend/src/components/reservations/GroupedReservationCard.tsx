@@ -114,7 +114,13 @@ export function GroupedReservationCard({
               <div className="text-sm text-muted-foreground break-words line-clamp-2 flex-1">
                 {group.items.map((item, index) => (
                   <span key={item.id}>
-                    {item.equipmentName}
+                    <a
+                      href={`/equipment/${item.equipmentId}`}
+                      className="hover:underline text-foreground"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {item.equipmentName}
+                    </a>
                     {index < group.items.length - 1 && ", "}
                   </span>
                 ))}

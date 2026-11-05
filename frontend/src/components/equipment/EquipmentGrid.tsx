@@ -7,7 +7,6 @@ interface EquipmentGridProps {
   items: EquipmentSearchItem[];
   isLoading?: boolean;
   error?: Error | null;
-  onViewDetail?: (item: EquipmentSearchItem) => void;
   viewMode?: "grid" | "list";
 }
 
@@ -15,7 +14,6 @@ export function EquipmentGrid({
   items,
   isLoading,
   error,
-  onViewDetail,
   viewMode = "grid",
 }: EquipmentGridProps) {
   if (isLoading) {
@@ -98,7 +96,7 @@ export function EquipmentGrid({
       data-testid="equipment-grid"
     >
       {items.map((item) => (
-        <EquipmentCard key={item.id} item={item} onViewDetail={onViewDetail} viewMode={viewMode} />
+        <EquipmentCard key={item.id} item={item} viewMode={viewMode} />
       ))}
     </div>
   );
