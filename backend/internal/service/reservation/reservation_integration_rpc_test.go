@@ -5,10 +5,12 @@ package reservation_test
 import (
 	"context"
 	"encoding/json"
+	"testing"
+
+	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/testutils"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
