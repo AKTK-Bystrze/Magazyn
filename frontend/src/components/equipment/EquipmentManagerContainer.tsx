@@ -6,7 +6,6 @@ import { FilterSidebar } from "./FilterSidebar";
 import { AddEquipmentDialog } from "./AddEquipmentDialog";
 import { EditEquipmentDialog } from "./EditEquipmentDialog";
 import { ConfirmArchiveDialog } from "./ConfirmArchiveDialog";
-import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
@@ -61,7 +60,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
 
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
-  const [isDetailsSheetOpen, setIsDetailsSheetOpen] = React.useState(false);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = React.useState(false);
   const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(
     null
@@ -113,11 +111,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     [updateEquipment, setSuccessMessage]
   );
 
-  const handleViewDetails = React.useCallback((item: EquipmentSearchItem) => {
-    setSelectedEquipment(item);
-    setIsDetailsSheetOpen(true);
-  }, []);
-
   const handleArchiveClick = React.useCallback((item: EquipmentSearchItem) => {
     setSelectedEquipment(item);
     setArchiveError(null);
@@ -152,11 +145,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
     },
     [setFilter]
   );
-
-  const handleDetailsSheetClose = React.useCallback(() => {
-    setIsDetailsSheetOpen(false);
-    setSelectedEquipment(null);
-  }, []);
 
   return (
     <div className={`space-y-6 ${className ?? ""}`} data-testid="equipment-manager-container">
@@ -210,7 +198,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         equipment={equipment}
         isLoading={isLoading}
         onEdit={handleEditClick}
-        onViewDetails={handleViewDetails}
         onArchive={handleArchiveClick}
       />
 
@@ -243,12 +230,6 @@ function EquipmentManagerContainerInner({ className }: EquipmentManagerContainer
         error={archiveError}
         onClose={handleArchiveDialogClose}
         onConfirm={handleArchiveConfirm}
-      />
-
-      <EquipmentDetailsSheet
-        isOpen={isDetailsSheetOpen}
-        equipment={selectedEquipment}
-        onClose={handleDetailsSheetClose}
       />
     </div>
   );

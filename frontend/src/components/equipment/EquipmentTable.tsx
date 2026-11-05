@@ -39,8 +39,6 @@ interface EquipmentTableProps {
   isLoading: boolean;
   /** Callback when edit action is clicked */
   onEdit: (item: EquipmentSearchItem) => void;
-  /** Callback when view details action is clicked */
-  onViewDetails: (item: EquipmentSearchItem) => void;
   /** Callback when archive action is clicked */
   onArchive: (item: EquipmentSearchItem) => void;
 }
@@ -100,7 +98,6 @@ export function EquipmentTable({
   equipment,
   isLoading,
   onEdit,
-  onViewDetails,
   onArchive,
 }: EquipmentTableProps) {
   const {
@@ -120,13 +117,6 @@ export function EquipmentTable({
       onEdit(item);
     },
     [onEdit]
-  );
-
-  const handleViewDetails = React.useCallback(
-    (item: EquipmentSearchItem) => () => {
-      onViewDetails(item);
-    },
-    [onViewDetails]
   );
 
   const handleArchive = React.useCallback(
@@ -187,7 +177,9 @@ export function EquipmentTable({
               <TableRow
                 key={item.id}
                 className="hover:bg-muted/50 cursor-pointer"
-                onClick={handleViewDetails(item)}
+                onClick={() => {
+                  window.location.href = `/equipment/${item.id}`;
+                }}
                 data-testid={`equipment-row-${item.id}`}
               >
                 <TableCell>
@@ -200,7 +192,6 @@ export function EquipmentTable({
                       className="hover:underline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onViewDetails(item);
                       }}
                     >
                       {item.name || (
@@ -242,12 +233,14 @@ export function EquipmentTable({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onSelect={handleViewDetails(item)}
+                        asChild
                         onClick={(e) => e.stopPropagation()}
                         data-testid={`equipment-view-details-btn-${item.id}`}
                       >
-                        <Eye className={ICON_SIZE_SM + " mr-2"} />
-                        {UI.VIEW_DETAILS}
+                        <a href={`/equipment/${item.id}`} className="flex items-center w-full">
+                          <Eye className={ICON_SIZE_SM + " mr-2"} />
+                          {UI.VIEW_DETAILS}
+                        </a>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={handleEdit(item)}

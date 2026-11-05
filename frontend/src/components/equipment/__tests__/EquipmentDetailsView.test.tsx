@@ -97,6 +97,7 @@ describe("EquipmentDetailsView", () => {
     expect(screen.getByText("Kajak Górski Rapid")).toBeInTheDocument();
     expect(screen.getByText("EQ-001 • Kajaki")).toBeInTheDocument();
     expect(screen.getByText("Wytrzymały kajak górski")).toBeInTheDocument();
+    expect(screen.getByText("Historia Konserwacji")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Powrót do sprzętu/ })).toHaveAttribute(
       "href",
       "/equipment"

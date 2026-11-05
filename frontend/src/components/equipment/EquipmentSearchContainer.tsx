@@ -3,14 +3,12 @@ import { useEquipmentSearch } from "@/hooks/use-equipment-search";
 import { useInfiniteEquipmentList, useEquipmentTypes } from "@/hooks/use-equipment-api";
 import { FilterSidebar } from "./FilterSidebar";
 import { EquipmentGrid } from "./EquipmentGrid";
-import { EquipmentDetailsSheet } from "./EquipmentDetailsSheet";
 import { CartIndicator } from "./CartIndicator";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Filter, LayoutGrid, List } from "lucide-react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { useInfiniteScrollTrigger } from "@/lib/hooks/useInfiniteScrollTrigger";
-import type { EquipmentSearchItem } from "@/types";
 
 /**
  * Props for EquipmentSearchContainer component
@@ -30,10 +28,6 @@ interface EquipmentSearchContainerProps {
 function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProps) {
   const { filters, activeFilters, updateFilter } = useEquipmentSearch();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
-  const [selectedEquipment, setSelectedEquipment] = React.useState<EquipmentSearchItem | null>(
-    null
-  );
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   const { data: types = [] } = useEquipmentTypes();
@@ -65,11 +59,6 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
     updateFilter("status", undefined);
     updateFilter("availableFrom", undefined);
     updateFilter("availableTo", undefined);
-  };
-
-  const handleViewDetail = (item: EquipmentSearchItem) => {
-    setSelectedEquipment(item);
-    setIsDetailsOpen(true);
   };
 
   return (
@@ -167,7 +156,6 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
             items={equipment}
             isLoading={isLoading}
             error={error as Error | null}
-            onViewDetail={handleViewDetail}
             viewMode={viewMode}
           />
         </div>
@@ -185,12 +173,6 @@ function EquipmentSearchContainer({ checkoutPath }: EquipmentSearchContainerProp
           availableFrom: filters.availableFrom,
           availableTo: filters.availableTo,
         }}
-      />
-
-      <EquipmentDetailsSheet
-        isOpen={isDetailsOpen}
-        equipment={selectedEquipment}
-        onClose={() => setIsDetailsOpen(false)}
       />
     </div>
   );
