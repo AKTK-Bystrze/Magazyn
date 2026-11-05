@@ -81,6 +81,9 @@ The Equipment Rental System with a mobile-accessible web application. The system
 - **Supabase Account**: Free tier account (optional)
 
 [Note]
+When running on Windows replace "journald" driver with "json-file" in docker-compose.yaml file. Look for the detailed guidance in the file comments
+
+[Note]
 Database instance is created on Supabase. It can be started locally or remotely on [text](https://supabase.com/)
 
 ### Quick Start (Docker)
@@ -96,12 +99,8 @@ Database instance is created on Supabase. It can be started locally or remotely 
    create .env file based on .env.example
 
    Update in `.env`:
-   - `PUBLIC_SUPABASE_URL`
    - `PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `SESSION_ENCRYPTION_KEY` (64-character hex string)
-
-   >When running on Windows replace "journald" driver driver with "json-file" in docker-compose.yaml file. Look for the detailed guidance in the file
 
 3. **Start Application**
 

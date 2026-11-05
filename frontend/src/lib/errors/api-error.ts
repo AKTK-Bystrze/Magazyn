@@ -44,4 +44,6 @@ export function handleApiError(error: unknown): Response {
 export const ApiErrors = {
   unauthorized: (message: string = "Unauthorized") => new ApiError(message, 401, "UNAUTHORIZED"),
   forbidden: (message: string = "Forbidden") => new ApiError(message, 403, "FORBIDDEN"),
+  serviceUnavailable: (message: string = "Service temporarily unavailable") =>
+    new ApiError(message, 503, "SERVICE_UNAVAILABLE"),
 };
