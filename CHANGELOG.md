@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.10.1...v0.11.0) (2026-11-05)
+
+
+### Features
+
+* **reservations:** add pickup transition, unified status badges and list filters ([#319](https://github.com/AKTK-Bystrze/Magazyn/issues/319)) ([a59aa74](https://github.com/AKTK-Bystrze/Magazyn/commit/a59aa7427b876b6dfc26991989d71d3164db67ed))
+
+
+### Bug Fixes
+
+* **auth:** prevent premature session logout after inactivity and style callback handoff ([#317](https://github.com/AKTK-Bystrze/Magazyn/issues/317)) ([abcda76](https://github.com/AKTK-Bystrze/Magazyn/commit/abcda769fd7136ce8ca1d2c8a4d432e2ac83dd6a))
+
 ## [0.10.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.10.0...v0.10.1) (2026-11-02)
 
 
