@@ -143,6 +143,13 @@ export function useReservationDialogs({
     setReturnDialogOpen(true);
   }, []);
 
+  const closeAndReset = React.useCallback((setOpen: (open: boolean) => void) => {
+    setOpen(false);
+    setSelectedReservation(null);
+    setBatchReservations([]);
+    refreshCreditBalance();
+  }, []);
+
   const handleModifyDatesConfirm = React.useCallback(
     async (startDate: string, endDate: string) => {
       const targets =
@@ -153,39 +160,52 @@ export function useReservationDialogs({
             : [];
       if (targets.length === 0) return;
 
-      try {
-        const command = { startDate, endDate };
+      const command = { startDate, endDate };
 
-        if (targets.length === 1) {
+      if (targets.length === 1) {
+        try {
           await updateReservation(targets[0].id, command);
           setSuccessMessage(
             `Daty rezerwacji dla "${targets[0].equipmentName}" zaktualizowane pomyślnie.`
           );
-        } else {
-          const results = await Promise.allSettled(
-            targets.map((target) => updateReservation(target.id, command))
-          );
-          const successful = results.filter((r) => r.status === "fulfilled").length;
+          closeAndReset(setModifyDialogOpen);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Nie udało się zaktualizować dat";
+          setErrorMessage(message);
+          throw err;
+        }
+      } else {
+        const results = await Promise.allSettled(
+          targets.map((target) => updateReservation(target.id, command))
+        );
+        const successful = results.filter((r) => r.status === "fulfilled").length;
+        const failed = targets.length - successful;
 
-          if (successful === targets.length) {
-            setSuccessMessage(`${successful} rezerwacji zaktualizowano pomyślnie.`);
-          } else {
-            setSuccessMessage(
-              `${successful} zaktualizowano. ${targets.length - successful} nie powiodło się.`
-            );
-          }
+        if (successful === 0) {
+          const firstError = results.find((r) => r.status === "rejected") as
+            PromiseRejectedResult | undefined;
+          const detail =
+            firstError?.reason instanceof Error ? firstError.reason.message : "Błąd aktualizacji";
+          const message = `Nie udało się zaktualizować dat dla żadnej z ${targets.length} rezerwacji: ${detail}`;
+          setErrorMessage(message);
+          throw new Error(message);
         }
 
-        setModifyDialogOpen(false);
-        setSelectedReservation(null);
-        setBatchReservations([]);
-        refreshCreditBalance();
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Nie udało się zaktualizować dat";
-        setErrorMessage(message);
+        setSuccessMessage(`${successful} rezerwacji zaktualizowano pomyślnie.`);
+        if (failed > 0) {
+          setErrorMessage(`${failed} rezerwacji nie udało się zaktualizować.`);
+        }
+        closeAndReset(setModifyDialogOpen);
       }
     },
-    [selectedReservation, batchReservations, updateReservation, setSuccessMessage, setErrorMessage]
+    [
+      selectedReservation,
+      batchReservations,
+      updateReservation,
+      setSuccessMessage,
+      setErrorMessage,
+      closeAndReset,
+    ]
   );
 
   const handleReturnConfirm = React.useCallback(
@@ -209,6 +229,7 @@ export function useReservationDialogs({
         if (targets.length === 1) {
           await updateReservation(targets[0].id, command);
           setSuccessMessage(`Sprzęt "${targets[0].equipmentName}" oznaczony jako zwrócony.`);
+          closeAndReset(setReturnDialogOpen);
         } else {
           const hasDateChange = !!(command.startDate || command.endDate);
 
@@ -217,27 +238,50 @@ export function useReservationDialogs({
               targets.map((target) => updateReservation(target.id, command))
             );
             const successful = results.filter((r) => r.status === "fulfilled").length;
+            const failed = targets.length - successful;
 
-            setSuccessMessage(
-              `${successful} elementów zaktualizowano i zwrócono. ${targets.length - successful} nie powiodło się.`
-            );
+            if (successful === 0) {
+              const firstError = results.find((r) => r.status === "rejected") as
+                PromiseRejectedResult | undefined;
+              const detail =
+                firstError?.reason instanceof Error
+                  ? firstError.reason.message
+                  : "Błąd aktualizacji";
+              const message = `Nie udało się zwrócić żadnego z ${targets.length} elementów: ${detail}`;
+              setErrorMessage(message);
+              throw new Error(message);
+            }
+
+            setSuccessMessage(`${successful} elementów zaktualizowano i zwrócono.`);
+            if (failed > 0) {
+              setErrorMessage(`${failed} elementów nie udało się zaktualizować/zwrócić.`);
+            }
+            closeAndReset(setReturnDialogOpen);
           } else {
             const result = await bulkUpdateStatus({
               reservationIds: targets.map((t) => t.id),
               status: "RETURNED",
             });
 
+            if (result.updated_count === 0) {
+              const message = "Nie udało się oznaczyć żadnego elementu jako zwróconego.";
+              setErrorMessage(message);
+              throw new Error(message);
+            }
+
             setSuccessMessage(`${result.updated_count} elementów oznaczono jako zwrócone.`);
+            if (result.updated_count < targets.length) {
+              setErrorMessage(
+                `${targets.length - result.updated_count} elementów pominięto lub nie udało się zwrócić.`
+              );
+            }
+            closeAndReset(setReturnDialogOpen);
           }
         }
-
-        setReturnDialogOpen(false);
-        setSelectedReservation(null);
-        setBatchReservations([]);
-        refreshCreditBalance();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Nie udało się zwrócić sprzętu";
         setErrorMessage(message);
+        throw err;
       }
     },
     [
@@ -247,6 +291,7 @@ export function useReservationDialogs({
       bulkUpdateStatus,
       setSuccessMessage,
       setErrorMessage,
+      closeAndReset,
     ]
   );
 
@@ -266,24 +311,33 @@ export function useReservationDialogs({
         setSuccessMessage(
           `Rezerwacja "${targets[0].equipmentName}" została anulowana. Godzinki zostały zwrócone.`
         );
+        closeAndReset(setCancelDialogOpen);
       } else {
         const result = await bulkUpdateStatus({
           reservationIds: targets.map((t) => t.id),
           status: "CANCELLED",
         });
 
+        if (result.updated_count === 0) {
+          const message = "Nie udało się anulować żadnej z wybranych rezerwacji.";
+          setErrorMessage(message);
+          throw new Error(message);
+        }
+
         setSuccessMessage(
           `${result.updated_count} rezerwacji anulowano. ${result.refund_count} zwrotów godzinek przetworzono.`
         );
+        if (result.updated_count < targets.length) {
+          setErrorMessage(
+            `${targets.length - result.updated_count} rezerwacji pominięto lub nie udało się anulować.`
+          );
+        }
+        closeAndReset(setCancelDialogOpen);
       }
-
-      setCancelDialogOpen(false);
-      setSelectedReservation(null);
-      setBatchReservations([]);
-      refreshCreditBalance();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Nie udało się anulować rezerwacji";
       setErrorMessage(message);
+      throw err;
     }
   }, [
     selectedReservation,
@@ -292,6 +346,7 @@ export function useReservationDialogs({
     bulkUpdateStatus,
     setSuccessMessage,
     setErrorMessage,
+    closeAndReset,
   ]);
 
   const handleRent = React.useCallback(
@@ -325,10 +380,19 @@ export function useReservationDialogs({
           reservations.map((r) => updateReservation(r.id, { status: "RENTED" }))
         );
         const successful = results.filter((r) => r.status === "fulfilled").length;
+        const failed = reservations.length - successful;
         const dateNotice = anyDateChanged
           ? ` Uwaga: daty rozpoczęcia zostały zmienione na dzisiejszą (${today}).`
           : "";
-        setSuccessMessage(`${successful} elementów oznaczono jako wypożyczone.${dateNotice}`);
+
+        if (successful === reservations.length) {
+          setSuccessMessage(`${successful} elementów oznaczono jako wypożyczone.${dateNotice}`);
+        } else if (successful === 0) {
+          setErrorMessage("Nie udało się wypożyczyć żadnego z wybranych sprzętów.");
+        } else {
+          setSuccessMessage(`${successful} elementów oznaczono jako wypożyczone.${dateNotice}`);
+          setErrorMessage(`${failed} elementów nie udało się oznaczyć jako wypożyczone.`);
+        }
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Nie udało się zmienić statusu na wypożyczony";

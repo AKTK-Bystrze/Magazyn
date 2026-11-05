@@ -13,8 +13,6 @@ interface ReservationCardProps {
   reservation: ReservationListItem;
   mode: "user" | "admin";
   isOwn?: boolean;
-  /** Whether to show action buttons */
-  showActions?: boolean;
   /** Whether to show the 'Your reservation' badge */
   showOwnershipBadge?: boolean;
   onModify?: (reservation: ReservationListItem) => void;
@@ -32,7 +30,6 @@ export function ReservationCard({
   reservation,
   mode,
   isOwn = false,
-  showActions = true,
   showOwnershipBadge = false,
   onModify,
   onCancel,
@@ -123,67 +120,65 @@ export function ReservationCard({
             </a>
           </div>
 
-          {showActions && (
-            <div className="flex flex-wrap gap-2 pt-3 mt-1 border-t">
-              {canRent && onRent && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onRent(reservation)}
-                  className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950/20"
-                  data-testid="rent-reservation-button"
-                >
-                  <PackageCheck className={ICON_SIZE_SM} />
-                  {isAdmin ? "Wydaj" : "Odbierz"}
-                </Button>
-              )}
-
-              {canCancel && onModify && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleModify}
-                  className="flex items-center gap-1"
-                  data-testid="modify-dates-button"
-                >
-                  <Edit2 className={ICON_SIZE_SM} />
-                  Zmień termin
-                </Button>
-              )}
-
-              {canCancel && onCancel && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancel}
-                  className="flex items-center gap-1 text-destructive hover:text-destructive"
-                  data-testid="cancel-reservation-button"
-                >
-                  <X className={ICON_SIZE_SM} />
-                  Anuluj
-                </Button>
-              )}
-
-              {canMarkReturned && onReturn && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReturn}
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
-                >
-                  <Calendar className={ICON_SIZE_SM} />
-                  Zwróć
-                </Button>
-              )}
-
-              <a
-                href={`/reservations/${reservation.id}`}
-                className="sm:ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground border border-input bg-background hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
+          <div className="flex flex-wrap gap-2 pt-3 mt-1 border-t">
+            {canRent && onRent && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRent(reservation)}
+                className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950/20"
+                data-testid="rent-reservation-button"
               >
-                Szczegóły
-              </a>
-            </div>
-          )}
+                <PackageCheck className={ICON_SIZE_SM} />
+                {isAdmin ? "Wydaj" : "Odbierz"}
+              </Button>
+            )}
+
+            {canCancel && onModify && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleModify}
+                className="flex items-center gap-1"
+                data-testid="modify-dates-button"
+              >
+                <Edit2 className={ICON_SIZE_SM} />
+                Zmień termin
+              </Button>
+            )}
+
+            {canCancel && onCancel && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancel}
+                className="flex items-center gap-1 text-destructive hover:text-destructive"
+                data-testid="cancel-reservation-button"
+              >
+                <X className={ICON_SIZE_SM} />
+                Anuluj
+              </Button>
+            )}
+
+            {canMarkReturned && onReturn && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReturn}
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/20"
+              >
+                <Calendar className={ICON_SIZE_SM} />
+                Zwróć
+              </Button>
+            )}
+
+            <a
+              href={`/reservations/${reservation.id}`}
+              className="sm:ml-auto inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground border border-input bg-background hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 px-3"
+            >
+              Szczegóły
+            </a>
+          </div>
         </div>
       </CardContent>
     </Card>

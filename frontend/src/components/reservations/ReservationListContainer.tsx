@@ -44,7 +44,16 @@ function ReservationListContainerInner({
 
   const [successMessage, setSuccessMessage] = useDismissibleMessage();
   const [errorMessage, setErrorMessage] = useDismissibleMessage();
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("magazyn:reservations:viewMode") as "grid" | "list") || "grid"
+      : "grid"
+  );
+
+  const handleViewModeChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    localStorage.setItem("magazyn:reservations:viewMode", mode);
+  };
 
   const {
     cancelDialogOpen,
@@ -97,7 +106,6 @@ function ReservationListContainerInner({
   );
 
   const hasActiveFilters = hasActiveReservationFilters(filters);
-  const showActions = mode === "admin" || filters.scope === "my";
 
   return (
     <div className="space-y-6" data-testid="reservation-list-container">
@@ -124,7 +132,7 @@ function ReservationListContainerInner({
             variant={viewMode === "grid" ? "secondary" : "ghost"}
             size="sm"
             className="px-2 h-8"
-            onClick={() => setViewMode("grid")}
+            onClick={() => handleViewModeChange("grid")}
             aria-label="Widok kafelków"
           >
             <LayoutGrid className="h-4 w-4" />
@@ -133,7 +141,7 @@ function ReservationListContainerInner({
             variant={viewMode === "list" ? "secondary" : "ghost"}
             size="sm"
             className="px-2 h-8"
-            onClick={() => setViewMode("list")}
+            onClick={() => handleViewModeChange("list")}
             aria-label="Widok tabeli"
             data-testid="view-mode-table"
           >
@@ -156,14 +164,14 @@ function ReservationListContainerInner({
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
-          onModify={showActions ? handleModify : undefined}
-          onCancel={showActions ? handleCancelClick : undefined}
-          onReturn={showActions ? handleReturn : undefined}
-          onRent={showActions ? handleRent : undefined}
-          onCancelAll={showActions ? handleCancelAll : undefined}
-          onModifyDatesAll={showActions ? handleModifyDatesAll : undefined}
-          onReturnAll={showActions ? handleReturnAll : undefined}
-          onRentAll={showActions ? handleRentAll : undefined}
+          onModify={handleModify}
+          onCancel={handleCancelClick}
+          onReturn={handleReturn}
+          onRent={handleRent}
+          onCancelAll={handleCancelAll}
+          onModifyDatesAll={handleModifyDatesAll}
+          onReturnAll={handleReturnAll}
+          onRentAll={handleRentAll}
           onViewDetails={handleViewDetails}
         />
       ) : (
@@ -174,10 +182,10 @@ function ReservationListContainerInner({
           mode={mode}
           scope={filters.scope}
           currentUserId={currentUserId}
-          onModify={showActions ? handleModify : undefined}
-          onCancel={showActions ? handleCancelClick : undefined}
-          onReturn={showActions ? handleReturn : undefined}
-          onRent={showActions ? handleRent : undefined}
+          onModify={handleModify}
+          onCancel={handleCancelClick}
+          onReturn={handleReturn}
+          onRent={handleRent}
           onViewDetails={handleViewDetails}
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}

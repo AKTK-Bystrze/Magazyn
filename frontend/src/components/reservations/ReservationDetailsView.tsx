@@ -42,6 +42,15 @@ function ReservationDetailsContent({
   const { reservation, isLoading, error, updateStatus, isUpdating } =
     useReservationDetail(reservationId);
 
+  const backUrl = isAdmin ? ROUTES.PROTECTED.ADMIN_RESERVATIONS : ROUTES.PROTECTED.RESERVATIONS;
+
+  const handleBack = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (window.history.length > 1 && document.referrer.includes("/reservations")) {
+      e.preventDefault();
+      window.history.back();
+    }
+  };
+
   React.useEffect(() => {
     if (reservation) {
       const label = `${formatDate(reservation.startDate)} - ${formatDate(reservation.endDate)}: ${reservation.equipmentName}`;
@@ -77,7 +86,8 @@ function ReservationDetailsContent({
     return (
       <div className="space-y-6">
         <a
-          href={ROUTES.PROTECTED.RESERVATIONS}
+          href={backUrl}
+          onClick={handleBack}
           className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <ArrowLeft className={ICON_SIZE_SM} />
@@ -98,7 +108,8 @@ function ReservationDetailsContent({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <a
-          href={ROUTES.PROTECTED.RESERVATIONS}
+          href={backUrl}
+          onClick={handleBack}
           className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <ArrowLeft className={ICON_SIZE_SM} />

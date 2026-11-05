@@ -57,6 +57,8 @@ export function ModifyDatesDialog({
 }: ModifyDatesDialogProps) {
   const [startDate, setStartDate] = React.useState<string | null>(reservation.startDate);
   const [endDate, setEndDate] = React.useState<string | null>(reservation.endDate);
+  const [isPending, setIsPending] = React.useState(false);
+  const submitting = isSubmitting || isPending;
   const [validationErrors, setValidationErrors] = React.useState<DateRangeValidationErrors>({
     startDate: null,
     endDate: null,
@@ -113,15 +115,12 @@ export function ModifyDatesDialog({
   };
 
   const handleConfirm = async () => {
-    if (!validate()) {
-      return;
-    }
-
-    if (!startDate || !endDate) {
+    if (!validate() || !startDate || !endDate || submitting) {
       return;
     }
 
     try {
+      setIsPending(true);
       setApiError(null);
       await onConfirm({ startDate, endDate });
       onOpenChange(false);
@@ -131,11 +130,13 @@ export function ModifyDatesDialog({
           ? String(error.message)
           : "Nie udało się zmienić dat rezerwacji";
       setApiError(errorMessage);
+    } finally {
+      setIsPending(false);
     }
   };
 
   const handleCancel = () => {
-    if (!isSubmitting) {
+    if (!submitting) {
       onOpenChange(false);
     }
   };
@@ -152,11 +153,23 @@ export function ModifyDatesDialog({
     setApiError(null);
   }, []);
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!submitting) {
+      onOpenChange(nextOpen);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
         data-testid="modify-dates-dialog"
+        onPointerDownOutside={(e) => {
+          if (submitting) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (submitting) e.preventDefault();
+        }}
       >
         <DialogHeader>
           <DialogTitle>{UI.MODIFY_DATES_TITLE}</DialogTitle>
@@ -188,19 +201,19 @@ export function ModifyDatesDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+          <Button variant="outline" onClick={handleCancel} disabled={submitting}>
             {UI.CANCEL_CHANGES}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={
-              isSubmitting ||
+              submitting ||
               !datesChanged ||
               (!allowNegativeBalance && adjustmentInfo.newBalance < 0)
             }
             data-testid="save-dates-button"
           >
-            {isSubmitting ? (
+            {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {UI.UPDATING_RESERVATION}
