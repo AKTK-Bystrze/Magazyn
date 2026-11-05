@@ -49,7 +49,6 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
 
   LOADING: CORE_UI_STRINGS.LOADING,
 
-  CHANGED_BY: "Zmienione przez",
   INITIAL_CREATION: "Rezerwacja utworzona",
   SYSTEM: "System",
 } as const;

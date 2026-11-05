@@ -172,9 +172,7 @@ export function EquipmentTable({ equipment, isLoading, onEdit, onArchive }: Equi
               <TableRow
                 key={item.id}
                 className="hover:bg-muted/50 cursor-pointer"
-                onClick={() => {
-                  window.location.href = `/equipment/${item.id}`;
-                }}
+                onClick={() => (window.location.href = `/equipment/${item.id}`)}
                 data-testid={`equipment-row-${item.id}`}
               >
                 <TableCell>
@@ -182,11 +180,7 @@ export function EquipmentTable({ equipment, isLoading, onEdit, onArchive }: Equi
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">
-                    <a
-                      href={`/equipment/${item.id}`}
-                      className="hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <a href={`/equipment/${item.id}`} className="hover:underline">
                       {item.name || (
                         <span className="text-muted-foreground italic">{item.type.name}</span>
                       )}

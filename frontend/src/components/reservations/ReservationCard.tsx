@@ -99,9 +99,7 @@ export function ReservationCard({
                       {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
                     </a>
                   ) : (
-                    <span>
-                      {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
-                    </span>
+                    `${formatDate(reservation.startDate)} → ${formatDate(reservation.endDate)}`
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground">

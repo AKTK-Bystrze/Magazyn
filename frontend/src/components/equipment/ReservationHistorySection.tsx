@@ -53,18 +53,15 @@ export function ReservationHistorySection({
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
-            {isAdmin || (currentUserId && reservation.userId === currentUserId) ? (
-              <a
-                href={`/reservations/${reservation.id}`}
-                className="hover:underline font-medium text-foreground"
-              >
-                {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
-              </a>
-            ) : (
-              <span className="font-medium text-foreground">
-                {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
-              </span>
-            )}
+            <span className="font-medium text-foreground">
+              {isAdmin || (currentUserId && reservation.userId === currentUserId) ? (
+                <a href={`/reservations/${reservation.id}`} className="hover:underline">
+                  {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
+                </a>
+              ) : (
+                `${formatDate(reservation.startDate)} → ${formatDate(reservation.endDate)}`
+              )}
+            </span>
           </div>
 
           <div className="flex items-center justify-between text-sm">

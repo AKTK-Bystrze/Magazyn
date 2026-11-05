@@ -13,7 +13,7 @@ if (!id) {
   return Astro.redirect(ROUTES.PUBLIC.EQUIPMENT);
 }
 
-const adminUser = sessionInfo ? isAdmin(sessionInfo.role) : false;
+const adminUser = isAdmin(sessionInfo?.role);
 ---
 
 <AppLayout title="Szczegóły Sprzętu | Magazyn">

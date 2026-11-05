@@ -4,7 +4,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -21,18 +20,14 @@ func isUpstreamAuthUnavailable(err error) bool {
 	if err == nil {
 		return false
 	}
-	if errors.Is(err, io.EOF) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-		return true
-	}
 	var netErr net.Error
-	if errors.As(err, &netErr) {
+	if errors.As(err, &netErr) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 		return true
 	}
 	errMsg := err.Error()
 	return strings.Contains(errMsg, "EOF") ||
 		strings.Contains(errMsg, "connection refused") ||
 		strings.Contains(errMsg, "connect: ") ||
-		strings.Contains(errMsg, "i/o timeout") ||
 		strings.Contains(errMsg, "no such host") ||
 		strings.Contains(errMsg, "name resolution failed") ||
 		strings.Contains(errMsg, "response status code 5")

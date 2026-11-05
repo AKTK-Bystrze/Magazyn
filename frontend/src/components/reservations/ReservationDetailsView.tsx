@@ -70,13 +70,9 @@ function ReservationDetailsContent({
   }
 
   if (error || !reservation) {
-    const status = (error as Error & { status?: number })?.status;
+    const status = (error as { status?: number })?.status ?? error?.message;
     const errorMessage =
-      status === 403 || error?.message === "403"
-        ? UI.UNAUTHORIZED
-        : status === 404 || error?.message === "404"
-          ? UI.NOT_FOUND
-          : UI.NETWORK_ERROR;
+      status == 403 ? UI.UNAUTHORIZED : status == 404 ? UI.NOT_FOUND : UI.NETWORK_ERROR;
 
     return (
       <div className="space-y-6">
@@ -117,10 +113,7 @@ function ReservationDetailsContent({
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          <a
-            href={`/equipment/${reservation.equipmentId}`}
-            className="hover:underline"
-          >
+          <a href={`/equipment/${reservation.equipmentId}`} className="hover:underline">
             {reservation.equipmentName}
           </a>
         </h1>

@@ -53,7 +53,7 @@ export function ReservationTableRow({
   mode,
 }: ReservationTableRowProps) {
   const canViewDetails =
-    mode === "admin" || (currentUserId ? item.userId === currentUserId : false);
+    mode === "admin" || Boolean(currentUserId && item.userId === currentUserId);
 
   const handleRowClick = () => {
     if (canViewDetails) {
@@ -92,9 +92,7 @@ export function ReservationTableRow({
             {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
           </a>
         ) : (
-          <span>
-            {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
-          </span>
+          `${formatDateMobile(item.startDate)} - ${formatDateMobile(item.endDate)}`
         )}
       </TableCell>
       <TableCell className="md:hidden font-medium truncate max-w-[120px]">
