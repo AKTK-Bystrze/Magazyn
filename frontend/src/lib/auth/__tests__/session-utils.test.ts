@@ -28,7 +28,7 @@ describe("getUserSession", () => {
   });
 
   describe("successful response", () => {
-    it("should return SessionInfo on 200 OK response with correct request options", async () => {
+    it("should return ok with SessionInfo on 200 OK response with correct request options", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -38,7 +38,7 @@ describe("getUserSession", () => {
 
       const result = await getUserSession(validAccessToken);
 
-      expect(result).toEqual(mockSessionInfo);
+      expect(result).toEqual({ status: "ok", sessionInfo: mockSessionInfo });
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringMatching(/http:\/\/(localhost|127\.0\.0\.1):8080\/auth\/session/),
         expect.objectContaining({
@@ -46,6 +46,7 @@ describe("getUserSession", () => {
             Authorization: `Bearer ${validAccessToken}`,
           }),
           cache: "no-store",
+          signal: expect.any(AbortSignal),
         })
       );
     });
@@ -64,17 +65,31 @@ describe("getUserSession", () => {
       });
 
       const result = await getUserSession(validAccessToken);
-      expect(result?.isEnabled).toBe(false);
+      expect(result.status).toBe("ok");
+      if (result.status === "ok") {
+        expect(result.sessionInfo.isEnabled).toBe(false);
+      }
     });
   });
 
   describe("error handling", () => {
+    it("should return unauthorized on 401", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+        text: () => Promise.resolve("Invalid token"),
+        headers: new Headers(),
+      });
+
+      const result = await getUserSession(validAccessToken);
+      expect(result).toEqual({ status: "unauthorized" });
+    });
+
     it.each([
-      [401, "Unauthorized", "Token expired"],
-      [403, "Forbidden", "Account disabled"],
-      [404, "Not Found", "Profile not found"],
       [500, "Internal Server Error", "Server error"],
-    ])("should return null on HTTP %i", async (status, statusText, text) => {
+      [502, "Bad Gateway", "Upstream error"],
+    ])("should return unavailable on HTTP %i", async (status, statusText, text) => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status,
@@ -83,31 +98,20 @@ describe("getUserSession", () => {
         headers: new Headers(),
       });
 
-      expect(await getUserSession(validAccessToken)).toBeNull();
+      const result = await getUserSession(validAccessToken);
+      expect(result.status).toBe("unavailable");
+      if (result.status === "unavailable") {
+        expect(result.error).toContain(String(status));
+      }
     });
 
     it.each([
       ["network error", new Error("Network error")],
       ["fetch timeout", new Error("AbortError: The operation was aborted.")],
-    ])("should return null on %s", async (_, error) => {
+    ])("should return unavailable on %s", async (_, error) => {
       mockFetch.mockRejectedValueOnce(error);
-      expect(await getUserSession(validAccessToken)).toBeNull();
-    });
-  });
-
-  describe("input handling", () => {
-    it("should handle empty access token", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: "Unauthorized",
-        text: () => Promise.resolve("Missing token"),
-        headers: new Headers(),
-      });
-
-      const result = await getUserSession("");
-
-      expect(result).toBeNull();
+      const result = await getUserSession(validAccessToken);
+      expect(result.status).toBe("unavailable");
     });
   });
 });

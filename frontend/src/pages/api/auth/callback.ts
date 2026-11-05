@@ -1,6 +1,6 @@
 // frontend/src/pages/api/auth/callback.ts
 // Magic-link authentication callback handler:
-// 1. GET renders a client-side handoff page that extracts tokens from the URL fragment and POSTs them.
+// 1. GET renders a styled client-side handoff page that extracts tokens from the URL fragment and POSTs them.
 // 2. POST validates the tokens against Supabase, retrieves user session info, and sets the encrypted HttpOnly session cookie.
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
@@ -21,10 +21,68 @@ const HANDOFF_PAGE = `<!doctype html>
 <html lang="pl">
   <head>
     <meta charset="utf-8" />
-    <title>Logowanie</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Logowanie | Magazyn</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #09090b;
+        --muted: #71717a;
+        --spinner: #18181b;
+        --spinner-track: #e4e4e7;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --fg: #fafafa;
+          --muted: #a1a1aa;
+          --spinner: #fafafa;
+          --spinner-track: #27272a;
+        }
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg);
+        color: var(--fg);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.25rem;
+        max-width: 320px;
+        width: 100%;
+      }
+      .spinner {
+        width: 36px;
+        height: 36px;
+        border: 3.5px solid var(--spinner-track);
+        border-top-color: var(--spinner);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .title {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--muted);
+      }
+    </style>
   </head>
   <body>
-    <p>Trwa logowanie, proszę czekać...</p>
+    <div class="card">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="title">Trwa logowanie, proszę czekać...</p>
+    </div>
     <script>
       (async () => {
         const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -107,13 +165,15 @@ export const POST: APIRoute = async ({ url, request, cookies, locals }) => {
   }
 
   // Fetch authoritative role + enabled status from the Go backend.
-  const sessionInfo = await getUserSession(accessToken);
-  if (!sessionInfo) {
+  const sessionRes = await getUserSession(accessToken);
+  if (sessionRes.status !== "ok") {
     locals.logger?.error("Magic link session info fetch failed from backend", {
       userId: data.user.id,
     });
     return Response.json({ error: "session_fetch_failed" }, { status: 502 });
   }
+
+  const sessionInfo = sessionRes.sessionInfo;
 
   const session: MagazynSession = {
     userId: data.user.id,
