@@ -50,7 +50,7 @@ The backend registers routes directly on standard `net/http` ServeMux (no `/api/
 │   └── POST /equipment/{id}/maintenance-logs    # Auth: add maintenance log entry
 │
 ├── /reservations
-│   ├── GET  /reservations                       # Auth: list reservations (scope=my or scope=all; filters: search, user_id, type_id, status, dates, sort; pagination)
+│   ├── GET  /reservations                       # Auth: list reservations (scope=my|all; filters: search, user_id, type_id, status=[PENDING|RENTED|RETURNED|CANCELLED|FUTURE|ACTIVE|OVERDUE], dates, sort; pagination)
 │   ├── POST /reservations                       # Auth: create atomic reservation(s) & deduct credits
 │   ├── GET  /reservations/dashboard             # Admin, SuperAdmin: reservation dashboard statistics
 │   ├── PATCH /reservations/bulk                 # Admin, SuperAdmin: bulk update reservation statuses

@@ -58,10 +58,12 @@ function ReservationListContainerInner({
     currentUserBalance,
     handleModify,
     handleReturn,
+    handleRent,
     handleCancelClick,
     handleCancelAll,
     handleModifyDatesAll,
     handleReturnAll,
+    handleRentAll,
     handleCancelDialogClose,
     handleModifyDatesConfirm,
     handleReturnConfirm,
@@ -157,9 +159,11 @@ function ReservationListContainerInner({
           onModify={showActions ? handleModify : undefined}
           onCancel={showActions ? handleCancelClick : undefined}
           onReturn={showActions ? handleReturn : undefined}
+          onRent={showActions ? handleRent : undefined}
           onCancelAll={showActions ? handleCancelAll : undefined}
           onModifyDatesAll={showActions ? handleModifyDatesAll : undefined}
           onReturnAll={showActions ? handleReturnAll : undefined}
+          onRentAll={showActions ? handleRentAll : undefined}
           onViewDetails={handleViewDetails}
         />
       ) : (
@@ -173,6 +177,7 @@ function ReservationListContainerInner({
           onModify={showActions ? handleModify : undefined}
           onCancel={showActions ? handleCancelClick : undefined}
           onReturn={showActions ? handleReturn : undefined}
+          onRent={showActions ? handleRent : undefined}
           onViewDetails={handleViewDetails}
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}

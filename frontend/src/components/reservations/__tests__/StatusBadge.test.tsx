@@ -61,9 +61,35 @@ describe("StatusBadge", () => {
     expect(screen.getByTestId("status-badge")).toHaveTextContent("Anulowana");
 
     rerender(<StatusBadge status="RENTED" data-testid="status-badge" />);
-    expect(screen.getByTestId("status-badge")).toHaveTextContent("Wypożyczona");
+    expect(screen.getByTestId("status-badge")).toHaveTextContent("W trakcie");
 
     rerender(<StatusBadge status="RETURNED" data-testid="status-badge" />);
     expect(screen.getByTestId("status-badge")).toHaveTextContent("Zwrócona");
+  });
+
+  it("renders RENTED status with Przyszła when startDate is in the future", () => {
+    render(
+      <StatusBadge
+        status="RENTED"
+        startDate="2099-01-01"
+        endDate="2099-01-05"
+        data-testid="status-badge"
+      />
+    );
+    const badge = screen.getByTestId("status-badge");
+    expect(badge).toHaveTextContent(RESERVATION_FUTURE_STATUS_LABEL);
+  });
+
+  it("renders RENTED status with Zaległa when endDate is in the past", () => {
+    render(
+      <StatusBadge
+        status="RENTED"
+        startDate="2020-01-01"
+        endDate="2020-01-05"
+        data-testid="status-badge"
+      />
+    );
+    const badge = screen.getByTestId("status-badge");
+    expect(badge).toHaveTextContent(RESERVATION_OVERDUE_STATUS_LABEL);
   });
 });

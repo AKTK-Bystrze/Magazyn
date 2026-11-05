@@ -5,10 +5,12 @@ package reservation_test
 import (
 	"context"
 	"encoding/json"
+	"testing"
+
+	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/testutils"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -185,7 +187,7 @@ func TestBulkUpdate_DenyMultiple_RefundsAllCredits(t *testing.T) {
 		ReservationIDs: []string{res1ID, res2ID},
 		Status:         constants.ReservationStatusCancelled,
 	}
-	resp, err := fixture.svc.BulkUpdate(ctx, updateCmd, fixture.testUser2ID)
+	resp, err := fixture.svc.BulkUpdate(ctx, updateCmd, fixture.testUser2ID, auth.RoleAdmin)
 	require.NoError(t, err)
 	assert.Equal(t, int32(2), resp.UpdatedCount)
 	balance1Final := fixture.getUserBalance(fixture.testUserID)

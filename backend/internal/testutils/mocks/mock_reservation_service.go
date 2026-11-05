@@ -45,8 +45,8 @@ func (m *MockReservationService) Update(ctx context.Context, id string, cmd type
 	return args.Get(0).(*types.UpdateReservationResponse), args.Error(1)
 }
 
-func (m *MockReservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error) {
-	args := m.Called(ctx, cmd, adminID)
+func (m *MockReservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, userID string, role string) (*types.BulkStatusUpdateResponse, error) {
+	args := m.Called(ctx, cmd, userID, role)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

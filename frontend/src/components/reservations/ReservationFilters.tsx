@@ -12,11 +12,13 @@ import {
   RESERVATION_FILTER_OPTIONS,
   RESERVATION_SORT_OPTIONS,
   ICON_SIZE_SM,
-  DEFAULT_STATUS_FILTER,
   hasActiveReservationFilters,
 } from "@/lib/config/constants";
-import type { ReservationFilterState, ReservationSortOption } from "@/types";
-import type { Enums } from "@/db/database.types";
+import type {
+  ReservationFilterState,
+  ReservationFilterStatus,
+  ReservationSortOption,
+} from "@/types";
 import { useEquipmentTypes } from "@/hooks/use-equipment-api";
 import { usersApi } from "@/lib/api/users-api";
 import { useQuery } from "@tanstack/react-query";
@@ -117,12 +119,7 @@ export function ReservationFilters({ filters, onFilterChange, onReset }: Reserva
         </label>
         <Select
           value={filters.status}
-          onValueChange={(val) =>
-            onFilterChange(
-              "status",
-              val as Enums<"reservation_status"> | typeof DEFAULT_STATUS_FILTER
-            )
-          }
+          onValueChange={(val) => onFilterChange("status", val as ReservationFilterStatus)}
         >
           <SelectTrigger id="status-filter" className="w-[160px] h-9">
             <SelectValue placeholder="Filtruj według statusu" />

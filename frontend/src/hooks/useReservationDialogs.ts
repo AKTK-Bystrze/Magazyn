@@ -4,6 +4,7 @@ import { usersApi } from "@/lib/api/users-api";
 import { equipmentApi } from "@/lib/api/equipment-api";
 import { useStore } from "@nanostores/react";
 import { $creditBalance, initCreditBalance, refreshCreditBalance } from "@/lib/stores/credits";
+import { getTodayAsString } from "@/lib/utils/date-utils";
 import type { ReservationListItem, UpdateReservationCommand } from "@/types";
 
 /**
@@ -293,6 +294,50 @@ export function useReservationDialogs({
     setErrorMessage,
   ]);
 
+  const handleRent = React.useCallback(
+    async (reservation: ReservationListItem) => {
+      try {
+        const today = getTodayAsString();
+        const hasDateChange = reservation.startDate?.split("T")[0] !== today;
+        await updateReservation(reservation.id, { status: "RENTED" });
+        const dateNotice = hasDateChange
+          ? ` Uwaga: data rozpoczęcia została zmieniona na dzisiejszą (${today}).`
+          : "";
+        setSuccessMessage(
+          `Sprzęt "${reservation.equipmentName}" oznaczony jako wypożyczony.${dateNotice}`
+        );
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Nie udało się zmienić statusu na wypożyczony";
+        setErrorMessage(message);
+      }
+    },
+    [updateReservation, setSuccessMessage, setErrorMessage]
+  );
+
+  const handleRentAll = React.useCallback(
+    async (reservations: ReservationListItem[]) => {
+      if (reservations.length === 0) return;
+      try {
+        const today = getTodayAsString();
+        const anyDateChanged = reservations.some((r) => r.startDate?.split("T")[0] !== today);
+        const results = await Promise.allSettled(
+          reservations.map((r) => updateReservation(r.id, { status: "RENTED" }))
+        );
+        const successful = results.filter((r) => r.status === "fulfilled").length;
+        const dateNotice = anyDateChanged
+          ? ` Uwaga: daty rozpoczęcia zostały zmienione na dzisiejszą (${today}).`
+          : "";
+        setSuccessMessage(`${successful} elementów oznaczono jako wypożyczone.${dateNotice}`);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Nie udało się zmienić statusu na wypożyczony";
+        setErrorMessage(message);
+      }
+    },
+    [updateReservation, setSuccessMessage, setErrorMessage]
+  );
+
   return {
     cancelDialogOpen,
     setCancelDialogOpen,
@@ -306,10 +351,12 @@ export function useReservationDialogs({
     currentUserBalance,
     handleModify,
     handleReturn,
+    handleRent,
     handleCancelClick,
     handleCancelAll,
     handleModifyDatesAll,
     handleReturnAll,
+    handleRentAll,
     handleCancelDialogClose,
     handleModifyDatesConfirm,
     handleReturnConfirm,

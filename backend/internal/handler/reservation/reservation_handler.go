@@ -141,7 +141,7 @@ func (h *ReservationHandler) HandleUpdate(w http.ResponseWriter, r *http.Request
 	common.RespondJSON(ctx, w, http.StatusOK, response)
 }
 
-// HandleBulkUpdate updates status for multiple reservations (admin only).
+// HandleBulkUpdate updates status for multiple reservations.
 func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var cmd types.BulkUpdateReservationsCommand
@@ -153,8 +153,9 @@ func (h *ReservationHandler) HandleBulkUpdate(w http.ResponseWriter, r *http.Req
 		common.RespondError(ctx, w, http.StatusBadRequest, "Invalid reservation status")
 		return
 	}
-	adminID := common.GetUserIDFromContext(r)
-	response, err := h.service.BulkUpdate(ctx, cmd, adminID)
+	userID := common.GetUserIDFromContext(r)
+	role := common.GetUserRoleFromContext(r)
+	response, err := h.service.BulkUpdate(ctx, cmd, userID, role)
 	if err != nil {
 		logger.Errorf(ctx, "BulkUpdate error: %v", err)
 		common.RespondWithError(ctx, w, err)

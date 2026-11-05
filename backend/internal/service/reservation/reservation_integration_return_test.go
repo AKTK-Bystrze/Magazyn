@@ -4,9 +4,11 @@ package reservation_test
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/types"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -245,6 +247,28 @@ func TestTS3_User_Rent_PendingReservation(t *testing.T) {
 	require.NoError(t, err, "Owner must be allowed to transition pending reservation to RENTED")
 	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
 	t.Logf("✓ TS-3 owner rent of pending reservation succeeded")
+}
+
+func TestTS3_Rent_Future_UpdatesStartDateToToday(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	// Create future reservation (start in 3 days, end in 5 days)
+	resID, err := fixture.createTestReservation(fixture.testUserID, 3, 5)
+	require.NoError(t, err)
+
+	today := time.Now().Format(constants.DateFormatISO)
+
+	// Owner marks pending future reservation as RENTED
+	rentedStatus := constants.ReservationStatusRented
+	resp, err := fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &rentedStatus},
+		fixture.testUserID, "user")
+	require.NoError(t, err)
+	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
+	assert.Equal(t, today, resp.StartDate, "StartDate must be updated to today upon pickup")
+	t.Logf("✓ TS-3 future reservation pickup updated StartDate to today")
 }
 
 func TestTS3_NonOwner_CannotRent(t *testing.T) {

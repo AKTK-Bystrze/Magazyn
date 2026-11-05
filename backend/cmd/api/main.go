@@ -101,7 +101,7 @@ func main() {
 	mux.Handle("GET /reservations", authMiddleware(http.HandlerFunc(reservationHandler.HandleList)))
 	mux.Handle("POST /reservations", authMiddleware(http.HandlerFunc(reservationHandler.HandleCreate)))
 	mux.Handle("GET /reservations/dashboard", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(reservationHandler.HandleDashboardStats))))
-	mux.Handle("PATCH /reservations/bulk", authMiddleware(authmiddleware.RequireRoles(auth.RoleAdmin, auth.RoleSuperAdmin)(http.HandlerFunc(reservationHandler.HandleBulkUpdate))))
+	mux.Handle("PATCH /reservations/bulk", authMiddleware(http.HandlerFunc(reservationHandler.HandleBulkUpdate)))
 	mux.Handle("GET /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleGetByID)))
 	mux.Handle("PATCH /reservations/{id}", authMiddleware(http.HandlerFunc(reservationHandler.HandleUpdate)))
 	mux.Handle("GET /calendar/availability", authMiddleware(http.HandlerFunc(calendarHandler.HandleGetAvailability)))

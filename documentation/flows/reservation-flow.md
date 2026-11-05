@@ -70,10 +70,11 @@ Statuses are defined in `backend/internal/constants/constants.go`:
 stateDiagram-v2
     [*] --> PENDING: Create Reservation
 
-    PENDING --> RENTED: Admin Approves / Pickup
-    PENDING --> CANCELLED: User or Admin Cancels
+    PENDING --> RENTED: Owner Pickup ("Odbierz") / Admin ("Wydaj")
+    PENDING --> CANCELLED: Owner or Admin Cancels ("Anuluj")
+    PENDING --> RETURNED: Owner or Admin Returns ("Zwróć")
 
-    RENTED --> RETURNED: Equipment Returned
+    RENTED --> RETURNED: Owner or Admin Returns ("Zwróć")
 
     CANCELLED --> [*]
     RETURNED --> [*]
@@ -81,14 +82,45 @@ stateDiagram-v2
 
 ### Permission-Based Transitions
 
-| Actor | From Status | Allowed Transitions                                 |
-| ----- | ----------- | --------------------------------------------------- |
-| User  | `PENDING`   | → `CANCELLED` (cancel own), `RETURNED` (return own) |
-| Admin | `PENDING`   | → `RENTED`, `CANCELLED`                             |
-| Admin | `RENTED`    | → `RETURNED`                                        |
+| Actor        | From Status | Allowed Transitions                                                  | Notes                                                            |
+| ------------ | ----------- | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| User (Owner) | `PENDING`   | → `RENTED` ("Odbierz"), `CANCELLED` ("Anuluj"), `RETURNED` ("Zwróć") | Can pick up, cancel, or return own reservation; can adjust dates |
+| User (Owner) | `RENTED`    | → `RETURNED` ("Zwróć")                                               | Can return equipment; cannot cancel or adjust dates              |
+| Admin        | `PENDING`   | → `RENTED` ("Wydaj"), `CANCELLED` ("Anuluj"), `RETURNED` ("Zwróć")   | Full transition permissions; can adjust dates                    |
+| Admin        | `RENTED`    | → `RETURNED` ("Zwróć")                                               | Can mark equipment as returned; active rentals cannot be cancelled |
 
 > [!IMPORTANT]
-> Users can only modify their **own PENDING** reservations (transitioning to `CANCELLED` or `RETURNED`). Non-pending reservations are immutable for regular users.
+> Regular users can only modify their **own** reservations. For `PENDING` reservations, owners can pick up (`RENTED`), cancel (`CANCELLED`, triggering refund), return (`RETURNED`), or adjust dates. Once `RENTED`, reservations cannot be cancelled; they can only be marked as returned (`RETURNED`).
+> When picking up (`PENDING` → `RENTED`), the system automatically aligns `start_date` to today (including for future or overdue reservations), adjusts `end_date` if overdue, recalculates credit balance, and displays a warning notice. Users are also permitted to bulk-return their own equipment.
+
+### UI Badge Presentation & Query Filters
+
+#### Dynamic Badge Evaluation (Client / SSR)
+
+Database reservation records store only canonical statuses (`PENDING`, `RENTED`, `RETURNED`, `CANCELLED`). The frontend [`StatusBadge.tsx`](../../frontend/src/components/reservations/StatusBadge.tsx) dynamically evaluates human-readable badges based on current date (`today`):
+
+| Database Status       | Date Condition                  | Rendered Badge         | Badge Variant / Style  |
+| --------------------- | ------------------------------- | ---------------------- | ---------------------- |
+| `PENDING` or `RENTED` | `endDate < today`               | **Zaległa** (Overdue)  | Destructive (red)      |
+| `PENDING` or `RENTED` | `startDate > today`             | **Przyszła** (Future)  | Green (`bg-green-500`) |
+| `PENDING` or `RENTED` | `startDate <= today <= endDate` | **W trakcie** (Active) | Green (`bg-green-500`) |
+| `RETURNED`            | Any                             | **Zwrócona**           | Outline                |
+| `CANCELLED`           | Any                             | **Anulowana**          | Destructive            |
+
+#### Server-Side Query Filtering
+
+The `GET /reservations?status={filter}` endpoint supports filtering by both canonical statuses and temporal dynamic categories:
+
+| Filter Parameter | Matching Logic in PostgreSQL (`reservation_repository_query.go`)                              |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `ALL` / (empty)  | No status filtering applied                                                                   |
+| `FUTURE`         | `status IN ('PENDING', 'RENTED') AND start_date > CURRENT_DATE`                               |
+| `ACTIVE`         | `status IN ('PENDING', 'RENTED') AND start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE` |
+| `OVERDUE`        | `status IN ('PENDING', 'RENTED') AND end_date < CURRENT_DATE`                                 |
+| `RETURNED`       | `status = 'RETURNED'`                                                                         |
+| `CANCELLED`      | `status = 'CANCELLED'`                                                                        |
+| `PENDING`        | `status = 'PENDING'`                                                                          |
+| `RENTED`         | `status = 'RENTED'`                                                                           |
 
 ---
 
@@ -144,14 +176,21 @@ The update, date modification, and cancellation lifecycle is orchestrated by `ba
 ```mermaid
 flowchart TD
     A[Update Request] --> B{Is Admin?}
-    B -->|Yes| C[Allow All Updates]
+    B -->|Yes| C[Allow Status & Date Modifications]
     B -->|No| D{Is Owner?}
     D -->|No| E[403 Forbidden]
-    D -->|Yes| F{Status = PENDING?}
-    F -->|No| G[403 Cannot Modify]
-    F -->|Yes| H{New Status?}
-    H -->|CANCELLED or RETURNED| I[Allow Status Change]
-    H -->|Other| J[400 Validation Error]
+    D -->|Yes| F{Changing Status?}
+    F -->|No: Modifying Dates| G{Current Status = PENDING?}
+    G -->|Yes| H[Allow Date Adjustment]
+    G -->|No| I[403 Cannot modify non-pending reservation]
+    F -->|Yes: Changing Status| J{Current Status?}
+    J -->|PENDING| K{Target Status?}
+    K -->|RENTED, CANCELLED, or RETURNED| L[Allow Status Transition]
+    K -->|Other| M[400 Validation Error]
+    J -->|RENTED| N{Target Status?}
+    N -->|RETURNED| L
+    N -->|Other| M
+    J -->|RETURNED or CANCELLED| O[400 Cannot modify inactive reservation]
 ```
 
 ### Status Change to CANCELLED (Cancellation)
@@ -276,7 +315,7 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 | `backend/internal/service/reservation/reservation_service.go`           | Main service interface, constructor, list, get, and bulk updates                                                                                 |
 | `backend/internal/service/reservation/reservation_service_create.go`    | Reservation creation validation, pricing orchestration, and atomic RPC dispatch                                                                  |
 | `backend/internal/service/reservation/reservation_service_update.go`    | Reservation update, date conflict checks, cancellation, and refund logic                                                                         |
-| `backend/internal/validation/date.go`                                   | Inclusive date span calculation (`CalculateDays`), pricing calculation (`CalculateReservationCost`), and ISO validation                         |
+| `backend/internal/validation/date.go`                                   | Inclusive date span calculation (`CalculateDays`), pricing calculation (`CalculateReservationCost`), and ISO validation                          |
 | `backend/internal/repository/supabase/reservation_repository_rpc.go`    | Atomic PostgreSQL stored procedure wrappers (`create_reservation_atomic`, `modify_reservation_dates_with_credits`, `refund_reservation_credits`) |
 | `backend/internal/repository/supabase/reservation_repository_query.go`  | Filtered list retrieval and RLS bypass logic                                                                                                     |
 | `backend/internal/repository/supabase/reservation_repository_detail.go` | Detailed queries joining user profiles and equipment                                                                                             |
@@ -290,3 +329,7 @@ if err := s.repo.RefundCredits(ctx, id, refundAmount); err != nil {
 | `frontend/src/components/reservations/ReservationCartView.tsx`          | Cart presentation view and checkout mutation submission (`fetch('/api/reservations')`)                                                           |
 | `frontend/src/hooks/useReservationDateAdjustment.ts`                    | Frontend date adjustment mutation and range validation                                                                                           |
 | `frontend/src/hooks/useReservationDialogs.ts`                           | Frontend modal dialog state management                                                                                                           |
+| `frontend/src/lib/utils/status-utils.ts`                                | Status transition permissions matrix (`canRent`, `canReturn`, `canCancel`, `canEditDates`)                                                       |
+| `frontend/src/components/reservations/StatusBadge.tsx`                  | Dynamic date-driven status badge evaluation (`Przyszła`, `W trakcie`, `Zaległa`)                                                                 |
+| `frontend/src/components/reservations/ReservationStatusActions.tsx`     | Status change action buttons ("Odbierz" / "Wydaj", "Zwróć", "Anuluj")                                                                            |
+| `frontend/src/components/reservations/ReservationFilters.tsx`           | Reservation list status filter dropdown (`FUTURE`, `ACTIVE`, `OVERDUE`, `RETURNED`, `CANCELLED`)                                                 |

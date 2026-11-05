@@ -4,11 +4,13 @@ import type { Enums } from "@/db/database.types";
 /**
  * Configuration for available status actions based on role and current status
  */
-type StatusActionConfig = {
+export type StatusActionConfig = {
   /** Whether user can cancel (change to CANCELLED) */
   canCancel: boolean;
   /** Whether user can mark as returned */
   canMarkReturned: boolean;
+  /** Whether user or admin can pickup/rent (change from PENDING to RENTED) */
+  canRent: boolean;
   /** Whether admin can change status via dropdown */
   canChangeStatus: boolean;
   /** Valid status transitions for dropdown */
@@ -33,6 +35,7 @@ export function canChangeStatus(
     return {
       canCancel: false,
       canMarkReturned: false,
+      canRent: false,
       canChangeStatus: false,
       availableStatuses: [],
     };
@@ -42,6 +45,7 @@ export function canChangeStatus(
     canCancel: currentStatus === RESERVATION_STATUS.PENDING,
     canMarkReturned:
       currentStatus === RESERVATION_STATUS.PENDING || currentStatus === RESERVATION_STATUS.RENTED,
+    canRent: currentStatus === RESERVATION_STATUS.PENDING,
     canChangeStatus: isAdmin,
     availableStatuses: isAdmin ? getAvailableTransitions(currentStatus, isAdmin) : [],
   };

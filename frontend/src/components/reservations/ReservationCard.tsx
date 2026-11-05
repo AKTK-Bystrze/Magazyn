@@ -2,9 +2,9 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
-import { Calendar, CreditCard, Edit2, User, X } from "lucide-react";
+import { Calendar, CreditCard, Edit2, User, X, PackageCheck } from "lucide-react";
 import { formatDate, calculateDays } from "@/lib/utils/date-utils";
-import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
+import { ICON_SIZE_SM } from "@/lib/config/constants";
 import { cn } from "@/lib/utils";
 import { canChangeStatus } from "@/lib/utils/status-utils";
 import type { ReservationListItem } from "@/types";
@@ -20,6 +20,7 @@ interface ReservationCardProps {
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
   onReturn?: (reservation: ReservationListItem) => void;
+  onRent?: (reservation: ReservationListItem) => void;
   onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
@@ -36,14 +37,14 @@ export function ReservationCard({
   onModify,
   onCancel,
   onReturn,
+  onRent,
 }: ReservationCardProps) {
   const isAdmin = mode === "admin";
-  const { canCancel, canMarkReturned } = React.useMemo(
+  const { canCancel, canMarkReturned, canRent } = React.useMemo(
     () => canChangeStatus(reservation.status, isOwn, isAdmin),
     [reservation.status, isOwn, isAdmin]
   );
 
-  const isPending = reservation.status === RESERVATION_STATUS.PENDING;
   const days = calculateDays(reservation.startDate, reservation.endDate);
 
   const handleModify = React.useCallback(() => {
@@ -109,7 +110,20 @@ export function ReservationCard({
 
           {showActions && (
             <div className="flex flex-wrap gap-2 pt-3 mt-1 border-t">
-              {isPending && onModify && (
+              {canRent && onRent && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRent(reservation)}
+                  className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950/20"
+                  data-testid="rent-reservation-button"
+                >
+                  <PackageCheck className={ICON_SIZE_SM} />
+                  {isAdmin ? "Wydaj" : "Odbierz"}
+                </Button>
+              )}
+
+              {canCancel && onModify && (
                 <Button
                   variant="outline"
                   size="sm"

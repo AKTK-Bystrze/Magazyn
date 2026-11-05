@@ -44,9 +44,44 @@ describe("ReservationStatusActions", () => {
       />
     );
 
+    expect(screen.getByRole("button", { name: /Wydaj/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Zmień termin/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Anuluj/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Zwróć/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Zmień Status/i })).not.toBeInTheDocument();
+  });
+
+  it("renders pickup button Odbierz and date warning for owner when reservation is pending and start date differs from today", () => {
+    renderWithQuery(
+      <ReservationStatusActions
+        reservation={mockReservation}
+        currentUserId="user-1"
+        currentUserBalance={100}
+        isAdmin={false}
+        onStatusChange={vi.fn()}
+        isUpdating={false}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /Odbierz/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Wydaj/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId("rent-date-warning")).toBeInTheDocument();
+  });
+
+  it("does not render pickup or return buttons for non-owner non-admin", () => {
+    renderWithQuery(
+      <ReservationStatusActions
+        reservation={mockReservation}
+        currentUserId="user-other"
+        currentUserBalance={100}
+        isAdmin={false}
+        onStatusChange={vi.fn()}
+        isUpdating={false}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /Odbierz/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Wydaj/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Anuluj/i })).not.toBeInTheDocument();
   });
 });

@@ -34,6 +34,31 @@ async function cancelReservationViaUI(adminPage: Page, row: Locator) {
   await expect(confirmButton).toBeHidden({ timeout: 10000 });
 }
 
+async function rentReservationViaUI(adminPage: Page, row: Locator) {
+  const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
+  await expect(actionTrigger).toBeVisible({ timeout: 10000 });
+  await actionTrigger.click();
+
+  const rentButton = adminPage.getByTestId("rent-reservation-button");
+  await expect(rentButton).toBeVisible({ timeout: 10000 });
+  await rentButton.click();
+}
+
+async function returnReservationViaUI(adminPage: Page, row: Locator) {
+  const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
+  await expect(actionTrigger).toBeVisible({ timeout: 10000 });
+  await actionTrigger.click();
+
+  const returnButton = adminPage.getByTestId("return-reservation-button");
+  await expect(returnButton).toBeVisible({ timeout: 10000 });
+  await returnButton.click();
+
+  const confirmButton = adminPage.getByRole("button", { name: "Potwierdź Zwrot" });
+  await expect(confirmButton).toBeVisible();
+  await confirmButton.click();
+  await expect(confirmButton).toBeHidden({ timeout: 10000 });
+}
+
 test.describe.serial("Admin Reservation Management", () => {
   let initialUserCredits: number;
 
@@ -212,5 +237,56 @@ test.describe.serial("Admin Reservation Management", () => {
     const balanceAfter = profileAfter?.credit_balance ?? 0;
 
     expect(balanceAfter).toBe(balanceBefore);
+  });
+
+  test("Happy Path: Complete lifecycle PENDING -> RENTED -> RETURNED", async ({
+    adminPage,
+    testUser,
+    testEquipment,
+    workerIndex,
+  }) => {
+    test.setTimeout(60000);
+    const [equip1] = testEquipment;
+    const cart = new ReservationCartPOM(adminPage);
+
+    await addToCart(adminPage, equip1.id);
+    await goToCart(adminPage);
+    await cart.waitForCartView();
+    await cart.selectUser(testUser.email);
+
+    const { startDays, endDays } = calculateWorkerDates(workerIndex);
+    await cart.setDatesFromNow(startDays, endDays);
+
+    await cart.proceedToConfirmation();
+    await cart.confirm();
+    await cart.waitForSuccess();
+
+    await navigateToAllReservations(adminPage);
+
+    const row = adminPage.locator('[data-testid^="reservation-row-"]', { hasText: equip1.name });
+    await expect(row.first()).toBeVisible({ timeout: 10000 });
+
+    const testId = await row.first().getAttribute("data-testid");
+    const reservationId = testId!.replace("reservation-row-", "");
+
+    // 1. Move from PENDING to RENTED
+    await rentReservationViaUI(adminPage, row);
+
+    // Verify badge shows active or future label for rented item
+    const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
+    await expect(statusBadge).toBeVisible();
+    await expect(statusBadge).toContainText(/Przyszła|W trakcie/);
+
+    // Disallowed transition check: cancel button must not be available once rented
+    const actionTrigger = row.first().getByTestId("reservation-action-menu-trigger").first();
+    await actionTrigger.click();
+    await expect(adminPage.getByTestId("cancel-reservation-button")).not.toBeVisible();
+    await adminPage.keyboard.press("Escape");
+
+    // 2. Move from RENTED to RETURNED
+    await returnReservationViaUI(adminPage, row);
+
+    // Verify badge updates to RETURNED (Zwrócona)
+    await expect(statusBadge).toContainText(/Zwrócon[ao]/);
   });
 });

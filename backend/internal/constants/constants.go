@@ -25,6 +25,13 @@ const (
 	ReservationStatusReturned = "RETURNED"
 	// ReservationStatusCancelled indicates reservation was cancelled.
 	ReservationStatusCancelled = "CANCELLED"
+
+	// ReservationFilterStatusFuture filters active reservations with start date in the future.
+	ReservationFilterStatusFuture = "FUTURE"
+	// ReservationFilterStatusActive filters active reservations currently within their rental period.
+	ReservationFilterStatusActive = "ACTIVE"
+	// ReservationFilterStatusOverdue filters active reservations past their return date.
+	ReservationFilterStatusOverdue = "OVERDUE"
 )
 
 // Equipment status values that indicate the current condition and availability.
@@ -89,6 +96,17 @@ var ValidReservationStatuses = []string{
 	ReservationStatusRented,
 	ReservationStatusReturned,
 	ReservationStatusCancelled,
+}
+
+// ValidReservationFilterStatuses lists all valid status values allowed for list filtering.
+var ValidReservationFilterStatuses = []string{
+	ReservationStatusPending,
+	ReservationStatusRented,
+	ReservationStatusReturned,
+	ReservationStatusCancelled,
+	ReservationFilterStatusFuture,
+	ReservationFilterStatusActive,
+	ReservationFilterStatusOverdue,
 }
 
 // ValidReservationSorts lists all valid sort options for listing reservations.

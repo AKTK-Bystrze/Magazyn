@@ -72,6 +72,7 @@ interface ReservationTableProps {
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
   onReturn?: (reservation: ReservationListItem) => void;
+  onRent?: (reservation: ReservationListItem) => void;
   onViewDetails: (reservation: ReservationListItem) => void;
   fetchNextPage: () => void;
   hasNextPage: boolean;
@@ -92,6 +93,7 @@ export function ReservationTable({
   onModify,
   onCancel,
   onReturn,
+  onRent,
   onViewDetails,
   fetchNextPage,
   hasNextPage,
@@ -141,6 +143,8 @@ export function ReservationTable({
                   onModify={onModify}
                   onCancel={onCancel}
                   onReturn={onReturn}
+                  onRent={onRent}
+                  mode={mode}
                 />
               ))}
 

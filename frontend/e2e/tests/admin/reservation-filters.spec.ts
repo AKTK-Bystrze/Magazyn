@@ -51,6 +51,15 @@ test.describe("Reservation Filtering and Sorting E2E", () => {
     await expect(statusTrigger).toBeVisible({ timeout: 15000 });
     await expect(statusTrigger).toContainText(/Wszystkie statusy/i);
 
+    // Verify temporal status filter options are present
+    await statusTrigger.click();
+    await expect(adminPage.getByRole("option", { name: "Przyszła" })).toBeVisible();
+    await expect(adminPage.getByRole("option", { name: "W trakcie" })).toBeVisible();
+    await expect(adminPage.getByRole("option", { name: "Zaległa" })).toBeVisible();
+    await expect(adminPage.getByRole("option", { name: "Zwrócona" })).toBeVisible();
+    await expect(adminPage.getByRole("option", { name: "Anulowana" })).toBeVisible();
+    await adminPage.keyboard.press("Escape");
+
     const sortTrigger = adminPage.locator("#sort-filter");
     await expect(sortTrigger).toBeVisible({ timeout: 15000 });
     await expect(sortTrigger).toContainText(/Data utworzenia: najnowsze/i);

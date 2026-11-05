@@ -58,8 +58,9 @@ export const RESERVATION_STATUS_VARIANTS: Record<
  */
 export const RESERVATION_FILTER_OPTIONS = [
   { value: "ALL", label: "Wszystkie statusy" },
-  { value: "PENDING", label: "W trakcie" },
-  { value: "RENTED", label: "Wypożyczona" },
+  { value: "FUTURE", label: "Przyszła" },
+  { value: "ACTIVE", label: "W trakcie" },
+  { value: "OVERDUE", label: "Zaległa" },
   { value: "RETURNED", label: "Zwrócona" },
   { value: "CANCELLED", label: "Anulowana" },
 ] as const;
