@@ -3,6 +3,7 @@ package reservation
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
@@ -33,6 +34,16 @@ func (s *reservationService) Update(ctx context.Context, id string, cmd types.Up
 	isReturning := cmd.Status != nil && *cmd.Status == constants.ReservationStatusReturned
 	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
 	allowNegative := isReturning || isAdmin
+	isRenting := cmd.Status != nil && *cmd.Status == constants.ReservationStatusRented && current.Status == constants.ReservationStatusPending
+	if isRenting {
+		today := time.Now().Format(constants.DateFormatISO)
+		if current.StartDate != today {
+			cmd.StartDate = &today
+		}
+		if current.EndDate < today {
+			cmd.EndDate = &today
+		}
+	}
 	datesChanging := (cmd.StartDate != nil && *cmd.StartDate != current.StartDate) || (cmd.EndDate != nil && *cmd.EndDate != current.EndDate)
 	if datesChanging {
 		start := current.StartDate

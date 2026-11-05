@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"magazyn/backend/internal/auth"
+	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 	"magazyn/backend/internal/service/email"
@@ -19,7 +20,7 @@ type ReservationService interface {
 	GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error)
 	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string, role string) (*types.CreateReservationsResponse, error)
 	Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error)
-	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error)
+	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, userID string, role string) (*types.BulkStatusUpdateResponse, error)
 	GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error)
 }
 
@@ -88,8 +89,32 @@ func (s *reservationService) GetByID(ctx context.Context, id string, userID stri
 	return res, nil
 }
 
-func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, adminID string) (*types.BulkStatusUpdateResponse, error) {
-	return s.repo.BulkUpdateStatusAtomic(ctx, cmd.ReservationIDs, cmd.Status, adminID)
+func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, userID string, role string) (*types.BulkStatusUpdateResponse, error) {
+	isAdmin := role == auth.RoleAdmin || role == auth.RoleSuperAdmin
+	if !isAdmin {
+		for _, id := range cmd.ReservationIDs {
+			res, err := s.repo.GetReservationByID(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+			if res.UserID != userID {
+				return nil, types.NewForbiddenError("Cannot modify reservations belonging to other users")
+			}
+			switch cmd.Status {
+			case constants.ReservationStatusReturned:
+				if res.Status != constants.ReservationStatusPending && res.Status != constants.ReservationStatusRented {
+					return nil, types.NewValidationError("Can only return active reservations", nil)
+				}
+			case constants.ReservationStatusRented, constants.ReservationStatusCancelled:
+				if res.Status != constants.ReservationStatusPending {
+					return nil, types.NewValidationError("Can only modify pending reservations", nil)
+				}
+			default:
+				return nil, types.NewForbiddenError("Users can only cancel, rent, or return reservations")
+			}
+		}
+	}
+	return s.repo.BulkUpdateStatusAtomic(ctx, cmd.ReservationIDs, cmd.Status, userID)
 }
 
 func (s *reservationService) GetDashboardStats(ctx context.Context) (*types.ReservationDashboardSummary, error) {

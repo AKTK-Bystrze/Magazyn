@@ -75,7 +75,6 @@ stateDiagram-v2
     PENDING --> RETURNED: Owner or Admin Returns ("Zwróć")
 
     RENTED --> RETURNED: Owner or Admin Returns ("Zwróć")
-    RENTED --> CANCELLED: Admin Cancels
 
     CANCELLED --> [*]
     RETURNED --> [*]
@@ -88,10 +87,11 @@ stateDiagram-v2
 | User (Owner) | `PENDING`   | → `RENTED` ("Odbierz"), `CANCELLED` ("Anuluj"), `RETURNED` ("Zwróć") | Can pick up, cancel, or return own reservation; can adjust dates |
 | User (Owner) | `RENTED`    | → `RETURNED` ("Zwróć")                                               | Can return equipment; cannot cancel or adjust dates              |
 | Admin        | `PENDING`   | → `RENTED` ("Wydaj"), `CANCELLED` ("Anuluj"), `RETURNED` ("Zwróć")   | Full transition permissions; can adjust dates                    |
-| Admin        | `RENTED`    | → `RETURNED` ("Zwróć"), `CANCELLED` ("Anuluj")                       | Can return or cancel                                             |
+| Admin        | `RENTED`    | → `RETURNED` ("Zwróć")                                               | Can mark equipment as returned; active rentals cannot be cancelled |
 
 > [!IMPORTANT]
-> Regular users can only modify their **own** reservations. For `PENDING` reservations, owners can pick up (`RENTED`), cancel (`CANCELLED`, triggering refund), return (`RETURNED`), or adjust dates. Once `RENTED`, owners can only return (`RETURNED`) the equipment.
+> Regular users can only modify their **own** reservations. For `PENDING` reservations, owners can pick up (`RENTED`), cancel (`CANCELLED`, triggering refund), return (`RETURNED`), or adjust dates. Once `RENTED`, reservations cannot be cancelled; they can only be marked as returned (`RETURNED`).
+> When picking up (`PENDING` → `RENTED`), the system automatically aligns `start_date` to today (including for future or overdue reservations), adjusts `end_date` if overdue, recalculates credit balance, and displays a warning notice. Users are also permitted to bulk-return their own equipment.
 
 ### UI Badge Presentation & Query Filters
 

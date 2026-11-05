@@ -143,6 +143,29 @@ func TestHandleBulkUpdate_InvalidStatus_ReturnsBadRequest(t *testing.T) {
 	mockSvc.AssertNotCalled(t, "BulkUpdate")
 }
 
+func TestHandleBulkUpdate_UserRole_CallsService(t *testing.T) {
+	mockSvc := new(mocks.MockReservationService)
+	h := handler.NewReservationHandler(mockSvc)
+
+	cmd := types.BulkUpdateReservationsCommand{
+		ReservationIDs: []string{"res-1", "res-2"},
+		Status:         constants.ReservationStatusReturned,
+	}
+	body, _ := json.Marshal(cmd)
+
+	req := httptest.NewRequest(http.MethodPatch, "/reservations/bulk", bytes.NewReader(body))
+	req = testutils.WithUserContext(req, "user-1", auth.RoleUser)
+	rec := httptest.NewRecorder()
+
+	mockSvc.On("BulkUpdate", mock.Anything, cmd, "user-1", auth.RoleUser).
+		Return(&types.BulkStatusUpdateResponse{UpdatedCount: 2}, nil)
+
+	h.HandleBulkUpdate(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	mockSvc.AssertExpectations(t)
+}
+
 func TestHandleList_AllFiltersValid_CallsService(t *testing.T) {
 	mockSvc := new(mocks.MockReservationService)
 	h := handler.NewReservationHandler(mockSvc)

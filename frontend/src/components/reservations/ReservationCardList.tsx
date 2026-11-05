@@ -124,6 +124,7 @@ export function ReservationCardList({
                 onModify={onModify}
                 onCancel={onCancel}
                 onReturn={onReturn}
+                onRent={onRent}
                 onViewDetails={onViewDetails}
                 mode={mode}
               />

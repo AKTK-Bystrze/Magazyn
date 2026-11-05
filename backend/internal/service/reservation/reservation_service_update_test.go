@@ -3,6 +3,7 @@ package reservation_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"magazyn/backend/internal/auth"
 	"magazyn/backend/internal/constants"
@@ -208,14 +209,16 @@ func TestUpdate_OwnerCanRentPending(t *testing.T) {
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 	reservationID := "res-456"
+	today := time.Now().Format(constants.DateFormatISO)
+	endDay := time.Now().AddDate(0, 0, 2).Format(constants.DateFormatISO)
 	reservation := &types.ReservationDetail{
 		ReservationListItem: types.ReservationListItem{
 			ID:          reservationID,
 			UserID:      "user-123",
 			Status:      constants.ReservationStatusPending,
 			EquipmentID: "eq-1",
-			StartDate:   "2025-01-01",
-			EndDate:     "2025-01-03",
+			StartDate:   today,
+			EndDate:     endDay,
 			IsFree:      false,
 		},
 	}
@@ -228,8 +231,8 @@ func TestUpdate_OwnerCanRentPending(t *testing.T) {
 		ID:          reservationID,
 		EquipmentID: "eq-1",
 		Status:      constants.ReservationStatusRented,
-		StartDate:   "2025-01-01",
-		EndDate:     "2025-01-03",
+		StartDate:   today,
+		EndDate:     endDay,
 	}
 	name := "Test Equipment"
 	equipment := &types.PublicEquipmentSelect{
@@ -256,18 +259,89 @@ func TestUpdate_OwnerCanRentPending(t *testing.T) {
 	mockEquipRepo.AssertExpectations(t)
 }
 
-func TestUpdate_AdminCanChangeStatus(t *testing.T) {
+func TestUpdate_OwnerRentPending_FutureUpdatesStartDate(t *testing.T) {
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
-	reservationID := "res-456"
+	reservationID := "res-789"
+	today := time.Now().Format(constants.DateFormatISO)
+	futureStart := time.Now().AddDate(0, 0, 3).Format(constants.DateFormatISO)
+	futureEnd := time.Now().AddDate(0, 0, 5).Format(constants.DateFormatISO)
 	reservation := &types.ReservationDetail{
 		ReservationListItem: types.ReservationListItem{
 			ID:          reservationID,
 			UserID:      "user-123",
 			Status:      constants.ReservationStatusPending,
 			EquipmentID: "eq-1",
-			StartDate:   "2025-01-01",
-			EndDate:     "2025-01-03",
+			StartDate:   futureStart,
+			EndDate:     futureEnd,
+			IsFree:      false,
+		},
+	}
+	mockRepo.On("GetReservationByID", ctx, reservationID).Return(reservation, nil)
+	rentedStatus := constants.ReservationStatusRented
+	cmd := types.UpdateReservationCommand{
+		Status: &rentedStatus,
+	}
+
+	mockRepo.On("GetOverlappingReservations", ctx, "eq-1", today, futureEnd, &reservationID).
+		Return([]types.PublicReservationsSelect{}, nil)
+	mockRepo.On("ModifyReservationDatesWithCredits", ctx, reservationID, "user-123", today, futureEnd, false).
+		Return(&types.ModifyDatesResponse{
+			ID:               reservationID,
+			StartDate:        today,
+			EndDate:          futureEnd,
+			CreditAdjustment: -20,
+			NewBalance:       80,
+			UpdatedAt:        "2026-11-05T12:00:00Z",
+		}, nil)
+
+	updatedRes := &types.PublicReservationsSelect{
+		ID:          reservationID,
+		EquipmentID: "eq-1",
+		Status:      constants.ReservationStatusRented,
+		StartDate:   today,
+		EndDate:     futureEnd,
+	}
+	name := "Test Equipment"
+	equipment := &types.PublicEquipmentSelect{
+		ID:     "eq-1",
+		Name:   &name,
+		TypeID: "type-1",
+		Status: constants.EquipmentStatusOK,
+	}
+	equipmentType := &types.PublicEquipmentTypesSelect{
+		ID:               "type-1",
+		CreditCostPerDay: 10,
+	}
+	mockEquipRepo.On("GetByID", ctx, "eq-1").Return(equipment, nil)
+	mockEquipRepo.On("GetTypeByID", ctx, "type-1").Return(equipmentType, nil)
+	mockRepo.On("UpdateReservation", ctx, reservationID, mock.MatchedBy(func(u types.PublicReservationsUpdate) bool {
+		return u.Status != nil && *u.Status == rentedStatus
+	}), "user-123").Return(updatedRes, nil)
+
+	result, err := svc.Update(ctx, reservationID, cmd, "user-123", auth.RoleUser)
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, constants.ReservationStatusRented, result.Status)
+	assert.Equal(t, today, result.StartDate)
+	mockRepo.AssertExpectations(t)
+	mockEquipRepo.AssertExpectations(t)
+}
+
+func TestUpdate_AdminCanChangeStatus(t *testing.T) {
+	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
+	ctx := context.Background()
+	reservationID := "res-456"
+	today := time.Now().Format(constants.DateFormatISO)
+	endDay := time.Now().AddDate(0, 0, 2).Format(constants.DateFormatISO)
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:          reservationID,
+			UserID:      "user-123",
+			Status:      constants.ReservationStatusPending,
+			EquipmentID: "eq-1",
+			StartDate:   today,
+			EndDate:     endDay,
 			IsFree:      false,
 		},
 	}
@@ -280,8 +354,8 @@ func TestUpdate_AdminCanChangeStatus(t *testing.T) {
 		ID:          reservationID,
 		EquipmentID: "eq-1",
 		Status:      constants.ReservationStatusRented,
-		StartDate:   "2025-01-01",
-		EndDate:     "2025-01-03",
+		StartDate:   today,
+		EndDate:     endDay,
 	}
 	name := "Test Equipment"
 	equipment := &types.PublicEquipmentSelect{
@@ -492,14 +566,16 @@ func TestUpdate_PreservesEquipmentIDWhenRPCReturnsEmpty(t *testing.T) {
 	mockRepo, mockEquipRepo, _, _, svc := setupTestService()
 	ctx := context.Background()
 	reservationID := "res-456"
+	today := time.Now().Format(constants.DateFormatISO)
+	endDay := time.Now().AddDate(0, 0, 2).Format(constants.DateFormatISO)
 	reservation := &types.ReservationDetail{
 		ReservationListItem: types.ReservationListItem{
 			ID:          reservationID,
 			UserID:      "user-123",
 			Status:      constants.ReservationStatusPending,
 			EquipmentID: "eq-1",
-			StartDate:   "2025-01-01",
-			EndDate:     "2025-01-03",
+			StartDate:   today,
+			EndDate:     endDay,
 			IsFree:      false,
 		},
 	}
@@ -538,8 +614,8 @@ func TestUpdate_PreservesEquipmentIDWhenRPCReturnsEmpty(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, constants.ReservationStatusRented, result.Status)
 	assert.Equal(t, "eq-1", result.EquipmentID)
-	assert.Equal(t, "2025-01-01", result.StartDate)
-	assert.Equal(t, "2025-01-03", result.EndDate)
+	assert.Equal(t, today, result.StartDate)
+	assert.Equal(t, endDay, result.EndDate)
 	assert.Equal(t, int32(30), result.CreditCost)
 	mockRepo.AssertExpectations(t)
 	mockEquipRepo.AssertExpectations(t)

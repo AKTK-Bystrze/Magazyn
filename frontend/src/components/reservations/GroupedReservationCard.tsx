@@ -49,7 +49,7 @@ export function GroupedReservationCard({
 }: GroupedReservationCardProps) {
   const days = calculateDays(group.startDate, group.endDate);
   const isPending = group.status === RESERVATION_STATUS.PENDING;
-  const canBulkReturn = isPending || group.status === RESERVATION_STATUS.RENTED;
+  const canBulkReturn = group.status === RESERVATION_STATUS.RENTED;
   const showActions = mode === "admin" || scope === "my";
   const isOwn = currentUserId ? group.userId === currentUserId : false;
 

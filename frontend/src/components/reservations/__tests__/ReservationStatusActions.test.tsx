@@ -51,7 +51,7 @@ describe("ReservationStatusActions", () => {
     expect(screen.queryByRole("button", { name: /Zmień Status/i })).not.toBeInTheDocument();
   });
 
-  it("renders pickup button Odbierz for owner when reservation is pending", () => {
+  it("renders pickup button Odbierz and date warning for owner when reservation is pending and start date differs from today", () => {
     renderWithQuery(
       <ReservationStatusActions
         reservation={mockReservation}
@@ -65,6 +65,7 @@ describe("ReservationStatusActions", () => {
 
     expect(screen.getByRole("button", { name: /Odbierz/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Wydaj/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId("rent-date-warning")).toBeInTheDocument();
   });
 
   it("does not render pickup or return buttons for non-owner non-admin", () => {

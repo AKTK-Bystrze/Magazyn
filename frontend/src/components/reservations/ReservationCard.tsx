@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Calendar, CreditCard, Edit2, User, X, PackageCheck } from "lucide-react";
 import { formatDate, calculateDays } from "@/lib/utils/date-utils";
-import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
+import { ICON_SIZE_SM } from "@/lib/config/constants";
 import { cn } from "@/lib/utils";
 import { canChangeStatus } from "@/lib/utils/status-utils";
 import type { ReservationListItem } from "@/types";
@@ -45,7 +45,6 @@ export function ReservationCard({
     [reservation.status, isOwn, isAdmin]
   );
 
-  const isPending = reservation.status === RESERVATION_STATUS.PENDING;
   const days = calculateDays(reservation.startDate, reservation.endDate);
 
   const handleModify = React.useCallback(() => {
@@ -124,7 +123,7 @@ export function ReservationCard({
                 </Button>
               )}
 
-              {isPending && onModify && (
+              {canCancel && onModify && (
                 <Button
                   variant="outline"
                   size="sm"

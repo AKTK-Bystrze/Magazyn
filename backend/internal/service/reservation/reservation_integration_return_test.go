@@ -247,6 +247,28 @@ func TestTS3_User_Rent_PendingReservation(t *testing.T) {
 	t.Logf("✓ TS-3 owner rent of pending reservation succeeded")
 }
 
+func TestTS3_Rent_Future_UpdatesStartDateToToday(t *testing.T) {
+	fixture := setupDateTestFixture(t)
+	defer fixture.teardown()
+	ctx := context.Background()
+
+	// Create future reservation (start in 3 days, end in 5 days)
+	resID, err := fixture.createTestReservation(fixture.testUserID, 3, 5)
+	require.NoError(t, err)
+
+	today := time.Now().Format(constants.DateFormatISO)
+
+	// Owner marks pending future reservation as RENTED
+	rentedStatus := constants.ReservationStatusRented
+	resp, err := fixture.svc.Update(ctx, resID,
+		types.UpdateReservationCommand{Status: &rentedStatus},
+		fixture.testUserID, "user")
+	require.NoError(t, err)
+	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
+	assert.Equal(t, today, resp.StartDate, "StartDate must be updated to today upon pickup")
+	t.Logf("✓ TS-3 future reservation pickup updated StartDate to today")
+}
+
 func TestTS3_NonOwner_CannotRent(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
