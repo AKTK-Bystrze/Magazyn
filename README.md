@@ -96,12 +96,8 @@ Database instance is created on Supabase. It can be started locally or remotely 
    create .env file based on .env.example
 
    Update in `.env`:
-   - `PUBLIC_SUPABASE_URL`
    - `PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `SESSION_ENCRYPTION_KEY` (64-character hex string)
-
-   >When running on Windows replace "journald" driver driver with "json-file" in docker-compose.yaml file. Look for the detailed guidance in the file
 
 3. **Start Application**
 
@@ -152,8 +148,10 @@ Database instance is created on Supabase. It can be started locally or remotely 
    Copy `.env.example` to `.env`:
 
    Update in `.env`:
+   - `PUBLIC_SUPABASE_URL`
    - `PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SESSION_ENCRYPTION_KEY` (64-character hex string)
 
    See [`.env.example`](.env.example) for all configuration options.
 
