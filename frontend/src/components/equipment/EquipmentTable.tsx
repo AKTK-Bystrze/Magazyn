@@ -187,13 +187,7 @@ export function EquipmentTable({
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">
-                    <a
-                      href={`/equipment/${item.id}`}
-                      className="hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
+                    <a href={`/equipment/${item.id}`} className="hover:underline">
                       {item.name || (
                         <span className="text-muted-foreground italic">{item.type.name}</span>
                       )}

@@ -28,10 +28,6 @@ func isUpstreamAuthUnavailable(err error) bool {
 	if errors.As(err, &netErr) {
 		return true
 	}
-	var opErr *net.OpError
-	if errors.As(err, &opErr) {
-		return true
-	}
 	errMsg := err.Error()
 	return strings.Contains(errMsg, "EOF") ||
 		strings.Contains(errMsg, "connection refused") ||
