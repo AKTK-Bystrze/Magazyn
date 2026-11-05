@@ -10,11 +10,10 @@ import { FEEDBACK_DISPLAY_DURATION_MS } from "@/lib/config/constants";
 
 interface EquipmentCardProps {
   item: EquipmentSearchItem;
-  onViewDetail?: (item: EquipmentSearchItem) => void;
   viewMode?: "grid" | "list";
 }
 
-export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: EquipmentCardProps) {
+export function EquipmentCard({ item, viewMode = "grid" }: EquipmentCardProps) {
   const [isInCart, setIsInCart] = React.useState(false);
   const [justAdded, setJustAdded] = React.useState(false);
 
@@ -141,7 +140,11 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
       )}
 
       <div className={viewMode === "list" ? "flex-1 min-w-0" : "p-4 flex-grow"}>
-        <h3 className="font-semibold text-lg">{item.name}</h3>
+        <h3 className="font-semibold text-lg">
+          <a href={`/equipment/${item.id}`} className="hover:underline">
+            {item.name}
+          </a>
+        </h3>
         <p className="text-sm text-muted-foreground">{item.type.name}</p>
         <p className="text-sm text-gray-600 line-clamp-2 mt-2">
           {item.description || "Brak opisu."}
@@ -155,11 +158,11 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
             <Button
               size="sm"
               variant="default"
-              onClick={() => onViewDetail && onViewDetail(item)}
+              asChild
               aria-label={`Szczegóły sprzętu ${item.name}`}
               data-testid={`equipment-details-button-${item.id}`}
             >
-              Szczegóły
+              <a href={`/equipment/${item.id}`}>Szczegóły</a>
             </Button>
           </div>
         </div>
@@ -170,11 +173,11 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onViewDetail?.(item)}
+              asChild
               className="shrink-0"
               data-testid={`equipment-details-button-${item.id}`}
             >
-              Szczegóły
+              <a href={`/equipment/${item.id}`}>Szczegóły</a>
             </Button>
           </div>
         </CardFooter>

@@ -12,12 +12,20 @@ const UI = EQUIPMENT_MANAGER_UI_STRINGS;
 interface ReservationHistorySectionProps {
   /** List of reservation history items */
   reservations: EquipmentReservationHistoryItem[];
+  /** Current user ID for checking reservation view permissions */
+  currentUserId?: string;
+  /** Whether the current user is an admin */
+  isAdmin?: boolean;
 }
 
 /**
  * Reservation history section showing recent rentals for equipment
  */
-export function ReservationHistorySection({ reservations }: ReservationHistorySectionProps) {
+export function ReservationHistorySection({
+  reservations,
+  currentUserId,
+  isAdmin = false,
+}: ReservationHistorySectionProps) {
   if (reservations.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -45,8 +53,14 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
-            <span>
-              {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
+            <span className="font-medium text-foreground">
+              {isAdmin || (currentUserId && reservation.userId === currentUserId) ? (
+                <a href={`/reservations/${reservation.id}`} className="hover:underline">
+                  {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
+                </a>
+              ) : (
+                `${formatDate(reservation.startDate)} → ${formatDate(reservation.endDate)}`
+              )}
             </span>
           </div>
 

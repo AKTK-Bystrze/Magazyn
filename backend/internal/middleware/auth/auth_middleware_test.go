@@ -89,6 +89,23 @@ func TestAuthMiddleware_Logic(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 		mockRepo.AssertExpectations(t)
 	})
+	t.Run("upstream auth service unavailable returns 503", func(t *testing.T) {
+		mockRepo := setupMocks()
+		token := "some.token"
+		expectedErr := errors.New("Get \"http://host.docker.internal:54321/auth/v1/user\": EOF")
+		mockRepo.On("GetUser", mock.Anything, token).Return((*types.User)(nil), expectedErr)
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			t.Error("Next should not be called")
+		})
+		middleware := NewAuthMiddleware(mockRepo)(next)
+		req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		middleware.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+		assert.Contains(t, w.Body.String(), "Authentication service temporarily unavailable")
+		mockRepo.AssertExpectations(t)
+	})
 	t.Run("disabled user denied (403)", func(t *testing.T) {
 		mockRepo := setupMocks()
 		token := "valid.token"

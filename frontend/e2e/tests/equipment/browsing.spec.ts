@@ -19,7 +19,8 @@ test.describe("Equipment Browsing", () => {
     );
     await detailsButton.click();
 
-    const detailsSheet = authenticatedPage.getByTestId("equipment-details-sheet");
-    await expect(detailsSheet).toBeVisible();
+    await expect(authenticatedPage).toHaveURL(new RegExp(`/equipment/${equipmentId}`));
+    const detailsView = authenticatedPage.getByTestId("equipment-details-view");
+    await expect(detailsView).toBeVisible();
   });
 });

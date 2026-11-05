@@ -72,12 +72,12 @@ func (m *MockEquipmentRepository) GetActiveReservations(ctx context.Context, equ
 	}
 	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
 }
-func (m *MockEquipmentRepository) GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.PublicReservationsSelect, error) {
+func (m *MockEquipmentRepository) GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.ConflictingReservation, error) {
 	args := m.Called(ctx, equipmentID, start, end)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]types.PublicReservationsSelect), args.Error(1)
+	return args.Get(0).([]types.ConflictingReservation), args.Error(1)
 }
 
 func (m *MockEquipmentRepository) GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error) {

@@ -67,8 +67,11 @@ export interface AvailabilityCheckResult {
     name: string;
     reason: string;
     conflictingReservations: Array<{
+      id?: string;
       startDate: string;
       endDate: string;
+      userId?: string;
+      username?: string;
     }>;
   }>;
 }

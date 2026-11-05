@@ -26,7 +26,7 @@ type EquipmentRepository interface {
 	// GetActiveReservations checks for active reservations for equipment
 	GetActiveReservations(ctx context.Context, equipmentID string) ([]types.PublicReservationsSelect, error)
 	// GetConflictingReservations checks for reservations overlapping a date range
-	GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.PublicReservationsSelect, error)
+	GetConflictingReservations(ctx context.Context, equipmentID string, start string, end string) ([]types.ConflictingReservation, error)
 	// GetUserFavorites retrieves IDs of equipment that are user's favorites
 	GetUserFavorites(ctx context.Context, userID string) (map[string]bool, error)
 	// CreateMaintenanceLog creates a new maintenance log entry

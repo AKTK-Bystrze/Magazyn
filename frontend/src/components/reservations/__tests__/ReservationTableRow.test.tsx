@@ -94,6 +94,7 @@ describe("ReservationTableRow", () => {
       <ReservationTableRow
         item={mockItem}
         showUserColumn={false}
+        currentUserId="user-1"
         onViewDetails={onViewDetails}
         onCancel={onCancel}
       />
@@ -116,5 +117,22 @@ describe("ReservationTableRow", () => {
     const row = screen.getByTestId(`reservation-row-${mockItem.id}`);
     fireEvent.click(row);
     expect(onViewDetails).toHaveBeenCalledWith(mockItem);
+  });
+
+  it("does not trigger onViewDetails callback when row is clicked for other users' reservations as non-admin", () => {
+    const onViewDetails = vi.fn();
+    renderInTable(
+      <ReservationTableRow
+        item={mockItem}
+        showUserColumn={false}
+        currentUserId="different-user"
+        mode="user"
+        onViewDetails={onViewDetails}
+      />
+    );
+
+    const row = screen.getByTestId(`reservation-row-${mockItem.id}`);
+    fireEvent.click(row);
+    expect(onViewDetails).not.toHaveBeenCalled();
   });
 });

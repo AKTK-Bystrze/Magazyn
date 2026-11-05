@@ -43,13 +43,12 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
   CONFIRM_STATUS_CHANGE_BUTTON: "Zmień Status",
   CANCEL_CHANGE: "Anuluj",
 
-  UNAUTHORIZED: "Nie masz uprawnień do przeglądania tej rezerwacji",
+  UNAUTHORIZED: "Możesz zobaczyć szczegóły tylko własnej rezerwacji (under development)",
   NOT_FOUND: "Nie znaleziono rezerwacji",
   NETWORK_ERROR: "Błąd połączenia. Spróbuj ponownie",
 
   LOADING: CORE_UI_STRINGS.LOADING,
 
-  CHANGED_BY: "Zmienione przez",
   INITIAL_CREATION: "Rezerwacja utworzona",
   SYSTEM: "System",
 } as const;

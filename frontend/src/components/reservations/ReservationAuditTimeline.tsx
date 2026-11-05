@@ -65,11 +65,8 @@ export function ReservationAuditTimeline({ auditTrail }: ReservationAuditTimelin
 
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className={ICON_SIZE_SM} />
-                    <span>
-                      {UI.CHANGED_BY}{" "}
-                      <span className="font-medium text-foreground">
-                        {entry.changedByUsername || UI.SYSTEM}
-                      </span>
+                    <span className="font-medium text-foreground">
+                      {entry.changedByUsername || UI.SYSTEM}
                     </span>
                   </div>
 

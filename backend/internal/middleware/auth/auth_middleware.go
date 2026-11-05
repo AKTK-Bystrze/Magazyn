@@ -4,13 +4,34 @@ package auth
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
+	"strings"
 
 	"magazyn/backend/internal/appcontext"
 	"magazyn/backend/internal/handler/common"
 	"magazyn/backend/internal/logger"
 	"magazyn/backend/internal/repository"
 )
+
+// isUpstreamAuthUnavailable checks if the error from auth repository is an upstream infrastructure
+// or network failure (e.g. connection refused, EOF, timeout, 5xx) rather than invalid credentials.
+func isUpstreamAuthUnavailable(err error) bool {
+	if err == nil {
+		return false
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return true
+	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "EOF") ||
+		strings.Contains(errMsg, "connection refused") ||
+		strings.Contains(errMsg, "connect: ") ||
+		strings.Contains(errMsg, "no such host") ||
+		strings.Contains(errMsg, "name resolution failed") ||
+		strings.Contains(errMsg, "response status code 5")
+}
 
 // NewAuthMiddleware creates HTTP middleware that verifies bearer tokens and populates request context.
 func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.Handler {
@@ -29,6 +50,11 @@ func NewAuthMiddleware(repo repository.AuthRepository) func(http.Handler) http.H
 			}
 			user, err := repo.GetUser(r.Context(), token)
 			if err != nil {
+				if isUpstreamAuthUnavailable(err) {
+					logger.Errorf(r.Context(), "Authentication service unavailable: %v", err)
+					common.RespondError(r.Context(), w, http.StatusServiceUnavailable, "Authentication service temporarily unavailable")
+					return
+				}
 				logger.Errorf(r.Context(), "Token verification failed: %v", err)
 				common.RespondError(r.Context(), w, http.StatusUnauthorized, "Invalid or expired token")
 				return

@@ -58,6 +58,8 @@ export type EquipmentAvailability = {
     /** Reservation end date (YYYY-MM-DD) */
     endDate: string;
     status: Enums<"reservation_status">;
+    userId?: string;
+    username?: string;
   }>;
 };
 
@@ -91,7 +93,7 @@ export type EquipmentManagerFilterState = EquipmentSearchParams;
 
 /**
  * Equipment reservation history item
- * Used in EquipmentDetailsSheet to show reservation history
+ * Used in EquipmentDetailsView to show reservation history
  */
 export type EquipmentReservationHistoryItem = {
   id: string;

@@ -94,8 +94,11 @@ export function useAvailabilityCheck(
           reason: ERROR_UNAVAILABLE_FOR_DATES,
           conflictingReservations: (r.availability.conflictingReservations || []).map(
             (reservation) => ({
+              id: reservation.id,
               startDate: reservation.startDate,
               endDate: reservation.endDate,
+              userId: reservation.userId,
+              username: reservation.username,
             })
           ),
         }));

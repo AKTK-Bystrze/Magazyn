@@ -52,8 +52,13 @@ export function ReservationTableRow({
   onRent,
   mode,
 }: ReservationTableRowProps) {
+  const canViewDetails =
+    mode === "admin" || Boolean(currentUserId && item.userId === currentUserId);
+
   const handleRowClick = () => {
-    onViewDetails(item);
+    if (canViewDetails) {
+      onViewDetails(item);
+    }
   };
 
   const actionMenu = (
@@ -70,7 +75,7 @@ export function ReservationTableRow({
 
   return (
     <TableRow
-      className="hover:bg-muted/50 cursor-pointer"
+      className={canViewDetails ? "hover:bg-muted/50 cursor-pointer" : "hover:bg-muted/50"}
       onClick={handleRowClick}
       data-testid={`reservation-row-${item.id}`}
     >
@@ -78,10 +83,26 @@ export function ReservationTableRow({
         <TableCell className="md:hidden truncate max-w-[100px] text-sm">{item.username}</TableCell>
       )}
       <TableCell className="md:hidden whitespace-nowrap text-sm">
-        {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
+        {canViewDetails ? (
+          <a
+            href={`/reservations/${item.id}`}
+            className="hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {formatDateMobile(item.startDate)} - {formatDateMobile(item.endDate)}
+          </a>
+        ) : (
+          `${formatDateMobile(item.startDate)} - ${formatDateMobile(item.endDate)}`
+        )}
       </TableCell>
       <TableCell className="md:hidden font-medium truncate max-w-[120px]">
-        {item.equipmentName}
+        <a
+          href={`/equipment/${item.equipmentId}`}
+          className="hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {item.equipmentName}
+        </a>
       </TableCell>
       <TableCell className="md:hidden">
         <StatusBadge
@@ -96,7 +117,13 @@ export function ReservationTableRow({
 
       <TableCell className="hidden md:table-cell">
         <div className="font-medium truncate max-w-[200px]" title={item.equipmentName}>
-          {item.equipmentName}
+          <a
+            href={`/equipment/${item.equipmentId}`}
+            className="hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {item.equipmentName}
+          </a>
         </div>
       </TableCell>
       <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-[150px]">
