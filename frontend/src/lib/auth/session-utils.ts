@@ -22,6 +22,7 @@ export async function getUserSession(accessToken: string): Promise<SessionFetchR
         "Content-Type": "application/json",
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(5000),
     });
 
     if (response.ok) {

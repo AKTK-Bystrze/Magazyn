@@ -46,6 +46,7 @@ describe("getUserSession", () => {
             Authorization: `Bearer ${validAccessToken}`,
           }),
           cache: "no-store",
+          signal: expect.any(AbortSignal),
         })
       );
     });

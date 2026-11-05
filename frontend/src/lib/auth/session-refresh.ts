@@ -7,7 +7,7 @@ export type RefreshResult =
   | { success: true; session: MagazynSession }
   | { success: false; isRevoked: boolean; error?: string };
 
-// In-flight refresh promises mapped by userId
+// In-flight refresh promises mapped by refreshToken
 const activeRefreshes = new Map<string, Promise<RefreshResult>>();
 
 // Recently rotated tokens mapped by oldRefreshToken -> newSession (30s grace window)
@@ -33,8 +33,8 @@ export async function refreshUserSession(
     return { success: true, session: cached };
   }
 
-  // 2. Check if a refresh for this user is already in flight
-  const existingPromise = activeRefreshes.get(session.userId);
+  // 2. Check if a refresh for this token is already in flight
+  const existingPromise = activeRefreshes.get(session.refreshToken);
   if (existingPromise) {
     return existingPromise;
   }
@@ -48,8 +48,10 @@ export async function refreshUserSession(
 
       if (error || !data.session) {
         const authErr = error as { code?: string; message?: string; status?: number } | null;
+        const isRateLimitedOrTimeout = authErr?.status === 429 || authErr?.status === 408;
         const isRevoked =
           Boolean(error) &&
+          !isRateLimitedOrTimeout &&
           ((authErr?.status !== undefined && authErr.status >= 400 && authErr.status < 500) ||
             /revoked|expired|not_found|invalid/i.test(`${authErr?.code} ${authErr?.message}`));
 
@@ -79,11 +81,11 @@ export async function refreshUserSession(
         error: err instanceof Error ? err.message : String(err),
       };
     } finally {
-      activeRefreshes.delete(session.userId);
+      activeRefreshes.delete(session.refreshToken);
     }
   })();
 
-  activeRefreshes.set(session.userId, refreshPromise);
+  activeRefreshes.set(session.refreshToken, refreshPromise);
   return refreshPromise;
 }
 

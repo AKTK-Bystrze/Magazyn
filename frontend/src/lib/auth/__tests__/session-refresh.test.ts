@@ -89,6 +89,52 @@ describe("session-refresh (Single-flight & Grace cache)", () => {
     }
   });
 
+  it("permits independent concurrent refreshes for different devices with different tokens", async () => {
+    const sessionDeviceA: MagazynSession = {
+      ...baseSession,
+      refreshToken: "token-device-a",
+    };
+    const sessionDeviceB: MagazynSession = {
+      ...baseSession,
+      refreshToken: "token-device-b",
+    };
+
+    mockRefreshSession
+      .mockResolvedValueOnce({
+        data: {
+          session: {
+            access_token: "access-device-a",
+            refresh_token: "rotated-device-a",
+            expires_at: 1900000000,
+          },
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          session: {
+            access_token: "access-device-b",
+            refresh_token: "rotated-device-b",
+            expires_at: 1900000000,
+          },
+        },
+        error: null,
+      });
+
+    const [resA, resB] = await Promise.all([
+      refreshUserSession(sessionDeviceA, mockSupabase),
+      refreshUserSession(sessionDeviceB, mockSupabase),
+    ]);
+
+    expect(mockRefreshSession).toHaveBeenCalledTimes(2);
+    expect(resA.success).toBe(true);
+    expect(resB.success).toBe(true);
+    if (resA.success && resB.success) {
+      expect(resA.session.refreshToken).toBe("rotated-device-a");
+      expect(resB.session.refreshToken).toBe("rotated-device-b");
+    }
+  });
+
   it("serves subsequent requests with old refresh token from grace cache", async () => {
     mockRefreshSession.mockResolvedValueOnce({
       data: {
@@ -136,6 +182,34 @@ describe("session-refresh (Single-flight & Grace cache)", () => {
     mockRefreshSession.mockResolvedValueOnce({
       data: { session: null },
       error: { message: "Internal server error", status: 500 },
+    });
+
+    const result = await refreshUserSession(baseSession, mockSupabase);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.isRevoked).toBe(false);
+    }
+  });
+
+  it("marks isRevoked false when Supabase returns 429 Too Many Requests (rate limit)", async () => {
+    mockRefreshSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: { message: "Too many requests", status: 429 },
+    });
+
+    const result = await refreshUserSession(baseSession, mockSupabase);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.isRevoked).toBe(false);
+    }
+  });
+
+  it("marks isRevoked false when Supabase returns 408 Request Timeout", async () => {
+    mockRefreshSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: { message: "Request timeout", status: 408 },
     });
 
     const result = await refreshUserSession(baseSession, mockSupabase);
