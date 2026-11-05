@@ -50,15 +50,10 @@ export function GroupedReservationCard({
 }: GroupedReservationCardProps) {
   const days = calculateDays(group.startDate, group.endDate);
   const isPending = group.status === RESERVATION_STATUS.PENDING;
-  const returnableItems = React.useMemo(
-    () =>
-      group.items.filter(
-        (item) =>
-          item.status === RESERVATION_STATUS.PENDING || item.status === RESERVATION_STATUS.RENTED
-      ),
-    [group.items]
+  const canBulkReturn = group.items.some(
+    (item) =>
+      item.status === RESERVATION_STATUS.PENDING || item.status === RESERVATION_STATUS.RENTED
   );
-  const canBulkReturn = returnableItems.length > 0;
   const isOwn = currentUserId ? group.userId === currentUserId : false;
   const showActions = mode === "admin" || isOwn;
 
