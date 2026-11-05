@@ -56,16 +56,12 @@ export function ReservationTableRow({
     onViewDetails(item);
   };
 
+  const isOwn = currentUserId ? item.userId === currentUserId : false;
+  const canAct = mode === "admin" || isOwn;
+  const actions = canAct ? { onModify, onCancel, onReturn, onRent } : {};
+
   const actionMenu = (
-    <ReservationActionMenu
-      item={item}
-      mode={mode}
-      onViewDetails={onViewDetails}
-      onModify={onModify}
-      onCancel={onCancel}
-      onReturn={onReturn}
-      onRent={onRent}
-    />
+    <ReservationActionMenu item={item} mode={mode} onViewDetails={onViewDetails} {...actions} />
   );
 
   return (

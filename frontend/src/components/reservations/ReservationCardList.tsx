@@ -120,7 +120,6 @@ export function ReservationCardList({
                 reservation={reservation}
                 isOwn={isOwn}
                 showOwnershipBadge={scope === "all"}
-                showActions={mode === "admin" || scope === "my"}
                 onModify={onModify}
                 onCancel={onCancel}
                 onReturn={onReturn}

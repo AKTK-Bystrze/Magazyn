@@ -50,8 +50,8 @@ export function GroupedReservationCard({
   const days = calculateDays(group.startDate, group.endDate);
   const isPending = group.status === RESERVATION_STATUS.PENDING;
   const canBulkReturn = group.status === RESERVATION_STATUS.RENTED;
-  const showActions = mode === "admin" || scope === "my";
   const isOwn = currentUserId ? group.userId === currentUserId : false;
+  const showActions = mode === "admin" || isOwn;
 
   return (
     <Card
@@ -199,11 +199,10 @@ export function GroupedReservationCard({
                   reservation={item}
                   isOwn={itemIsOwn}
                   showOwnershipBadge={scope === "all"}
-                  showActions={showActions}
-                  onCancel={showActions ? onCancelSingle : undefined}
-                  onModify={showActions ? onModifySingle : undefined}
-                  onReturn={showActions ? onReturnSingle : undefined}
-                  onRent={showActions ? onRentSingle : undefined}
+                  onCancel={onCancelSingle}
+                  onModify={onModifySingle}
+                  onReturn={onReturnSingle}
+                  onRent={onRentSingle}
                   mode={mode}
                 />
               );
