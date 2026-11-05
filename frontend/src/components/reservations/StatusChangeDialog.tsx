@@ -1,3 +1,4 @@
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -48,9 +49,26 @@ export function StatusChangeDialog({
   isSubmitting,
   mode,
 }: StatusChangeDialogProps) {
+  const [isPending, setIsPending] = React.useState(false);
+  const submitting = isSubmitting || isPending;
+
   const handleConfirm = async () => {
-    await onConfirm();
-    onOpenChange(false);
+    if (submitting) return;
+    try {
+      setIsPending(true);
+      await onConfirm();
+      onOpenChange(false);
+    } catch {
+      // Keep dialog open if onConfirm fails
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!submitting) {
+      onOpenChange(nextOpen);
+    }
   };
 
   const getDialogContent = () => {
@@ -93,8 +111,15 @@ export function StatusChangeDialog({
   if (!content) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        onPointerDownOutside={(e) => {
+          if (submitting) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (submitting) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{content.title}</DialogTitle>
           <DialogDescription>{content.message}</DialogDescription>
@@ -121,14 +146,14 @@ export function StatusChangeDialog({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {content.cancelButton}
           </Button>
-          <Button variant={content.variant} onClick={handleConfirm} disabled={isSubmitting}>
-            {isSubmitting ? (
+          <Button variant={content.variant} onClick={handleConfirm} disabled={submitting}>
+            {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {UI.UPDATING}
+                {UI.LOADING}
               </>
             ) : (
               content.confirmButton

@@ -177,4 +177,52 @@ describe("ReturnWithDatesDialog", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
+
+  it("keeps dialog open and displays apiError when onConfirm fails", async () => {
+    const onConfirm = vi.fn().mockRejectedValue(new Error("Conflict: equipment already returned"));
+    const onOpenChange = vi.fn();
+
+    render(
+      <ReturnWithDatesDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        reservation={mockReservation}
+        onConfirm={onConfirm}
+        isSubmitting={false}
+        currentUserBalance={50}
+      />
+    );
+
+    const confirmButton = screen.getByRole("button", { name: "Potwierdź Zwrot" });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Conflict: equipment already returned")).toBeInTheDocument();
+    });
+
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("disables buttons and prevents closing while submitting", () => {
+    const onOpenChange = vi.fn();
+
+    render(
+      <ReturnWithDatesDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        reservation={mockReservation}
+        onConfirm={vi.fn()}
+        isSubmitting={true}
+        currentUserBalance={50}
+      />
+    );
+
+    const confirmButton = screen.getByRole("button", { name: /aktualizowanie rezerwacji/i });
+    const cancelButton = screen.getByRole("button", { name: "Anuluj" });
+    expect(confirmButton).toBeDisabled();
+    expect(cancelButton).toBeDisabled();
+
+    fireEvent.click(cancelButton);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
 });

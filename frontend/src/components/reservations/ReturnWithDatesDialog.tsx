@@ -55,6 +55,8 @@ export function ReturnWithDatesDialog({
   const [startDate, setStartDate] = React.useState<string | null>(reservation.startDate);
   const [endDate, setEndDate] = React.useState<string | null>(reservation.endDate);
   const [notes, setNotes] = React.useState("");
+  const [isPending, setIsPending] = React.useState(false);
+  const submitting = isSubmitting || isPending;
   const [validationErrors, setValidationErrors] = React.useState<DateRangeValidationErrors>({
     startDate: null,
     endDate: null,
@@ -104,9 +106,10 @@ export function ReturnWithDatesDialog({
   };
 
   const handleConfirm = async () => {
-    if (!validate()) return;
+    if (!validate() || submitting) return;
 
     try {
+      setIsPending(true);
       setApiError(null);
       const command: UpdateReservationCommand = {
         status: "RETURNED",
@@ -129,6 +132,8 @@ export function ReturnWithDatesDialog({
           ? String(error.message)
           : "Nie udało się oznaczyć rezerwacji jako zwróconej";
       setApiError(errorMessage);
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -144,9 +149,23 @@ export function ReturnWithDatesDialog({
     setApiError(null);
   }, []);
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!submitting) {
+      onOpenChange(nextOpen);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => {
+          if (submitting) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (submitting) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{UI.RETURN_WITH_DATES_TITLE}</DialogTitle>
           <DialogDescription>{UI.RETURN_WITH_DATES_DESCRIPTION}</DialogDescription>
@@ -158,7 +177,7 @@ export function ReturnWithDatesDialog({
               id="modify-dates"
               checked={modifyDates}
               onCheckedChange={(checked) => setModifyDates(!!checked)}
-              disabled={isSubmitting}
+              disabled={submitting}
             />
             <div className="grid gap-1.5 leading-none">
               <Label
@@ -201,7 +220,7 @@ export function ReturnWithDatesDialog({
               placeholder="Opisz ewentualne usterki, uszkodzenia lub uwagi do zwracanego sprzętu..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              disabled={isSubmitting}
+              disabled={submitting}
               rows={3}
               className="resize-none"
             />
@@ -222,11 +241,11 @@ export function ReturnWithDatesDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {UI.CANCEL_CHANGES}
           </Button>
-          <Button onClick={handleConfirm} disabled={isSubmitting}>
-            {isSubmitting ? (
+          <Button onClick={handleConfirm} disabled={submitting}>
+            {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {UI.UPDATING_RESERVATION}
