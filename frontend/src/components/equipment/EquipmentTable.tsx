@@ -94,12 +94,7 @@ function EmptyState() {
  * Data table displaying equipment list with columns for ID, name, type, status, cost, created date, and actions
  * Uses Shadcn Table components
  */
-export function EquipmentTable({
-  equipment,
-  isLoading,
-  onEdit,
-  onArchive,
-}: EquipmentTableProps) {
+export function EquipmentTable({ equipment, isLoading, onEdit, onArchive }: EquipmentTableProps) {
   const {
     sortConfig,
     requestSort,
@@ -187,7 +182,11 @@ export function EquipmentTable({
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">
-                    <a href={`/equipment/${item.id}`} className="hover:underline">
+                    <a
+                      href={`/equipment/${item.id}`}
+                      className="hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {item.name || (
                         <span className="text-muted-foreground italic">{item.type.name}</span>
                       )}
@@ -212,7 +211,7 @@ export function EquipmentTable({
                   {item.type.creditCostPerDay}
                 </TableCell>
                 <TableCell className="hidden xl:table-cell text-muted-foreground">—</TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
