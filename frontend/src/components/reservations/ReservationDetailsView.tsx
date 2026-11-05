@@ -70,10 +70,11 @@ function ReservationDetailsContent({
   }
 
   if (error || !reservation) {
+    const status = (error as Error & { status?: number })?.status;
     const errorMessage =
-      error?.message === "403"
+      status === 403 || error?.message === "403"
         ? UI.UNAUTHORIZED
-        : error?.message === "404"
+        : status === 404 || error?.message === "404"
           ? UI.NOT_FOUND
           : UI.NETWORK_ERROR;
 
