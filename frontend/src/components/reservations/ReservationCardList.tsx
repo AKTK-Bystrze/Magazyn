@@ -3,7 +3,7 @@ import { ReservationCard } from "./ReservationCard";
 import { GroupedReservationCard } from "./GroupedReservationCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Package } from "lucide-react";
-import { ICON_SIZE_LG } from "@/lib/config/constants";
+import { ICON_SIZE_LG, RESERVATION_STATUS } from "@/lib/config/constants";
 import { groupReservationsByDateRange } from "@/lib/utils/group-reservations";
 import type { ReservationListItem, ReservationSortOption } from "@/types";
 
@@ -140,7 +140,14 @@ export function ReservationCardList({
               onToggle={() => toggleGroup(group.groupKey)}
               onCancelAll={() => onCancelAll?.(group.items)}
               onModifyDatesAll={() => onModifyDatesAll?.(group.items)}
-              onReturnAll={() => onReturnAll?.(group.items)}
+              onReturnAll={() => {
+                const returnable = group.items.filter(
+                  (i) =>
+                    i.status === RESERVATION_STATUS.PENDING ||
+                    i.status === RESERVATION_STATUS.RENTED
+                );
+                onReturnAll?.(returnable.length > 0 ? returnable : group.items);
+              }}
               onRentAll={() => onRentAll?.(group.items)}
               onCancelSingle={onCancel}
               onModifySingle={onModify}

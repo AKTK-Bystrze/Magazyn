@@ -106,7 +106,6 @@ function ReservationListContainerInner({
   );
 
   const hasActiveFilters = hasActiveReservationFilters(filters);
-  const showActions = mode === "admin" || filters.scope === "my";
 
   return (
     <div className="space-y-6" data-testid="reservation-list-container">
@@ -169,10 +168,10 @@ function ReservationListContainerInner({
           onCancel={handleCancelClick}
           onReturn={handleReturn}
           onRent={handleRent}
-          onCancelAll={showActions ? handleCancelAll : undefined}
-          onModifyDatesAll={showActions ? handleModifyDatesAll : undefined}
-          onReturnAll={showActions ? handleReturnAll : undefined}
-          onRentAll={showActions ? handleRentAll : undefined}
+          onCancelAll={handleCancelAll}
+          onModifyDatesAll={handleModifyDatesAll}
+          onReturnAll={handleReturnAll}
+          onRentAll={handleRentAll}
           onViewDetails={handleViewDetails}
         />
       ) : (

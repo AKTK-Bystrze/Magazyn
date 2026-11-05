@@ -1,3 +1,4 @@
+import * as React from "react";
 import type { GroupedReservation, ReservationListItem } from "@/types";
 import { RESERVATION_STATUS } from "@/lib/config/constants";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -49,7 +50,15 @@ export function GroupedReservationCard({
 }: GroupedReservationCardProps) {
   const days = calculateDays(group.startDate, group.endDate);
   const isPending = group.status === RESERVATION_STATUS.PENDING;
-  const canBulkReturn = group.status === RESERVATION_STATUS.RENTED;
+  const returnableItems = React.useMemo(
+    () =>
+      group.items.filter(
+        (item) =>
+          item.status === RESERVATION_STATUS.PENDING || item.status === RESERVATION_STATUS.RENTED
+      ),
+    [group.items]
+  );
+  const canBulkReturn = returnableItems.length > 0;
   const isOwn = currentUserId ? group.userId === currentUserId : false;
   const showActions = mode === "admin" || isOwn;
 
@@ -170,6 +179,7 @@ export function GroupedReservationCard({
                     e.stopPropagation();
                     onReturnAll();
                   }}
+                  data-testid="return-all-button"
                 >
                   Zwróć Wszystkie
                 </Button>
