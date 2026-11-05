@@ -11,6 +11,8 @@ export interface CartAvailabilityAlertsProps {
   submissionError: string | null;
   /** Result of equipment availability pre-check */
   availabilityResult: AvailabilityCheckResult;
+  /** Optional path to navigate back to equipment browse */
+  equipmentBrowsePath?: string;
 }
 
 /**
@@ -20,6 +22,7 @@ export interface CartAvailabilityAlertsProps {
 export function CartAvailabilityAlerts({
   submissionError,
   availabilityResult,
+  equipmentBrowsePath,
 }: CartAvailabilityAlertsProps) {
   const localRef = React.useRef<HTMLDivElement>(null);
 
@@ -73,14 +76,37 @@ export function CartAvailabilityAlerts({
             <ul className="list-disc pl-5 mt-2 space-y-2">
               {availabilityResult.unavailableItems.map((item) => (
                 <li key={item.equipmentId}>
-                  <strong>{item.name}</strong>: {item.reason}
+                  <a
+                    href={`/equipment/${item.equipmentId}`}
+                    className="underline font-bold hover:text-foreground"
+                  >
+                    {item.name}
+                  </a>
+                  : {item.reason}
                   {item.conflictingReservations && item.conflictingReservations.length > 0 && (
                     <div className="mt-1 text-sm">
                       <span className="font-medium">Konfliktujące rezerwacje:</span>
                       <ul className="list-none pl-4 mt-1 space-y-1">
                         {item.conflictingReservations.map((conflict, idx) => (
-                          <li key={idx} className="text-xs">
-                            • {conflict.startDate} do {conflict.endDate}
+                          <li key={idx} className="text-xs flex flex-wrap items-center gap-1.5">
+                            <span>• {conflict.startDate} do {conflict.endDate}</span>
+                            {conflict.username && (
+                              <span className="text-muted-foreground">
+                                (rezerwujący:{" "}
+                                <span className="font-medium text-foreground">
+                                  {conflict.username}
+                                </span>
+                                )
+                              </span>
+                            )}
+                            {conflict.id && (
+                              <a
+                                href={`/reservations/${conflict.id}`}
+                                className="underline font-medium hover:text-foreground"
+                              >
+                                Szczegóły
+                              </a>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -90,6 +116,16 @@ export function CartAvailabilityAlerts({
               ))}
             </ul>
             <p className="mt-2 text-sm">Proszę usunąć te przedmioty lub zmienić daty.</p>
+            {equipmentBrowsePath && (
+              <div className="mt-3">
+                <a
+                  href={equipmentBrowsePath}
+                  className="inline-flex items-center gap-1 text-sm font-medium underline hover:text-foreground"
+                >
+                  ← Wróć do listy sprzętu
+                </a>
+              </div>
+            )}
           </AlertDescription>
         </Alert>
       )}

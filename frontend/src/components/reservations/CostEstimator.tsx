@@ -70,7 +70,14 @@ export function CostEstimator({
                 className="w-full flex justify-between items-center text-sm"
               >
                 <span className="text-foreground">
-                  {item.name}{" "}
+                  <a
+                    href={`/equipment/${item.equipmentId}`}
+                    className="hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item.name}
+                  </a>{" "}
                   <span className="text-muted-foreground">
                     ({item.creditCostPerDay} × {item.days} {item.days === 1 ? "dzień" : "dni"})
                   </span>

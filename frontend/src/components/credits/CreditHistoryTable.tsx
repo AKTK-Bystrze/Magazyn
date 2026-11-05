@@ -207,7 +207,16 @@ function CreditHistoryRow({ item, index }: { item: CreditHistoryItem; index: num
         )}
       </TableCell>
       <TableCell className="hidden sm:table-cell max-w-[200px] sm:max-w-md truncate">
-        {item.description || "-"}
+        {item.reservationId ? (
+          <a
+            href={`/reservations/${item.reservationId}`}
+            className="hover:underline text-foreground"
+          >
+            {item.description || "Szczegóły rezerwacji"}
+          </a>
+        ) : (
+          item.description || "-"
+        )}
       </TableCell>
       <TableCell className="text-muted-foreground whitespace-nowrap">
         {item.authorUsername || "-"}

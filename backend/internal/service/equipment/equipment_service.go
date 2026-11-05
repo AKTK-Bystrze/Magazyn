@@ -157,19 +157,10 @@ func (s *EquipmentService) CheckAvailability(ctx context.Context, id string, que
 	if err != nil {
 		return nil, err
 	}
-	conflictDTOs := make([]types.ConflictingReservation, len(conflicts))
-	for i, c := range conflicts {
-		conflictDTOs[i] = types.ConflictingReservation{
-			ID:        c.ID,
-			StartDate: c.StartDate,
-			EndDate:   c.EndDate,
-			Status:    c.Status,
-		}
-	}
 	return &types.AvailabilityResponse{
 		EquipmentID:             id,
 		IsAvailable:             len(conflicts) == 0,
-		ConflictingReservations: conflictDTOs,
+		ConflictingReservations: conflicts,
 	}, nil
 }
 

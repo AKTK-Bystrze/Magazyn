@@ -31,6 +31,8 @@ export function transformEquipmentAvailabilityDTO(dto: unknown): EquipmentAvaila
       startDate: r.start_date,
       endDate: r.end_date,
       status: r.status as "PENDING" | "RENTED" | "RETURNED" | "CANCELLED",
+      userId: r.user_id,
+      username: r.username,
     })),
   };
 }

@@ -87,9 +87,35 @@ func TestCheckAvailability_Available(t *testing.T) {
 	id := "eq-uuid"
 	query := types.AvailabilityQuery{StartDate: "2023-01-01", EndDate: "2023-01-05"}
 	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{ID: id}, nil)
-	mockRepo.On("GetConflictingReservations", ctx, id, "2023-01-01", "2023-01-05").Return([]types.PublicReservationsSelect{}, nil)
+	mockRepo.On("GetConflictingReservations", ctx, id, "2023-01-01", "2023-01-05").Return([]types.ConflictingReservation{}, nil)
 	result, err := service.CheckAvailability(ctx, id, query)
 	assert.NoError(t, err)
 	assert.True(t, result.IsAvailable)
 	assert.Empty(t, result.ConflictingReservations)
+}
+
+func TestCheckAvailability_WithConflicts_IncludesOwner(t *testing.T) {
+	mockRepo := new(mocks.MockEquipmentRepository)
+	service := NewEquipmentService(mockRepo, nil, nil, "http://localhost:54321")
+	ctx := context.Background()
+	id := "eq-uuid"
+	query := types.AvailabilityQuery{StartDate: "2023-01-01", EndDate: "2023-01-05"}
+	username := "jan.kowalski"
+	userID := "user-123"
+	mockRepo.On("GetByID", ctx, id).Return(&types.PublicEquipmentSelect{ID: id}, nil)
+	mockRepo.On("GetConflictingReservations", ctx, id, "2023-01-01", "2023-01-05").Return([]types.ConflictingReservation{
+		{
+			ID:        "res-1",
+			StartDate: "2023-01-02",
+			EndDate:   "2023-01-04",
+			Status:    "PENDING",
+			UserID:    userID,
+			Username:  username,
+		},
+	}, nil)
+	result, err := service.CheckAvailability(ctx, id, query)
+	assert.NoError(t, err)
+	assert.False(t, result.IsAvailable)
+	assert.Len(t, result.ConflictingReservations, 1)
+	assert.Equal(t, username, result.ConflictingReservations[0].Username)
 }

@@ -45,9 +45,12 @@ export function ReservationHistorySection({ reservations }: ReservationHistorySe
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
-            <span>
+            <a
+              href={`/reservations/${reservation.id}`}
+              className="hover:underline font-medium text-foreground"
+            >
               {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
-            </span>
+            </a>
           </div>
 
           <div className="flex items-center justify-between text-sm">

@@ -141,7 +141,20 @@ export function EquipmentCard({ item, onViewDetail, viewMode = "grid" }: Equipme
       )}
 
       <div className={viewMode === "list" ? "flex-1 min-w-0" : "p-4 flex-grow"}>
-        <h3 className="font-semibold text-lg">{item.name}</h3>
+        <h3 className="font-semibold text-lg">
+          <a
+            href={`/equipment/${item.id}`}
+            onClick={(e) => {
+              if (onViewDetail) {
+                e.preventDefault();
+                onViewDetail(item);
+              }
+            }}
+            className="hover:underline"
+          >
+            {item.name}
+          </a>
+        </h3>
         <p className="text-sm text-muted-foreground">{item.type.name}</p>
         <p className="text-sm text-gray-600 line-clamp-2 mt-2">
           {item.description || "Brak opisu."}

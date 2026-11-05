@@ -58,6 +58,8 @@ export type EquipmentAvailability = {
     /** Reservation end date (YYYY-MM-DD) */
     endDate: string;
     status: Enums<"reservation_status">;
+    userId?: string;
+    username?: string;
   }>;
 };
 

@@ -22,6 +22,7 @@ import {
   SKELETON_ROW_COUNT,
   EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_MANAGER_UI_STRINGS,
+  getEquipmentStatusVariant,
 } from "@/lib/config/constants";
 import { useTableSort } from "@/lib/hooks/useTableSort";
 import type { EquipmentSearchItem } from "@/types";
@@ -42,22 +43,6 @@ interface EquipmentTableProps {
   onViewDetails: (item: EquipmentSearchItem) => void;
   /** Callback when archive action is clicked */
   onArchive: (item: EquipmentSearchItem) => void;
-}
-
-/**
- * Returns badge variant based on equipment status
- */
-function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "ok":
-      return "default";
-    case "broken":
-      return "destructive";
-    case "blocked":
-      return "secondary";
-    default:
-      return "outline";
-  }
 }
 
 /**
@@ -210,16 +195,25 @@ export function EquipmentTable({
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">
-                    {item.name || (
-                      <span className="text-muted-foreground italic">{item.type.name}</span>
-                    )}
+                    <a
+                      href={`/equipment/${item.id}`}
+                      className="hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewDetails(item);
+                      }}
+                    >
+                      {item.name || (
+                        <span className="text-muted-foreground italic">{item.type.name}</span>
+                      )}
+                    </a>
                   </div>
                   <div className="text-xs text-muted-foreground md:hidden">{item.type.name}</div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{item.type.name}</TableCell>
                 <TableCell>
                   <Badge
-                    variant={getStatusVariant(item.status)}
+                    variant={getEquipmentStatusVariant(item.status)}
                     className={
                       item.status === "ok"
                         ? "bg-green-600 hover:bg-green-700 text-white border-transparent"

@@ -115,7 +115,14 @@ function ReservationDetailsContent({
       </div>
 
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{reservation.equipmentName}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          <a
+            href={`/equipment/${reservation.equipmentId}`}
+            className="hover:underline"
+          >
+            {reservation.equipmentName}
+          </a>
+        </h1>
         <p className="text-muted-foreground text-lg mt-1">
           {reservation.equipmentType} • {reservation.equipmentInternalId}
         </p>

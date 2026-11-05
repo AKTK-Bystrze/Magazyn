@@ -14,6 +14,7 @@ import {
   EQUIPMENT_STATUS_LABELS,
   EQUIPMENT_MANAGER_UI_STRINGS,
   PLACEHOLDER_EQUIPMENT_IMAGE,
+  getEquipmentStatusVariant,
 } from "@/lib/config/constants";
 import type { EquipmentSearchItem } from "@/types";
 
@@ -29,22 +30,6 @@ interface EquipmentDetailsSheetProps {
   equipment: EquipmentSearchItem | null;
   /** Callback when sheet closes */
   onClose: () => void;
-}
-
-/**
- * Returns badge variant based on equipment status
- */
-function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "ok":
-      return "default";
-    case "broken":
-      return "destructive";
-    case "blocked":
-      return "secondary";
-    default:
-      return "outline";
-  }
 }
 
 /**
@@ -104,7 +89,7 @@ export function EquipmentDetailsSheet({ isOpen, equipment, onClose }: EquipmentD
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{equipment.name || equipment.type.name}</h2>
                 <Badge
-                  variant={getStatusVariant(equipment.status)}
+                  variant={getEquipmentStatusVariant(equipment.status)}
                   className={
                     equipment.status === "ok"
                       ? "bg-green-600 hover:bg-green-700 text-white border-transparent"

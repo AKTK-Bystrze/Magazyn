@@ -26,3 +26,21 @@ export const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
   blocked: "Zablokowane",
   ALL: "Wszystkie statusy",
 };
+
+/**
+ * Returns badge variant based on equipment status
+ */
+export function getEquipmentStatusVariant(
+  status: string | null | undefined
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "ok":
+      return "default";
+    case "broken":
+      return "destructive";
+    case "blocked":
+      return "secondary";
+    default:
+      return "outline";
+  }
+}

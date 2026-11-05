@@ -23,6 +23,7 @@ const initialCreditBalance = sessionInfo.creditBalance || 0;
       client:only="react"
       initialCreditBalance={initialCreditBalance}
       isAdmin={isAdmin(sessionInfo.role)}
+      equipmentBrowsePath={ROUTES.PUBLIC.EQUIPMENT}
     />
   </div>
 </AppLayout>

@@ -12,10 +12,10 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Trash2, CheckCircle2 } from "lucide-react";
+import { Trash2, CheckCircle2, ArrowLeft } from "lucide-react";
 import type { UserListItem, CreateReservationsCommand } from "@/types";
 import type { AvailabilityCheckResult } from "@/types/reservation-cart.types";
-import { CLEAR_CART_CONFIRM_TIMEOUT_MS } from "@/lib/config/constants";
+import { CLEAR_CART_CONFIRM_TIMEOUT_MS, ICON_SIZE_SM } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
 import { transformCreateReservationsCommand } from "@/lib/transformers/reservation.transformer";
 import { defaultLogger as logger } from "@/lib/utils/logger";
@@ -263,6 +263,17 @@ function ReservationCartContent({
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 max-w-7xl" data-testid="reservation-cart">
+      <div>
+        <a
+          href={equipmentBrowsePath}
+          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          data-testid="back-to-equipment-button"
+        >
+          <ArrowLeft className={ICON_SIZE_SM} />
+          Powrót do sprzętu
+        </a>
+      </div>
+
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Dokończ Rezerwację</h1>
         {!isEmpty && (
@@ -314,6 +325,7 @@ function ReservationCartContent({
       <CartAvailabilityAlerts
         submissionError={submissionError}
         availabilityResult={availabilityResult}
+        equipmentBrowsePath={equipmentBrowsePath}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
