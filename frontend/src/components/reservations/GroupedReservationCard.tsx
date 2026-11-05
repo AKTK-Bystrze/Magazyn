@@ -19,9 +19,11 @@ interface GroupedReservationCardProps {
   onCancelAll: () => void;
   onModifyDatesAll: () => void;
   onReturnAll?: () => void;
-  onCancelSingle: (reservation: ReservationListItem) => void;
-  onModifySingle: (reservation: ReservationListItem) => void;
+  onRentAll?: () => void;
+  onCancelSingle?: (reservation: ReservationListItem) => void;
+  onModifySingle?: (reservation: ReservationListItem) => void;
   onReturnSingle?: (reservation: ReservationListItem) => void;
+  onRentSingle?: (reservation: ReservationListItem) => void;
   mode: "user" | "admin";
 }
 
@@ -38,15 +40,16 @@ export function GroupedReservationCard({
   onCancelAll,
   onModifyDatesAll,
   onReturnAll,
+  onRentAll,
   onCancelSingle,
   onModifySingle,
   onReturnSingle,
+  onRentSingle,
   mode,
 }: GroupedReservationCardProps) {
   const days = calculateDays(group.startDate, group.endDate);
-  const canBulkModify = group.status === RESERVATION_STATUS.PENDING;
-  const canBulkReturn =
-    group.status === RESERVATION_STATUS.PENDING || group.status === RESERVATION_STATUS.RENTED;
+  const isPending = group.status === RESERVATION_STATUS.PENDING;
+  const canBulkReturn = isPending || group.status === RESERVATION_STATUS.RENTED;
   const showActions = mode === "admin" || scope === "my";
   const isOwn = currentUserId ? group.userId === currentUserId : false;
 
@@ -77,7 +80,11 @@ export function GroupedReservationCard({
                   {scope === "all" && isOwn && " (Ty)"}
                 </span>
               </div>
-              <StatusBadge status={group.status} startDate={group.startDate} />
+              <StatusBadge
+                status={group.status}
+                startDate={group.startDate}
+                endDate={group.endDate}
+              />
             </div>
 
             <div className="flex items-start justify-between gap-2 min-w-0">
@@ -125,9 +132,23 @@ export function GroupedReservationCard({
 
       {isExpanded && (
         <CardContent className="pt-6 space-y-4">
-          {showActions && (canBulkModify || canBulkReturn) && (
+          {showActions && (isPending || canBulkReturn) && (
             <div className="flex flex-wrap gap-2 pb-4 border-b">
-              {canBulkModify && (
+              {isPending && onRentAll && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto h-auto py-2 whitespace-normal text-left sm:text-center text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950/20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRentAll();
+                  }}
+                  data-testid="rent-all-button"
+                >
+                  {mode === "admin" ? "Wydaj Wszystkie" : "Odbierz Wszystkie"}
+                </Button>
+              )}
+              {isPending && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -153,7 +174,7 @@ export function GroupedReservationCard({
                   Zwróć Wszystkie
                 </Button>
               )}
-              {canBulkModify && (
+              {isPending && (
                 <Button
                   variant="destructive"
                   size="sm"
@@ -179,9 +200,10 @@ export function GroupedReservationCard({
                   isOwn={itemIsOwn}
                   showOwnershipBadge={scope === "all"}
                   showActions={showActions}
-                  onCancel={showActions ? () => onCancelSingle(item) : undefined}
-                  onModify={showActions ? () => onModifySingle(item) : undefined}
-                  onReturn={showActions && onReturnSingle ? () => onReturnSingle(item) : undefined}
+                  onCancel={showActions ? onCancelSingle : undefined}
+                  onModify={showActions ? onModifySingle : undefined}
+                  onReturn={showActions ? onReturnSingle : undefined}
+                  onRent={showActions ? onRentSingle : undefined}
                   mode={mode}
                 />
               );

@@ -21,9 +21,11 @@ interface ReservationCardListProps {
   onModify?: (reservation: ReservationListItem) => void;
   onCancel?: (reservation: ReservationListItem) => void;
   onReturn?: (reservation: ReservationListItem) => void;
+  onRent?: (reservation: ReservationListItem) => void;
   onCancelAll?: (reservations: ReservationListItem[]) => void;
   onModifyDatesAll?: (reservations: ReservationListItem[]) => void;
   onReturnAll?: (reservations: ReservationListItem[]) => void;
+  onRentAll?: (reservations: ReservationListItem[]) => void;
   onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
@@ -46,9 +48,11 @@ export function ReservationCardList({
   onModify,
   onCancel,
   onReturn,
+  onRent,
   onCancelAll,
   onModifyDatesAll,
   onReturnAll,
+  onRentAll,
   onViewDetails,
 }: ReservationCardListProps) {
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
@@ -137,9 +141,11 @@ export function ReservationCardList({
               onCancelAll={() => onCancelAll?.(group.items)}
               onModifyDatesAll={() => onModifyDatesAll?.(group.items)}
               onReturnAll={() => onReturnAll?.(group.items)}
-              onCancelSingle={(item) => onCancel?.(item)}
-              onModifySingle={(item) => onModify?.(item)}
-              onReturnSingle={(item) => onReturn?.(item)}
+              onRentAll={() => onRentAll?.(group.items)}
+              onCancelSingle={onCancel}
+              onModifySingle={onModify}
+              onReturnSingle={onReturn}
+              onRentSingle={onRent}
               mode={mode}
             />
           );

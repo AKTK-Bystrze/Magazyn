@@ -41,7 +41,7 @@ export function StatusBadge({
     );
   }
 
-  if (status === "PENDING") {
+  if (status === "PENDING" || status === "RENTED") {
     const today = getTodayAsString();
     const startDay = startDate?.split("T")[0];
     const endDay = endDate?.split("T")[0];
@@ -54,10 +54,7 @@ export function StatusBadge({
       );
     }
 
-    const label =
-      startDay && startDay > today
-        ? RESERVATION_FUTURE_STATUS_LABEL
-        : (RESERVATION_STATUS_LABELS[status] ?? status);
+    const label = startDay && startDay > today ? RESERVATION_FUTURE_STATUS_LABEL : "W trakcie";
 
     return (
       <Badge

@@ -6,7 +6,10 @@ globs:
 
 # Writing Commit Messages & PR Titles
 
+For PR guidelines and title validation, see [Pull Requests Workflow](file:///e:/bystrze/Magazyn-reservation-lifecycle/.agent/workflows/pull-requests.md).
+
 ## Format
+
 All commit messages and PR titles MUST follow Conventional Commits format:
 
 ```
@@ -154,20 +157,6 @@ Use scope to specify what part of the codebase is affected:
 Common scopes:
 - `auth`, `ui`, `backend`, `frontend`, `api`, `db`, `e2e`, `ci`, `docs`
 
-## Testing PR Titles Locally
-
-Before opening a PR, validate your title:
-
-```bash
-cd frontend
-
-# Test valid title
-echo "feat: add new feature" | npx commitlint
-
-# Test invalid title
-echo "Updated stuff" | npx commitlint
-```
-
 ## Quick Decision Tree
 
 1. **Did you add a user-facing feature?** → `feat:`
@@ -206,13 +195,6 @@ feat: add feature    ← CORRECT
 feat:  ← WRONG
 feat: add calendar view  ← CORRECT
 ```
-
-## PR Title = Squash Commit Message
-
-Since we use **squash merge**, the PR title becomes the final commit message.
-Make your PR title descriptive and follow this format!
-
-**The PR title should summarize ALL changes in the PR, not just the first commit.**
 
 ## Enforcement
 

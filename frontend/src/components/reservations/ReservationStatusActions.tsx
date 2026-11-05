@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { StatusChangeDialog } from "./StatusChangeDialog";
 import { ModifyDatesDialog } from "./ModifyDatesDialog";
 import { ReturnWithDatesDialog } from "./ReturnWithDatesDialog";
-import { X, CheckCircle, CalendarClock } from "lucide-react";
+import { X, CheckCircle, CalendarClock, PackageCheck } from "lucide-react";
 import { canChangeStatus } from "@/lib/utils/status-utils";
 import {
   ICON_SIZE_SM,
@@ -108,12 +108,24 @@ export function ReservationStatusActions({
     window.location.reload();
   };
 
-  if (!actions.canCancel && !actions.canMarkReturned) {
+  if (!actions.canCancel && !actions.canMarkReturned && !actions.canRent) {
     return null;
   }
 
   return (
     <div className="flex flex-wrap gap-3">
+      {actions.canRent && (
+        <Button
+          variant="default"
+          onClick={() => onStatusChange("RENTED")}
+          disabled={isUpdating}
+          data-testid="rent-reservation-button"
+        >
+          <PackageCheck className={ICON_SIZE_SM + " mr-2"} />
+          {isAdmin ? "Wydaj" : "Odbierz"}
+        </Button>
+      )}
+
       {canModify && (
         <Button variant="outline" onClick={handleModifyDatesClick} disabled={isUpdating}>
           <CalendarClock className={ICON_SIZE_SM + " mr-2"} />

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"magazyn/backend/internal/constants"
 	"magazyn/backend/internal/types"
@@ -33,7 +34,18 @@ func (r *reservationRepository) GetReservations(ctx context.Context, query types
 	selectStr := "*, profiles!user_id(username), equipment(name, equipment_types(name, credit_cost_per_day))"
 	qb := client.From(constants.TableReservations).Select(selectStr, "exact", false)
 	if query.Status != nil && *query.Status != "" {
-		qb = qb.Eq("status", *query.Status)
+		today := time.Now().Format(constants.DateFormatISO)
+		activeStatuses := []string{constants.ReservationStatusPending, constants.ReservationStatusRented}
+		switch *query.Status {
+		case constants.ReservationFilterStatusFuture:
+			qb = qb.In("status", activeStatuses).Gt("start_date", today)
+		case constants.ReservationFilterStatusOverdue:
+			qb = qb.In("status", activeStatuses).Lt("end_date", today)
+		case constants.ReservationFilterStatusActive:
+			qb = qb.In("status", activeStatuses).Lte("start_date", today).Gte("end_date", today)
+		default:
+			qb = qb.Eq("status", *query.Status)
+		}
 	}
 	if query.UserID != nil && *query.UserID != "" {
 		qb = qb.Eq("user_id", *query.UserID)

@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, X, CornerDownLeft, Eye, Edit2 } from "lucide-react";
+import { MoreHorizontal, X, CornerDownLeft, Eye, Edit2, PackageCheck } from "lucide-react";
 import { ICON_SIZE_SM, RESERVATION_STATUS } from "@/lib/config/constants";
 import type { ReservationListItem } from "@/types";
 
@@ -29,6 +29,8 @@ export interface ReservationActionMenuProps {
   onCancel?: (item: ReservationListItem) => void;
   /** Optional callback to return reservation */
   onReturn?: (item: ReservationListItem) => void;
+  /** Optional callback to pickup/rent reservation */
+  onRent?: (item: ReservationListItem) => void;
 }
 
 /**
@@ -36,19 +38,25 @@ export interface ReservationActionMenuProps {
  */
 export function ReservationActionMenu({
   item,
+  mode,
   onViewDetails,
   onModify,
   onCancel,
   onReturn,
+  onRent,
 }: ReservationActionMenuProps) {
-  const canModify = item.status === RESERVATION_STATUS.PENDING;
-  const canReturn =
-    item.status === RESERVATION_STATUS.PENDING || item.status === RESERVATION_STATUS.RENTED;
-  const hasActions = (canModify && (onModify || onCancel)) || (canReturn && onReturn);
+  const isPending = item.status === RESERVATION_STATUS.PENDING;
+  const canReturn = isPending || item.status === RESERVATION_STATUS.RENTED;
+  const hasActions = (isPending && (onModify || onCancel || onRent)) || (canReturn && onReturn);
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
     onViewDetails(item);
+  };
+
+  const handleRent = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRent?.(item);
   };
 
   const handleModify = (e: React.MouseEvent) => {
@@ -88,7 +96,17 @@ export function ReservationActionMenu({
         {hasActions && (
           <>
             <DropdownMenuSeparator />
-            {canModify && onModify && (
+            {isPending && onRent && (
+              <DropdownMenuItem
+                onClick={handleRent}
+                className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
+                data-testid="rent-reservation-button"
+              >
+                <PackageCheck className={ICON_SIZE_SM + " mr-2"} />
+                {mode === "admin" ? "Wydaj" : "Odbierz"}
+              </DropdownMenuItem>
+            )}
+            {isPending && onModify && (
               <DropdownMenuItem onClick={handleModify}>
                 <Edit2 className={ICON_SIZE_SM + " mr-2"} />
                 Zmień termin
@@ -104,7 +122,7 @@ export function ReservationActionMenu({
                 Zwróć
               </DropdownMenuItem>
             )}
-            {canModify && onCancel && (
+            {isPending && onCancel && (
               <DropdownMenuItem
                 onClick={handleCancel}
                 className="text-destructive focus:text-destructive"

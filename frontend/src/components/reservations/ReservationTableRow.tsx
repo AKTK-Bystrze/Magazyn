@@ -23,6 +23,10 @@ export interface ReservationTableRowProps {
   onCancel?: (item: ReservationListItem) => void;
   /** Optional callback to return reservation */
   onReturn?: (item: ReservationListItem) => void;
+  /** Optional callback to pickup/rent reservation */
+  onRent?: (item: ReservationListItem) => void;
+  /** Optional view mode */
+  mode?: "user" | "admin";
 }
 
 /**
@@ -45,6 +49,8 @@ export function ReservationTableRow({
   onModify,
   onCancel,
   onReturn,
+  onRent,
+  mode,
 }: ReservationTableRowProps) {
   const handleRowClick = () => {
     onViewDetails(item);
@@ -53,10 +59,12 @@ export function ReservationTableRow({
   const actionMenu = (
     <ReservationActionMenu
       item={item}
+      mode={mode}
       onViewDetails={onViewDetails}
       onModify={onModify}
       onCancel={onCancel}
       onReturn={onReturn}
+      onRent={onRent}
     />
   );
 

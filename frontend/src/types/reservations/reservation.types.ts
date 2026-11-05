@@ -116,6 +116,9 @@ export type BulkStatusUpdateResponse = {
 import type { ReservationSortOption } from "@/lib/config/constants/reservation/status";
 export type { ReservationSortOption };
 
+export type ReservationFilterStatus =
+  Enums<"reservation_status"> | "ALL" | "FUTURE" | "ACTIVE" | "OVERDUE";
+
 /**
  * Filter state for reservation list view
  * Synced with URL search params for shareable links
@@ -123,7 +126,7 @@ export type { ReservationSortOption };
 export type ReservationFilterState = {
   page: number;
   perPage: number;
-  status: Enums<"reservation_status"> | "ALL";
+  status: ReservationFilterStatus;
   sort: ReservationSortOption;
   search?: string;
   userId?: string;

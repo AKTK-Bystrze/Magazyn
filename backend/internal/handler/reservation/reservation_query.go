@@ -13,7 +13,7 @@ func parseReservationListQuery(r *http.Request) (types.ReservationListQuery, err
 	query := types.ReservationListQuery{}
 	query.Page, query.PerPage = common.ParsePagination(r, constants.DefaultPage, constants.DefaultPerPage)
 	if status := r.URL.Query().Get("status"); status != "" {
-		if err := validation.ValidateEnum(status, constants.ValidReservationStatuses); err != nil {
+		if err := validation.ValidateEnum(status, constants.ValidReservationFilterStatuses); err != nil {
 			return query, types.NewValidationError("Invalid reservation status", nil)
 		}
 		query.Status = &status

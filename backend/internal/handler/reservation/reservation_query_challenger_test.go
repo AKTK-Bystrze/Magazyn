@@ -78,6 +78,16 @@ func TestAdversarial_ParseReservationListQuery(t *testing.T) {
 		assert.Contains(t, err.Error(), "Invalid scope: must be 'all' or 'my'")
 	})
 
+	t.Run("temporal filter statuses are accepted", func(t *testing.T) {
+		for _, status := range []string{"FUTURE", "ACTIVE", "OVERDUE"} {
+			req := httptest.NewRequest(http.MethodGet, "/reservations?status="+status, nil)
+			query, err := parseReservationListQuery(req)
+			require.NoError(t, err)
+			require.NotNil(t, query.Status)
+			assert.Equal(t, status, *query.Status)
+		}
+	})
+
 	t.Run("invalid sort option returns error", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/reservations?sort=unknown_sort", nil)
 		_, err := parseReservationListQuery(req)

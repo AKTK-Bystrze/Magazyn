@@ -293,6 +293,38 @@ export function useReservationDialogs({
     setErrorMessage,
   ]);
 
+  const handleRent = React.useCallback(
+    async (reservation: ReservationListItem) => {
+      try {
+        await updateReservation(reservation.id, { status: "RENTED" });
+        setSuccessMessage(`Sprzęt "${reservation.equipmentName}" oznaczony jako wypożyczony.`);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Nie udało się zmienić statusu na wypożyczony";
+        setErrorMessage(message);
+      }
+    },
+    [updateReservation, setSuccessMessage, setErrorMessage]
+  );
+
+  const handleRentAll = React.useCallback(
+    async (reservations: ReservationListItem[]) => {
+      if (reservations.length === 0) return;
+      try {
+        const result = await bulkUpdateStatus({
+          reservationIds: reservations.map((r) => r.id),
+          status: "RENTED",
+        });
+        setSuccessMessage(`${result.updated_count} elementów oznaczono jako wypożyczone.`);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Nie udało się zmienić statusu na wypożyczony";
+        setErrorMessage(message);
+      }
+    },
+    [bulkUpdateStatus, setSuccessMessage, setErrorMessage]
+  );
+
   return {
     cancelDialogOpen,
     setCancelDialogOpen,
@@ -306,10 +338,12 @@ export function useReservationDialogs({
     currentUserBalance,
     handleModify,
     handleReturn,
+    handleRent,
     handleCancelClick,
     handleCancelAll,
     handleModifyDatesAll,
     handleReturnAll,
+    handleRentAll,
     handleCancelDialogClose,
     handleModifyDatesConfirm,
     handleReturnConfirm,
