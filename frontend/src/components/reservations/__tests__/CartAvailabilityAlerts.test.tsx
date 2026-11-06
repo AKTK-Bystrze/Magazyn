@@ -100,14 +100,7 @@ describe("CartAvailabilityAlerts", () => {
       ],
     };
 
-    render(
-      <CartAvailabilityAlerts
-        submissionError={null}
-        availabilityResult={conflictResult}
-        currentUserId="me-123"
-        isAdmin={false}
-      />
-    );
+    render(<CartAvailabilityAlerts submissionError={null} availabilityResult={conflictResult} />);
 
     expect(screen.getByRole("link", { name: "Szczegóły" })).toHaveAttribute(
       "href",

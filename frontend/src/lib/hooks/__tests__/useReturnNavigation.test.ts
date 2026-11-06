@@ -22,7 +22,7 @@ describe("useReturnNavigation", () => {
     });
   });
 
-  it("defaults backHref to defaultPath when no referrer or returnUrl is present", () => {
+  it("defaults backHref to defaultPath when no referrer is present", () => {
     const { result } = renderHook(() => useReturnNavigation("/equipment"));
     expect(result.current.backHref).toBe("/equipment");
   });

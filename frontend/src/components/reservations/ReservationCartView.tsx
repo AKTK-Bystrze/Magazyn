@@ -50,7 +50,6 @@ interface ReservationCartViewProps {
 function ReservationCartContent({
   initialCreditBalance,
   isAdmin = false,
-  currentUserId,
   successRedirectPath = ROUTES.PROTECTED.RESERVATIONS,
   initialSelectedUserId,
   initialSelectedUserCreditBalance = 0,
@@ -329,8 +328,6 @@ function ReservationCartContent({
         submissionError={submissionError}
         availabilityResult={availabilityResult}
         equipmentBrowsePath={equipmentBrowsePath}
-        currentUserId={currentUserId}
-        isAdmin={isAdmin}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

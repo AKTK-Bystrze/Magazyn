@@ -48,6 +48,17 @@ function ReservationDetailsContent({
     : ROUTES.PROTECTED.RESERVATIONS;
   const { backHref, handleBack } = useReturnNavigation(defaultBackPath);
 
+  const backLink = (
+    <a
+      href={backHref}
+      onClick={handleBack}
+      className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+    >
+      <ArrowLeft className={ICON_SIZE_SM} />
+      {UI.BACK_TO_LIST}
+    </a>
+  );
+
   React.useEffect(() => {
     if (reservation) {
       const label = `${formatDate(reservation.startDate)} - ${formatDate(reservation.endDate)}: ${reservation.equipmentName}`;
@@ -82,14 +93,7 @@ function ReservationDetailsContent({
 
     return (
       <div className="space-y-6">
-        <a
-          href={backHref}
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <ArrowLeft className={ICON_SIZE_SM} />
-          {UI.BACK_TO_LIST}
-        </a>
+        {backLink}
         <Alert className="border-destructive bg-destructive/10">
           <AlertTriangle className={ICON_SIZE_SM + " text-destructive"} />
           <AlertDescription className="text-destructive">{errorMessage}</AlertDescription>
@@ -104,14 +108,7 @@ function ReservationDetailsContent({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <a
-          href={backHref}
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <ArrowLeft className={ICON_SIZE_SM} />
-          {UI.BACK_TO_LIST}
-        </a>
+        {backLink}
         <StatusBadge
           status={reservation.status}
           startDate={reservation.startDate}

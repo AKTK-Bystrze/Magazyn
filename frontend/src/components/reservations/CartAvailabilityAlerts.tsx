@@ -13,10 +13,6 @@ export interface CartAvailabilityAlertsProps {
   availabilityResult: AvailabilityCheckResult;
   /** Optional path to navigate back to equipment browse */
   equipmentBrowsePath?: string;
-  /** Current user ID for checking reservation view permissions */
-  currentUserId?: string;
-  /** Whether the current user is an admin */
-  isAdmin?: boolean;
 }
 
 /**

@@ -19,7 +19,6 @@ interface ReservationCardProps {
   onCancel?: (reservation: ReservationListItem) => void;
   onReturn?: (reservation: ReservationListItem) => void;
   onRent?: (reservation: ReservationListItem) => void;
-  onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
 /**
