@@ -37,7 +37,6 @@ export function ReservationCard({
   onRent,
 }: ReservationCardProps) {
   const isAdmin = mode === "admin";
-  const canViewDetails = isAdmin || isOwn;
   const { canCancel, canMarkReturned, canRent } = React.useMemo(
     () => canChangeStatus(reservation.status, isOwn, isAdmin),
     [reservation.status, isOwn, isAdmin]
@@ -88,16 +87,12 @@ export function ReservationCard({
               <Calendar className={ICON_SIZE_SM + " text-muted-foreground flex-shrink-0 mt-0.5"} />
               <div className="flex-1 min-w-0 break-words">
                 <div className="font-medium">
-                  {canViewDetails ? (
-                    <a
-                      href={`/reservations/${reservation.id}`}
-                      className="hover:underline text-foreground"
-                    >
-                      {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
-                    </a>
-                  ) : (
-                    `${formatDate(reservation.startDate)} → ${formatDate(reservation.endDate)}`
-                  )}
+                  <a
+                    href={`/reservations/${reservation.id}`}
+                    className="hover:underline text-foreground"
+                  >
+                    {formatDate(reservation.startDate)} → {formatDate(reservation.endDate)}
+                  </a>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {days} {days === 1 ? "dzień" : "dni"}

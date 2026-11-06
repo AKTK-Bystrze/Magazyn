@@ -52,7 +52,6 @@ func (h *ReservationHandler) HandleList(w http.ResponseWriter, r *http.Request) 
 func (h *ReservationHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := common.GetUserIDFromContext(r)
-	role := common.GetUserRoleFromContext(r)
 	id := r.PathValue("id")
 	if userID == "" {
 		common.RespondUnauthorized(ctx, w)
@@ -62,7 +61,7 @@ func (h *ReservationHandler) HandleGetByID(w http.ResponseWriter, r *http.Reques
 		common.RespondError(ctx, w, http.StatusBadRequest, "ID is required")
 		return
 	}
-	response, err := h.service.GetByID(ctx, id, userID, role)
+	response, err := h.service.GetByID(ctx, id)
 	if err != nil {
 		common.RespondWithError(ctx, w, err)
 		return

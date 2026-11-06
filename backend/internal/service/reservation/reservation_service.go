@@ -17,7 +17,7 @@ import (
 // ReservationService defines operations for managing reservations.
 type ReservationService interface {
 	List(ctx context.Context, query types.ReservationListQuery, userID string, role string) (*types.ReservationListResponse, error)
-	GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error)
+	GetByID(ctx context.Context, id string) (*types.ReservationDetail, error)
 	Create(ctx context.Context, cmd types.CreateReservationsCommand, userID string, role string) (*types.CreateReservationsResponse, error)
 	Update(ctx context.Context, id string, cmd types.UpdateReservationCommand, userID string, role string) (*types.UpdateReservationResponse, error)
 	BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, userID string, role string) (*types.BulkStatusUpdateResponse, error)
@@ -78,15 +78,8 @@ func (s *reservationService) List(ctx context.Context, query types.ReservationLi
 	}, nil
 }
 
-func (s *reservationService) GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error) {
-	res, err := s.repo.GetReservationByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if role != auth.RoleAdmin && role != auth.RoleSuperAdmin && res.UserID != userID {
-		return nil, types.NewForbiddenError("You are not allowed to view this reservation")
-	}
-	return res, nil
+func (s *reservationService) GetByID(ctx context.Context, id string) (*types.ReservationDetail, error) {
+	return s.repo.GetReservationByID(ctx, id)
 }
 
 func (s *reservationService) BulkUpdate(ctx context.Context, cmd types.BulkUpdateReservationsCommand, userID string, role string) (*types.BulkStatusUpdateResponse, error) {

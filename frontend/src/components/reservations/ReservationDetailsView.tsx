@@ -182,14 +182,16 @@ function ReservationDetailsContent({
         </CardContent>
       </Card>
 
-      <ReservationStatusActions
-        reservation={reservation}
-        currentUserId={currentUserId}
-        currentUserBalance={currentUserBalance}
-        isAdmin={isAdmin}
-        onStatusChange={handleStatusChange}
-        isUpdating={isUpdating}
-      />
+      {(isOwner || isAdmin) && (
+        <ReservationStatusActions
+          reservation={reservation}
+          currentUserId={currentUserId}
+          currentUserBalance={currentUserBalance}
+          isAdmin={isAdmin}
+          onStatusChange={handleStatusChange}
+          isUpdating={isUpdating}
+        />
+      )}
 
       <ReservationAuditTimeline auditTrail={reservation.auditTrail} />
     </div>

@@ -54,7 +54,7 @@ The backend registers routes directly on standard `net/http` ServeMux (no `/api/
 │   ├── POST /reservations                       # Auth: create atomic reservation(s) & deduct credits
 │   ├── GET  /reservations/dashboard             # Admin, SuperAdmin: reservation dashboard statistics
 │   ├── PATCH /reservations/bulk                 # Admin, SuperAdmin: bulk update reservation statuses
-│   ├── GET  /reservations/{id}                  # Auth: get reservation details with history
+│   ├── GET  /reservations/{id}                  # Auth: get reservation details with history (all users, read-only for non-owners)
 │   └── PATCH /reservations/{id}                 # Auth: update dates or cancel reservation
 │
 ├── /credits
