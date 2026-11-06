@@ -43,7 +43,7 @@ export const RESERVATION_STATUS_VIEW_UI_STRINGS = {
   CONFIRM_STATUS_CHANGE_BUTTON: "Zmień Status",
   CANCEL_CHANGE: "Anuluj",
 
-  UNAUTHORIZED: "Możesz zobaczyć szczegóły tylko własnej rezerwacji (under development)",
+  UNAUTHORIZED: "Brak uprawnień do wyświetlenia rezerwacji",
   NOT_FOUND: "Nie znaleziono rezerwacji",
   NETWORK_ERROR: "Błąd połączenia. Spróbuj ponownie",
 

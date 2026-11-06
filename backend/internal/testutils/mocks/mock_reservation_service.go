@@ -21,8 +21,8 @@ func (m *MockReservationService) List(ctx context.Context, query types.Reservati
 	return args.Get(0).(*types.ReservationListResponse), args.Error(1)
 }
 
-func (m *MockReservationService) GetByID(ctx context.Context, id string, userID string, role string) (*types.ReservationDetail, error) {
-	args := m.Called(ctx, id, userID, role)
+func (m *MockReservationService) GetByID(ctx context.Context, id string) (*types.ReservationDetail, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

@@ -119,7 +119,7 @@ describe("ReservationTableRow", () => {
     expect(onViewDetails).toHaveBeenCalledWith(mockItem);
   });
 
-  it("does not trigger onViewDetails callback when row is clicked for other users' reservations as non-admin", () => {
+  it("triggers onViewDetails callback when row is clicked for other users' reservations as non-admin", () => {
     const onViewDetails = vi.fn();
     renderInTable(
       <ReservationTableRow
@@ -133,6 +133,6 @@ describe("ReservationTableRow", () => {
 
     const row = screen.getByTestId(`reservation-row-${mockItem.id}`);
     fireEvent.click(row);
-    expect(onViewDetails).not.toHaveBeenCalled();
+    expect(onViewDetails).toHaveBeenCalledWith(mockItem);
   });
 });

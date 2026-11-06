@@ -13,10 +13,6 @@ export interface CartAvailabilityAlertsProps {
   availabilityResult: AvailabilityCheckResult;
   /** Optional path to navigate back to equipment browse */
   equipmentBrowsePath?: string;
-  /** Current user ID for checking reservation view permissions */
-  currentUserId?: string;
-  /** Whether the current user is an admin */
-  isAdmin?: boolean;
 }
 
 /**
@@ -27,8 +23,6 @@ export function CartAvailabilityAlerts({
   submissionError,
   availabilityResult,
   equipmentBrowsePath,
-  currentUserId,
-  isAdmin = false,
 }: CartAvailabilityAlertsProps) {
   const localRef = React.useRef<HTMLDivElement>(null);
 
@@ -107,15 +101,14 @@ export function CartAvailabilityAlerts({
                                 )
                               </span>
                             )}
-                            {conflict.id &&
-                              (isAdmin || (currentUserId && conflict.userId === currentUserId)) && (
-                                <a
-                                  href={`/reservations/${conflict.id}`}
-                                  className="underline font-medium hover:text-foreground"
-                                >
-                                  Szczegóły
-                                </a>
-                              )}
+                            {conflict.id && (
+                              <a
+                                href={`/reservations/${conflict.id}`}
+                                className="underline font-medium hover:text-foreground"
+                              >
+                                Szczegóły
+                              </a>
+                            )}
                           </li>
                         ))}
                       </ul>

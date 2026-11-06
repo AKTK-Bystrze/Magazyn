@@ -82,12 +82,7 @@ export function ConfirmationModal({
                 >
                   <div>
                     <p className="font-medium">
-                      <a
-                        href={`/equipment/${item.equipmentId}`}
-                        className="hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={`/equipment/${item.equipmentId}`} className="hover:underline">
                         {item.name}
                       </a>
                     </p>

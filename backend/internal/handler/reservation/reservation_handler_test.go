@@ -261,3 +261,75 @@ func TestHandleUpdate_ConflictError_ReturnsConflict(t *testing.T) {
 	assert.Equal(t, "Dates not available", resp["error"])
 	mockSvc.AssertExpectations(t)
 }
+
+func TestHandleGetByID(t *testing.T) {
+	reservation := &types.ReservationDetail{
+		ReservationListItem: types.ReservationListItem{
+			ID:     "res-1",
+			UserID: "other-user",
+			Status: constants.ReservationStatusPending,
+		},
+		UserEmail: "other@example.com",
+	}
+
+	tests := []struct {
+		name       string
+		pathID     string
+		user       string
+		mockSetup  func(m *mocks.MockReservationService)
+		wantStatus int
+	}{
+		{
+			name:       "Unauthorized",
+			pathID:     "res-1",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "MissingID",
+			user:       "user-1",
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:   "Success",
+			pathID: "res-1",
+			user:   "user-1",
+			mockSetup: func(m *mocks.MockReservationService) {
+				m.On("GetByID", mock.Anything, "res-1").Return(reservation, nil)
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:   "NotFound",
+			pathID: "res-missing",
+			user:   "user-1",
+			mockSetup: func(m *mocks.MockReservationService) {
+				m.On("GetByID", mock.Anything, "res-missing").Return(nil, types.NewNotFoundError("Reservation", "res-missing"))
+			},
+			wantStatus: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSvc := new(mocks.MockReservationService)
+			if tt.mockSetup != nil {
+				tt.mockSetup(mockSvc)
+			}
+			h := handler.NewReservationHandler(mockSvc)
+
+			req := httptest.NewRequest(http.MethodGet, "/reservations/"+tt.pathID, nil)
+			if tt.pathID != "" {
+				req.SetPathValue("id", tt.pathID)
+			}
+			if tt.user != "" {
+				req = testutils.WithUserContext(req, tt.user, auth.RoleUser)
+			}
+			rec := httptest.NewRecorder()
+
+			h.HandleGetByID(rec, req)
+
+			assert.Equal(t, tt.wantStatus, rec.Code)
+			mockSvc.AssertExpectations(t)
+		})
+	}
+}

@@ -26,7 +26,6 @@ interface ReservationCardListProps {
   onModifyDatesAll?: (reservations: ReservationListItem[]) => void;
   onReturnAll?: (reservations: ReservationListItem[]) => void;
   onRentAll?: (reservations: ReservationListItem[]) => void;
-  onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
 /**
@@ -53,7 +52,6 @@ export function ReservationCardList({
   onModifyDatesAll,
   onReturnAll,
   onRentAll,
-  onViewDetails,
 }: ReservationCardListProps) {
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
 
@@ -124,7 +122,6 @@ export function ReservationCardList({
                 onCancel={onCancel}
                 onReturn={onReturn}
                 onRent={onRent}
-                onViewDetails={onViewDetails}
                 mode={mode}
               />
             );

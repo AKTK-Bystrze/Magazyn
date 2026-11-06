@@ -172,7 +172,6 @@ function ReservationListContainerInner({
           onModifyDatesAll={handleModifyDatesAll}
           onReturnAll={handleReturnAll}
           onRentAll={handleRentAll}
-          onViewDetails={handleViewDetails}
         />
       ) : (
         <ReservationTable

@@ -9,6 +9,7 @@ import { ReservationStatusActions } from "./ReservationStatusActions";
 import { ReservationAuditTimeline } from "./ReservationAuditTimeline";
 import { ArrowLeft, Calendar, CreditCard, User, Clock, AlertTriangle } from "lucide-react";
 import { useReservationDetail } from "@/hooks/useReservationDetail";
+import { useReturnNavigation } from "@/lib/hooks/useReturnNavigation";
 import { formatDate, calculateDays } from "@/lib/utils/date-utils";
 import { ICON_SIZE_SM, RESERVATION_STATUS_VIEW_UI_STRINGS as UI } from "@/lib/config/constants";
 import { ROUTES } from "@/lib/config/routes";
@@ -42,14 +43,21 @@ function ReservationDetailsContent({
   const { reservation, isLoading, error, updateStatus, isUpdating } =
     useReservationDetail(reservationId);
 
-  const backUrl = isAdmin ? ROUTES.PROTECTED.ADMIN_RESERVATIONS : ROUTES.PROTECTED.RESERVATIONS;
+  const defaultBackPath = isAdmin
+    ? ROUTES.PROTECTED.ADMIN_RESERVATIONS
+    : ROUTES.PROTECTED.RESERVATIONS;
+  const { backHref, handleBack } = useReturnNavigation(defaultBackPath);
 
-  const handleBack = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (window.history.length > 1 && document.referrer.includes("/reservations")) {
-      e.preventDefault();
-      window.history.back();
-    }
-  };
+  const backLink = (
+    <a
+      href={backHref}
+      onClick={handleBack}
+      className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+    >
+      <ArrowLeft className={ICON_SIZE_SM} />
+      {UI.BACK_TO_LIST}
+    </a>
+  );
 
   React.useEffect(() => {
     if (reservation) {
@@ -85,14 +93,7 @@ function ReservationDetailsContent({
 
     return (
       <div className="space-y-6">
-        <a
-          href={backUrl}
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <ArrowLeft className={ICON_SIZE_SM} />
-          {UI.BACK_TO_LIST}
-        </a>
+        {backLink}
         <Alert className="border-destructive bg-destructive/10">
           <AlertTriangle className={ICON_SIZE_SM + " text-destructive"} />
           <AlertDescription className="text-destructive">{errorMessage}</AlertDescription>
@@ -107,14 +108,7 @@ function ReservationDetailsContent({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <a
-          href={backUrl}
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <ArrowLeft className={ICON_SIZE_SM} />
-          {UI.BACK_TO_LIST}
-        </a>
+        {backLink}
         <StatusBadge
           status={reservation.status}
           startDate={reservation.startDate}
@@ -182,14 +176,16 @@ function ReservationDetailsContent({
         </CardContent>
       </Card>
 
-      <ReservationStatusActions
-        reservation={reservation}
-        currentUserId={currentUserId}
-        currentUserBalance={currentUserBalance}
-        isAdmin={isAdmin}
-        onStatusChange={handleStatusChange}
-        isUpdating={isUpdating}
-      />
+      {(isOwner || isAdmin) && (
+        <ReservationStatusActions
+          reservation={reservation}
+          currentUserId={currentUserId}
+          currentUserBalance={currentUserBalance}
+          isAdmin={isAdmin}
+          onStatusChange={handleStatusChange}
+          isUpdating={isUpdating}
+        />
+      )}
 
       <ReservationAuditTimeline auditTrail={reservation.auditTrail} />
     </div>

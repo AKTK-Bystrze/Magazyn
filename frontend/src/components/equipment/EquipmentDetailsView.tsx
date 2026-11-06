@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { useEquipmentDetails } from "@/hooks/useEquipmentDetails";
+import { useReturnNavigation } from "@/lib/hooks/useReturnNavigation";
 import { MaintenanceLogSection } from "./MaintenanceLogSection";
 import { ReservationHistorySection } from "./ReservationHistorySection";
 import {
@@ -21,7 +22,6 @@ const UI = EQUIPMENT_MANAGER_UI_STRINGS;
 interface EquipmentDetailsViewProps {
   equipmentId: string;
   isAdmin?: boolean;
-  currentUserId?: string;
 }
 
 /**
@@ -36,11 +36,7 @@ export function EquipmentDetailsView(props: EquipmentDetailsViewProps) {
   );
 }
 
-function EquipmentDetailsViewContent({
-  equipmentId,
-  isAdmin = false,
-  currentUserId,
-}: EquipmentDetailsViewProps) {
+function EquipmentDetailsViewContent({ equipmentId, isAdmin = false }: EquipmentDetailsViewProps) {
   const {
     equipment,
     maintenanceLogs,
@@ -53,7 +49,8 @@ function EquipmentDetailsViewContent({
     error,
   } = useEquipmentDetails(equipmentId);
 
-  const backPath = isAdmin ? ROUTES.PROTECTED.ADMIN_EQUIPMENT : ROUTES.PUBLIC.EQUIPMENT;
+  const defaultBackPath = isAdmin ? ROUTES.PROTECTED.ADMIN_EQUIPMENT : ROUTES.PUBLIC.EQUIPMENT;
+  const { backHref, handleBack } = useReturnNavigation(defaultBackPath);
 
   if (isLoading) {
     return (
@@ -69,7 +66,8 @@ function EquipmentDetailsViewContent({
     <div className="space-y-6 max-w-4xl mx-auto py-6" data-testid="equipment-details-view">
       <div className="flex items-center justify-between gap-4">
         <a
-          href={backPath}
+          href={backHref}
+          onClick={handleBack}
           className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <ArrowLeft className={ICON_SIZE_SM} />
@@ -179,11 +177,7 @@ function EquipmentDetailsViewContent({
                 <Skeleton className="h-16 w-full" />
               </div>
             ) : (
-              <ReservationHistorySection
-                reservations={reservationHistory}
-                currentUserId={currentUserId}
-                isAdmin={isAdmin}
-              />
+              <ReservationHistorySection reservations={reservationHistory} />
             )}
           </div>
         </div>

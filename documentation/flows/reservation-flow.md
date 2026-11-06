@@ -227,11 +227,12 @@ When dates are modified:
 
 ### Authorization Errors (HTTP 403)
 
-| Condition                      | Error Message                                  |
-| ------------------------------ | ---------------------------------------------- |
-| User views other's reservation | `You are not allowed to view this reservation` |
-| User modifies non-own          | `Not allowed`                                  |
-| User modifies non-pending      | `Cannot modify non-pending reservation`        |
+| Condition                 | Error Message                           |
+| ------------------------- | --------------------------------------- |
+| User modifies non-own     | `Not allowed`                           |
+| User modifies non-pending | `Cannot modify non-pending reservation` |
+
+> **Note on Read Access**: `GET /reservations/:id` is accessible to all enabled authenticated users to inspect dates, equipment specifications, reserver details, and audit history. Only modification operations (`PATCH`) are restricted to owners and administrators.
 
 ### Conflict Errors (HTTP 409)
 

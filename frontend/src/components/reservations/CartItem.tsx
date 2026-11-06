@@ -52,12 +52,7 @@ export function CartItem({ item, onRemove }: CartItemProps) {
       <CardHeader className="p-4 pb-2">
         <div>
           <h3 className="font-semibold text-lg">
-            <a
-              href={`/equipment/${item.equipmentId}`}
-              className="hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href={`/equipment/${item.equipmentId}`} className="hover:underline">
               {item.name}
             </a>
           </h3>

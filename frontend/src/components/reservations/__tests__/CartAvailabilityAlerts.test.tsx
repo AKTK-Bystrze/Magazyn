@@ -79,7 +79,7 @@ describe("CartAvailabilityAlerts", () => {
     expect(backLink).toHaveAttribute("href", "/equipment");
   });
 
-  it("does not render details link for non-admin user when conflict belongs to another user", () => {
+  it("renders details link for non-admin user even when conflict belongs to another user", () => {
     const conflictResult: AvailabilityCheckResult = {
       isAllAvailable: false,
       unavailableItems: [
@@ -100,16 +100,12 @@ describe("CartAvailabilityAlerts", () => {
       ],
     };
 
-    render(
-      <CartAvailabilityAlerts
-        submissionError={null}
-        availabilityResult={conflictResult}
-        currentUserId="me-123"
-        isAdmin={false}
-      />
-    );
+    render(<CartAvailabilityAlerts submissionError={null} availabilityResult={conflictResult} />);
 
-    expect(screen.queryByRole("link", { name: "Szczegóły" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Szczegóły" })).toHaveAttribute(
+      "href",
+      "/reservations/res-123"
+    );
     expect(screen.getByText("jan.kowalski")).toBeInTheDocument();
   });
 
