@@ -22,7 +22,6 @@ const UI = EQUIPMENT_MANAGER_UI_STRINGS;
 interface EquipmentDetailsViewProps {
   equipmentId: string;
   isAdmin?: boolean;
-  currentUserId?: string;
 }
 
 /**
@@ -37,11 +36,7 @@ export function EquipmentDetailsView(props: EquipmentDetailsViewProps) {
   );
 }
 
-function EquipmentDetailsViewContent({
-  equipmentId,
-  isAdmin = false,
-  currentUserId,
-}: EquipmentDetailsViewProps) {
+function EquipmentDetailsViewContent({ equipmentId, isAdmin = false }: EquipmentDetailsViewProps) {
   const {
     equipment,
     maintenanceLogs,
@@ -182,11 +177,7 @@ function EquipmentDetailsViewContent({
                 <Skeleton className="h-16 w-full" />
               </div>
             ) : (
-              <ReservationHistorySection
-                reservations={reservationHistory}
-                currentUserId={currentUserId}
-                isAdmin={isAdmin}
-              />
+              <ReservationHistorySection reservations={reservationHistory} />
             )}
           </div>
         </div>

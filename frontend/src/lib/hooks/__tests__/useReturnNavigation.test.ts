@@ -49,6 +49,28 @@ describe("useReturnNavigation", () => {
     expect(result.current.backHref).toBe("/equipment");
   });
 
+  it("ignores same-page referrer to prevent self-referencing loops", () => {
+    Object.defineProperty(document, "referrer", {
+      value: `http://localhost:3000${window.location.pathname}`,
+      configurable: true,
+      writable: true,
+    });
+
+    const { result } = renderHook(() => useReturnNavigation("/equipment"));
+    expect(result.current.backHref).toBe("/equipment");
+  });
+
+  it("ignores login referrer to prevent returning to login page after auth", () => {
+    Object.defineProperty(document, "referrer", {
+      value: "http://localhost:3000/login?redirect=%2Fequipment%2F123",
+      configurable: true,
+      writable: true,
+    });
+
+    const { result } = renderHook(() => useReturnNavigation("/equipment"));
+    expect(result.current.backHref).toBe("/equipment");
+  });
+
   it("calls window.history.back() when history.length > 1 and referrer is same origin", () => {
     const backSpy = vi.spyOn(window.history, "back").mockImplementation(() => {});
     Object.defineProperty(document, "referrer", {

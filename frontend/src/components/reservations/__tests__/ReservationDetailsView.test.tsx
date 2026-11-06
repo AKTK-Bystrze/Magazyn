@@ -69,7 +69,7 @@ describe("ReservationDetailsView", () => {
     expect(backLink).toHaveAttribute("href", "/reservations");
   });
 
-  it("calls window.history.back() when referrer contains /reservations", () => {
+  it("calls window.history.back() when referrer is from same origin", () => {
     const backSpy = vi.spyOn(window.history, "back").mockImplementation(() => {});
     Object.defineProperty(document, "referrer", {
       value: "http://localhost:3000/admin/reservations?scope=all",

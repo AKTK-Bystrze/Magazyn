@@ -57,7 +57,7 @@ describe("ReservationHistorySection", () => {
     expect(screen.getByText("Przyszła")).toBeInTheDocument();
   });
 
-  it("renders reservation dates as links for admin or owner, plain text otherwise", () => {
+  it("renders reservation dates as links for all users", () => {
     const reservations: EquipmentReservationHistoryItem[] = [
       {
         id: "res-1",
@@ -71,34 +71,7 @@ describe("ReservationHistorySection", () => {
       },
     ];
 
-    // As non-owner regular user: no link
-    const { rerender } = render(
-      <ReservationHistorySection
-        reservations={reservations}
-        currentUserId="other-user"
-        isAdmin={false}
-      />
-    );
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
-
-    // As owner: link is rendered
-    rerender(
-      <ReservationHistorySection
-        reservations={reservations}
-        currentUserId="owner-1"
-        isAdmin={false}
-      />
-    );
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/reservations/res-1");
-
-    // As admin: link is rendered
-    rerender(
-      <ReservationHistorySection
-        reservations={reservations}
-        currentUserId="other-user"
-        isAdmin={true}
-      />
-    );
+    render(<ReservationHistorySection reservations={reservations} />);
     expect(screen.getByRole("link")).toHaveAttribute("href", "/reservations/res-1");
   });
 });

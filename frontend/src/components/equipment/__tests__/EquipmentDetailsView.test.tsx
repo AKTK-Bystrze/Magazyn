@@ -109,7 +109,7 @@ describe("EquipmentDetailsView", () => {
       refetch: vi.fn(),
     });
 
-    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} currentUserId="user-1" />);
+    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} />);
     expect(screen.getByText("Kajak Górski Rapid")).toBeInTheDocument();
     expect(screen.getByText("EQ-001 • Kajaki")).toBeInTheDocument();
     expect(screen.getByText("Wytrzymały kajak górski")).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("EquipmentDetailsView", () => {
     );
   });
 
-  it("renders reservation history dates as plain text when user is not admin and not owner", () => {
+  it("renders reservation history dates as link when viewing other users' reservations as regular user", () => {
     vi.mocked(useEquipmentDetails).mockReturnValue({
       equipment: {
         id: "eq-1",
@@ -164,10 +164,12 @@ describe("EquipmentDetailsView", () => {
       refetch: vi.fn(),
     });
 
-    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} currentUserId="me-123" />);
+    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} />);
 
-    expect(screen.queryByRole("link", { name: /01.05.2026 → 03.05.2026/ })).not.toBeInTheDocument();
-    expect(screen.getByText(/01.05.2026 → 03.05.2026/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /01.05.2026 → 03.05.2026/ })).toHaveAttribute(
+      "href",
+      "/reservations/res-1"
+    );
   });
 
   it("renders admin back link to admin equipment", () => {

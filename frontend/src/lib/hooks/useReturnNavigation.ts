@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ROUTES } from "@/lib/config/routes";
 
 /**
  * Return type of useReturnNavigation hook.
@@ -11,12 +12,16 @@ export interface UseReturnNavigationReturn {
 }
 
 /**
- * Validates whether the document referrer originates from the same site.
+ * Validates whether the document referrer originates from a valid, non-self, non-auth same-origin page.
  */
-function isSameOriginReferrer(): boolean {
+function isValidReturnReferrer(): boolean {
   if (typeof window === "undefined" || !document.referrer) return false;
   try {
-    return new URL(document.referrer).origin === window.location.origin;
+    const refUrl = new URL(document.referrer);
+    if (refUrl.origin !== window.location.origin) return false;
+    if (refUrl.pathname === window.location.pathname) return false;
+    if (refUrl.pathname.startsWith(ROUTES.PUBLIC.LOGIN)) return false;
+    return true;
   } catch {
     return false;
   }
@@ -34,14 +39,14 @@ export function useReturnNavigation(defaultPath: string): UseReturnNavigationRet
   const [backHref, setBackHref] = React.useState<string>(defaultPath);
 
   React.useEffect(() => {
-    if (isSameOriginReferrer()) {
+    if (isValidReturnReferrer()) {
       const refUrl = new URL(document.referrer);
       setBackHref(refUrl.pathname + refUrl.search);
     }
   }, [defaultPath]);
 
   const handleBack = React.useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (typeof window !== "undefined" && window.history.length > 1 && isSameOriginReferrer()) {
+    if (typeof window !== "undefined" && window.history.length > 1 && isValidReturnReferrer()) {
       e.preventDefault();
       window.history.back();
     }

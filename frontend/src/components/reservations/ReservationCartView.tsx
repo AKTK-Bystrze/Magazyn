@@ -35,8 +35,6 @@ interface ReservationCartViewProps {
   initialCreditBalance: number;
   /** Enable admin mode to create reservations on behalf of other users */
   isAdmin?: boolean;
-  /** Current authenticated user ID */
-  currentUserId?: string;
   /** Route to redirect after successful reservation */
   successRedirectPath?: string;
   /** Pre-selected user ID (admin mode) - defaults to admin's own ID */

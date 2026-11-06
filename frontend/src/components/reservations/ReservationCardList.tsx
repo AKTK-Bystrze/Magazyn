@@ -26,7 +26,6 @@ interface ReservationCardListProps {
   onModifyDatesAll?: (reservations: ReservationListItem[]) => void;
   onReturnAll?: (reservations: ReservationListItem[]) => void;
   onRentAll?: (reservations: ReservationListItem[]) => void;
-  onViewDetails?: (reservation: ReservationListItem) => void;
 }
 
 /**
