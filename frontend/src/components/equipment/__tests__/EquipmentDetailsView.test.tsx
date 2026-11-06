@@ -1,12 +1,28 @@
 import * as React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { EquipmentDetailsView } from "../EquipmentDetailsView";
 import { useEquipmentDetails } from "@/hooks/useEquipmentDetails";
 
 vi.mock("@/hooks/useEquipmentDetails");
 
 describe("EquipmentDetailsView", () => {
+  const mockEquipment = {
+    id: "eq-1",
+    internalId: "EQ-001",
+    typeId: "typ-1",
+    name: "Kajak Górski Rapid",
+    description: "Wytrzymały kajak górski",
+    status: "ok" as const,
+    isArchived: false,
+    createdAt: "2026-01-01",
+    updatedAt: null,
+    type: {
+      id: "typ-1",
+      name: "Kajaki",
+      creditCostPerDay: 5,
+    },
+  };
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -188,5 +204,38 @@ describe("EquipmentDetailsView", () => {
       "href",
       "/admin/equipment"
     );
+  });
+
+  it("calls window.history.back() when referrer is from same origin", () => {
+    vi.mocked(useEquipmentDetails).mockReturnValue({
+      equipment: mockEquipment,
+      maintenanceLogs: [],
+      reservationHistory: [],
+      isLoading: false,
+      isLogsLoading: false,
+      isReservationsLoading: false,
+      error: null,
+      addMaintenanceLog: vi.fn(),
+      isMutating: false,
+      refetch: vi.fn(),
+    });
+
+    const backSpy = vi.spyOn(window.history, "back").mockImplementation(() => {});
+    Object.defineProperty(document, "referrer", {
+      value: "http://localhost:3000/reservations/create",
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(window.history, "length", {
+      value: 2,
+      configurable: true,
+      writable: true,
+    });
+
+    render(<EquipmentDetailsView equipmentId="eq-1" isAdmin={false} />);
+    const backLink = screen.getByRole("link", { name: /Powrót do sprzętu/ });
+    fireEvent.click(backLink);
+
+    expect(backSpy).toHaveBeenCalled();
   });
 });

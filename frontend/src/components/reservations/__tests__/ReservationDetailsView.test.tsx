@@ -95,6 +95,32 @@ describe("ReservationDetailsView", () => {
     expect(backSpy).toHaveBeenCalled();
   });
 
+  it("calls window.history.back() when referrer is from equipment details", () => {
+    const backSpy = vi.spyOn(window.history, "back").mockImplementation(() => {});
+    Object.defineProperty(document, "referrer", {
+      value: "http://localhost:3000/equipment/eq-1",
+      configurable: true,
+    });
+    Object.defineProperty(window.history, "length", {
+      value: 2,
+      configurable: true,
+    });
+
+    render(
+      <ReservationDetailsView
+        reservationId="res-123"
+        currentUserId="user-1"
+        currentUserBalance={100}
+        isAdmin={false}
+      />
+    );
+
+    const backLink = screen.getByRole("link", { name: /powrót do rezerwacji/i });
+    fireEvent.click(backLink);
+
+    expect(backSpy).toHaveBeenCalled();
+  });
+
   it("renders reservation details, reserver info, and no status actions for non-owner regular user", () => {
     render(
       <ReservationDetailsView

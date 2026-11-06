@@ -27,8 +27,6 @@ export function CartAvailabilityAlerts({
   submissionError,
   availabilityResult,
   equipmentBrowsePath,
-  currentUserId,
-  isAdmin = false,
 }: CartAvailabilityAlertsProps) {
   const localRef = React.useRef<HTMLDivElement>(null);
 
@@ -107,15 +105,14 @@ export function CartAvailabilityAlerts({
                                 )
                               </span>
                             )}
-                            {conflict.id &&
-                              (isAdmin || (currentUserId && conflict.userId === currentUserId)) && (
-                                <a
-                                  href={`/reservations/${conflict.id}`}
-                                  className="underline font-medium hover:text-foreground"
-                                >
-                                  Szczegóły
-                                </a>
-                              )}
+                            {conflict.id && (
+                              <a
+                                href={`/reservations/${conflict.id}`}
+                                className="underline font-medium hover:text-foreground"
+                              >
+                                Szczegóły
+                              </a>
+                            )}
                           </li>
                         ))}
                       </ul>
