@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.12.0...v0.12.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* **auth:** disable auto-refresh ticker and session persistence in SSR server clients ([#330](https://github.com/AKTK-Bystrze/Magazyn/issues/330)) ([7d3abd4](https://github.com/AKTK-Bystrze/Magazyn/commit/7d3abd4bef04563ae2aafc63b80c1b43c2f1995f))
+
 ## [0.12.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.11.0...v0.12.0) (2026-11-06)
 
 
