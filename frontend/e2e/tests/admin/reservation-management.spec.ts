@@ -305,6 +305,6 @@ test.describe.serial("Admin Reservation Management", () => {
       .eq("id", reservationId)
       .single();
     expect(resError).toBeNull();
-    expect(dbReservation?.status).toBe("returned");
+    expect(dbReservation?.status).toBe("RETURNED");
   });
 });
