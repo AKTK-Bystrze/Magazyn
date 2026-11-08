@@ -156,7 +156,13 @@ export const POST: APIRoute = async ({ url, request, cookies, locals }) => {
   // Validate the tokens with Supabase before trusting them.
   const supabase = createClient(
     process.env.INTERNAL_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL,
-    process.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    process.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
   );
   const { data, error } = await supabase.auth.getUser(accessToken);
   if (error || !data.user) {

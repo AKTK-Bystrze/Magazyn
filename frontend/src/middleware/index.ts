@@ -59,7 +59,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
         const supabase = createClient(
           process.env.INTERNAL_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL,
-          process.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+          process.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false,
+            },
+          }
         );
 
         const refreshResult = await refreshUserSession(session, supabase);
