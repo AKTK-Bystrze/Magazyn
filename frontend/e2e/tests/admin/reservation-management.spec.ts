@@ -81,6 +81,7 @@ test.describe.serial("Admin Reservation Management", () => {
     testUser,
     testEquipment,
     workerIndex,
+    supabaseAdmin,
   }) => {
     test.setTimeout(60000);
     const [equip1] = testEquipment;
@@ -116,6 +117,13 @@ test.describe.serial("Admin Reservation Management", () => {
 
     const statusBadge = row.first().getByTestId(`reservation-status-${reservationId}`).first();
     await expect(statusBadge).toContainText(/Anulowan[ao]/);
+
+    const { data: profileAfterCancel } = await supabaseAdmin
+      .from("profiles")
+      .select("credit_balance")
+      .eq("id", testUser.id)
+      .single();
+    expect(profileAfterCancel?.credit_balance).toBe(initialUserCredits);
   });
 
   test("Happy Path: Admin creates free reservation for user", async ({
