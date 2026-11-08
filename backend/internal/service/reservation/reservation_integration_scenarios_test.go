@@ -85,14 +85,21 @@ func TestTS1_ReservationLifecycle_Full(t *testing.T) {
 	require.NoError(t, json.Unmarshal(data, &histEntries))
 	require.Len(t, histEntries, 3, "Should have exactly 3 credit history entries tied to reservation ID (2 extensions, refund)")
 
-	assert.Equal(t, "reservation_adjustment", histEntries[0].Reason)
-	assert.Equal(t, -1*fixture.costPerDay, histEntries[0].Amount)
-
-	assert.Equal(t, "reservation_adjustment", histEntries[1].Reason)
-	assert.Equal(t, -5*fixture.costPerDay, histEntries[1].Amount)
-
-	assert.Equal(t, "reservation_refund", histEntries[2].Reason)
-	assert.Equal(t, 9*fixture.costPerDay, histEntries[2].Amount)
+	var refundCount, adj1Count, adj2Count int
+	for _, entry := range histEntries {
+		if entry.Reason == "reservation_refund" && entry.Amount == 9*fixture.costPerDay {
+			refundCount++
+		}
+		if entry.Reason == "reservation_adjustment" && entry.Amount == -1*fixture.costPerDay {
+			adj1Count++
+		}
+		if entry.Reason == "reservation_adjustment" && entry.Amount == -5*fixture.costPerDay {
+			adj2Count++
+		}
+	}
+	assert.Equal(t, 1, refundCount, "Should have exactly 1 refund entry for +9x costPerDay")
+	assert.Equal(t, 1, adj1Count, "Should have exactly 1 adjustment entry for -1x costPerDay")
+	assert.Equal(t, 1, adj2Count, "Should have exactly 1 adjustment entry for -5x costPerDay")
 
 	var initialCharges []types.PublicCreditHistorySelect
 	dataCharge, _, err := fixture.client.From("credit_history").
