@@ -58,24 +58,27 @@ func (f *equipmentTestFixture) setupTestData() {
 		ID string `json:"id"`
 	}
 	var profiles []profile
-	data, _, _ := f.client.From("profiles").Select("id", "exact", false).Limit(1, "").Execute()
-	json.Unmarshal(data, &profiles)
-	if len(profiles) > 0 {
-		f.testUserID = profiles[0].ID
-	}
+	data, _, err := f.client.From("profiles").Select("id", "exact", false).Limit(1, "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &profiles))
+	require.NotEmpty(f.t, profiles, "Need at least one user profile in database")
+	f.testUserID = profiles[0].ID
+
 	type eqType struct {
 		ID string `json:"id"`
 	}
 	var types []eqType
-	data, _, _ = f.client.From("equipment_types").Select("id", "exact", false).Limit(1, "").Execute()
-	json.Unmarshal(data, &types)
-	if len(types) > 0 {
-		f.typeID = types[0].ID
-	}
+	data, _, err = f.client.From("equipment_types").Select("id", "exact", false).Limit(1, "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &types))
+	require.NotEmpty(f.t, types, "Need at least one equipment type in database")
+	f.typeID = types[0].ID
+
 	f.createTestEquipment()
 }
+
 func (f *equipmentTestFixture) createTestEquipment() {
-	suffix := time.Now().Format("150405.000")
+	suffix := time.Now().Format("150405.000000")
 	newEq := map[string]interface{}{
 		"name":        "Integration Test Equipment " + suffix,
 		"type_id":     f.typeID,
@@ -85,11 +88,12 @@ func (f *equipmentTestFixture) createTestEquipment() {
 	var created []struct {
 		ID string `json:"id"`
 	}
-	data, _, _ := f.client.From("equipment").Insert(newEq, false, "", "representation", "").Execute()
-	json.Unmarshal(data, &created)
-	if len(created) > 0 {
-		f.equipmentID = created[0].ID
-	}
+	data, _, err := f.client.From("equipment").Insert(newEq, false, "", "representation", "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &created))
+	require.NotEmpty(f.t, created)
+	f.equipmentID = created[0].ID
+
 	f.cleanup = append(f.cleanup, func() {
 		f.client.From("maintenance_logs").Delete("", "").Eq("equipment_id", f.equipmentID).Execute()
 		f.client.From("equipment").Delete("", "").Eq("id", f.equipmentID).Execute()
@@ -137,18 +141,17 @@ func (f *equipmentTestFixture) createReservation(equipmentID string, startDays, 
 	var created []struct {
 		ID string `json:"id"`
 	}
-	data, _, _ := f.client.From("reservations").Insert(res, false, "", "representation", "").Execute()
-	json.Unmarshal(data, &created)
-	if len(created) > 0 {
-		resID := created[0].ID
-		f.cleanup = append(f.cleanup, func() {
-			f.client.From("reservation_history").Delete("", "").Eq("reservation_id", resID).Execute()
-			f.client.From("credit_history").Delete("", "").Eq("reservation_id", resID).Execute()
-			f.client.From("reservations").Delete("", "").Eq("id", resID).Execute()
-		})
-		return resID
-	}
-	return ""
+	data, _, err := f.client.From("reservations").Insert(res, false, "", "representation", "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &created))
+	require.NotEmpty(f.t, created)
+	resID := created[0].ID
+	f.cleanup = append(f.cleanup, func() {
+		f.client.From("reservation_history").Delete("", "").Eq("reservation_id", resID).Execute()
+		f.client.From("credit_history").Delete("", "").Eq("reservation_id", resID).Execute()
+		f.client.From("reservations").Delete("", "").Eq("id", resID).Execute()
+	})
+	return resID
 }
 
 // TestEquipmentList_WithFavorites_MarksCorrectly verifies that when a user

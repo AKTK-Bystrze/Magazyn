@@ -93,38 +93,40 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	ctx := context.Background()
 	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
 	require.NoError(t, err)
-	type auditEntry struct {
-		ID     string `json:"id"`
-		Status string `json:"status"`
-	}
-	var auditBefore []auditEntry
-	dataBefore, _, _ := fixture.client.From("reservation_history").
-		Select("id,status", "exact", false).
+
+	var auditBefore []types.PublicReservationHistorySelect
+	dataBefore, _, err := fixture.client.From("reservation_history").
+		Select("id,status,reservation_id", "exact", false).
 		Eq("reservation_id", reservationID).
 		Execute()
-	json.Unmarshal(dataBefore, &auditBefore)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(dataBefore, &auditBefore))
 	auditCountBefore := len(auditBefore)
 	t.Logf("Audit entries before: %d", auditCountBefore)
+
 	updateCmd := types.UpdateReservationCommand{
 		Status: testutils.StringPtr(constants.ReservationStatusRented),
 	}
 	resp, err := fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
 	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
-	var auditAfter []auditEntry
-	dataAfter, _, _ := fixture.client.From("reservation_history").
-		Select("id,status", "exact", false).
+
+	var auditAfter []types.PublicReservationHistorySelect
+	dataAfter, _, err := fixture.client.From("reservation_history").
+		Select("id,status,reservation_id", "exact", false).
 		Eq("reservation_id", reservationID).
 		Order("created_at", nil).
 		Execute()
-	json.Unmarshal(dataAfter, &auditAfter)
-	auditCountAfter := len(auditAfter)
-	assert.Greater(t, auditCountAfter, auditCountBefore, "No audit entry created")
-	t.Logf("✓ Audit trail: %d -> %d entries", auditCountBefore, auditCountAfter)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(dataAfter, &auditAfter))
+	require.Len(t, auditAfter, auditCountBefore+1, "Exactly one audit entry must be added")
+	t.Logf("✓ Audit trail: %d -> %d entries", auditCountBefore, len(auditAfter))
+
 	latestEntry := auditAfter[len(auditAfter)-1]
 	assert.Equal(t, constants.ReservationStatusPending, latestEntry.Status, "Audit entry should record old status")
 	t.Logf("✓ Audit entry preserves old status: %s", latestEntry.Status)
 }
+
 func TestUpdateAudit_DateChange_RecordsOldDates(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
@@ -139,17 +141,15 @@ func TestUpdateAudit_DateChange_RecordsOldDates(t *testing.T) {
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUserID, "user")
 	require.NoError(t, err)
-	type auditEntry struct {
-		StartDate string `json:"start_date"`
-		EndDate   string `json:"end_date"`
-	}
-	var auditEntries []auditEntry
-	data, _, _ := fixture.client.From("reservation_history").
-		Select("start_date,end_date", "exact", false).
+
+	var auditEntries []types.PublicReservationHistorySelect
+	data, _, err := fixture.client.From("reservation_history").
+		Select("id,start_date,end_date,reservation_id", "exact", false).
 		Eq("reservation_id", reservationID).
 		Order("created_at", nil).
 		Execute()
-	json.Unmarshal(data, &auditEntries)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(data, &auditEntries))
 	found := false
 	for _, entry := range auditEntries {
 		if entry.StartDate == originalStart && entry.EndDate == originalEnd {

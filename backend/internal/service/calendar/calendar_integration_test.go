@@ -58,26 +58,29 @@ func (f *calendarTestFixture) setupTestData() {
 		ID string `json:"id"`
 	}
 	var profiles []profile
-	data, _, _ := f.client.From("profiles").Select("id", "exact", false).Limit(1, "").Execute()
-	json.Unmarshal(data, &profiles)
-	if len(profiles) > 0 {
-		f.testUserID = profiles[0].ID
-	}
+	data, _, err := f.client.From("profiles").Select("id", "exact", false).Limit(1, "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &profiles))
+	require.NotEmpty(f.t, profiles, "Need at least one user profile in database")
+	f.testUserID = profiles[0].ID
+
 	type eqType struct {
 		ID string `json:"id"`
 	}
 	var types []eqType
-	data, _, _ = f.client.From("equipment_types").Select("id", "exact", false).Limit(1, "").Execute()
-	json.Unmarshal(data, &types)
-	if len(types) > 0 {
-		f.typeID = types[0].ID
-	}
+	data, _, err = f.client.From("equipment_types").Select("id", "exact", false).Limit(1, "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &types))
+	require.NotEmpty(f.t, types, "Need at least one equipment type in database")
+	f.typeID = types[0].ID
+
 	f.equipment1ID = f.createTestEquipment("CAL-TEST-1")
 	f.equipment2ID = f.createTestEquipment("CAL-TEST-2")
 	f.equipment3ID = f.createTestEquipment("CAL-TEST-3")
 }
+
 func (f *calendarTestFixture) createTestEquipment(internalID string) string {
-	suffix := time.Now().Format("150405")
+	suffix := time.Now().Format("150405.000000")
 	newEq := map[string]interface{}{
 		"name":        "Calendar Test " + internalID,
 		"type_id":     f.typeID,
@@ -87,17 +90,17 @@ func (f *calendarTestFixture) createTestEquipment(internalID string) string {
 	var created []struct {
 		ID string `json:"id"`
 	}
-	data, _, _ := f.client.From("equipment").Insert(newEq, false, "", "representation", "").Execute()
-	json.Unmarshal(data, &created)
-	if len(created) > 0 {
-		eqID := created[0].ID
-		f.cleanup = append(f.cleanup, func() {
-			f.client.From("equipment").Delete("", "").Eq("id", eqID).Execute()
-		})
-		return eqID
-	}
-	return ""
+	data, _, err := f.client.From("equipment").Insert(newEq, false, "", "representation", "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &created))
+	require.NotEmpty(f.t, created)
+	eqID := created[0].ID
+	f.cleanup = append(f.cleanup, func() {
+		f.client.From("equipment").Delete("", "").Eq("id", eqID).Execute()
+	})
+	return eqID
 }
+
 func (f *calendarTestFixture) createReservation(equipmentID string, startDays, endDays int) {
 	start := time.Now().AddDate(0, 0, startDays).Format("2006-01-02")
 	end := time.Now().AddDate(0, 0, endDays).Format("2006-01-02")
@@ -111,14 +114,14 @@ func (f *calendarTestFixture) createReservation(equipmentID string, startDays, e
 	var created []struct {
 		ID string `json:"id"`
 	}
-	data, _, _ := f.client.From("reservations").Insert(res, false, "", "representation", "").Execute()
-	json.Unmarshal(data, &created)
-	if len(created) > 0 {
-		resID := created[0].ID
-		f.cleanup = append(f.cleanup, func() {
-			f.client.From("reservations").Delete("", "").Eq("id", resID).Execute()
-		})
-	}
+	data, _, err := f.client.From("reservations").Insert(res, false, "", "representation", "").Execute()
+	require.NoError(f.t, err)
+	require.NoError(f.t, json.Unmarshal(data, &created))
+	require.NotEmpty(f.t, created)
+	resID := created[0].ID
+	f.cleanup = append(f.cleanup, func() {
+		f.client.From("reservations").Delete("", "").Eq("id", resID).Execute()
+	})
 }
 func (f *calendarTestFixture) teardown() {
 	for i := len(f.cleanup) - 1; i >= 0; i-- {
@@ -141,11 +144,14 @@ func TestCalendarAvailability_MultipleEquipment_CorrectGrid(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.GreaterOrEqual(t, len(resp.Calendar), 21, "Should have at least 21 entries (3 equipment × 7 days)")
+	seen := make(map[string]bool, len(resp.Calendar))
 	for _, entry := range resp.Calendar {
 		assert.NotEmpty(t, entry.Date, "Entry should have date")
 		assert.NotEmpty(t, entry.EquipmentID, "Entry should have equipment ID")
 		assert.NotEmpty(t, entry.EquipmentName, "Entry should have equipment name")
+		seen[entry.EquipmentID] = true
 	}
+	assert.True(t, seen[fixture.equipment1ID] && seen[fixture.equipment2ID] && seen[fixture.equipment3ID], "All 3 test equipment items must be in the calendar grid")
 	t.Logf("✓ Calendar grid created: %d entries for 7 days", len(resp.Calendar))
 }
 

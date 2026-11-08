@@ -252,6 +252,7 @@ test.describe.serial("Admin Reservation Management", () => {
     testUser,
     testEquipment,
     workerIndex,
+    supabaseAdmin,
   }) => {
     test.setTimeout(60000);
     const [equip1] = testEquipment;
@@ -296,5 +297,14 @@ test.describe.serial("Admin Reservation Management", () => {
 
     // Verify badge updates to RETURNED (Zwrócona)
     await expect(statusBadge).toContainText(/Zwrócon[ao]/);
+
+    // Verify database record status is actually updated to RETURNED
+    const { data: dbReservation, error: resError } = await supabaseAdmin
+      .from("reservations")
+      .select("status")
+      .eq("id", reservationId)
+      .single();
+    expect(resError).toBeNull();
+    expect(dbReservation?.status).toBe("returned");
   });
 });
