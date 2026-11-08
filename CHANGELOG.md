@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.11.0...v0.12.0) (2026-11-06)
+
+
+### Features
+
+* checkout back button, conflict owner info and ubiquitous crosslinks ([#322](https://github.com/AKTK-Bystrze/Magazyn/issues/322)) ([e8f5170](https://github.com/AKTK-Bystrze/Magazyn/commit/e8f5170a9ff33adc2f911f1e4dae5bb398b656df))
+* **reservations:** allow all users to view any reservation ([#324](https://github.com/AKTK-Bystrze/Magazyn/issues/324)) ([#328](https://github.com/AKTK-Bystrze/Magazyn/issues/328)) ([057ffc3](https://github.com/AKTK-Bystrze/Magazyn/commit/057ffc320828de611a91b4d752b7856e2eb869a7))
+
+
+### Bug Fixes
+
+* **reservations:** restore buttons on back, enable bulk return, and fix modal error routing ([#323](https://github.com/AKTK-Bystrze/Magazyn/issues/323)) ([d1de933](https://github.com/AKTK-Bystrze/Magazyn/commit/d1de9339763cbb885226ca5824a0832fe13e0726))
+
 ## [0.11.0](https://github.com/AKTK-Bystrze/Magazyn/compare/v0.10.1...v0.11.0) (2026-11-05)
 
 
