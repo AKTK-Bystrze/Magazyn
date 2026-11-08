@@ -91,7 +91,7 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
+	reservationID, err := fixture.createTestReservation(fixture.testUserID, 0, 2)
 	require.NoError(t, err)
 
 	var auditBefore []types.PublicReservationHistorySelect
