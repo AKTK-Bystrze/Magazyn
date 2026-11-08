@@ -265,6 +265,12 @@ describe("Astro Middleware (onRequest) — HttpOnly session", () => {
       await runMiddleware(context, nextMock);
 
       expect(mocks.createClient).toHaveBeenCalledTimes(1);
+      expect(mocks.createClient.mock.calls[0][2]).toEqual({
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
       expect(mocks.refreshSession).toHaveBeenCalledWith({
         refresh_token: "refresh-token-1",
       });

@@ -216,7 +216,12 @@ export async function ensureSuperAdminUserExists(
 async function injectSupabaseSession(page: Page, email: string): Promise<void> {
   const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
   const anonKey = process.env.PUBLIC_SUPABASE_ANON_KEY;
-  const client = createClient(supabaseUrl!, anonKey!);
+  const client = createClient(supabaseUrl!, anonKey!, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 
   const { data, error } = await client.auth.signInWithPassword({
     email: email,

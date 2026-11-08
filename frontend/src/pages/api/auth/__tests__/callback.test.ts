@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createClient } from "@supabase/supabase-js";
+import { getUserSession } from "@/lib/auth/session-utils";
 import { GET, POST } from "../callback";
 import type { APIContext } from "astro";
 
@@ -85,6 +87,58 @@ describe("Magic Link Callback Handler", () => {
       expect(response.status).toBe(400);
       const data = await response.json();
       expect(data).toEqual({ error: "missing_session" });
+    });
+
+    it("initializes Supabase with autoRefreshToken: false and persistSession: false", async () => {
+      const mockGetUser = vi.fn().mockResolvedValue({
+        data: { user: { id: "user-123" } },
+        error: null,
+      });
+      vi.mocked(createClient).mockReturnValue({
+        auth: { getUser: mockGetUser },
+      } as unknown as ReturnType<typeof createClient>);
+      vi.mocked(getUserSession).mockResolvedValue({
+        status: "ok",
+        sessionInfo: {
+          userId: "user-123",
+          email: "test@example.com",
+          role: "user",
+          isEnabled: true,
+          creditBalance: 0,
+          username: "test",
+          expiresAt: new Date().toISOString(),
+        },
+      });
+
+      const request = new Request("http://localhost/api/auth/callback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-magazyn-handoff": "1",
+        },
+        body: JSON.stringify({
+          access_token: "test-access-token",
+          refresh_token: "test-refresh-token",
+          expires_at: 1800000000,
+        }),
+      });
+
+      const response = await POST({
+        url: new URL("http://localhost/api/auth/callback"),
+        request,
+        cookies: { set: vi.fn() } as unknown as APIContext["cookies"],
+        locals: {
+          logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn() },
+        } as unknown as APIContext["locals"],
+      } as APIContext);
+
+      expect(response.status).toBe(200);
+      expect(vi.mocked(createClient).mock.calls[0][2]).toEqual({
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
     });
   });
 });
