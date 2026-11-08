@@ -5,6 +5,7 @@ package user_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"magazyn/backend/internal/config"
 	"magazyn/backend/internal/repository/supabase"
 	"magazyn/backend/internal/service/credit"
@@ -12,6 +13,7 @@ import (
 	"magazyn/backend/internal/types"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -101,26 +103,29 @@ func TestTS4_BulkAdjustCredits_Integration(t *testing.T) {
 	ctx := context.Background()
 	balance1Before := fixture.getUserBalance(fixture.user1ID)
 	balance2Before := fixture.getUserBalance(fixture.user2ID)
+	testDesc := fmt.Sprintf("TS-4 integration: deduction test %d", time.Now().UnixNano())
 	err := fixture.svc.BulkAdjustCredits(ctx, fixture.adminID, types.BulkAdjustCreditsRequest{
 		UserIDs:     []string{fixture.user1ID, fixture.user2ID},
 		Amount:      -50,
 		Reason:      "admin_adjustment",
-		Description: "TS-4 integration: deduction test",
+		Description: testDesc,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, balance1Before-50, fixture.getUserBalance(fixture.user1ID), "User1 balance -50")
 	assert.Equal(t, balance2Before-50, fixture.getUserBalance(fixture.user2ID), "User2 balance -50")
-	type entry struct {
-		UserID string `json:"user_id"`
-	}
-	var entries []entry
-	data, _, _ := fixture.client.From("credit_history").
-		Select("user_id", "exact", false).
+	var entries []types.PublicCreditHistorySelect
+	data, _, err := fixture.client.From("credit_history").
+		Select("user_id,amount,reason,description", "exact", false).
 		Eq("reason", "admin_adjustment").
+		Eq("description", testDesc).
 		In("user_id", []string{fixture.user1ID, fixture.user2ID}).
 		Execute()
-	_ = json.Unmarshal(data, &entries)
-	assert.GreaterOrEqual(t, len(entries), 2, "Should have history entry for each user")
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(data, &entries))
+	assert.Len(t, entries, 2, "Should have exactly 2 history entries for the bulk adjustment")
+	for _, entry := range entries {
+		assert.Equal(t, int32(-50), entry.Amount)
+	}
 	t.Logf("✓ TS-4: BulkAdjustCredits deducted 50 from 2 users, history created")
 	fixture.cleanup = append(fixture.cleanup, func() {
 		_, _, _ = fixture.client.From("profiles").Update(map[string]interface{}{"credit_balance": balance1Before}, "", "").Eq("id", fixture.user1ID).Execute()
@@ -140,15 +145,16 @@ func TestUpdateUser_CreditBalanceChangeRequiresAuditedAdjustment_Integration(t *
 	assert.IsType(t, &types.ValidationError{}, err)
 	assert.Equal(t, balanceBefore, fixture.getUserBalance(fixture.user1ID), "Balance must not be changed by profile update")
 }
-func TestTS4_UserSeesAdjustedBalance_Integration(t *testing.T) {
+func TestTS4_UserViewsAuditHistory(t *testing.T) {
 	fixture := setupUserTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
+	testDesc := fmt.Sprintf("TS-4: reward for warehouse cleanup %d", time.Now().UnixNano())
 	err := fixture.svc.BulkAdjustCredits(ctx, fixture.adminID, types.BulkAdjustCreditsRequest{
 		UserIDs:     []string{fixture.user1ID},
 		Amount:      200,
 		Reason:      "work_credit",
-		Description: "TS-4: reward for warehouse cleanup",
+		Description: testDesc,
 	})
 	require.NoError(t, err)
 	targetID := fixture.user1ID
@@ -160,7 +166,7 @@ func TestTS4_UserSeesAdjustedBalance_Integration(t *testing.T) {
 	require.NoError(t, err)
 	found := false
 	for _, entry := range resp.CreditHistory {
-		if entry.Reason == "work_credit" && entry.Amount == 200 {
+		if entry.Reason == "work_credit" && entry.Amount == 200 && entry.Description != nil && *entry.Description == testDesc {
 			found = true
 			break
 		}

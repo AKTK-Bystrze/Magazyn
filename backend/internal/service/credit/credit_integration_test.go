@@ -80,23 +80,30 @@ func (f *creditTestFixture) teardown() {
 		f.cleanup[i]()
 	}
 }
-func (f *creditTestFixture) createTestCreditEntry(userID string, amount int32, reason string) {
-	_, _, err := f.client.From("credit_history").
+func (f *creditTestFixture) createTestCreditEntry(userID string, amount int32, reason string) string {
+	uniqueDesc := fmt.Sprintf("Test entry %d", time.Now().UnixNano())
+	var created []struct {
+		ID string `json:"id"`
+	}
+	data, _, err := f.client.From("credit_history").
 		Insert(map[string]interface{}{
 			"user_id":     userID,
 			"amount":      amount,
 			"reason":      reason,
-			"description": fmt.Sprintf("Test entry %s", time.Now().Format("15:04:05")),
+			"description": uniqueDesc,
 		}, false, "", "representation", "").
 		Execute()
 	require.NoError(f.t, err, "Failed to create test credit entry")
+	require.NoError(f.t, json.Unmarshal(data, &created))
+	require.NotEmpty(f.t, created)
+	entryID := created[0].ID
 	f.cleanup = append(f.cleanup, func() {
 		f.client.From("credit_history").
 			Delete("", "").
-			Eq("user_id", userID).
-			Eq("reason", reason).
+			Eq("id", entryID).
 			Execute()
 	})
+	return uniqueDesc
 }
 
 // TestGetCreditHistory_OwnHistory_ReturnsPaginated verifies that a user
@@ -127,7 +134,7 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	fixture := setupCreditTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	fixture.createTestCreditEntry(fixture.testUserID, 200, "admin_adjustment")
+	desc := fixture.createTestCreditEntry(fixture.testUserID, 200, "admin_adjustment")
 	targetUserID := fixture.testUserID
 	query := types.GetCreditHistoryQuery{
 		UserID:  &targetUserID,
@@ -139,12 +146,11 @@ func TestGetCreditHistory_AdminViewsOtherUser_Success(t *testing.T) {
 	assert.NotNil(t, resp)
 	found := false
 	for _, entry := range resp.CreditHistory {
-		if entry.Reason == "admin_adjustment" && entry.Amount == 200 {
+		if entry.Reason == "admin_adjustment" && entry.Amount == 200 && entry.Description != nil && *entry.Description == desc {
 			found = true
 			break
 		}
 	}
-	assert.NotEmpty(t, resp.CreditHistory, "Admin should receive non-empty credit history for target user")
 	assert.True(t, found, "Expected admin to view target user's credit history entry with reason 'admin_adjustment' and amount 200")
 }
 

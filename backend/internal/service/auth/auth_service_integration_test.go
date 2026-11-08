@@ -48,7 +48,7 @@ func TestLogin_Integration(t *testing.T) {
 
 	t.Run("returns error for non-existent email", func(t *testing.T) {
 		resp, err := service.Login(context.Background(), fmt.Sprintf("nonexistent_%d@example.com", time.Now().UnixNano()))
-		assert.Error(t, err, "Magic link login should fail for non-existent user")
+		require.Error(t, err, "Magic link login should fail for non-existent user")
 		assert.Nil(t, resp)
 	})
 }
@@ -84,8 +84,8 @@ func TestGetSession_Integration(t *testing.T) {
 	})
 	t.Run("returns error for non-existent user", func(t *testing.T) {
 		session, err := service.GetSession(context.Background(), "00000000-0000-0000-0000-000000000000", validToken)
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.IsType(t, &types.NotFoundError{}, err)
 		assert.Nil(t, session)
-		assert.Contains(t, err.Error(), "not found")
 	})
 }

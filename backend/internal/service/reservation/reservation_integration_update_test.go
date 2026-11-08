@@ -78,7 +78,8 @@ func TestModifyDates(t *testing.T) {
 		require.NoError(t, err)
 		updateCmd := types.UpdateReservationCommand{EndDate: testutils.StringPtr(dateOffset(11))}
 		_, err = fixture.svc.Update(ctx, resID, updateCmd, fixture.testUserID, "user")
-		assert.Error(t, err)
+		require.Error(t, err)
+		assert.IsType(t, &types.ConflictError{}, err)
 		assert.Contains(t, err.Error(), "Dates not available")
 	})
 

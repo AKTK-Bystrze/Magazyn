@@ -24,10 +24,7 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 	lowBalance := int32(1)
-	_, _, _ = fixture.client.From("profiles").
-		Update(map[string]interface{}{"credit_balance": lowBalance}, "", "").
-		Eq("id", fixture.testUserID).
-		Execute()
+	fixture.setUserBalance(fixture.testUserID, lowBalance)
 	balanceBefore := fixture.getUserBalance(fixture.testUserID)
 	require.Equal(t, lowBalance, balanceBefore, "Setup failed: balance not set")
 	cmd := types.CreateReservationsCommand{
@@ -64,16 +61,6 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
 	require.NoError(t, err)
 	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
-	type historyEntry struct {
-		ID string `json:"id"`
-	}
-	var historyBefore []historyEntry
-	dataBefore, _, _ := fixture.client.From("credit_history").
-		Select("id", "exact", false).
-		Eq("user_id", fixture.testUserID).
-		Execute()
-	json.Unmarshal(dataBefore, &historyBefore)
-	historyCountBefore := len(historyBefore)
 	updateCmd := types.UpdateReservationCommand{
 		Status: testutils.StringPtr(constants.ReservationStatusCancelled),
 	}
@@ -84,15 +71,18 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	expectedRefund := 3 * fixture.costPerDay
 	assert.Equal(t, expectedRefund, refundAmount, "Refund amount mismatch")
 	t.Logf("✓ Refunded %d credits", refundAmount)
-	var historyAfter []historyEntry
-	dataAfter, _, _ := fixture.client.From("credit_history").
-		Select("id", "exact", false).
+	var refundEntries []types.PublicCreditHistorySelect
+	dataAfter, _, err := fixture.client.From("credit_history").
+		Select("id,amount,reason,reservation_id,user_id", "exact", false).
 		Eq("user_id", fixture.testUserID).
+		Eq("reservation_id", reservationID).
+		Eq("reason", "reservation_refund").
 		Execute()
-	json.Unmarshal(dataAfter, &historyAfter)
-	historyCountAfter := len(historyAfter)
-	assert.Greater(t, historyCountAfter, historyCountBefore, "No credit_history entry created")
-	t.Logf("✓ Credit history logged (%d -> %d entries)", historyCountBefore, historyCountAfter)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(dataAfter, &refundEntries))
+	require.Len(t, refundEntries, 1, "Exactly one refund credit_history entry must exist for this reservation")
+	assert.Equal(t, expectedRefund, refundEntries[0].Amount, "Credit history refund amount mismatch")
+	t.Logf("✓ Credit history logged: 1 refund entry with %d credits", refundEntries[0].Amount)
 }
 
 // TestUpdateAudit_StatusChange_CreatesAuditEntry verifies that updating
@@ -101,40 +91,42 @@ func TestUpdateAudit_StatusChange_CreatesAuditEntry(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
-	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
+	reservationID, err := fixture.createTestReservation(fixture.testUserID, 0, 2)
 	require.NoError(t, err)
-	type auditEntry struct {
-		ID     string `json:"id"`
-		Status string `json:"status"`
-	}
-	var auditBefore []auditEntry
-	dataBefore, _, _ := fixture.client.From("reservation_history").
-		Select("id,status", "exact", false).
+
+	var auditBefore []types.PublicReservationHistorySelect
+	dataBefore, _, err := fixture.client.From("reservation_history").
+		Select("id,status,reservation_id", "exact", false).
 		Eq("reservation_id", reservationID).
 		Execute()
-	json.Unmarshal(dataBefore, &auditBefore)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(dataBefore, &auditBefore))
 	auditCountBefore := len(auditBefore)
 	t.Logf("Audit entries before: %d", auditCountBefore)
+
 	updateCmd := types.UpdateReservationCommand{
 		Status: testutils.StringPtr(constants.ReservationStatusRented),
 	}
 	resp, err := fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUser2ID, "admin")
 	require.NoError(t, err)
 	assert.Equal(t, constants.ReservationStatusRented, resp.Status)
-	var auditAfter []auditEntry
-	dataAfter, _, _ := fixture.client.From("reservation_history").
-		Select("id,status", "exact", false).
+
+	var auditAfter []types.PublicReservationHistorySelect
+	dataAfter, _, err := fixture.client.From("reservation_history").
+		Select("id,status,reservation_id", "exact", false).
 		Eq("reservation_id", reservationID).
 		Order("created_at", nil).
 		Execute()
-	json.Unmarshal(dataAfter, &auditAfter)
-	auditCountAfter := len(auditAfter)
-	assert.Greater(t, auditCountAfter, auditCountBefore, "No audit entry created")
-	t.Logf("✓ Audit trail: %d -> %d entries", auditCountBefore, auditCountAfter)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(dataAfter, &auditAfter))
+	require.Len(t, auditAfter, auditCountBefore+1, "Exactly one audit entry must be added")
+	t.Logf("✓ Audit trail: %d -> %d entries", auditCountBefore, len(auditAfter))
+
 	latestEntry := auditAfter[len(auditAfter)-1]
 	assert.Equal(t, constants.ReservationStatusPending, latestEntry.Status, "Audit entry should record old status")
 	t.Logf("✓ Audit entry preserves old status: %s", latestEntry.Status)
 }
+
 func TestUpdateAudit_DateChange_RecordsOldDates(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
@@ -149,17 +141,15 @@ func TestUpdateAudit_DateChange_RecordsOldDates(t *testing.T) {
 	}
 	_, err = fixture.svc.Update(ctx, reservationID, updateCmd, fixture.testUserID, "user")
 	require.NoError(t, err)
-	type auditEntry struct {
-		StartDate string `json:"start_date"`
-		EndDate   string `json:"end_date"`
-	}
-	var auditEntries []auditEntry
-	data, _, _ := fixture.client.From("reservation_history").
-		Select("start_date,end_date", "exact", false).
+
+	var auditEntries []types.PublicReservationHistorySelect
+	data, _, err := fixture.client.From("reservation_history").
+		Select("id,start_date,end_date,reservation_id", "exact", false).
 		Eq("reservation_id", reservationID).
 		Order("created_at", nil).
 		Execute()
-	json.Unmarshal(data, &auditEntries)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(data, &auditEntries))
 	found := false
 	for _, entry := range auditEntries {
 		if entry.StartDate == originalStart && entry.EndDate == originalEnd {

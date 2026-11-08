@@ -85,7 +85,10 @@ func CreateTestUser(email, password string) (*types.User, error) {
 		"credit_balance": 100,
 		"is_enabled":     true,
 	}
-	_, _, _ = TestAppState.SupabaseClient.From("profiles").Insert(profile, false, "", "", "").Execute()
+	_, _, err = TestAppState.SupabaseClient.From("profiles").Upsert(profile, "", "", "").Execute()
+	if err != nil {
+		return nil, fmt.Errorf("failed to upsert test user profile: %w", err)
+	}
 	return &user.User, nil
 }
 func DeleteTestUser(userID string) error {
@@ -101,7 +104,10 @@ func DeleteTestUser(userID string) error {
 	if serviceKey != "" {
 		client = client.WithToken(serviceKey)
 	}
-	_, _, _ = TestAppState.SupabaseClient.From("profiles").Delete("", "").Eq("id", userID).Execute()
+	_, _, err = TestAppState.SupabaseClient.From("profiles").Delete("", "").Eq("id", userID).Execute()
+	if err != nil {
+		logger.Warnf(context.Background(), "Failed to delete test user profile: %v", err)
+	}
 	return client.AdminDeleteUser(types.AdminDeleteUserRequest{
 		UserID: uid,
 	})

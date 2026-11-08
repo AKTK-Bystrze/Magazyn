@@ -100,6 +100,14 @@ test.describe("Admin Equipment Manager", () => {
     await expect(equipmentRow).toContainText(updatedName);
     await expect(equipmentRow).toContainText("Zablokowane");
 
+    const { data: dbEdited, error: editError } = await supabaseAdmin
+      .from("equipment")
+      .select("name, status")
+      .eq("id", equipmentId)
+      .single();
+    expect(editError).toBeNull();
+    expect(dbEdited).toMatchObject({ name: updatedName, status: "blocked" });
+
     console.log(`[Worker ${workerIndex}] 4. Archiving equipment via UI dialog`);
     await equipmentPage.clickArchive(equipmentId);
     await expect(equipmentPage.getArchiveDialog()).toBeVisible();
@@ -113,6 +121,14 @@ test.describe("Admin Equipment Manager", () => {
     await expect(equipmentPage.getEquipmentRow(equipmentId)).toBeHidden({
       timeout: E2E_CONFIG.TIMEOUT.ASSERTION,
     });
+
+    const { data: dbArchived, error: archiveError } = await supabaseAdmin
+      .from("equipment")
+      .select("is_archived")
+      .eq("id", equipmentId)
+      .single();
+    expect(archiveError).toBeNull();
+    expect(dbArchived?.is_archived).toBe(true);
 
     console.log(`[Worker ${workerIndex}] ✅ Equipment lifecycle test completed`);
   });
