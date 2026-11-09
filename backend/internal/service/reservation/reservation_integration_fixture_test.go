@@ -66,6 +66,7 @@ func initializeFixture(t *testing.T, fixture *dateTestFixture, client *supa.Clie
 	require.NotEmpty(t, eqTypes)
 	fixture.typeID = eqTypes[0].ID
 	fixture.costPerDay = eqTypes[0].CreditCostPerDay
+	require.Greater(t, fixture.costPerDay, int32(0), "Fixture requires positive credit cost per day to validate charges")
 	createUniqueEquipment(t, fixture)
 	setupTestUsers(t, fixture)
 }

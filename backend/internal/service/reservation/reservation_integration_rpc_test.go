@@ -24,10 +24,7 @@ func TestCreateAtomic_InsufficientCredits_RollsBack(t *testing.T) {
 	defer fixture.teardown()
 	ctx := context.Background()
 	lowBalance := int32(1)
-	_, _, _ = fixture.client.From("profiles").
-		Update(map[string]interface{}{"credit_balance": lowBalance}, "", "").
-		Eq("id", fixture.testUserID).
-		Execute()
+	fixture.setUserBalance(fixture.testUserID, lowBalance)
 	balanceBefore := fixture.getUserBalance(fixture.testUserID)
 	require.Equal(t, lowBalance, balanceBefore, "Setup failed: balance not set")
 	cmd := types.CreateReservationsCommand{
@@ -64,16 +61,6 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	reservationID, err := fixture.createTestReservation(fixture.testUserID, 5, 7)
 	require.NoError(t, err)
 	balanceAfterCreate := fixture.getUserBalance(fixture.testUserID)
-	type historyEntry struct {
-		ID string `json:"id"`
-	}
-	var historyBefore []historyEntry
-	dataBefore, _, _ := fixture.client.From("credit_history").
-		Select("id", "exact", false).
-		Eq("user_id", fixture.testUserID).
-		Execute()
-	json.Unmarshal(dataBefore, &historyBefore)
-	historyCountBefore := len(historyBefore)
 	updateCmd := types.UpdateReservationCommand{
 		Status: testutils.StringPtr(constants.ReservationStatusCancelled),
 	}
@@ -84,15 +71,18 @@ func TestRefundCredits_ValidCancellation_RefundsAndLogs(t *testing.T) {
 	expectedRefund := 3 * fixture.costPerDay
 	assert.Equal(t, expectedRefund, refundAmount, "Refund amount mismatch")
 	t.Logf("✓ Refunded %d credits", refundAmount)
-	var historyAfter []historyEntry
-	dataAfter, _, _ := fixture.client.From("credit_history").
-		Select("id", "exact", false).
+	var refundEntries []types.PublicCreditHistorySelect
+	dataAfter, _, err := fixture.client.From("credit_history").
+		Select("id,amount,reason,reservation_id,user_id", "exact", false).
 		Eq("user_id", fixture.testUserID).
+		Eq("reservation_id", reservationID).
+		Eq("reason", "reservation_refund").
 		Execute()
-	json.Unmarshal(dataAfter, &historyAfter)
-	historyCountAfter := len(historyAfter)
-	assert.Greater(t, historyCountAfter, historyCountBefore, "No credit_history entry created")
-	t.Logf("✓ Credit history logged (%d -> %d entries)", historyCountBefore, historyCountAfter)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(dataAfter, &refundEntries))
+	require.Len(t, refundEntries, 1, "Exactly one refund credit_history entry must exist for this reservation")
+	assert.Equal(t, expectedRefund, refundEntries[0].Amount, "Credit history refund amount mismatch")
+	t.Logf("✓ Credit history logged: 1 refund entry with %d credits", refundEntries[0].Amount)
 }
 
 // TestUpdateAudit_StatusChange_CreatesAuditEntry verifies that updating

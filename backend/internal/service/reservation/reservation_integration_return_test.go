@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTS3_EarlyReturn(t *testing.T) {
+func TestTS3_Return_EarlyReturn_BalanceUnchanged(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
@@ -30,7 +30,8 @@ func TestTS3_EarlyReturn(t *testing.T) {
 	assert.Equal(t, balanceAfterCreate, fixture.getUserBalance(fixture.testUserID), "No credit change on RETURNED status")
 	t.Logf("✓ TS-3 early return: status=RETURNED, balance unchanged")
 }
-func TestTS3_OnTimeReturn(t *testing.T) {
+
+func TestTS3_Return_OnTimeReturn_BalanceUnchanged(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
@@ -44,19 +45,34 @@ func TestTS3_OnTimeReturn(t *testing.T) {
 	assert.Equal(t, constants.ReservationStatusReturned, resp.Status)
 	t.Logf("✓ TS-3 on-time return: status=RETURNED")
 }
-func TestTS3_LateReturn_Succeeds(t *testing.T) {
+
+func TestTS3_Return_LateReturn_Allowed(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
 	resAID, err := fixture.createTestReservation(fixture.testUserID, -5, -2)
 	require.NoError(t, err)
-	_, err = fixture.createTestReservation(fixture.testUser2ID, -1, 3)
+	resBID, err := fixture.createTestReservation(fixture.testUser2ID, -1, 3)
 	require.NoError(t, err)
+	require.NotEmpty(t, resBID)
+
+	// Step 9: Extending overdue Res A to today conflicts with active Res B (-1 to 3)
+	today := todayStr()
 	returnStatus := constants.ReservationStatusReturned
+	_, err = fixture.svc.Update(ctx, resAID,
+		types.UpdateReservationCommand{
+			Status:  &returnStatus,
+			EndDate: &today,
+		},
+		fixture.testUser2ID, "admin")
+	require.Error(t, err, "Late return with date extension into conflicting reservation must be rejected")
+	assert.IsType(t, &types.ConflictError{}, err)
+
+	// Step 11: Recording physical return without date extension must NOT be blocked by system
 	resp, err := fixture.svc.Update(ctx, resAID,
 		types.UpdateReservationCommand{Status: &returnStatus},
 		fixture.testUser2ID, "admin")
-	require.NoError(t, err, "Late return must NOT be blocked by the system")
+	require.NoError(t, err, "Late physical return without date extension must succeed")
 	assert.Equal(t, constants.ReservationStatusReturned, resp.Status)
 	t.Logf("✓ TS-3 late return: allowed - admin must handle follow-up reservation manually")
 }
@@ -187,7 +203,7 @@ func TestTS3_User_Return_ExistingNegativeBalance(t *testing.T) {
 	t.Logf("✓ TS-3 user return with negative balance succeeded")
 }
 
-func TestTS3_User_Return_RentedOverdue(t *testing.T) {
+func TestTS3_Owner_Return_OverdueRented_Succeeds(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
@@ -231,7 +247,7 @@ func TestTS3_NonOwner_CannotReturn(t *testing.T) {
 	t.Logf("✓ TS-3 non-owner return rejected with ForbiddenError")
 }
 
-func TestTS3_User_Rent_PendingReservation(t *testing.T) {
+func TestTS3_Owner_Rent_Pending_Succeeds(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()
@@ -249,7 +265,7 @@ func TestTS3_User_Rent_PendingReservation(t *testing.T) {
 	t.Logf("✓ TS-3 owner rent of pending reservation succeeded")
 }
 
-func TestTS3_Rent_Future_UpdatesStartDateToToday(t *testing.T) {
+func TestTS3_Rent_FutureReservation_UpdatesStartDateToToday(t *testing.T) {
 	fixture := setupDateTestFixture(t)
 	defer fixture.teardown()
 	ctx := context.Background()

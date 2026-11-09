@@ -44,7 +44,9 @@ func TestReservationDateConflicts(t *testing.T) {
 			require.NoError(t, err)
 			res2, err := fixture.createTestReservation(user2, tt.sec1, tt.sec2)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
+				assert.IsType(t, &types.ConflictError{}, err)
+				assert.Contains(t, err.Error(), "Reservation failed")
 			} else {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, res2)

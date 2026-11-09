@@ -100,7 +100,9 @@ test.describe("Reservation Creation", () => {
     await expect(authenticatedPage.getByTestId(TEST_IDS.RESERVATION_LIST_CONTAINER)).toBeVisible();
 
     await expect(
-      authenticatedPage.locator('[data-testid^="reservation-row-"]').first()
+      authenticatedPage
+        .locator('[data-testid^="reservation-row-"]', { hasText: equip1.name })
+        .first()
     ).toBeVisible({ timeout: E2E_CONFIG.TIMEOUT.ASSERTION });
 
     await authenticatedPage.goto("/equipment");
